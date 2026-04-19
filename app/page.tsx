@@ -16,6 +16,8 @@ export default function Home() {
         {/* Decorative circles */}
         <div className="pointer-events-none absolute -top-20 -left-20 w-80 h-80 rounded-full bg-rose-200 opacity-30 blur-3xl" />
         <div className="pointer-events-none absolute top-10 -right-16 w-64 h-64 rounded-full bg-orange-200 opacity-25 blur-3xl" />
+        <div className="pointer-events-none absolute top-1/2 -translate-y-1/2 -left-[250px] rounded-full" style={{ width: 500, height: 500, backgroundColor: "#f9a8d4", opacity: 0.4 }} />
+        <div className="pointer-events-none absolute top-1/2 -translate-y-1/2 -right-[225px] rounded-full" style={{ width: 450, height: 450, backgroundColor: "#fcd34d", opacity: 0.35 }} />
 
         {/* Wave separator */}
         <svg
