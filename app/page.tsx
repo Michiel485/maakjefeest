@@ -1,65 +1,200 @@
-import Image from "next/image";
-
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="min-h-screen bg-white font-sans antialiased">
+
+      {/* ── Nav ── */}
+      <header className="relative z-10 flex items-center justify-between px-8 py-5 max-w-6xl mx-auto">
+        <span className="text-lg font-bold text-rose-600 tracking-tight">maakjefeest.nl</span>
+        <a href="/inloggen" className="text-sm font-medium text-gray-600 hover:text-rose-600 transition-colors">
+          Inloggen
+        </a>
+      </header>
+
+      {/* ── Hero ── */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-rose-50 via-pink-50 to-orange-50 pt-10 pb-32">
+
+        {/* Decorative circles */}
+        <div className="pointer-events-none absolute -top-20 -left-20 w-80 h-80 rounded-full bg-rose-200 opacity-30 blur-3xl" />
+        <div className="pointer-events-none absolute top-10 -right-16 w-64 h-64 rounded-full bg-orange-200 opacity-25 blur-3xl" />
+
+        {/* Wave separator */}
+        <svg
+          aria-hidden
+          className="pointer-events-none absolute bottom-0 left-0 w-full text-white"
+          viewBox="0 0 1440 72"
+          preserveAspectRatio="none"
+          fill="currentColor"
+        >
+          <path d="M0,36 C360,72 1080,0 1440,36 L1440,72 L0,72 Z" />
+        </svg>
+
+        <div className="relative flex flex-col items-center text-center px-6 max-w-3xl mx-auto">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-rose-100 text-rose-500 text-sm font-semibold px-5 py-2 rounded-full mb-8 shadow-sm">
+            <svg className="w-4 h-4 text-rose-400" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+            Eenmalig €24 — daarna voor altijd online
+          </div>
+
+          <h1 className="text-5xl sm:text-6xl font-extrabold text-gray-900 leading-[1.1] tracking-tight mb-6">
+            Maak jouw feest<br />
+            <span className="text-rose-500">onvergetelijk</span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+
+          <p className="text-xl text-gray-500 max-w-xl mb-10 leading-relaxed">
+            Bouw in minuten een prachtige eventwebsite voor jouw bruiloft, verjaardag of evenement.
+            Deel hem met je gasten en ontvang aanmeldingen direct in jouw dashboard.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
+
           <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/start"
+            className="inline-flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white text-base font-bold px-9 py-4 rounded-2xl shadow-lg shadow-rose-200 hover:shadow-xl hover:shadow-rose-200 hover:-translate-y-0.5 transition-all"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
+            Start nu gratis
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
           </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          <p className="mt-3 text-xs text-gray-400">Geen account nodig om te starten</p>
         </div>
-      </main>
+      </section>
+
+      {/* ── Event type cards ── */}
+      <section className="max-w-5xl mx-auto px-6 -mt-6 pb-20 relative z-10">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+
+          {/* Bruiloft */}
+          <div className="group rounded-3xl border border-pink-100 bg-gradient-to-b from-rose-50 to-pink-50 p-8 flex flex-col gap-5 shadow-md hover:shadow-xl hover:shadow-rose-100 hover:-translate-y-1.5 transition-all duration-300">
+            <div className="w-13 h-13 w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center shadow-md shadow-rose-200">
+              <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="7" cy="16" r="4" />
+                <circle cx="17" cy="16" r="4" />
+                <path d="M11 16a4 4 0 0 1 2 0" />
+                <path d="M10.5 7 Q12 4.5 13.5 7" />
+                <circle cx="12" cy="5" r="1.5" fill="currentColor" stroke="none" opacity="0.6" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-gray-900 mb-1.5">Bruiloft</h3>
+              <p className="text-sm text-gray-500 leading-relaxed">
+                Een stijlvolle website voor jullie mooiste dag. Met RSVP, programma en wishlist voor jullie gasten.
+              </p>
+            </div>
+            <div className="mt-auto flex flex-wrap gap-2">
+              {["RSVP", "Programma", "Wishlist"].map(t => (
+                <span key={t} className="text-xs font-semibold bg-rose-100 text-rose-500 px-2.5 py-1 rounded-full">{t}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Verjaardag */}
+          <div className="group rounded-3xl border border-amber-100 bg-gradient-to-b from-amber-50 to-orange-50 p-8 flex flex-col gap-5 shadow-md hover:shadow-xl hover:shadow-amber-100 hover:-translate-y-1.5 transition-all duration-300">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-400 flex items-center justify-center shadow-md shadow-amber-200">
+              <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="10" rx="2" />
+                <path d="M3 15h18" />
+                <path d="M7 11V9a5 5 0 0 1 10 0v2" />
+                <path d="M8 6 Q8.5 4 9 6" />
+                <path d="M12 5 Q12.5 3 13 5" />
+                <path d="M16 6 Q16.5 4 17 6" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-gray-900 mb-1.5">Verjaardag</h3>
+              <p className="text-sm text-gray-500 leading-relaxed">
+                Nodig al je vrienden en familie uit op één plek. Vertel wanneer, waar en hoe laat het feest begint.
+              </p>
+            </div>
+            <div className="mt-auto flex flex-wrap gap-2">
+              {["Uitnodiging", "RSVP", "Foto's"].map(t => (
+                <span key={t} className="text-xs font-semibold bg-amber-100 text-amber-600 px-2.5 py-1 rounded-full">{t}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Evenement */}
+          <div className="group rounded-3xl border border-teal-100 bg-gradient-to-b from-teal-50 to-cyan-50 p-8 flex flex-col gap-5 shadow-md hover:shadow-xl hover:shadow-teal-100 hover:-translate-y-1.5 transition-all duration-300">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center shadow-md shadow-teal-200">
+              <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <path d="M16 2v4M8 2v4M3 10h18" />
+                <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01" strokeWidth={2.5} />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-gray-900 mb-1.5">Evenement</h3>
+              <p className="text-sm text-gray-500 leading-relaxed">
+                Van bedrijfsborrel tot buurtfeest — één centrale plek voor alle informatie en aanmeldingen.
+              </p>
+            </div>
+            <div className="mt-auto flex flex-wrap gap-2">
+              {["Aanmelden", "Programma", "Locatie"].map(t => (
+                <span key={t} className="text-xs font-semibold bg-teal-100 text-teal-600 px-2.5 py-1 rounded-full">{t}</span>
+              ))}
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ── Hoe werkt het ── */}
+      <section className="bg-gray-950 py-24 px-6">
+        <div className="max-w-4xl mx-auto text-center">
+          <p className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-3">Simpel en snel</p>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-16">In drie stappen live</h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+            {[
+              {
+                n: "01", color: "text-rose-400", border: "border-rose-900", bg: "bg-rose-950",
+                title: "Kies je type",
+                body: "Bruiloft, verjaardag of evenement — kies het thema dat bij jou past en geef je website een naam.",
+              },
+              {
+                n: "02", color: "text-amber-400", border: "border-amber-900", bg: "bg-amber-950",
+                title: "Bouw je website",
+                body: "Vul je pagina's in: welkomsttekst, programma, RSVP-formulier en praktische informatie.",
+              },
+              {
+                n: "03", color: "text-teal-400", border: "border-teal-900", bg: "bg-teal-950",
+                title: "Deel met je gasten",
+                body: "Betaal eenmalig €24 en zet je website live op jouw eigen subdomein. Daarna voor altijd online.",
+              },
+            ].map(({ n, color, border, bg, title, body }) => (
+              <div key={n} className={`rounded-3xl border ${border} ${bg} p-8 text-left flex flex-col gap-4`}>
+                <span className={`text-4xl font-black ${color} opacity-60 leading-none`}>{n}</span>
+                <h3 className="text-base font-bold text-white">{title}</h3>
+                <p className="text-sm text-gray-400 leading-relaxed">{body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA band ── */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-rose-500 to-pink-600 py-20 px-6 text-center">
+        <div className="pointer-events-none absolute -bottom-12 -right-12 w-56 h-56 rounded-full bg-white opacity-10" />
+        <div className="pointer-events-none absolute -top-8 -left-8 w-40 h-40 rounded-full bg-white opacity-10" />
+        <h2 className="relative text-3xl sm:text-4xl font-extrabold text-white mb-4 leading-tight">
+          Klaar om jouw feest<br />te bouwen?
+        </h2>
+        <p className="relative text-rose-100 text-lg mb-8">Start vandaag nog — je website is in minuten klaar.</p>
+        <a
+          href="/start"
+          className="relative inline-flex items-center gap-2 bg-white text-rose-500 font-bold px-9 py-4 rounded-2xl hover:bg-rose-50 transition-colors shadow-xl text-base"
+        >
+          Start nu gratis
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </a>
+        <p className="relative mt-4 text-xs text-rose-200">Eenmalig €24 · Geen maandelijkse kosten · Altijd online</p>
+      </section>
+
+      <footer className="bg-gray-950 border-t border-gray-900 py-7 text-center text-xs text-gray-500">
+        © {new Date().getFullYear()} maakjefeest.nl
+      </footer>
     </div>
-  );
+  )
 }
