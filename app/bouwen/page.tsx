@@ -72,6 +72,30 @@ export default function BouwenPage() {
     })
   }
 
+  const [publishing, setPublishing] = useState(false)
+  const [publishError, setPublishError] = useState<string | null>(null)
+
+  async function handlePublish() {
+    if (!draft) return
+    setPublishing(true)
+    setPublishError(null)
+    try {
+      const activePages = PAGES.filter((p) => active[p.id]).map((p) => p.id)
+      const res = await fetch("/api/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...draft, pages: activePages }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Er ging iets mis")
+      localStorage.setItem("maakjefeest_event", JSON.stringify({ id: json.id, slug: json.slug }))
+      router.push(`/betalen?event_id=${json.id}`)
+    } catch (err) {
+      setPublishError(err instanceof Error ? err.message : "Er ging iets mis")
+      setPublishing(false)
+    }
+  }
+
   const activePagesOrdered = PAGES.filter((p) => active[p.id])
   const eventName = draft?.naam || "Jouw evenement"
   const eventDate = draft?.datum ? formatDate(draft.datum) : "Datum nog niet ingesteld"
@@ -95,12 +119,33 @@ export default function BouwenPage() {
 
         <span className="text-sm font-bold text-rose-600 tracking-tight hidden sm:block">maakjefeest.nl</span>
 
-        <button className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-md shadow-emerald-100 hover:shadow-lg hover:-translate-y-0.5 transition-all">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
-          Publiceren voor €24
-        </button>
+        <div className="flex flex-col items-end gap-1">
+          <button
+            onClick={handlePublish}
+            disabled={publishing}
+            className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-300 disabled:cursor-not-allowed text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-md shadow-emerald-100 hover:shadow-lg hover:-translate-y-0.5 disabled:shadow-none disabled:translate-y-0 transition-all"
+          >
+            {publishing ? (
+              <>
+                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                </svg>
+                Bezig...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                Publiceren voor €24
+              </>
+            )}
+          </button>
+          {publishError && (
+            <p className="text-xs text-red-500 font-medium">{publishError}</p>
+          )}
+        </div>
       </header>
 
       {/* ── Body ── */}
