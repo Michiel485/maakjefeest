@@ -64,8 +64,8 @@ export default function AanmakenPage() {
   function handleStart(e: React.FormEvent) {
     e.preventDefault()
     const data = { type: selectedType, ...form, aangemaakt: new Date().toISOString() }
-    localStorage.setItem("maakjefeest_onboarding", JSON.stringify(data))
-    router.push("/")
+    localStorage.setItem("maakjefeest_draft", JSON.stringify(data))
+    router.push("/bouwen")
   }
 
   return (
