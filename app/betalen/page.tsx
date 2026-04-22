@@ -1,4 +1,27 @@
+"use client"
+
+import { useEffect } from "react"
+import { useSearchParams } from "next/navigation"
+
 export default function BetalenPage() {
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    const event_id = searchParams.get("event_id")
+    if (!event_id) return
+
+    fetch("/api/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event_id }),
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.url) window.location.href = json.url
+      })
+      .catch(() => {})
+  }, [searchParams])
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-orange-50 font-sans antialiased flex items-center justify-center">
       <div className="flex flex-col items-center gap-5 text-center">
@@ -25,7 +48,7 @@ export default function BetalenPage() {
         </div>
         <div>
           <p className="text-base font-bold text-gray-800">Betaling wordt geladen...</p>
-          <p className="text-sm text-gray-400 mt-1">Even geduld, je wordt zo doorgestuurd.</p>
+          <p className="text-sm text-gray-400 mt-1">Even geduld, je wordt zo doorgestuurd naar Stripe.</p>
         </div>
       </div>
     </div>
