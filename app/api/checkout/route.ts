@@ -32,8 +32,8 @@ export async function POST(request: Request) {
         quantity: 1,
       },
     ],
-    success_url: `http://localhost:3000/succes?event_id=${event_id}`,
-    cancel_url: `http://localhost:3000/betalen?event_id=${event_id}`,
+    success_url: `http://localhost:3001/succes?event_id=${event_id}`,
+    cancel_url: `http://localhost:3001/betalen?event_id=${event_id}`,
     metadata: { event_id },
   })
 

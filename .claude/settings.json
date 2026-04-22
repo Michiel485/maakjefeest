@@ -2,6 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(npm install *)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\m.vanbendegem_smartp\\Desktop\\SpeedDate\\maakjefeest\\app\\api\\events"
     ]
   }
 }
