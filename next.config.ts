@@ -17,7 +17,7 @@ const nextConfig: NextConfig = {
           has: [
             {
               type: 'host',
-              value: '(?<slug>.+)\\.maakjefeest\\.nl',
+              value: '(?<slug>(?!www)[a-z0-9-]+)\\.maakjefeest\\.nl',
             },
           ],
           destination: '/events/:slug/:path*',
