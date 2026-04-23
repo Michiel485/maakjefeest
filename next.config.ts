@@ -9,6 +9,22 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return {
+      beforeFiles: [
+        {
+          source: '/:path*',
+          has: [
+            {
+              type: 'host',
+              value: '(?<slug>.+)\\.maakjefeest\\.nl',
+            },
+          ],
+          destination: '/events/:slug/:path*',
+        },
+      ],
+    }
+  },
 };
 
 export default nextConfig;
