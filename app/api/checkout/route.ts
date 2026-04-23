@@ -17,6 +17,9 @@ export async function POST(request: Request) {
     return Response.json({ error: "event_id is verplicht" }, { status: 400 })
   }
 
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ??
+    `${request.headers.get("x-forwarded-proto") ?? "https"}://${request.headers.get("host")}`
+
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
     payment_method_types: ["card", "ideal"],
@@ -32,8 +35,8 @@ export async function POST(request: Request) {
         quantity: 1,
       },
     ],
-    success_url: `http://localhost:3001/succes?event_id=${event_id}`,
-    cancel_url: `http://localhost:3001/betalen?event_id=${event_id}`,
+    success_url: `${baseUrl}/succes?event_id=${event_id}`,
+    cancel_url: `${baseUrl}/betalen?event_id=${event_id}`,
     metadata: { event_id },
   })
 
