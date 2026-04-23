@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useEffect } from "react"
+import { Suspense, useEffect, useRef } from "react"
 import { useSearchParams } from "next/navigation"
 
 function Spinner() {
@@ -24,10 +24,12 @@ function Spinner() {
 
 function BetalenContent() {
   const searchParams = useSearchParams()
+  const event_id = searchParams.get("event_id")
+  const called = useRef(false)
 
   useEffect(() => {
-    const event_id = searchParams.get("event_id")
-    if (!event_id) return
+    if (!event_id || called.current) return
+    called.current = true
 
     fetch("/api/checkout", {
       method: "POST",
@@ -39,7 +41,7 @@ function BetalenContent() {
         if (json.url) window.location.href = json.url
       })
       .catch(() => {})
-  }, [searchParams])
+  }, [event_id])
 
   return <Spinner />
 }
