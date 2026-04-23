@@ -2,6 +2,10 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
 export function middleware(request: NextRequest) {
+  console.log('middleware host:', request.headers.get('host'))
+  console.log('middleware url:', request.url)
+  console.log('middleware nextUrl:', request.nextUrl.hostname)
+
   const rawHost = request.headers.get("host") ?? ""
   // Strip port (e.g. localhost:3001 → localhost)
   const host = rawHost.split(":")[0]
