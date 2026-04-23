@@ -34,6 +34,7 @@ export async function POST(request: Request) {
     locatie: string
     email: string
     pages: string[]
+    content?: Record<string, Record<string, unknown>>
   }
 
   try {
@@ -42,7 +43,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Ongeldige JSON body" }, { status: 400 })
   }
 
-  const { type, naam, datum, locatie, email, pages } = body
+  const { type, naam, datum, locatie, email, pages, content = {} } = body
 
   if (!type || !naam || !datum || !locatie || !email) {
     return Response.json({ error: "Verplichte velden ontbreken" }, { status: 400 })
@@ -77,7 +78,7 @@ export async function POST(request: Request) {
     event_id:   event.id,
     type,
     title:      PAGE_TITLES[type] ?? type,
-    content:    {},
+    content:    content[type] ?? {},
     is_enabled: true,
     order:      index,
   }))
