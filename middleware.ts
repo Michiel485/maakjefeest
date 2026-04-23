@@ -1,37 +1,24 @@
-import { NextResponse } from "next/server"
-import type { NextRequest } from "next/server"
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  console.log('middleware host:', request.headers.get('host'))
-  console.log('middleware url:', request.url)
-  console.log('middleware nextUrl:', request.nextUrl.hostname)
+  const hostname = request.nextUrl.hostname
 
-  const rawHost = request.headers.get("host") ?? ""
-  // Strip port (e.g. localhost:3001 → localhost)
-  const host = rawHost.split(":")[0]
+  console.log('hostname:', hostname)
 
-  // Local dev: pass through unchanged
-  if (host === "localhost" || host === "127.0.0.1") {
-    return NextResponse.next()
-  }
+  // Werkt op Vercel: hostname is exact "bruiloft-m-en-l.maakjefeest.nl"
+  if (hostname.endsWith('.maakjefeest.nl') && !hostname.startsWith('www.')) {
+    const slug = hostname.replace('.maakjefeest.nl', '')
+    console.log('slug gevonden:', slug)
 
-  // Subdomain detection: <slug>.maakjefeest.nl
-  if (host.endsWith(".maakjefeest.nl")) {
-    const slug = host.slice(0, host.length - ".maakjefeest.nl".length)
-
-    // Skip www and bare domain
-    if (slug && slug !== "www") {
-      const url = request.nextUrl.clone()
-      url.pathname = `/events/${slug}`
-      return NextResponse.rewrite(url)
-    }
+    const url = request.nextUrl.clone()
+    url.pathname = `/events/${slug}${request.nextUrl.pathname === '/' ? '' : request.nextUrl.pathname}`
+    return NextResponse.rewrite(url)
   }
 
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon\\.ico|api/).*)",
-  ],
+  matcher: ['/((?!_next|api|favicon.ico).*)'],
 }
