@@ -1,6 +1,55 @@
 import { createServiceClient } from "@/lib/supabase"
 import RsvpForm from "./rsvp-form"
 
+// ── Style system (mirrors the builder exactly) ────────────────────────────────
+
+const STYLE_CONFIG = {
+  roze: {
+    accent: "#E8627A",
+    heroGradient: "linear-gradient(135deg, #fff0f3, #fce7e7, #fff5ee)",
+    fontFamily: "Inter, sans-serif",
+    navBg: "#ffffff",
+    navText: "#374151",
+    headingColor: "#1a1a1a",
+    bodyText: "#4b5563",
+    buttonBg: "#E8627A",
+    buttonText: "#ffffff",
+    labelColor: "#E8627A",
+    fontImport: null as string | null,
+  },
+  ivoor: {
+    accent: "#1A1A1A",
+    heroGradient: "linear-gradient(135deg, #FAF7F2, #F5EFE6, #FAF7F2)",
+    fontFamily: "'Cormorant Garamond', serif",
+    navBg: "#FAF7F2",
+    navText: "#1A1A1A",
+    headingColor: "#1A1A1A",
+    bodyText: "#3d3d3d",
+    buttonBg: "#1A1A1A",
+    buttonText: "#FAF7F2",
+    labelColor: "#8a7a6a",
+    fontImport: "@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap');",
+  },
+  zand: {
+    accent: "#8A9E8C",
+    heroGradient: "linear-gradient(135deg, #F5F0E8, #EDE8DF, #E8E4DC)",
+    fontFamily: "Inter, sans-serif",
+    navBg: "#F5F0E8",
+    navText: "#2C2C2C",
+    headingColor: "#2C2C2C",
+    bodyText: "#5a5a5a",
+    buttonBg: "#8A9E8C",
+    buttonText: "#ffffff",
+    labelColor: "#8A9E8C",
+    fontImport: null as string | null,
+  },
+} as const
+
+type Style = keyof typeof STYLE_CONFIG
+type SC = typeof STYLE_CONFIG[Style]
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+
 interface Page {
   id: string
   type: string
@@ -16,7 +65,10 @@ interface Event {
   title: string
   datum: string
   locatie: string
+  style: string
 }
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 const TYPE_LABEL: Record<string, string> = {
   bruiloft: "Bruiloft",
@@ -34,6 +86,8 @@ function formatDate(iso: string) {
   })
 }
 
+// ── Page ──────────────────────────────────────────────────────────────────────
+
 export default async function EventPage({
   params,
 }: {
@@ -44,7 +98,7 @@ export default async function EventPage({
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, slug, type, title, datum, locatie")
+    .select("id, slug, type, title, datum, locatie, style")
     .eq("slug", slug)
     .eq("status", "published")
     .single<Event>()
@@ -86,15 +140,25 @@ export default async function EventPage({
 
   const pageList: Page[] = pages ?? []
 
+  const style: Style = (event.style in STYLE_CONFIG) ? (event.style as Style) : "roze"
+  const sc = STYLE_CONFIG[style]
+
+  const homePage = pageList.find((p) => p.type === "home")
+  const homeContent = homePage?.content ?? {}
+  const homeTitle = typeof homeContent.title === "string" ? homeContent.title : null
+  const homeBody = typeof homeContent.body === "string" ? homeContent.body : null
+  const homeAlign = (homeContent.align as string) || "center"
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
+      {sc.fontImport && <style>{sc.fontImport}</style>}
 
       {/* ── Sticky nav ── */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
+      <header className="sticky top-0 z-30 border-b shadow-sm" style={{ backgroundColor: sc.navBg, borderColor: `${sc.accent}22` }}>
         <div className="max-w-5xl mx-auto px-5 py-3 flex items-center justify-between gap-4">
           <span
             className="text-base font-extrabold tracking-tight flex-shrink-0 truncate max-w-[180px] sm:max-w-xs"
-            style={{ color: "#E8627A" }}
+            style={{ color: sc.accent, fontFamily: sc.fontFamily }}
           >
             {event.title}
           </span>
@@ -103,7 +167,8 @@ export default async function EventPage({
               <a
                 key={page.id}
                 href={`#${page.type}`}
-                className="text-xs font-semibold text-gray-500 hover:text-[#E8627A] px-3 py-1.5 rounded-lg hover:bg-rose-50 transition-colors flex-shrink-0 whitespace-nowrap"
+                className="text-xs font-semibold px-3 py-1.5 rounded-lg hover:opacity-75 transition-opacity flex-shrink-0 whitespace-nowrap"
+                style={{ color: sc.navText }}
               >
                 {page.title}
               </a>
@@ -113,29 +178,24 @@ export default async function EventPage({
       </header>
 
       {/* ── Hero ── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-rose-50 via-pink-50 to-orange-50 pt-16 pb-24 px-6 text-center">
-        <div className="pointer-events-none absolute -top-20 -left-20 w-72 h-72 rounded-full bg-rose-200 opacity-20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-10 -right-10 w-64 h-64 rounded-full bg-orange-200 opacity-20 blur-3xl" />
-
-        {/* Wave */}
-        <svg aria-hidden className="pointer-events-none absolute bottom-0 left-0 w-full text-white" viewBox="0 0 1440 48" preserveAspectRatio="none" fill="currentColor">
-          <path d="M0,24 C360,48 1080,0 1440,24 L1440,48 L0,48 Z" />
-        </svg>
-
-        <div className="relative max-w-2xl mx-auto">
+      <section id="home" className="relative overflow-hidden text-center" style={{ background: sc.heroGradient }}>
+        <div className="relative max-w-2xl mx-auto px-6 py-16 sm:py-20">
           <span
-            className="inline-block text-xs font-bold uppercase tracking-widest mb-4 px-3 py-1 rounded-full bg-white/70 backdrop-blur-sm"
-            style={{ color: "#E8627A" }}
+            className="inline-block text-xs font-bold uppercase tracking-widest mb-4 px-3 py-1 rounded-full"
+            style={{ color: sc.accent, backgroundColor: `${sc.accent}15` }}
           >
             {TYPE_LABEL[event.type] ?? "Evenement"}
           </span>
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight mb-5">
+          <h1
+            className="text-4xl sm:text-5xl font-extrabold leading-tight mb-5"
+            style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}
+          >
             {event.title}
           </h1>
-          <div className="flex flex-wrap items-center justify-center gap-5 text-sm text-gray-600">
+          <div className="flex flex-wrap items-center justify-center gap-4 text-sm mb-8">
             {event.datum && (
-              <span className="flex items-center gap-2 bg-white/70 backdrop-blur-sm rounded-full px-4 py-1.5">
-                <svg className="w-4 h-4 flex-shrink-0" style={{ color: "#E8627A" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <span className="flex items-center gap-2 bg-white/70 backdrop-blur-sm rounded-full px-4 py-1.5" style={{ color: sc.bodyText }}>
+                <svg className="w-4 h-4 flex-shrink-0" style={{ color: sc.accent }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <rect x="3" y="4" width="18" height="18" rx="2" strokeLinecap="round" strokeLinejoin="round" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16 2v4M8 2v4M3 10h18" />
                 </svg>
@@ -143,8 +203,8 @@ export default async function EventPage({
               </span>
             )}
             {event.locatie && (
-              <span className="flex items-center gap-2 bg-white/70 backdrop-blur-sm rounded-full px-4 py-1.5">
-                <svg className="w-4 h-4 flex-shrink-0" style={{ color: "#E8627A" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <span className="flex items-center gap-2 bg-white/70 backdrop-blur-sm rounded-full px-4 py-1.5" style={{ color: sc.bodyText }}>
+                <svg className="w-4 h-4 flex-shrink-0" style={{ color: sc.accent }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
@@ -152,26 +212,68 @@ export default async function EventPage({
               </span>
             )}
           </div>
+          <a
+            href="#rsvp"
+            className="inline-flex items-center gap-2 text-sm font-bold px-6 py-2.5 rounded-xl shadow-md transition-all hover:-translate-y-0.5"
+            style={{ backgroundColor: sc.buttonBg, color: sc.buttonText }}
+          >
+            Meld je aan
+          </a>
         </div>
       </section>
 
-      {/* ── Page sections ── */}
+      {/* ── Home content block ── */}
+      {(homeTitle || homeBody) && (
+        <div className="max-w-3xl mx-auto px-5 pt-10 pb-2">
+          {homeTitle && (
+            <p
+              className="font-bold mb-2"
+              style={{
+                color: sc.headingColor,
+                fontFamily: sc.fontFamily,
+                textAlign: homeAlign as React.CSSProperties["textAlign"],
+                fontSize: "1rem",
+              }}
+            >
+              {homeTitle}
+            </p>
+          )}
+          {homeBody && (
+            <div
+              className="text-sm leading-relaxed"
+              style={{
+                color: sc.bodyText,
+                fontFamily: sc.fontFamily,
+                textAlign: homeAlign as React.CSSProperties["textAlign"],
+              }}
+              dangerouslySetInnerHTML={{ __html: homeBody }}
+            />
+          )}
+        </div>
+      )}
+
+      {/* ── Page sections (non-home) ── */}
       <div className="max-w-3xl mx-auto px-5 py-14 flex flex-col gap-16">
-        {pageList.map((page) => (
+        {pageList.filter((p) => p.type !== "home").map((page) => (
           <section key={page.id} id={page.type} className="scroll-mt-20">
             <div className="flex items-center gap-3 mb-7">
-              <span className="w-1 h-6 rounded-full flex-shrink-0" style={{ backgroundColor: "#E8627A" }} />
-              <h2 className="text-xl sm:text-2xl font-extrabold text-gray-900">{page.title}</h2>
+              <span className="w-1 h-6 rounded-full flex-shrink-0" style={{ backgroundColor: sc.accent }} />
+              <h2
+                className="text-xl sm:text-2xl font-extrabold"
+                style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}
+              >
+                {page.title}
+              </h2>
             </div>
-            <PageContent page={page} />
+            <PageContent page={page} sc={sc} />
           </section>
         ))}
       </div>
 
       {/* ── Footer ── */}
-      <footer className="border-t border-gray-100 py-7 text-center text-xs text-gray-400">
+      <footer className="border-t py-7 text-center text-xs" style={{ borderColor: `${sc.accent}20`, color: sc.bodyText }}>
         Gemaakt met{" "}
-        <a href="https://maakjefeest.nl" className="font-semibold hover:underline" style={{ color: "#E8627A" }}>
+        <a href="https://maakjefeest.nl" className="font-semibold hover:underline" style={{ color: sc.accent }}>
           maakjefeest.nl
         </a>
       </footer>
@@ -179,43 +281,33 @@ export default async function EventPage({
   )
 }
 
-function PageContent({ page }: { page: Page }) {
+// ── Page content renderer ─────────────────────────────────────────────────────
+
+function PageContent({ page, sc }: { page: Page; sc: SC }) {
   const c = page.content ?? {}
 
   if (page.type === "rsvp") {
     return (
-      <div className="rounded-2xl border border-gray-100 bg-gray-50 p-6 sm:p-8">
-        <p className="text-gray-500 text-sm mb-6">Laat weten of je erbij bent — vul het formulier in.</p>
+      <div className="rounded-2xl border p-6 sm:p-8" style={{ backgroundColor: `${sc.accent}08`, borderColor: `${sc.accent}20` }}>
+        <p className="text-sm mb-6" style={{ color: sc.bodyText }}>Laat weten of je erbij bent — vul het formulier in.</p>
         <RsvpForm />
       </div>
     )
   }
 
-  if (page.type === "home") {
-    const text = typeof c.text === "string" ? c.text : null
-    if (!text) {
-      return (
-        <div className="rounded-2xl bg-rose-50 border border-rose-100 p-6 text-sm text-gray-500 italic">
-          Welkomsttekst wordt binnenkort toegevoegd.
-        </div>
-      )
-    }
-    return <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-base">{text}</p>
-  }
-
   if (page.type === "programma") {
     const items = Array.isArray(c.items) ? (c.items as { time: string; description: string }[]) : []
-    if (items.length === 0) {
-      return <Placeholder>Het programma wordt binnenkort toegevoegd.</Placeholder>
-    }
+    if (items.length === 0) return <Placeholder sc={sc}>Het programma wordt binnenkort toegevoegd.</Placeholder>
     return (
-      <div className="flex flex-col gap-0 border border-gray-100 rounded-2xl overflow-hidden">
+      <div className="flex flex-col gap-0 border rounded-2xl overflow-hidden" style={{ borderColor: `${sc.accent}20` }}>
         {items.map((item, i) => (
-          <div key={i} className={`flex gap-4 px-6 py-4 ${i % 2 === 0 ? "bg-white" : "bg-gray-50"}`}>
-            <span className="text-sm font-bold w-14 flex-shrink-0 pt-0.5" style={{ color: "#E8627A" }}>
-              {item.time}
-            </span>
-            <p className="text-gray-700 text-sm">{item.description}</p>
+          <div
+            key={i}
+            className="flex gap-4 px-6 py-4"
+            style={{ backgroundColor: i % 2 === 0 ? sc.navBg : `${sc.accent}06` }}
+          >
+            <span className="text-sm font-bold w-14 flex-shrink-0 pt-0.5" style={{ color: sc.labelColor }}>{item.time}</span>
+            <p className="text-sm" style={{ color: sc.bodyText }}>{item.description}</p>
           </div>
         ))}
       </div>
@@ -224,15 +316,17 @@ function PageContent({ page }: { page: Page }) {
 
   if (page.type === "praktisch") {
     const items = Array.isArray(c.items) ? (c.items as { label: string; value: string }[]) : []
-    if (items.length === 0) {
-      return <Placeholder>Praktische informatie wordt binnenkort toegevoegd.</Placeholder>
-    }
+    if (items.length === 0) return <Placeholder sc={sc}>Praktische informatie wordt binnenkort toegevoegd.</Placeholder>
     return (
       <div className="grid sm:grid-cols-2 gap-4">
         {items.map((item, i) => (
-          <div key={i} className="rounded-2xl border border-gray-100 bg-gray-50 p-5">
-            <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">{item.label}</p>
-            <p className="text-gray-800 font-semibold">{item.value}</p>
+          <div
+            key={i}
+            className="rounded-2xl border p-5"
+            style={{ borderColor: `${sc.accent}20`, backgroundColor: `${sc.accent}06` }}
+          >
+            <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: sc.labelColor }}>{item.label}</p>
+            <p className="font-semibold" style={{ color: sc.headingColor }}>{item.value}</p>
           </div>
         ))}
       </div>
@@ -241,24 +335,26 @@ function PageContent({ page }: { page: Page }) {
 
   if (page.type === "wishlist") {
     const items = Array.isArray(c.items) ? (c.items as { name: string; url?: string; price?: string }[]) : []
-    if (items.length === 0) {
-      return <Placeholder>De wishlist wordt binnenkort toegevoegd.</Placeholder>
-    }
+    if (items.length === 0) return <Placeholder sc={sc}>De wishlist wordt binnenkort toegevoegd.</Placeholder>
     return (
       <div className="grid sm:grid-cols-2 gap-4">
         {items.map((item, i) => (
-          <div key={i} className="rounded-2xl border border-gray-100 p-5 flex items-center justify-between gap-3">
+          <div
+            key={i}
+            className="rounded-2xl border p-5 flex items-center justify-between gap-3"
+            style={{ borderColor: `${sc.accent}20` }}
+          >
             <div>
-              <p className="font-semibold text-gray-800 text-sm">{item.name}</p>
-              {item.price && <p className="text-xs text-gray-400 mt-0.5">{item.price}</p>}
+              <p className="font-semibold text-sm" style={{ color: sc.headingColor }}>{item.name}</p>
+              {item.price && <p className="text-xs mt-0.5" style={{ color: sc.bodyText }}>{item.price}</p>}
             </div>
             {item.url && (
               <a
                 href={item.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs font-bold px-3 py-1.5 rounded-lg border border-rose-200 hover:bg-rose-50 transition-colors flex-shrink-0"
-                style={{ color: "#E8627A" }}
+                className="text-xs font-bold px-3 py-1.5 rounded-lg border transition-colors flex-shrink-0 hover:opacity-80"
+                style={{ color: sc.accent, borderColor: `${sc.accent}40` }}
               >
                 Bekijk
               </a>
@@ -271,9 +367,7 @@ function PageContent({ page }: { page: Page }) {
 
   if (page.type === "fotos") {
     const urls = Array.isArray(c.urls) ? (c.urls as string[]) : []
-    if (urls.length === 0) {
-      return <Placeholder>Foto&apos;s worden binnenkort toegevoegd.</Placeholder>
-    }
+    if (urls.length === 0) return <Placeholder sc={sc}>Foto&apos;s worden binnenkort toegevoegd.</Placeholder>
     return (
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {urls.map((url, i) => (
@@ -285,13 +379,16 @@ function PageContent({ page }: { page: Page }) {
   }
 
   const text = typeof c.text === "string" ? c.text : null
-  if (!text) return <Placeholder>Inhoud wordt binnenkort toegevoegd.</Placeholder>
-  return <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{text}</p>
+  if (!text) return <Placeholder sc={sc}>Inhoud wordt binnenkort toegevoegd.</Placeholder>
+  return <p className="leading-relaxed whitespace-pre-wrap text-sm" style={{ color: sc.bodyText }}>{text}</p>
 }
 
-function Placeholder({ children }: { children: React.ReactNode }) {
+function Placeholder({ children, sc }: { children: React.ReactNode; sc: SC }) {
   return (
-    <div className="rounded-2xl bg-gray-50 border border-gray-100 px-6 py-5 text-sm text-gray-400 italic">
+    <div
+      className="rounded-2xl border px-6 py-5 text-sm italic"
+      style={{ borderColor: `${sc.accent}20`, backgroundColor: `${sc.accent}06`, color: sc.bodyText }}
+    >
       {children}
     </div>
   )

@@ -204,10 +204,19 @@ export default function BouwenPage() {
     setPublishError(null)
     try {
       const activePages = PAGES.filter((p) => active[p.id]).map((p) => p.id)
+      const mergedContent: ContentMap = {
+        ...content,
+        home: {
+          ...(content.home ?? {}),
+          title: homeContent.title,
+          body: homeContent.body,
+          align: homeContent.align,
+        },
+      }
       const res = await fetch("/api/events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...draft, pages: activePages, content }),
+        body: JSON.stringify({ ...draft, pages: activePages, content: mergedContent }),
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || "Er ging iets mis")
