@@ -34,6 +34,7 @@ export async function POST(request: Request) {
     locatie: string
     email: string
     style?: string
+    hero_image_url?: string | null
     pages: string[]
     content?: Record<string, Record<string, unknown>>
   }
@@ -44,7 +45,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Ongeldige JSON body" }, { status: 400 })
   }
 
-  const { type, naam, datum, locatie, email, style = "roze", pages, content = {} } = body
+  const { type, naam, datum, locatie, email, style = "roze", hero_image_url = null, pages, content = {} } = body
 
   if (!type || !naam || !datum || !locatie || !email) {
     return Response.json({ error: "Verplichte velden ontbreken" }, { status: 400 })
@@ -54,7 +55,7 @@ export async function POST(request: Request) {
 
   const { data: event, error: eventError } = await supabase
     .from("events")
-    .insert({ type, title: naam, datum, locatie, user_email: email, slug, status: "draft", style })
+    .insert({ type, title: naam, datum, locatie, user_email: email, slug, status: "draft", style, hero_image_url })
     .select("id, slug")
     .single()
 

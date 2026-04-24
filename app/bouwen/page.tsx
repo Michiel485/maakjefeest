@@ -112,6 +112,7 @@ export default function BouwenPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [heroImageUrl, setHeroImageUrl] = useState<string | null>(null)
+  const [heroFile, setHeroFile] = useState<File | null>(null)
   const [draft, setDraft] = useState<Draft | null>(null)
   const [active, setActive] = useState<Record<PageId, boolean>>({
     home: true, programma: true, rsvp: true, praktisch: false, wishlist: false, fotos: false,
@@ -175,6 +176,7 @@ export default function BouwenPage() {
       return
     }
     setHeroImageError(null)
+    setHeroFile(file)
     const url = URL.createObjectURL(file)
     setHeroImageUrl(url)
     updateDraft({ heroOverlay: true })
@@ -213,10 +215,22 @@ export default function BouwenPage() {
           align: homeContent.align,
         },
       }
+
+      let uploadedHeroUrl: string | null = null
+      if (heroFile) {
+        const fd = new FormData()
+        fd.append("file", heroFile)
+        const uploadRes = await fetch("/api/upload-hero", { method: "POST", body: fd })
+        if (uploadRes.ok) {
+          const { url } = await uploadRes.json()
+          uploadedHeroUrl = url
+        }
+      }
+
       const res = await fetch("/api/events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...draft, pages: activePages, content: mergedContent }),
+        body: JSON.stringify({ ...draft, hero_image_url: uploadedHeroUrl, pages: activePages, content: mergedContent }),
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || "Er ging iets mis")
@@ -552,7 +566,7 @@ export default function BouwenPage() {
                       {/* Remove photo */}
                       {heroImageUrl && (
                         <button
-                          onClick={() => setHeroImageUrl(null)}
+                          onClick={() => { setHeroImageUrl(null); setHeroFile(null) }}
                           className="absolute top-2 right-2 z-20 flex items-center gap-1 text-xs font-semibold bg-white/80 backdrop-blur-sm rounded-lg px-2 py-1 text-gray-600 hover:text-red-500 transition-colors shadow-sm"
                         >
                           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>

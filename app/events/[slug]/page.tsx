@@ -66,6 +66,7 @@ interface Event {
   datum: string
   locatie: string
   style: string
+  hero_image_url: string | null
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -98,7 +99,7 @@ export default async function EventPage({
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, slug, type, title, datum, locatie, style")
+    .select("id, slug, type, title, datum, locatie, style, hero_image_url")
     .eq("slug", slug)
     .eq("status", "published")
     .single<Event>()
@@ -178,23 +179,36 @@ export default async function EventPage({
       </header>
 
       {/* ── Hero ── */}
-      <section id="home" className="relative overflow-hidden text-center" style={{ background: sc.heroGradient }}>
-        <div className="relative max-w-2xl mx-auto px-6 py-16 sm:py-20">
+      <section
+        id="home"
+        className="relative overflow-hidden text-center"
+        style={event.hero_image_url
+          ? { backgroundImage: `url(${event.hero_image_url})`, backgroundSize: "cover", backgroundPosition: "center" }
+          : { background: sc.heroGradient }
+        }
+      >
+        {event.hero_image_url && (
+          <div className="absolute inset-0" style={{ backgroundColor: sc.accent, opacity: 0.45 }} />
+        )}
+        <div className="relative z-10 max-w-2xl mx-auto px-6 py-16 sm:py-20">
           <span
             className="inline-block text-xs font-bold uppercase tracking-widest mb-4 px-3 py-1 rounded-full"
-            style={{ color: sc.accent, backgroundColor: `${sc.accent}15` }}
+            style={event.hero_image_url
+              ? { color: "#fff", backgroundColor: "rgba(255,255,255,0.2)" }
+              : { color: sc.accent, backgroundColor: `${sc.accent}15` }
+            }
           >
             {TYPE_LABEL[event.type] ?? "Evenement"}
           </span>
           <h1
             className="text-4xl sm:text-5xl font-extrabold leading-tight mb-5"
-            style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}
+            style={{ color: event.hero_image_url ? "#ffffff" : sc.headingColor, fontFamily: sc.fontFamily }}
           >
             {event.title}
           </h1>
           <div className="flex flex-wrap items-center justify-center gap-4 text-sm mb-8">
             {event.datum && (
-              <span className="flex items-center gap-2 bg-white/70 backdrop-blur-sm rounded-full px-4 py-1.5" style={{ color: sc.bodyText }}>
+              <span className="flex items-center gap-2 bg-white/70 backdrop-blur-sm rounded-full px-4 py-1.5" style={{ color: event.hero_image_url ? sc.headingColor : sc.bodyText }}>
                 <svg className="w-4 h-4 flex-shrink-0" style={{ color: sc.accent }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <rect x="3" y="4" width="18" height="18" rx="2" strokeLinecap="round" strokeLinejoin="round" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16 2v4M8 2v4M3 10h18" />
@@ -203,7 +217,7 @@ export default async function EventPage({
               </span>
             )}
             {event.locatie && (
-              <span className="flex items-center gap-2 bg-white/70 backdrop-blur-sm rounded-full px-4 py-1.5" style={{ color: sc.bodyText }}>
+              <span className="flex items-center gap-2 bg-white/70 backdrop-blur-sm rounded-full px-4 py-1.5" style={{ color: event.hero_image_url ? sc.headingColor : sc.bodyText }}>
                 <svg className="w-4 h-4 flex-shrink-0" style={{ color: sc.accent }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
