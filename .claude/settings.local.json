@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(git checkout *)",
-      "Bash(node -e \"require\\('stripe'\\); console.log\\('ok'\\)\")"
+      "Bash(node -e \"require\\('stripe'\\); console.log\\('ok'\\)\")",
+      "Read(//c/Users/m.vanbendegem_smartp/.claude/projects/c--Users-m-vanbendegem-smartp-Desktop-SpeedDate-maakjefeest/memory/**)"
     ]
   }
 }

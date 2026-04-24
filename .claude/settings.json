@@ -3,7 +3,8 @@
     "allow": [
       "Bash(npm install *)",
       "Bash(xargs grep *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(npx tsc *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\m.vanbendegem_smartp\\Desktop\\SpeedDate\\maakjefeest\\app\\api\\events",
