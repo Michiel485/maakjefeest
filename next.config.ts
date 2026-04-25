@@ -11,18 +11,7 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     return {
-      beforeFiles: [
-        // 1. Keiharde passthrough voor Next.js assets (CSS, JS, media)
-        {
-          source: '/_next/:path*',
-          destination: '/_next/:path*',
-        },
-        // 2. Optioneel: passthrough voor public map bestanden (zoals favicon.ico)
-        {
-          source: '/favicon.ico',
-          destination: '/favicon.ico',
-        },
-        // 3. De daadwerkelijke subdomein routing
+      afterFiles: [
         {
           source: '/:path*',
           has: [
