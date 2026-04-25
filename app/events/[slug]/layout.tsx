@@ -1,5 +1,6 @@
 import { createServiceClient } from "@/lib/supabase"
 import { getStyleConfig } from "@/lib/event-styles"
+import EventNav from "./event-nav"
 
 export default async function EventLayout({
   children,
@@ -34,40 +35,13 @@ export default async function EventLayout({
     <div style={{ minHeight: "100vh", backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
       {sc.fontImport && <style>{sc.fontImport}</style>}
 
-      {/* Nav */}
-      <header style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 30,
-        backgroundColor: sc.navBg,
-        borderBottom: `1px solid ${sc.accent}22`,
-        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-      }}>
-        <div style={{ maxWidth: 960, margin: "0 auto", padding: "12px 20px", display: "flex", alignItems: "center", gap: 4 }}>
-          {/* Logo — linkt naar home */}
-          <a
-            href="/"
-            style={{ fontSize: "0.9375rem", fontWeight: 800, letterSpacing: "-0.02em", color: sc.accent, fontFamily: sc.fontFamily, textDecoration: "none", flexShrink: 0, marginRight: 8, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-          >
-            {event.title}
-          </a>
+      <EventNav title={event.title} pages={pageList} sc={sc} />
 
-          {/* Paginalinks — echte URLs via subdomain rewrites */}
-          {pageList.map((page) => (
-            <a
-              key={page.type}
-              href={page.type === "home" ? "/" : `/${page.type}`}
-              style={{ fontSize: "0.75rem", fontWeight: 600, color: sc.navText, padding: "6px 10px", borderRadius: 8, textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}
-            >
-              {page.title}
-            </a>
-          ))}
-        </div>
-      </header>
+      <main style={{ maxWidth: 1024, margin: "0 auto" }}>
+        {children}
+      </main>
 
-      {children}
-
-      <footer style={{ borderTop: `1px solid ${sc.accent}20`, padding: "28px 0", textAlign: "center", fontSize: "0.75rem", color: sc.bodyText }}>
+      <footer style={{ borderTop: `1px solid ${sc.accent}20`, padding: "24px 0", textAlign: "center", fontSize: "0.75rem", color: sc.bodyText }}>
         Gemaakt met{" "}
         <a href="https://maakjefeest.nl" style={{ fontWeight: 600, color: sc.accent, textDecoration: "none" }}>
           maakjefeest.nl

@@ -63,7 +63,7 @@ export default async function EventHomePage({
           <div style={{ position: "absolute", inset: 0, backgroundColor: sc.accent, opacity: 0.45 }} />
         )}
 
-        <div style={{ position: "relative", zIndex: 10, maxWidth: 672, margin: "0 auto", padding: "72px 24px 88px" }}>
+        <div style={{ position: "relative", zIndex: 10, maxWidth: 672, margin: "0 auto", padding: "48px 24px 56px" }}>
           <span style={{
             display: "inline-block",
             fontSize: "0.6875rem",
@@ -113,7 +113,7 @@ export default async function EventHomePage({
 
       {/* ── Home content ── */}
       {(homeTitle || homeBody) && (
-        <div style={{ maxWidth: 720, margin: "0 auto", padding: "48px 24px 80px" }}>
+        <div style={{ maxWidth: 720, margin: "0 auto", padding: "36px 24px 56px" }}>
           {homeTitle && (
             <p style={{ fontWeight: 700, margin: "0 0 8px", color: sc.headingColor, fontFamily: sc.fontFamily, textAlign: homeAlign as React.CSSProperties["textAlign"], fontSize: "1rem" }}>
               {homeTitle}
