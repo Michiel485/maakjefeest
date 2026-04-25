@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Explicitly tell Tailwind v4 where to scan for class names */
+@source "../app/**/*.{ts,tsx,js,jsx}";
+@source "../components/**/*.{ts,tsx,js,jsx}";
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
