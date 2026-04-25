@@ -37,7 +37,7 @@ export default async function EventLayout({
 
       <EventNav title={event.title} pages={pageList} sc={sc} />
 
-      <main style={{ maxWidth: 1024, margin: "0 auto" }}>
+      <main>
         {children}
       </main>
 
