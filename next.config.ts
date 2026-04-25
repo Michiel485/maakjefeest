@@ -11,9 +11,21 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     return {
-      afterFiles: [
+      beforeFiles: [
+        // 1. Rewrite expliciet voor de root (/) van het subdomein
         {
-          source: '/:path*',
+          source: '/',
+          has: [
+            {
+              type: 'host',
+              value: '(?<slug>(?!www)[a-z0-9-]+)\\.maakjefeest\\.nl',
+            },
+          ],
+          destination: '/events/:slug',
+        },
+        // 2. Rewrite voor alle andere paden, BEHALVE interne Next.js assets en API
+        {
+          source: '/:path((?!_next|api|_vercel|favicon\\.ico).*)',
           has: [
             {
               type: 'host',
