@@ -1,15 +1,16 @@
 import { createServiceClient } from "@/lib/supabase"
-import { getStyleConfig, TYPE_LABEL, formatDate } from "@/lib/event-styles"
+import { getStyleConfig, TYPE_LABEL, formatDate, type SC } from "@/lib/event-styles"
+import RsvpForm from "./rsvp-form"
 
-const PAGE_ICONS: Record<string, string> = {
-  programma: "📅",
-  rsvp: "✉️",
-  praktisch: "📌",
-  wishlist: "🎁",
-  fotos: "📷",
+interface Page {
+  id: string
+  type: string
+  title: string
+  content: Record<string, unknown>
+  order: number
 }
 
-export default async function EventHomePage({
+export default async function EventPage({
   params,
 }: {
   params: Promise<{ slug: string }>
@@ -28,7 +29,9 @@ export default async function EventHomePage({
     return (
       <div style={{ padding: "80px 24px", textAlign: "center" }}>
         <h1 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#111", marginBottom: 8 }}>Pagina niet gevonden</h1>
-        <p style={{ color: "#6b7280", fontSize: "0.875rem" }}>Deze eventwebsite bestaat niet of is nog niet gepubliceerd.</p>
+        <p style={{ color: "#6b7280", fontSize: "0.875rem" }}>
+          Deze eventwebsite bestaat niet of is nog niet gepubliceerd.
+        </p>
       </div>
     )
   }
@@ -40,7 +43,7 @@ export default async function EventHomePage({
     .eq("is_enabled", true)
     .order("order", { ascending: true })
 
-  const pageList = pages ?? []
+  const pageList: Page[] = pages ?? []
   const sc = getStyleConfig(event.style)
   const hasPhoto = !!event.hero_image_url
 
@@ -51,12 +54,12 @@ export default async function EventHomePage({
   const homeAlign = (c.align as string) || "center"
 
   const otherPages = pageList.filter((p) => p.type !== "home")
-  const hasRsvp = otherPages.some((p) => p.type === "rsvp")
 
   return (
     <>
       {/* ── Hero ── */}
       <section
+        id="home"
         style={{
           position: "relative",
           overflow: "hidden",
@@ -70,7 +73,9 @@ export default async function EventHomePage({
         {hasPhoto && (
           <div style={{ position: "absolute", inset: 0, backgroundColor: sc.accent, opacity: 0.45 }} />
         )}
+
         <div style={{ position: "relative", zIndex: 10, maxWidth: 672, margin: "0 auto", padding: "72px 24px 88px" }}>
+          {/* Type label */}
           <span style={{
             display: "inline-block",
             fontSize: "0.6875rem",
@@ -86,46 +91,47 @@ export default async function EventHomePage({
             {TYPE_LABEL[event.type] ?? "Evenement"}
           </span>
 
+          {/* Naam */}
           <h1 style={{
             fontSize: "clamp(2rem, 5vw, 3rem)",
             fontWeight: 800,
             lineHeight: 1.1,
-            margin: "0 0 20px",
+            margin: "0 0 12px",
             color: hasPhoto ? "#fff" : sc.headingColor,
             fontFamily: sc.fontFamily,
           }}>
             {event.title}
           </h1>
 
-          <div style={{ display: "flex", flexWrap: "wrap" as const, justifyContent: "center", gap: 12, marginBottom: 36 }}>
-            {event.datum && (
-              <span style={{ fontSize: "0.875rem", backgroundColor: "rgba(255,255,255,0.8)", borderRadius: 999, padding: "6px 16px", color: "#1a1a1a" }}>
-                {formatDate(event.datum)}
-              </span>
-            )}
-            {event.locatie && (
-              <span style={{ fontSize: "0.875rem", backgroundColor: "rgba(255,255,255,0.8)", borderRadius: 999, padding: "6px 16px", color: "#1a1a1a" }}>
-                {event.locatie}
-              </span>
-            )}
-          </div>
-
-          {hasRsvp && (
-            <a
-              href={`/events/${slug}/rsvp`}
-              style={{ display: "inline-block", fontSize: "0.9375rem", fontWeight: 700, padding: "12px 28px", borderRadius: 12, boxShadow: "0 4px 14px rgba(0,0,0,0.18)", backgroundColor: sc.buttonBg, color: sc.buttonText, textDecoration: "none" }}
-            >
-              Meld je aan
-            </a>
+          {/* Datum — zelfde stijl als builder: kleine tekst, geen pill */}
+          {event.datum && (
+            <p style={{ fontSize: "0.875rem", margin: "0 0 4px", color: hasPhoto ? "rgba(255,255,255,0.85)" : sc.bodyText }}>
+              {formatDate(event.datum)}
+            </p>
           )}
+
+          {/* Locatie — zelfde stijl als builder */}
+          {event.locatie && (
+            <p style={{ fontSize: "0.875rem", margin: "0 0 28px", color: hasPhoto ? "rgba(255,255,255,0.85)" : sc.bodyText }}>
+              {event.locatie}
+            </p>
+          )}
+
+          {/* CTA knop */}
+          <a
+            href="#rsvp"
+            style={{ display: "inline-block", fontSize: "0.875rem", fontWeight: 700, padding: "10px 24px", borderRadius: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.15)", backgroundColor: sc.buttonBg, color: sc.buttonText, textDecoration: "none" }}
+          >
+            Meld je aan
+          </a>
         </div>
       </section>
 
       {/* ── Welkomstbericht ── */}
       {(homeTitle || homeBody) && (
-        <div style={{ maxWidth: 672, margin: "0 auto", padding: "48px 24px 0" }}>
+        <div style={{ maxWidth: 720, margin: "0 auto", padding: "48px 24px 8px" }}>
           {homeTitle && (
-            <p style={{ fontWeight: 700, margin: "0 0 8px", color: sc.headingColor, fontFamily: sc.fontFamily, textAlign: homeAlign as React.CSSProperties["textAlign"], fontSize: "1.125rem" }}>
+            <p style={{ fontWeight: 700, margin: "0 0 8px", color: sc.headingColor, fontFamily: sc.fontFamily, textAlign: homeAlign as React.CSSProperties["textAlign"], fontSize: "1rem" }}>
               {homeTitle}
             </p>
           )}
@@ -138,23 +144,117 @@ export default async function EventHomePage({
         </div>
       )}
 
-      {/* ── Navigatiekaarten naar andere pagina's ── */}
-      {otherPages.length > 0 && (
-        <div style={{ maxWidth: 672, margin: "0 auto", padding: "40px 24px 80px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 12 }}>
-            {otherPages.map((page) => (
-              <a
-                key={page.type}
-                href={`/events/${slug}/${page.type}`}
-                style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", justifyContent: "center", gap: 10, padding: "24px 16px", borderRadius: 16, border: `1px solid ${sc.accent}25`, backgroundColor: `${sc.accent}07`, textDecoration: "none" }}
-              >
-                <span style={{ fontSize: "1.75rem", lineHeight: 1 }}>{PAGE_ICONS[page.type] ?? "📄"}</span>
-                <span style={{ fontSize: "0.875rem", fontWeight: 700, color: sc.headingColor, fontFamily: sc.fontFamily }}>{page.title}</span>
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* ── Overige secties ── */}
+      <div style={{ maxWidth: 720, margin: "0 auto", padding: "56px 24px 96px", display: "flex", flexDirection: "column" as const, gap: 64 }}>
+        {otherPages.map((page) => (
+          <section key={page.id} id={page.type} style={{ scrollMarginTop: 72 }}>
+            {/* Sectie heading — identiek aan builder preview */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
+              <span style={{ width: 4, height: 24, borderRadius: 999, flexShrink: 0, backgroundColor: sc.accent, display: "block" }} />
+              <h2 style={{ fontSize: "1.25rem", fontWeight: 800, color: sc.headingColor, fontFamily: sc.fontFamily, margin: 0 }}>
+                {page.title}
+              </h2>
+            </div>
+            <PageContent page={page} sc={sc} />
+          </section>
+        ))}
+      </div>
     </>
+  )
+}
+
+// ── Content renderers ─────────────────────────────────────────────────────────
+
+function PageContent({ page, sc }: { page: Page; sc: SC }) {
+  const c = page.content ?? {}
+
+  if (page.type === "rsvp") {
+    return (
+      <div style={{ borderRadius: 16, border: `1px solid ${sc.accent}20`, backgroundColor: `${sc.accent}08`, padding: "24px 28px" }}>
+        <p style={{ fontSize: "0.875rem", marginBottom: 20, color: sc.bodyText }}>
+          Laat weten of je erbij bent — vul het formulier in.
+        </p>
+        <RsvpForm />
+      </div>
+    )
+  }
+
+  if (page.type === "programma") {
+    const items = Array.isArray(c.items) ? (c.items as { time: string; description: string }[]) : []
+    if (items.length === 0) return <Placeholder sc={sc}>Het programma wordt binnenkort toegevoegd.</Placeholder>
+    return (
+      <div style={{ border: `1px solid ${sc.accent}20`, borderRadius: 16, overflow: "hidden" }}>
+        {items.map((item, i) => (
+          <div key={i} style={{ display: "flex", gap: 16, padding: "14px 24px", backgroundColor: i % 2 === 0 ? sc.navBg : `${sc.accent}06` }}>
+            <span style={{ fontSize: "0.875rem", fontWeight: 700, width: 52, flexShrink: 0, paddingTop: 1, color: sc.labelColor }}>
+              {item.time}
+            </span>
+            <p style={{ fontSize: "0.9375rem", color: sc.bodyText, margin: 0 }}>{item.description}</p>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  if (page.type === "praktisch") {
+    const items = Array.isArray(c.items) ? (c.items as { label: string; value: string }[]) : []
+    if (items.length === 0) return <Placeholder sc={sc}>Praktische informatie wordt binnenkort toegevoegd.</Placeholder>
+    return (
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 }}>
+        {items.map((item, i) => (
+          <div key={i} style={{ borderRadius: 14, border: `1px solid ${sc.accent}20`, backgroundColor: `${sc.accent}06`, padding: 18 }}>
+            <p style={{ fontSize: "0.6875rem", fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 4, color: sc.labelColor }}>{item.label}</p>
+            <p style={{ fontWeight: 600, color: sc.headingColor, margin: 0, fontSize: "0.9375rem" }}>{item.value}</p>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  if (page.type === "wishlist") {
+    const items = Array.isArray(c.items) ? (c.items as { name: string; url?: string; price?: string }[]) : []
+    if (items.length === 0) return <Placeholder sc={sc}>De wishlist wordt binnenkort toegevoegd.</Placeholder>
+    return (
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 }}>
+        {items.map((item, i) => (
+          <div key={i} style={{ borderRadius: 14, border: `1px solid ${sc.accent}20`, padding: 18, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+            <div>
+              <p style={{ fontWeight: 600, fontSize: "0.9375rem", color: sc.headingColor, margin: 0 }}>{item.name}</p>
+              {item.price && <p style={{ fontSize: "0.8125rem", color: sc.bodyText, margin: "3px 0 0" }}>{item.price}</p>}
+            </div>
+            {item.url && (
+              <a href={item.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.8125rem", fontWeight: 700, padding: "6px 14px", borderRadius: 8, border: `1px solid ${sc.accent}40`, color: sc.accent, textDecoration: "none", flexShrink: 0 }}>
+                Bekijk
+              </a>
+            )}
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  if (page.type === "fotos") {
+    const urls = Array.isArray(c.urls) ? (c.urls as string[]) : []
+    if (urls.length === 0) return <Placeholder sc={sc}>Foto&apos;s worden binnenkort toegevoegd.</Placeholder>
+    return (
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+        {urls.map((url, i) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img key={i} src={url} alt="" style={{ borderRadius: 12, aspectRatio: "1", objectFit: "cover", width: "100%", display: "block" }} />
+        ))}
+      </div>
+    )
+  }
+
+  const text = typeof c.text === "string" ? c.text : null
+  if (!text) return <Placeholder sc={sc}>Inhoud wordt binnenkort toegevoegd.</Placeholder>
+  return <p style={{ lineHeight: 1.75, whiteSpace: "pre-wrap", fontSize: "0.9375rem", color: sc.bodyText, margin: 0 }}>{text}</p>
+}
+
+function Placeholder({ children, sc }: { children: React.ReactNode; sc: SC }) {
+  return (
+    <div style={{ borderRadius: 14, border: `1px solid ${sc.accent}20`, backgroundColor: `${sc.accent}06`, padding: "18px 24px", fontSize: "0.875rem", fontStyle: "italic", color: sc.bodyText }}>
+      {children}
+    </div>
   )
 }
