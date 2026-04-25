@@ -37,20 +37,17 @@ export default function EventNav({
       position: "sticky",
       top: 0,
       zIndex: 30,
-      width: "100%",
       backgroundColor: sc.navBg,
       borderBottom: `1px solid ${sc.accent}22`,
       boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
     }}>
-      {/* max-w-5xl inner container — logo + links grouped left */}
       <div style={{
-        maxWidth: 1024,
-        margin: "0 auto",
-        padding: "10px 24px",
+        padding: "14px 32px",
         display: "flex",
         alignItems: "center",
-        gap: 24,
+        justifyContent: "space-between",
       }}>
+        {/* Logo — left */}
         <a
           href="/"
           style={{
@@ -70,6 +67,7 @@ export default function EventNav({
           {title}
         </a>
 
+        {/* Nav links — right */}
         <nav style={{ display: "flex", alignItems: "center", gap: 4 }}>
           {pages.map((page) => {
             const active = isActive(page.type)

@@ -32,21 +32,34 @@ export default async function EventLayout({
   const pageList = pages ?? []
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
+    // Viewport — neutral bg fills the whole screen behind the card
+    <div style={{ minHeight: "100vh", backgroundColor: "#F5F4F2", fontFamily: sc.fontFamily }}>
       {sc.fontImport && <style>{sc.fontImport}</style>}
 
-      <EventNav title={event.title} pages={pageList} sc={sc} />
+      {/* Card — floating centered block on desktop, fullscreen on mobile */}
+      <div
+        className="max-w-4xl mx-auto flex flex-col overflow-hidden sm:my-10 sm:rounded-2xl sm:shadow-2xl"
+        style={{ minHeight: "100vh", backgroundColor: sc.navBg }}
+      >
+        <EventNav title={event.title} pages={pageList} sc={sc} />
 
-      <main>
-        {children}
-      </main>
+        <main style={{ flex: 1 }}>
+          {children}
+        </main>
 
-      <footer style={{ borderTop: `1px solid ${sc.accent}20`, padding: "24px 0", textAlign: "center", fontSize: "0.75rem", color: sc.bodyText }}>
-        Gemaakt met{" "}
-        <a href="https://maakjefeest.nl" style={{ fontWeight: 600, color: sc.accent, textDecoration: "none" }}>
-          maakjefeest.nl
-        </a>
-      </footer>
+        <footer style={{
+          borderTop: `1px solid ${sc.accent}20`,
+          padding: "20px 32px",
+          textAlign: "center",
+          fontSize: "0.75rem",
+          color: sc.bodyText,
+        }}>
+          Gemaakt met{" "}
+          <a href="https://maakjefeest.nl" style={{ fontWeight: 600, color: sc.accent, textDecoration: "none" }}>
+            maakjefeest.nl
+          </a>
+        </footer>
+      </div>
     </div>
   )
 }

@@ -18,7 +18,7 @@ export default async function EventHomePage({
 
   if (!event) {
     return (
-      <div style={{ padding: "80px 24px", textAlign: "center" }}>
+      <div style={{ padding: "80px 32px", textAlign: "center" }}>
         <h1 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#111", marginBottom: 8 }}>
           Pagina niet gevonden
         </h1>
@@ -46,39 +46,34 @@ export default async function EventHomePage({
 
   return (
     <>
-      {/* ── Hero — full-width background, max-w-5xl inner content ── */}
+      {/* ── Hero — fills the card width ── */}
       <section
         style={{
-          width: "100%",
           position: "relative",
           overflow: "hidden",
+          textAlign: "center",
           ...(hasPhoto
-            ? { backgroundImage: `url(${event.hero_image_url})`, backgroundSize: "cover", backgroundPosition: "center" }
-            : { background: sc.heroGradient }
-          ),
+            ? {
+                backgroundImage: `url(${event.hero_image_url})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }
+            : { background: sc.heroGradient }),
         }}
       >
         {hasPhoto && (
           <div style={{ position: "absolute", inset: 0, backgroundColor: sc.accent, opacity: 0.45 }} />
         )}
 
-        {/* Centered text content */}
-        <div style={{
-          position: "relative",
-          zIndex: 10,
-          maxWidth: 1024,
-          margin: "0 auto",
-          padding: "40px 24px 48px",
-          textAlign: "center",
-        }}>
+        <div style={{ position: "relative", zIndex: 10, padding: "64px 32px 72px" }}>
           <span style={{
             display: "inline-block",
             fontSize: "0.6875rem",
             fontWeight: 700,
             textTransform: "uppercase" as const,
             letterSpacing: "0.1em",
-            marginBottom: 14,
-            padding: "4px 12px",
+            marginBottom: 16,
+            padding: "4px 14px",
             borderRadius: 999,
             color: hasPhoto ? "#fff" : sc.labelColor,
             backgroundColor: hasPhoto ? "rgba(255,255,255,0.2)" : `${sc.accent}15`,
@@ -87,10 +82,10 @@ export default async function EventHomePage({
           </span>
 
           <h1 style={{
-            fontSize: "clamp(1.75rem, 4vw, 2.5rem)",
+            fontSize: "clamp(2.25rem, 6vw, 3.5rem)",
             fontWeight: 800,
-            lineHeight: 1.15,
-            margin: "0 0 10px",
+            lineHeight: 1.1,
+            margin: "0 0 12px",
             color: hasPhoto ? "#fff" : sc.headingColor,
             fontFamily: sc.fontFamily,
           }}>
@@ -98,20 +93,30 @@ export default async function EventHomePage({
           </h1>
 
           {event.datum && (
-            <p style={{ fontSize: "0.875rem", margin: "0 0 4px", color: hasPhoto ? "rgba(255,255,255,0.85)" : sc.bodyText }}>
+            <p style={{ fontSize: "0.9375rem", margin: "0 0 4px", color: hasPhoto ? "rgba(255,255,255,0.85)" : sc.bodyText }}>
               {formatDate(event.datum)}
             </p>
           )}
 
           {event.locatie && (
-            <p style={{ fontSize: "0.875rem", margin: "0 0 24px", color: hasPhoto ? "rgba(255,255,255,0.85)" : sc.bodyText }}>
+            <p style={{ fontSize: "0.9375rem", margin: "0 0 28px", color: hasPhoto ? "rgba(255,255,255,0.85)" : sc.bodyText }}>
               {event.locatie}
             </p>
           )}
 
           <a
             href="/rsvp"
-            style={{ display: "inline-block", fontSize: "0.875rem", fontWeight: 700, padding: "10px 24px", borderRadius: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.15)", backgroundColor: sc.buttonBg, color: sc.buttonText, textDecoration: "none" }}
+            style={{
+              display: "inline-block",
+              fontSize: "0.875rem",
+              fontWeight: 700,
+              padding: "11px 28px",
+              borderRadius: 12,
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              backgroundColor: sc.buttonBg,
+              color: sc.buttonText,
+              textDecoration: "none",
+            }}
           >
             Meld je aan
           </a>
@@ -120,15 +125,28 @@ export default async function EventHomePage({
 
       {/* ── Home content ── */}
       {(homeTitle || homeBody) && (
-        <div style={{ maxWidth: 1024, margin: "0 auto", padding: "32px 24px 48px" }}>
+        <div style={{ padding: "36px 32px 52px" }}>
           {homeTitle && (
-            <p style={{ fontWeight: 700, margin: "0 0 8px", color: sc.headingColor, fontFamily: sc.fontFamily, textAlign: homeAlign as React.CSSProperties["textAlign"], fontSize: "1rem" }}>
+            <p style={{
+              fontWeight: 700,
+              margin: "0 0 8px",
+              color: sc.headingColor,
+              fontFamily: sc.fontFamily,
+              textAlign: homeAlign as React.CSSProperties["textAlign"],
+              fontSize: "1rem",
+            }}>
               {homeTitle}
             </p>
           )}
           {homeBody && (
             <div
-              style={{ fontSize: "0.9375rem", lineHeight: 1.75, color: sc.bodyText, fontFamily: sc.fontFamily, textAlign: homeAlign as React.CSSProperties["textAlign"] }}
+              style={{
+                fontSize: "0.9375rem",
+                lineHeight: 1.75,
+                color: sc.bodyText,
+                fontFamily: sc.fontFamily,
+                textAlign: homeAlign as React.CSSProperties["textAlign"],
+              }}
               dangerouslySetInnerHTML={{ __html: homeBody }}
             />
           )}
