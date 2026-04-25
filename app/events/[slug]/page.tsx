@@ -46,13 +46,12 @@ export default async function EventHomePage({
 
   return (
     <>
-      {/* ── Hero ── */}
+      {/* ── Hero — full-width background, max-w-5xl inner content ── */}
       <section
-        id="home"
         style={{
+          width: "100%",
           position: "relative",
           overflow: "hidden",
-          textAlign: "center",
           ...(hasPhoto
             ? { backgroundImage: `url(${event.hero_image_url})`, backgroundSize: "cover", backgroundPosition: "center" }
             : { background: sc.heroGradient }
@@ -63,14 +62,22 @@ export default async function EventHomePage({
           <div style={{ position: "absolute", inset: 0, backgroundColor: sc.accent, opacity: 0.45 }} />
         )}
 
-        <div style={{ position: "relative", zIndex: 10, maxWidth: 1152, margin: "0 auto", padding: "52px 24px 64px" }}>
+        {/* Centered text content */}
+        <div style={{
+          position: "relative",
+          zIndex: 10,
+          maxWidth: 1024,
+          margin: "0 auto",
+          padding: "40px 24px 48px",
+          textAlign: "center",
+        }}>
           <span style={{
             display: "inline-block",
             fontSize: "0.6875rem",
             fontWeight: 700,
             textTransform: "uppercase" as const,
             letterSpacing: "0.1em",
-            marginBottom: 16,
+            marginBottom: 14,
             padding: "4px 12px",
             borderRadius: 999,
             color: hasPhoto ? "#fff" : sc.labelColor,
@@ -80,10 +87,10 @@ export default async function EventHomePage({
           </span>
 
           <h1 style={{
-            fontSize: "clamp(2rem, 5vw, 3rem)",
+            fontSize: "clamp(1.75rem, 4vw, 2.5rem)",
             fontWeight: 800,
-            lineHeight: 1.1,
-            margin: "0 0 12px",
+            lineHeight: 1.15,
+            margin: "0 0 10px",
             color: hasPhoto ? "#fff" : sc.headingColor,
             fontFamily: sc.fontFamily,
           }}>
@@ -97,7 +104,7 @@ export default async function EventHomePage({
           )}
 
           {event.locatie && (
-            <p style={{ fontSize: "0.875rem", margin: "0 0 28px", color: hasPhoto ? "rgba(255,255,255,0.85)" : sc.bodyText }}>
+            <p style={{ fontSize: "0.875rem", margin: "0 0 24px", color: hasPhoto ? "rgba(255,255,255,0.85)" : sc.bodyText }}>
               {event.locatie}
             </p>
           )}
@@ -113,7 +120,7 @@ export default async function EventHomePage({
 
       {/* ── Home content ── */}
       {(homeTitle || homeBody) && (
-        <div style={{ maxWidth: 1152, margin: "0 auto", padding: "36px 24px 56px" }}>
+        <div style={{ maxWidth: 1024, margin: "0 auto", padding: "32px 24px 48px" }}>
           {homeTitle && (
             <p style={{ fontWeight: 700, margin: "0 0 8px", color: sc.headingColor, fontFamily: sc.fontFamily, textAlign: homeAlign as React.CSSProperties["textAlign"], fontSize: "1rem" }}>
               {homeTitle}

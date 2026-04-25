@@ -40,7 +40,7 @@ export default async function EventSubPage({
   const sc = getStyleConfig(event.style)
 
   return (
-    <div style={{ maxWidth: 1152, margin: "0 auto", padding: "36px 24px 64px" }}>
+    <div style={{ maxWidth: 1024, margin: "0 auto", padding: "36px 24px 56px" }}>
       <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: sc.headingColor, fontFamily: sc.fontFamily, margin: "0 0 28px" }}>
         {page.title}
       </h1>
