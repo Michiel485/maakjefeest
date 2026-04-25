@@ -34,7 +34,7 @@ export default async function EventLayout({
     <div style={{ minHeight: "100vh", backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
       {sc.fontImport && <style>{sc.fontImport}</style>}
 
-      {/* Nav — logo links, links direct ernaast */}
+      {/* Nav */}
       <header style={{
         position: "sticky",
         top: 0,
@@ -44,19 +44,19 @@ export default async function EventLayout({
         boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
       }}>
         <div style={{ maxWidth: 960, margin: "0 auto", padding: "12px 20px", display: "flex", alignItems: "center", gap: 4 }}>
-          {/* Logo */}
+          {/* Logo — linkt naar home */}
           <a
-            href={`/events/${slug}`}
+            href="/"
             style={{ fontSize: "0.9375rem", fontWeight: 800, letterSpacing: "-0.02em", color: sc.accent, fontFamily: sc.fontFamily, textDecoration: "none", flexShrink: 0, marginRight: 8, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
           >
             {event.title}
           </a>
 
-          {/* Paginalinks als anchor links */}
+          {/* Paginalinks — echte URLs via subdomain rewrites */}
           {pageList.map((page) => (
             <a
               key={page.type}
-              href={`#${page.type}`}
+              href={page.type === "home" ? "/" : `/${page.type}`}
               style={{ fontSize: "0.75rem", fontWeight: 600, color: sc.navText, padding: "6px 10px", borderRadius: 8, textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}
             >
               {page.title}
