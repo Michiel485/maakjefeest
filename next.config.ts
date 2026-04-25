@@ -12,13 +12,17 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return {
       beforeFiles: [
-        // Passthrough: prevent /_next/ static assets from being caught by the
-        // subdomain rewrite below (they'd resolve to a non-existent path → 404).
+        // 1. Keiharde passthrough voor Next.js assets (CSS, JS, media)
         {
           source: '/_next/:path*',
           destination: '/_next/:path*',
         },
-        // Subdomain rewrite: michiel.maakjefeest.nl/:path* → /events/michiel/:path*
+        // 2. Optioneel: passthrough voor public map bestanden (zoals favicon.ico)
+        {
+          source: '/favicon.ico',
+          destination: '/favicon.ico',
+        },
+        // 3. De daadwerkelijke subdomein routing
         {
           source: '/:path*',
           has: [
