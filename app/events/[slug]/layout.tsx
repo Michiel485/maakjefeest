@@ -32,33 +32,24 @@ export default async function EventLayout({
   const pageList = pages ?? []
 
   return (
-    // Viewport — neutral bg fills the whole screen behind the card
-    <div style={{ minHeight: "100vh", backgroundColor: "#F5F4F2", fontFamily: sc.fontFamily }}>
+    <div className="min-h-screen bg-slate-50 sm:py-12" style={{ fontFamily: sc.fontFamily }}>
       {sc.fontImport && <style>{sc.fontImport}</style>}
 
-      {/* Card — floating centered block on desktop, fullscreen on mobile */}
-      <div
-        className="max-w-4xl mx-auto flex flex-col overflow-hidden sm:my-10 sm:rounded-2xl sm:shadow-2xl"
-        style={{ minHeight: "100vh", backgroundColor: sc.navBg }}
-      >
+      <div className="max-w-4xl mx-auto bg-white sm:shadow-2xl sm:rounded-2xl overflow-hidden min-h-[85vh] flex flex-col">
+
         <EventNav title={event.title} pages={pageList} sc={sc} />
 
-        <main style={{ flex: 1 }}>
+        <main className="flex-grow">
           {children}
         </main>
 
-        <footer style={{
-          borderTop: `1px solid ${sc.accent}20`,
-          padding: "20px 32px",
-          textAlign: "center",
-          fontSize: "0.75rem",
-          color: sc.bodyText,
-        }}>
+        <footer className="py-6 text-center text-sm" style={{ color: sc.bodyText, borderTop: `1px solid ${sc.accent}15` }}>
           Gemaakt met{" "}
           <a href="https://maakjefeest.nl" style={{ fontWeight: 600, color: sc.accent, textDecoration: "none" }}>
             maakjefeest.nl
           </a>
         </footer>
+
       </div>
     </div>
   )

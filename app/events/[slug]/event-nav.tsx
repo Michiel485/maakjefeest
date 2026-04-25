@@ -33,65 +33,57 @@ export default function EventNav({
   }
 
   return (
-    <header style={{
-      position: "sticky",
-      top: 0,
-      zIndex: 30,
-      backgroundColor: sc.navBg,
-      borderBottom: `1px solid ${sc.accent}22`,
-      boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-    }}>
-      <div style={{
-        padding: "14px 32px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-      }}>
-        {/* Logo — left */}
-        <a
-          href="/"
-          style={{
-            fontSize: "0.9375rem",
-            fontWeight: 800,
-            letterSpacing: "-0.02em",
-            color: sc.accent,
-            fontFamily: sc.fontFamily,
-            textDecoration: "none",
-            flexShrink: 0,
-            maxWidth: 200,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {title}
-        </a>
+    <nav
+      className="flex justify-between items-center px-8 py-5 sticky top-0 z-30"
+      style={{
+        backgroundColor: sc.navBg,
+        borderBottom: `1px solid ${sc.accent}20`,
+        fontFamily: sc.fontFamily,
+      }}
+    >
+      {/* Logo — left */}
+      <a
+        href="/"
+        style={{
+          fontSize: "0.9375rem",
+          fontWeight: 800,
+          letterSpacing: "-0.02em",
+          color: sc.accent,
+          textDecoration: "none",
+          flexShrink: 0,
+          maxWidth: 200,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {title}
+      </a>
 
-        {/* Nav links — right */}
-        <nav style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          {pages.map((page) => {
-            const active = isActive(page.type)
-            return (
-              <a
-                key={page.type}
-                href={page.type === "home" ? "/" : `/${page.type}`}
-                style={{
-                  fontSize: "0.75rem",
-                  fontWeight: active ? 700 : 600,
-                  color: active ? sc.accent : sc.navText,
-                  padding: "5px 10px",
-                  borderRadius: 8,
-                  textDecoration: "none",
-                  whiteSpace: "nowrap",
-                  backgroundColor: active ? `${sc.accent}14` : "transparent",
-                }}
-              >
-                {page.title}
-              </a>
-            )
-          })}
-        </nav>
+      {/* Links — right, gap-8 as requested */}
+      <div className="flex items-center gap-8">
+        {pages.map((page) => {
+          const active = isActive(page.type)
+          return (
+            <a
+              key={page.type}
+              href={page.type === "home" ? "/" : `/${page.type}`}
+              style={{
+                fontSize: "0.8125rem",
+                fontWeight: active ? 700 : 500,
+                color: active ? sc.accent : sc.navText,
+                padding: "4px 10px",
+                borderRadius: 8,
+                textDecoration: "none",
+                whiteSpace: "nowrap",
+                backgroundColor: active ? `${sc.accent}14` : "transparent",
+              }}
+            >
+              {page.title}
+            </a>
+          )
+        })}
       </div>
-    </header>
+    </nav>
   )
 }

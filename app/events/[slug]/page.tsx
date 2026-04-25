@@ -18,13 +18,9 @@ export default async function EventHomePage({
 
   if (!event) {
     return (
-      <div style={{ padding: "80px 32px", textAlign: "center" }}>
-        <h1 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#111", marginBottom: 8 }}>
-          Pagina niet gevonden
-        </h1>
-        <p style={{ color: "#6b7280", fontSize: "0.875rem" }}>
-          Deze eventwebsite bestaat niet of is nog niet gepubliceerd.
-        </p>
+      <div className="py-20 px-8 text-center">
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Pagina niet gevonden</h1>
+        <p className="text-sm text-gray-500">Deze eventwebsite bestaat niet of is nog niet gepubliceerd.</p>
       </div>
     )
   }
@@ -48,74 +44,59 @@ export default async function EventHomePage({
     <>
       {/* ── Hero — fills the card width ── */}
       <section
-        style={{
-          position: "relative",
-          overflow: "hidden",
-          textAlign: "center",
-          ...(hasPhoto
+        className="w-full py-16 px-8 text-center relative overflow-hidden"
+        style={
+          hasPhoto
             ? {
                 backgroundImage: `url(${event.hero_image_url})`,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
               }
-            : { background: sc.heroGradient }),
-        }}
+            : { background: sc.heroGradient }
+        }
       >
         {hasPhoto && (
-          <div style={{ position: "absolute", inset: 0, backgroundColor: sc.accent, opacity: 0.45 }} />
+          <div className="absolute inset-0" style={{ backgroundColor: sc.accent, opacity: 0.45 }} />
         )}
 
-        <div style={{ position: "relative", zIndex: 10, padding: "64px 32px 72px" }}>
-          <span style={{
-            display: "inline-block",
-            fontSize: "0.6875rem",
-            fontWeight: 700,
-            textTransform: "uppercase" as const,
-            letterSpacing: "0.1em",
-            marginBottom: 16,
-            padding: "4px 14px",
-            borderRadius: 999,
-            color: hasPhoto ? "#fff" : sc.labelColor,
-            backgroundColor: hasPhoto ? "rgba(255,255,255,0.2)" : `${sc.accent}15`,
-          }}>
+        <div className="relative z-10">
+          <span
+            className="inline-block text-xs font-bold uppercase tracking-widest mb-4 px-3 py-1 rounded-full"
+            style={{
+              color: hasPhoto ? "#fff" : sc.labelColor,
+              backgroundColor: hasPhoto ? "rgba(255,255,255,0.2)" : `${sc.accent}15`,
+            }}
+          >
             {TYPE_LABEL[event.type] ?? "Evenement"}
           </span>
 
-          <h1 style={{
-            fontSize: "clamp(2.25rem, 6vw, 3.5rem)",
-            fontWeight: 800,
-            lineHeight: 1.1,
-            margin: "0 0 12px",
-            color: hasPhoto ? "#fff" : sc.headingColor,
-            fontFamily: sc.fontFamily,
-          }}>
+          <h1
+            className="text-5xl font-extrabold leading-tight mb-3"
+            style={{ color: hasPhoto ? "#fff" : sc.headingColor, fontFamily: sc.fontFamily }}
+          >
             {event.title}
           </h1>
 
           {event.datum && (
-            <p style={{ fontSize: "0.9375rem", margin: "0 0 4px", color: hasPhoto ? "rgba(255,255,255,0.85)" : sc.bodyText }}>
+            <p className="text-sm mb-1" style={{ color: hasPhoto ? "rgba(255,255,255,0.85)" : sc.bodyText }}>
               {formatDate(event.datum)}
             </p>
           )}
 
           {event.locatie && (
-            <p style={{ fontSize: "0.9375rem", margin: "0 0 28px", color: hasPhoto ? "rgba(255,255,255,0.85)" : sc.bodyText }}>
+            <p className="text-sm mb-7" style={{ color: hasPhoto ? "rgba(255,255,255,0.85)" : sc.bodyText }}>
               {event.locatie}
             </p>
           )}
 
           <a
             href="/rsvp"
+            className="inline-block text-sm font-bold px-7 py-3 rounded-xl"
             style={{
-              display: "inline-block",
-              fontSize: "0.875rem",
-              fontWeight: 700,
-              padding: "11px 28px",
-              borderRadius: 12,
-              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
               backgroundColor: sc.buttonBg,
               color: sc.buttonText,
               textDecoration: "none",
+              boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
             }}
           >
             Meld je aan
@@ -125,24 +106,23 @@ export default async function EventHomePage({
 
       {/* ── Home content ── */}
       {(homeTitle || homeBody) && (
-        <div style={{ padding: "36px 32px 52px" }}>
+        <div className="px-8 py-10">
           {homeTitle && (
-            <p style={{
-              fontWeight: 700,
-              margin: "0 0 8px",
-              color: sc.headingColor,
-              fontFamily: sc.fontFamily,
-              textAlign: homeAlign as React.CSSProperties["textAlign"],
-              fontSize: "1rem",
-            }}>
+            <p
+              className="font-bold text-base mb-2"
+              style={{
+                color: sc.headingColor,
+                fontFamily: sc.fontFamily,
+                textAlign: homeAlign as React.CSSProperties["textAlign"],
+              }}
+            >
               {homeTitle}
             </p>
           )}
           {homeBody && (
             <div
+              className="text-[0.9375rem] leading-relaxed"
               style={{
-                fontSize: "0.9375rem",
-                lineHeight: 1.75,
                 color: sc.bodyText,
                 fontFamily: sc.fontFamily,
                 textAlign: homeAlign as React.CSSProperties["textAlign"],
