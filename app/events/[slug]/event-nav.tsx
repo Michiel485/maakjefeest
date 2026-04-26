@@ -24,24 +24,24 @@ export default function EventNav({
   sc: SC
 }) {
   const pathname = usePathname()
-  const segments = pathname.split("/").filter(Boolean)
-  const lastSegment = segments[segments.length - 1]
 
+  // With middleware, usePathname() returns the browser URL (/rsvp, /programma, /)
+  // NOT the internal rewritten path (/events/slug/rsvp), so comparison is straightforward.
   function isActive(type: string) {
-    if (type === "home") return segments.length <= 2 || lastSegment === segments[1]
-    return lastSegment === type
+    if (type === "home") return pathname === "/"
+    return pathname === `/${type}`
   }
 
   return (
     <nav
-      className="flex justify-between items-center px-8 py-5 sticky top-0 z-30"
+      className="sticky top-0 z-50 flex items-center gap-10 px-8 py-4 border-b backdrop-blur-sm"
       style={{
-        backgroundColor: sc.navBg,
-        borderBottom: `1px solid ${sc.accent}20`,
+        backgroundColor: `${sc.navBg}f2`,
+        borderColor: `${sc.accent}20`,
         fontFamily: sc.fontFamily,
       }}
     >
-      {/* Logo — left */}
+      {/* Logo */}
       <a
         href="/"
         style={{
@@ -60,8 +60,8 @@ export default function EventNav({
         {title}
       </a>
 
-      {/* Links — right, gap-8 as requested */}
-      <div className="flex items-center gap-8">
+      {/* Nav links — grouped next to logo, gap-1 between items */}
+      <div className="flex items-center gap-1">
         {pages.map((page) => {
           const active = isActive(page.type)
           return (
@@ -72,11 +72,11 @@ export default function EventNav({
                 fontSize: "0.8125rem",
                 fontWeight: active ? 700 : 500,
                 color: active ? sc.accent : sc.navText,
-                padding: "4px 10px",
+                padding: "5px 12px",
                 borderRadius: 8,
                 textDecoration: "none",
                 whiteSpace: "nowrap",
-                backgroundColor: active ? `${sc.accent}14` : "transparent",
+                backgroundColor: active ? `${sc.accent}15` : "transparent",
               }}
             >
               {page.title}
