@@ -6,6 +6,7 @@ import Link from "next/link"
 import EventHomePreview from "@/components/EventHomePreview"
 import EventMastersPreview from "@/components/EventMastersPreview"
 import { formatDate } from "@/lib/event-styles"
+import { createClient } from "@/lib/supabase"
 
 type EventType = "bruiloft" | "verjaardag" | "evenement"
 type PageId = "home" | "programma" | "rsvp" | "praktisch" | "wishlist" | "fotos" | "ceremoniemeesters"
@@ -48,6 +49,24 @@ interface PraktischItem { label: string; value: string }
 
 type ContentMap = Partial<Record<PageId, Record<string, unknown>>>
 type StyleConfig = typeof STYLE_CONFIG[Style]
+
+const UPLOAD_MIME: Record<string, string> = {
+  jpg: "image/jpeg", jpeg: "image/jpeg",
+  png: "image/png", webp: "image/webp", gif: "image/gif",
+}
+
+async function uploadToStorage(file: File, bucket: string): Promise<string> {
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg"
+  const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+  const contentType = file.type || UPLOAD_MIME[ext] || "image/jpeg"
+  const supabase = createClient()
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .upload(filename, file, { contentType, upsert: true })
+  if (error || !data?.path) throw new Error(error?.message ?? "Upload mislukt")
+  const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(data.path)
+  return urlData.publicUrl
+}
 
 const STYLES: { id: Style; label: string; sub: string; dot: string; border: string; active: string }[] = [
   { id: "roze",  label: "Feestelijk Roze",   sub: "Roze accenten, modern",  dot: "bg-rose-400",  border: "border-rose-300",  active: "ring-rose-400"  },
@@ -252,16 +271,7 @@ export default function BouwenPage() {
       const activePages = PAGES.filter((p) => active[p.id]).map((p) => p.id)
       let uploadedHeroUrl: string | null = null
       if (heroFile) {
-        const fd = new FormData()
-        fd.append("file", heroFile)
-        const uploadRes = await fetch("/api/upload-hero", { method: "POST", body: fd })
-        if (!uploadRes.ok) {
-          const errJson = await uploadRes.json().catch(() => ({}))
-          throw new Error(errJson.error ?? "Headerfoto upload mislukt — probeer het opnieuw")
-        }
-        const { url } = await uploadRes.json()
-        if (!url) throw new Error("Upload geslaagd maar geen URL ontvangen")
-        uploadedHeroUrl = url
+        uploadedHeroUrl = await uploadToStorage(heroFile, "hero-images")
       } else if (heroImageUrl && !heroImageUrl.startsWith("blob:")) {
         uploadedHeroUrl = heroImageUrl
       }
@@ -270,13 +280,10 @@ export default function BouwenPage() {
       for (let i = 0; i < 2; i++) {
         const f = masterFiles[i as 0 | 1]
         if (f) {
-          const fd = new FormData()
-          fd.append("file", f)
-          const uploadRes = await fetch("/api/upload-hero", { method: "POST", body: fd })
-          if (uploadRes.ok) {
-            const { url } = await uploadRes.json()
+          try {
+            const url = await uploadToStorage(f, "hero-images")
             uploadedMasters[i] = { ...uploadedMasters[i], foto_url: url }
-          }
+          } catch { /* niet-kritiek: ceremoniemeester-foto overslaan bij fout */ }
         }
       }
 
