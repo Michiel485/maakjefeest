@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import EventHomePreview from "@/components/EventHomePreview"
 
 type EventType = "bruiloft" | "verjaardag" | "evenement"
 type PageId = "home" | "programma" | "rsvp" | "praktisch" | "wishlist" | "fotos"
@@ -124,8 +125,6 @@ export default function BouwenPage() {
   const [viewport, setViewport] = useState<Viewport>("desktop")
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [heroImageError, setHeroImageError] = useState<string | null>(null)
-  const [editingHeroField, setEditingHeroField] = useState<"naam" | "datum" | "locatie" | null>(null)
-  const [editingHomeContent, setEditingHomeContent] = useState(false)
   const [publishing, setPublishing] = useState(false)
   const [publishError, setPublishError] = useState<string | null>(null)
 
@@ -197,7 +196,7 @@ export default function BouwenPage() {
 
   function openEditor(id: PageId) {
     setPreviewPage(id)
-    setEditingPage(id)
+    if (id !== "home") setEditingPage(id)
   }
 
   async function handlePublish() {
@@ -438,370 +437,347 @@ export default function BouwenPage() {
             )}
           </div>
 
-          <div className="flex-1 overflow-y-auto p-3">
-            {/* ── Editor panel ── */}
-            {editingPage && (
-              <div className="max-w-2xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden">
-                <div className="px-8 py-6">
-                  <h3 className="text-base font-bold text-gray-900 mb-5">
-                    {PAGES.find(p => p.id === editingPage)?.label}
-                  </h3>
-                  <Editor
-                    pageId={editingPage}
-                    content={content[editingPage] ?? {}}
-                    onChange={(val) => updateContent(editingPage, val)}
-                  />
-                </div>
-              </div>
-            )}
+          {/* ── Home: Controls | Canvas ── */}
+          {previewPage === "home" && !editingPage ? (
+            <div className="flex flex-1 min-h-0 overflow-hidden">
 
-            {/* ── Preview ── */}
-            {!editingPage && (
-              <div className={`mx-auto rounded-3xl shadow-xl overflow-hidden min-h-[500px] transition-all duration-300 ${
-                viewport === "mobiel"
-                  ? "w-[390px] ring-4 ring-gray-800 ring-offset-2 rounded-[2rem]"
-                  : "max-w-2xl"
-              }`} style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
+              {/* Left — Controls */}
+              <div className="w-[300px] flex-shrink-0 overflow-y-auto bg-white border-r border-gray-100 p-6 flex flex-col gap-6">
 
-                {sc.fontImport && <style>{sc.fontImport}</style>}
-
-                {/* Mock browser chrome */}
-                <div className="bg-gray-50 border-b border-gray-200 px-4 py-2 flex items-center gap-2">
-                  <div className="flex gap-1.5 flex-shrink-0">
-                    <span className="w-2 h-2 rounded-full bg-red-400" />
-                    <span className="w-2 h-2 rounded-full bg-amber-400" />
-                    <span className="w-2 h-2 rounded-full bg-green-400" />
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Event</p>
+                  <div className="flex flex-col gap-3">
+                    <label className="flex flex-col gap-1.5">
+                      <span className="text-xs font-semibold text-gray-600">Naam evenement</span>
+                      <input
+                        type="text"
+                        value={draft?.naam ?? ""}
+                        onChange={(e) => updateDraft({ naam: e.target.value })}
+                        placeholder="Bijv. Bruiloft Michiel & Lisa"
+                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1.5">
+                      <span className="text-xs font-semibold text-gray-600">Datum</span>
+                      <input
+                        type="date"
+                        value={draft?.datum ?? ""}
+                        onChange={(e) => updateDraft({ datum: e.target.value })}
+                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1.5">
+                      <span className="text-xs font-semibold text-gray-600">Locatie</span>
+                      <input
+                        type="text"
+                        value={draft?.locatie ?? ""}
+                        onChange={(e) => updateDraft({ locatie: e.target.value })}
+                        placeholder="Bijv. Kasteel de Haar, Utrecht"
+                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                      />
+                    </label>
                   </div>
-                  <div className="flex-1 bg-white rounded-md border border-gray-200 px-3 py-1 text-xs text-gray-400">
-                    jouwfeest.maakjefeest.nl
-                  </div>
                 </div>
 
-                {/* Mock site nav */}
-                <nav className="relative px-5 py-3 border-b flex items-center" style={{ backgroundColor: sc.navBg, borderColor: `${sc.accent}22` }}>
-                  <span className="text-sm font-bold mr-4 flex-shrink-0" style={{ color: sc.accent, fontFamily: sc.fontFamily }}>{eventName}</span>
-                  {viewport === "mobiel" ? (
-                    <div className="relative ml-auto">
-                      <button
-                        onClick={() => setMobileNavOpen((v) => !v)}
-                        className="p-1.5 rounded-lg"
-                        style={{ color: sc.navText }}
-                      >
-                        {mobileNavOpen ? (
-                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        ) : (
-                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                          </svg>
-                        )}
-                      </button>
-                      {mobileNavOpen && (
-                        <>
-                          <div className="fixed inset-0 z-10" onClick={() => setMobileNavOpen(false)} />
-                          <div className="absolute right-0 top-full mt-1 z-20 rounded-xl shadow-lg border overflow-hidden min-w-[140px]" style={{ backgroundColor: sc.navBg, borderColor: `${sc.accent}22` }}>
-                            {activePagesOrdered.map((page) => (
-                              <button
-                                key={page.id}
-                                onClick={() => { setPreviewPage(page.id); setMobileNavOpen(false) }}
-                                className="w-full text-left px-4 py-2.5 text-sm font-medium"
-                                style={previewPage === page.id ? { color: sc.accent, backgroundColor: `${sc.accent}12` } : { color: sc.navText }}
-                              >
-                                {page.label}
-                              </button>
-                            ))}
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-0">
-                      {activePagesOrdered.map((page) => (
-                        <button
-                          key={page.id}
-                          onClick={() => setPreviewPage(page.id)}
-                          className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors flex-shrink-0"
-                          style={previewPage === page.id ? { color: sc.accent, backgroundColor: `${sc.accent}15` } : { color: sc.navText }}
-                        >
-                          {page.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </nav>
+                <div className="border-t border-gray-100" />
 
-                {/* ── Home ── */}
-                {previewPage === "home" && (
-                  <div>
-                    {/* Hero — background via CSS backgroundImage */}
-                    <div
-                      className="relative text-center overflow-hidden"
-                      style={{
-                        minHeight: "220px",
-                        ...(heroImageUrl
-                          ? { backgroundImage: `url(${heroImageUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
-                          : { background: sc.heroGradient }
-                        ),
-                      }}
-                    >
-                      {/* Colour overlay on top of photo */}
-                      {heroImageUrl && heroOverlay && (
-                        <div className="absolute inset-0" style={{ backgroundColor: sc.accent, opacity: 0.45 }} />
-                      )}
-
-                      {/* Overlay toggle */}
-                      {heroImageUrl && (
-                        <div className="absolute top-2 left-2 z-20 flex items-center gap-1.5 bg-white/80 backdrop-blur-sm rounded-lg px-2 py-1 shadow-sm">
-                          <span className="text-[10px] font-semibold text-gray-600">Overlay</span>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Headerfoto</p>
+                  {heroImageUrl ? (
+                    <div className="flex flex-col gap-3">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={heroImageUrl} alt="" className="w-full h-24 object-cover rounded-xl" />
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-semibold text-gray-600">Kleur overlay</span>
                           <button
                             onClick={() => updateDraft({ heroOverlay: !heroOverlay })}
-                            className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${heroOverlay ? "bg-pink-400" : "bg-gray-300"}`}
+                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${heroOverlay ? "bg-pink-400" : "bg-gray-200"}`}
                           >
-                            <span className={`absolute h-3 w-3 rounded-full bg-white transition-transform shadow-sm ${heroOverlay ? "translate-x-3.5" : "translate-x-0.5"}`} />
+                            <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${heroOverlay ? "translate-x-4" : "translate-x-0.5"}`} />
                           </button>
                         </div>
-                      )}
-
-                      {/* Remove photo */}
-                      {heroImageUrl && (
                         <button
                           onClick={() => { setHeroImageUrl(null); setHeroFile(null) }}
-                          className="absolute top-2 right-2 z-20 flex items-center gap-1 text-xs font-semibold bg-white/80 backdrop-blur-sm rounded-lg px-2 py-1 text-gray-600 hover:text-red-500 transition-colors shadow-sm"
+                          className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors"
                         >
-                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                          </svg>
                           Verwijderen
                         </button>
-                      )}
-
-                      {/* Hero content */}
-                      <div className="relative z-10 px-8 py-12">
-                        <p
-                          className="text-xs font-bold uppercase tracking-widest mb-3"
-                          style={{ color: heroImageUrl && heroOverlay ? "#fff" : sc.labelColor, fontFamily: sc.fontFamily }}
-                        >{typeLabel}</p>
-
-                        {/* Naam — textarea for multi-line support */}
-                        {editingHeroField === "naam" ? (
-                          <textarea
-                            autoFocus
-                            rows={2}
-                            className="text-2xl font-extrabold text-center bg-transparent border-b-2 outline-none w-full mb-2 pb-0.5 resize-none"
-                            style={{ color: sc.headingColor, fontFamily: sc.fontFamily, borderColor: sc.accent }}
-                            value={draft?.naam ?? ""}
-                            onChange={(e) => updateDraft({ naam: e.target.value })}
-                            onBlur={() => setEditingHeroField(null)}
-                          />
-                        ) : (
-                          <h1
-                            className="text-2xl font-extrabold mb-2 cursor-text hover:opacity-75 transition-opacity"
-                            title="Klik om te bewerken"
-                            style={{
-                              color: heroImageUrl && heroOverlay ? "#fff" : sc.headingColor,
-                              fontFamily: sc.fontFamily,
-                              whiteSpace: "pre-line",
-                            }}
-                            onClick={() => setEditingHeroField("naam")}
-                          >{eventName}</h1>
-                        )}
-
-                        {/* Datum */}
-                        {editingHeroField === "datum" ? (
-                          <input
-                            autoFocus
-                            type="date"
-                            className="text-sm text-center bg-transparent border-b outline-none mb-1 pb-0.5"
-                            style={{ color: sc.bodyText, borderColor: sc.accent }}
-                            value={draft?.datum ?? ""}
-                            onChange={(e) => updateDraft({ datum: e.target.value })}
-                            onBlur={() => setEditingHeroField(null)}
-                          />
-                        ) : (
-                          <p
-                            className="text-sm mb-1 cursor-text hover:opacity-75 transition-opacity"
-                            title="Klik om te bewerken"
-                            style={{ color: heroImageUrl && heroOverlay ? "rgba(255,255,255,0.85)" : sc.bodyText }}
-                            onClick={() => setEditingHeroField("datum")}
-                          >{eventDate}</p>
-                        )}
-
-                        {/* Locatie */}
-                        {editingHeroField === "locatie" ? (
-                          <input
-                            autoFocus
-                            className="text-sm text-center bg-transparent border-b outline-none pb-0.5"
-                            style={{ color: sc.bodyText, borderColor: sc.accent }}
-                            value={draft?.locatie ?? ""}
-                            onChange={(e) => updateDraft({ locatie: e.target.value })}
-                            onBlur={() => setEditingHeroField(null)}
-                            onKeyDown={(e) => { if (e.key === "Enter") setEditingHeroField(null) }}
-                          />
-                        ) : (
-                          <p
-                            className="text-sm cursor-text hover:opacity-75 transition-opacity"
-                            title="Klik om te bewerken"
-                            style={{ color: heroImageUrl && heroOverlay ? "rgba(255,255,255,0.85)" : sc.bodyText }}
-                            onClick={() => setEditingHeroField("locatie")}
-                          >{eventLocatie || <span className="opacity-40">Locatie toevoegen</span>}</p>
-                        )}
-
-                        <div
-                          className="mt-5 inline-flex items-center gap-2 text-sm font-bold px-6 py-2.5 rounded-xl"
-                          style={{ backgroundColor: sc.buttonBg, color: sc.buttonText }}
-                        >Meld je aan</div>
                       </div>
+                    </div>
+                  ) : (
+                    <div>
+                      {heroImageError && <p className="text-xs text-red-500 mb-2 leading-snug">{heroImageError}</p>}
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-gray-200 rounded-xl py-5 text-gray-400 hover:border-rose-300 hover:text-rose-500 transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        Foto uploaden
+                      </button>
+                    </div>
+                  )}
+                  <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={handleImageUpload} />
+                </div>
 
-                      {/* Photo upload button + error */}
-                      {!heroImageUrl && (
-                        <div className="absolute bottom-3 right-3 z-20 flex flex-col items-end gap-1.5">
-                          {heroImageError && (
-                            <p className="text-[10px] font-semibold bg-white/90 text-red-500 rounded-lg px-2.5 py-1.5 shadow-sm max-w-[200px] text-right leading-snug">
-                              {heroImageError}
-                            </p>
-                          )}
+                <div className="border-t border-gray-100" />
+
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Welkomstbericht</p>
+                  <div className="flex flex-col gap-3">
+                    <label className="flex flex-col gap-1.5">
+                      <span className="text-xs font-semibold text-gray-600">Titel</span>
+                      <input
+                        type="text"
+                        value={homeContent.title}
+                        onChange={(e) => updateDraft({ homeContent: { ...homeContent, title: e.target.value } })}
+                        placeholder="Optionele titel"
+                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1.5">
+                      <span className="text-xs font-semibold text-gray-600">Tekst</span>
+                      <textarea
+                        rows={5}
+                        value={homeContent.body}
+                        onChange={(e) => updateDraft({ homeContent: { ...homeContent, body: e.target.value } })}
+                        placeholder="Schrijf een welkomstbericht voor je gasten..."
+                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
+                      />
+                    </label>
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-xs font-semibold text-gray-600">Uitlijning</span>
+                      <div className="flex gap-1.5">
+                        {(["left", "center", "right"] as const).map((a) => (
                           <button
-                            onClick={() => fileInputRef.current?.click()}
-                            className="flex items-center gap-1.5 text-xs font-semibold bg-white/80 backdrop-blur-sm rounded-lg px-3 py-1.5 text-gray-600 hover:bg-white transition-colors shadow-sm"
+                            key={a}
+                            onClick={() => updateDraft({ homeContent: { ...homeContent, align: a } })}
+                            className={`flex-1 flex items-center justify-center py-2 rounded-lg border transition-all ${homeContent.align === a ? "border-rose-300 bg-rose-50 text-rose-600" : "border-gray-200 text-gray-400 hover:border-gray-300"}`}
                           >
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            Foto toevoegen
+                            {a === "left" && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h10M4 18h12" /></svg>}
+                            {a === "center" && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M7 12h10M6 18h12" /></svg>}
+                            {a === "right" && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M10 12h10M8 18h12" /></svg>}
                           </button>
-                        </div>
-                      )}
-                      <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={handleImageUpload} />
-                    </div>
-
-                    {/* Home content block */}
-                    <div className="px-8 py-6" style={{ backgroundColor: sc.navBg }}>
-                      {editingHomeContent ? (
-                        <HomeContentEditor
-                          sc={sc}
-                          homeContent={homeContent}
-                          onSave={(val) => updateDraft({ homeContent: val })}
-                          onClose={() => setEditingHomeContent(false)}
-                        />
-                      ) : (
-                        <div
-                          className="cursor-text min-h-[60px] rounded-xl transition-colors hover:bg-black/[0.02] px-2 py-2 -mx-2 -my-2"
-                          onClick={() => setEditingHomeContent(true)}
-                        >
-                          {homeContent.title && (
-                            <p
-                              className="font-bold mb-2"
-                              style={{ color: sc.headingColor, fontFamily: sc.fontFamily, textAlign: homeContent.align, fontSize: "1rem" }}
-                            >{homeContent.title}</p>
-                          )}
-                          {homeContent.body ? (
-                            <div
-                              className="text-sm leading-relaxed"
-                              style={{ color: sc.bodyText, fontFamily: sc.fontFamily, textAlign: homeContent.align }}
-                              dangerouslySetInnerHTML={{ __html: homeContent.body }}
-                            />
-                          ) : !homeContent.title ? (
-                            <p className="text-sm italic select-none" style={{ color: `${sc.accent}55` }}>
-                              Klik om een welkomstbericht toe te voegen...
-                            </p>
-                          ) : null}
-                        </div>
-                      )}
+                        ))}
+                      </div>
                     </div>
                   </div>
-                )}
+                </div>
 
-                {/* Programma */}
-                {previewPage === "programma" && (
-                  <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
-                    <h2 className="text-lg font-extrabold mb-6" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>Programma</h2>
-                    {programmaItems.length > 0
-                      ? programmaItems.map((item, i) => (
-                          <div key={i} className="flex gap-4 mb-4">
-                            <span className="text-xs font-bold w-10 flex-shrink-0 pt-0.5" style={{ color: sc.labelColor }}>{item.time}</span>
-                            <p className="text-sm" style={{ color: sc.bodyText }}>{item.description}</p>
-                          </div>
-                        ))
-                      : [["14:00", "Aankomst gasten"], ["15:00", "Ceremonie"], ["17:00", "Borrel"]].map(([t, d]) => (
-                          <div key={t} className="flex gap-4 mb-4 opacity-30">
-                            <span className="text-xs font-bold w-10 flex-shrink-0 pt-0.5" style={{ color: sc.labelColor }}>{t}</span>
-                            <p className="text-sm italic" style={{ color: sc.bodyText }}>{d}</p>
-                          </div>
-                        ))
-                    }
-                  </div>
-                )}
-
-                {/* RSVP */}
-                {previewPage === "rsvp" && (
-                  <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
-                    <h2 className="text-lg font-extrabold mb-2" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>Aanmelden</h2>
-                    <p className="text-sm mb-6" style={{ color: sc.bodyText }}>Laat weten of je erbij bent!</p>
-                    <div className="flex flex-col gap-3">
-                      {["Naam", "E-mailadres", "Aantal personen"].map((f) => (
-                        <div key={f}>
-                          <div className="text-xs font-semibold mb-1" style={{ color: sc.navText }}>{f}</div>
-                          <div className="h-9 rounded-xl border" style={{ backgroundColor: `${sc.accent}08`, borderColor: `${sc.accent}25` }} />
-                        </div>
-                      ))}
-                      <div className="h-10 rounded-xl mt-2" style={{ backgroundColor: sc.buttonBg }} />
-                    </div>
-                  </div>
-                )}
-
-                {/* Praktisch */}
-                {previewPage === "praktisch" && (
-                  <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
-                    <h2 className="text-lg font-extrabold mb-6" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>Praktische info</h2>
-                    {praktischItems.length > 0
-                      ? praktischItems.map((item, i) => (
-                          <div key={i} className="mb-4">
-                            <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: sc.labelColor }}>{item.label}</p>
-                            <p className="text-sm font-semibold" style={{ color: sc.headingColor }}>{item.value}</p>
-                          </div>
-                        ))
-                      : [["Locatie", eventLocatie || "Nog in te vullen"], ["Datum", eventDate]].map(([k, v]) => (
-                          <div key={k} className="mb-4">
-                            <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: sc.labelColor }}>{k}</p>
-                            <p className="text-sm font-semibold" style={{ color: sc.headingColor }}>{v}</p>
-                          </div>
-                        ))
-                    }
-                  </div>
-                )}
-
-                {/* Wishlist */}
-                {previewPage === "wishlist" && (
-                  <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
-                    <h2 className="text-lg font-extrabold mb-6" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>Wishlist</h2>
-                    <div className="grid grid-cols-2 gap-3">
-                      {[1, 2, 3, 4].map((n) => (
-                        <div key={n} className="rounded-2xl border p-4" style={{ borderColor: `${sc.accent}20` }}>
-                          <div className="h-16 rounded-xl mb-3" style={{ backgroundColor: `${sc.accent}12` }} />
-                          <div className="h-2.5 rounded-full w-3/4 mb-1.5" style={{ backgroundColor: `${sc.accent}18` }} />
-                          <div className="h-2 rounded-full w-1/2" style={{ backgroundColor: `${sc.accent}10` }} />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Fotos */}
-                {previewPage === "fotos" && (
-                  <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
-                    <h2 className="text-lg font-extrabold mb-6" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>Foto&apos;s</h2>
-                    <div className="grid grid-cols-3 gap-2">
-                      {[1, 2, 3, 4, 5, 6].map((n) => (
-                        <div key={n} className="aspect-square rounded-xl" style={{ backgroundColor: `${sc.accent}12` }} />
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
-            )}
-          </div>
+
+              {/* Right — Canvas */}
+              <div className="flex-1 overflow-y-auto bg-gray-100 p-6">
+                <div className="max-w-xl mx-auto">
+                  <div className="rounded-2xl shadow-xl overflow-clip" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
+                    {sc.fontImport && <style>{sc.fontImport}</style>}
+                    <div className="bg-gray-50 border-b border-gray-200 px-4 py-2 flex items-center gap-2">
+                      <div className="flex gap-1.5 flex-shrink-0">
+                        <span className="w-2 h-2 rounded-full bg-red-400" />
+                        <span className="w-2 h-2 rounded-full bg-amber-400" />
+                        <span className="w-2 h-2 rounded-full bg-green-400" />
+                      </div>
+                      <div className="flex-1 bg-white rounded-md border border-gray-200 px-3 py-1 text-xs text-gray-400">
+                        jouwfeest.maakjefeest.nl
+                      </div>
+                    </div>
+                    <nav className="px-5 py-3 border-b flex items-center" style={{ backgroundColor: sc.navBg, borderColor: `${sc.accent}22` }}>
+                      <span className="text-sm font-bold mr-4 flex-shrink-0" style={{ color: sc.accent, fontFamily: sc.fontFamily }}>{eventName}</span>
+                      <div className="flex items-center">
+                        {activePagesOrdered.map((page) => (
+                          <span key={page.id} className="text-xs font-semibold px-2.5 py-1.5 rounded-lg" style={page.id === "home" ? { color: sc.accent, backgroundColor: `${sc.accent}15` } : { color: sc.navText }}>
+                            {page.label}
+                          </span>
+                        ))}
+                      </div>
+                    </nav>
+                    <EventHomePreview
+                      typeLabel={typeLabel}
+                      title={eventName}
+                      datumFormatted={draft?.datum ? formatDate(draft.datum) : null}
+                      locatie={eventLocatie || null}
+                      heroImageUrl={heroImageUrl}
+                      heroOverlay={heroOverlay}
+                      homeTitle={homeContent.title || null}
+                      homeBody={homeContent.body || null}
+                      homeAlign={homeContent.align}
+                      sc={sc}
+                    />
+                  </div>
+                  <p className="text-center text-xs text-gray-400 mt-3">Dit is precies hoe jouw site eruitziet</p>
+                </div>
+              </div>
+
+            </div>
+
+          ) : (
+
+            <div className="flex-1 overflow-y-auto p-3">
+              {/* ── Editor panel (niet-home pagina's) ── */}
+              {editingPage && (
+                <div className="max-w-2xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden">
+                  <div className="px-8 py-6">
+                    <h3 className="text-base font-bold text-gray-900 mb-5">
+                      {PAGES.find(p => p.id === editingPage)?.label}
+                    </h3>
+                    <Editor
+                      pageId={editingPage}
+                      content={content[editingPage] ?? {}}
+                      onChange={(val) => updateContent(editingPage, val)}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* ── Preview (niet-home pagina's) ── */}
+              {!editingPage && (
+                <div className={`mx-auto rounded-3xl shadow-xl overflow-hidden min-h-[500px] transition-all duration-300 ${
+                  viewport === "mobiel"
+                    ? "w-[390px] ring-4 ring-gray-800 ring-offset-2 rounded-[2rem]"
+                    : "max-w-2xl"
+                }`} style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
+
+                  {sc.fontImport && <style>{sc.fontImport}</style>}
+
+                  <div className="bg-gray-50 border-b border-gray-200 px-4 py-2 flex items-center gap-2">
+                    <div className="flex gap-1.5 flex-shrink-0">
+                      <span className="w-2 h-2 rounded-full bg-red-400" />
+                      <span className="w-2 h-2 rounded-full bg-amber-400" />
+                      <span className="w-2 h-2 rounded-full bg-green-400" />
+                    </div>
+                    <div className="flex-1 bg-white rounded-md border border-gray-200 px-3 py-1 text-xs text-gray-400">
+                      jouwfeest.maakjefeest.nl
+                    </div>
+                  </div>
+
+                  <nav className="relative px-5 py-3 border-b flex items-center" style={{ backgroundColor: sc.navBg, borderColor: `${sc.accent}22` }}>
+                    <span className="text-sm font-bold mr-4 flex-shrink-0" style={{ color: sc.accent, fontFamily: sc.fontFamily }}>{eventName}</span>
+                    {viewport === "mobiel" ? (
+                      <div className="relative ml-auto">
+                        <button onClick={() => setMobileNavOpen((v) => !v)} className="p-1.5 rounded-lg" style={{ color: sc.navText }}>
+                          {mobileNavOpen
+                            ? <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                            : <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                          }
+                        </button>
+                        {mobileNavOpen && (
+                          <>
+                            <div className="fixed inset-0 z-10" onClick={() => setMobileNavOpen(false)} />
+                            <div className="absolute right-0 top-full mt-1 z-20 rounded-xl shadow-lg border overflow-hidden min-w-[140px]" style={{ backgroundColor: sc.navBg, borderColor: `${sc.accent}22` }}>
+                              {activePagesOrdered.map((page) => (
+                                <button key={page.id} onClick={() => { setPreviewPage(page.id); setMobileNavOpen(false) }} className="w-full text-left px-4 py-2.5 text-sm font-medium" style={previewPage === page.id ? { color: sc.accent, backgroundColor: `${sc.accent}12` } : { color: sc.navText }}>
+                                  {page.label}
+                                </button>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-0">
+                        {activePagesOrdered.map((page) => (
+                          <button key={page.id} onClick={() => setPreviewPage(page.id)} className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors flex-shrink-0" style={previewPage === page.id ? { color: sc.accent, backgroundColor: `${sc.accent}15` } : { color: sc.navText }}>
+                            {page.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </nav>
+
+                  {/* Programma */}
+                  {previewPage === "programma" && (
+                    <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
+                      <h2 className="text-lg font-extrabold mb-6" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>Programma</h2>
+                      {programmaItems.length > 0
+                        ? programmaItems.map((item, i) => (
+                            <div key={i} className="flex gap-4 mb-4">
+                              <span className="text-xs font-bold w-10 flex-shrink-0 pt-0.5" style={{ color: sc.labelColor }}>{item.time}</span>
+                              <p className="text-sm" style={{ color: sc.bodyText }}>{item.description}</p>
+                            </div>
+                          ))
+                        : [["14:00", "Aankomst gasten"], ["15:00", "Ceremonie"], ["17:00", "Borrel"]].map(([t, d]) => (
+                            <div key={t} className="flex gap-4 mb-4 opacity-30">
+                              <span className="text-xs font-bold w-10 flex-shrink-0 pt-0.5" style={{ color: sc.labelColor }}>{t}</span>
+                              <p className="text-sm italic" style={{ color: sc.bodyText }}>{d}</p>
+                            </div>
+                          ))
+                      }
+                    </div>
+                  )}
+
+                  {/* RSVP */}
+                  {previewPage === "rsvp" && (
+                    <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
+                      <h2 className="text-lg font-extrabold mb-2" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>Aanmelden</h2>
+                      <p className="text-sm mb-6" style={{ color: sc.bodyText }}>Laat weten of je erbij bent!</p>
+                      <div className="flex flex-col gap-3">
+                        {["Naam", "E-mailadres", "Aantal personen"].map((f) => (
+                          <div key={f}>
+                            <div className="text-xs font-semibold mb-1" style={{ color: sc.navText }}>{f}</div>
+                            <div className="h-9 rounded-xl border" style={{ backgroundColor: `${sc.accent}08`, borderColor: `${sc.accent}25` }} />
+                          </div>
+                        ))}
+                        <div className="h-10 rounded-xl mt-2" style={{ backgroundColor: sc.buttonBg }} />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Praktisch */}
+                  {previewPage === "praktisch" && (
+                    <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
+                      <h2 className="text-lg font-extrabold mb-6" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>Praktische info</h2>
+                      {praktischItems.length > 0
+                        ? praktischItems.map((item, i) => (
+                            <div key={i} className="mb-4">
+                              <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: sc.labelColor }}>{item.label}</p>
+                              <p className="text-sm font-semibold" style={{ color: sc.headingColor }}>{item.value}</p>
+                            </div>
+                          ))
+                        : [["Locatie", eventLocatie || "Nog in te vullen"], ["Datum", eventDate]].map(([k, v]) => (
+                            <div key={k} className="mb-4">
+                              <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: sc.labelColor }}>{k}</p>
+                              <p className="text-sm font-semibold" style={{ color: sc.headingColor }}>{v}</p>
+                            </div>
+                          ))
+                      }
+                    </div>
+                  )}
+
+                  {/* Wishlist */}
+                  {previewPage === "wishlist" && (
+                    <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
+                      <h2 className="text-lg font-extrabold mb-6" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>Wishlist</h2>
+                      <div className="grid grid-cols-2 gap-3">
+                        {[1, 2, 3, 4].map((n) => (
+                          <div key={n} className="rounded-2xl border p-4" style={{ borderColor: `${sc.accent}20` }}>
+                            <div className="h-16 rounded-xl mb-3" style={{ backgroundColor: `${sc.accent}12` }} />
+                            <div className="h-2.5 rounded-full w-3/4 mb-1.5" style={{ backgroundColor: `${sc.accent}18` }} />
+                            <div className="h-2 rounded-full w-1/2" style={{ backgroundColor: `${sc.accent}10` }} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Fotos */}
+                  {previewPage === "fotos" && (
+                    <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
+                      <h2 className="text-lg font-extrabold mb-6" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>Foto&apos;s</h2>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[1, 2, 3, 4, 5, 6].map((n) => (
+                          <div key={n} className="aspect-square rounded-xl" style={{ backgroundColor: `${sc.accent}12` }} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+          )}
         </main>
       </div>
     </div>
