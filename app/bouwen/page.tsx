@@ -255,8 +255,12 @@ export default function BouwenPage() {
         const fd = new FormData()
         fd.append("file", heroFile)
         const uploadRes = await fetch("/api/upload-hero", { method: "POST", body: fd })
-        if (!uploadRes.ok) throw new Error("Foto upload mislukt — probeer het opnieuw")
+        if (!uploadRes.ok) {
+          const errJson = await uploadRes.json().catch(() => ({}))
+          throw new Error(errJson.error ?? "Headerfoto upload mislukt — probeer het opnieuw")
+        }
         const { url } = await uploadRes.json()
+        if (!url) throw new Error("Upload geslaagd maar geen URL ontvangen")
         uploadedHeroUrl = url
       } else if (heroImageUrl && !heroImageUrl.startsWith("blob:")) {
         uploadedHeroUrl = heroImageUrl
