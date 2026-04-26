@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import EventHomePreview from "@/components/EventHomePreview"
+import { formatDate } from "@/lib/event-styles"
 
 type EventType = "bruiloft" | "verjaardag" | "evenement"
 type PageId = "home" | "programma" | "rsvp" | "praktisch" | "wishlist" | "fotos"
@@ -101,11 +102,6 @@ const TYPE_LABEL: Record<EventType, string> = {
   bruiloft: "Bruiloft", verjaardag: "Verjaardag", evenement: "Evenement",
 }
 
-function formatDate(iso: string) {
-  if (!iso) return ""
-  return new Date(iso).toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })
-}
-
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function BouwenPage() {
@@ -125,6 +121,9 @@ export default function BouwenPage() {
   const [viewport, setViewport] = useState<Viewport>("desktop")
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [heroImageError, setHeroImageError] = useState<string | null>(null)
+  const [isEditingHome, setIsEditingHome] = useState(false)
+  const canvasContainerRef = useRef<HTMLDivElement>(null)
+  const [canvasScale, setCanvasScale] = useState(1)
   const [publishing, setPublishing] = useState(false)
   const [publishError, setPublishError] = useState<string | null>(null)
 
@@ -142,6 +141,26 @@ export default function BouwenPage() {
       if (saved) setContent(JSON.parse(saved))
     } catch {}
   }, [router])
+
+  useEffect(() => {
+    function measure() {
+      const el = canvasContainerRef.current
+      if (!el) return
+      setCanvasScale(Math.min(1, Math.max(0.4, (el.clientWidth - 48) / 1024)))
+    }
+    measure()
+    window.addEventListener("resize", measure)
+    return () => window.removeEventListener("resize", measure)
+  }, [])
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      const el = canvasContainerRef.current
+      if (!el) return
+      setCanvasScale(Math.min(1, Math.max(0.4, (el.clientWidth - 48) / 1024)))
+    })
+    return () => cancelAnimationFrame(id)
+  }, [isEditingHome])
 
   function updateDraft(fields: Partial<Draft>) {
     setDraft((prev) => {
@@ -360,7 +379,14 @@ export default function BouwenPage() {
                     {isOn && (
                       <div className="px-3 pb-2.5">
                         <button
-                          onClick={() => isEditing ? setEditingPage(null) : openEditor(page.id)}
+                          onClick={() => {
+                            if (page.id === "home") {
+                              setPreviewPage("home")
+                              setIsEditingHome(true)
+                            } else {
+                              isEditing ? setEditingPage(null) : openEditor(page.id)
+                            }
+                          }}
                           className={`w-full flex items-center justify-center gap-1.5 text-xs font-semibold py-1.5 rounded-lg transition-colors ${
                             isEditing
                               ? "bg-rose-100 text-rose-600"
@@ -441,7 +467,8 @@ export default function BouwenPage() {
           {previewPage === "home" && !editingPage ? (
             <div className="flex flex-1 min-h-0 overflow-hidden">
 
-              {/* Left — Controls */}
+              {/* Middle — Controls (inklapbaar) */}
+              {isEditingHome && (
               <div className="w-[300px] flex-shrink-0 overflow-y-auto bg-white border-r border-gray-100 p-6 flex flex-col gap-6">
 
                 <div>
@@ -567,47 +594,62 @@ export default function BouwenPage() {
                   </div>
                 </div>
 
-              </div>
+                <div className="border-t border-gray-100 pt-2">
+                  <button
+                    onClick={() => setIsEditingHome(false)}
+                    className="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold px-5 py-3 rounded-xl shadow-md shadow-emerald-100 hover:shadow-lg hover:-translate-y-0.5 transition-all"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Klaar
+                  </button>
+                </div>
 
-              {/* Right — Canvas */}
-              <div className="flex-1 overflow-y-auto bg-gray-100 p-6">
-                <div className="max-w-xl mx-auto">
-                  <div className="rounded-2xl shadow-xl overflow-clip" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
-                    {sc.fontImport && <style>{sc.fontImport}</style>}
-                    <div className="bg-gray-50 border-b border-gray-200 px-4 py-2 flex items-center gap-2">
-                      <div className="flex gap-1.5 flex-shrink-0">
-                        <span className="w-2 h-2 rounded-full bg-red-400" />
-                        <span className="w-2 h-2 rounded-full bg-amber-400" />
-                        <span className="w-2 h-2 rounded-full bg-green-400" />
+              </div>
+              )}
+
+              {/* Right — Canvas (Scaling Wrapper) */}
+              <div ref={canvasContainerRef} className="flex-1 overflow-y-auto bg-gray-100 p-6">
+                <div className="mx-auto" style={{ width: `${Math.round(1024 * canvasScale)}px` }}>
+                  <div style={{ width: 1024, transform: `scale(${canvasScale})`, transformOrigin: "top left" }}>
+                    <div className="rounded-2xl shadow-xl overflow-clip" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
+                      {sc.fontImport && <style>{sc.fontImport}</style>}
+                      <div className="bg-gray-50 border-b border-gray-200 px-4 py-2 flex items-center gap-2">
+                        <div className="flex gap-1.5 flex-shrink-0">
+                          <span className="w-2 h-2 rounded-full bg-red-400" />
+                          <span className="w-2 h-2 rounded-full bg-amber-400" />
+                          <span className="w-2 h-2 rounded-full bg-green-400" />
+                        </div>
+                        <div className="flex-1 bg-white rounded-md border border-gray-200 px-3 py-1 text-xs text-gray-400">
+                          jouwfeest.maakjefeest.nl
+                        </div>
                       </div>
-                      <div className="flex-1 bg-white rounded-md border border-gray-200 px-3 py-1 text-xs text-gray-400">
-                        jouwfeest.maakjefeest.nl
-                      </div>
+                      <nav className="px-5 py-3 border-b flex items-center" style={{ backgroundColor: sc.navBg, borderColor: `${sc.accent}22` }}>
+                        <span className="text-sm font-bold mr-4 flex-shrink-0" style={{ color: sc.accent, fontFamily: sc.fontFamily }}>{eventName}</span>
+                        <div className="flex items-center">
+                          {activePagesOrdered.map((page) => (
+                            <span key={page.id} className="text-xs font-semibold px-2.5 py-1.5 rounded-lg" style={page.id === "home" ? { color: sc.accent, backgroundColor: `${sc.accent}15` } : { color: sc.navText }}>
+                              {page.label}
+                            </span>
+                          ))}
+                        </div>
+                      </nav>
+                      <EventHomePreview
+                        typeLabel={typeLabel}
+                        title={eventName}
+                        datumFormatted={draft?.datum ? formatDate(draft.datum) : null}
+                        locatie={eventLocatie || null}
+                        heroImageUrl={heroImageUrl}
+                        heroOverlay={heroOverlay}
+                        homeTitle={homeContent.title || null}
+                        homeBody={homeContent.body || null}
+                        homeAlign={homeContent.align}
+                        sc={sc}
+                      />
                     </div>
-                    <nav className="px-5 py-3 border-b flex items-center" style={{ backgroundColor: sc.navBg, borderColor: `${sc.accent}22` }}>
-                      <span className="text-sm font-bold mr-4 flex-shrink-0" style={{ color: sc.accent, fontFamily: sc.fontFamily }}>{eventName}</span>
-                      <div className="flex items-center">
-                        {activePagesOrdered.map((page) => (
-                          <span key={page.id} className="text-xs font-semibold px-2.5 py-1.5 rounded-lg" style={page.id === "home" ? { color: sc.accent, backgroundColor: `${sc.accent}15` } : { color: sc.navText }}>
-                            {page.label}
-                          </span>
-                        ))}
-                      </div>
-                    </nav>
-                    <EventHomePreview
-                      typeLabel={typeLabel}
-                      title={eventName}
-                      datumFormatted={draft?.datum ? formatDate(draft.datum) : null}
-                      locatie={eventLocatie || null}
-                      heroImageUrl={heroImageUrl}
-                      heroOverlay={heroOverlay}
-                      homeTitle={homeContent.title || null}
-                      homeBody={homeContent.body || null}
-                      homeAlign={homeContent.align}
-                      sc={sc}
-                    />
+                    <p className="text-center text-xs text-gray-400 mt-3">Dit is precies hoe jouw site eruitziet</p>
                   </div>
-                  <p className="text-center text-xs text-gray-400 mt-3">Dit is precies hoe jouw site eruitziet</p>
                 </div>
               </div>
 

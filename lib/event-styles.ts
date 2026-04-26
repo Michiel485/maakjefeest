@@ -56,7 +56,6 @@ export function getStyleConfig(style: string): SC {
 export function formatDate(iso: string) {
   if (!iso) return ""
   return new Date(iso).toLocaleDateString("nl-NL", {
-    weekday: "long",
     day: "numeric",
     month: "long",
     year: "numeric",
