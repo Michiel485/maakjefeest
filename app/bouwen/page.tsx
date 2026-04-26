@@ -255,10 +255,11 @@ export default function BouwenPage() {
         const fd = new FormData()
         fd.append("file", heroFile)
         const uploadRes = await fetch("/api/upload-hero", { method: "POST", body: fd })
-        if (uploadRes.ok) {
-          const { url } = await uploadRes.json()
-          uploadedHeroUrl = url
-        }
+        if (!uploadRes.ok) throw new Error("Foto upload mislukt — probeer het opnieuw")
+        const { url } = await uploadRes.json()
+        uploadedHeroUrl = url
+      } else if (heroImageUrl && !heroImageUrl.startsWith("blob:")) {
+        uploadedHeroUrl = heroImageUrl
       }
 
       const uploadedMasters = [...mastersData] as typeof mastersData

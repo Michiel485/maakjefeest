@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import Stripe from "stripe"
+import { revalidatePath } from "next/cache"
 import { createServiceClient } from "@/lib/supabase"
 
 export const dynamic = "force-dynamic"
@@ -36,13 +37,19 @@ export async function POST(request: Request) {
 
     const supabase = createServiceClient()
 
-    await supabase
+    const { data: updatedEvent } = await supabase
       .from("events")
       .update({
         status: "published",
         stripe_payment_id: session.payment_intent as string,
       })
       .eq("id", event_id)
+      .select("slug")
+      .single()
+
+    if (updatedEvent?.slug) {
+      revalidatePath(`/events/${updatedEvent.slug}`, "layout")
+    }
   }
 
   return NextResponse.json({ received: true }, { status: 200 })
