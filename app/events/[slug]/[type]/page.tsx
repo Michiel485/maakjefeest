@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import { createServiceClient } from "@/lib/supabase"
 import { getStyleConfig, type SC } from "@/lib/event-styles"
 import RsvpForm from "../rsvp-form"
+import EventMastersPreview from "@/components/EventMastersPreview"
 
 interface Page {
   id: string
@@ -117,6 +118,17 @@ function PageContent({ page, sc }: { page: Page; sc: SC }) {
         ))}
       </div>
     )
+  }
+
+  if (page.type === "ceremoniemeesters") {
+    const rawMasters = Array.isArray(c.masters) ? (c.masters as { naam?: string; telefoon?: string; email?: string; foto_url?: string | null }[]) : []
+    const masters = rawMasters.map((m) => ({
+      naam: m.naam ?? "",
+      telefoon: m.telefoon ?? "",
+      email: m.email ?? "",
+      foto_url: m.foto_url ?? null,
+    }))
+    return <EventMastersPreview masters={masters} sc={sc} />
   }
 
   if (page.type === "fotos") {

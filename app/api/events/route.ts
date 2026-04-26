@@ -64,12 +64,13 @@ export async function POST(request: Request) {
   }
 
   const PAGE_TITLES: Record<string, string> = {
-    home:      "Home",
-    programma: "Programma",
-    rsvp:      "RSVP",
-    praktisch: "Praktisch",
-    wishlist:  "Wishlist",
-    fotos:     "Foto's",
+    home:               "Home",
+    programma:          "Programma",
+    rsvp:               "RSVP",
+    praktisch:          "Praktisch",
+    wishlist:           "Wishlist",
+    fotos:              "Foto's",
+    ceremoniemeesters:  "Ceremoniemeesters",
   }
 
   const pageList: string[] = Array.isArray(pages) && pages.length > 0

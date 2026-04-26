@@ -4,10 +4,11 @@ import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import EventHomePreview from "@/components/EventHomePreview"
+import EventMastersPreview from "@/components/EventMastersPreview"
 import { formatDate } from "@/lib/event-styles"
 
 type EventType = "bruiloft" | "verjaardag" | "evenement"
-type PageId = "home" | "programma" | "rsvp" | "praktisch" | "wishlist" | "fotos"
+type PageId = "home" | "programma" | "rsvp" | "praktisch" | "wishlist" | "fotos" | "ceremoniemeesters"
 type Style = "roze" | "ivoor" | "zand"
 type Viewport = "desktop" | "mobiel"
 type Align = "left" | "center" | "right"
@@ -16,6 +17,13 @@ interface HomeContent {
   title: string
   body: string   // HTML from contenteditable
   align: Align
+}
+
+interface MasterPerson {
+  naam: string
+  telefoon: string
+  email: string
+  foto_url: string | null
 }
 
 interface Draft {
@@ -90,13 +98,16 @@ const STYLE_CONFIG = {
 } as const
 
 const PAGES: PageConfig[] = [
-  { id: "home",      label: "Home",      toggleable: false },
-  { id: "programma", label: "Programma", toggleable: true  },
-  { id: "rsvp",      label: "RSVP",      toggleable: false },
-  { id: "praktisch", label: "Praktisch", toggleable: true  },
-  { id: "wishlist",  label: "Wishlist",  toggleable: true  },
-  { id: "fotos",     label: "Foto's",    toggleable: true  },
+  { id: "home",               label: "Home",               toggleable: false },
+  { id: "programma",          label: "Programma",          toggleable: true  },
+  { id: "rsvp",               label: "RSVP",               toggleable: false },
+  { id: "praktisch",          label: "Praktisch",          toggleable: true  },
+  { id: "wishlist",           label: "Wishlist",           toggleable: true  },
+  { id: "fotos",              label: "Foto's",             toggleable: true  },
+  { id: "ceremoniemeesters",  label: "Ceremoniemeesters",  toggleable: true  },
 ]
+
+const CONTROLS_PAGES = new Set<PageId>(["home", "ceremoniemeesters"])
 
 const TYPE_LABEL: Record<EventType, string> = {
   bruiloft: "Bruiloft", verjaardag: "Verjaardag", evenement: "Evenement",
@@ -112,7 +123,7 @@ export default function BouwenPage() {
   const [heroFile, setHeroFile] = useState<File | null>(null)
   const [draft, setDraft] = useState<Draft | null>(null)
   const [active, setActive] = useState<Record<PageId, boolean>>({
-    home: true, programma: true, rsvp: true, praktisch: false, wishlist: false, fotos: false,
+    home: true, programma: true, rsvp: true, praktisch: false, wishlist: false, fotos: false, ceremoniemeesters: false,
   })
   const [previewPage, setPreviewPage] = useState<PageId>("home")
   const [editingPage, setEditingPage] = useState<PageId | null>(null)
@@ -121,9 +132,13 @@ export default function BouwenPage() {
   const [viewport, setViewport] = useState<Viewport>("desktop")
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [heroImageError, setHeroImageError] = useState<string | null>(null)
-  const [isEditingHome, setIsEditingHome] = useState(false)
+  const [isEditingControls, setIsEditingControls] = useState(false)
   const canvasContainerRef = useRef<HTMLDivElement>(null)
   const [canvasScale, setCanvasScale] = useState(1)
+  const [masterPhotoUrls, setMasterPhotoUrls] = useState<[string | null, string | null]>([null, null])
+  const [masterFiles, setMasterFiles] = useState<[File | null, File | null]>([null, null])
+  const masterPhotoRef0 = useRef<HTMLInputElement>(null)
+  const masterPhotoRef1 = useRef<HTMLInputElement>(null)
   const [publishing, setPublishing] = useState(false)
   const [publishError, setPublishError] = useState<string | null>(null)
 
@@ -160,7 +175,7 @@ export default function BouwenPage() {
       setCanvasScale(Math.min(1, Math.max(0.4, (el.clientWidth - 48) / 1024)))
     })
     return () => cancelAnimationFrame(id)
-  }, [isEditingHome])
+  }, [isEditingControls])
 
   function updateDraft(fields: Partial<Draft>) {
     setDraft((prev) => {
@@ -213,9 +228,20 @@ export default function BouwenPage() {
     })
   }
 
+  function handleMasterPhotoUpload(e: React.ChangeEvent<HTMLInputElement>, index: 0 | 1) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const supported = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+    if (!supported.includes(file.type)) { e.target.value = ""; return }
+    const url = URL.createObjectURL(file)
+    setMasterFiles((prev) => { const next: [File | null, File | null] = [...prev] as [File | null, File | null]; next[index] = file; return next })
+    setMasterPhotoUrls((prev) => { const next: [string | null, string | null] = [...prev] as [string | null, string | null]; next[index] = url; return next })
+    e.target.value = ""
+  }
+
   function openEditor(id: PageId) {
     setPreviewPage(id)
-    if (id !== "home") setEditingPage(id)
+    if (!CONTROLS_PAGES.has(id)) setEditingPage(id)
   }
 
   async function handlePublish() {
@@ -224,16 +250,6 @@ export default function BouwenPage() {
     setPublishError(null)
     try {
       const activePages = PAGES.filter((p) => active[p.id]).map((p) => p.id)
-      const mergedContent: ContentMap = {
-        ...content,
-        home: {
-          ...(content.home ?? {}),
-          title: homeContent.title,
-          body: homeContent.body,
-          align: homeContent.align,
-        },
-      }
-
       let uploadedHeroUrl: string | null = null
       if (heroFile) {
         const fd = new FormData()
@@ -243,6 +259,31 @@ export default function BouwenPage() {
           const { url } = await uploadRes.json()
           uploadedHeroUrl = url
         }
+      }
+
+      const uploadedMasters = [...mastersData] as typeof mastersData
+      for (let i = 0; i < 2; i++) {
+        const f = masterFiles[i as 0 | 1]
+        if (f) {
+          const fd = new FormData()
+          fd.append("file", f)
+          const uploadRes = await fetch("/api/upload-hero", { method: "POST", body: fd })
+          if (uploadRes.ok) {
+            const { url } = await uploadRes.json()
+            uploadedMasters[i] = { ...uploadedMasters[i], foto_url: url }
+          }
+        }
+      }
+
+      const mergedContent: ContentMap = {
+        ...content,
+        home: {
+          ...(content.home ?? {}),
+          title: homeContent.title,
+          body: homeContent.body,
+          align: homeContent.align,
+        },
+        ceremoniemeesters: { masters: uploadedMasters },
       }
 
       const res = await fetch("/api/events", {
@@ -269,6 +310,17 @@ export default function BouwenPage() {
   const typeLabel = draft?.type ? TYPE_LABEL[draft.type] : "Evenement"
   const heroOverlay = draft?.heroOverlay ?? true
   const homeContent: HomeContent = draft?.homeContent ?? { title: "", body: "", align: "center" }
+
+  const emptyMaster: MasterPerson = { naam: "", telefoon: "", email: "", foto_url: null }
+  const rawMasters = (content.ceremoniemeesters?.masters as Partial<MasterPerson>[] | undefined) ?? []
+  const mastersData: [MasterPerson, MasterPerson] = [
+    { ...emptyMaster, ...rawMasters[0] },
+    { ...emptyMaster, ...rawMasters[1] },
+  ]
+  const mastersForPreview = [
+    { ...mastersData[0], foto_url: masterPhotoUrls[0] ?? mastersData[0].foto_url },
+    { ...mastersData[1], foto_url: masterPhotoUrls[1] ?? mastersData[1].foto_url },
+  ]
 
   const programmaItems = (content.programma?.items as ProgrammaItem[]) || []
   const praktischItems = (content.praktisch?.items as PraktischItem[]) || []
@@ -380,10 +432,11 @@ export default function BouwenPage() {
                       <div className="px-3 pb-2.5">
                         <button
                           onClick={() => {
-                            if (page.id === "home") {
-                              setPreviewPage("home")
-                              setIsEditingHome(true)
+                            if (CONTROLS_PAGES.has(page.id)) {
+                              setPreviewPage(page.id)
+                              setIsEditingControls(true)
                             } else {
+                              setIsEditingControls(false)
                               isEditing ? setEditingPage(null) : openEditor(page.id)
                             }
                           }}
@@ -463,140 +516,224 @@ export default function BouwenPage() {
             )}
           </div>
 
-          {/* ── Home: Controls | Canvas ── */}
-          {previewPage === "home" && !editingPage ? (
+          {/* ── Controls | Canvas (home + ceremoniemeesters) ── */}
+          {CONTROLS_PAGES.has(previewPage) && !editingPage ? (
             <div className="flex flex-1 min-h-0 overflow-hidden">
 
               {/* Middle — Controls (inklapbaar) */}
-              {isEditingHome && (
+              {isEditingControls && (
               <div className="w-[300px] flex-shrink-0 overflow-y-auto bg-white border-r border-gray-100 p-6 flex flex-col gap-6">
 
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Event</p>
-                  <div className="flex flex-col gap-3">
-                    <label className="flex flex-col gap-1.5">
-                      <span className="text-xs font-semibold text-gray-600">Naam evenement</span>
-                      <input
-                        type="text"
-                        value={draft?.naam ?? ""}
-                        onChange={(e) => updateDraft({ naam: e.target.value })}
-                        placeholder="Bijv. Bruiloft Michiel & Lisa"
-                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                      />
-                    </label>
-                    <label className="flex flex-col gap-1.5">
-                      <span className="text-xs font-semibold text-gray-600">Datum</span>
-                      <input
-                        type="date"
-                        value={draft?.datum ?? ""}
-                        onChange={(e) => updateDraft({ datum: e.target.value })}
-                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                      />
-                    </label>
-                    <label className="flex flex-col gap-1.5">
-                      <span className="text-xs font-semibold text-gray-600">Locatie</span>
-                      <input
-                        type="text"
-                        value={draft?.locatie ?? ""}
-                        onChange={(e) => updateDraft({ locatie: e.target.value })}
-                        placeholder="Bijv. Kasteel de Haar, Utrecht"
-                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                      />
-                    </label>
-                  </div>
-                </div>
-
-                <div className="border-t border-gray-100" />
-
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Headerfoto</p>
-                  {heroImageUrl ? (
+                {/* ── Home controls ── */}
+                {previewPage === "home" && (<>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Event</p>
                     <div className="flex flex-col gap-3">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={heroImageUrl} alt="" className="w-full h-24 object-cover rounded-xl" />
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-semibold text-gray-600">Kleur overlay</span>
+                      <label className="flex flex-col gap-1.5">
+                        <span className="text-xs font-semibold text-gray-600">Naam evenement</span>
+                        <input
+                          type="text"
+                          value={draft?.naam ?? ""}
+                          onChange={(e) => updateDraft({ naam: e.target.value })}
+                          placeholder="Bijv. Bruiloft Michiel & Lisa"
+                          className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                        />
+                      </label>
+                      <label className="flex flex-col gap-1.5">
+                        <span className="text-xs font-semibold text-gray-600">Datum</span>
+                        <input
+                          type="date"
+                          value={draft?.datum ?? ""}
+                          onChange={(e) => updateDraft({ datum: e.target.value })}
+                          className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                        />
+                      </label>
+                      <label className="flex flex-col gap-1.5">
+                        <span className="text-xs font-semibold text-gray-600">Locatie</span>
+                        <input
+                          type="text"
+                          value={draft?.locatie ?? ""}
+                          onChange={(e) => updateDraft({ locatie: e.target.value })}
+                          placeholder="Bijv. Kasteel de Haar, Utrecht"
+                          className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-gray-100" />
+
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Headerfoto</p>
+                    {heroImageUrl ? (
+                      <div className="flex flex-col gap-3">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={heroImageUrl} alt="" className="w-full h-24 object-cover rounded-xl" />
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-gray-600">Kleur overlay</span>
+                            <button
+                              onClick={() => updateDraft({ heroOverlay: !heroOverlay })}
+                              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${heroOverlay ? "bg-pink-400" : "bg-gray-200"}`}
+                            >
+                              <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${heroOverlay ? "translate-x-4" : "translate-x-0.5"}`} />
+                            </button>
+                          </div>
                           <button
-                            onClick={() => updateDraft({ heroOverlay: !heroOverlay })}
-                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${heroOverlay ? "bg-pink-400" : "bg-gray-200"}`}
+                            onClick={() => { setHeroImageUrl(null); setHeroFile(null) }}
+                            className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors"
                           >
-                            <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${heroOverlay ? "translate-x-4" : "translate-x-0.5"}`} />
+                            Verwijderen
                           </button>
                         </div>
+                      </div>
+                    ) : (
+                      <div>
+                        {heroImageError && <p className="text-xs text-red-500 mb-2 leading-snug">{heroImageError}</p>}
                         <button
-                          onClick={() => { setHeroImageUrl(null); setHeroFile(null) }}
-                          className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-gray-200 rounded-xl py-5 text-gray-400 hover:border-rose-300 hover:text-rose-500 transition-colors"
                         >
-                          Verwijderen
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          Foto uploaden
                         </button>
                       </div>
-                    </div>
-                  ) : (
-                    <div>
-                      {heroImageError && <p className="text-xs text-red-500 mb-2 leading-snug">{heroImageError}</p>}
-                      <button
-                        onClick={() => fileInputRef.current?.click()}
-                        className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-gray-200 rounded-xl py-5 text-gray-400 hover:border-rose-300 hover:text-rose-500 transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        Foto uploaden
-                      </button>
-                    </div>
-                  )}
-                  <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={handleImageUpload} />
-                </div>
+                    )}
+                    <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={handleImageUpload} />
+                  </div>
 
-                <div className="border-t border-gray-100" />
+                  <div className="border-t border-gray-100" />
 
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Welkomstbericht</p>
-                  <div className="flex flex-col gap-3">
-                    <label className="flex flex-col gap-1.5">
-                      <span className="text-xs font-semibold text-gray-600">Titel</span>
-                      <input
-                        type="text"
-                        value={homeContent.title}
-                        onChange={(e) => updateDraft({ homeContent: { ...homeContent, title: e.target.value } })}
-                        placeholder="Optionele titel"
-                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                      />
-                    </label>
-                    <label className="flex flex-col gap-1.5">
-                      <span className="text-xs font-semibold text-gray-600">Tekst</span>
-                      <textarea
-                        rows={5}
-                        value={homeContent.body}
-                        onChange={(e) => updateDraft({ homeContent: { ...homeContent, body: e.target.value } })}
-                        placeholder="Schrijf een welkomstbericht voor je gasten..."
-                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
-                      />
-                    </label>
-                    <div className="flex flex-col gap-1.5">
-                      <span className="text-xs font-semibold text-gray-600">Uitlijning</span>
-                      <div className="flex gap-1.5">
-                        {(["left", "center", "right"] as const).map((a) => (
-                          <button
-                            key={a}
-                            onClick={() => updateDraft({ homeContent: { ...homeContent, align: a } })}
-                            className={`flex-1 flex items-center justify-center py-2 rounded-lg border transition-all ${homeContent.align === a ? "border-rose-300 bg-rose-50 text-rose-600" : "border-gray-200 text-gray-400 hover:border-gray-300"}`}
-                          >
-                            {a === "left" && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h10M4 18h12" /></svg>}
-                            {a === "center" && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M7 12h10M6 18h12" /></svg>}
-                            {a === "right" && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M10 12h10M8 18h12" /></svg>}
-                          </button>
-                        ))}
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Welkomstbericht</p>
+                    <div className="flex flex-col gap-3">
+                      <label className="flex flex-col gap-1.5">
+                        <span className="text-xs font-semibold text-gray-600">Titel</span>
+                        <input
+                          type="text"
+                          value={homeContent.title}
+                          onChange={(e) => updateDraft({ homeContent: { ...homeContent, title: e.target.value } })}
+                          placeholder="Optionele titel"
+                          className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                        />
+                      </label>
+                      <label className="flex flex-col gap-1.5">
+                        <span className="text-xs font-semibold text-gray-600">Tekst</span>
+                        <textarea
+                          rows={5}
+                          value={homeContent.body}
+                          onChange={(e) => updateDraft({ homeContent: { ...homeContent, body: e.target.value } })}
+                          placeholder="Schrijf een welkomstbericht voor je gasten..."
+                          className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
+                        />
+                      </label>
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-xs font-semibold text-gray-600">Uitlijning</span>
+                        <div className="flex gap-1.5">
+                          {(["left", "center", "right"] as const).map((a) => (
+                            <button
+                              key={a}
+                              onClick={() => updateDraft({ homeContent: { ...homeContent, align: a } })}
+                              className={`flex-1 flex items-center justify-center py-2 rounded-lg border transition-all ${homeContent.align === a ? "border-rose-300 bg-rose-50 text-rose-600" : "border-gray-200 text-gray-400 hover:border-gray-300"}`}
+                            >
+                              {a === "left" && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h10M4 18h12" /></svg>}
+                              {a === "center" && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M7 12h10M6 18h12" /></svg>}
+                              {a === "right" && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M10 12h10M8 18h12" /></svg>}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                </>)}
+
+                {/* ── Ceremoniemeesters controls ── */}
+                {previewPage === "ceremoniemeesters" && (<>
+                  {([0, 1] as const).map((i) => (
+                    <div key={i}>
+                      <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">
+                        Ceremoniemeester {i + 1}{i === 1 && <span className="normal-case font-normal ml-1 text-gray-300">(optioneel)</span>}
+                      </p>
+                      <div className="flex flex-col gap-3">
+                        {masterPhotoUrls[i] ? (
+                          <div className="flex flex-col gap-2">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={masterPhotoUrls[i]!} alt="" className="w-16 h-16 rounded-full object-cover" />
+                            <button
+                              onClick={() => setMasterPhotoUrls((prev) => { const n: [string | null, string | null] = [...prev] as [string | null, string | null]; n[i] = null; return n })}
+                              className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors self-start"
+                            >
+                              Foto verwijderen
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => (i === 0 ? masterPhotoRef0 : masterPhotoRef1).current?.click()}
+                            className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-gray-200 rounded-xl py-4 text-gray-400 hover:border-rose-300 hover:text-rose-500 transition-colors"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            Foto uploaden
+                          </button>
+                        )}
+                        <label className="flex flex-col gap-1.5">
+                          <span className="text-xs font-semibold text-gray-600">Naam</span>
+                          <input
+                            type="text"
+                            value={mastersData[i].naam}
+                            onChange={(e) => {
+                              const updated = [...mastersData] as [MasterPerson, MasterPerson]
+                              updated[i] = { ...updated[i], naam: e.target.value }
+                              updateContent("ceremoniemeesters", { masters: updated })
+                            }}
+                            placeholder="Volledige naam"
+                            className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                          />
+                        </label>
+                        <label className="flex flex-col gap-1.5">
+                          <span className="text-xs font-semibold text-gray-600">Telefoon</span>
+                          <input
+                            type="tel"
+                            value={mastersData[i].telefoon}
+                            onChange={(e) => {
+                              const updated = [...mastersData] as [MasterPerson, MasterPerson]
+                              updated[i] = { ...updated[i], telefoon: e.target.value }
+                              updateContent("ceremoniemeesters", { masters: updated })
+                            }}
+                            placeholder="+31 6 12345678"
+                            className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                          />
+                        </label>
+                        <label className="flex flex-col gap-1.5">
+                          <span className="text-xs font-semibold text-gray-600">E-mail</span>
+                          <input
+                            type="email"
+                            value={mastersData[i].email}
+                            onChange={(e) => {
+                              const updated = [...mastersData] as [MasterPerson, MasterPerson]
+                              updated[i] = { ...updated[i], email: e.target.value }
+                              updateContent("ceremoniemeesters", { masters: updated })
+                            }}
+                            placeholder="naam@voorbeeld.nl"
+                            className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                          />
+                        </label>
+                      </div>
+                      {i === 0 && <div className="border-t border-gray-100 mt-6" />}
+                    </div>
+                  ))}
+                  <input ref={masterPhotoRef0} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={(e) => handleMasterPhotoUpload(e, 0)} />
+                  <input ref={masterPhotoRef1} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={(e) => handleMasterPhotoUpload(e, 1)} />
+                </>)}
 
                 <div className="border-t border-gray-100 pt-2">
                   <button
-                    onClick={() => setIsEditingHome(false)}
+                    onClick={() => setIsEditingControls(false)}
                     className="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold px-5 py-3 rounded-xl shadow-md shadow-emerald-100 hover:shadow-lg hover:-translate-y-0.5 transition-all"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -629,24 +766,36 @@ export default function BouwenPage() {
                         <span className="text-sm font-bold mr-4 flex-shrink-0" style={{ color: sc.accent, fontFamily: sc.fontFamily }}>{eventName}</span>
                         <div className="flex items-center">
                           {activePagesOrdered.map((page) => (
-                            <span key={page.id} className="text-xs font-semibold px-2.5 py-1.5 rounded-lg" style={page.id === "home" ? { color: sc.accent, backgroundColor: `${sc.accent}15` } : { color: sc.navText }}>
+                            <span key={page.id} className="text-xs font-semibold px-2.5 py-1.5 rounded-lg" style={page.id === previewPage ? { color: sc.accent, backgroundColor: `${sc.accent}15` } : { color: sc.navText }}>
                               {page.label}
                             </span>
                           ))}
                         </div>
                       </nav>
-                      <EventHomePreview
-                        typeLabel={typeLabel}
-                        title={eventName}
-                        datumFormatted={draft?.datum ? formatDate(draft.datum) : null}
-                        locatie={eventLocatie || null}
-                        heroImageUrl={heroImageUrl}
-                        heroOverlay={heroOverlay}
-                        homeTitle={homeContent.title || null}
-                        homeBody={homeContent.body || null}
-                        homeAlign={homeContent.align}
-                        sc={sc}
-                      />
+                      {previewPage === "home" && (
+                        <EventHomePreview
+                          typeLabel={typeLabel}
+                          title={eventName}
+                          datumFormatted={draft?.datum ? formatDate(draft.datum) : null}
+                          locatie={eventLocatie || null}
+                          heroImageUrl={heroImageUrl}
+                          heroOverlay={heroOverlay}
+                          homeTitle={homeContent.title || null}
+                          homeBody={homeContent.body || null}
+                          homeAlign={homeContent.align}
+                          sc={sc}
+                        />
+                      )}
+                      {previewPage === "ceremoniemeesters" && (
+                        <>
+                          <div style={{ padding: "28px 32px 0", backgroundColor: sc.navBg }}>
+                            <h2 style={{ fontSize: "1.125rem", fontWeight: 800, color: sc.headingColor, fontFamily: sc.fontFamily, margin: 0 }}>
+                              Ceremoniemeesters
+                            </h2>
+                          </div>
+                          <EventMastersPreview masters={mastersForPreview} sc={sc} />
+                        </>
+                      )}
                     </div>
                     <p className="text-center text-xs text-gray-400 mt-3">Dit is precies hoe jouw site eruitziet</p>
                   </div>
