@@ -35,7 +35,7 @@ export default async function EventLayout({
     <div className="min-h-screen bg-slate-50 sm:py-12" style={{ fontFamily: sc.fontFamily }}>
       {sc.fontImport && <style>{sc.fontImport}</style>}
 
-      <div className="max-w-4xl mx-auto bg-white sm:shadow-2xl sm:rounded-2xl overflow-hidden min-h-[85vh] flex flex-col">
+      <div className="max-w-4xl mx-auto bg-white sm:shadow-2xl sm:rounded-2xl overflow-clip min-h-[85vh] flex flex-col">
 
         <EventNav title={event.title} pages={pageList} sc={sc} />
 
