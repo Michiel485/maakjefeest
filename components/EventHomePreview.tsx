@@ -1,3 +1,5 @@
+"use client"
+
 import type { SC } from "@/lib/event-styles"
 
 export interface EventHomePreviewProps {
@@ -11,6 +13,7 @@ export interface EventHomePreviewProps {
   homeBody: string | null
   homeAlign: "left" | "center" | "right"
   sc: SC
+  onNavigate?: (pageId: string) => void
 }
 
 export default function EventHomePreview({
@@ -24,6 +27,7 @@ export default function EventHomePreview({
   homeBody,
   homeAlign,
   sc,
+  onNavigate,
 }: EventHomePreviewProps) {
   const hasPhoto = !!heroImageUrl
   const showOverlay = hasPhoto && heroOverlay
@@ -55,7 +59,7 @@ export default function EventHomePreview({
           </span>
 
           <h1
-            className="text-5xl font-extrabold leading-tight mb-3"
+            className="text-5xl font-extrabold leading-tight mb-3 whitespace-pre-wrap"
             style={{ color: showOverlay ? "#fff" : sc.headingColor, fontFamily: sc.fontFamily }}
           >
             {title}
@@ -75,6 +79,7 @@ export default function EventHomePreview({
 
           <a
             href="/rsvp"
+            onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("rsvp") } : undefined}
             className="inline-block text-sm font-bold px-7 py-3 rounded-xl"
             style={{
               backgroundColor: sc.buttonBg,
@@ -93,22 +98,19 @@ export default function EventHomePreview({
         <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
           {homeTitle && (
             <p
-              className="font-bold text-base mb-2"
-              style={{
-                color: sc.headingColor,
-                fontFamily: sc.fontFamily,
-                textAlign: homeAlign,
-              }}
+              className="font-bold text-base mb-2 whitespace-pre-wrap"
+              style={{ color: sc.headingColor, fontFamily: sc.fontFamily, textAlign: homeAlign }}
             >
               {homeTitle}
             </p>
           )}
           {homeBody && (
-            <div
-              className="text-[0.9375rem] leading-relaxed"
+            <p
+              className="text-[0.9375rem] leading-relaxed whitespace-pre-wrap"
               style={{ color: sc.bodyText, fontFamily: sc.fontFamily, textAlign: homeAlign }}
-              dangerouslySetInnerHTML={{ __html: homeBody }}
-            />
+            >
+              {homeBody}
+            </p>
           )}
         </div>
       )}

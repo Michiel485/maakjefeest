@@ -14,7 +14,7 @@ export default async function EventLayout({
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, title, style")
+    .select("id, title, style, nav_layout")
     .eq("slug", slug)
     .eq("status", "published")
     .single()
@@ -37,7 +37,7 @@ export default async function EventLayout({
 
       <div className="max-w-4xl mx-auto bg-white sm:shadow-2xl sm:rounded-2xl overflow-clip min-h-[85vh] flex flex-col">
 
-        <EventNav title={event.title} pages={pageList} sc={sc} />
+        <EventNav title={event.title} pages={pageList} sc={sc} navLayout={(event.nav_layout ?? "split") as "stacked" | "split"} />
 
         <main className="flex-grow">
           {children}

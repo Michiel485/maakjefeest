@@ -36,6 +36,7 @@ interface Draft {
   style?: string
   heroOverlay?: boolean
   homeContent?: HomeContent
+  navLayout?: 'stacked' | 'split'
 }
 
 interface PageConfig {
@@ -149,7 +150,6 @@ export default function BouwenPage() {
   const [content, setContent] = useState<ContentMap>({})
   const [style, setStyle] = useState<Style>("roze")
   const [viewport, setViewport] = useState<Viewport>("desktop")
-  const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [heroImageError, setHeroImageError] = useState<string | null>(null)
   const [isEditingControls, setIsEditingControls] = useState(false)
   const canvasContainerRef = useRef<HTMLDivElement>(null)
@@ -180,21 +180,23 @@ export default function BouwenPage() {
     function measure() {
       const el = canvasContainerRef.current
       if (!el) return
-      setCanvasScale(Math.min(1, Math.max(0.4, (el.clientWidth - 48) / 1024)))
+      const cw = viewport === "mobiel" ? 390 : 1024
+      setCanvasScale(Math.min(1, Math.max(0.4, (el.clientWidth - 48) / cw)))
     }
     measure()
     window.addEventListener("resize", measure)
     return () => window.removeEventListener("resize", measure)
-  }, [])
+  }, [viewport])
 
   useEffect(() => {
     const id = requestAnimationFrame(() => {
       const el = canvasContainerRef.current
       if (!el) return
-      setCanvasScale(Math.min(1, Math.max(0.4, (el.clientWidth - 48) / 1024)))
+      const cw = viewport === "mobiel" ? 390 : 1024
+      setCanvasScale(Math.min(1, Math.max(0.4, (el.clientWidth - 48) / cw)))
     })
     return () => cancelAnimationFrame(id)
-  }, [isEditingControls])
+  }, [isEditingControls, viewport])
 
   function updateDraft(fields: Partial<Draft>) {
     setDraft((prev) => {
@@ -301,7 +303,7 @@ export default function BouwenPage() {
       const res = await fetch("/api/events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...draft, hero_image_url: uploadedHeroUrl, pages: activePages, content: mergedContent }),
+        body: JSON.stringify({ ...draft, hero_image_url: uploadedHeroUrl, nav_layout: navLayout, pages: activePages, content: mergedContent }),
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || "Er ging iets mis")
@@ -314,6 +316,7 @@ export default function BouwenPage() {
   }
 
   const sc = STYLE_CONFIG[style]
+  const canvasWidth = viewport === "mobiel" ? 390 : 1024
 
   const activePagesOrdered = PAGES.filter((p) => active[p.id])
   const eventName = draft?.naam || "Jouw evenement"
@@ -322,6 +325,7 @@ export default function BouwenPage() {
   const typeLabel = draft?.type ? TYPE_LABEL[draft.type] : "Evenement"
   const heroOverlay = draft?.heroOverlay ?? true
   const homeContent: HomeContent = draft?.homeContent ?? { title: "", body: "", align: "center" }
+  const navLayout = (draft?.navLayout ?? 'split') as 'stacked' | 'split'
 
   const emptyMaster: MasterPerson = { naam: "", telefoon: "", email: "", foto_url: null }
   const rawMasters = (content.ceremoniemeesters?.masters as Partial<MasterPerson>[] | undefined) ?? []
@@ -406,6 +410,28 @@ export default function BouwenPage() {
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
                   )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Nav layout toggle */}
+          <div className="px-5 pt-5 pb-4 border-b border-gray-100">
+            <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Navigatie</p>
+            <div className="flex rounded-xl border border-gray-200 overflow-hidden">
+              {(['split', 'stacked'] as const).map((opt) => (
+                <button
+                  key={opt}
+                  onClick={() => {
+                    const next = { ...draft, navLayout: opt } as Draft
+                    setDraft(next)
+                    localStorage.setItem("maakjefeest_draft", JSON.stringify(next))
+                  }}
+                  className={`flex-1 py-2 text-xs font-semibold transition-colors ${
+                    navLayout === opt ? 'bg-rose-500 text-white' : 'text-gray-500 hover:bg-gray-50'
+                  }`}
+                >
+                  {opt === 'split' ? 'Naast elkaar' : 'Gecentreerd'}
                 </button>
               ))}
             </div>
@@ -528,12 +554,11 @@ export default function BouwenPage() {
             )}
           </div>
 
-          {/* ── Controls | Canvas (home + ceremoniemeesters) ── */}
-          {CONTROLS_PAGES.has(previewPage) && !editingPage ? (
-            <div className="flex flex-1 min-h-0 overflow-hidden">
+          {/* ── Builder layout: optional controls sidebar + canvas or editor ── */}
+          <div className="flex flex-1 min-h-0 overflow-hidden">
 
-              {/* Middle — Controls (inklapbaar) */}
-              {isEditingControls && (
+            {/* Controls sidebar — only for CONTROLS_PAGES when open */}
+            {!editingPage && CONTROLS_PAGES.has(previewPage) && isEditingControls && (
               <div className="w-[300px] flex-shrink-0 overflow-y-auto bg-white border-r border-gray-100 p-6 flex flex-col gap-6">
 
                 {/* ── Home controls ── */}
@@ -543,12 +568,12 @@ export default function BouwenPage() {
                     <div className="flex flex-col gap-3">
                       <label className="flex flex-col gap-1.5">
                         <span className="text-xs font-semibold text-gray-600">Naam evenement</span>
-                        <input
-                          type="text"
+                        <textarea
+                          rows={2}
                           value={draft?.naam ?? ""}
                           onChange={(e) => updateDraft({ naam: e.target.value })}
                           placeholder="Bijv. Bruiloft Michiel & Lisa"
-                          className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                          className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
                         />
                       </label>
                       <label className="flex flex-col gap-1.5">
@@ -758,69 +783,9 @@ export default function BouwenPage() {
               </div>
               )}
 
-              {/* Right — Canvas (Scaling Wrapper) */}
-              <div ref={canvasContainerRef} className="flex-1 overflow-y-auto bg-gray-100 p-6">
-                <div className="mx-auto" style={{ width: `${Math.round(1024 * canvasScale)}px` }}>
-                  <div style={{ width: 1024, transform: `scale(${canvasScale})`, transformOrigin: "top left" }}>
-                    <div className="rounded-2xl shadow-xl overflow-clip" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
-                      {sc.fontImport && <style>{sc.fontImport}</style>}
-                      <div className="bg-gray-50 border-b border-gray-200 px-4 py-2 flex items-center gap-2">
-                        <div className="flex gap-1.5 flex-shrink-0">
-                          <span className="w-2 h-2 rounded-full bg-red-400" />
-                          <span className="w-2 h-2 rounded-full bg-amber-400" />
-                          <span className="w-2 h-2 rounded-full bg-green-400" />
-                        </div>
-                        <div className="flex-1 bg-white rounded-md border border-gray-200 px-3 py-1 text-xs text-gray-400">
-                          jouwfeest.maakjefeest.nl
-                        </div>
-                      </div>
-                      <nav className="px-5 py-3 border-b flex items-center" style={{ backgroundColor: sc.navBg, borderColor: `${sc.accent}22` }}>
-                        <span className="text-sm font-bold mr-4 flex-shrink-0" style={{ color: sc.accent, fontFamily: sc.fontFamily }}>{eventName}</span>
-                        <div className="flex items-center">
-                          {activePagesOrdered.map((page) => (
-                            <span key={page.id} className="text-xs font-semibold px-2.5 py-1.5 rounded-lg" style={page.id === previewPage ? { color: sc.accent, backgroundColor: `${sc.accent}15` } : { color: sc.navText }}>
-                              {page.label}
-                            </span>
-                          ))}
-                        </div>
-                      </nav>
-                      {previewPage === "home" && (
-                        <EventHomePreview
-                          typeLabel={typeLabel}
-                          title={eventName}
-                          datumFormatted={draft?.datum ? formatDate(draft.datum) : null}
-                          locatie={eventLocatie || null}
-                          heroImageUrl={heroImageUrl}
-                          heroOverlay={heroOverlay}
-                          homeTitle={homeContent.title || null}
-                          homeBody={homeContent.body || null}
-                          homeAlign={homeContent.align}
-                          sc={sc}
-                        />
-                      )}
-                      {previewPage === "ceremoniemeesters" && (
-                        <>
-                          <div style={{ padding: "28px 32px 0", backgroundColor: sc.navBg }}>
-                            <h2 style={{ fontSize: "1.125rem", fontWeight: 800, color: sc.headingColor, fontFamily: sc.fontFamily, margin: 0 }}>
-                              Ceremoniemeesters
-                            </h2>
-                          </div>
-                          <EventMastersPreview masters={mastersForPreview} sc={sc} />
-                        </>
-                      )}
-                    </div>
-                    <p className="text-center text-xs text-gray-400 mt-3">Dit is precies hoe jouw site eruitziet</p>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-
-          ) : (
-
-            <div className="flex-1 overflow-y-auto p-3">
-              {/* ── Editor panel (niet-home pagina's) ── */}
-              {editingPage && (
+            {/* Editor when editing a page */}
+            {editingPage ? (
+              <div className="flex-1 overflow-y-auto p-3">
                 <div className="max-w-2xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden">
                   <div className="px-8 py-6">
                     <h3 className="text-base font-bold text-gray-900 mb-5">
@@ -833,154 +798,167 @@ export default function BouwenPage() {
                     />
                   </div>
                 </div>
-              )}
-
-              {/* ── Preview (niet-home pagina's) ── */}
-              {!editingPage && (
-                <div className={`mx-auto rounded-3xl shadow-xl overflow-hidden min-h-[500px] transition-all duration-300 ${
-                  viewport === "mobiel"
-                    ? "w-[390px] ring-4 ring-gray-800 ring-offset-2 rounded-[2rem]"
-                    : "max-w-2xl"
-                }`} style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
-
-                  {sc.fontImport && <style>{sc.fontImport}</style>}
-
-                  <div className="bg-gray-50 border-b border-gray-200 px-4 py-2 flex items-center gap-2">
-                    <div className="flex gap-1.5 flex-shrink-0">
-                      <span className="w-2 h-2 rounded-full bg-red-400" />
-                      <span className="w-2 h-2 rounded-full bg-amber-400" />
-                      <span className="w-2 h-2 rounded-full bg-green-400" />
-                    </div>
-                    <div className="flex-1 bg-white rounded-md border border-gray-200 px-3 py-1 text-xs text-gray-400">
-                      jouwfeest.maakjefeest.nl
-                    </div>
-                  </div>
-
-                  <nav className="relative px-5 py-3 border-b flex items-center" style={{ backgroundColor: sc.navBg, borderColor: `${sc.accent}22` }}>
-                    <span className="text-sm font-bold mr-4 flex-shrink-0" style={{ color: sc.accent, fontFamily: sc.fontFamily }}>{eventName}</span>
-                    {viewport === "mobiel" ? (
-                      <div className="relative ml-auto">
-                        <button onClick={() => setMobileNavOpen((v) => !v)} className="p-1.5 rounded-lg" style={{ color: sc.navText }}>
-                          {mobileNavOpen
-                            ? <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                            : <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
+              </div>
+            ) : (
+              /* Universal scaling canvas — all pages */
+              <div ref={canvasContainerRef} className="flex-1 overflow-y-auto bg-gray-100 p-6">
+                <div className="mx-auto" style={{ width: `${Math.round(canvasWidth * canvasScale)}px` }}>
+                  <div style={{ width: canvasWidth, transform: `scale(${canvasScale})`, transformOrigin: "top left" }}>
+                    <div className="rounded-2xl shadow-xl overflow-clip" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
+                      {sc.fontImport && <style>{sc.fontImport}</style>}
+                      <div className="bg-gray-50 border-b border-gray-200 px-4 py-2 flex items-center gap-2">
+                        <div className="flex gap-1.5 flex-shrink-0">
+                          <span className="w-2 h-2 rounded-full bg-red-400" />
+                          <span className="w-2 h-2 rounded-full bg-amber-400" />
+                          <span className="w-2 h-2 rounded-full bg-green-400" />
+                        </div>
+                        <div className="flex-1 bg-white rounded-md border border-gray-200 px-3 py-1 text-xs text-gray-400">
+                          jouwfeest.maakjefeest.nl
+                        </div>
+                      </div>
+                      {navLayout === 'split' ? (
+                        <nav className="px-5 py-4 border-b flex items-center justify-between gap-4" style={{ backgroundColor: sc.navBg, borderColor: `${sc.accent}22` }}>
+                          <span className="text-sm font-bold whitespace-pre-wrap flex-shrink-0" style={{ color: sc.accent, fontFamily: sc.fontFamily }}>{eventName}</span>
+                          <div className="flex items-center flex-wrap justify-end gap-1">
+                            {activePagesOrdered.map((page) => (
+                              <button
+                                key={page.id}
+                                onClick={() => { setPreviewPage(page.id); setIsEditingControls(false) }}
+                                className="text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors"
+                                style={page.id === previewPage ? { color: sc.accent, backgroundColor: `${sc.accent}15` } : { color: sc.navText }}
+                              >
+                                {page.label}
+                              </button>
+                            ))}
+                          </div>
+                        </nav>
+                      ) : (
+                        <nav className="px-5 py-5 border-b flex flex-col items-center gap-2" style={{ backgroundColor: sc.navBg, borderColor: `${sc.accent}22` }}>
+                          <span className="text-sm font-bold text-center whitespace-pre-wrap" style={{ color: sc.accent, fontFamily: sc.fontFamily }}>{eventName}</span>
+                          <div className="flex items-center flex-wrap justify-center gap-1">
+                            {activePagesOrdered.map((page) => (
+                              <button
+                                key={page.id}
+                                onClick={() => { setPreviewPage(page.id); setIsEditingControls(false) }}
+                                className="text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors"
+                                style={page.id === previewPage ? { color: sc.accent, backgroundColor: `${sc.accent}15` } : { color: sc.navText }}
+                              >
+                                {page.label}
+                              </button>
+                            ))}
+                          </div>
+                        </nav>
+                      )}
+                      {previewPage === "home" && (
+                        <EventHomePreview
+                          typeLabel={typeLabel}
+                          title={eventName}
+                          datumFormatted={draft?.datum ? formatDate(draft.datum) : null}
+                          locatie={eventLocatie || null}
+                          heroImageUrl={heroImageUrl}
+                          heroOverlay={heroOverlay}
+                          homeTitle={homeContent.title || null}
+                          homeBody={homeContent.body || null}
+                          homeAlign={homeContent.align}
+                          sc={sc}
+                          onNavigate={(id) => setPreviewPage(id as PageId)}
+                        />
+                      )}
+                      {previewPage === "ceremoniemeesters" && (
+                        <>
+                          <div style={{ padding: "28px 32px 0", backgroundColor: sc.navBg }}>
+                            <h2 style={{ fontSize: "1.125rem", fontWeight: 800, color: sc.headingColor, fontFamily: sc.fontFamily, margin: 0 }}>
+                              Ceremoniemeesters
+                            </h2>
+                          </div>
+                          <EventMastersPreview masters={mastersForPreview} sc={sc} />
+                        </>
+                      )}
+                      {previewPage === "programma" && (
+                        <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
+                          <h2 className="text-lg font-extrabold mb-6" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>Programma</h2>
+                          {programmaItems.length > 0
+                            ? programmaItems.map((item, i) => (
+                                <div key={i} className="flex gap-4 mb-4">
+                                  <span className="text-xs font-bold w-10 flex-shrink-0 pt-0.5" style={{ color: sc.labelColor }}>{item.time}</span>
+                                  <p className="text-sm" style={{ color: sc.bodyText }}>{item.description}</p>
+                                </div>
+                              ))
+                            : [["14:00", "Aankomst gasten"], ["15:00", "Ceremonie"], ["17:00", "Borrel"]].map(([t, d]) => (
+                                <div key={t} className="flex gap-4 mb-4 opacity-30">
+                                  <span className="text-xs font-bold w-10 flex-shrink-0 pt-0.5" style={{ color: sc.labelColor }}>{t}</span>
+                                  <p className="text-sm italic" style={{ color: sc.bodyText }}>{d}</p>
+                                </div>
+                              ))
                           }
-                        </button>
-                        {mobileNavOpen && (
-                          <>
-                            <div className="fixed inset-0 z-10" onClick={() => setMobileNavOpen(false)} />
-                            <div className="absolute right-0 top-full mt-1 z-20 rounded-xl shadow-lg border overflow-hidden min-w-[140px]" style={{ backgroundColor: sc.navBg, borderColor: `${sc.accent}22` }}>
-                              {activePagesOrdered.map((page) => (
-                                <button key={page.id} onClick={() => { setPreviewPage(page.id); setMobileNavOpen(false) }} className="w-full text-left px-4 py-2.5 text-sm font-medium" style={previewPage === page.id ? { color: sc.accent, backgroundColor: `${sc.accent}12` } : { color: sc.navText }}>
-                                  {page.label}
-                                </button>
-                              ))}
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-0">
-                        {activePagesOrdered.map((page) => (
-                          <button key={page.id} onClick={() => setPreviewPage(page.id)} className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors flex-shrink-0" style={previewPage === page.id ? { color: sc.accent, backgroundColor: `${sc.accent}15` } : { color: sc.navText }}>
-                            {page.label}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </nav>
-
-                  {/* Programma */}
-                  {previewPage === "programma" && (
-                    <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
-                      <h2 className="text-lg font-extrabold mb-6" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>Programma</h2>
-                      {programmaItems.length > 0
-                        ? programmaItems.map((item, i) => (
-                            <div key={i} className="flex gap-4 mb-4">
-                              <span className="text-xs font-bold w-10 flex-shrink-0 pt-0.5" style={{ color: sc.labelColor }}>{item.time}</span>
-                              <p className="text-sm" style={{ color: sc.bodyText }}>{item.description}</p>
-                            </div>
-                          ))
-                        : [["14:00", "Aankomst gasten"], ["15:00", "Ceremonie"], ["17:00", "Borrel"]].map(([t, d]) => (
-                            <div key={t} className="flex gap-4 mb-4 opacity-30">
-                              <span className="text-xs font-bold w-10 flex-shrink-0 pt-0.5" style={{ color: sc.labelColor }}>{t}</span>
-                              <p className="text-sm italic" style={{ color: sc.bodyText }}>{d}</p>
-                            </div>
-                          ))
-                      }
-                    </div>
-                  )}
-
-                  {/* RSVP */}
-                  {previewPage === "rsvp" && (
-                    <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
-                      <h2 className="text-lg font-extrabold mb-2" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>Aanmelden</h2>
-                      <p className="text-sm mb-6" style={{ color: sc.bodyText }}>Laat weten of je erbij bent!</p>
-                      <div className="flex flex-col gap-3">
-                        {["Naam", "E-mailadres", "Aantal personen"].map((f) => (
-                          <div key={f}>
-                            <div className="text-xs font-semibold mb-1" style={{ color: sc.navText }}>{f}</div>
-                            <div className="h-9 rounded-xl border" style={{ backgroundColor: `${sc.accent}08`, borderColor: `${sc.accent}25` }} />
+                        </div>
+                      )}
+                      {previewPage === "rsvp" && (
+                        <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
+                          <h2 className="text-lg font-extrabold mb-2" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>Aanmelden</h2>
+                          <p className="text-sm mb-6" style={{ color: sc.bodyText }}>Laat weten of je erbij bent!</p>
+                          <div className="flex flex-col gap-3">
+                            {["Naam", "E-mailadres", "Aantal personen"].map((f) => (
+                              <div key={f}>
+                                <div className="text-xs font-semibold mb-1" style={{ color: sc.navText }}>{f}</div>
+                                <div className="h-9 rounded-xl border" style={{ backgroundColor: `${sc.accent}08`, borderColor: `${sc.accent}25` }} />
+                              </div>
+                            ))}
+                            <div className="h-10 rounded-xl mt-2" style={{ backgroundColor: sc.buttonBg }} />
                           </div>
-                        ))}
-                        <div className="h-10 rounded-xl mt-2" style={{ backgroundColor: sc.buttonBg }} />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Praktisch */}
-                  {previewPage === "praktisch" && (
-                    <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
-                      <h2 className="text-lg font-extrabold mb-6" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>Praktische info</h2>
-                      {praktischItems.length > 0
-                        ? praktischItems.map((item, i) => (
-                            <div key={i} className="mb-4">
-                              <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: sc.labelColor }}>{item.label}</p>
-                              <p className="text-sm font-semibold" style={{ color: sc.headingColor }}>{item.value}</p>
-                            </div>
-                          ))
-                        : [["Locatie", eventLocatie || "Nog in te vullen"], ["Datum", eventDate]].map(([k, v]) => (
-                            <div key={k} className="mb-4">
-                              <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: sc.labelColor }}>{k}</p>
-                              <p className="text-sm font-semibold" style={{ color: sc.headingColor }}>{v}</p>
-                            </div>
-                          ))
-                      }
-                    </div>
-                  )}
-
-                  {/* Wishlist */}
-                  {previewPage === "wishlist" && (
-                    <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
-                      <h2 className="text-lg font-extrabold mb-6" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>Wishlist</h2>
-                      <div className="grid grid-cols-2 gap-3">
-                        {[1, 2, 3, 4].map((n) => (
-                          <div key={n} className="rounded-2xl border p-4" style={{ borderColor: `${sc.accent}20` }}>
-                            <div className="h-16 rounded-xl mb-3" style={{ backgroundColor: `${sc.accent}12` }} />
-                            <div className="h-2.5 rounded-full w-3/4 mb-1.5" style={{ backgroundColor: `${sc.accent}18` }} />
-                            <div className="h-2 rounded-full w-1/2" style={{ backgroundColor: `${sc.accent}10` }} />
+                        </div>
+                      )}
+                      {previewPage === "praktisch" && (
+                        <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
+                          <h2 className="text-lg font-extrabold mb-6" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>Praktische info</h2>
+                          {praktischItems.length > 0
+                            ? praktischItems.map((item, i) => (
+                                <div key={i} className="mb-4">
+                                  <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: sc.labelColor }}>{item.label}</p>
+                                  <p className="text-sm font-semibold" style={{ color: sc.headingColor }}>{item.value}</p>
+                                </div>
+                              ))
+                            : [["Locatie", eventLocatie || "Nog in te vullen"], ["Datum", eventDate]].map(([k, v]) => (
+                                <div key={k} className="mb-4">
+                                  <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: sc.labelColor }}>{k}</p>
+                                  <p className="text-sm font-semibold" style={{ color: sc.headingColor }}>{v}</p>
+                                </div>
+                              ))
+                          }
+                        </div>
+                      )}
+                      {previewPage === "wishlist" && (
+                        <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
+                          <h2 className="text-lg font-extrabold mb-6" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>Wishlist</h2>
+                          <div className="grid grid-cols-2 gap-3">
+                            {[1, 2, 3, 4].map((n) => (
+                              <div key={n} className="rounded-2xl border p-4" style={{ borderColor: `${sc.accent}20` }}>
+                                <div className="h-16 rounded-xl mb-3" style={{ backgroundColor: `${sc.accent}12` }} />
+                                <div className="h-2.5 rounded-full w-3/4 mb-1.5" style={{ backgroundColor: `${sc.accent}18` }} />
+                                <div className="h-2 rounded-full w-1/2" style={{ backgroundColor: `${sc.accent}10` }} />
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
+                        </div>
+                      )}
+                      {previewPage === "fotos" && (
+                        <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
+                          <h2 className="text-lg font-extrabold mb-6" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>Foto&apos;s</h2>
+                          <div className="grid grid-cols-3 gap-2">
+                            {[1, 2, 3, 4, 5, 6].map((n) => (
+                              <div key={n} className="aspect-square rounded-xl" style={{ backgroundColor: `${sc.accent}12` }} />
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
-
-                  {/* Fotos */}
-                  {previewPage === "fotos" && (
-                    <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
-                      <h2 className="text-lg font-extrabold mb-6" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>Foto&apos;s</h2>
-                      <div className="grid grid-cols-3 gap-2">
-                        {[1, 2, 3, 4, 5, 6].map((n) => (
-                          <div key={n} className="aspect-square rounded-xl" style={{ backgroundColor: `${sc.accent}12` }} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                    <p className="text-center text-xs text-gray-400 mt-3">Dit is precies hoe jouw site eruitziet</p>
+                  </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
-          )}
+          </div>
         </main>
       </div>
     </div>
