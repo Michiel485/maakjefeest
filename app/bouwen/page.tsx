@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import EventHomePreview from "@/components/EventHomePreview"
 import EventMastersPreview from "@/components/EventMastersPreview"
+import EventProgramPreview, { PROGRAM_ICONS, ProgramIcon } from "@/components/EventProgramPreview"
 import { formatDate } from "@/lib/event-styles"
 import { createClient } from "@/lib/supabase"
 
@@ -36,7 +37,7 @@ interface Draft {
   style?: string
   heroOverlay?: boolean
   homeContent?: HomeContent
-  navLayout?: 'stacked' | 'split'
+  navLayout?: 'stacked' | 'split' | 'left'
 }
 
 interface PageConfig {
@@ -45,7 +46,7 @@ interface PageConfig {
   toggleable: boolean
 }
 
-interface ProgrammaItem { time: string; description: string }
+interface ProgrammaItem { id?: string; time: string; description: string; iconId?: string; image_url?: string | null }
 interface PraktischItem { label: string; value: string }
 
 type ContentMap = Partial<Record<PageId, Record<string, unknown>>>
@@ -56,14 +57,66 @@ const UPLOAD_MIME: Record<string, string> = {
   png: "image/png", webp: "image/webp", gif: "image/gif",
 }
 
+const MAX_DIM = 1920
+const WEBP_QUALITY = 0.82
+
+async function compressImage(file: File): Promise<File> {
+  // GIF: canvas strips animation — upload as-is
+  if (file.type === "image/gif") return file
+
+  return new Promise((resolve) => {
+    const objectUrl = URL.createObjectURL(file)
+    const img = new Image()
+
+    img.onerror = () => { URL.revokeObjectURL(objectUrl); resolve(file) }
+
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl)
+
+      let { naturalWidth: w, naturalHeight: h } = img
+      if (w > MAX_DIM || h > MAX_DIM) {
+        if (w >= h) { h = Math.round(h * MAX_DIM / w); w = MAX_DIM }
+        else        { w = Math.round(w * MAX_DIM / h); h = MAX_DIM }
+      }
+
+      const canvas = document.createElement("canvas")
+      canvas.width = w
+      canvas.height = h
+      canvas.getContext("2d")!.drawImage(img, 0, 0, w, h)
+
+      const tryBlob = (mime: string, quality: number, fallbackMime?: string) => {
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            if (fallbackMime) tryBlob(fallbackMime, quality)
+            else resolve(file)
+            return
+          }
+          const ext = mime === "image/webp" ? "webp" : "jpg"
+          const name = file.name.replace(/\.[^.]+$/, `.${ext}`)
+          const compressed = new File([blob], name, { type: mime })
+          // Keep original if compression made it larger (e.g. tiny PNGs)
+          resolve(compressed.size < file.size ? compressed : file)
+        }, mime, quality)
+      }
+
+      tryBlob("image/webp", WEBP_QUALITY, "image/jpeg")
+    }
+
+    img.src = objectUrl
+  })
+}
+
 async function uploadToStorage(file: File, bucket: string): Promise<string> {
-  const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg"
+  let toUpload = file
+  try { toUpload = await compressImage(file) } catch { /* fallback: upload original */ }
+
+  const ext = toUpload.name.split(".").pop()?.toLowerCase() ?? "webp"
   const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-  const contentType = file.type || UPLOAD_MIME[ext] || "image/jpeg"
+  const contentType = toUpload.type || UPLOAD_MIME[ext] || "image/jpeg"
   const supabase = createClient()
   const { data, error } = await supabase.storage
     .from(bucket)
-    .upload(filename, file, { contentType, upsert: true })
+    .upload(filename, toUpload, { contentType, upsert: true })
   if (error || !data?.path) throw new Error(error?.message ?? "Upload mislukt")
   const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(data.path)
   return urlData.publicUrl
@@ -127,7 +180,7 @@ const PAGES: PageConfig[] = [
   { id: "ceremoniemeesters",  label: "Ceremoniemeesters",  toggleable: true  },
 ]
 
-const CONTROLS_PAGES = new Set<PageId>(["home", "ceremoniemeesters"])
+const CONTROLS_PAGES = new Set<PageId>(["home", "ceremoniemeesters", "programma"])
 
 const TYPE_LABEL: Record<EventType, string> = {
   bruiloft: "Bruiloft", verjaardag: "Verjaardag", evenement: "Evenement",
@@ -156,8 +209,11 @@ export default function BouwenPage() {
   const [canvasScale, setCanvasScale] = useState(1)
   const [masterPhotoUrls, setMasterPhotoUrls] = useState<[string | null, string | null]>([null, null])
   const [masterFiles, setMasterFiles] = useState<[File | null, File | null]>([null, null])
+  const [programUploadIndex, setProgramUploadIndex] = useState<number | null>(null)
+  const [openIconPickerIdx, setOpenIconPickerIdx] = useState<number | null>(null)
   const masterPhotoRef0 = useRef<HTMLInputElement>(null)
   const masterPhotoRef1 = useRef<HTMLInputElement>(null)
+  const programPhotoRef = useRef<HTMLInputElement>(null)
   const [publishing, setPublishing] = useState(false)
   const [publishError, setPublishError] = useState<string | null>(null)
 
@@ -260,6 +316,21 @@ export default function BouwenPage() {
     e.target.value = ""
   }
 
+  async function handleProgramPhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ""
+    if (!file || programUploadIndex === null) return
+    const supported = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+    if (!supported.includes(file.type)) return
+    try {
+      const url = await uploadToStorage(file, "hero-images")
+      const updated = [...programmaItems]
+      updated[programUploadIndex] = { ...updated[programUploadIndex], image_url: url }
+      updateContent("programma", { items: updated, layout: programLayout })
+    } catch { /* niet-kritiek */ }
+    setProgramUploadIndex(null)
+  }
+
   function openEditor(id: PageId) {
     setPreviewPage(id)
     if (!CONTROLS_PAGES.has(id)) setEditingPage(id)
@@ -325,7 +396,7 @@ export default function BouwenPage() {
   const typeLabel = draft?.type ? TYPE_LABEL[draft.type] : "Evenement"
   const heroOverlay = draft?.heroOverlay ?? true
   const homeContent: HomeContent = draft?.homeContent ?? { title: "", body: "", align: "center" }
-  const navLayout = (draft?.navLayout ?? 'split') as 'stacked' | 'split'
+  const navLayout = (draft?.navLayout ?? 'split') as 'stacked' | 'split' | 'left'
 
   const emptyMaster: MasterPerson = { naam: "", telefoon: "", email: "", foto_url: null }
   const rawMasters = (content.ceremoniemeesters?.masters as Partial<MasterPerson>[] | undefined) ?? []
@@ -339,6 +410,8 @@ export default function BouwenPage() {
   ]
 
   const programmaItems = (content.programma?.items as ProgrammaItem[]) || []
+  const programmaItemsSorted = programmaItems.slice().sort((a, b) => a.time.localeCompare(b.time))
+  const programLayout = ((content.programma?.layout as string) || "centered") as "centered" | "timeline" | "bento"
   const praktischItems = (content.praktisch?.items as PraktischItem[]) || []
 
   return (
@@ -419,7 +492,7 @@ export default function BouwenPage() {
           <div className="px-5 pt-5 pb-4 border-b border-gray-100">
             <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Navigatie</p>
             <div className="flex rounded-xl border border-gray-200 overflow-hidden">
-              {(['split', 'stacked'] as const).map((opt) => (
+              {(['left', 'split', 'stacked'] as const).map((opt) => (
                 <button
                   key={opt}
                   onClick={() => {
@@ -431,7 +504,7 @@ export default function BouwenPage() {
                     navLayout === opt ? 'bg-rose-500 text-white' : 'text-gray-500 hover:bg-gray-50'
                   }`}
                 >
-                  {opt === 'split' ? 'Naast elkaar' : 'Gecentreerd'}
+                  {opt === 'left' ? 'Links' : opt === 'split' ? 'Verdeeld' : 'Gecentreerd'}
                 </button>
               ))}
             </div>
@@ -560,6 +633,20 @@ export default function BouwenPage() {
             {/* Controls sidebar — only for CONTROLS_PAGES when open */}
             {!editingPage && CONTROLS_PAGES.has(previewPage) && isEditingControls && (
               <div className="w-[300px] flex-shrink-0 overflow-y-auto bg-white border-r border-gray-100 p-6 flex flex-col gap-6">
+
+                {/* Top back button */}
+                <div className="flex items-center justify-between -mb-2">
+                  <button
+                    onClick={() => setIsEditingControls(false)}
+                    className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Sluiten
+                  </button>
+                  <span className="text-xs font-bold text-gray-700 capitalize">{previewPage}</span>
+                </div>
 
                 {/* ── Home controls ── */}
                 {previewPage === "home" && (<>
@@ -768,6 +855,149 @@ export default function BouwenPage() {
                   <input ref={masterPhotoRef1} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={(e) => handleMasterPhotoUpload(e, 1)} />
                 </>)}
 
+                {/* ── Programma controls ── */}
+                {previewPage === "programma" && (
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Weergave</p>
+                    <div className="flex rounded-xl border border-gray-200 overflow-hidden mb-5">
+                      {(["timeline", "centered", "bento"] as const).map((opt) => (
+                        <button
+                          key={opt}
+                          onClick={() => updateContent("programma", { items: programmaItems, layout: opt })}
+                          className={`flex-1 py-2 text-xs font-semibold transition-colors ${
+                            programLayout === opt ? "bg-rose-500 text-white" : "text-gray-500 hover:bg-gray-50"
+                          }`}
+                        >
+                          {opt === "timeline" ? "Tijdlijn" : opt === "centered" ? "Gecentreerd" : "Kaarten"}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Onderdelen</p>
+                    <div className="flex flex-col gap-2">
+                      {programmaItems.map((item, i) => (
+                        <div key={item.id ?? i} className="flex flex-col gap-1.5 bg-gray-50 rounded-xl p-3">
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="time"
+                              value={item.time}
+                              onChange={(e) => {
+                                const updated = [...programmaItems]
+                                updated[i] = { ...updated[i], time: e.target.value }
+                                updateContent("programma", { items: updated, layout: programLayout })
+                              }}
+                              className="w-24 rounded-lg border border-gray-200 px-2 py-1.5 text-xs font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400"
+                            />
+                            <button
+                              onClick={() => setOpenIconPickerIdx(openIconPickerIdx === i ? null : i)}
+                              className={`p-1 rounded-lg transition-colors ${openIconPickerIdx === i ? "text-rose-500 bg-rose-50" : "text-gray-400 hover:text-rose-400"}`}
+                              title="Icoon kiezen"
+                            >
+                              <ProgramIcon iconId={item.iconId ?? "clock"} size={18} strokeWidth={2} />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setProgramUploadIndex(i)
+                                programPhotoRef.current?.click()
+                              }}
+                              className="ml-auto text-gray-300 hover:text-rose-400 transition-colors p-1"
+                              title="Foto toevoegen"
+                            >
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => {
+                                const updated = programmaItems.filter((_, j) => j !== i)
+                                updateContent("programma", { items: updated, layout: programLayout })
+                              }}
+                              className="text-gray-300 hover:text-red-500 transition-colors p-1"
+                              title="Verwijderen"
+                            >
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
+                          {openIconPickerIdx === i && (
+                            <div className="grid grid-cols-4 gap-1 p-2 bg-white rounded-xl border border-gray-100 shadow-sm">
+                              {PROGRAM_ICONS.map((icon) => (
+                                <button
+                                  key={icon.id}
+                                  onClick={() => {
+                                    const updated = [...programmaItems]
+                                    updated[i] = { ...updated[i], iconId: icon.id }
+                                    updateContent("programma", { items: updated, layout: programLayout })
+                                    setOpenIconPickerIdx(null)
+                                  }}
+                                  className={`flex flex-col items-center gap-0.5 p-1.5 rounded-lg transition-colors ${
+                                    (item.iconId ?? "clock") === icon.id
+                                      ? "bg-rose-50 text-rose-500"
+                                      : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"
+                                  }`}
+                                  title={icon.label}
+                                >
+                                  <ProgramIcon iconId={icon.id} size={20} strokeWidth={2} />
+                                  <span className="text-[9px] leading-tight truncate w-full text-center">{icon.label}</span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                          {item.image_url && (
+                            <div className="relative">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={item.image_url} alt="" className="w-full h-20 object-cover rounded-lg" />
+                              <button
+                                onClick={() => {
+                                  const updated = [...programmaItems]
+                                  updated[i] = { ...updated[i], image_url: null }
+                                  updateContent("programma", { items: updated, layout: programLayout })
+                                }}
+                                className="absolute top-1 right-1 bg-white rounded-full p-0.5 text-gray-400 hover:text-red-500 transition-colors shadow-sm"
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </div>
+                          )}
+                          <textarea
+                            rows={2}
+                            value={item.description}
+                            onChange={(e) => {
+                              const updated = [...programmaItems]
+                              updated[i] = { ...updated[i], description: e.target.value }
+                              updateContent("programma", { items: updated, layout: programLayout })
+                            }}
+                            placeholder="Beschrijving..."
+                            className="rounded-lg border border-gray-200 px-2 py-1.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none"
+                          />
+                        </div>
+                      ))}
+                      <button
+                        onClick={() => {
+                          const updated = [...programmaItems, { id: crypto.randomUUID(), time: "", description: "", iconId: "clock" }]
+                          updateContent("programma", { items: updated, layout: programLayout })
+                        }}
+                        className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-emerald-200 rounded-xl py-3 text-emerald-600 hover:border-emerald-300 hover:bg-emerald-50 transition-colors mt-1"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Onderdeel toevoegen
+                      </button>
+                    </div>
+                    <input
+                      ref={programPhotoRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      className="hidden"
+                      onChange={handleProgramPhotoUpload}
+                    />
+                  </div>
+                )}
+
                 <div className="border-t border-gray-100 pt-2">
                   <button
                     onClick={() => setIsEditingControls(false)}
@@ -816,7 +1046,23 @@ export default function BouwenPage() {
                           jouwfeest.maakjefeest.nl
                         </div>
                       </div>
-                      {navLayout === 'split' ? (
+                      {navLayout === 'left' ? (
+                        <nav className="px-5 py-4 border-b flex items-center gap-6 flex-wrap" style={{ backgroundColor: sc.navBg, borderColor: `${sc.accent}22` }}>
+                          <span className="text-sm font-bold whitespace-pre-wrap flex-shrink-0" style={{ color: sc.accent, fontFamily: sc.fontFamily }}>{eventName}</span>
+                          <div className="flex items-center flex-wrap gap-1">
+                            {activePagesOrdered.map((page) => (
+                              <button
+                                key={page.id}
+                                onClick={() => { setPreviewPage(page.id); setIsEditingControls(false) }}
+                                className="text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors"
+                                style={page.id === previewPage ? { color: sc.accent, backgroundColor: `${sc.accent}15` } : { color: sc.navText }}
+                              >
+                                {page.label}
+                              </button>
+                            ))}
+                          </div>
+                        </nav>
+                      ) : navLayout === 'split' ? (
                         <nav className="px-5 py-4 border-b flex items-center justify-between gap-4" style={{ backgroundColor: sc.navBg, borderColor: `${sc.accent}22` }}>
                           <span className="text-sm font-bold whitespace-pre-wrap flex-shrink-0" style={{ color: sc.accent, fontFamily: sc.fontFamily }}>{eventName}</span>
                           <div className="flex items-center flex-wrap justify-end gap-1">
@@ -875,23 +1121,7 @@ export default function BouwenPage() {
                         </>
                       )}
                       {previewPage === "programma" && (
-                        <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
-                          <h2 className="text-lg font-extrabold mb-6" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>Programma</h2>
-                          {programmaItems.length > 0
-                            ? programmaItems.map((item, i) => (
-                                <div key={i} className="flex gap-4 mb-4">
-                                  <span className="text-xs font-bold w-10 flex-shrink-0 pt-0.5" style={{ color: sc.labelColor }}>{item.time}</span>
-                                  <p className="text-sm" style={{ color: sc.bodyText }}>{item.description}</p>
-                                </div>
-                              ))
-                            : [["14:00", "Aankomst gasten"], ["15:00", "Ceremonie"], ["17:00", "Borrel"]].map(([t, d]) => (
-                                <div key={t} className="flex gap-4 mb-4 opacity-30">
-                                  <span className="text-xs font-bold w-10 flex-shrink-0 pt-0.5" style={{ color: sc.labelColor }}>{t}</span>
-                                  <p className="text-sm italic" style={{ color: sc.bodyText }}>{d}</p>
-                                </div>
-                              ))
-                          }
-                        </div>
+                        <EventProgramPreview items={programmaItemsSorted} sc={sc} programLayout={programLayout} />
                       )}
                       {previewPage === "rsvp" && (
                         <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>

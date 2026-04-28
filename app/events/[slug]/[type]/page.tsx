@@ -3,6 +3,7 @@ import { createServiceClient } from "@/lib/supabase"
 import { getStyleConfig, type SC } from "@/lib/event-styles"
 import RsvpForm from "../rsvp-form"
 import EventMastersPreview from "@/components/EventMastersPreview"
+import EventProgramPreview from "@/components/EventProgramPreview"
 
 interface Page {
   id: string
@@ -40,6 +41,14 @@ export default async function EventSubPage({
 
   const sc = getStyleConfig(event.style)
 
+  if (page.type === "programma") {
+    const items = Array.isArray(page.content?.items)
+      ? (page.content.items as { time: string; description: string }[])
+      : []
+    const programLayout = ((page.content?.layout as string) || "centered") as "centered" | "timeline" | "bento"
+    return <EventProgramPreview items={items} sc={sc} programLayout={programLayout} />
+  }
+
   return (
     <div style={{ padding: "36px 32px 64px" }}>
       <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: sc.headingColor, fontFamily: sc.fontFamily, margin: "0 0 28px" }}>
@@ -60,23 +69,6 @@ function PageContent({ page, sc }: { page: Page; sc: SC }) {
           Laat weten of je erbij bent — vul het formulier in.
         </p>
         <RsvpForm />
-      </div>
-    )
-  }
-
-  if (page.type === "programma") {
-    const items = Array.isArray(c.items) ? (c.items as { time: string; description: string }[]) : []
-    if (items.length === 0) return <Placeholder sc={sc}>Het programma wordt binnenkort toegevoegd.</Placeholder>
-    return (
-      <div style={{ border: `1px solid ${sc.accent}20`, borderRadius: 16, overflow: "hidden" }}>
-        {items.map((item, i) => (
-          <div key={i} style={{ display: "flex", gap: 16, padding: "14px 24px", backgroundColor: i % 2 === 0 ? sc.navBg : `${sc.accent}06` }}>
-            <span style={{ fontSize: "0.875rem", fontWeight: 700, width: 52, flexShrink: 0, paddingTop: 1, color: sc.labelColor }}>
-              {item.time}
-            </span>
-            <p style={{ fontSize: "0.9375rem", color: sc.bodyText, margin: 0 }}>{item.description}</p>
-          </div>
-        ))}
       </div>
     )
   }

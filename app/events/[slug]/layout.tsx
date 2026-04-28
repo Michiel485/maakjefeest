@@ -37,7 +37,7 @@ export default async function EventLayout({
 
       <div className="max-w-4xl mx-auto bg-white sm:shadow-2xl sm:rounded-2xl overflow-clip min-h-[85vh] flex flex-col">
 
-        <EventNav title={event.title} pages={pageList} sc={sc} navLayout={(event.nav_layout ?? "split") as "stacked" | "split"} />
+        <EventNav title={event.title} pages={pageList} sc={sc} navLayout={(event.nav_layout ?? "split") as "stacked" | "split" | "left"} />
 
         <main className="flex-grow">
           {children}
