@@ -43,9 +43,10 @@ export default async function EventSubPage({
 
   if (page.type === "programma") {
     const items = Array.isArray(page.content?.items)
-      ? (page.content.items as { time: string; description: string }[])
+      ? (page.content.items as { id?: string; time: string; title?: string; description: string; iconId?: string; image_url?: string | null; imagePosX?: number }[])
       : []
-    const programLayout = ((page.content?.layout as string) || "centered") as "centered" | "timeline" | "bento"
+    const rawLayout = (page.content?.layout as string) || "centered"
+    const programLayout = (rawLayout === "bento" ? "centered" : rawLayout) as "centered" | "timeline"
     return <EventProgramPreview items={items} sc={sc} programLayout={programLayout} />
   }
 

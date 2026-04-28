@@ -46,7 +46,7 @@ interface PageConfig {
   toggleable: boolean
 }
 
-interface ProgrammaItem { id?: string; time: string; description: string; iconId?: string; image_url?: string | null }
+interface ProgrammaItem { id?: string; time: string; title?: string; description: string; iconId?: string; image_url?: string | null; imagePosX?: number }
 interface PraktischItem { label: string; value: string }
 
 type ContentMap = Partial<Record<PageId, Record<string, unknown>>>
@@ -411,7 +411,8 @@ export default function BouwenPage() {
 
   const programmaItems = (content.programma?.items as ProgrammaItem[]) || []
   const programmaItemsSorted = programmaItems.slice().sort((a, b) => a.time.localeCompare(b.time))
-  const programLayout = ((content.programma?.layout as string) || "centered") as "centered" | "timeline" | "bento"
+  const rawLayout = (content.programma?.layout as string) || "centered"
+  const programLayout = (rawLayout === "bento" ? "centered" : rawLayout) as "centered" | "timeline"
   const praktischItems = (content.praktisch?.items as PraktischItem[]) || []
 
   return (
@@ -860,7 +861,7 @@ export default function BouwenPage() {
                   <div>
                     <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Weergave</p>
                     <div className="flex rounded-xl border border-gray-200 overflow-hidden mb-5">
-                      {(["timeline", "centered", "bento"] as const).map((opt) => (
+                      {(["timeline", "centered"] as const).map((opt) => (
                         <button
                           key={opt}
                           onClick={() => updateContent("programma", { items: programmaItems, layout: opt })}
@@ -868,7 +869,7 @@ export default function BouwenPage() {
                             programLayout === opt ? "bg-rose-500 text-white" : "text-gray-500 hover:bg-gray-50"
                           }`}
                         >
-                          {opt === "timeline" ? "Tijdlijn" : opt === "centered" ? "Gecentreerd" : "Kaarten"}
+                          {opt === "timeline" ? "Tijdlijn" : "Gecentreerd"}
                         </button>
                       ))}
                     </div>
@@ -892,7 +893,7 @@ export default function BouwenPage() {
                               className={`p-1 rounded-lg transition-colors ${openIconPickerIdx === i ? "text-rose-500 bg-rose-50" : "text-gray-400 hover:text-rose-400"}`}
                               title="Icoon kiezen"
                             >
-                              <ProgramIcon iconId={item.iconId ?? "clock"} size={18} strokeWidth={2} />
+                              <ProgramIcon iconId={item.iconId ?? "heart"} size={18} strokeWidth={2} />
                             </button>
                             <button
                               onClick={() => {
@@ -932,7 +933,7 @@ export default function BouwenPage() {
                                     setOpenIconPickerIdx(null)
                                   }}
                                   className={`flex flex-col items-center gap-0.5 p-1.5 rounded-lg transition-colors ${
-                                    (item.iconId ?? "clock") === icon.id
+                                    (item.iconId ?? "heart") === icon.id
                                       ? "bg-rose-50 text-rose-500"
                                       : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"
                                   }`}
@@ -945,23 +946,69 @@ export default function BouwenPage() {
                             </div>
                           )}
                           {item.image_url && (
-                            <div className="relative">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={item.image_url} alt="" className="w-full h-20 object-cover rounded-lg" />
-                              <button
-                                onClick={() => {
-                                  const updated = [...programmaItems]
-                                  updated[i] = { ...updated[i], image_url: null }
-                                  updateContent("programma", { items: updated, layout: programLayout })
-                                }}
-                                className="absolute top-1 right-1 bg-white rounded-full p-0.5 text-gray-400 hover:text-red-500 transition-colors shadow-sm"
-                              >
-                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                              </button>
+                            <div className="flex flex-col items-center gap-1.5 py-1">
+                              <div className="relative">
+                                {/* Round photo preview — drag left/right to pan */}
+                                <div
+                                  style={{ width: 80, height: 80, borderRadius: "50%", overflow: "hidden", cursor: "ew-resize", userSelect: "none", flexShrink: 0 }}
+                                  onMouseDown={(e) => {
+                                    e.preventDefault()
+                                    const startX = e.clientX
+                                    const startPosX = item.imagePosX ?? 50
+                                    function onMove(me: MouseEvent) {
+                                      const newX = Math.max(0, Math.min(100, startPosX - (me.clientX - startX)))
+                                      const updated = [...programmaItems]
+                                      updated[i] = { ...updated[i], imagePosX: newX }
+                                      updateContent("programma", { items: updated, layout: programLayout })
+                                    }
+                                    function onUp() {
+                                      window.removeEventListener("mousemove", onMove)
+                                      window.removeEventListener("mouseup", onUp)
+                                    }
+                                    window.addEventListener("mousemove", onMove)
+                                    window.addEventListener("mouseup", onUp)
+                                  }}
+                                >
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={item.image_url}
+                                    alt=""
+                                    style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: `${item.imagePosX ?? 50}% 50%`, display: "block", pointerEvents: "none" }}
+                                  />
+                                </div>
+                                {/* Pan hint arrows */}
+                                <div className="absolute inset-0 rounded-full flex items-center justify-between px-1.5 pointer-events-none">
+                                  <span className="text-white text-sm font-bold leading-none" style={{ filter: "drop-shadow(0 0 2px rgba(0,0,0,0.8))", opacity: 0.7 }}>‹</span>
+                                  <span className="text-white text-sm font-bold leading-none" style={{ filter: "drop-shadow(0 0 2px rgba(0,0,0,0.8))", opacity: 0.7 }}>›</span>
+                                </div>
+                                {/* Remove button */}
+                                <button
+                                  onClick={() => {
+                                    const updated = [...programmaItems]
+                                    updated[i] = { ...updated[i], image_url: null }
+                                    updateContent("programma", { items: updated, layout: programLayout })
+                                  }}
+                                  className="absolute -top-1 -right-1 bg-white rounded-full p-0.5 text-gray-400 hover:text-red-500 transition-colors shadow-sm border border-gray-100"
+                                >
+                                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                </button>
+                              </div>
+                              <p className="text-[10px] text-gray-400">Sleep om bij te snijden</p>
                             </div>
                           )}
+                          <input
+                            type="text"
+                            value={item.title ?? ""}
+                            onChange={(e) => {
+                              const updated = [...programmaItems]
+                              updated[i] = { ...updated[i], title: e.target.value }
+                              updateContent("programma", { items: updated, layout: programLayout })
+                            }}
+                            placeholder="Titel..."
+                            className="rounded-lg border border-gray-200 px-2 py-1.5 text-sm font-semibold text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400"
+                          />
                           <textarea
                             rows={2}
                             value={item.description}
@@ -977,7 +1024,7 @@ export default function BouwenPage() {
                       ))}
                       <button
                         onClick={() => {
-                          const updated = [...programmaItems, { id: crypto.randomUUID(), time: "", description: "", iconId: "clock" }]
+                          const updated = [...programmaItems, { id: crypto.randomUUID(), time: "", title: "", description: "", iconId: "heart" }]
                           updateContent("programma", { items: updated, layout: programLayout })
                         }}
                         className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-emerald-200 rounded-xl py-3 text-emerald-600 hover:border-emerald-300 hover:bg-emerald-50 transition-colors mt-1"
@@ -1000,7 +1047,13 @@ export default function BouwenPage() {
 
                 <div className="border-t border-gray-100 pt-2">
                   <button
-                    onClick={() => setIsEditingControls(false)}
+                    onClick={() => {
+                      if (previewPage === "programma") {
+                        const sorted = [...programmaItems].sort((a, b) => a.time.localeCompare(b.time))
+                        updateContent("programma", { items: sorted, layout: programLayout })
+                      }
+                      setIsEditingControls(false)
+                    }}
                     className="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold px-5 py-3 rounded-xl shadow-md shadow-emerald-100 hover:shadow-lg hover:-translate-y-0.5 transition-all"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -1121,7 +1174,19 @@ export default function BouwenPage() {
                         </>
                       )}
                       {previewPage === "programma" && (
-                        <EventProgramPreview items={programmaItemsSorted} sc={sc} programLayout={programLayout} />
+                        <EventProgramPreview
+                          items={programmaItemsSorted}
+                          sc={sc}
+                          programLayout={programLayout}
+                          builderMode
+                          onImagePositionChange={(itemId, x) => {
+                            const updated = programmaItems.map((it) => {
+                              const itId = it.id ?? `${it.time}::${it.description}`
+                              return itId === itemId ? { ...it, imagePosX: x } : it
+                            })
+                            updateContent("programma", { items: updated, layout: programLayout })
+                          }}
+                        />
                       )}
                       {previewPage === "rsvp" && (
                         <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
