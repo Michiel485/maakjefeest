@@ -216,6 +216,14 @@ export default function BouwenPage() {
   const programPhotoRef = useRef<HTMLInputElement>(null)
   const [publishing, setPublishing] = useState(false)
   const [publishError, setPublishError] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [savedEventId, setSavedEventId] = useState<string | null>(null)
+  const [justSaved, setJustSaved] = useState(false)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [authEmail, setAuthEmail] = useState("")
+  const [authSent, setAuthSent] = useState(false)
+  const [authLoading, setAuthLoading] = useState(false)
 
   useEffect(() => {
     try {
@@ -230,6 +238,9 @@ export default function BouwenPage() {
       const saved = localStorage.getItem("maakjefeest_content")
       if (saved) setContent(JSON.parse(saved))
     } catch {}
+
+    const savedId = localStorage.getItem("maakjefeest_saved_event_id")
+    if (savedId) setSavedEventId(savedId)
   }, [router])
 
   useEffect(() => {
@@ -386,6 +397,66 @@ export default function BouwenPage() {
     }
   }
 
+  async function performSave() {
+    if (!draft) return
+    setSaving(true)
+    setSaveError(null)
+    try {
+      const activePages = PAGES.filter((p) => active[p.id]).map((p) => p.id)
+      let uploadedHeroUrl: string | null = null
+      if (heroFile) {
+        uploadedHeroUrl = await uploadToStorage(heroFile, "hero-images")
+      } else if (heroImageUrl && !heroImageUrl.startsWith("blob:")) {
+        uploadedHeroUrl = heroImageUrl
+      }
+      const mergedContent: ContentMap = {
+        ...content,
+        home: { ...(content.home ?? {}), title: homeContent.title, body: homeContent.body, align: homeContent.align },
+        ceremoniemeesters: { masters: mastersData },
+      }
+      const res = await fetch("/api/drafts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...draft, hero_image_url: uploadedHeroUrl, nav_layout: navLayout, pages: activePages, content: mergedContent, event_id: savedEventId }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Opslaan mislukt")
+      localStorage.setItem("maakjefeest_saved_event_id", json.id)
+      setSavedEventId(json.id)
+      setJustSaved(true)
+      setTimeout(() => setJustSaved(false), 3000)
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Opslaan mislukt")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleSave() {
+    const { data: { user } } = await createClient().auth.getUser()
+    if (!user) {
+      setShowAuthModal(true)
+      return
+    }
+    await performSave()
+  }
+
+  async function handleAuthSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setAuthLoading(true)
+    const { error } = await createClient().auth.signInWithOtp({
+      email: authEmail,
+      options: { emailRedirectTo: `${window.location.origin}/api/auth/callback?next=/bouwen` },
+    })
+    setAuthLoading(false)
+    if (error) {
+      setSaveError(error.message)
+      setShowAuthModal(false)
+    } else {
+      setAuthSent(true)
+    }
+  }
+
   const sc = STYLE_CONFIG[style]
   const canvasWidth = viewport === "mobiel" ? 390 : 1024
 
@@ -428,29 +499,65 @@ export default function BouwenPage() {
         </Link>
         <span className="text-sm font-bold text-rose-600 tracking-tight hidden sm:block">maakjefeest.nl</span>
         <div className="flex flex-col items-end gap-1">
-          <button
-            onClick={handlePublish}
-            disabled={publishing}
-            className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-300 disabled:cursor-not-allowed text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-md shadow-emerald-100 hover:shadow-lg hover:-translate-y-0.5 disabled:shadow-none disabled:translate-y-0 transition-all"
-          >
-            {publishing ? (
-              <>
-                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                </svg>
-                Bezig...
-              </>
-            ) : (
-              <>
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-                Publiceren voor €24
-              </>
-            )}
-          </button>
-          {publishError && <p className="text-xs text-red-500 font-medium">{publishError}</p>}
+          <div className="flex items-center gap-2">
+            {/* Opslaan */}
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="inline-flex items-center gap-1.5 bg-white hover:bg-gray-50 disabled:bg-gray-50 text-gray-700 text-sm font-bold px-4 py-2.5 rounded-xl border border-gray-200 shadow-sm hover:shadow hover:-translate-y-0.5 disabled:translate-y-0 transition-all"
+            >
+              {saving ? (
+                <>
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                  </svg>
+                  Opslaan...
+                </>
+              ) : justSaved ? (
+                <>
+                  <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  Opgeslagen!
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                  </svg>
+                  Opslaan
+                </>
+              )}
+            </button>
+
+            {/* Publiceren */}
+            <button
+              onClick={handlePublish}
+              disabled={publishing}
+              className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-300 disabled:cursor-not-allowed text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-md shadow-emerald-100 hover:shadow-lg hover:-translate-y-0.5 disabled:shadow-none disabled:translate-y-0 transition-all"
+            >
+              {publishing ? (
+                <>
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                  </svg>
+                  Bezig...
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  Publiceren voor €24
+                </>
+              )}
+            </button>
+          </div>
+          {(publishError || saveError) && (
+            <p className="text-xs text-red-500 font-medium">{publishError || saveError}</p>
+          )}
         </div>
       </header>
 
@@ -1256,6 +1363,70 @@ export default function BouwenPage() {
           </div>
         </main>
       </div>
+
+      {/* ── Auth modal ── */}
+      {showAuthModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => { if (!authSent) { setShowAuthModal(false); setSaveError(null) } }}
+        >
+          <div
+            className="bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {authSent ? (
+              <>
+                <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-6 h-6 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-extrabold text-gray-900 text-center mb-2">Controleer je inbox</h3>
+                <p className="text-sm text-gray-500 text-center mb-4 leading-relaxed">
+                  We hebben een inloglink gestuurd naar <strong className="text-gray-800">{authEmail}</strong>.
+                  Klik op de link, kom dan terug naar deze pagina en klik nogmaals op <strong>Opslaan</strong>.
+                </p>
+                <button
+                  onClick={() => { setShowAuthModal(false); setAuthSent(false); setAuthEmail("") }}
+                  className="w-full text-center text-sm text-rose-500 hover:underline font-medium"
+                >
+                  Sluiten
+                </button>
+              </>
+            ) : (
+              <>
+                <h3 className="text-lg font-extrabold text-gray-900 mb-1.5">Opslaan vereist een account</h3>
+                <p className="text-sm text-gray-500 mb-5 leading-relaxed">
+                  Vul je e-mailadres in om een magische inloglink te ontvangen — geen wachtwoord nodig.
+                </p>
+                <form onSubmit={handleAuthSubmit} className="space-y-3">
+                  <input
+                    type="email"
+                    required
+                    value={authEmail}
+                    onChange={(e) => setAuthEmail(e.target.value)}
+                    placeholder="jouw@email.nl"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-transparent"
+                  />
+                  <button
+                    type="submit"
+                    disabled={authLoading}
+                    className="w-full bg-rose-500 hover:bg-rose-600 disabled:bg-rose-300 text-white font-bold py-3 rounded-xl text-sm transition-colors"
+                  >
+                    {authLoading ? "Bezig..." : "Stuur inloglink"}
+                  </button>
+                </form>
+                <button
+                  onClick={() => { setShowAuthModal(false); setSaveError(null) }}
+                  className="mt-3 w-full text-center text-sm text-gray-400 hover:text-gray-600"
+                >
+                  Annuleren
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -128,3 +128,17 @@ create policy "Owner read rsvp" on rsvp
 create policy "No anon access" on magic_links
   for all
   using (false);
+
+-- ── Migration: Supabase Auth columns (run after enabling Auth in Supabase dashboard) ──────
+-- The events table uses user_email (text) for ownership. When using Supabase Auth,
+-- auth.jwt() ->> 'email' returns the authenticated user's email, so existing RLS
+-- policies continue to work without modification.
+--
+-- Optional: add extra columns for style, hero image, and nav layout if not already present.
+-- Run these only if the columns don't exist yet:
+--
+-- alter table events add column if not exists datum text not null default '';
+-- alter table events add column if not exists locatie text not null default '';
+-- alter table events add column if not exists style text not null default 'roze';
+-- alter table events add column if not exists hero_image_url text;
+-- alter table events add column if not exists nav_layout text not null default 'split';
