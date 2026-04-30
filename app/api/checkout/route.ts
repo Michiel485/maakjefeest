@@ -28,7 +28,7 @@ export async function POST(request: Request) {
           currency: "eur",
           unit_amount: 2400,
           product_data: {
-            name: "maakjefeest.nl — eventwebsite",
+            name: "Saying Yes — bruiloftswebsite",
           },
         },
         quantity: 1,

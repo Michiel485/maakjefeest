@@ -45,8 +45,8 @@ export default async function EventLayout({
 
         <footer className="py-6 text-center text-sm" style={{ color: sc.bodyText, borderTop: `1px solid ${sc.accent}15` }}>
           Gemaakt met{" "}
-          <a href="https://maakjefeest.nl" style={{ fontWeight: 600, color: sc.accent, textDecoration: "none" }}>
-            maakjefeest.nl
+          <a href="https://sayingyes.nl" style={{ fontWeight: 600, color: sc.accent, textDecoration: "none" }}>
+            Saying Yes
           </a>
         </footer>
 

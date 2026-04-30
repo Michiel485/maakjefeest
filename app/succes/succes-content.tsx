@@ -27,11 +27,11 @@ export default function SuccesContent() {
       .catch(() => setLoading(false))
   }, [event_id])
 
-  const siteUrl = event ? `https://${event.slug}.maakjefeest.nl` : null
+  const siteUrl = event ? `https://${event.slug}.sayingyes.nl` : null
 
   const whatsappText = event
     ? encodeURIComponent(
-        `Hé! Ik heb een eventwebsite aangemaakt voor ${event.title}. Bekijk hem hier: ${siteUrl}`
+        `Hé! Bekijk onze bruiloftswebsite voor ${event.title} hier: ${siteUrl}`
       )
     : ""
 
@@ -71,7 +71,7 @@ export default function SuccesContent() {
             rel="noopener noreferrer"
             className="text-lg font-bold text-rose-600 hover:text-rose-700 transition-colors break-all"
           >
-            {event?.slug}.maakjefeest.nl
+            {event?.slug}.sayingyes.nl
           </a>
         </div>
       )}

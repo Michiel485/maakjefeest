@@ -71,7 +71,7 @@ export default function InloggenPage() {
     <div className="min-h-screen bg-rose-50 flex items-center justify-center px-6">
       <div className="bg-white rounded-3xl shadow-xl p-10 max-w-md w-full">
         <Link href="/" className="text-lg font-bold text-rose-600 tracking-tight block mb-8">
-          maakjefeest.nl
+          Saying Yes
         </Link>
         <h1 className="text-2xl font-extrabold text-gray-900 mb-2">Inloggen</h1>
         <p className="text-sm text-gray-500 mb-8 leading-relaxed">

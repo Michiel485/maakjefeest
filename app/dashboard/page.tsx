@@ -3,6 +3,7 @@ import Link from "next/link"
 import { createClient } from "@/lib/supabase-server"
 import { createServiceClient } from "@/lib/supabase"
 import { SignOutButton } from "./SignOutButton"
+import RsvpSection, { type RsvpRow } from "./RsvpSection"
 
 type Event = {
   id: string
@@ -49,7 +50,7 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
       <div className="flex items-center gap-3 flex-shrink-0">
         {!isDraft && (
           <a
-            href={`https://${event.slug}.maakjefeest.nl`}
+            href={`https://${event.slug}.sayingyes.nl`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm text-gray-500 hover:text-rose-500 font-medium transition-colors whitespace-nowrap"
@@ -87,12 +88,23 @@ export default async function DashboardPage() {
   const drafts = (events ?? []).filter((e: Event) => e.status === "draft")
   const firstName = user.email?.split("@")[0] ?? "daar"
 
+  let rsvps: RsvpRow[] = []
+  if (published.length > 0) {
+    const eventIds = published.map((e: Event) => e.id)
+    const { data: rsvpData } = await service
+      .from("rsvp")
+      .select("id, event_id, submission_id, name, email, guest_type, dietary, is_primary, created_at")
+      .in("event_id", eventIds)
+      .order("created_at", { ascending: false })
+    rsvps = (rsvpData ?? []) as RsvpRow[]
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="text-lg font-bold text-rose-600 tracking-tight">
-            maakjefeest.nl
+            Saying Yes
           </Link>
           <SignOutButton />
         </div>
@@ -167,16 +179,7 @@ export default async function DashboardPage() {
           <h2 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">
             RSVP-aanmeldingen
           </h2>
-          <div className="bg-white rounded-2xl border border-gray-100 p-10 text-center shadow-sm">
-            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-              </svg>
-            </div>
-            <p className="text-gray-400 text-sm">
-              Aanmeldingen van jullie gasten verschijnen hier zodra de bruiloftswebsite live is.
-            </p>
-          </div>
+          <RsvpSection rsvps={rsvps} events={published.map((e: Event) => ({ id: e.id, title: e.title }))} />
         </section>
       </main>
     </div>

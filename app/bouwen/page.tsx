@@ -497,7 +497,7 @@ export default function BouwenPage() {
           </svg>
           Terug naar gegevens
         </Link>
-        <span className="text-sm font-bold text-rose-600 tracking-tight hidden sm:block">maakjefeest.nl</span>
+        <span className="text-sm font-bold text-rose-600 tracking-tight hidden sm:block">Saying Yes</span>
         <div className="flex flex-col items-end gap-1">
           <div className="flex items-center gap-2">
             {/* Opslaan */}
@@ -1203,7 +1203,7 @@ export default function BouwenPage() {
                           <span className="w-2 h-2 rounded-full bg-green-400" />
                         </div>
                         <div className="flex-1 bg-white rounded-md border border-gray-200 px-3 py-1 text-xs text-gray-400">
-                          jouwfeest.maakjefeest.nl
+                          jouwbruiloft.sayingyes.nl
                         </div>
                       </div>
                       {navLayout === 'left' ? (

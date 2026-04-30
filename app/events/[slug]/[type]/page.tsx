@@ -55,12 +55,12 @@ export default async function EventSubPage({
       <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: sc.headingColor, fontFamily: sc.fontFamily, margin: "0 0 28px" }}>
         {page.title}
       </h1>
-      <PageContent page={page} sc={sc} />
+      <PageContent page={page} sc={sc} eventId={event.id} />
     </div>
   )
 }
 
-function PageContent({ page, sc }: { page: Page; sc: SC }) {
+function PageContent({ page, sc, eventId }: { page: Page; sc: SC; eventId: string }) {
   const c = page.content ?? {}
 
   if (page.type === "rsvp") {
@@ -69,7 +69,7 @@ function PageContent({ page, sc }: { page: Page; sc: SC }) {
         <p style={{ fontSize: "0.9375rem", marginBottom: 24, color: sc.bodyText }}>
           Laat weten of je erbij bent — vul het formulier in.
         </p>
-        <RsvpForm />
+        <RsvpForm eventId={eventId} accentColor={sc.accent} />
       </div>
     )
   }

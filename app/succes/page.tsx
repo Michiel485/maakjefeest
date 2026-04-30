@@ -26,9 +26,9 @@ function SuccesContent() {
       .catch(() => setLoading(false))
   }, [event_id])
 
-  const siteUrl = event ? `https://${event.slug}.maakjefeest.nl` : null
+  const siteUrl = event ? `https://${event.slug}.sayingyes.nl` : null
   const whatsappText = event
-    ? encodeURIComponent(`Hé! Ik heb een eventwebsite aangemaakt voor ${event.title}. Bekijk hem hier: ${siteUrl}`)
+    ? encodeURIComponent(`Hé! Bekijk onze bruiloftswebsite voor ${event.title} hier: ${siteUrl}`)
     : ""
 
   if (loading) {
@@ -60,7 +60,7 @@ function SuccesContent() {
           <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Jouw website</p>
           <a href={siteUrl} target="_blank" rel="noopener noreferrer"
             className="text-lg font-bold text-rose-600 hover:text-rose-700 transition-colors break-all">
-            {event?.slug}.maakjefeest.nl
+            {event?.slug}.sayingyes.nl
           </a>
         </div>
       )}
@@ -99,7 +99,7 @@ export default function SuccesPage() {
       <div className="pointer-events-none fixed -top-20 -left-20 w-80 h-80 rounded-full bg-rose-200 opacity-20 blur-3xl" />
       <div className="pointer-events-none fixed -bottom-20 -right-20 w-96 h-96 rounded-full bg-orange-200 opacity-20 blur-3xl" />
       <header className="relative z-10 flex items-center px-8 py-5 max-w-xl mx-auto">
-        <Link href="/" className="text-lg font-bold text-rose-600 tracking-tight">maakjefeest.nl</Link>
+        <Link href="/" className="text-lg font-bold text-rose-600 tracking-tight">Saying Yes</Link>
       </header>
       <Suspense fallback={
         <div className="flex items-center justify-center min-h-[60vh]">

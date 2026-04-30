@@ -10,7 +10,9 @@ export async function proxy(req: NextRequest) {
   const url = req.nextUrl.clone()
   const hostname = req.headers.get("host") || ""
   const currentHost = hostname.split(":")[0]
-  const baseDomain = currentHost.includes("localhost") ? "localhost" : "maakjefeest.nl"
+  const baseDomain = currentHost.includes("localhost")
+    ? "localhost"
+    : currentHost.endsWith(".sayingyes.be") ? "sayingyes.be" : "sayingyes.nl"
 
   // Subdomain rewrite for event pages (e.g. janenjoop.maakjefeest.nl)
   if (

@@ -63,7 +63,7 @@ export default function AanmakenPage() {
 
       {/* Nav */}
       <header className="relative z-10 flex items-center justify-between px-8 py-5 max-w-3xl mx-auto">
-        <a href="/" className="text-lg font-bold text-rose-600 tracking-tight">maakjefeest.nl</a>
+        <a href="/" className="text-lg font-bold text-rose-600 tracking-tight">Saying Yes</a>
         <a href="/" className="text-sm font-medium text-gray-500 hover:text-rose-600 transition-colors flex items-center gap-1">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />

@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { NavLoginButton } from "@/components/NavLoginButton"
 
 export default function Home() {
   return (
@@ -6,10 +7,8 @@ export default function Home() {
 
       {/* ── Nav ── */}
       <header className="relative z-10 flex items-center justify-between px-8 py-5 max-w-6xl mx-auto">
-        <span className="text-lg font-bold text-rose-600 tracking-tight">maakjefeest.nl</span>
-        <a href="/inloggen" className="text-sm font-medium text-gray-600 hover:text-rose-600 transition-colors">
-          Inloggen
-        </a>
+        <span className="text-lg font-bold text-rose-600 tracking-tight">Saying Yes</span>
+        <NavLoginButton />
       </header>
 
       {/* ── Hero ── */}
@@ -186,7 +185,7 @@ export default function Home() {
       </section>
 
       <footer className="bg-gray-950 border-t border-gray-900 py-7 text-center text-xs text-gray-500">
-        © {new Date().getFullYear()} maakjefeest.nl
+        © {new Date().getFullYear()} Saying Yes
       </footer>
     </div>
   )

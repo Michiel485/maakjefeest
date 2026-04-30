@@ -129,6 +129,16 @@ create policy "No anon access" on magic_links
   for all
   using (false);
 
+-- ── Migration: RSVP multi-guest support ─────────────────────────────────────────────────
+-- Run these in the Supabase SQL editor if the columns don't exist yet:
+--
+-- alter table rsvp add column if not exists submission_id uuid default gen_random_uuid();
+-- alter table rsvp add column if not exists is_primary boolean not null default false;
+-- alter table rsvp add column if not exists guest_type text not null default 'daggast' check (guest_type in ('daggast', 'avondgast'));
+-- alter table rsvp add column if not exists dietary text;
+-- alter table rsvp alter column email drop not null;
+-- create index if not exists rsvp_submission_id_idx on rsvp(submission_id);
+
 -- ── Migration: Supabase Auth columns (run after enabling Auth in Supabase dashboard) ──────
 -- The events table uses user_email (text) for ownership. When using Supabase Auth,
 -- auth.jwt() ->> 'email' returns the authenticated user's email, so existing RLS
