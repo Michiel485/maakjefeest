@@ -461,7 +461,7 @@ export default function BouwenPage() {
   const canvasWidth = viewport === "mobiel" ? 390 : 1024
 
   const activePagesOrdered = PAGES.filter((p) => active[p.id])
-  const eventName = draft?.naam || "Jouw evenement"
+  const eventName = draft?.naam || "Jullie bruiloft"
   const eventDate = draft?.datum ? formatDate(draft.datum) : "Datum nog niet ingesteld"
   const eventLocatie = draft?.locatie || ""
   const typeLabel = draft?.type ? TYPE_LABEL[draft.type] : "Evenement"
@@ -495,7 +495,7 @@ export default function BouwenPage() {
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          Terug naar basisinfo
+          Terug naar gegevens
         </Link>
         <span className="text-sm font-bold text-rose-600 tracking-tight hidden sm:block">maakjefeest.nl</span>
         <div className="flex flex-col items-end gap-1">

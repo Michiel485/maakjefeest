@@ -105,7 +105,7 @@ export default async function DashboardPage() {
             Welkom, {firstName}!
           </h1>
           <p className="text-gray-500">
-            Hier vind je al jouw projecten en RSVP-aanmeldingen.
+            Hier vind je al jullie bruiloftsprojecten en RSVP-aanmeldingen.
           </p>
         </div>
 
@@ -113,13 +113,13 @@ export default async function DashboardPage() {
         <section className="mb-10">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xs font-bold uppercase tracking-widest text-gray-400">
-              Live websites
+              Live bruiloftswebsites
             </h2>
             <Link
               href="/aanmaken"
               className="text-sm font-semibold text-rose-500 hover:text-rose-600 transition-colors"
             >
-              + Nieuw project
+              + Nieuwe bruiloft
             </Link>
           </div>
           {published.length === 0 ? (
@@ -130,7 +130,7 @@ export default async function DashboardPage() {
                 </svg>
               </div>
               <p className="text-gray-400 text-sm mb-4">
-                Nog geen live website. Bouw er een en publiceer hem voor eenmalig €24!
+                Nog geen live bruiloftswebsite. Bouw er een en publiceer hem voor eenmalig €24!
               </p>
               <Link
                 href="/aanmaken"
@@ -174,7 +174,7 @@ export default async function DashboardPage() {
               </svg>
             </div>
             <p className="text-gray-400 text-sm">
-              Aanmeldingen van je gasten verschijnen hier zodra je website live is.
+              Aanmeldingen van jullie gasten verschijnen hier zodra de bruiloftswebsite live is.
             </p>
           </div>
         </section>

@@ -42,13 +42,13 @@ export default function Home() {
           </div>
 
           <h1 className="text-5xl sm:text-6xl font-extrabold text-gray-900 leading-[1.1] tracking-tight mb-6">
-            Maak jouw feest<br />
+            Maak jullie bruiloft<br />
             <span className="text-rose-500">onvergetelijk</span>
           </h1>
 
           <p className="text-xl text-gray-500 max-w-xl mb-10 leading-relaxed">
-            Bouw in minuten een prachtige eventwebsite voor jouw bruiloft, verjaardag of evenement.
-            Deel hem met je gasten en ontvang aanmeldingen direct in jouw dashboard.
+            Bouw in minuten een prachtige bruiloftswebsite voor jullie grote dag.
+            Deel hem met jullie gasten en ontvang aanmeldingen direct in jullie dashboard.
           </p>
 
           <Link
@@ -64,76 +64,65 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Event type cards ── */}
+      {/* ── Feature cards ── */}
       <section className="max-w-5xl mx-auto px-6 -mt-6 pb-20 relative z-10">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
 
-          {/* Bruiloft */}
+          {/* RSVP */}
           <div className="group rounded-3xl border border-pink-100 bg-gradient-to-b from-rose-50 to-pink-50 p-8 flex flex-col gap-5 shadow-md hover:shadow-xl hover:shadow-rose-100 hover:-translate-y-1.5 transition-all duration-300">
-            <div className="w-13 h-13 w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center shadow-md shadow-rose-200">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center shadow-md shadow-rose-200">
               <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="7" cy="16" r="4" />
-                <circle cx="17" cy="16" r="4" />
-                <path d="M11 16a4 4 0 0 1 2 0" />
-                <path d="M10.5 7 Q12 4.5 13.5 7" />
-                <circle cx="12" cy="5" r="1.5" fill="currentColor" stroke="none" opacity="0.6" />
+                <path d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
               </svg>
             </div>
             <div>
-              <h3 className="text-base font-bold text-gray-900 mb-1.5">Bruiloft</h3>
+              <h3 className="text-base font-bold text-gray-900 mb-1.5">RSVP</h3>
               <p className="text-sm text-gray-500 leading-relaxed">
-                Een stijlvolle website voor jullie mooiste dag. Met RSVP, programma en wishlist voor jullie gasten.
+                Gasten melden zich aan via een stijlvol formulier. Jij ziet alle aanmeldingen overzichtelijk in jullie dashboard.
               </p>
             </div>
             <div className="mt-auto flex flex-wrap gap-2">
-              {["RSVP", "Programma", "Wishlist"].map(t => (
+              {["Aanmelden", "Overzicht", "Export"].map(t => (
                 <span key={t} className="text-xs font-semibold bg-rose-100 text-rose-500 px-2.5 py-1 rounded-full">{t}</span>
               ))}
             </div>
           </div>
 
-          {/* Verjaardag */}
+          {/* Programma */}
           <div className="group rounded-3xl border border-amber-100 bg-gradient-to-b from-amber-50 to-orange-50 p-8 flex flex-col gap-5 shadow-md hover:shadow-xl hover:shadow-amber-100 hover:-translate-y-1.5 transition-all duration-300">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-400 flex items-center justify-center shadow-md shadow-amber-200">
               <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="11" width="18" height="10" rx="2" />
-                <path d="M3 15h18" />
-                <path d="M7 11V9a5 5 0 0 1 10 0v2" />
-                <path d="M8 6 Q8.5 4 9 6" />
-                <path d="M12 5 Q12.5 3 13 5" />
-                <path d="M16 6 Q16.5 4 17 6" />
+                <path d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
               </svg>
             </div>
             <div>
-              <h3 className="text-base font-bold text-gray-900 mb-1.5">Verjaardag</h3>
+              <h3 className="text-base font-bold text-gray-900 mb-1.5">Programma</h3>
               <p className="text-sm text-gray-500 leading-relaxed">
-                Nodig al je vrienden en familie uit op één plek. Vertel wanneer, waar en hoe laat het feest begint.
+                Deel het tijdschema van jullie grote dag. Van de ceremonie tot het avondfeest — overzichtelijk en stijlvol.
               </p>
             </div>
             <div className="mt-auto flex flex-wrap gap-2">
-              {["Uitnodiging", "RSVP", "Foto's"].map(t => (
+              {["Ceremonie", "Diner", "Feest"].map(t => (
                 <span key={t} className="text-xs font-semibold bg-amber-100 text-amber-600 px-2.5 py-1 rounded-full">{t}</span>
               ))}
             </div>
           </div>
 
-          {/* Evenement */}
+          {/* Wishlist */}
           <div className="group rounded-3xl border border-teal-100 bg-gradient-to-b from-teal-50 to-cyan-50 p-8 flex flex-col gap-5 shadow-md hover:shadow-xl hover:shadow-teal-100 hover:-translate-y-1.5 transition-all duration-300">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center shadow-md shadow-teal-200">
               <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="2" />
-                <path d="M16 2v4M8 2v4M3 10h18" />
-                <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01" strokeWidth={2.5} />
+                <path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
               </svg>
             </div>
             <div>
-              <h3 className="text-base font-bold text-gray-900 mb-1.5">Evenement</h3>
+              <h3 className="text-base font-bold text-gray-900 mb-1.5">Wishlist</h3>
               <p className="text-sm text-gray-500 leading-relaxed">
-                Van bedrijfsborrel tot buurtfeest — één centrale plek voor alle informatie en aanmeldingen.
+                Zet jullie cadeauwensen op de website. Gasten kunnen eenvoudig zien wat jullie leuk vinden.
               </p>
             </div>
             <div className="mt-auto flex flex-wrap gap-2">
-              {["Aanmelden", "Programma", "Locatie"].map(t => (
+              {["Cadeaus", "Bijdrage", "Lijst"].map(t => (
                 <span key={t} className="text-xs font-semibold bg-teal-100 text-teal-600 px-2.5 py-1 rounded-full">{t}</span>
               ))}
             </div>
@@ -152,18 +141,18 @@ export default function Home() {
             {[
               {
                 n: "01", color: "text-rose-400", border: "border-rose-900", bg: "bg-rose-950",
-                title: "Kies je type",
-                body: "Bruiloft, verjaardag of evenement — kies het thema dat bij jou past en geef je website een naam.",
+                title: "Vul jullie gegevens in",
+                body: "Vul de namen, trouwdatum en locatie in. We zetten jullie bruiloftswebsite direct voor jullie klaar.",
               },
               {
                 n: "02", color: "text-amber-400", border: "border-amber-900", bg: "bg-amber-950",
-                title: "Bouw je website",
-                body: "Vul je pagina's in: welkomsttekst, programma, RSVP-formulier en praktische informatie.",
+                title: "Bouw jullie website",
+                body: "Personaliseer de pagina's: welkomsttekst, programma, RSVP-formulier en praktische informatie.",
               },
               {
                 n: "03", color: "text-teal-400", border: "border-teal-900", bg: "bg-teal-950",
-                title: "Deel met je gasten",
-                body: "Betaal eenmalig €24 en zet je website live op jouw eigen subdomein. 2 jaar online, daarna verlengbaar.",
+                title: "Deel met jullie gasten",
+                body: "Betaal eenmalig €24 en zet jullie bruiloftswebsite live op een eigen subdomein. 2 jaar online.",
               },
             ].map(({ n, color, border, bg, title, body }) => (
               <div key={n} className={`rounded-3xl border ${border} ${bg} p-8 text-left flex flex-col gap-4`}>
@@ -181,9 +170,9 @@ export default function Home() {
         <div className="pointer-events-none absolute -bottom-12 -right-12 w-56 h-56 rounded-full bg-white opacity-10" />
         <div className="pointer-events-none absolute -top-8 -left-8 w-40 h-40 rounded-full bg-white opacity-10" />
         <h2 className="relative text-3xl sm:text-4xl font-extrabold text-white mb-4 leading-tight">
-          Klaar om jouw feest<br />te bouwen?
+          Klaar om jullie bruiloft<br />te bouwen?
         </h2>
-        <p className="relative text-rose-100 text-lg mb-8">Start vandaag nog — je website is in minuten klaar.</p>
+        <p className="relative text-rose-100 text-lg mb-8">Start vandaag nog — jullie website is in minuten klaar.</p>
         <Link
           href="/aanmaken"
           className="relative inline-flex items-center gap-2 bg-white text-rose-500 font-bold px-9 py-4 rounded-2xl hover:bg-rose-50 transition-colors shadow-xl text-base"
