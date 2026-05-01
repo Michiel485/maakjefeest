@@ -1412,55 +1412,63 @@ export default function BouwenPage() {
                       )}
                       {previewPage === "rsvp" && (
                         <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
-                          {/* Titel buiten de card, net als op de live site */}
                           <h2 className="text-2xl font-extrabold mb-6" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>RSVP</h2>
-                          <div className="rounded-2xl p-6 flex flex-col gap-5" style={{ border: `1px solid ${sc.accent}18`, boxShadow: "0 1px 8px rgba(0,0,0,0.06)" }}>
+                          {/* max-w-lg: zelfde breedte als de echte form */}
+                          <div className="flex flex-col gap-6 max-w-lg">
                             <p className="text-sm" style={{ color: sc.bodyText }}>{(content.rsvp?.text as string) || "Laat weten of je erbij bent — vul het formulier in."}</p>
-                            {/* Aantal personen */}
+                            {/* Aantal personen — buiten de inner card */}
                             <div>
-                              <div className="text-sm font-bold mb-3" style={{ color: sc.headingColor }}>Met hoeveel personen komen jullie?</div>
+                              <div className="text-sm font-semibold mb-3" style={{ color: "#374151" }}>Met hoeveel personen komen jullie?</div>
                               <div className="flex gap-2 flex-wrap">
                                 {[1,2,3,4,5,6,7,8].map((n) => (
-                                  <div key={n} className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-2"
+                                  <div key={n} className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold"
                                     style={n === 1
-                                      ? { backgroundColor: sc.buttonBg, color: sc.buttonText, borderColor: sc.buttonBg }
-                                      : { backgroundColor: "transparent", color: sc.bodyText, borderColor: `${sc.accent}25` }
+                                      ? { backgroundColor: sc.accent, color: "#fff", border: `2px solid ${sc.accent}` }
+                                      : { backgroundColor: "transparent", color: "#6b7280", border: "2px solid #e5e7eb" }
                                     }>
                                     {n}
                                   </div>
                                 ))}
                               </div>
                             </div>
-                            {/* Hoofdgast */}
-                            <div className="flex flex-col gap-3">
-                              <div className="text-[10px] font-bold uppercase tracking-widest pt-1" style={{ color: sc.accent }}>Hoofdgast</div>
+                            {/* Hoofdgast inner card — bg-gray-50 border-gray-100, net als de echte form */}
+                            <div className="rounded-2xl p-5 flex flex-col gap-4" style={{ backgroundColor: "#f9fafb", border: "1px solid #f3f4f6" }}>
+                              <div className="text-xs font-bold uppercase tracking-widest" style={{ color: "#9ca3af" }}>Hoofdgast</div>
                               <div>
-                                <div className="text-sm font-semibold mb-1.5" style={{ color: sc.headingColor }}>Naam <span style={{ color: sc.accent }}>*</span></div>
-                                <div className="w-full h-10 rounded-xl border px-3 flex items-center" style={{ borderColor: `${sc.accent}25` }}>
-                                  <span className="text-sm" style={{ color: `${sc.bodyText}50` }}>Voornaam</span>
+                                <div className="text-sm font-semibold mb-1.5" style={{ color: "#374151" }}>Naam *</div>
+                                <div className="w-full h-10 rounded-xl border border-gray-200 bg-white px-4 flex items-center shadow-sm">
+                                  <span className="text-sm text-gray-400">Voornaam</span>
                                 </div>
                               </div>
                               <div>
-                                <div className="text-sm font-semibold mb-1.5" style={{ color: sc.headingColor }}>Type gast</div>
-                                <div className="flex w-full rounded-xl overflow-hidden border" style={{ borderColor: `${sc.accent}25` }}>
-                                  <div className="flex-1 h-10 flex items-center justify-center text-sm font-bold" style={{ backgroundColor: sc.buttonBg, color: sc.buttonText }}>Daggast</div>
-                                  <div className="flex-1 h-10 flex items-center justify-center text-sm font-semibold" style={{ color: sc.bodyText }}>Avondgast</div>
+                                <div className="text-sm font-semibold mb-1.5" style={{ color: "#374151" }}>Type gast</div>
+                                <div className="flex gap-2">
+                                  <div className="flex-1 h-9 rounded-xl flex items-center justify-center text-sm font-semibold"
+                                    style={{ backgroundColor: sc.accent, color: "#fff", border: `2px solid ${sc.accent}` }}>
+                                    Daggast
+                                  </div>
+                                  <div className="flex-1 h-9 rounded-xl flex items-center justify-center text-sm font-semibold text-gray-500"
+                                    style={{ border: "2px solid #e5e7eb" }}>
+                                    Avondgast
+                                  </div>
                                 </div>
                               </div>
                               <div>
-                                <div className="text-sm font-semibold mb-1.5" style={{ color: sc.headingColor }}>Dieetwensen / Allergieën</div>
-                                <div className="w-full h-10 rounded-xl border px-3 flex items-center" style={{ borderColor: `${sc.accent}25` }}>
-                                  <span className="text-sm" style={{ color: `${sc.bodyText}50` }}>Bijv. vegetarisch, notenallergie</span>
+                                <div className="text-sm font-semibold mb-1.5" style={{ color: "#374151" }}>Dieetwensen / Allergieën</div>
+                                <div className="w-full h-10 rounded-xl border border-gray-200 bg-white px-4 flex items-center shadow-sm">
+                                  <span className="text-sm text-gray-400">Bijv. vegetarisch, notenallergie</span>
                                 </div>
                               </div>
                               <div>
-                                <div className="text-sm font-semibold mb-1.5" style={{ color: sc.headingColor }}>E-mailadres <span style={{ color: sc.accent }}>*</span></div>
-                                <div className="w-full h-10 rounded-xl border px-3 flex items-center" style={{ borderColor: `${sc.accent}25` }}>
-                                  <span className="text-sm" style={{ color: `${sc.bodyText}50` }}>jouw@email.nl</span>
+                                <div className="text-sm font-semibold mb-1.5" style={{ color: "#374151" }}>E-mailadres *</div>
+                                <div className="w-full h-10 rounded-xl border border-gray-200 bg-white px-4 flex items-center shadow-sm">
+                                  <span className="text-sm text-gray-400">jouw@email.nl</span>
                                 </div>
                               </div>
                             </div>
-                            <div className="w-full h-11 rounded-xl flex items-center justify-center text-sm font-bold" style={{ backgroundColor: sc.buttonBg, color: sc.buttonText }}>
+                            {/* Aanmelden knop buiten de inner card */}
+                            <div className="w-full h-12 rounded-xl flex items-center justify-center text-sm font-bold shadow-md"
+                              style={{ backgroundColor: sc.accent, color: "#fff" }}>
                               Aanmelden
                             </div>
                           </div>
