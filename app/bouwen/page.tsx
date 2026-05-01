@@ -410,7 +410,7 @@ export default function BouwenPage() {
       const res = await fetch("/api/events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...draft, hero_image_url: uploadedHeroUrl, nav_layout: navLayout, pages: activePages, content: mergedContent }),
+        body: JSON.stringify({ ...draft, hero_image_url: uploadedHeroUrl, nav_layout: navLayout, pages: activePages, content: mergedContent, event_id: savedEventId }),
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || "Er ging iets mis")
