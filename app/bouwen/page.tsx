@@ -1412,16 +1412,56 @@ export default function BouwenPage() {
                       )}
                       {previewPage === "rsvp" && (
                         <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
-                          <h2 className="text-lg font-extrabold mb-2" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>Aanmelden</h2>
-                          <p className="text-sm mb-6" style={{ color: sc.bodyText }}>{(content.rsvp?.text as string) || "Laat weten of je erbij bent — vul het formulier in."}</p>
-                          <div className="flex flex-col gap-3">
-                            {["Naam", "E-mailadres", "Aantal personen"].map((f) => (
-                              <div key={f}>
-                                <div className="text-xs font-semibold mb-1" style={{ color: sc.navText }}>{f}</div>
-                                <div className="h-9 rounded-xl border" style={{ backgroundColor: `${sc.accent}08`, borderColor: `${sc.accent}25` }} />
+                          <h2 className="text-2xl font-extrabold mb-1" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>RSVP</h2>
+                          <div className="rounded-2xl border p-5 mt-4 flex flex-col gap-4" style={{ borderColor: `${sc.accent}20` }}>
+                            <p className="text-sm" style={{ color: sc.bodyText }}>{(content.rsvp?.text as string) || "Laat weten of je erbij bent — vul het formulier in."}</p>
+                            {/* Aantal personen */}
+                            <div>
+                              <div className="text-xs font-bold mb-2" style={{ color: sc.headingColor }}>Met hoeveel personen komen jullie?</div>
+                              <div className="flex gap-1.5 flex-wrap">
+                                {[1,2,3,4,5,6,7,8].map((n) => (
+                                  <div key={n} className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border"
+                                    style={n === 1
+                                      ? { backgroundColor: sc.buttonBg, color: sc.buttonText, borderColor: sc.buttonBg }
+                                      : { backgroundColor: "transparent", color: sc.bodyText, borderColor: `${sc.accent}30` }
+                                    }>
+                                    {n}
+                                  </div>
+                                ))}
                               </div>
-                            ))}
-                            <div className="h-10 rounded-xl mt-2" style={{ backgroundColor: sc.buttonBg }} />
+                            </div>
+                            {/* Hoofdgast */}
+                            <div className="flex flex-col gap-2.5">
+                              <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: sc.accent }}>Hoofdgast</div>
+                              <div>
+                                <div className="text-xs font-semibold mb-1" style={{ color: sc.headingColor }}>Naam <span style={{ color: sc.accent }}>*</span></div>
+                                <div className="h-9 rounded-xl border px-3 flex items-center">
+                                  <span className="text-xs" style={{ color: `${sc.bodyText}50` }}>Voornaam</span>
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-xs font-semibold mb-1" style={{ color: sc.headingColor }}>Type gast</div>
+                                <div className="flex rounded-xl overflow-hidden border" style={{ borderColor: `${sc.accent}30` }}>
+                                  <div className="flex-1 h-8 flex items-center justify-center text-xs font-bold" style={{ backgroundColor: sc.buttonBg, color: sc.buttonText }}>Daggast</div>
+                                  <div className="flex-1 h-8 flex items-center justify-center text-xs font-semibold" style={{ color: sc.bodyText }}>Avondgast</div>
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-xs font-semibold mb-1" style={{ color: sc.headingColor }}>Dieetwensen / Allergieën</div>
+                                <div className="h-9 rounded-xl border px-3 flex items-center" style={{ borderColor: `${sc.accent}25` }}>
+                                  <span className="text-xs" style={{ color: `${sc.bodyText}50` }}>Bijv. vegetarisch, notenallergie</span>
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-xs font-semibold mb-1" style={{ color: sc.headingColor }}>E-mailadres <span style={{ color: sc.accent }}>*</span></div>
+                                <div className="h-9 rounded-xl border px-3 flex items-center" style={{ borderColor: `${sc.accent}25` }}>
+                                  <span className="text-xs" style={{ color: `${sc.bodyText}50` }}>jouw@email.nl</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="h-10 rounded-xl flex items-center justify-center text-sm font-bold mt-1" style={{ backgroundColor: sc.buttonBg, color: sc.buttonText }}>
+                              Aanmelden
+                            </div>
                           </div>
                         </div>
                       )}
