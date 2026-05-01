@@ -193,7 +193,7 @@ export default function BouwenPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [heroImageUrl, setHeroImageUrl] = useState<string | null>(null)
-  const [heroFile, setHeroFile] = useState<File | null>(null)
+  const [heroUploading, setHeroUploading] = useState(false)
   const [draft, setDraft] = useState<Draft | null>(null)
   const [active, setActive] = useState<Record<PageId, boolean>>({
     home: true, programma: true, rsvp: true, praktisch: false, wishlist: false, fotos: false, ceremoniemeesters: false,
@@ -208,14 +208,14 @@ export default function BouwenPage() {
   const canvasContainerRef = useRef<HTMLDivElement>(null)
   const [canvasScale, setCanvasScale] = useState(1)
   const [masterPhotoUrls, setMasterPhotoUrls] = useState<[string | null, string | null]>([null, null])
-  const [masterFiles, setMasterFiles] = useState<[File | null, File | null]>([null, null])
+  const [masterUploading, setMasterUploading] = useState<[boolean, boolean]>([false, false])
   const [programUploadIndex, setProgramUploadIndex] = useState<number | null>(null)
   const [openIconPickerIdx, setOpenIconPickerIdx] = useState<number | null>(null)
   const masterPhotoRef0 = useRef<HTMLInputElement>(null)
   const masterPhotoRef1 = useRef<HTMLInputElement>(null)
   const programPhotoRef = useRef<HTMLInputElement>(null)
   const [programBlobUrls, setProgramBlobUrls] = useState<Record<string, string>>({})
-  const [programFileMap, setProgramFileMap] = useState<Record<string, File>>({})
+  const [programUploadingIds, setProgramUploadingIds] = useState<Set<string>>(new Set())
   const [publishing, setPublishing] = useState(false)
   const [publishError, setPublishError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -289,21 +289,36 @@ export default function BouwenPage() {
     updateDraft({ style: s })
   }
 
-  function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
+    e.target.value = ""
     if (!file) return
     const supported = ["image/jpeg", "image/png", "image/webp", "image/gif"]
     if (!supported.includes(file.type)) {
       setHeroImageError("Gebruik een JPEG, PNG of WebP afbeelding. HEIC (iPhone) werkt niet in de browser — converteer het eerst.")
-      e.target.value = ""
       return
     }
     setHeroImageError(null)
-    setHeroFile(file)
-    const url = URL.createObjectURL(file)
-    setHeroImageUrl(url)
+
+    // Show blob preview immediately while upload runs in background
+    const blobUrl = URL.createObjectURL(file)
+    setHeroImageUrl(blobUrl)
     updateDraft({ heroOverlay: true })
-    e.target.value = ""
+    setHeroUploading(true)
+
+    try {
+      const url = await uploadToStorage(file, "hero-images")
+      console.log("[hero] geüpload naar Storage:", url)
+      URL.revokeObjectURL(blobUrl)
+      setHeroImageUrl(url)
+    } catch (err) {
+      console.error("[hero] upload mislukt:", err)
+      setHeroImageError("Upload mislukt — controleer je verbinding en probeer opnieuw.")
+      URL.revokeObjectURL(blobUrl)
+      setHeroImageUrl(null)
+    } finally {
+      setHeroUploading(false)
+    }
   }
 
   function toggle(id: PageId) {
@@ -318,37 +333,88 @@ export default function BouwenPage() {
     })
   }
 
-  function handleMasterPhotoUpload(e: React.ChangeEvent<HTMLInputElement>, index: 0 | 1) {
+  async function handleMasterPhotoUpload(e: React.ChangeEvent<HTMLInputElement>, index: 0 | 1) {
     const file = e.target.files?.[0]
+    e.target.value = ""
     if (!file) return
     const supported = ["image/jpeg", "image/png", "image/webp", "image/gif"]
-    if (!supported.includes(file.type)) { e.target.value = ""; return }
-    const url = URL.createObjectURL(file)
-    setMasterFiles((prev) => { const next: [File | null, File | null] = [...prev] as [File | null, File | null]; next[index] = file; return next })
-    setMasterPhotoUrls((prev) => { const next: [string | null, string | null] = [...prev] as [string | null, string | null]; next[index] = url; return next })
-    e.target.value = ""
+    if (!supported.includes(file.type)) return
+
+    const blobUrl = URL.createObjectURL(file)
+    setMasterPhotoUrls((prev) => { const n = [...prev] as [string | null, string | null]; n[index] = blobUrl; return n })
+    setMasterUploading((prev) => { const n = [...prev] as [boolean, boolean]; n[index] = true; return n })
+
+    try {
+      const url = await uploadToStorage(file, "hero-images")
+      console.log(`[master ${index}] geüpload naar Storage:`, url)
+      URL.revokeObjectURL(blobUrl)
+      setMasterPhotoUrls((prev) => { const n = [...prev] as [string | null, string | null]; n[index] = url; return n })
+      // Persist real URL into content so doSave() picks it up
+      setContent((prev) => {
+        const rawM = (prev.ceremoniemeesters?.masters as Partial<MasterPerson>[] | undefined) ?? []
+        const updated: Partial<MasterPerson>[] = [{ ...rawM[0] }, { ...rawM[1] }]
+        updated[index] = { ...updated[index], foto_url: url }
+        const next = { ...prev, ceremoniemeesters: { masters: updated } }
+        localStorage.setItem("maakjefeest_content", JSON.stringify(next))
+        return next
+      })
+    } catch (err) {
+      console.error(`[master ${index}] upload mislukt:`, err)
+      URL.revokeObjectURL(blobUrl)
+      setMasterPhotoUrls((prev) => { const n = [...prev] as [string | null, string | null]; n[index] = null; return n })
+    } finally {
+      setMasterUploading((prev) => { const n = [...prev] as [boolean, boolean]; n[index] = false; return n })
+    }
   }
 
-  function handleProgramPhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleProgramPhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     e.target.value = ""
     if (!file || programUploadIndex === null) return
     const supported = ["image/jpeg", "image/png", "image/webp", "image/gif"]
     if (!supported.includes(file.type)) return
 
-    let item = programmaItems[programUploadIndex]
+    // Snapshot index before clearing it
+    const idx = programUploadIndex
+    setProgramUploadIndex(null)
+
+    // Ensure item has an ID
+    let item = programmaItems[idx]
+    if (!item) return
     if (!item.id) {
       item = { ...item, id: crypto.randomUUID() }
       const updated = [...programmaItems]
-      updated[programUploadIndex] = item
+      updated[idx] = item
       updateContent("programma", { items: updated, layout: programLayout })
     }
+    const itemId = item.id!
 
+    // Show blob preview immediately
     const blobUrl = URL.createObjectURL(file)
-    if (programBlobUrls[item.id!]) URL.revokeObjectURL(programBlobUrls[item.id!])
-    setProgramBlobUrls((prev) => ({ ...prev, [item.id!]: blobUrl }))
-    setProgramFileMap((prev) => ({ ...prev, [item.id!]: file }))
-    setProgramUploadIndex(null)
+    if (programBlobUrls[itemId]) URL.revokeObjectURL(programBlobUrls[itemId])
+    setProgramBlobUrls((prev) => ({ ...prev, [itemId]: blobUrl }))
+    setProgramUploadingIds((prev) => new Set([...prev, itemId]))
+
+    try {
+      const url = await uploadToStorage(file, "hero-images")
+      console.log(`[programma] foto geüpload voor item ${itemId}:`, url)
+      URL.revokeObjectURL(blobUrl)
+      setProgramBlobUrls((prev) => { const n = { ...prev }; delete n[itemId]; return n })
+      // Persist real URL into content
+      setContent((prev) => {
+        const items = [...((prev.programma?.items as ProgrammaItem[]) ?? [])]
+        const i2 = items.findIndex((it) => it.id === itemId)
+        if (i2 !== -1) items[i2] = { ...items[i2], image_url: url }
+        const next = { ...prev, programma: { ...(prev.programma ?? {}), items } }
+        localStorage.setItem("maakjefeest_content", JSON.stringify(next))
+        return next
+      })
+    } catch (err) {
+      console.error(`[programma] foto upload mislukt voor item ${itemId}:`, err)
+      // Blob stays alive so photo remains visible in UI
+    } finally {
+      setProgramUploadingIds((prev) => { const n = new Set(prev); n.delete(itemId); return n })
+    }
   }
 
   function openEditor(id: PageId) {
@@ -356,97 +422,18 @@ export default function BouwenPage() {
     if (!CONTROLS_PAGES.has(id)) setEditingPage(id)
   }
 
-  // ── Shared core: uploads alles en slaat op via /api/drafts ──────────────────
+  // ── Shared core: stuurt opgeslagen state op via /api/drafts ─────────────────
+  // Alle foto-uploads zijn al gedaan in de upload-handlers (immediate upload).
+  // doSave() hoeft alleen de huidige state te lezen en naar de API te sturen.
   async function doSave(): Promise<{ id: string; slug: string }> {
     if (!draft) throw new Error("Geen draft beschikbaar")
 
     const activePages = PAGES.filter((p) => active[p.id]).map((p) => p.id)
 
-    // ── Hero upload ──────────────────────────────────────────────────────────
-    // Start with whatever permanent URL is already in state (from a previous save).
-    // Only overwrite it if we successfully upload a new file.
-    let uploadedHeroUrl: string | null =
+    // Hero: gebruik de permanente URL; blob-URL betekent upload nog bezig of mislukt
+    const heroUrl: string | null =
       heroImageUrl && !heroImageUrl.startsWith("blob:") ? heroImageUrl : null
 
-    if (heroFile) {
-      try {
-        const url = await uploadToStorage(heroFile, "hero-images")
-        console.log("[save] hero geüpload:", url)
-        uploadedHeroUrl = url
-        setHeroFile(null)
-        setHeroImageUrl(url)
-      } catch (err) {
-        console.error("[save] hero upload mislukt:", err)
-        // uploadedHeroUrl stays as the existing permanent URL (or null)
-      }
-    }
-
-    // ── Ceremoniemeesters uploads ────────────────────────────────────────────
-    const uploadedMasters = [...mastersData] as typeof mastersData
-    for (let i = 0; i < 2; i++) {
-      const f = masterFiles[i as 0 | 1]
-      if (!f) continue
-      try {
-        const url = await uploadToStorage(f, "hero-images")
-        console.log(`[save] ceremoniemeester ${i} geüpload:`, url)
-        uploadedMasters[i] = { ...uploadedMasters[i], foto_url: url }
-        setMasterFiles((prev) => { const n = [...prev] as [File | null, File | null]; n[i] = null; return n })
-        setMasterPhotoUrls((prev) => { const n = [...prev] as [string | null, string | null]; n[i] = url; return n })
-      } catch (err) {
-        console.error(`[save] ceremoniemeester ${i} upload mislukt:`, err)
-        // foto_url stays as whatever mastersData already has
-      }
-    }
-
-    // ── Programma foto uploads ───────────────────────────────────────────────
-    // Start with a mutable copy of the current items (may already contain
-    // permanent URLs from earlier saves).
-    const programmaItemsUploaded = programmaItems.slice()
-    const successfullyUploadedIds = new Set<string>()
-
-    for (let i = 0; i < programmaItemsUploaded.length; i++) {
-      const it = programmaItemsUploaded[i]
-      if (!it.id || !programFileMap[it.id]) continue
-      try {
-        const url = await uploadToStorage(programFileMap[it.id], "hero-images")
-        console.log(`[save] programma foto geüpload voor item ${it.id}:`, url)
-        programmaItemsUploaded[i] = { ...it, image_url: url }
-        successfullyUploadedIds.add(it.id)
-      } catch (err) {
-        console.error(`[save] programma foto upload mislukt voor item ${it.id}:`, err)
-        // item keeps its current image_url — blob stays alive in state
-      }
-    }
-
-    // Clean up only blobs that were successfully uploaded; keep the rest alive
-    // so photos remain visible in the UI on failed uploads.
-    if (successfullyUploadedIds.size > 0) {
-      setProgramBlobUrls((prev) => {
-        const next = { ...prev }
-        successfullyUploadedIds.forEach((id) => {
-          if (next[id]) { URL.revokeObjectURL(next[id]); delete next[id] }
-        })
-        return next
-      })
-      setProgramFileMap((prev) => {
-        const next = { ...prev }
-        successfullyUploadedIds.forEach((id) => delete next[id])
-        return next
-      })
-      // Persist the permanent URLs back into local state so the next save/publish
-      // uses them directly without needing to re-upload.
-      setContent((prev) => {
-        const updatedProgramma = { ...(prev.programma ?? {}), items: programmaItemsUploaded }
-        const next = { ...prev, programma: updatedProgramma }
-        localStorage.setItem("maakjefeest_content", JSON.stringify(next))
-        return next
-      })
-    }
-
-    // ── Assemble the complete payload ────────────────────────────────────────
-    // Use `programmaItemsUploaded` (local variable, never stale) as the
-    // definitive source for programma items. All other content comes from
-    // the current `content` closure which reflects the last render.
     const mergedContent: ContentMap = {
       ...content,
       home: {
@@ -455,16 +442,13 @@ export default function BouwenPage() {
         body: homeContent.body,
         align: homeContent.align,
       },
-      ceremoniemeesters: { masters: uploadedMasters },
-      programma: {
-        ...(content.programma ?? {}),
-        items: programmaItemsUploaded,
-      },
+      ceremoniemeesters: { masters: mastersData },
+      programma: { ...(content.programma ?? {}) },
     }
 
     const payload = {
       ...draft,
-      hero_image_url: uploadedHeroUrl,
+      hero_image_url: heroUrl,
       nav_layout: navLayout,
       pages: activePages,
       content: mergedContent,
@@ -474,7 +458,7 @@ export default function BouwenPage() {
       "[save] verstuur naar /api/drafts",
       "| event_id:", payload.event_id,
       "| hero_image_url:", payload.hero_image_url,
-      "| programma items:", programmaItemsUploaded.map((it) => ({ id: it.id, image_url: it.image_url })),
+      "| programma items:", (programmaItems).map((it) => ({ id: it.id, image_url: it.image_url })),
     )
 
     const res = await fetch("/api/drafts", {
@@ -550,6 +534,8 @@ export default function BouwenPage() {
     }
   }
 
+  const anyUploading = heroUploading || masterUploading[0] || masterUploading[1] || programUploadingIds.size > 0
+
   const sc = STYLE_CONFIG[style]
   const canvasWidth = viewport === "mobiel" ? 390 : 1024
 
@@ -600,10 +586,18 @@ export default function BouwenPage() {
             {/* Opslaan */}
             <button
               onClick={handleSave}
-              disabled={saving}
+              disabled={saving || anyUploading}
               className="inline-flex items-center gap-1.5 bg-white hover:bg-gray-50 disabled:bg-gray-50 text-gray-700 text-sm font-bold px-4 py-2.5 rounded-xl border border-gray-200 shadow-sm hover:shadow hover:-translate-y-0.5 disabled:translate-y-0 transition-all"
             >
-              {saving ? (
+              {anyUploading ? (
+                <>
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                  </svg>
+                  Uploaden...
+                </>
+              ) : saving ? (
                 <>
                   <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
@@ -631,7 +625,7 @@ export default function BouwenPage() {
             {/* Publiceren */}
             <button
               onClick={handlePublish}
-              disabled={publishing}
+              disabled={publishing || anyUploading}
               className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-300 disabled:cursor-not-allowed text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-md shadow-emerald-100 hover:shadow-lg hover:-translate-y-0.5 disabled:shadow-none disabled:translate-y-0 transition-all"
             >
               {publishing ? (
@@ -909,7 +903,7 @@ export default function BouwenPage() {
                             </button>
                           </div>
                           <button
-                            onClick={() => { setHeroImageUrl(null); setHeroFile(null) }}
+                            onClick={() => { setHeroImageUrl(null) }}
                             className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors"
                           >
                             Verwijderen
@@ -1193,7 +1187,6 @@ export default function BouwenPage() {
                                       if (item.id && programBlobUrls[item.id]) {
                                         URL.revokeObjectURL(programBlobUrls[item.id])
                                         setProgramBlobUrls((prev) => { const n = { ...prev }; delete n[item.id!]; return n })
-                                        setProgramFileMap((prev) => { const n = { ...prev }; delete n[item.id!]; return n })
                                       }
                                       const updated = [...programmaItems]
                                       updated[i] = { ...updated[i], image_url: null }
