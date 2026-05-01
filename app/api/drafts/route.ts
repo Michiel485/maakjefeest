@@ -119,21 +119,27 @@ export async function POST(request: Request) {
 
   const pageList = Array.isArray(pages) && pages.length > 0 ? pages : ["home", "rsvp"]
 
-  // Update existing draft if event_id provided and belongs to this user
+  // Update existing event if event_id provided and belongs to this user
   if (event_id) {
+    console.log("[drafts] update poging voor event_id:", event_id, "user:", user.email)
     const { data: existing } = await db
       .from("events")
       .select("id, slug, status")
       .eq("id", event_id)
       .single()
 
-    if (existing && existing.status === "draft") {
+    console.log("[drafts] gevonden event:", existing)
+
+    if (existing) {
       const { error: updateErr } = await db
         .from("events")
         .update({ type, title: naam, datum, locatie, style, hero_image_url, nav_layout })
         .eq("id", event_id)
 
-      if (updateErr) return Response.json({ error: updateErr.message }, { status: 500 })
+      if (updateErr) {
+        console.error("[drafts] update fout:", updateErr)
+        return Response.json({ error: updateErr.message }, { status: 500 })
+      }
 
       await db.from("pages").delete().eq("event_id", event_id)
 
@@ -146,13 +152,20 @@ export async function POST(request: Request) {
         order: i,
       }))
       const { error: pagesErr } = await db.from("pages").insert(pageRows)
-      if (pagesErr) return Response.json({ error: pagesErr.message }, { status: 500 })
+      if (pagesErr) {
+        console.error("[drafts] pages insert fout:", pagesErr)
+        return Response.json({ error: pagesErr.message }, { status: 500 })
+      }
 
+      console.log("[drafts] update succesvol, id:", event_id, "slug:", existing.slug)
       return Response.json({ id: event_id, slug: existing.slug })
     }
+
+    console.warn("[drafts] event_id opgegeven maar niet gevonden, maak nieuw event aan")
   }
 
   // Create new draft
+  console.log("[drafts] nieuw event aanmaken voor user:", user.email)
   const slug = await uniqueSlug(toSlug(naam || "mijn-feest"))
   const { data: event, error: eventError } = await db
     .from("events")
@@ -171,7 +184,10 @@ export async function POST(request: Request) {
     .select("id, slug")
     .single()
 
-  if (eventError) return Response.json({ error: eventError.message }, { status: 500 })
+  if (eventError) {
+    console.error("[drafts] nieuw event fout:", eventError)
+    return Response.json({ error: eventError.message }, { status: 500 })
+  }
 
   const pageRows = pageList.map((t, i) => ({
     event_id: event.id,
@@ -182,7 +198,11 @@ export async function POST(request: Request) {
     order: i,
   }))
   const { error: pagesErr } = await db.from("pages").insert(pageRows)
-  if (pagesErr) return Response.json({ error: pagesErr.message }, { status: 500 })
+  if (pagesErr) {
+    console.error("[drafts] pages insert fout:", pagesErr)
+    return Response.json({ error: pagesErr.message }, { status: 500 })
+  }
 
+  console.log("[drafts] nieuw event aangemaakt, id:", event.id, "slug:", event.slug)
   return Response.json({ id: event.id, slug: event.slug }, { status: 201 })
 }

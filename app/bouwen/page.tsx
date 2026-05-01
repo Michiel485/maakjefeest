@@ -356,70 +356,88 @@ export default function BouwenPage() {
     if (!CONTROLS_PAGES.has(id)) setEditingPage(id)
   }
 
-  async function handlePublish() {
-    if (!draft) return
-    setPublishing(true)
-    setPublishError(null)
-    try {
-      const activePages = PAGES.filter((p) => active[p.id]).map((p) => p.id)
-      let uploadedHeroUrl: string | null = null
-      if (heroFile) {
-        uploadedHeroUrl = await uploadToStorage(heroFile, "hero-images")
-      } else if (heroImageUrl && !heroImageUrl.startsWith("blob:")) {
-        uploadedHeroUrl = heroImageUrl
-      }
+  // ── Shared core: uploads alles en slaat op via /api/drafts ──────────────────
+  async function doSave(): Promise<{ id: string; slug: string }> {
+    if (!draft) throw new Error("Geen draft beschikbaar")
 
-      const uploadedMasters = [...mastersData] as typeof mastersData
-      for (let i = 0; i < 2; i++) {
-        const f = masterFiles[i as 0 | 1]
-        if (f) {
-          try {
-            const url = await uploadToStorage(f, "hero-images")
-            uploadedMasters[i] = { ...uploadedMasters[i], foto_url: url }
-          } catch { /* niet-kritiek: ceremoniemeester-foto overslaan bij fout */ }
-        }
-      }
+    const activePages = PAGES.filter((p) => active[p.id]).map((p) => p.id)
 
-      let programmaItemsUploaded = programmaItems.slice()
-      if (Object.keys(programFileMap).length > 0) {
-        for (let i = 0; i < programmaItemsUploaded.length; i++) {
-          const it = programmaItemsUploaded[i]
-          if (!it.id || !programFileMap[it.id]) continue
-          try {
-            const url = await uploadToStorage(programFileMap[it.id], "hero-images")
-            programmaItemsUploaded[i] = { ...it, image_url: url }
-          } catch { /* skip */ }
-        }
-        Object.values(programBlobUrls).forEach((u) => URL.revokeObjectURL(u))
-        setProgramBlobUrls({})
-        setProgramFileMap({})
-      }
-
-      const mergedContent: ContentMap = {
-        ...content,
-        home: {
-          ...(content.home ?? {}),
-          title: homeContent.title,
-          body: homeContent.body,
-          align: homeContent.align,
-        },
-        ceremoniemeesters: { masters: uploadedMasters },
-        programma: { ...(content.programma ?? {}), items: programmaItemsUploaded },
-      }
-
-      const res = await fetch("/api/events", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...draft, hero_image_url: uploadedHeroUrl, nav_layout: navLayout, pages: activePages, content: mergedContent, event_id: savedEventId }),
-      })
-      const json = await res.json()
-      if (!res.ok) throw new Error(json.error || "Er ging iets mis")
-      localStorage.setItem("maakjefeest_event", JSON.stringify({ id: json.id, slug: json.slug }))
-      router.push(`/betalen?event_id=${json.id}`)
-    } catch (err) {
-      setPublishError(err instanceof Error ? err.message : "Er ging iets mis")
-      setPublishing(false)
+    // Hero upload
+    let uploadedHeroUrl: string | null = null
+    if (heroFile) {
+      uploadedHeroUrl = await uploadToStorage(heroFile, "hero-images")
+      setHeroFile(null)
+      setHeroImageUrl(uploadedHeroUrl)
+    } else if (heroImageUrl && !heroImageUrl.startsWith("blob:")) {
+      uploadedHeroUrl = heroImageUrl
     }
+
+    // Ceremoniemeesters uploads
+    const uploadedMasters = [...mastersData] as typeof mastersData
+    for (let i = 0; i < 2; i++) {
+      const f = masterFiles[i as 0 | 1]
+      if (f) {
+        try {
+          const url = await uploadToStorage(f, "hero-images")
+          uploadedMasters[i] = { ...uploadedMasters[i], foto_url: url }
+          setMasterFiles((prev) => { const n = [...prev] as [File | null, File | null]; n[i] = null; return n })
+          setMasterPhotoUrls((prev) => { const n = [...prev] as [string | null, string | null]; n[i] = url; return n })
+        } catch (err) {
+          console.error(`[save] ceremoniemeester ${i} upload mislukt:`, err)
+        }
+      }
+    }
+
+    // Programma foto uploads
+    let programmaItemsUploaded = programmaItems.slice()
+    if (Object.keys(programFileMap).length > 0) {
+      for (let i = 0; i < programmaItemsUploaded.length; i++) {
+        const it = programmaItemsUploaded[i]
+        if (!it.id || !programFileMap[it.id]) continue
+        try {
+          const url = await uploadToStorage(programFileMap[it.id], "hero-images")
+          console.log(`[save] programma foto geüpload voor item ${it.id}:`, url)
+          programmaItemsUploaded[i] = { ...it, image_url: url }
+        } catch (err) {
+          console.error(`[save] programma foto upload mislukt voor item ${it.id}:`, err)
+        }
+      }
+      Object.values(programBlobUrls).forEach((u) => URL.revokeObjectURL(u))
+      setProgramBlobUrls({})
+      setProgramFileMap({})
+      // Schrijf permanente URLs terug naar lokale state zodat een volgende save/publish ze vindt
+      updateContent("programma", { ...(content.programma ?? {}), items: programmaItemsUploaded })
+    }
+
+    const mergedContent: ContentMap = {
+      ...content,
+      home: { ...(content.home ?? {}), title: homeContent.title, body: homeContent.body, align: homeContent.align },
+      ceremoniemeesters: { masters: uploadedMasters },
+      programma: { ...(content.programma ?? {}), items: programmaItemsUploaded },
+    }
+
+    const payload = {
+      ...draft,
+      hero_image_url: uploadedHeroUrl,
+      nav_layout: navLayout,
+      pages: activePages,
+      content: mergedContent,
+      event_id: savedEventId ?? undefined,
+    }
+    console.log("[save] verstuur naar /api/drafts — event_id:", payload.event_id, "| pagina's:", activePages)
+
+    const res = await fetch("/api/drafts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+    const json = await res.json()
+    console.log("[save] /api/drafts response:", json)
+    if (!res.ok) throw new Error(json.error || "Opslaan mislukt")
+
+    localStorage.setItem("maakjefeest_saved_event_id", json.id)
+    setSavedEventId(json.id)
+    return json as { id: string; slug: string }
   }
 
   async function performSave() {
@@ -427,52 +445,32 @@ export default function BouwenPage() {
     setSaving(true)
     setSaveError(null)
     try {
-      const activePages = PAGES.filter((p) => active[p.id]).map((p) => p.id)
-      let uploadedHeroUrl: string | null = null
-      if (heroFile) {
-        uploadedHeroUrl = await uploadToStorage(heroFile, "hero-images")
-      } else if (heroImageUrl && !heroImageUrl.startsWith("blob:")) {
-        uploadedHeroUrl = heroImageUrl
-      }
-      let programmaItemsUploaded = programmaItems.slice()
-      if (Object.keys(programFileMap).length > 0) {
-        for (let i = 0; i < programmaItemsUploaded.length; i++) {
-          const it = programmaItemsUploaded[i]
-          if (!it.id || !programFileMap[it.id]) continue
-          try {
-            const url = await uploadToStorage(programFileMap[it.id], "hero-images")
-            programmaItemsUploaded[i] = { ...it, image_url: url }
-          } catch { /* skip */ }
-        }
-        Object.values(programBlobUrls).forEach((u) => URL.revokeObjectURL(u))
-        setProgramBlobUrls({})
-        setProgramFileMap({})
-        // Persist uploaded URLs back into local content so a subsequent publish
-        // finds the permanent Supabase URLs instead of null.
-        updateContent("programma", { ...(content.programma ?? {}), items: programmaItemsUploaded })
-      }
-
-      const mergedContent: ContentMap = {
-        ...content,
-        home: { ...(content.home ?? {}), title: homeContent.title, body: homeContent.body, align: homeContent.align },
-        ceremoniemeesters: { masters: mastersData },
-        programma: { ...(content.programma ?? {}), items: programmaItemsUploaded },
-      }
-      const res = await fetch("/api/drafts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...draft, hero_image_url: uploadedHeroUrl, nav_layout: navLayout, pages: activePages, content: mergedContent, event_id: savedEventId }),
-      })
-      const json = await res.json()
-      if (!res.ok) throw new Error(json.error || "Opslaan mislukt")
-      localStorage.setItem("maakjefeest_saved_event_id", json.id)
-      setSavedEventId(json.id)
+      await doSave()
       setJustSaved(true)
       setTimeout(() => setJustSaved(false), 3000)
     } catch (err) {
+      console.error("[save] fout:", err)
       setSaveError(err instanceof Error ? err.message : "Opslaan mislukt")
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handlePublish() {
+    if (!draft) return
+    const { data: { user } } = await createClient().auth.getUser()
+    if (!user) { setShowAuthModal(true); return }
+    setPublishing(true)
+    setPublishError(null)
+    try {
+      // Sla altijd eerst de laatste wijzigingen op via dezelfde flow als "Opslaan"
+      const { id: eventId } = await doSave()
+      console.log("[publish] opgeslagen, navigeer naar betalen met event_id:", eventId)
+      router.push(`/betalen?event_id=${eventId}`)
+    } catch (err) {
+      console.error("[publish] fout:", err)
+      setPublishError(err instanceof Error ? err.message : "Er ging iets mis")
+      setPublishing(false)
     }
   }
 
