@@ -18,6 +18,7 @@ export default function SuccesContent() {
 
   const [event, setEvent] = useState<EventData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [siteLabel, setSiteLabel] = useState<string | null>(null)
 
   useEffect(() => {
     if (!event_id) { setLoading(false); return }
@@ -28,10 +29,14 @@ export default function SuccesContent() {
       .catch(() => setLoading(false))
   }, [event_id])
 
-  const siteUrl = event ? eventSiteUrl(event.slug) : null
-  const siteLabel = event ? eventSiteLabel(event.slug) : null
+  useEffect(() => {
+    if (!event) return
+    setSiteLabel(eventSiteLabel(event.slug, window.location.host))
+  }, [event])
 
-  const whatsappText = event
+  const siteUrl = event ? eventSiteUrl(event.slug) : null
+
+  const whatsappText = event && siteUrl
     ? encodeURIComponent(
         `Hé! Bekijk onze bruiloftswebsite voor ${event.title} hier: ${siteUrl}`
       )

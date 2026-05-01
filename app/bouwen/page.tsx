@@ -447,6 +447,9 @@ export default function BouwenPage() {
         Object.values(programBlobUrls).forEach((u) => URL.revokeObjectURL(u))
         setProgramBlobUrls({})
         setProgramFileMap({})
+        // Persist uploaded URLs back into local content so a subsequent publish
+        // finds the permanent Supabase URLs instead of null.
+        updateContent("programma", { ...(content.programma ?? {}), items: programmaItemsUploaded })
       }
 
       const mergedContent: ContentMap = {

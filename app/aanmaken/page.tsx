@@ -38,7 +38,7 @@ export default function AanmakenPage() {
       aangemaakt: new Date().toISOString(),
       homeContent: {
         title: `Wij gaan trouwen!`,
-        body: `<p>We zijn zo blij dat jullie erbij zijn op onze grote dag. Hieronder vinden jullie alles wat jullie moeten weten.</p>`,
+        body: `We zijn zo blij dat jullie erbij zijn op onze grote dag. Hieronder vinden jullie alles wat jullie moeten weten.`,
         align: "center",
       },
     }

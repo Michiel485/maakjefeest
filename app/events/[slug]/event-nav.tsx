@@ -19,25 +19,33 @@ export default function EventNav({
   pages,
   sc,
   navLayout = "split",
+  basePath = "",
   onNavigate,
 }: {
   title: string
   pages: NavPage[]
   sc: SC
   navLayout?: "stacked" | "split" | "left"
+  basePath?: string
   onNavigate?: (type: string) => void
 }) {
   const pathname = usePathname()
   const safeTitle = title.replace(/\n/g, " ")
 
+  const homeHref = basePath || "/"
+
   function isActive(type: string) {
-    if (type === "home") return pathname === "/"
-    return pathname === `/${type}`
+    if (type === "home") return pathname === homeHref || pathname === basePath
+    return pathname === `${basePath}/${type}`
+  }
+
+  function pageHref(type: string) {
+    return type === "home" ? homeHref : `${basePath}/${type}`
   }
 
   const titleLink = (
     <a
-      href="/"
+      href={homeHref}
       onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("home") } : undefined}
       className="flex-shrink-0"
       style={{
@@ -61,7 +69,7 @@ export default function EventNav({
     return (
       <a
         key={page.type}
-        href={page.type === "home" ? "/" : `/${page.type}`}
+        href={pageHref(page.type)}
         onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate(page.type) } : undefined}
         style={{
           fontSize: "0.8125rem",
@@ -111,7 +119,7 @@ export default function EventNav({
   return (
     <nav className={`${navBase} py-5 flex flex-col items-center gap-2`} style={navStyle}>
       <a
-        href="/"
+        href={homeHref}
         onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("home") } : undefined}
         className="text-center"
         style={{

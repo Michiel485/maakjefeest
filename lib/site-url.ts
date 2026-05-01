@@ -9,7 +9,11 @@ export function eventSiteUrl(slug: string): string {
   return IS_PROD ? `https://${slug}.sayingyes.nl` : `/events/${slug}`
 }
 
-/** Human-readable label for the URL (strips the protocol). */
-export function eventSiteLabel(slug: string): string {
-  return IS_PROD ? `${slug}.sayingyes.nl` : `/events/${slug}`
+/**
+ * Human-readable label for the URL.
+ * Pass `window.location.host` from client components to get the correct port in dev.
+ */
+export function eventSiteLabel(slug: string, host?: string): string {
+  if (IS_PROD) return `${slug}.sayingyes.nl`
+  return `${host ?? "localhost:3000"}/events/${slug}`
 }
