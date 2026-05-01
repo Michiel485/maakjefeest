@@ -48,9 +48,9 @@ export default function AanmakenPage() {
       praktisch: DEFAULT_PRAKTISCH,
     }
 
-    localStorage.setItem("maakjefeest_draft", JSON.stringify(draft))
-    localStorage.setItem("maakjefeest_content", JSON.stringify(content))
-    localStorage.removeItem("maakjefeest_saved_event_id")
+    localStorage.setItem("sayingyes_draft", JSON.stringify(draft))
+    localStorage.setItem("sayingyes_content", JSON.stringify(content))
+    localStorage.removeItem("sayingyes_saved_event_id")
     router.push("/bouwen")
   }
 

@@ -229,7 +229,7 @@ export default function BouwenPage() {
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem("maakjefeest_draft")
+      const raw = localStorage.getItem("sayingyes_draft")
       if (!raw) { router.replace("/aanmaken"); return }
       const parsed = JSON.parse(raw)
       setDraft(parsed)
@@ -237,11 +237,11 @@ export default function BouwenPage() {
     } catch { router.replace("/aanmaken") }
 
     try {
-      const saved = localStorage.getItem("maakjefeest_content")
+      const saved = localStorage.getItem("sayingyes_content")
       if (saved) setContent(JSON.parse(saved))
     } catch {}
 
-    const savedId = localStorage.getItem("maakjefeest_saved_event_id")
+    const savedId = localStorage.getItem("sayingyes_saved_event_id")
     if (savedId) setSavedEventId(savedId)
   }, [router])
 
@@ -271,7 +271,7 @@ export default function BouwenPage() {
     setDraft((prev) => {
       if (!prev) return prev
       const next = { ...prev, ...fields }
-      localStorage.setItem("maakjefeest_draft", JSON.stringify(next))
+      localStorage.setItem("sayingyes_draft", JSON.stringify(next))
       return next
     })
   }
@@ -279,7 +279,7 @@ export default function BouwenPage() {
   function updateContent(pageId: PageId, value: Record<string, unknown>) {
     setContent((prev) => {
       const next = { ...prev, [pageId]: value }
-      localStorage.setItem("maakjefeest_content", JSON.stringify(next))
+      localStorage.setItem("sayingyes_content", JSON.stringify(next))
       return next
     })
   }
@@ -355,7 +355,7 @@ export default function BouwenPage() {
         const updated: Partial<MasterPerson>[] = [{ ...rawM[0] }, { ...rawM[1] }]
         updated[index] = { ...updated[index], foto_url: url }
         const next = { ...prev, ceremoniemeesters: { masters: updated } }
-        localStorage.setItem("maakjefeest_content", JSON.stringify(next))
+        localStorage.setItem("sayingyes_content", JSON.stringify(next))
         return next
       })
     } catch (err) {
@@ -406,7 +406,7 @@ export default function BouwenPage() {
         const i2 = items.findIndex((it) => it.id === itemId)
         if (i2 !== -1) items[i2] = { ...items[i2], image_url: url }
         const next = { ...prev, programma: { ...(prev.programma ?? {}), items } }
-        localStorage.setItem("maakjefeest_content", JSON.stringify(next))
+        localStorage.setItem("sayingyes_content", JSON.stringify(next))
         return next
       })
     } catch (err) {
@@ -470,7 +470,7 @@ export default function BouwenPage() {
     console.log("[save] /api/drafts response:", json)
     if (!res.ok) throw new Error(json.error || "Opslaan mislukt")
 
-    localStorage.setItem("maakjefeest_saved_event_id", json.id)
+    localStorage.setItem("sayingyes_saved_event_id", json.id)
     setSavedEventId(json.id)
     return json as { id: string; slug: string }
   }
@@ -697,7 +697,7 @@ export default function BouwenPage() {
                   onClick={() => {
                     const next = { ...draft, navLayout: opt } as Draft
                     setDraft(next)
-                    localStorage.setItem("maakjefeest_draft", JSON.stringify(next))
+                    localStorage.setItem("sayingyes_draft", JSON.stringify(next))
                   }}
                   className={`flex-1 py-2 text-xs font-semibold transition-colors ${
                     navLayout === opt ? 'bg-rose-500 text-white' : 'text-gray-500 hover:bg-gray-50'
