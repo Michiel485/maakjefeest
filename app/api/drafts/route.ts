@@ -131,6 +131,10 @@ export async function POST(request: Request) {
     console.log("[drafts] gevonden event:", existing)
 
     if (existing) {
+      console.log("[drafts] URL naar DB:", hero_image_url, "| programma items:", JSON.stringify(
+        (content["programma"] as { items?: Array<{ id?: string; image_url?: string | null }> })?.items
+          ?.map((it) => ({ id: it.id, image_url: it.image_url }))
+      ))
       const { error: updateErr } = await db
         .from("events")
         .update({ type, title: naam, datum, locatie, style, hero_image_url, nav_layout })

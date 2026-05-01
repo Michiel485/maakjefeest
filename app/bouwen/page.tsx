@@ -362,58 +362,104 @@ export default function BouwenPage() {
 
     const activePages = PAGES.filter((p) => active[p.id]).map((p) => p.id)
 
-    // Hero upload
-    let uploadedHeroUrl: string | null = null
+    // ── Hero upload ──────────────────────────────────────────────────────────
+    // Start with whatever permanent URL is already in state (from a previous save).
+    // Only overwrite it if we successfully upload a new file.
+    let uploadedHeroUrl: string | null =
+      heroImageUrl && !heroImageUrl.startsWith("blob:") ? heroImageUrl : null
+
     if (heroFile) {
-      uploadedHeroUrl = await uploadToStorage(heroFile, "hero-images")
-      setHeroFile(null)
-      setHeroImageUrl(uploadedHeroUrl)
-    } else if (heroImageUrl && !heroImageUrl.startsWith("blob:")) {
-      uploadedHeroUrl = heroImageUrl
+      try {
+        const url = await uploadToStorage(heroFile, "hero-images")
+        console.log("[save] hero geüpload:", url)
+        uploadedHeroUrl = url
+        setHeroFile(null)
+        setHeroImageUrl(url)
+      } catch (err) {
+        console.error("[save] hero upload mislukt:", err)
+        // uploadedHeroUrl stays as the existing permanent URL (or null)
+      }
     }
 
-    // Ceremoniemeesters uploads
+    // ── Ceremoniemeesters uploads ────────────────────────────────────────────
     const uploadedMasters = [...mastersData] as typeof mastersData
     for (let i = 0; i < 2; i++) {
       const f = masterFiles[i as 0 | 1]
-      if (f) {
-        try {
-          const url = await uploadToStorage(f, "hero-images")
-          uploadedMasters[i] = { ...uploadedMasters[i], foto_url: url }
-          setMasterFiles((prev) => { const n = [...prev] as [File | null, File | null]; n[i] = null; return n })
-          setMasterPhotoUrls((prev) => { const n = [...prev] as [string | null, string | null]; n[i] = url; return n })
-        } catch (err) {
-          console.error(`[save] ceremoniemeester ${i} upload mislukt:`, err)
-        }
+      if (!f) continue
+      try {
+        const url = await uploadToStorage(f, "hero-images")
+        console.log(`[save] ceremoniemeester ${i} geüpload:`, url)
+        uploadedMasters[i] = { ...uploadedMasters[i], foto_url: url }
+        setMasterFiles((prev) => { const n = [...prev] as [File | null, File | null]; n[i] = null; return n })
+        setMasterPhotoUrls((prev) => { const n = [...prev] as [string | null, string | null]; n[i] = url; return n })
+      } catch (err) {
+        console.error(`[save] ceremoniemeester ${i} upload mislukt:`, err)
+        // foto_url stays as whatever mastersData already has
       }
     }
 
-    // Programma foto uploads
-    let programmaItemsUploaded = programmaItems.slice()
-    if (Object.keys(programFileMap).length > 0) {
-      for (let i = 0; i < programmaItemsUploaded.length; i++) {
-        const it = programmaItemsUploaded[i]
-        if (!it.id || !programFileMap[it.id]) continue
-        try {
-          const url = await uploadToStorage(programFileMap[it.id], "hero-images")
-          console.log(`[save] programma foto geüpload voor item ${it.id}:`, url)
-          programmaItemsUploaded[i] = { ...it, image_url: url }
-        } catch (err) {
-          console.error(`[save] programma foto upload mislukt voor item ${it.id}:`, err)
-        }
+    // ── Programma foto uploads ───────────────────────────────────────────────
+    // Start with a mutable copy of the current items (may already contain
+    // permanent URLs from earlier saves).
+    const programmaItemsUploaded = programmaItems.slice()
+    const successfullyUploadedIds = new Set<string>()
+
+    for (let i = 0; i < programmaItemsUploaded.length; i++) {
+      const it = programmaItemsUploaded[i]
+      if (!it.id || !programFileMap[it.id]) continue
+      try {
+        const url = await uploadToStorage(programFileMap[it.id], "hero-images")
+        console.log(`[save] programma foto geüpload voor item ${it.id}:`, url)
+        programmaItemsUploaded[i] = { ...it, image_url: url }
+        successfullyUploadedIds.add(it.id)
+      } catch (err) {
+        console.error(`[save] programma foto upload mislukt voor item ${it.id}:`, err)
+        // item keeps its current image_url — blob stays alive in state
       }
-      Object.values(programBlobUrls).forEach((u) => URL.revokeObjectURL(u))
-      setProgramBlobUrls({})
-      setProgramFileMap({})
-      // Schrijf permanente URLs terug naar lokale state zodat een volgende save/publish ze vindt
-      updateContent("programma", { ...(content.programma ?? {}), items: programmaItemsUploaded })
     }
 
+    // Clean up only blobs that were successfully uploaded; keep the rest alive
+    // so photos remain visible in the UI on failed uploads.
+    if (successfullyUploadedIds.size > 0) {
+      setProgramBlobUrls((prev) => {
+        const next = { ...prev }
+        successfullyUploadedIds.forEach((id) => {
+          if (next[id]) { URL.revokeObjectURL(next[id]); delete next[id] }
+        })
+        return next
+      })
+      setProgramFileMap((prev) => {
+        const next = { ...prev }
+        successfullyUploadedIds.forEach((id) => delete next[id])
+        return next
+      })
+      // Persist the permanent URLs back into local state so the next save/publish
+      // uses them directly without needing to re-upload.
+      setContent((prev) => {
+        const updatedProgramma = { ...(prev.programma ?? {}), items: programmaItemsUploaded }
+        const next = { ...prev, programma: updatedProgramma }
+        localStorage.setItem("maakjefeest_content", JSON.stringify(next))
+        return next
+      })
+    }
+
+    // ── Assemble the complete payload ────────────────────────────────────────
+    // Use `programmaItemsUploaded` (local variable, never stale) as the
+    // definitive source for programma items. All other content comes from
+    // the current `content` closure which reflects the last render.
     const mergedContent: ContentMap = {
       ...content,
-      home: { ...(content.home ?? {}), title: homeContent.title, body: homeContent.body, align: homeContent.align },
+      home: {
+        ...(content.home ?? {}),
+        title: homeContent.title,
+        body: homeContent.body,
+        align: homeContent.align,
+      },
       ceremoniemeesters: { masters: uploadedMasters },
-      programma: { ...(content.programma ?? {}), items: programmaItemsUploaded },
+      programma: {
+        ...(content.programma ?? {}),
+        items: programmaItemsUploaded,
+      },
     }
 
     const payload = {
@@ -424,7 +470,12 @@ export default function BouwenPage() {
       content: mergedContent,
       event_id: savedEventId ?? undefined,
     }
-    console.log("[save] verstuur naar /api/drafts — event_id:", payload.event_id, "| pagina's:", activePages)
+    console.log(
+      "[save] verstuur naar /api/drafts",
+      "| event_id:", payload.event_id,
+      "| hero_image_url:", payload.hero_image_url,
+      "| programma items:", programmaItemsUploaded.map((it) => ({ id: it.id, image_url: it.image_url })),
+    )
 
     const res = await fetch("/api/drafts", {
       method: "POST",
