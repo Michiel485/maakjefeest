@@ -2,16 +2,14 @@ import { createServerClient } from "@supabase/ssr"
 import { createServiceClient } from "@/lib/supabase"
 import { cookies } from "next/headers"
 
-async function getUser() {
+async function getAuthClient() {
   const cookieStore = await cookies()
-  const supabase = createServerClient(
+  const db = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
+        getAll() { return cookieStore.getAll() },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) =>
             cookieStore.set(name, value, options)
@@ -20,8 +18,8 @@ async function getUser() {
       },
     }
   )
-  const { data: { user } } = await supabase.auth.getUser()
-  return user
+  const { data: { user } } = await db.auth.getUser()
+  return { db, user }
 }
 
 function toSlug(naam: string): string {
@@ -35,6 +33,7 @@ function toSlug(naam: string): string {
 }
 
 async function uniqueSlug(base: string): Promise<string> {
+  // Service role needed to check slugs across ALL events (including other users' drafts)
   const service = createServiceClient()
   const { data } = await service
     .from("events")
@@ -60,13 +59,12 @@ const PAGE_TITLES: Record<string, string> = {
 
 // GET /api/drafts — list all events for the logged-in user
 export async function GET() {
-  const user = await getUser()
+  const { db, user } = await getAuthClient()
   if (!user?.email) {
     return Response.json({ error: "Niet ingelogd" }, { status: 401 })
   }
 
-  const service = createServiceClient()
-  const { data, error } = await service
+  const { data, error } = await db
     .from("events")
     .select("id, slug, title, type, status, created_at")
     .eq("user_email", user.email)
@@ -78,7 +76,7 @@ export async function GET() {
 
 // POST /api/drafts — create or update a draft event
 export async function POST(request: Request) {
-  const user = await getUser()
+  const { db, user } = await getAuthClient()
   if (!user?.email) {
     return Response.json({ error: "Niet ingelogd" }, { status: 401 })
   }
@@ -119,25 +117,25 @@ export async function POST(request: Request) {
     return Response.json({ error: "Verplichte velden ontbreken" }, { status: 400 })
   }
 
-  const service = createServiceClient()
   const pageList = Array.isArray(pages) && pages.length > 0 ? pages : ["home", "rsvp"]
 
   // Update existing draft if event_id provided and belongs to this user
   if (event_id) {
-    const { data: existing } = await service
+    const { data: existing } = await db
       .from("events")
       .select("id, slug, status")
       .eq("id", event_id)
-      .eq("user_email", user.email)
       .single()
 
     if (existing && existing.status === "draft") {
-      await service
+      const { error: updateErr } = await db
         .from("events")
         .update({ type, title: naam, datum, locatie, style, hero_image_url, nav_layout })
         .eq("id", event_id)
 
-      await service.from("pages").delete().eq("event_id", event_id)
+      if (updateErr) return Response.json({ error: updateErr.message }, { status: 500 })
+
+      await db.from("pages").delete().eq("event_id", event_id)
 
       const pageRows = pageList.map((t, i) => ({
         event_id,
@@ -147,7 +145,8 @@ export async function POST(request: Request) {
         is_enabled: true,
         order: i,
       }))
-      await service.from("pages").insert(pageRows)
+      const { error: pagesErr } = await db.from("pages").insert(pageRows)
+      if (pagesErr) return Response.json({ error: pagesErr.message }, { status: 500 })
 
       return Response.json({ id: event_id, slug: existing.slug })
     }
@@ -155,7 +154,7 @@ export async function POST(request: Request) {
 
   // Create new draft
   const slug = await uniqueSlug(toSlug(naam || "mijn-feest"))
-  const { data: event, error: eventError } = await service
+  const { data: event, error: eventError } = await db
     .from("events")
     .insert({
       type,
@@ -182,7 +181,8 @@ export async function POST(request: Request) {
     is_enabled: true,
     order: i,
   }))
-  await service.from("pages").insert(pageRows)
+  const { error: pagesErr } = await db.from("pages").insert(pageRows)
+  if (pagesErr) return Response.json({ error: pagesErr.message }, { status: 500 })
 
   return Response.json({ id: event.id, slug: event.slug }, { status: 201 })
 }

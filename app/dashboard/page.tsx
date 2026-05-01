@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase-server"
 import { createServiceClient } from "@/lib/supabase"
 import { SignOutButton } from "./SignOutButton"
 import RsvpSection, { type RsvpRow } from "./RsvpSection"
+import { eventSiteUrl, eventSiteLabel } from "@/lib/site-url"
 
 type Event = {
   id: string
@@ -50,10 +51,11 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
       <div className="flex items-center gap-3 flex-shrink-0">
         {!isDraft && (
           <a
-            href={`https://${event.slug}.sayingyes.nl`}
+            href={eventSiteUrl(event.slug)}
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm text-gray-500 hover:text-rose-500 font-medium transition-colors whitespace-nowrap"
+            title={eventSiteLabel(event.slug)}
           >
             Bekijken →
           </a>

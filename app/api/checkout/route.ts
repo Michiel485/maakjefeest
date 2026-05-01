@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "event_id is verplicht" }, { status: 400 })
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3001"
+  const baseUrl = new URL(request.url).origin
 
   const session = await stripe.checkout.sessions.create({
     mode: "payment",

@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
+import { eventSiteUrl, eventSiteLabel } from "@/lib/site-url"
 
 interface EventData {
   id: string
@@ -26,7 +27,8 @@ function SuccesContent() {
       .catch(() => setLoading(false))
   }, [event_id])
 
-  const siteUrl = event ? `https://${event.slug}.sayingyes.nl` : null
+  const siteUrl = event ? eventSiteUrl(event.slug) : null
+  const siteLabel = event ? eventSiteLabel(event.slug) : null
   const whatsappText = event
     ? encodeURIComponent(`Hé! Bekijk onze bruiloftswebsite voor ${event.title} hier: ${siteUrl}`)
     : ""
@@ -60,7 +62,7 @@ function SuccesContent() {
           <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Jouw website</p>
           <a href={siteUrl} target="_blank" rel="noopener noreferrer"
             className="text-lg font-bold text-rose-600 hover:text-rose-700 transition-colors break-all">
-            {event?.slug}.sayingyes.nl
+            {siteLabel}
           </a>
         </div>
       )}

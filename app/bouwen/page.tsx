@@ -180,7 +180,7 @@ const PAGES: PageConfig[] = [
   { id: "ceremoniemeesters",  label: "Ceremoniemeesters",  toggleable: true  },
 ]
 
-const CONTROLS_PAGES = new Set<PageId>(["home", "ceremoniemeesters", "programma"])
+const CONTROLS_PAGES = new Set<PageId>(["home", "ceremoniemeesters", "programma", "rsvp"])
 
 const TYPE_LABEL: Record<EventType, string> = {
   bruiloft: "Bruiloft", verjaardag: "Verjaardag", evenement: "Evenement",
@@ -214,6 +214,8 @@ export default function BouwenPage() {
   const masterPhotoRef0 = useRef<HTMLInputElement>(null)
   const masterPhotoRef1 = useRef<HTMLInputElement>(null)
   const programPhotoRef = useRef<HTMLInputElement>(null)
+  const [programBlobUrls, setProgramBlobUrls] = useState<Record<string, string>>({})
+  const [programFileMap, setProgramFileMap] = useState<Record<string, File>>({})
   const [publishing, setPublishing] = useState(false)
   const [publishError, setPublishError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -327,18 +329,25 @@ export default function BouwenPage() {
     e.target.value = ""
   }
 
-  async function handleProgramPhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleProgramPhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     e.target.value = ""
     if (!file || programUploadIndex === null) return
     const supported = ["image/jpeg", "image/png", "image/webp", "image/gif"]
     if (!supported.includes(file.type)) return
-    try {
-      const url = await uploadToStorage(file, "hero-images")
+
+    let item = programmaItems[programUploadIndex]
+    if (!item.id) {
+      item = { ...item, id: crypto.randomUUID() }
       const updated = [...programmaItems]
-      updated[programUploadIndex] = { ...updated[programUploadIndex], image_url: url }
+      updated[programUploadIndex] = item
       updateContent("programma", { items: updated, layout: programLayout })
-    } catch { /* niet-kritiek */ }
+    }
+
+    const blobUrl = URL.createObjectURL(file)
+    if (programBlobUrls[item.id!]) URL.revokeObjectURL(programBlobUrls[item.id!])
+    setProgramBlobUrls((prev) => ({ ...prev, [item.id!]: blobUrl }))
+    setProgramFileMap((prev) => ({ ...prev, [item.id!]: file }))
     setProgramUploadIndex(null)
   }
 
@@ -371,6 +380,21 @@ export default function BouwenPage() {
         }
       }
 
+      let programmaItemsUploaded = programmaItems.slice()
+      if (Object.keys(programFileMap).length > 0) {
+        for (let i = 0; i < programmaItemsUploaded.length; i++) {
+          const it = programmaItemsUploaded[i]
+          if (!it.id || !programFileMap[it.id]) continue
+          try {
+            const url = await uploadToStorage(programFileMap[it.id], "hero-images")
+            programmaItemsUploaded[i] = { ...it, image_url: url }
+          } catch { /* skip */ }
+        }
+        Object.values(programBlobUrls).forEach((u) => URL.revokeObjectURL(u))
+        setProgramBlobUrls({})
+        setProgramFileMap({})
+      }
+
       const mergedContent: ContentMap = {
         ...content,
         home: {
@@ -380,6 +404,7 @@ export default function BouwenPage() {
           align: homeContent.align,
         },
         ceremoniemeesters: { masters: uploadedMasters },
+        programma: { ...(content.programma ?? {}), items: programmaItemsUploaded },
       }
 
       const res = await fetch("/api/events", {
@@ -409,10 +434,26 @@ export default function BouwenPage() {
       } else if (heroImageUrl && !heroImageUrl.startsWith("blob:")) {
         uploadedHeroUrl = heroImageUrl
       }
+      let programmaItemsUploaded = programmaItems.slice()
+      if (Object.keys(programFileMap).length > 0) {
+        for (let i = 0; i < programmaItemsUploaded.length; i++) {
+          const it = programmaItemsUploaded[i]
+          if (!it.id || !programFileMap[it.id]) continue
+          try {
+            const url = await uploadToStorage(programFileMap[it.id], "hero-images")
+            programmaItemsUploaded[i] = { ...it, image_url: url }
+          } catch { /* skip */ }
+        }
+        Object.values(programBlobUrls).forEach((u) => URL.revokeObjectURL(u))
+        setProgramBlobUrls({})
+        setProgramFileMap({})
+      }
+
       const mergedContent: ContentMap = {
         ...content,
         home: { ...(content.home ?? {}), title: homeContent.title, body: homeContent.body, align: homeContent.align },
         ceremoniemeesters: { masters: mastersData },
+        programma: { ...(content.programma ?? {}), items: programmaItemsUploaded },
       }
       const res = await fetch("/api/drafts", {
         method: "POST",
@@ -462,6 +503,7 @@ export default function BouwenPage() {
 
   const activePagesOrdered = PAGES.filter((p) => active[p.id])
   const eventName = draft?.naam || "Jullie bruiloft"
+  const safeEventName = eventName.replace(/\n/g, " ")
   const eventDate = draft?.datum ? formatDate(draft.datum) : "Datum nog niet ingesteld"
   const eventLocatie = draft?.locatie || ""
   const typeLabel = draft?.type ? TYPE_LABEL[draft.type] : "Evenement"
@@ -482,6 +524,9 @@ export default function BouwenPage() {
 
   const programmaItems = (content.programma?.items as ProgrammaItem[]) || []
   const programmaItemsSorted = programmaItems.slice().sort((a, b) => a.time.localeCompare(b.time))
+  const programmaItemsForPreview = programmaItemsSorted.map((it) =>
+    it.id && programBlobUrls[it.id] ? { ...it, image_url: programBlobUrls[it.id] } : it
+  )
   const rawLayout = (content.programma?.layout as string) || "centered"
   const programLayout = (rawLayout === "bento" ? "centered" : rawLayout) as "centered" | "timeline"
   const praktischItems = (content.praktisch?.items as PraktischItem[]) || []
@@ -1052,59 +1097,67 @@ export default function BouwenPage() {
                               ))}
                             </div>
                           )}
-                          {item.image_url && (
-                            <div className="flex flex-col items-center gap-1.5 py-1">
-                              <div className="relative">
-                                {/* Round photo preview — drag left/right to pan */}
-                                <div
-                                  style={{ width: 80, height: 80, borderRadius: "50%", overflow: "hidden", cursor: "ew-resize", userSelect: "none", flexShrink: 0 }}
-                                  onMouseDown={(e) => {
-                                    e.preventDefault()
-                                    const startX = e.clientX
-                                    const startPosX = item.imagePosX ?? 50
-                                    function onMove(me: MouseEvent) {
-                                      const newX = Math.max(0, Math.min(100, startPosX - (me.clientX - startX)))
+                          {((item.id && programBlobUrls[item.id]) || item.image_url) && (() => {
+                            const photoUrl = (item.id && programBlobUrls[item.id]) || item.image_url!
+                            return (
+                              <div className="flex flex-col items-center gap-1.5 py-1">
+                                <div className="relative">
+                                  {/* Round photo preview — drag left/right to pan */}
+                                  <div
+                                    style={{ width: 80, height: 80, borderRadius: "50%", overflow: "hidden", cursor: "ew-resize", userSelect: "none", flexShrink: 0 }}
+                                    onMouseDown={(e) => {
+                                      e.preventDefault()
+                                      const startX = e.clientX
+                                      const startPosX = item.imagePosX ?? 50
+                                      function onMove(me: MouseEvent) {
+                                        const newX = Math.max(0, Math.min(100, startPosX - (me.clientX - startX)))
+                                        const updated = [...programmaItems]
+                                        updated[i] = { ...updated[i], imagePosX: newX }
+                                        updateContent("programma", { items: updated, layout: programLayout })
+                                      }
+                                      function onUp() {
+                                        window.removeEventListener("mousemove", onMove)
+                                        window.removeEventListener("mouseup", onUp)
+                                      }
+                                      window.addEventListener("mousemove", onMove)
+                                      window.addEventListener("mouseup", onUp)
+                                    }}
+                                  >
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                      src={photoUrl}
+                                      alt=""
+                                      style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: `${item.imagePosX ?? 50}% 50%`, display: "block", pointerEvents: "none" }}
+                                    />
+                                  </div>
+                                  {/* Pan hint arrows */}
+                                  <div className="absolute inset-0 rounded-full flex items-center justify-between px-1.5 pointer-events-none">
+                                    <span className="text-white text-sm font-bold leading-none" style={{ filter: "drop-shadow(0 0 2px rgba(0,0,0,0.8))", opacity: 0.7 }}>‹</span>
+                                    <span className="text-white text-sm font-bold leading-none" style={{ filter: "drop-shadow(0 0 2px rgba(0,0,0,0.8))", opacity: 0.7 }}>›</span>
+                                  </div>
+                                  {/* Remove button */}
+                                  <button
+                                    onClick={() => {
+                                      if (item.id && programBlobUrls[item.id]) {
+                                        URL.revokeObjectURL(programBlobUrls[item.id])
+                                        setProgramBlobUrls((prev) => { const n = { ...prev }; delete n[item.id!]; return n })
+                                        setProgramFileMap((prev) => { const n = { ...prev }; delete n[item.id!]; return n })
+                                      }
                                       const updated = [...programmaItems]
-                                      updated[i] = { ...updated[i], imagePosX: newX }
+                                      updated[i] = { ...updated[i], image_url: null }
                                       updateContent("programma", { items: updated, layout: programLayout })
-                                    }
-                                    function onUp() {
-                                      window.removeEventListener("mousemove", onMove)
-                                      window.removeEventListener("mouseup", onUp)
-                                    }
-                                    window.addEventListener("mousemove", onMove)
-                                    window.addEventListener("mouseup", onUp)
-                                  }}
-                                >
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img
-                                    src={item.image_url}
-                                    alt=""
-                                    style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: `${item.imagePosX ?? 50}% 50%`, display: "block", pointerEvents: "none" }}
-                                  />
+                                    }}
+                                    className="absolute -top-1 -right-1 bg-white rounded-full p-0.5 text-gray-400 hover:text-red-500 transition-colors shadow-sm border border-gray-100"
+                                  >
+                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                  </button>
                                 </div>
-                                {/* Pan hint arrows */}
-                                <div className="absolute inset-0 rounded-full flex items-center justify-between px-1.5 pointer-events-none">
-                                  <span className="text-white text-sm font-bold leading-none" style={{ filter: "drop-shadow(0 0 2px rgba(0,0,0,0.8))", opacity: 0.7 }}>‹</span>
-                                  <span className="text-white text-sm font-bold leading-none" style={{ filter: "drop-shadow(0 0 2px rgba(0,0,0,0.8))", opacity: 0.7 }}>›</span>
-                                </div>
-                                {/* Remove button */}
-                                <button
-                                  onClick={() => {
-                                    const updated = [...programmaItems]
-                                    updated[i] = { ...updated[i], image_url: null }
-                                    updateContent("programma", { items: updated, layout: programLayout })
-                                  }}
-                                  className="absolute -top-1 -right-1 bg-white rounded-full p-0.5 text-gray-400 hover:text-red-500 transition-colors shadow-sm border border-gray-100"
-                                >
-                                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                  </svg>
-                                </button>
+                                <p className="text-[10px] text-gray-400">Sleep om bij te snijden</p>
                               </div>
-                              <p className="text-[10px] text-gray-400">Sleep om bij te snijden</p>
-                            </div>
-                          )}
+                            )
+                          })()}
                           <input
                             type="text"
                             value={item.title ?? ""}
@@ -1149,6 +1202,23 @@ export default function BouwenPage() {
                       className="hidden"
                       onChange={handleProgramPhotoUpload}
                     />
+                  </div>
+                )}
+
+                {/* ── RSVP controls ── */}
+                {previewPage === "rsvp" && (
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Introductietekst</p>
+                    <label className="flex flex-col gap-1.5">
+                      <span className="text-xs font-semibold text-gray-600">Tekst boven het formulier</span>
+                      <textarea
+                        rows={4}
+                        value={(content.rsvp?.text as string) ?? ""}
+                        onChange={(e) => updateContent("rsvp", { ...(content.rsvp ?? {}), text: e.target.value })}
+                        placeholder="Laat weten of je erbij bent — vul het formulier in."
+                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
+                      />
+                    </label>
                   </div>
                 )}
 
@@ -1208,7 +1278,7 @@ export default function BouwenPage() {
                       </div>
                       {navLayout === 'left' ? (
                         <nav className="px-5 py-4 border-b flex items-center gap-6 flex-wrap" style={{ backgroundColor: sc.navBg, borderColor: `${sc.accent}22` }}>
-                          <span className="text-sm font-bold whitespace-pre-wrap flex-shrink-0" style={{ color: sc.accent, fontFamily: sc.fontFamily }}>{eventName}</span>
+                          <span className="text-sm font-bold whitespace-nowrap flex-shrink-0 overflow-hidden text-ellipsis" style={{ color: sc.accent, fontFamily: sc.fontFamily, maxWidth: 200 }}>{safeEventName}</span>
                           <div className="flex items-center flex-wrap gap-1">
                             {activePagesOrdered.map((page) => (
                               <button
@@ -1224,7 +1294,7 @@ export default function BouwenPage() {
                         </nav>
                       ) : navLayout === 'split' ? (
                         <nav className="px-5 py-4 border-b flex items-center justify-between gap-4" style={{ backgroundColor: sc.navBg, borderColor: `${sc.accent}22` }}>
-                          <span className="text-sm font-bold whitespace-pre-wrap flex-shrink-0" style={{ color: sc.accent, fontFamily: sc.fontFamily }}>{eventName}</span>
+                          <span className="text-sm font-bold whitespace-nowrap flex-shrink-0 overflow-hidden text-ellipsis" style={{ color: sc.accent, fontFamily: sc.fontFamily, maxWidth: 200 }}>{safeEventName}</span>
                           <div className="flex items-center flex-wrap justify-end gap-1">
                             {activePagesOrdered.map((page) => (
                               <button
@@ -1240,7 +1310,7 @@ export default function BouwenPage() {
                         </nav>
                       ) : (
                         <nav className="px-5 py-5 border-b flex flex-col items-center gap-2" style={{ backgroundColor: sc.navBg, borderColor: `${sc.accent}22` }}>
-                          <span className="text-sm font-bold text-center whitespace-pre-wrap" style={{ color: sc.accent, fontFamily: sc.fontFamily }}>{eventName}</span>
+                          <span className="text-sm font-bold text-center whitespace-nowrap overflow-hidden text-ellipsis" style={{ color: sc.accent, fontFamily: sc.fontFamily, maxWidth: 200 }}>{safeEventName}</span>
                           <div className="flex items-center flex-wrap justify-center gap-1">
                             {activePagesOrdered.map((page) => (
                               <button
@@ -1282,7 +1352,7 @@ export default function BouwenPage() {
                       )}
                       {previewPage === "programma" && (
                         <EventProgramPreview
-                          items={programmaItemsSorted}
+                          items={programmaItemsForPreview}
                           sc={sc}
                           programLayout={programLayout}
                           builderMode
@@ -1298,7 +1368,7 @@ export default function BouwenPage() {
                       {previewPage === "rsvp" && (
                         <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
                           <h2 className="text-lg font-extrabold mb-2" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>Aanmelden</h2>
-                          <p className="text-sm mb-6" style={{ color: sc.bodyText }}>Laat weten of je erbij bent!</p>
+                          <p className="text-sm mb-6" style={{ color: sc.bodyText }}>{(content.rsvp?.text as string) || "Laat weten of je erbij bent — vul het formulier in."}</p>
                           <div className="flex flex-col gap-3">
                             {["Naam", "E-mailadres", "Aantal personen"].map((f) => (
                               <div key={f}>

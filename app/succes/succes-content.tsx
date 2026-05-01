@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
+import { eventSiteUrl, eventSiteLabel } from "@/lib/site-url"
 
 interface EventData {
   id: string
@@ -27,7 +28,8 @@ export default function SuccesContent() {
       .catch(() => setLoading(false))
   }, [event_id])
 
-  const siteUrl = event ? `https://${event.slug}.sayingyes.nl` : null
+  const siteUrl = event ? eventSiteUrl(event.slug) : null
+  const siteLabel = event ? eventSiteLabel(event.slug) : null
 
   const whatsappText = event
     ? encodeURIComponent(
@@ -71,7 +73,7 @@ export default function SuccesContent() {
             rel="noopener noreferrer"
             className="text-lg font-bold text-rose-600 hover:text-rose-700 transition-colors break-all"
           >
-            {event?.slug}.sayingyes.nl
+            {siteLabel}
           </a>
         </div>
       )}

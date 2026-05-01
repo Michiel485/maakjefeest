@@ -28,6 +28,7 @@ export default function EventNav({
   onNavigate?: (type: string) => void
 }) {
   const pathname = usePathname()
+  const safeTitle = title.replace(/\n/g, " ")
 
   function isActive(type: string) {
     if (type === "home") return pathname === "/"
@@ -45,9 +46,13 @@ export default function EventNav({
         letterSpacing: "-0.02em",
         color: sc.accent,
         textDecoration: "none",
+        whiteSpace: "nowrap",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        maxWidth: "200px",
       }}
     >
-      {title}
+      {safeTitle}
     </a>
   )
 
@@ -117,7 +122,7 @@ export default function EventNav({
           textDecoration: "none",
         }}
       >
-        {title}
+        {safeTitle}
       </a>
       <div className="flex items-center flex-wrap justify-center gap-1">
         {pageLinks}
