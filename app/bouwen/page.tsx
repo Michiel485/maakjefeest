@@ -1329,14 +1329,14 @@ export default function BouwenPage() {
                       </div>
                       {navLayout === 'left' ? (
                         <nav className="px-5 py-4 border-b flex items-center gap-6 flex-wrap" style={{ backgroundColor: sc.navBg, borderColor: `${sc.accent}22` }}>
-                          <span className="text-sm font-bold whitespace-nowrap flex-shrink-0 overflow-hidden text-ellipsis" style={{ color: sc.accent, fontFamily: sc.fontFamily, maxWidth: 200 }}>{safeEventName}</span>
+                          <span className="text-sm font-bold whitespace-nowrap flex-shrink-0 overflow-hidden text-ellipsis" style={{ color: sc.accent, fontFamily: sc.fontFamily, maxWidth: sc.floral ? 260 : 200, fontSize: sc.floral ? "1.25rem" : undefined }}>{safeEventName}</span>
                           <div className="flex items-center flex-wrap gap-1">
                             {activePagesOrdered.map((page) => (
                               <button
                                 key={page.id}
                                 onClick={() => { setPreviewPage(page.id); setIsEditingControls(false) }}
                                 className="text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors"
-                                style={page.id === previewPage ? { color: sc.accent, backgroundColor: `${sc.accent}15` } : { color: sc.navText }}
+                                style={page.id === previewPage ? { color: sc.accent, backgroundColor: `${sc.accent}15`, fontSize: sc.floral ? "1rem" : undefined } : { color: sc.navText, fontSize: sc.floral ? "1rem" : undefined }}
                               >
                                 {page.label}
                               </button>
@@ -1345,14 +1345,14 @@ export default function BouwenPage() {
                         </nav>
                       ) : navLayout === 'split' ? (
                         <nav className="px-5 py-4 border-b flex items-center justify-between gap-4" style={{ backgroundColor: sc.navBg, borderColor: `${sc.accent}22` }}>
-                          <span className="text-sm font-bold whitespace-nowrap flex-shrink-0 overflow-hidden text-ellipsis" style={{ color: sc.accent, fontFamily: sc.fontFamily, maxWidth: 200 }}>{safeEventName}</span>
+                          <span className="text-sm font-bold whitespace-nowrap flex-shrink-0 overflow-hidden text-ellipsis" style={{ color: sc.accent, fontFamily: sc.fontFamily, maxWidth: sc.floral ? 260 : 200, fontSize: sc.floral ? "1.25rem" : undefined }}>{safeEventName}</span>
                           <div className="flex items-center flex-wrap justify-end gap-1">
                             {activePagesOrdered.map((page) => (
                               <button
                                 key={page.id}
                                 onClick={() => { setPreviewPage(page.id); setIsEditingControls(false) }}
                                 className="text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors"
-                                style={page.id === previewPage ? { color: sc.accent, backgroundColor: `${sc.accent}15` } : { color: sc.navText }}
+                                style={page.id === previewPage ? { color: sc.accent, backgroundColor: `${sc.accent}15`, fontSize: sc.floral ? "1rem" : undefined } : { color: sc.navText, fontSize: sc.floral ? "1rem" : undefined }}
                               >
                                 {page.label}
                               </button>
@@ -1361,14 +1361,14 @@ export default function BouwenPage() {
                         </nav>
                       ) : (
                         <nav className="px-5 py-5 border-b flex flex-col items-center gap-2" style={{ backgroundColor: sc.navBg, borderColor: `${sc.accent}22` }}>
-                          <span className="text-sm font-bold text-center whitespace-nowrap overflow-hidden text-ellipsis" style={{ color: sc.accent, fontFamily: sc.fontFamily, maxWidth: 200 }}>{safeEventName}</span>
+                          <span className="text-sm font-bold text-center whitespace-nowrap overflow-hidden text-ellipsis" style={{ color: sc.accent, fontFamily: sc.fontFamily, maxWidth: sc.floral ? 260 : 200, fontSize: sc.floral ? "1.25rem" : undefined }}>{safeEventName}</span>
                           <div className="flex items-center flex-wrap justify-center gap-1">
                             {activePagesOrdered.map((page) => (
                               <button
                                 key={page.id}
                                 onClick={() => { setPreviewPage(page.id); setIsEditingControls(false) }}
                                 className="text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors"
-                                style={page.id === previewPage ? { color: sc.accent, backgroundColor: `${sc.accent}15` } : { color: sc.navText }}
+                                style={page.id === previewPage ? { color: sc.accent, backgroundColor: `${sc.accent}15`, fontSize: sc.floral ? "1rem" : undefined } : { color: sc.navText, fontSize: sc.floral ? "1rem" : undefined }}
                               >
                                 {page.label}
                               </button>

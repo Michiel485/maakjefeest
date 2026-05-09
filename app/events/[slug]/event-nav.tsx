@@ -12,6 +12,7 @@ interface SC {
   navBg: string
   navText: string
   fontFamily: string
+  floral?: boolean
 }
 
 export default function EventNav({
@@ -49,15 +50,15 @@ export default function EventNav({
       onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("home") } : undefined}
       className="flex-shrink-0"
       style={{
-        fontSize: "0.9375rem",
+        fontSize: sc.floral ? "1.25rem" : "0.9375rem",
         fontWeight: 800,
-        letterSpacing: "-0.02em",
+        letterSpacing: sc.floral ? "0.01em" : "-0.02em",
         color: sc.accent,
         textDecoration: "none",
         whiteSpace: "nowrap",
         overflow: "hidden",
         textOverflow: "ellipsis",
-        maxWidth: "200px",
+        maxWidth: sc.floral ? "260px" : "200px",
       }}
     >
       {safeTitle}
@@ -72,7 +73,7 @@ export default function EventNav({
         href={pageHref(page.type)}
         onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate(page.type) } : undefined}
         style={{
-          fontSize: "0.8125rem",
+          fontSize: sc.floral ? "1rem" : "0.8125rem",
           fontWeight: 600,
           color: active ? sc.accent : sc.navText,
           padding: "5px 12px",
@@ -123,9 +124,9 @@ export default function EventNav({
         onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("home") } : undefined}
         className="text-center"
         style={{
-          fontSize: "0.9375rem",
+          fontSize: sc.floral ? "1.25rem" : "0.9375rem",
           fontWeight: 800,
-          letterSpacing: "-0.02em",
+          letterSpacing: sc.floral ? "0.01em" : "-0.02em",
           color: sc.accent,
           textDecoration: "none",
         }}
