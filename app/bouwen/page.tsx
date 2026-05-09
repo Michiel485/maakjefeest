@@ -124,7 +124,7 @@ async function uploadToStorage(file: File, bucket: string): Promise<string> {
 
 const STYLES: { id: Style; label: string; sub: string; dot: string; border: string; active: string }[] = [
   { id: "roze",  label: "Feestelijk Roze",   sub: "Roze accenten, modern",  dot: "bg-rose-400",  border: "border-rose-300",  active: "ring-rose-400"  },
-  { id: "ivoor", label: "Klassiek Ivoor",     sub: "Gebroken wit, sierlijk", dot: "bg-amber-100 border border-amber-300", border: "border-amber-200", active: "ring-amber-400" },
+  { id: "ivoor", label: "Bohemian",            sub: "Salie, crème & goud",    dot: "bg-[#8B9E7A]",                       border: "border-[#8B9E7A]/40",             active: "ring-[#8B7355]"  },
   { id: "zand",  label: "Scandinavisch Zand", sub: "Aards, clean",           dot: "bg-[#E8E0D5]", border: "border-stone-200", active: "ring-stone-400" },
 ]
 
@@ -140,19 +140,23 @@ const STYLE_CONFIG = {
     buttonBg: "#E8627A",
     buttonText: "#ffffff",
     labelColor: "#E8627A",
+    bodyBg: "#f1f5f9",
+    floral: false as boolean,
     fontImport: null as string | null,
   },
   ivoor: {
-    accent: "#1A1A1A",
-    heroGradient: "linear-gradient(135deg, #FAF7F2, #F5EFE6, #FAF7F2)",
+    accent: "#8B7355",
+    heroGradient: "linear-gradient(160deg, #FDFAF5 0%, #F5EDE0 55%, #EDE0CF 100%)",
     fontFamily: "'Cormorant Garamond', serif",
-    navBg: "#FAF7F2",
-    navText: "#1A1A1A",
-    headingColor: "#1A1A1A",
-    bodyText: "#3d3d3d",
-    buttonBg: "#1A1A1A",
-    buttonText: "#FAF7F2",
-    labelColor: "#8a7a6a",
+    navBg: "#FDFAF5",
+    navText: "#4A3E30",
+    headingColor: "#2D2217",
+    bodyText: "#6B5E4F",
+    buttonBg: "#7A9478",
+    buttonText: "#ffffff",
+    labelColor: "#C4A265",
+    bodyBg: "#EDE7DC",
+    floral: true as boolean,
     fontImport: "@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap');",
   },
   zand: {
@@ -166,6 +170,8 @@ const STYLE_CONFIG = {
     buttonBg: "#8A9E8C",
     buttonText: "#ffffff",
     labelColor: "#8A9E8C",
+    bodyBg: "#ede8e0",
+    floral: false as boolean,
     fontImport: null as string | null,
   },
 } as const
@@ -1309,7 +1315,7 @@ export default function BouwenPage() {
               <div ref={canvasContainerRef} className="flex-1 overflow-y-auto bg-gray-100 p-6">
                 <div className="mx-auto" style={{ width: `${Math.round(canvasWidth * canvasScale)}px` }}>
                   <div style={{ width: canvasWidth, transform: `scale(${canvasScale})`, transformOrigin: "top left" }}>
-                    <div className="rounded-2xl shadow-xl overflow-clip" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
+                    <div className="rounded-2xl shadow-xl overflow-clip relative" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
                       {sc.fontImport && <style>{sc.fontImport}</style>}
                       <div className="bg-gray-50 border-b border-gray-200 px-4 py-2 flex items-center gap-2">
                         <div className="flex gap-1.5 flex-shrink-0">
@@ -1516,6 +1522,32 @@ export default function BouwenPage() {
                             ))}
                           </div>
                         </div>
+                      )}
+                      {style === "ivoor" && (
+                        <svg width="220" height="180" viewBox="0 0 220 180" fill="none" aria-hidden="true"
+                          style={{ position: "absolute", bottom: 0, right: 0, pointerEvents: "none", zIndex: 0 }}>
+                          {/* Stengel: (218,178) → knooppunt (148,100) → bloem (128,50) */}
+                          <path d="M218 178 C195 155 168 128 148 100 C133 78 128 60 128 50"
+                            stroke="#6B8A5A" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+                          {/* Blad links — start exact op knooppunt (148,100) */}
+                          <path d="M148 100 C138 92 124 87 120 76 C128 72 142 81 148 100Z"
+                            fill="#7A9468" opacity="0.78"/>
+                          {/* Blad rechts */}
+                          <path d="M148 100 C158 92 172 87 176 76 C168 72 154 81 148 100Z"
+                            fill="#8B9E7A" opacity="0.70"/>
+                          {/* Grote bloem bij (128,50) — 6 blaadjes groeien vanuit midden */}
+                          <g transform="translate(128,50)">
+                            <path d="M0 0 C-12 -8 -12 -28 0 -32 C12 -28 12 -8 0 0" fill="#F5EDD8" opacity="0.90" transform="rotate(0)"/>
+                            <path d="M0 0 C-12 -8 -12 -28 0 -32 C12 -28 12 -8 0 0" fill="#EFE4CC" opacity="0.88" transform="rotate(60)"/>
+                            <path d="M0 0 C-12 -8 -12 -28 0 -32 C12 -28 12 -8 0 0" fill="#F5EDD8" opacity="0.87" transform="rotate(120)"/>
+                            <path d="M0 0 C-12 -8 -12 -28 0 -32 C12 -28 12 -8 0 0" fill="#EFE4CC" opacity="0.87" transform="rotate(180)"/>
+                            <path d="M0 0 C-12 -8 -12 -28 0 -32 C12 -28 12 -8 0 0" fill="#F5EDD8" opacity="0.87" transform="rotate(240)"/>
+                            <path d="M0 0 C-12 -8 -12 -28 0 -32 C12 -28 12 -8 0 0" fill="#EFE4CC" opacity="0.87" transform="rotate(300)"/>
+                          </g>
+                          <circle cx="128" cy="50" r="10" fill="#E8D5A8" opacity="0.95"/>
+                          <circle cx="128" cy="50" r="6"  fill="#D4B87A" opacity="0.92"/>
+                          <circle cx="128" cy="50" r="3"  fill="#C4A265" opacity="0.90"/>
+                        </svg>
                       )}
                     </div>
                     <p className="text-center text-xs text-gray-400 mt-3">Dit is precies hoe jouw site eruitziet</p>

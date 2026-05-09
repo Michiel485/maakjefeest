@@ -24,7 +24,17 @@ const DEFAULT_PRAKTISCH = {
 
 export default function AanmakenPage() {
   const router = useRouter()
-  const [form, setForm] = useState({ naam: "", datum: "", locatie: "", email: "" })
+  const [form, setForm] = useState(() => {
+    if (typeof window === "undefined") return { naam: "", datum: "", locatie: "", email: "" }
+    try {
+      const saved = localStorage.getItem("sayingyes_draft")
+      if (saved) {
+        const { naam = "", datum = "", locatie = "", email = "" } = JSON.parse(saved)
+        return { naam, datum, locatie, email }
+      }
+    } catch {}
+    return { naam: "", datum: "", locatie: "", email: "" }
+  })
 
   function handleStart(e: React.FormEvent) {
     e.preventDefault()

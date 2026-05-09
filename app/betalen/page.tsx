@@ -38,7 +38,12 @@ function BetalenContent() {
     })
       .then((res) => res.json())
       .then((json) => {
-        if (json.url) window.location.href = json.url
+        if (json.url) {
+          localStorage.removeItem("sayingyes_draft")
+          localStorage.removeItem("sayingyes_content")
+          localStorage.removeItem("sayingyes_saved_event_id")
+          window.location.href = json.url
+        }
       })
       .catch(() => {})
   }, [event_id])
