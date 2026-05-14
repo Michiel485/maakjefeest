@@ -14,7 +14,7 @@ export default async function EventLayout({
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, title, style, nav_layout")
+    .select("id, title, nav_title, style, nav_layout")
     .eq("slug", slug)
     .eq("status", "published")
     .single()
@@ -54,37 +54,29 @@ export default async function EventLayout({
       <div className={`max-w-4xl mx-auto sm:shadow-2xl sm:rounded-2xl overflow-clip min-h-[85vh] flex flex-col relative${sc.floral ? " bohemian-scale" : ""}`}
         style={{ backgroundColor: sc.navBg }}>
 
-        <EventNav title={event.title} pages={pageList} sc={sc} navLayout={(event.nav_layout ?? "split") as "stacked" | "split" | "left"} basePath={basePath} />
+        <EventNav title={(event.nav_title as string | null) || event.title} pages={pageList} sc={sc} navLayout={(event.nav_layout ?? "split") as "stacked" | "split" | "left"} basePath={basePath} />
 
         <main className="flex-grow relative" style={{ zIndex: 1 }}>
           {children}
         </main>
 
         {sc.floral && (
-          <svg width="220" height="180" viewBox="0 0 220 180" fill="none" aria-hidden="true"
-            style={{ position: "absolute", bottom: 0, right: 0, pointerEvents: "none", zIndex: 0 }}>
-            {/* Stengel: (218,178) → knooppunt (148,100) → bloem (128,50) */}
-            <path d="M218 178 C195 155 168 128 148 100 C133 78 128 60 128 50"
-              stroke="#6B8A5A" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
-            {/* Blad links — start exact op knooppunt (148,100) */}
-            <path d="M148 100 C138 92 124 87 120 76 C128 72 142 81 148 100Z"
-              fill="#7A9468" opacity="0.78"/>
-            {/* Blad rechts */}
-            <path d="M148 100 C158 92 172 87 176 76 C168 72 154 81 148 100Z"
-              fill="#8B9E7A" opacity="0.70"/>
-            {/* Grote bloem bij (128,50) — 6 blaadjes groeien vanuit midden */}
-            <g transform="translate(128,50)">
-              <path d="M0 0 C-12 -8 -12 -28 0 -32 C12 -28 12 -8 0 0" fill="#F5EDD8" opacity="0.90" transform="rotate(0)"/>
-              <path d="M0 0 C-12 -8 -12 -28 0 -32 C12 -28 12 -8 0 0" fill="#EFE4CC" opacity="0.88" transform="rotate(60)"/>
-              <path d="M0 0 C-12 -8 -12 -28 0 -32 C12 -28 12 -8 0 0" fill="#F5EDD8" opacity="0.87" transform="rotate(120)"/>
-              <path d="M0 0 C-12 -8 -12 -28 0 -32 C12 -28 12 -8 0 0" fill="#EFE4CC" opacity="0.87" transform="rotate(180)"/>
-              <path d="M0 0 C-12 -8 -12 -28 0 -32 C12 -28 12 -8 0 0" fill="#F5EDD8" opacity="0.87" transform="rotate(240)"/>
-              <path d="M0 0 C-12 -8 -12 -28 0 -32 C12 -28 12 -8 0 0" fill="#EFE4CC" opacity="0.87" transform="rotate(300)"/>
-            </g>
-            <circle cx="128" cy="50" r="10" fill="#E8D5A8" opacity="0.95"/>
-            <circle cx="128" cy="50" r="6"  fill="#D4B87A" opacity="0.92"/>
-            <circle cx="128" cy="50" r="3"  fill="#C4A265" opacity="0.90"/>
-          </svg>
+          <div className="w-full flex justify-center" style={{ backgroundColor: sc.navBg, marginTop: "-20px" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/bouquet-home.png.jpg"
+              alt=""
+              aria-hidden="true"
+              style={{
+                width: "45%",
+                maxWidth: "280px",
+                display: "block",
+                mixBlendMode: "multiply",
+                userSelect: "none",
+                pointerEvents: "none",
+              }}
+            />
+          </div>
         )}
 
         <footer className="py-6 text-center text-sm relative" style={{ zIndex: 1, color: sc.bodyText, borderTop: `1px solid ${sc.accent}15` }}>

@@ -86,6 +86,8 @@ export async function POST(request: Request) {
     naam: string
     datum?: string
     locatie?: string
+    slug?: string
+    nav_title?: string
     style?: string
     hero_image_url?: string | null
     nav_layout?: string
@@ -105,6 +107,8 @@ export async function POST(request: Request) {
     naam,
     datum = "",
     locatie = "",
+    slug: providedSlug,
+    nav_title,
     style = "roze",
     hero_image_url = null,
     nav_layout = "split",
@@ -137,7 +141,7 @@ export async function POST(request: Request) {
       ))
       const { error: updateErr } = await db
         .from("events")
-        .update({ type, title: naam, datum, locatie, style, hero_image_url, nav_layout })
+        .update({ type, title: naam, datum, locatie, style, hero_image_url, nav_layout, nav_title: nav_title ?? naam })
         .eq("id", event_id)
 
       if (updateErr) {
@@ -170,12 +174,14 @@ export async function POST(request: Request) {
 
   // Create new draft
   console.log("[drafts] nieuw event aanmaken voor user:", user.email)
-  const slug = await uniqueSlug(toSlug(naam || "mijn-feest"))
+  const baseSlug = providedSlug || toSlug(naam || "mijn-feest")
+  const slug = await uniqueSlug(baseSlug)
   const { data: event, error: eventError } = await db
     .from("events")
     .insert({
       type,
       title: naam,
+      nav_title: nav_title ?? naam,
       datum,
       locatie,
       user_email: user.email,

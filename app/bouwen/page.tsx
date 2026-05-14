@@ -34,6 +34,8 @@ interface Draft {
   datum: string
   locatie: string
   email: string
+  slug?: string
+  nav_title?: string
   style?: string
   heroOverlay?: boolean
   homeContent?: HomeContent
@@ -554,6 +556,9 @@ export default function BouwenPage() {
   const heroOverlay = draft?.heroOverlay ?? true
   const homeContent: HomeContent = draft?.homeContent ?? { title: "", body: "", align: "center" }
   const navLayout = (draft?.navLayout ?? 'split') as 'stacked' | 'split' | 'left'
+  const navTitle = draft?.nav_title ?? draft?.naam ?? ""
+  const safeNavTitle = navTitle.replace(/\n/g, " ")
+  const slugPreview = draft?.slug || "jouwbruiloft"
 
   const emptyMaster: MasterPerson = { naam: "", telefoon: "", email: "", foto_url: null }
   const rawMasters = (content.ceremoniemeesters?.masters as Partial<MasterPerson>[] | undefined) ?? []
@@ -869,6 +874,17 @@ export default function BouwenPage() {
                         />
                       </label>
                       <label className="flex flex-col gap-1.5">
+                        <span className="text-xs font-semibold text-gray-600">Navigatietitel</span>
+                        <input
+                          type="text"
+                          value={draft?.nav_title ?? draft?.naam ?? ""}
+                          onChange={(e) => updateDraft({ nav_title: e.target.value })}
+                          placeholder="Bijv. Sanne & Tom"
+                          className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                        />
+                        <p className="text-[10px] text-gray-400 leading-snug">Naam in de menubalk van de website</p>
+                      </label>
+                      <label className="flex flex-col gap-1.5">
                         <span className="text-xs font-semibold text-gray-600">Datum</span>
                         <input
                           type="date"
@@ -1126,7 +1142,7 @@ export default function BouwenPage() {
                             </button>
                           </div>
                           {openIconPickerIdx === i && (
-                            <div className="grid grid-cols-4 gap-1 p-2 bg-white rounded-xl border border-gray-100 shadow-sm">
+                            <div className="grid grid-cols-3 gap-1 p-2 bg-white rounded-xl border border-gray-100 shadow-sm">
                               {PROGRAM_ICONS.map((icon) => (
                                 <button
                                   key={icon.id}
@@ -1136,15 +1152,17 @@ export default function BouwenPage() {
                                     updateContent("programma", { items: updated, layout: programLayout })
                                     setOpenIconPickerIdx(null)
                                   }}
-                                  className={`flex flex-col items-center gap-0.5 p-1.5 rounded-lg transition-colors ${
+                                  className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
                                     (item.iconId ?? "heart") === icon.id
                                       ? "bg-rose-50 text-rose-500"
                                       : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"
                                   }`}
                                   title={icon.label}
                                 >
-                                  <ProgramIcon iconId={icon.id} size={20} strokeWidth={2} />
-                                  <span className="text-[9px] leading-tight truncate w-full text-center">{icon.label}</span>
+                                  <div className="h-9 flex items-center justify-center">
+                                    <ProgramIcon iconId={icon.id} size={36} strokeWidth={2} fixedHeight />
+                                  </div>
+                                  <span className="text-[11px] leading-tight w-full text-center break-words">{icon.label}</span>
                                 </button>
                               ))}
                             </div>
@@ -1324,19 +1342,19 @@ export default function BouwenPage() {
                           <span className="w-2 h-2 rounded-full bg-green-400" />
                         </div>
                         <div className="flex-1 bg-white rounded-md border border-gray-200 px-3 py-1 text-xs text-gray-400">
-                          jouwbruiloft.sayingyes.nl
+                          {slugPreview}.sayingyes.nl
                         </div>
                       </div>
                       {navLayout === 'left' ? (
                         <nav className="px-5 py-4 border-b flex items-center gap-6 flex-wrap" style={{ backgroundColor: sc.navBg, borderColor: `${sc.accent}22` }}>
-                          <span className="text-sm font-bold whitespace-nowrap flex-shrink-0 overflow-hidden text-ellipsis" style={{ color: sc.accent, fontFamily: sc.fontFamily, maxWidth: sc.floral ? 260 : 200, fontSize: sc.floral ? "1.25rem" : undefined }}>{safeEventName}</span>
+                          <span className="font-bold whitespace-nowrap flex-shrink-0 overflow-hidden text-ellipsis" style={{ color: sc.accent, fontFamily: sc.fontFamily, maxWidth: sc.floral ? 260 : 200, fontSize: sc.floral ? "1.25rem" : "0.9375rem" }}>{safeNavTitle}</span>
                           <div className="flex items-center flex-wrap gap-1">
                             {activePagesOrdered.map((page) => (
                               <button
                                 key={page.id}
                                 onClick={() => { setPreviewPage(page.id); setIsEditingControls(false) }}
-                                className="text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors"
-                                style={page.id === previewPage ? { color: sc.accent, backgroundColor: `${sc.accent}15`, fontSize: sc.floral ? "1rem" : undefined } : { color: sc.navText, fontSize: sc.floral ? "1rem" : undefined }}
+                                className="font-semibold px-2.5 py-1.5 rounded-lg transition-colors"
+                                style={page.id === previewPage ? { color: sc.accent, backgroundColor: `${sc.accent}15`, fontSize: sc.floral ? "1rem" : "0.8125rem" } : { color: sc.navText, fontSize: sc.floral ? "1rem" : "0.8125rem" }}
                               >
                                 {page.label}
                               </button>
@@ -1345,14 +1363,14 @@ export default function BouwenPage() {
                         </nav>
                       ) : navLayout === 'split' ? (
                         <nav className="px-5 py-4 border-b flex items-center justify-between gap-4" style={{ backgroundColor: sc.navBg, borderColor: `${sc.accent}22` }}>
-                          <span className="text-sm font-bold whitespace-nowrap flex-shrink-0 overflow-hidden text-ellipsis" style={{ color: sc.accent, fontFamily: sc.fontFamily, maxWidth: sc.floral ? 260 : 200, fontSize: sc.floral ? "1.25rem" : undefined }}>{safeEventName}</span>
+                          <span className="font-bold whitespace-nowrap flex-shrink-0 overflow-hidden text-ellipsis" style={{ color: sc.accent, fontFamily: sc.fontFamily, maxWidth: sc.floral ? 260 : 200, fontSize: sc.floral ? "1.25rem" : "0.9375rem" }}>{safeNavTitle}</span>
                           <div className="flex items-center flex-wrap justify-end gap-1">
                             {activePagesOrdered.map((page) => (
                               <button
                                 key={page.id}
                                 onClick={() => { setPreviewPage(page.id); setIsEditingControls(false) }}
-                                className="text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors"
-                                style={page.id === previewPage ? { color: sc.accent, backgroundColor: `${sc.accent}15`, fontSize: sc.floral ? "1rem" : undefined } : { color: sc.navText, fontSize: sc.floral ? "1rem" : undefined }}
+                                className="font-semibold px-2.5 py-1.5 rounded-lg transition-colors"
+                                style={page.id === previewPage ? { color: sc.accent, backgroundColor: `${sc.accent}15`, fontSize: sc.floral ? "1rem" : "0.8125rem" } : { color: sc.navText, fontSize: sc.floral ? "1rem" : "0.8125rem" }}
                               >
                                 {page.label}
                               </button>
@@ -1361,14 +1379,14 @@ export default function BouwenPage() {
                         </nav>
                       ) : (
                         <nav className="px-5 py-5 border-b flex flex-col items-center gap-2" style={{ backgroundColor: sc.navBg, borderColor: `${sc.accent}22` }}>
-                          <span className="text-sm font-bold text-center whitespace-nowrap overflow-hidden text-ellipsis" style={{ color: sc.accent, fontFamily: sc.fontFamily, maxWidth: sc.floral ? 260 : 200, fontSize: sc.floral ? "1.25rem" : undefined }}>{safeEventName}</span>
+                          <span className="font-bold text-center whitespace-nowrap overflow-hidden text-ellipsis" style={{ color: sc.accent, fontFamily: sc.fontFamily, maxWidth: sc.floral ? 260 : 200, fontSize: sc.floral ? "1.25rem" : "0.9375rem" }}>{safeNavTitle}</span>
                           <div className="flex items-center flex-wrap justify-center gap-1">
                             {activePagesOrdered.map((page) => (
                               <button
                                 key={page.id}
                                 onClick={() => { setPreviewPage(page.id); setIsEditingControls(false) }}
-                                className="text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors"
-                                style={page.id === previewPage ? { color: sc.accent, backgroundColor: `${sc.accent}15`, fontSize: sc.floral ? "1rem" : undefined } : { color: sc.navText, fontSize: sc.floral ? "1rem" : undefined }}
+                                className="font-semibold px-2.5 py-1.5 rounded-lg transition-colors"
+                                style={page.id === previewPage ? { color: sc.accent, backgroundColor: `${sc.accent}15`, fontSize: sc.floral ? "1rem" : "0.8125rem" } : { color: sc.navText, fontSize: sc.floral ? "1rem" : "0.8125rem" }}
                               >
                                 {page.label}
                               </button>
@@ -1523,31 +1541,23 @@ export default function BouwenPage() {
                           </div>
                         </div>
                       )}
-                      {style === "ivoor" && (
-                        <svg width="220" height="180" viewBox="0 0 220 180" fill="none" aria-hidden="true"
-                          style={{ position: "absolute", bottom: 0, right: 0, pointerEvents: "none", zIndex: 0 }}>
-                          {/* Stengel: (218,178) → knooppunt (148,100) → bloem (128,50) */}
-                          <path d="M218 178 C195 155 168 128 148 100 C133 78 128 60 128 50"
-                            stroke="#6B8A5A" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
-                          {/* Blad links — start exact op knooppunt (148,100) */}
-                          <path d="M148 100 C138 92 124 87 120 76 C128 72 142 81 148 100Z"
-                            fill="#7A9468" opacity="0.78"/>
-                          {/* Blad rechts */}
-                          <path d="M148 100 C158 92 172 87 176 76 C168 72 154 81 148 100Z"
-                            fill="#8B9E7A" opacity="0.70"/>
-                          {/* Grote bloem bij (128,50) — 6 blaadjes groeien vanuit midden */}
-                          <g transform="translate(128,50)">
-                            <path d="M0 0 C-12 -8 -12 -28 0 -32 C12 -28 12 -8 0 0" fill="#F5EDD8" opacity="0.90" transform="rotate(0)"/>
-                            <path d="M0 0 C-12 -8 -12 -28 0 -32 C12 -28 12 -8 0 0" fill="#EFE4CC" opacity="0.88" transform="rotate(60)"/>
-                            <path d="M0 0 C-12 -8 -12 -28 0 -32 C12 -28 12 -8 0 0" fill="#F5EDD8" opacity="0.87" transform="rotate(120)"/>
-                            <path d="M0 0 C-12 -8 -12 -28 0 -32 C12 -28 12 -8 0 0" fill="#EFE4CC" opacity="0.87" transform="rotate(180)"/>
-                            <path d="M0 0 C-12 -8 -12 -28 0 -32 C12 -28 12 -8 0 0" fill="#F5EDD8" opacity="0.87" transform="rotate(240)"/>
-                            <path d="M0 0 C-12 -8 -12 -28 0 -32 C12 -28 12 -8 0 0" fill="#EFE4CC" opacity="0.87" transform="rotate(300)"/>
-                          </g>
-                          <circle cx="128" cy="50" r="10" fill="#E8D5A8" opacity="0.95"/>
-                          <circle cx="128" cy="50" r="6"  fill="#D4B87A" opacity="0.92"/>
-                          <circle cx="128" cy="50" r="3"  fill="#C4A265" opacity="0.90"/>
-                        </svg>
+                      {sc.floral && (
+                        <div className="w-full flex justify-center" style={{ backgroundColor: sc.navBg, marginTop: "-20px" }}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src="/bouquet-home.png.jpg"
+                            alt=""
+                            aria-hidden="true"
+                            style={{
+                              width: "45%",
+                              maxWidth: "280px",
+                              display: "block",
+                              mixBlendMode: "multiply",
+                              userSelect: "none",
+                              pointerEvents: "none",
+                            }}
+                          />
+                        </div>
                       )}
                     </div>
                     <p className="text-center text-xs text-gray-400 mt-3">Dit is precies hoe jouw site eruitziet</p>

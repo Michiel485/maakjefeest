@@ -1,16 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 
 const DEFAULT_PROGRAMMA = {
   layout: "timeline",
   items: [
-    { id: "1", time: "12:00", title: "Ontvangst",   description: "Welkom bij de receptie met een drankje en hapje.",    iconId: "champagne" },
-    { id: "2", time: "14:00", title: "Ceremonie",   description: "De officiële huwelijksceremonie.",                   iconId: "rings"     },
+    { id: "1", time: "12:00", title: "Ontvangst",   description: "Welkom bij de receptie met een drankje en hapje.",    iconId: "toost" },
+    { id: "2", time: "14:00", title: "Ceremonie",   description: "De officiële huwelijksceremonie.",                   iconId: "speech"     },
     { id: "3", time: "15:30", title: "Receptie",    description: "Proost op het gelukkige paar!",                      iconId: "heart"     },
     { id: "4", time: "18:30", title: "Diner",       description: "Geniet van een heerlijk driegangendiner.",           iconId: "cutlery"   },
-    { id: "5", time: "20:30", title: "Avondfeest",  description: "Dans de nacht weg met het bruidspaar.",              iconId: "champagne" },
+    { id: "5", time: "20:30", title: "Avondfeest",  description: "Dans de nacht weg met het bruidspaar.",              iconId: "toost" },
   ],
 }
 
@@ -22,28 +22,105 @@ const DEFAULT_PRAKTISCH = {
   ],
 }
 
+// Live formatting during typing — keeps trailing hyphen so space→hyphen is visible
+function formatSlugInput(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/&/g, "en")
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/-{2,}/g, "-")
+}
+
+// Final cleanup for availability checks and submission
+function sanitizeSlug(value: string): string {
+  return formatSlugInput(value).replace(/^-+|-+$/g, "")
+}
+
+type SlugStatus = "idle" | "checking" | "available" | "taken" | "invalid"
+
 export default function AanmakenPage() {
   const router = useRouter()
+
   const [form, setForm] = useState(() => {
-    if (typeof window === "undefined") return { naam: "", datum: "", locatie: "", email: "" }
+    if (typeof window === "undefined") return { naam: "", datum: "", email: "", slug: "" }
     try {
       const saved = localStorage.getItem("sayingyes_draft")
       if (saved) {
-        const { naam = "", datum = "", locatie = "", email = "" } = JSON.parse(saved)
-        return { naam, datum, locatie, email }
+        const { naam = "", datum = "", email = "", slug = "" } = JSON.parse(saved)
+        return { naam, datum, email, slug }
       }
     } catch {}
-    return { naam: "", datum: "", locatie: "", email: "" }
+    return { naam: "", datum: "", email: "", slug: "" }
   })
+
+  const [slugAutoFollow, setSlugAutoFollow] = useState(() => {
+    if (typeof window === "undefined") return true
+    try {
+      const saved = localStorage.getItem("sayingyes_draft")
+      if (saved) {
+        const { slug } = JSON.parse(saved)
+        return !slug
+      }
+    } catch {}
+    return true
+  })
+
+  const [slugStatus, setSlugStatus] = useState<SlugStatus>("idle")
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function scheduleSlugCheck(slug: string) {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    if (!slug) { setSlugStatus("idle"); return }
+    if (slug.length < 3) { setSlugStatus("invalid"); return }
+    setSlugStatus("checking")
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/check-slug?slug=${encodeURIComponent(slug)}`)
+        const { available } = await res.json()
+        setSlugStatus(available ? "available" : "taken")
+      } catch {
+        setSlugStatus("idle")
+      }
+    }, 500)
+  }
+
+  useEffect(() => {
+    if (form.slug) scheduleSlugCheck(form.slug)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  function handleNaamChange(naam: string) {
+    if (slugAutoFollow) {
+      const autoSlug = sanitizeSlug(naam)
+      setForm({ ...form, naam, slug: autoSlug })
+      scheduleSlugCheck(autoSlug)
+    } else {
+      setForm({ ...form, naam })
+    }
+  }
+
+  function handleSlugInput(raw: string) {
+    const formatted = formatSlugInput(raw)
+    setSlugAutoFollow(false)
+    setForm({ ...form, slug: formatted })
+    scheduleSlugCheck(sanitizeSlug(formatted))
+  }
 
   function handleStart(e: React.FormEvent) {
     e.preventDefault()
+    const cleanSlug = sanitizeSlug(form.slug)
+    if (!cleanSlug || slugStatus !== "available") return
 
     const draft = {
       type: "bruiloft",
       naam: form.naam,
+      slug: cleanSlug,
+      nav_title: form.naam,
       datum: form.datum,
-      locatie: form.locatie,
+      locatie: "",
       email: form.email,
       aangemaakt: new Date().toISOString(),
       homeContent: {
@@ -63,6 +140,8 @@ export default function AanmakenPage() {
     localStorage.removeItem("sayingyes_saved_event_id")
     router.push("/bouwen")
   }
+
+  const canSubmit = sanitizeSlug(form.slug).length >= 3 && slugStatus === "available"
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-orange-50 font-sans antialiased">
@@ -102,18 +181,82 @@ export default function AanmakenPage() {
 
         <form onSubmit={handleStart} className="flex flex-col gap-5">
 
+          {/* Titel */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Jullie namen</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Titel van jullie website</label>
             <input
               type="text"
               required
-              placeholder="Bijv. Sanne & Tom"
+              placeholder="bijv. Michiel & Lindsey gaan trouwen"
               value={form.naam}
-              onChange={(e) => setForm({ ...form, naam: e.target.value })}
+              onChange={(e) => handleNaamChange(e.target.value)}
               className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-400 transition-all shadow-sm"
             />
           </div>
 
+          {/* Slug */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+              Kies jullie unieke website link
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                required
+                placeholder="bijv. sanne-en-tom"
+                value={form.slug}
+                onChange={(e) => handleSlugInput(e.target.value)}
+                className={`w-full rounded-2xl border bg-white px-4 py-3 pr-10 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-all shadow-sm ${
+                  slugStatus === "available"
+                    ? "border-emerald-300 focus:ring-emerald-200 focus:border-emerald-400"
+                    : slugStatus === "taken"
+                    ? "border-red-300 focus:ring-red-200 focus:border-red-400"
+                    : "border-gray-200 focus:ring-rose-300 focus:border-rose-400"
+                }`}
+              />
+              <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
+                {slugStatus === "checking" && (
+                  <svg className="w-4 h-4 text-gray-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                  </svg>
+                )}
+                {slugStatus === "available" && (
+                  <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+                {slugStatus === "taken" && (
+                  <svg className="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-1.5 flex flex-col gap-0.5">
+              <p className="text-xs text-gray-400">Alleen kleine letters, cijfers en streepjes zijn toegestaan.</p>
+              {form.slug ? (
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Jouw link wordt:{" "}
+                  <span className="font-semibold text-gray-700">{sanitizeSlug(form.slug)}.sayingyes.nl</span>
+                </p>
+              ) : (
+                <p className="text-xs text-gray-400 mt-0.5">Bijv. sanne-en-tom.sayingyes.nl</p>
+              )}
+              {slugStatus === "available" && (
+                <p className="text-xs font-medium text-emerald-600">Beschikbaar!</p>
+              )}
+              {slugStatus === "taken" && (
+                <p className="text-xs font-medium text-red-500">Al bezet — kies een andere naam</p>
+              )}
+              {slugStatus === "invalid" && (
+                <p className="text-xs text-gray-400">Minimaal 3 tekens vereist</p>
+              )}
+            </div>
+          </div>
+
+          {/* Datum */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">Trouwdatum</label>
             <input
@@ -125,18 +268,7 @@ export default function AanmakenPage() {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Trouwlocatie</label>
-            <input
-              type="text"
-              required
-              placeholder="Bijv. Kasteel De Hooge Vuursche, Baarn"
-              value={form.locatie}
-              onChange={(e) => setForm({ ...form, locatie: e.target.value })}
-              className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-400 transition-all shadow-sm"
-            />
-          </div>
-
+          {/* E-mail */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">E-mailadres</label>
             <input
@@ -150,19 +282,34 @@ export default function AanmakenPage() {
             <p className="text-xs text-gray-400 mt-1.5">Voor je inloglink en bevestiging — nooit voor spam.</p>
           </div>
 
-          <div className="pt-2">
+          <div className="flex items-start gap-2.5 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5">
+            <svg className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-sm text-slate-600 leading-snug">
+              Geen stress — je kunt al deze gegevens later nog aanpassen in de builder.
+            </p>
+          </div>
+
+          <div className="pt-1">
             <button
               type="submit"
-              className="w-full inline-flex items-center justify-center gap-2 bg-rose-500 hover:bg-rose-600 text-white font-bold px-8 py-3.5 rounded-2xl shadow-lg shadow-rose-200 hover:shadow-xl hover:-translate-y-0.5 transition-all"
+              disabled={!canSubmit}
+              className="w-full inline-flex items-center justify-center gap-2 bg-rose-500 hover:bg-rose-600 disabled:bg-rose-300 disabled:cursor-not-allowed text-white font-bold px-8 py-3.5 rounded-2xl shadow-lg shadow-rose-200 hover:shadow-xl hover:-translate-y-0.5 disabled:shadow-none disabled:translate-y-0 transition-all"
             >
               Start bouwen
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
             </button>
+            {!canSubmit && form.slug && slugStatus !== "checking" && slugStatus !== "idle" && (
+              <p className="text-xs text-center text-gray-400 mt-2">
+                {slugStatus === "taken" ? "Kies eerst een beschikbare website link" : "Vul een geldige website link in"}
+              </p>
+            )}
           </div>
-        </form>
 
+        </form>
       </main>
     </div>
   )
