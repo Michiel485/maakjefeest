@@ -11,7 +11,7 @@ import { createClient } from "@/lib/supabase"
 
 type EventType = "bruiloft" | "verjaardag" | "evenement"
 type PageId = "home" | "programma" | "rsvp" | "praktisch" | "wishlist" | "fotos" | "ceremoniemeesters"
-type Style = "roze" | "ivoor" | "zand"
+type Style = "roze" | "ivoor" | "zand" | "earthy"
 type Viewport = "desktop" | "mobiel"
 type Align = "left" | "center" | "right"
 
@@ -40,6 +40,11 @@ interface Draft {
   heroOverlay?: boolean
   homeContent?: HomeContent
   navLayout?: 'stacked' | 'split' | 'left'
+  use_frame?: boolean
+  frame_style?: string
+  initials?: string
+  frame_names?: string
+  frame_location?: string
 }
 
 interface PageConfig {
@@ -125,9 +130,10 @@ async function uploadToStorage(file: File, bucket: string): Promise<string> {
 }
 
 const STYLES: { id: Style; label: string; sub: string; dot: string; border: string; active: string }[] = [
-  { id: "roze",  label: "Feestelijk Roze",   sub: "Roze accenten, modern",  dot: "bg-rose-400",  border: "border-rose-300",  active: "ring-rose-400"  },
-  { id: "ivoor", label: "Bohemian",            sub: "Salie, crème & goud",    dot: "bg-[#8B9E7A]",                       border: "border-[#8B9E7A]/40",             active: "ring-[#8B7355]"  },
-  { id: "zand",  label: "Scandinavisch Zand", sub: "Aards, clean",           dot: "bg-[#E8E0D5]", border: "border-stone-200", active: "ring-stone-400" },
+  { id: "zand",   label: "Gold & Ivory",      sub: "Clean, licht & tijdloos",   dot: "bg-[#E6D5B8]",    border: "border-[#E6D5B8]/60",    active: "ring-[#E6D5B8]"     },
+  { id: "ivoor",  label: "Pampas & Pearl",    sub: "Salie, crème & goud",       dot: "bg-[#C2B8A3]",    border: "border-[#C2B8A3]/60",    active: "ring-[#C2B8A3]"     },
+  { id: "roze",   label: "Terracotta & Gold", sub: "Warm, modern & feestelijk", dot: "bg-[#C86F59]",    border: "border-[#C86F59]/40",    active: "ring-[#C86F59]"     },
+  { id: "earthy", label: "Earthy & Warm",     sub: "Diep, aards & gedurfd",     dot: "bg-[#8B5E3C]",    border: "border-[#8B5E3C]/40",    active: "ring-[#8B5E3C]"     },
 ]
 
 const STYLE_CONFIG = {
@@ -135,6 +141,7 @@ const STYLE_CONFIG = {
     accent: "#E8627A",
     heroGradient: "linear-gradient(135deg, #fff0f3, #fce7e7, #fff5ee)",
     fontFamily: "Inter, sans-serif",
+    nameFont: null as string | null,
     navBg: "#ffffff",
     navText: "#374151",
     headingColor: "#1a1a1a",
@@ -150,6 +157,7 @@ const STYLE_CONFIG = {
     accent: "#8B7355",
     heroGradient: "linear-gradient(160deg, #FDFAF5 0%, #F5EDE0 55%, #EDE0CF 100%)",
     fontFamily: "'Cormorant Garamond', serif",
+    nameFont: null as string | null,
     navBg: "#FDFAF5",
     navText: "#4A3E30",
     headingColor: "#2D2217",
@@ -162,17 +170,34 @@ const STYLE_CONFIG = {
     fontImport: "@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap');",
   },
   zand: {
-    accent: "#8A9E8C",
-    heroGradient: "linear-gradient(135deg, #F5F0E8, #EDE8DF, #E8E4DC)",
-    fontFamily: "Inter, sans-serif",
-    navBg: "#F5F0E8",
-    navText: "#2C2C2C",
-    headingColor: "#2C2C2C",
-    bodyText: "#5a5a5a",
-    buttonBg: "#8A9E8C",
+    accent: "#C5A059",
+    heroGradient: "linear-gradient(135deg, #FAF8F5, #F3EFEA, #EDE8DF)",
+    fontFamily: "'Cormorant Garamond', serif",
+    nameFont: "'Pinyon Script', cursive" as string | null,
+    navBg: "#FAF8F5",
+    navText: "#3A352F",
+    headingColor: "#3A352F",
+    bodyText: "#3A352F",
+    buttonBg: "#C5A059",
     buttonText: "#ffffff",
-    labelColor: "#8A9E8C",
-    bodyBg: "#ede8e0",
+    labelColor: "#C5A059",
+    bodyBg: "#F3EFEA",
+    floral: false as boolean,
+    fontImport: "@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Pinyon+Script&display=swap');",
+  },
+  earthy: {
+    accent: "#A0785A",
+    heroGradient: "linear-gradient(135deg, #FAF5EE, #F0E6D8, #E8D9C8)",
+    fontFamily: "Inter, sans-serif",
+    nameFont: null as string | null,
+    navBg: "#FAF7F2",
+    navText: "#3D2B1F",
+    headingColor: "#2C1A0E",
+    bodyText: "#5C4033",
+    buttonBg: "#A0785A",
+    buttonText: "#ffffff",
+    labelColor: "#A0785A",
+    bodyBg: "#F0E8DC",
     floral: false as boolean,
     fontImport: null as string | null,
   },
@@ -209,12 +234,13 @@ export default function BouwenPage() {
   const [previewPage, setPreviewPage] = useState<PageId>("home")
   const [editingPage, setEditingPage] = useState<PageId | null>(null)
   const [content, setContent] = useState<ContentMap>({})
-  const [style, setStyle] = useState<Style>("roze")
+  const [style, setStyle] = useState<Style>("zand")
   const [viewport, setViewport] = useState<Viewport>("desktop")
   const [heroImageError, setHeroImageError] = useState<string | null>(null)
   const [isEditingControls, setIsEditingControls] = useState(false)
   const canvasContainerRef = useRef<HTMLDivElement>(null)
   const [canvasScale, setCanvasScale] = useState(1)
+  const [zoomMultiplier, setZoomMultiplier] = useState(1)
   const [masterPhotoUrls, setMasterPhotoUrls] = useState<[string | null, string | null]>([null, null])
   const [masterUploading, setMasterUploading] = useState<[boolean, boolean]>([false, false])
   const [programUploadIndex, setProgramUploadIndex] = useState<number | null>(null)
@@ -812,27 +838,59 @@ export default function BouwenPage() {
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Live preview</p>
             )}
             {!editingPage && (
-              <div className="flex items-center gap-1 bg-gray-200 rounded-lg p-0.5">
-                <button
-                  onClick={() => setViewport("desktop")}
-                  title="Desktop"
-                  className={`p-1.5 rounded-md transition-colors ${viewport === "desktop" ? "bg-white shadow-sm text-gray-700" : "text-gray-400 hover:text-gray-600"}`}
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <rect x="2" y="3" width="20" height="14" rx="2" strokeLinecap="round" strokeLinejoin="round" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 21h8M12 17v4" />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => setViewport("mobiel")}
-                  title="Mobiel"
-                  className={`p-1.5 rounded-md transition-colors ${viewport === "mobiel" ? "bg-white shadow-sm text-gray-700" : "text-gray-400 hover:text-gray-600"}`}
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <rect x="5" y="2" width="14" height="20" rx="2" strokeLinecap="round" strokeLinejoin="round" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01" strokeWidth={2.5} />
-                  </svg>
-                </button>
+              <div className="flex items-center gap-2">
+                {/* Zoom controls */}
+                <div className="flex items-center gap-1 bg-gray-200 rounded-lg p-0.5">
+                  <button
+                    onClick={() => setZoomMultiplier(z => Math.max(0.5, parseFloat((z - 0.1).toFixed(1))))}
+                    title="Zoom uit"
+                    className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => setZoomMultiplier(1)}
+                    title="Zoom resetten"
+                    className="text-[11px] font-semibold text-gray-500 hover:text-gray-700 w-9 text-center transition-colors tabular-nums"
+                  >
+                    {Math.round(zoomMultiplier * 100)}%
+                  </button>
+                  <button
+                    onClick={() => setZoomMultiplier(z => Math.min(1.5, parseFloat((z + 0.1).toFixed(1))))}
+                    title="Zoom in"
+                    className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Viewport toggle */}
+                <div className="flex items-center gap-1 bg-gray-200 rounded-lg p-0.5">
+                  <button
+                    onClick={() => setViewport("desktop")}
+                    title="Desktop"
+                    className={`p-1.5 rounded-md transition-colors ${viewport === "desktop" ? "bg-white shadow-sm text-gray-700" : "text-gray-400 hover:text-gray-600"}`}
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <rect x="2" y="3" width="20" height="14" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 21h8M12 17v4" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => setViewport("mobiel")}
+                    title="Mobiel"
+                    className={`p-1.5 rounded-md transition-colors ${viewport === "mobiel" ? "bg-white shadow-sm text-gray-700" : "text-gray-400 hover:text-gray-600"}`}
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <rect x="5" y="2" width="14" height="20" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01" strokeWidth={2.5} />
+                    </svg>
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -948,6 +1006,109 @@ export default function BouwenPage() {
                       </div>
                     )}
                     <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={handleImageUpload} />
+                  </div>
+
+                  <div className="border-t border-gray-100" />
+
+                  {/* ── Luxe Trouwkaart ── */}
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Luxe Trouwkaart</p>
+                    <div className="flex flex-col gap-4">
+
+                      {/* Toggle */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-gray-600">Toon grafisch kader</span>
+                        <button
+                          onClick={() => updateDraft({ use_frame: !(draft?.use_frame ?? false) })}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${draft?.use_frame ? "bg-pink-500" : "bg-gray-200"}`}
+                        >
+                          <span className={`absolute h-4 w-4 rounded-full bg-white transition-transform shadow-sm ${draft?.use_frame ? "translate-x-6" : "translate-x-1"}`} />
+                        </button>
+                      </div>
+
+                      {draft?.use_frame && (<>
+                        {/* Initialen */}
+                        <label className="flex flex-col gap-1.5">
+                          <span className="text-xs font-semibold text-gray-600">Initialen</span>
+                          <input
+                            type="text"
+                            maxLength={5}
+                            value={draft?.initials ?? ""}
+                            onChange={(e) => updateDraft({ initials: e.target.value })}
+                            placeholder="bijv. M | W"
+                            className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                          />
+                        </label>
+
+                        {/* Namen in kader */}
+                        <label className="flex flex-col gap-1.5">
+                          <span className="text-xs font-semibold text-gray-600">Namen in kader</span>
+                          <textarea
+                            rows={2}
+                            value={draft?.frame_names ?? ""}
+                            onChange={(e) => updateDraft({ frame_names: e.target.value })}
+                            placeholder={"bijv. Michiel\n& Lindsey"}
+                            className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all resize-none"
+                          />
+                        </label>
+
+                        {/* Locatie in kader */}
+                        <label className="flex flex-col gap-1.5">
+                          <span className="text-xs font-semibold text-gray-600">Locatie in kader</span>
+                          <input
+                            type="text"
+                            value={draft?.frame_location ?? ""}
+                            onChange={(e) => updateDraft({ frame_location: e.target.value })}
+                            placeholder="bijv. Kasteel de Haar"
+                            className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                          />
+                        </label>
+
+                        {/* Kader grid */}
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-xs font-semibold text-gray-600">Kader stijl</span>
+                          <div className="grid grid-cols-3 gap-2">
+                            {([
+                              { id: "gold-circle",   label: "Gold Cirkel"   },
+                              { id: "gold-diamond",  label: "Gold Ruit"     },
+                              { id: "terra-circle",  label: "Terra Cirkel"  },
+                              { id: "terra-diamond", label: "Terra Ruit"    },
+                              { id: "earthy-circle", label: "Earthy Cirkel" },
+                              { id: "earthy-diamond",label: "Earthy Ruit"   },
+                            ] as const).map((frame) => {
+                              const isActive = (draft?.frame_style ?? "gold-circle") === frame.id
+                              return (
+                                <button
+                                  key={frame.id}
+                                  onClick={() => updateDraft({ frame_style: frame.id })}
+                                  title={frame.label}
+                                  className={`relative rounded-xl overflow-hidden border-2 transition-all aspect-square ${
+                                    isActive
+                                      ? "border-rose-400 ring-2 ring-rose-300 ring-offset-1"
+                                      : "border-gray-100 hover:border-gray-300"
+                                  }`}
+                                >
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={`/frames/${frame.id}.png.png`}
+                                    alt={frame.label}
+                                    className="w-full h-full object-cover"
+                                  />
+                                  {isActive && (
+                                    <div className="absolute inset-0 bg-rose-400/10 flex items-center justify-center">
+                                      <svg className="w-4 h-4 text-rose-500 drop-shadow" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                      </svg>
+                                    </div>
+                                  )}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      </>)}
+
+                    </div>
                   </div>
 
                   <div className="border-t border-gray-100" />
@@ -1331,8 +1492,8 @@ export default function BouwenPage() {
             ) : (
               /* Universal scaling canvas — all pages */
               <div ref={canvasContainerRef} className="flex-1 overflow-y-auto bg-gray-100 p-6">
-                <div className="mx-auto" style={{ width: `${Math.round(canvasWidth * canvasScale)}px` }}>
-                  <div style={{ width: canvasWidth, transform: `scale(${canvasScale})`, transformOrigin: "top left" }}>
+                <div className="mx-auto" style={{ width: `${Math.round(canvasWidth * canvasScale * zoomMultiplier)}px` }}>
+                  <div style={{ width: canvasWidth, transform: `scale(${canvasScale * zoomMultiplier})`, transformOrigin: "top left" }}>
                     <div className="rounded-2xl shadow-xl overflow-clip relative" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
                       {sc.fontImport && <style>{sc.fontImport}</style>}
                       <div className="bg-gray-50 border-b border-gray-200 px-4 py-2 flex items-center gap-2">
@@ -1406,6 +1567,11 @@ export default function BouwenPage() {
                           homeBody={homeContent.body || null}
                           homeAlign={homeContent.align}
                           sc={sc}
+                          useFrame={draft?.use_frame}
+                          frameStyle={draft?.frame_style}
+                          initials={draft?.initials}
+                          frameNames={draft?.frame_names}
+                          frameLocation={draft?.frame_location}
                           onNavigate={(id) => setPreviewPage(id as PageId)}
                         />
                       )}

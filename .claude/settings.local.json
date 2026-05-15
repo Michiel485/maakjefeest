@@ -8,7 +8,12 @@
       "Read(//c/Users/m.vanbendegem_smartp/Desktop/SpeedDate/Docs/Maakjefeest.nl/Iconen/ChatGPT/In gebruik/**)",
       "PowerShell($content = Get-Content \"C:\\\\Users\\\\m.vanbendegem_smartp\\\\Desktop\\\\SpeedDate\\\\Docs\\\\Maakjefeest.nl\\\\Iconen\\\\ChatGPT\\\\In gebruik\\\\trouwboeket.svg\" -Raw; $idx = $content.IndexOf\\(\"M 348.00 538\"\\); Write-Output \"Position: $idx\"; $content.Substring\\($idx, [Math]::Min\\(5000, $content.Length - $idx\\)\\))",
       "PowerShell($content = Get-Content \"C:\\\\Users\\\\m.vanbendegem_smartp\\\\Desktop\\\\SpeedDate\\\\Docs\\\\Maakjefeest.nl\\\\Iconen\\\\ChatGPT\\\\In gebruik\\\\trouwboeket.svg\" -Raw; $idx = $content.IndexOf\\(\"M 348.00 538\"\\); $content.Substring\\($idx + 15000, [Math]::Min\\(5000, $content.Length - $idx - 15000\\)\\))",
-      "PowerShell($content = Get-Content \"C:\\\\Users\\\\m.vanbendegem_smartp\\\\Desktop\\\\SpeedDate\\\\Docs\\\\Maakjefeest.nl\\\\Iconen\\\\ChatGPT\\\\In gebruik\\\\trouwboeket.svg\" -Raw; $idx = $content.IndexOf\\(\"M 348.00 538\"\\); $content.Substring\\($idx + 20000, [Math]::Min\\(5000, $content.Length - $idx - 20000\\)\\))"
+      "PowerShell($content = Get-Content \"C:\\\\Users\\\\m.vanbendegem_smartp\\\\Desktop\\\\SpeedDate\\\\Docs\\\\Maakjefeest.nl\\\\Iconen\\\\ChatGPT\\\\In gebruik\\\\trouwboeket.svg\" -Raw; $idx = $content.IndexOf\\(\"M 348.00 538\"\\); $content.Substring\\($idx + 20000, [Math]::Min\\(5000, $content.Length - $idx - 20000\\)\\))",
+      "Bash(python -c \"from PIL import Image; print\\('Pillow OK'\\)\")",
+      "Bash(pip install *)",
+      "Bash(python scripts/remove_outer_white.py)",
+      "Bash(python scripts/remove_gold_leaves.py)",
+      "Bash(python scripts/sample_colors.py)"
     ],
     "additionalDirectories": [
       "c:\\Users\\m.vanbendegem_smartp\\Desktop\\SpeedDate\\maakjefeest\\app\\events\\[slug]\\[pagina]"

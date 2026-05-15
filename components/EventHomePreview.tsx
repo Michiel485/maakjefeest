@@ -13,6 +13,11 @@ export interface EventHomePreviewProps {
   homeBody: string | null
   homeAlign: "left" | "center" | "right"
   sc: SC
+  useFrame?: boolean
+  frameStyle?: string | null
+  initials?: string | null
+  frameNames?: string | null
+  frameLocation?: string | null
   onNavigate?: (pageId: string) => void
 }
 
@@ -27,142 +32,221 @@ export default function EventHomePreview({
   homeBody,
   homeAlign,
   sc,
+  useFrame = false,
+  frameStyle,
+  initials,
+  frameNames,
+  frameLocation,
   onNavigate,
 }: EventHomePreviewProps) {
   const hasPhoto = !!heroImageUrl
   const showOverlay = hasPhoto && heroOverlay
 
+  // Calligraphy font for names; serif fallback for other themes
+  const nameFont = sc.nameFont || (sc.floral ? sc.fontFamily : "'Georgia', serif")
+
+  // Texts shown inside the frame — dedicated fields take priority over event data
+  const frameDisplayNames    = (frameNames    && frameNames.trim())    ? frameNames    : title
+  const frameDisplayLocation = (frameLocation && frameLocation.trim()) ? frameLocation : (locatie ?? "")
+
+  // Safe zone: diamonds are widest at center, circles taper from sides
+  const isCircle  = frameStyle?.includes("circle")
+  const isDiamond = frameStyle?.includes("diamond")
+  const safeZoneClass = isDiamond ? "w-[80%] mx-auto" : "w-[65%] mx-auto"
+
   return (
     <>
-      {/* ── Hero ── */}
-      <section
-        className="w-full py-20 px-8 text-center relative overflow-hidden"
-        style={
-          hasPhoto
-            ? { backgroundImage: `url(${heroImageUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
-            : { background: sc.heroGradient }
-        }
-      >
-        {showOverlay && (
+      {/* ── Hero: only rendered when a photo is set ── */}
+      {hasPhoto && (
+        <section
+          className="w-full py-20 px-8 text-center relative overflow-hidden"
+          style={{ backgroundImage: `url(${heroImageUrl})`, backgroundSize: "cover", backgroundPosition: "center" }}
+        >
+          {showOverlay && (
+            <div
+              className="absolute inset-0"
+              style={
+                sc.floral
+                  ? { background: "linear-gradient(to bottom, rgba(28,25,23,0.22) 0%, rgba(28,25,23,0.54) 100%)" }
+                  : { backgroundColor: sc.accent, opacity: 0.45 }
+              }
+            />
+          )}
+
+          <div className="relative z-10 flex flex-col items-center">
+            <h1
+              className="leading-tight whitespace-pre-wrap mb-6"
+              style={{
+                color: "#fff",
+                fontFamily: nameFont,
+                fontSize: sc.nameFont ? "3.5rem" : "3rem",
+                fontWeight: sc.nameFont ? 400 : 800,
+                ...(sc.floral ? { textShadow: "0 1px 6px rgba(0,0,0,0.30)" } : {}),
+              }}
+            >
+              {title}
+            </h1>
+
+            <a
+              href="/rsvp"
+              onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("rsvp") } : undefined}
+              className="inline-block text-sm font-bold px-7 py-3 rounded-xl"
+              style={{
+                backgroundColor: sc.buttonBg,
+                color: sc.buttonText,
+                textDecoration: "none",
+                boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
+                fontFamily: sc.fontFamily,
+              }}
+            >
+              Meld je aan
+            </a>
+          </div>
+        </section>
+      )}
+
+      {/* ── Luxe Trouwkaart ── */}
+      <section className="w-full px-6 py-10 flex flex-col items-center" style={{ backgroundColor: sc.bodyBg }}>
+        {useFrame && frameStyle ? (
+          /* Container-query wrapper — text scales proportionally with the image */
           <div
-            className="absolute inset-0"
-            style={
-              sc.floral
-                ? { background: "linear-gradient(to bottom, rgba(28,25,23,0.22) 0%, rgba(28,25,23,0.54) 100%)" }
-                : { backgroundColor: sc.accent, opacity: 0.45 }
-            }
-          />
-        )}
-
-        <div className="relative z-10 flex flex-col items-center">
-          {/* Overline label */}
-          <span
-            className={`inline-block font-bold uppercase rounded-full tracking-widest ${sc.floral ? "text-sm px-5 py-2 mb-5 backdrop-blur-sm border border-white/20" : "text-xs px-3 py-1 mb-4"}`}
-            style={{
-              color: sc.floral && showOverlay ? "rgba(255,255,255,0.92)" : (showOverlay ? "#fff" : sc.labelColor),
-              backgroundColor: sc.floral && showOverlay ? "rgba(255,255,255,0.10)" : (showOverlay ? "rgba(255,255,255,0.2)" : `${sc.accent}15`),
-              letterSpacing: sc.floral ? "0.20em" : undefined,
-            }}
+            className="relative w-full max-w-2xl"
+            style={{ containerType: "inline-size" } as React.CSSProperties}
           >
-            {typeLabel}
-          </span>
+            <style>{`
+              .fk-initials  { font-size: clamp(1.2rem, 8cqi,  4.5rem); line-height: 1; letter-spacing: 0.2em; }
+              .fk-names     { font-size: clamp(1rem,   5.5cqi, 3rem);   line-height: 1.25; }
+              .fk-detail    { font-size: clamp(0.6rem, 1.8cqi, 0.85rem); letter-spacing: 0.18em; }
+            `}</style>
 
-          {/* H1 */}
-          <h1
-            className={`text-5xl font-extrabold leading-tight whitespace-pre-wrap ${sc.floral ? "mb-6" : "mb-3"}`}
-            style={{
-              color: showOverlay ? "#fff" : sc.headingColor,
-              fontFamily: sc.fontFamily,
-              ...(sc.floral && showOverlay ? { textShadow: "0 1px 6px rgba(0,0,0,0.30)" } : {}),
-            }}
-          >
-            {title}
-          </h1>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`/frames/${frameStyle}.png.png`} alt="" className="w-full h-auto block" />
 
-          {/* Datum & locatie */}
-          {sc.floral && hasPhoto ? (
-            (datumFormatted || locatie) && (
-              <div
-                className="flex flex-col items-center gap-1.5 px-8 py-3 mb-6 min-w-[220px]"
+            <div
+              className="absolute inset-0 flex flex-col items-center justify-center"
+              style={{ overflow: "hidden" }}
+            >
+              <div className={`flex flex-col items-center gap-[2cqi] ${safeZoneClass}`}>
+              {initials && (
+                <p
+                  className="fk-initials uppercase text-center"
+                  style={{
+                    fontFamily: sc.fontFamily,
+                    color: sc.headingColor,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    maxWidth: "100%",
+                  }}
+                >
+                  {initials}
+                </p>
+              )}
+
+              <p
+                className="fk-names text-center leading-[0.9]"
                 style={{
-                  background: "rgba(255,255,255,0.08)",
-                  backdropFilter: "blur(12px)",
-                  WebkitBackdropFilter: "blur(12px)",
+                  fontFamily: nameFont,
+                  color: sc.headingColor,
+                  fontStyle: sc.nameFont ? "normal" : "italic",
+                  fontWeight: sc.nameFont ? 400 : 300,
+                  whiteSpace: "pre-wrap",
+                  wordBreak: "break-word",
+                  maxWidth: "100%",
                 }}
               >
-                {/* Sierlijke bovenlijn */}
-                <svg width="100%" height="14" viewBox="0 0 220 14" preserveAspectRatio="xMidYMid meet" fill="none" aria-hidden="true">
-                  <line x1="0" y1="7" x2="90" y2="7" stroke="rgba(255,255,255,0.38)" strokeWidth="0.75"/>
-                  <path d="M94 7 C96 4.5 100 4 103 7 C100 10 96 9.5 94 7Z" fill="rgba(255,255,255,0.48)"/>
-                  <path d="M103 7 L110 2.5 L117 7 L110 11.5 Z" fill="rgba(255,255,255,0.62)"/>
-                  <path d="M126 7 C124 4.5 120 4 117 7 C120 10 124 9.5 126 7Z" fill="rgba(255,255,255,0.48)"/>
-                  <line x1="130" y1="7" x2="220" y2="7" stroke="rgba(255,255,255,0.38)" strokeWidth="0.75"/>
-                </svg>
+                {frameDisplayNames}
+              </p>
 
-                {datumFormatted && (
-                  <p className="text-xl" style={{ color: "rgba(255,255,255,0.95)", letterSpacing: "0.08em", fontWeight: 300 }}>
-                    {datumFormatted}
-                  </p>
-                )}
-                {locatie && (
-                  <p className="text-lg" style={{ color: "rgba(255,255,255,0.78)", letterSpacing: "0.05em", fontWeight: 300 }}>
-                    {locatie}
-                  </p>
-                )}
-
-                {/* Sierlijke onderlijn */}
-                <svg width="100%" height="14" viewBox="0 0 220 14" preserveAspectRatio="xMidYMid meet" fill="none" aria-hidden="true">
-                  <line x1="0" y1="7" x2="90" y2="7" stroke="rgba(255,255,255,0.38)" strokeWidth="0.75"/>
-                  <path d="M94 7 C96 4.5 100 4 103 7 C100 10 96 9.5 94 7Z" fill="rgba(255,255,255,0.48)"/>
-                  <path d="M103 7 L110 2.5 L117 7 L110 11.5 Z" fill="rgba(255,255,255,0.62)"/>
-                  <path d="M126 7 C124 4.5 120 4 117 7 C120 10 124 9.5 126 7Z" fill="rgba(255,255,255,0.48)"/>
-                  <line x1="130" y1="7" x2="220" y2="7" stroke="rgba(255,255,255,0.38)" strokeWidth="0.75"/>
-                </svg>
-              </div>
-            )
-          ) : (
-            <>
               {datumFormatted && (
                 <p
-                  className={sc.floral ? "text-xl mb-1" : "text-sm mb-1"}
+                  className="fk-detail uppercase text-center"
                   style={{
-                    color: showOverlay ? "rgba(255,255,255,0.92)" : sc.bodyText,
-                    ...(sc.floral ? { letterSpacing: "0.08em", fontWeight: 300 } : {}),
+                    fontFamily: sc.fontFamily,
+                    color: sc.bodyText,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    maxWidth: "100%",
+                    marginTop: "1cqi",
                   }}
                 >
                   {datumFormatted}
                 </p>
               )}
-              {locatie && (
+
+              {frameDisplayLocation && (
                 <p
-                  className={sc.floral ? "text-lg mb-7" : "text-sm mb-7"}
+                  className="fk-detail text-center"
                   style={{
-                    color: showOverlay ? "rgba(255,255,255,0.85)" : sc.bodyText,
-                    ...(sc.floral ? { letterSpacing: "0.05em", fontWeight: 300 } : {}),
+                    fontFamily: sc.fontFamily,
+                    color: sc.bodyText,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    maxWidth: "100%",
                   }}
                 >
-                  {locatie}
+                  {frameDisplayLocation}
                 </p>
               )}
-            </>
-          )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* No frame: only date + location, minimal */
+          <div className="flex flex-col items-center gap-2 py-6 text-center">
+            {datumFormatted && (
+              <p
+                className="text-sm uppercase tracking-[0.18em] font-medium"
+                style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}
+              >
+                {datumFormatted}
+              </p>
+            )}
+            {locatie && (
+              <p className="text-sm" style={{ color: sc.bodyText, fontFamily: sc.fontFamily }}>
+                {locatie}
+              </p>
+            )}
+          </div>
+        )}
 
-          {/* CTA */}
+        {/* CTA below the card when there is no hero photo */}
+        {!hasPhoto && (
           <a
             href="/rsvp"
             onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("rsvp") } : undefined}
-            className="inline-block text-sm font-bold px-7 py-3 rounded-xl"
+            className="mt-8 inline-block text-sm font-bold px-7 py-3 rounded-xl"
             style={{
               backgroundColor: sc.buttonBg,
               color: sc.buttonText,
               textDecoration: "none",
               boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
+              fontFamily: sc.fontFamily,
             }}
           >
             Meld je aan
           </a>
-        </div>
+        )}
       </section>
+
+      {/* ── Countdown strip ── */}
+      <div
+        className="w-full py-3 text-center"
+        style={{
+          backgroundColor: sc.bodyBg,
+          borderTop: `1px solid ${sc.accent}50`,
+          borderBottom: `1px solid ${sc.accent}50`,
+        }}
+      >
+        <p
+          className="text-xs font-medium uppercase"
+          style={{ color: sc.accent, letterSpacing: "0.18em", fontFamily: sc.fontFamily }}
+        >
+          NOG 145 DAGEN • TOT WE JA ZEGGEN
+        </p>
+      </div>
 
       {/* ── Home content ── */}
       {(homeTitle || homeBody) && (
@@ -185,7 +269,6 @@ export default function EventHomePreview({
           )}
         </div>
       )}
-
     </>
   )
 }
