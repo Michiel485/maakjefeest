@@ -6,11 +6,12 @@ import Link from "next/link"
 import EventHomePreview from "@/components/EventHomePreview"
 import EventMastersPreview from "@/components/EventMastersPreview"
 import EventProgramPreview, { PROGRAM_ICONS, ProgramIcon } from "@/components/EventProgramPreview"
+import StoryPreview from "@/components/StoryPreview"
 import { formatDate } from "@/lib/event-styles"
 import { createClient } from "@/lib/supabase"
 
 type EventType = "bruiloft" | "verjaardag" | "evenement"
-type PageId = "home" | "programma" | "rsvp" | "praktisch" | "wishlist" | "fotos" | "ceremoniemeesters"
+type PageId = "home" | "programma" | "rsvp" | "praktisch" | "wishlist" | "fotos" | "ceremoniemeesters" | "onsverhaal"
 type Style = "roze" | "ivoor" | "zand" | "earthy"
 type Viewport = "desktop" | "mobiel"
 type Align = "left" | "center" | "right"
@@ -45,6 +46,7 @@ interface Draft {
   initials?: string
   frame_names?: string
   frame_location?: string
+  hero_position?: 'top' | 'center' | 'bottom'
 }
 
 interface PageConfig {
@@ -205,15 +207,16 @@ const STYLE_CONFIG = {
 
 const PAGES: PageConfig[] = [
   { id: "home",               label: "Home",               toggleable: false },
+  { id: "onsverhaal",         label: "Ons Verhaal",        toggleable: true  },
   { id: "programma",          label: "Programma",          toggleable: true  },
-  { id: "rsvp",               label: "RSVP",               toggleable: false },
   { id: "praktisch",          label: "Praktisch",          toggleable: true  },
   { id: "wishlist",           label: "Wishlist",           toggleable: true  },
-  { id: "fotos",              label: "Foto's",             toggleable: true  },
   { id: "ceremoniemeesters",  label: "Ceremoniemeesters",  toggleable: true  },
+  { id: "rsvp",               label: "RSVP",               toggleable: false },
+  { id: "fotos",              label: "Foto's",             toggleable: true  },
 ]
 
-const CONTROLS_PAGES = new Set<PageId>(["home", "ceremoniemeesters", "programma", "rsvp"])
+const CONTROLS_PAGES = new Set<PageId>(["home", "ceremoniemeesters", "programma", "rsvp", "onsverhaal"])
 
 const TYPE_LABEL: Record<EventType, string> = {
   bruiloft: "Bruiloft", verjaardag: "Verjaardag", evenement: "Evenement",
@@ -224,12 +227,16 @@ const TYPE_LABEL: Record<EventType, string> = {
 export default function BouwenPage() {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const storyFileInputRef = useRef<HTMLInputElement>(null)
 
   const [heroImageUrl, setHeroImageUrl] = useState<string | null>(null)
   const [heroUploading, setHeroUploading] = useState(false)
+  const [storyImageBlob, setStoryImageBlob] = useState<string | null>(null)
+  const [storyUploading, setStoryUploading] = useState(false)
+  const [storyImageError, setStoryImageError] = useState<string | null>(null)
   const [draft, setDraft] = useState<Draft | null>(null)
   const [active, setActive] = useState<Record<PageId, boolean>>({
-    home: true, programma: true, rsvp: true, praktisch: false, wishlist: false, fotos: false, ceremoniemeesters: false,
+    home: true, programma: true, rsvp: true, praktisch: false, wishlist: false, fotos: false, ceremoniemeesters: false, onsverhaal: false,
   })
   const [previewPage, setPreviewPage] = useState<PageId>("home")
   const [editingPage, setEditingPage] = useState<PageId | null>(null)
@@ -352,6 +359,34 @@ export default function BouwenPage() {
       setHeroImageUrl(null)
     } finally {
       setHeroUploading(false)
+    }
+  }
+
+  async function handleStoryImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ""
+    if (!file) return
+    const supported = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+    if (!supported.includes(file.type)) {
+      setStoryImageError("Gebruik een JPEG, PNG of WebP afbeelding.")
+      return
+    }
+    setStoryImageError(null)
+    const blobUrl = URL.createObjectURL(file)
+    setStoryImageBlob(blobUrl)
+    setStoryUploading(true)
+    try {
+      const url = await uploadToStorage(file, "hero-images")
+      URL.revokeObjectURL(blobUrl)
+      setStoryImageBlob(null)
+      updateContent("onsverhaal", { ...(content.onsverhaal ?? {}), image_url: url })
+    } catch (err) {
+      console.error("[story] upload mislukt:", err)
+      setStoryImageError("Upload mislukt — probeer opnieuw.")
+      URL.revokeObjectURL(blobUrl)
+      setStoryImageBlob(null)
+    } finally {
+      setStoryUploading(false)
     }
   }
 
@@ -568,7 +603,7 @@ export default function BouwenPage() {
     }
   }
 
-  const anyUploading = heroUploading || masterUploading[0] || masterUploading[1] || programUploadingIds.size > 0
+  const anyUploading = heroUploading || masterUploading[0] || masterUploading[1] || programUploadingIds.size > 0 || storyUploading
 
   const sc = STYLE_CONFIG[style]
   const canvasWidth = viewport === "mobiel" ? 390 : 1024
@@ -988,6 +1023,30 @@ export default function BouwenPage() {
                           >
                             Verwijderen
                           </button>
+                        </div>
+
+                        {/* Focus foto */}
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-xs font-semibold text-gray-600">Focus foto</span>
+                          <div className="grid grid-cols-3 gap-1">
+                            {(["top", "center", "bottom"] as const).map((pos) => {
+                              const label = { top: "Boven", center: "Midden", bottom: "Onder" }[pos]
+                              const isActive = (draft?.hero_position ?? "center") === pos
+                              return (
+                                <button
+                                  key={pos}
+                                  onClick={() => updateDraft({ hero_position: pos })}
+                                  className={`py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                                    isActive
+                                      ? "bg-rose-500 text-white"
+                                      : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                                  }`}
+                                >
+                                  {label}
+                                </button>
+                              )
+                            })}
+                          </div>
                         </div>
                       </div>
                     ) : (
@@ -1452,6 +1511,79 @@ export default function BouwenPage() {
                   </div>
                 )}
 
+                {/* ── Ons Verhaal controls ── */}
+                {previewPage === "onsverhaal" && (
+                  <div className="flex flex-col gap-5">
+                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Ons Verhaal</p>
+
+                    {/* Titel */}
+                    <label className="flex flex-col gap-1.5">
+                      <span className="text-xs font-semibold text-gray-600">Titel</span>
+                      <input
+                        type="text"
+                        value={(content.onsverhaal?.title as string) ?? "Ons Verhaal"}
+                        onChange={(e) => updateContent("onsverhaal", { ...(content.onsverhaal ?? {}), title: e.target.value })}
+                        placeholder="Ons Verhaal"
+                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                      />
+                    </label>
+
+                    {/* Verhaal tekst */}
+                    <label className="flex flex-col gap-1.5">
+                      <span className="text-xs font-semibold text-gray-600">Verhaal</span>
+                      <textarea
+                        rows={6}
+                        value={(content.onsverhaal?.text as string) ?? ""}
+                        onChange={(e) => updateContent("onsverhaal", { ...(content.onsverhaal ?? {}), text: e.target.value })}
+                        placeholder="Vertel hier jullie verhaal..."
+                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
+                      />
+                    </label>
+
+                    {/* Foto */}
+                    <div>
+                      <p className="text-xs font-semibold text-gray-600 mb-2">Foto</p>
+                      {storyImageError && <p className="text-xs text-red-500 mb-2">{storyImageError}</p>}
+                      {(storyImageBlob ?? (content.onsverhaal?.image_url as string | null)) ? (
+                        <div className="flex flex-col gap-2">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={(storyImageBlob ?? (content.onsverhaal?.image_url as string))!}
+                            alt=""
+                            className="w-full h-24 object-cover rounded-xl"
+                          />
+                          {!storyUploading && (
+                            <button
+                              onClick={() => {
+                                setStoryImageBlob(null)
+                                updateContent("onsverhaal", { ...(content.onsverhaal ?? {}), image_url: null })
+                              }}
+                              className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors self-end"
+                            >
+                              Verwijderen
+                            </button>
+                          )}
+                          {storyUploading && <p className="text-xs text-gray-400">Uploading...</p>}
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => storyFileInputRef.current?.click()}
+                          disabled={storyUploading}
+                          className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-gray-200 rounded-xl py-5 text-gray-400 hover:border-rose-300 hover:text-rose-500 disabled:opacity-50 transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          Foto uploaden
+                        </button>
+                      )}
+                      <input ref={storyFileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={handleStoryImageUpload} />
+
+                    </div>
+                  </div>
+                )}
+
                 <div className="border-t border-gray-100 pt-2">
                   <button
                     onClick={() => {
@@ -1559,6 +1691,7 @@ export default function BouwenPage() {
                         <EventHomePreview
                           typeLabel={typeLabel}
                           title={eventName}
+                          datum={draft?.datum || null}
                           datumFormatted={draft?.datum ? formatDate(draft.datum) : null}
                           locatie={eventLocatie || null}
                           heroImageUrl={heroImageUrl}
@@ -1572,6 +1705,7 @@ export default function BouwenPage() {
                           initials={draft?.initials}
                           frameNames={draft?.frame_names}
                           frameLocation={draft?.frame_location}
+                          heroPosition={draft?.hero_position ?? "center"}
                           onNavigate={(id) => setPreviewPage(id as PageId)}
                         />
                       )}
@@ -1584,6 +1718,18 @@ export default function BouwenPage() {
                           </div>
                           <EventMastersPreview masters={mastersForPreview} sc={sc} />
                         </>
+                      )}
+                      {previewPage === "onsverhaal" && (
+                        <StoryPreview
+                          title={(content.onsverhaal?.title as string) ?? "Ons Verhaal"}
+                          text={(content.onsverhaal?.text as string) ?? null}
+                          imageUrl={storyImageBlob ?? ((content.onsverhaal?.image_url as string) || null)}
+                          imagePosX={(content.onsverhaal?.image_pos_x as number) ?? 50}
+                          imagePosY={(content.onsverhaal?.image_pos_y as number) ?? 50}
+                          editable={true}
+                          onPositionChange={(x, y) => updateContent("onsverhaal", { ...(content.onsverhaal ?? {}), image_pos_x: x, image_pos_y: y })}
+                          sc={sc}
+                        />
                       )}
                       {previewPage === "programma" && (
                         <EventProgramPreview

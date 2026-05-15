@@ -41,6 +41,7 @@ export default async function EventHomePage({
     <EventHomePreview
       typeLabel={TYPE_LABEL[event.type] ?? "Evenement"}
       title={event.title}
+      datum={event.datum ?? null}
       datumFormatted={event.datum ? formatDate(event.datum) : null}
       locatie={event.locatie ?? null}
       heroImageUrl={event.hero_image_url ?? null}

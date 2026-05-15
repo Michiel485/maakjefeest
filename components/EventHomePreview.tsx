@@ -7,6 +7,7 @@ export interface EventHomePreviewProps {
   title: string
   datumFormatted: string | null
   locatie: string | null
+  datum?: string | null
   heroImageUrl: string | null
   heroOverlay?: boolean
   homeTitle: string | null
@@ -18,12 +19,14 @@ export interface EventHomePreviewProps {
   initials?: string | null
   frameNames?: string | null
   frameLocation?: string | null
+  heroPosition?: 'top' | 'center' | 'bottom'
   onNavigate?: (pageId: string) => void
 }
 
 export default function EventHomePreview({
   typeLabel,
   title,
+  datum,
   datumFormatted,
   locatie,
   heroImageUrl,
@@ -37,6 +40,7 @@ export default function EventHomePreview({
   initials,
   frameNames,
   frameLocation,
+  heroPosition = 'center',
   onNavigate,
 }: EventHomePreviewProps) {
   const hasPhoto = !!heroImageUrl
@@ -49,6 +53,18 @@ export default function EventHomePreview({
   const frameDisplayNames    = (frameNames    && frameNames.trim())    ? frameNames    : title
   const frameDisplayLocation = (frameLocation && frameLocation.trim()) ? frameLocation : (locatie ?? "")
 
+  // Countdown: strip timezone/time noise by normalising both dates to midnight
+  let countdownText = "NOG ... DAGEN • TOT WE JA ZEGGEN"
+  if (datum) {
+    const today = new Date(); today.setHours(0, 0, 0, 0)
+    const weddingDay = new Date(datum); weddingDay.setHours(0, 0, 0, 0)
+    const days = Math.round((weddingDay.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+    if (days > 1)       countdownText = `NOG ${days} DAGEN • TOT WE JA ZEGGEN`
+    else if (days === 1) countdownText = "MORGEN IS DE GROTE DAG!"
+    else if (days === 0) countdownText = "VANDAAG IS DE DAG! 🤍"
+    else                 countdownText = `JUST MARRIED • ${datumFormatted ?? ""}`
+  }
+
   // Safe zone: diamonds are widest at center, circles taper from sides
   const isCircle  = frameStyle?.includes("circle")
   const isDiamond = frameStyle?.includes("diamond")
@@ -58,10 +74,18 @@ export default function EventHomePreview({
     <>
       {/* ── Hero: only rendered when a photo is set ── */}
       {hasPhoto && (
-        <section
-          className="w-full py-20 px-8 text-center relative overflow-hidden"
-          style={{ backgroundImage: `url(${heroImageUrl})`, backgroundSize: "cover", backgroundPosition: "center" }}
-        >
+        <section className="relative w-full h-[300px] md:h-[420px] overflow-hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={heroImageUrl!}
+            alt=""
+            className={`absolute inset-0 w-full h-full object-cover ${
+              heroPosition === 'top' ? 'object-top' :
+              heroPosition === 'bottom' ? 'object-bottom' :
+              'object-center'
+            }`}
+          />
+
           {showOverlay && (
             <div
               className="absolute inset-0"
@@ -73,40 +97,25 @@ export default function EventHomePreview({
             />
           )}
 
-          <div className="relative z-10 flex flex-col items-center">
+          <div className="absolute inset-0 flex items-center justify-center px-8 text-center">
             <h1
-              className="leading-tight whitespace-pre-wrap mb-6"
+              className="leading-tight whitespace-pre-wrap"
               style={{
                 color: "#fff",
                 fontFamily: nameFont,
                 fontSize: sc.nameFont ? "3.5rem" : "3rem",
                 fontWeight: sc.nameFont ? 400 : 800,
-                ...(sc.floral ? { textShadow: "0 1px 6px rgba(0,0,0,0.30)" } : {}),
+                filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.75))",
               }}
             >
               {title}
             </h1>
-
-            <a
-              href="/rsvp"
-              onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("rsvp") } : undefined}
-              className="inline-block text-sm font-bold px-7 py-3 rounded-xl"
-              style={{
-                backgroundColor: sc.buttonBg,
-                color: sc.buttonText,
-                textDecoration: "none",
-                boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
-                fontFamily: sc.fontFamily,
-              }}
-            >
-              Meld je aan
-            </a>
           </div>
         </section>
       )}
 
-      {/* ── Luxe Trouwkaart ── */}
-      <section className="w-full px-6 py-10 flex flex-col items-center" style={{ backgroundColor: sc.bodyBg }}>
+      {/* ── Luxe Trouwkaart + CTA ── */}
+      <section className="w-full px-6 pt-6 pb-8 flex flex-col items-center" style={{ backgroundColor: sc.bodyBg }}>
         {useFrame && frameStyle ? (
           /* Container-query wrapper — text scales proportionally with the image */
           <div
@@ -195,7 +204,7 @@ export default function EventHomePreview({
           </div>
         ) : (
           /* No frame: only date + location, minimal */
-          <div className="flex flex-col items-center gap-2 py-6 text-center">
+          <div className="flex flex-col items-center gap-2 pt-4 pb-0 text-center">
             {datumFormatted && (
               <p
                 className="text-sm uppercase tracking-[0.18em] font-medium"
@@ -212,23 +221,21 @@ export default function EventHomePreview({
           </div>
         )}
 
-        {/* CTA below the card when there is no hero photo */}
-        {!hasPhoto && (
-          <a
-            href="/rsvp"
-            onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("rsvp") } : undefined}
-            className="mt-8 inline-block text-sm font-bold px-7 py-3 rounded-xl"
-            style={{
-              backgroundColor: sc.buttonBg,
-              color: sc.buttonText,
-              textDecoration: "none",
-              boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
-              fontFamily: sc.fontFamily,
-            }}
-          >
-            Meld je aan
-          </a>
-        )}
+        {/* ── CTA ── */}
+        <a
+          href="/rsvp"
+          onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("rsvp") } : undefined}
+          className="mt-6 inline-block text-sm font-bold px-7 py-3 rounded-xl"
+          style={{
+            backgroundColor: sc.buttonBg,
+            color: sc.buttonText,
+            textDecoration: "none",
+            boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
+            fontFamily: sc.fontFamily,
+          }}
+        >
+          Meld je aan
+        </a>
       </section>
 
       {/* ── Countdown strip ── */}
@@ -241,10 +248,10 @@ export default function EventHomePreview({
         }}
       >
         <p
-          className="text-xs font-medium uppercase"
+          className="text-sm font-medium uppercase"
           style={{ color: sc.accent, letterSpacing: "0.18em", fontFamily: sc.fontFamily }}
         >
-          NOG 145 DAGEN • TOT WE JA ZEGGEN
+          {countdownText}
         </p>
       </div>
 

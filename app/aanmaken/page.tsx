@@ -22,6 +22,12 @@ const DEFAULT_PRAKTISCH = {
   ],
 }
 
+function buildInitials(naam1: string, naam2: string): string {
+  const a = naam1.trim()[0]?.toUpperCase()
+  const b = naam2.trim()[0]?.toUpperCase()
+  return a && b ? `${a}|${b}` : "M|L"
+}
+
 // Live formatting during typing — keeps trailing hyphen so space→hyphen is visible
 function formatSlugInput(value: string): string {
   return value
@@ -45,27 +51,15 @@ export default function AanmakenPage() {
   const router = useRouter()
 
   const [form, setForm] = useState(() => {
-    if (typeof window === "undefined") return { naam: "", datum: "", email: "", slug: "" }
+    if (typeof window === "undefined") return { naam1: "", naam2: "", datum: "", email: "", slug: "" }
     try {
       const saved = localStorage.getItem("sayingyes_draft")
       if (saved) {
-        const { naam = "", datum = "", email = "", slug = "" } = JSON.parse(saved)
-        return { naam, datum, email, slug }
+        const { naam1 = "", naam2 = "", datum = "", email = "", slug = "" } = JSON.parse(saved)
+        return { naam1, naam2, datum, email, slug }
       }
     } catch {}
-    return { naam: "", datum: "", email: "", slug: "" }
-  })
-
-  const [slugAutoFollow, setSlugAutoFollow] = useState(() => {
-    if (typeof window === "undefined") return true
-    try {
-      const saved = localStorage.getItem("sayingyes_draft")
-      if (saved) {
-        const { slug } = JSON.parse(saved)
-        return !slug
-      }
-    } catch {}
-    return true
+    return { naam1: "", naam2: "", datum: "", email: "", slug: "" }
   })
 
   const [slugStatus, setSlugStatus] = useState<SlugStatus>("idle")
@@ -92,19 +86,8 @@ export default function AanmakenPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  function handleNaamChange(naam: string) {
-    if (slugAutoFollow) {
-      const autoSlug = sanitizeSlug(naam)
-      setForm({ ...form, naam, slug: autoSlug })
-      scheduleSlugCheck(autoSlug)
-    } else {
-      setForm({ ...form, naam })
-    }
-  }
-
   function handleSlugInput(raw: string) {
     const formatted = formatSlugInput(raw)
-    setSlugAutoFollow(false)
     setForm({ ...form, slug: formatted })
     scheduleSlugCheck(sanitizeSlug(formatted))
   }
@@ -114,15 +97,23 @@ export default function AanmakenPage() {
     const cleanSlug = sanitizeSlug(form.slug)
     if (!cleanSlug || slugStatus !== "available") return
 
+    const frameNames = `${form.naam1.trim()} & ${form.naam2.trim()}`
+    const eventTitle = `De bruiloft van ${form.naam1.trim()} & ${form.naam2.trim()}`
+
     const draft = {
       type: "bruiloft",
-      naam: form.naam,
+      naam: eventTitle,
       slug: cleanSlug,
-      nav_title: form.naam,
+      nav_title: eventTitle,
       datum: form.datum,
-      locatie: "",
+      locatie: "Stadhuis Amersfoort",
       email: form.email,
       aangemaakt: new Date().toISOString(),
+      use_frame: true,
+      frame_style: "gold-circle",
+      frame_names: frameNames,
+      frame_location: "Stadhuis Amersfoort",
+      initials: buildInitials(form.naam1, form.naam2),
       homeContent: {
         title: `Wij gaan trouwen!`,
         body: `We zijn zo blij dat jullie erbij zijn op onze grote dag. Hieronder vinden jullie alles wat jullie moeten weten.`,
@@ -141,7 +132,11 @@ export default function AanmakenPage() {
     router.push("/bouwen")
   }
 
-  const canSubmit = sanitizeSlug(form.slug).length >= 3 && slugStatus === "available"
+  const canSubmit =
+    form.naam1.trim().length > 0 &&
+    form.naam2.trim().length > 0 &&
+    sanitizeSlug(form.slug).length >= 3 &&
+    slugStatus === "available"
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-orange-50 font-sans antialiased">
@@ -181,17 +176,27 @@ export default function AanmakenPage() {
 
         <form onSubmit={handleStart} className="flex flex-col gap-5">
 
-          {/* Titel */}
+          {/* Namen bruidspaar */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Titel van jullie website</label>
-            <input
-              type="text"
-              required
-              placeholder="bijv. Michiel & Lindsey gaan trouwen"
-              value={form.naam}
-              onChange={(e) => handleNaamChange(e.target.value)}
-              className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-400 transition-all shadow-sm"
-            />
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Namen Bruidspaar</label>
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                type="text"
+                required
+                placeholder="bijv. Michiel"
+                value={form.naam1}
+                onChange={(e) => setForm({ ...form, naam1: e.target.value })}
+                className="rounded-2xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-400 transition-all shadow-sm"
+              />
+              <input
+                type="text"
+                required
+                placeholder="bijv. Lindsey"
+                value={form.naam2}
+                onChange={(e) => setForm({ ...form, naam2: e.target.value })}
+                className="rounded-2xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-400 transition-all shadow-sm"
+              />
+            </div>
           </div>
 
           {/* Slug */}
