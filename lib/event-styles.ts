@@ -66,7 +66,23 @@ export const STYLE_CONFIG = {
 } as const
 
 export type Style = keyof typeof STYLE_CONFIG
-export type SC = typeof STYLE_CONFIG[Style]
+
+export interface SC {
+  accent: string
+  heroGradient: string
+  fontFamily: string
+  nameFont: string | null
+  navBg: string
+  navText: string
+  headingColor: string
+  bodyText: string
+  buttonBg: string
+  buttonText: string
+  labelColor: string
+  bodyBg: string
+  floral: boolean
+  fontImport: string | null
+}
 
 export const TYPE_LABEL: Record<string, string> = {
   bruiloft: "Bruiloft",
