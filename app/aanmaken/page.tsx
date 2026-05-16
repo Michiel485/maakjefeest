@@ -50,17 +50,17 @@ type SlugStatus = "idle" | "checking" | "available" | "taken" | "invalid"
 export default function AanmakenPage() {
   const router = useRouter()
 
-  const [form, setForm] = useState(() => {
-    if (typeof window === "undefined") return { naam1: "", naam2: "", datum: "", email: "", slug: "" }
+  const [form, setForm] = useState({ naam1: "", naam2: "", datum: "", email: "", slug: "" })
+
+  useEffect(() => {
     try {
       const saved = localStorage.getItem("sayingyes_draft")
       if (saved) {
         const { naam1 = "", naam2 = "", datum = "", email = "", slug = "" } = JSON.parse(saved)
-        return { naam1, naam2, datum, email, slug }
+        setForm({ naam1, naam2, datum, email, slug })
       }
     } catch {}
-    return { naam1: "", naam2: "", datum: "", email: "", slug: "" }
-  })
+  }, [])
 
   const [slugStatus, setSlugStatus] = useState<SlugStatus>("idle")
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
