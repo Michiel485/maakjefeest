@@ -46,7 +46,10 @@ interface Draft {
   initials?: string
   frame_names?: string
   frame_location?: string
-  hero_position?: 'top' | 'center' | 'bottom'
+  naam1?: string
+  naam2?: string
+  hero_image_pos_x?: number
+  hero_image_pos_y?: number
 }
 
 interface PageConfig {
@@ -267,6 +270,7 @@ export default function BouwenPage() {
   const [authEmail, setAuthEmail] = useState("")
   const [authSent, setAuthSent] = useState(false)
   const [authLoading, setAuthLoading] = useState(false)
+  const [autoSavePending, setAutoSavePending] = useState(false)
 
   useEffect(() => {
     try {
@@ -284,6 +288,11 @@ export default function BouwenPage() {
 
     const savedId = localStorage.getItem("sayingyes_saved_event_id")
     if (savedId) setSavedEventId(savedId)
+
+    if (localStorage.getItem("sayingyes_pending_save") === "1") {
+      localStorage.removeItem("sayingyes_pending_save")
+      setAutoSavePending(true)
+    }
   }, [router])
 
   useEffect(() => {
@@ -307,6 +316,17 @@ export default function BouwenPage() {
     })
     return () => cancelAnimationFrame(id)
   }, [isEditingControls, viewport])
+
+  useEffect(() => {
+    if (!autoSavePending || !draft) return
+    setAutoSavePending(false)
+    ;(async () => {
+      const { data: { user } } = await createClient().auth.getUser()
+      if (!user) return
+      await performSave()
+    })()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoSavePending, draft])
 
   function updateDraft(fields: Partial<Draft>) {
     setDraft((prev) => {
@@ -590,12 +610,14 @@ export default function BouwenPage() {
   async function handleAuthSubmit(e: React.FormEvent) {
     e.preventDefault()
     setAuthLoading(true)
+    localStorage.setItem("sayingyes_pending_save", "1")
     const { error } = await createClient().auth.signInWithOtp({
       email: authEmail,
       options: { emailRedirectTo: `${window.location.origin}/api/auth/callback?next=/bouwen` },
     })
     setAuthLoading(false)
     if (error) {
+      localStorage.removeItem("sayingyes_pending_save")
       setSaveError(error.message)
       setShowAuthModal(false)
     } else {
@@ -617,7 +639,7 @@ export default function BouwenPage() {
   const heroOverlay = draft?.heroOverlay ?? true
   const homeContent: HomeContent = draft?.homeContent ?? { title: "", body: "", align: "center" }
   const navLayout = (draft?.navLayout ?? 'split') as 'stacked' | 'split' | 'left'
-  const navTitle = draft?.nav_title ?? draft?.naam ?? ""
+  const navTitle = draft?.frame_names ?? draft?.nav_title ?? draft?.naam ?? ""
   const safeNavTitle = navTitle.replace(/\n/g, " ")
   const slugPreview = draft?.slug || "jouwbruiloft"
 
@@ -787,8 +809,10 @@ export default function BouwenPage() {
               {PAGES.map((page) => {
                 const isOn = active[page.id]
                 const isEditing = editingPage === page.id
+                const isControlsOpen = CONTROLS_PAGES.has(page.id) && previewPage === page.id && isEditingControls
+                const buttonActive = isEditing || isControlsOpen
                 return (
-                  <div key={page.id} className={`rounded-xl transition-colors ${isEditing ? "bg-rose-50 ring-1 ring-rose-200" : isOn ? "hover:bg-gray-50" : ""}`}>
+                  <div key={page.id} className={`rounded-xl transition-colors ${buttonActive ? "bg-rose-50 ring-1 ring-rose-200" : isOn ? "hover:bg-gray-50" : ""}`}>
                     <div
                       className="flex items-center justify-between px-3 py-2.5 cursor-pointer"
                       onClick={() => isOn && setPreviewPage(page.id)}
@@ -816,14 +840,18 @@ export default function BouwenPage() {
                           onClick={() => {
                             if (CONTROLS_PAGES.has(page.id)) {
                               setPreviewPage(page.id)
-                              setIsEditingControls(true)
+                              if (isControlsOpen) {
+                                setIsEditingControls(false)
+                              } else {
+                                setIsEditingControls(true)
+                              }
                             } else {
                               setIsEditingControls(false)
                               isEditing ? setEditingPage(null) : openEditor(page.id)
                             }
                           }}
                           className={`w-full flex items-center justify-center gap-1.5 text-xs font-semibold py-1.5 rounded-lg transition-colors ${
-                            isEditing
+                            buttonActive
                               ? "bg-rose-100 text-rose-600"
                               : "bg-gray-100 text-gray-500 hover:bg-rose-50 hover:text-rose-600"
                           }`}
@@ -831,7 +859,7 @@ export default function BouwenPage() {
                           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                           </svg>
-                          {isEditing ? "Klaar" : "Bewerken"}
+                          {buttonActive ? "Klaar" : "Bewerken"}
                         </button>
                       </div>
                     )}
@@ -1025,29 +1053,6 @@ export default function BouwenPage() {
                           </button>
                         </div>
 
-                        {/* Focus foto */}
-                        <div className="flex flex-col gap-1.5">
-                          <span className="text-xs font-semibold text-gray-600">Focus foto</span>
-                          <div className="grid grid-cols-3 gap-1">
-                            {(["top", "center", "bottom"] as const).map((pos) => {
-                              const label = { top: "Boven", center: "Midden", bottom: "Onder" }[pos]
-                              const isActive = (draft?.hero_position ?? "center") === pos
-                              return (
-                                <button
-                                  key={pos}
-                                  onClick={() => updateDraft({ hero_position: pos })}
-                                  className={`py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                                    isActive
-                                      ? "bg-rose-500 text-white"
-                                      : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                                  }`}
-                                >
-                                  {label}
-                                </button>
-                              )
-                            })}
-                          </div>
-                        </div>
                       </div>
                     ) : (
                       <div>
@@ -1330,23 +1335,29 @@ export default function BouwenPage() {
                             />
                             <button
                               onClick={() => setOpenIconPickerIdx(openIconPickerIdx === i ? null : i)}
-                              className={`p-1 rounded-lg transition-colors ${openIconPickerIdx === i ? "text-rose-500 bg-rose-50" : "text-gray-400 hover:text-rose-400"}`}
+                              className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-xs font-semibold transition-colors ${
+                                openIconPickerIdx === i
+                                  ? "border-rose-400 bg-rose-50 text-rose-600"
+                                  : "border-gray-200 bg-white text-gray-500 hover:border-rose-300 hover:text-rose-500"
+                              }`}
                               title="Icoon kiezen"
                             >
-                              <ProgramIcon iconId={item.iconId ?? "heart"} size={18} strokeWidth={2} />
+                              <ProgramIcon iconId={item.iconId ?? "heart"} size={14} strokeWidth={2} />
+                              <span>Icoon</span>
                             </button>
                             <button
                               onClick={() => {
                                 setProgramUploadIndex(i)
                                 programPhotoRef.current?.click()
                               }}
-                              className="ml-auto text-gray-300 hover:text-rose-400 transition-colors p-1"
+                              className="ml-auto flex items-center gap-1 px-2 py-1 rounded-lg border border-gray-200 bg-white text-xs font-semibold text-gray-500 hover:border-rose-300 hover:text-rose-500 transition-colors"
                               title="Foto toevoegen"
                             >
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                               </svg>
+                              <span>Foto</span>
                             </button>
                             <button
                               onClick={() => {
@@ -1640,7 +1651,7 @@ export default function BouwenPage() {
                       </div>
                       {navLayout === 'left' ? (
                         <nav className="px-5 py-4 border-b flex items-center gap-6 flex-wrap" style={{ backgroundColor: sc.navBg, borderColor: `${sc.accent}22` }}>
-                          <span className="font-bold whitespace-nowrap flex-shrink-0 overflow-hidden text-ellipsis" style={{ color: sc.accent, fontFamily: sc.fontFamily, maxWidth: sc.floral ? 260 : 200, fontSize: sc.floral ? "1.25rem" : "0.9375rem" }}>{safeNavTitle}</span>
+                          <span className="font-bold whitespace-nowrap flex-shrink-0 overflow-hidden text-ellipsis" style={{ color: sc.accent, fontFamily: sc.fontFamily, maxWidth: sc.floral ? 260 : 200, fontSize: sc.floral ? "1.25rem" : "0.9375rem", fontWeight: 800, letterSpacing: sc.floral ? "0.01em" : "-0.02em" }}>{safeNavTitle}</span>
                           <div className="flex items-center flex-wrap gap-1">
                             {activePagesOrdered.map((page) => (
                               <button
@@ -1656,7 +1667,7 @@ export default function BouwenPage() {
                         </nav>
                       ) : navLayout === 'split' ? (
                         <nav className="px-5 py-4 border-b flex items-center justify-between gap-4" style={{ backgroundColor: sc.navBg, borderColor: `${sc.accent}22` }}>
-                          <span className="font-bold whitespace-nowrap flex-shrink-0 overflow-hidden text-ellipsis" style={{ color: sc.accent, fontFamily: sc.fontFamily, maxWidth: sc.floral ? 260 : 200, fontSize: sc.floral ? "1.25rem" : "0.9375rem" }}>{safeNavTitle}</span>
+                          <span className="font-bold whitespace-nowrap flex-shrink-0 overflow-hidden text-ellipsis" style={{ color: sc.accent, fontFamily: sc.fontFamily, maxWidth: sc.floral ? 260 : 200, fontSize: sc.floral ? "1.25rem" : "0.9375rem", fontWeight: 800, letterSpacing: sc.floral ? "0.01em" : "-0.02em" }}>{safeNavTitle}</span>
                           <div className="flex items-center flex-wrap justify-end gap-1">
                             {activePagesOrdered.map((page) => (
                               <button
@@ -1672,7 +1683,7 @@ export default function BouwenPage() {
                         </nav>
                       ) : (
                         <nav className="px-5 py-5 border-b flex flex-col items-center gap-2" style={{ backgroundColor: sc.navBg, borderColor: `${sc.accent}22` }}>
-                          <span className="font-bold text-center whitespace-nowrap overflow-hidden text-ellipsis" style={{ color: sc.accent, fontFamily: sc.fontFamily, maxWidth: sc.floral ? 260 : 200, fontSize: sc.floral ? "1.25rem" : "0.9375rem" }}>{safeNavTitle}</span>
+                          <span className="font-bold text-center whitespace-nowrap overflow-hidden text-ellipsis" style={{ color: sc.accent, fontFamily: sc.fontFamily, maxWidth: sc.floral ? 260 : 200, fontSize: sc.floral ? "1.25rem" : "0.9375rem", fontWeight: 800, letterSpacing: sc.floral ? "0.01em" : "-0.02em" }}>{safeNavTitle}</span>
                           <div className="flex items-center flex-wrap justify-center gap-1">
                             {activePagesOrdered.map((page) => (
                               <button
@@ -1705,7 +1716,10 @@ export default function BouwenPage() {
                           initials={draft?.initials}
                           frameNames={draft?.frame_names}
                           frameLocation={draft?.frame_location}
-                          heroPosition={draft?.hero_position ?? "center"}
+                          heroPosX={draft?.hero_image_pos_x ?? 50}
+                          heroPosY={draft?.hero_image_pos_y ?? 50}
+                          editableHero={true}
+                          onHeroPositionChange={(x, y) => updateDraft({ hero_image_pos_x: x, hero_image_pos_y: y })}
                           onNavigate={(id) => setPreviewPage(id as PageId)}
                         />
                       )}

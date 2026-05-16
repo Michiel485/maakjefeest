@@ -103,6 +103,8 @@ export default function AanmakenPage() {
     const draft = {
       type: "bruiloft",
       naam: eventTitle,
+      naam1: form.naam1.trim(),
+      naam2: form.naam2.trim(),
       slug: cleanSlug,
       nav_title: eventTitle,
       datum: form.datum,

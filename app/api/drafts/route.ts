@@ -97,7 +97,6 @@ export async function POST(request: Request) {
     initials?: string
     frame_names?: string
     frame_location?: string
-    hero_position?: string
     pages: string[]
     content?: Record<string, Record<string, unknown>>
     event_id?: string
@@ -124,7 +123,6 @@ export async function POST(request: Request) {
     initials = null,
     frame_names = null,
     frame_location = null,
-    hero_position = "center",
     pages,
     content = {},
     event_id,
@@ -154,7 +152,7 @@ export async function POST(request: Request) {
       ))
       const { error: updateErr } = await db
         .from("events")
-        .update({ type, title: naam, datum, locatie, style, hero_image_url, nav_layout, nav_title: nav_title ?? naam, use_frame, frame_style, initials, frame_names, frame_location, hero_position })
+        .update({ type, title: naam, datum, locatie, style, hero_image_url, nav_layout, nav_title: nav_title ?? naam, use_frame, frame_style, initials, frame_names, frame_location })
         .eq("id", event_id)
 
       if (updateErr) {
@@ -208,7 +206,6 @@ export async function POST(request: Request) {
       initials,
       frame_names,
       frame_location,
-      hero_position,
     })
     .select("id, slug")
     .single()

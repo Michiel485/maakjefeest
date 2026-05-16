@@ -367,57 +367,63 @@ export default function EventProgramPreview({
             {list.map((item, i) => {
               const posX = item.imagePosX ?? 50
               return (
-                <div key={item.id ?? i} style={{ position: "relative", paddingBottom: 48, opacity: faded }}>
-                  {i < list.length - 1 && (
+                <div key={item.id ?? i}>
+                  {/* ── Item row ── */}
+                  <div style={{ position: "relative", opacity: faded }}>
                     <div style={{
-                      position: "absolute", left: -84, top: 64, bottom: -24,
-                      width: 2, borderRadius: 1, backgroundColor: `${sc.accent}28`,
-                    }} />
-                  )}
-                  <div style={{
-                    position: "absolute", left: -148, top: 0,
-                    width: 128, height: 128, borderRadius: "50%",
-                    backgroundColor: sc.navBg, border: `2px solid ${sc.accent}45`,
-                    display: "flex", alignItems: "center", justifyContent: "center", color: sc.accent,
-                  }}>
-                    <ProgramIcon iconId={item.iconId} size={80} strokeWidth={1.5} />
-                  </div>
-                  <div style={{ paddingTop: 8, display: "flex", alignItems: "flex-start", gap: 20 }}>
-                    <div style={{ flex: 1 }}>
-                      <span style={{ fontSize: "1rem", fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" as const, color: sc.labelColor }}>
-                        {item.time}
-                      </span>
-                      {item.title && (
-                        <p style={{ fontSize: "1.125rem", fontWeight: 800, color: sc.headingColor, margin: "6px 0 4px", lineHeight: 1.3 }}>
-                          {item.title}
-                        </p>
-                      )}
-                      {item.description && (
-                        <p style={{ fontSize: "0.9375rem", fontWeight: 400, color: sc.bodyText, margin: item.title ? "0" : "7px 0 0", lineHeight: 1.4 }}>
-                          {item.description}
-                        </p>
-                      )}
+                      position: "absolute", left: -148, top: 0,
+                      width: 128, height: 128, borderRadius: "50%",
+                      backgroundColor: sc.navBg, border: `3px solid ${sc.accent}55`,
+                      display: "flex", alignItems: "center", justifyContent: "center", color: sc.accent,
+                    }}>
+                      <ProgramIcon iconId={item.iconId} size={80} strokeWidth={1.5} />
                     </div>
-                    {item.image_url && (
-                      <div
-                        onMouseDown={(e) => startDrag(e, item)}
-                        style={{
-                          width: 128, height: 128, borderRadius: "50%", overflow: "hidden", flexShrink: 0,
-                          position: "relative", cursor: builderMode ? "grab" : undefined,
-                        }}
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={item.image_url} alt=""
-                          style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: `${posX}% 50%` }}
-                        />
-                        {builderMode && (
-                          <div style={{ position: "absolute", inset: 0, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            <DragHandle size={22} />
-                          </div>
+                    <div style={{ paddingTop: 8, paddingBottom: 16, display: "flex", alignItems: "flex-start", gap: 20 }}>
+                      <div style={{ flex: 1 }}>
+                        <span style={{ fontSize: "1rem", fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" as const, color: sc.labelColor }}>
+                          {item.time}
+                        </span>
+                        {item.title && (
+                          <p style={{ fontSize: "1.125rem", fontWeight: 800, color: sc.headingColor, margin: "6px 0 4px", lineHeight: 1.3 }}>
+                            {item.title}
+                          </p>
+                        )}
+                        {item.description && (
+                          <p style={{ fontSize: "0.9375rem", fontWeight: 400, color: sc.bodyText, margin: item.title ? "0" : "7px 0 0", lineHeight: 1.4 }}>
+                            {item.description}
+                          </p>
                         )}
                       </div>
-                    )}
+                      {item.image_url && (
+                        <div
+                          onMouseDown={(e) => startDrag(e, item)}
+                          style={{
+                            width: 128, height: 128, borderRadius: "50%", overflow: "hidden", flexShrink: 0,
+                            position: "relative", cursor: builderMode ? "grab" : undefined,
+                          }}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={item.image_url} alt=""
+                            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: `${posX}% 50%` }}
+                          />
+                          {builderMode && (
+                            <div style={{ position: "absolute", inset: 0, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              <DragHandle size={22} />
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
+                  {/* ── Fixed-height connector spacer between items ── */}
+                  {i < list.length - 1 && (
+                    <div style={{ position: "relative", height: 52, opacity: faded }}>
+                      <div style={{
+                        position: "absolute", left: -84, top: 0, bottom: 0,
+                        width: 3, borderRadius: 2, backgroundColor: `${sc.accent}35`,
+                      }} />
+                    </div>
+                  )}
                 </div>
               )
             })}

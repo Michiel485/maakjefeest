@@ -1,6 +1,11 @@
 "use client"
 
+import { useRef, useState, useCallback } from "react"
 import type { SC } from "@/lib/event-styles"
+
+function clamp(v: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, v))
+}
 
 export interface EventHomePreviewProps {
   typeLabel: string
@@ -10,6 +15,10 @@ export interface EventHomePreviewProps {
   datum?: string | null
   heroImageUrl: string | null
   heroOverlay?: boolean
+  heroPosX?: number
+  heroPosY?: number
+  editableHero?: boolean
+  onHeroPositionChange?: (x: number, y: number) => void
   homeTitle: string | null
   homeBody: string | null
   homeAlign: "left" | "center" | "right"
@@ -19,7 +28,6 @@ export interface EventHomePreviewProps {
   initials?: string | null
   frameNames?: string | null
   frameLocation?: string | null
-  heroPosition?: 'top' | 'center' | 'bottom'
   onNavigate?: (pageId: string) => void
 }
 
@@ -31,6 +39,10 @@ export default function EventHomePreview({
   locatie,
   heroImageUrl,
   heroOverlay = true,
+  heroPosX = 50,
+  heroPosY = 50,
+  editableHero = false,
+  onHeroPositionChange,
   homeTitle,
   homeBody,
   homeAlign,
@@ -40,11 +52,40 @@ export default function EventHomePreview({
   initials,
   frameNames,
   frameLocation,
-  heroPosition = 'center',
   onNavigate,
 }: EventHomePreviewProps) {
   const hasPhoto = !!heroImageUrl
   const showOverlay = hasPhoto && heroOverlay
+
+  const [heroPos, setHeroPos] = useState({ x: heroPosX, y: heroPosY })
+  const [heroDragging, setHeroDragging] = useState(false)
+  const heroRef = useRef<HTMLElement>(null)
+  const lastHeroPointer = useRef<{ x: number; y: number } | null>(null)
+
+  const startHeroDrag = useCallback((clientX: number, clientY: number) => {
+    if (!editableHero || !heroImageUrl) return
+    setHeroDragging(true)
+    lastHeroPointer.current = { x: clientX, y: clientY }
+  }, [editableHero, heroImageUrl])
+
+  const moveHeroDrag = useCallback((clientX: number, clientY: number) => {
+    if (!heroDragging || !lastHeroPointer.current || !heroRef.current) return
+    const rect = heroRef.current.getBoundingClientRect()
+    const deltaX = clientX - lastHeroPointer.current.x
+    const deltaY = clientY - lastHeroPointer.current.y
+    lastHeroPointer.current = { x: clientX, y: clientY }
+    setHeroPos(prev => ({
+      x: clamp(prev.x - (deltaX / rect.width) * 100, 0, 100),
+      y: clamp(prev.y - (deltaY / rect.height) * 100, 0, 100),
+    }))
+  }, [heroDragging])
+
+  const endHeroDrag = useCallback(() => {
+    if (!heroDragging) return
+    setHeroDragging(false)
+    lastHeroPointer.current = null
+    onHeroPositionChange?.(heroPos.x, heroPos.y)
+  }, [heroDragging, heroPos, onHeroPositionChange])
 
   // Calligraphy font for names; serif fallback for other themes
   const nameFont = sc.nameFont || (sc.floral ? sc.fontFamily : "'Georgia', serif")
@@ -74,17 +115,34 @@ export default function EventHomePreview({
     <>
       {/* ── Hero: only rendered when a photo is set ── */}
       {hasPhoto && (
-        <section className="relative w-full h-[300px] md:h-[420px] overflow-hidden">
+        <section
+          ref={heroRef}
+          className={`relative w-full h-[300px] md:h-[420px] overflow-hidden select-none ${
+            editableHero ? heroDragging ? "cursor-grabbing" : "cursor-grab" : ""
+          }`}
+          onMouseDown={editableHero ? (e) => { e.preventDefault(); startHeroDrag(e.clientX, e.clientY) } : undefined}
+          onMouseMove={editableHero ? (e) => moveHeroDrag(e.clientX, e.clientY) : undefined}
+          onMouseUp={editableHero ? endHeroDrag : undefined}
+          onMouseLeave={editableHero ? endHeroDrag : undefined}
+          onTouchStart={editableHero ? (e) => startHeroDrag(e.touches[0].clientX, e.touches[0].clientY) : undefined}
+          onTouchMove={editableHero ? (e) => { e.preventDefault(); moveHeroDrag(e.touches[0].clientX, e.touches[0].clientY) } : undefined}
+          onTouchEnd={editableHero ? endHeroDrag : undefined}
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={heroImageUrl!}
             alt=""
-            className={`absolute inset-0 w-full h-full object-cover ${
-              heroPosition === 'top' ? 'object-top' :
-              heroPosition === 'bottom' ? 'object-bottom' :
-              'object-center'
-            }`}
+            draggable={false}
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ objectPosition: `${heroPos.x}% ${heroPos.y}%` }}
           />
+          {editableHero && !heroDragging && (
+            <div className="absolute bottom-3 left-0 right-0 flex justify-center pointer-events-none">
+              <span className="text-xs px-3 py-1 rounded-full opacity-80" style={{ backgroundColor: "rgba(0,0,0,0.5)", color: "#fff" }}>
+                Sleep om te positioneren
+              </span>
+            </div>
+          )}
 
           {showOverlay && (
             <div

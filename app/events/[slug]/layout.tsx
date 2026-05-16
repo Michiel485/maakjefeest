@@ -14,7 +14,7 @@ export default async function EventLayout({
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, title, nav_title, style, nav_layout")
+    .select("id, title, nav_title, frame_names, style, nav_layout")
     .eq("slug", slug)
     .eq("status", "published")
     .single()
@@ -54,7 +54,7 @@ export default async function EventLayout({
       <div className={`max-w-4xl mx-auto sm:shadow-2xl sm:rounded-2xl overflow-clip min-h-[85vh] flex flex-col relative${sc.floral ? " bohemian-scale" : ""}`}
         style={{ backgroundColor: sc.navBg }}>
 
-        <EventNav title={(event.nav_title as string | null) || event.title} pages={pageList} sc={sc} navLayout={(event.nav_layout ?? "split") as "stacked" | "split" | "left"} basePath={basePath} />
+        <EventNav title={(event.frame_names as string | null) || (event.nav_title as string | null) || event.title} pages={pageList} sc={sc} navLayout={(event.nav_layout ?? "split") as "stacked" | "split" | "left"} basePath={basePath} />
 
         <main className="flex-grow relative" style={{ zIndex: 1 }}>
           {children}
