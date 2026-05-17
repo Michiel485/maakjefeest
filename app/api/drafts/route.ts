@@ -48,14 +48,14 @@ async function uniqueSlug(base: string): Promise<string> {
 }
 
 const PAGE_TITLES: Record<string, string> = {
-  home: "Home",
-  programma: "Programma",
-  rsvp: "RSVP",
-  praktisch: "Informatie",
-  wishlist: "Cadeautips",
-  fotos: "Foto's",
-  ceremoniemeesters: "Ceremoniemeesters",
-  onsverhaal: "Ons Verhaal",
+  Home: "Home",
+  Programma: "Programma",
+  RSVP: "RSVP",
+  Informatie: "Informatie",
+  Cadeautips: "Cadeautips",
+  Fotos: "Foto's",
+  Ceremoniemeesters: "Ceremoniemeesters",
+  OnsVerhaal: "Ons Verhaal",
 }
 
 // GET /api/drafts — list all events for the logged-in user
@@ -132,7 +132,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Verplichte velden ontbreken" }, { status: 400 })
   }
 
-  const pageList = Array.isArray(pages) && pages.length > 0 ? pages : ["home", "rsvp"]
+  const pageList = Array.isArray(pages) && pages.length > 0 ? pages : ["Home", "RSVP"]
 
   // Update existing event if event_id provided and belongs to this user
   if (event_id) {

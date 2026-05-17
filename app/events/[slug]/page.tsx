@@ -30,7 +30,7 @@ export default async function EventHomePage({
     .from("pages")
     .select("content")
     .eq("event_id", event.id)
-    .eq("type", "home")
+    .eq("type", "Home")
     .eq("is_enabled", true)
     .single()
 

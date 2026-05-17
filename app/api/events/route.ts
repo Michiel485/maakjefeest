@@ -27,13 +27,14 @@ async function uniqueSlug(base: string): Promise<string> {
 }
 
 const PAGE_TITLES: Record<string, string> = {
-  home:              "Home",
-  programma:         "Programma",
-  rsvp:              "RSVP",
-  praktisch:         "Praktisch",
-  wishlist:          "Wishlist",
-  fotos:             "Foto's",
-  ceremoniemeesters: "Ceremoniemeesters",
+  Home:              "Home",
+  Programma:         "Programma",
+  RSVP:              "RSVP",
+  Informatie:        "Informatie",
+  Cadeautips:        "Cadeautips",
+  Fotos:             "Foto's",
+  Ceremoniemeesters: "Ceremoniemeesters",
+  OnsVerhaal:        "Ons Verhaal",
 }
 
 export async function POST(request: Request) {
@@ -62,7 +63,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Verplichte velden ontbreken" }, { status: 400 })
   }
 
-  const pageList: string[] = Array.isArray(pages) && pages.length > 0 ? pages : ["home", "rsvp"]
+  const pageList: string[] = Array.isArray(pages) && pages.length > 0 ? pages : ["Home", "RSVP"]
   const slug = await uniqueSlug(toSlug(naam))
 
   const { data: event, error: eventError } = await supabase

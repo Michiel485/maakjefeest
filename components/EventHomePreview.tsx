@@ -281,7 +281,7 @@ export default function EventHomePreview({
         {/* ── CTA ── */}
         <a
           href="/rsvp"
-          onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("rsvp") } : undefined}
+          onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("RSVP") } : undefined}
           className="mt-6 inline-block text-sm font-bold px-7 py-3 rounded-xl"
           style={{
             backgroundColor: sc.buttonBg,

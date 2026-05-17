@@ -14,7 +14,7 @@ import { formatDate } from "@/lib/event-styles"
 import { createClient } from "@/lib/supabase"
 
 type EventType = "bruiloft" | "verjaardag" | "evenement"
-type PageId = "home" | "programma" | "rsvp" | "praktisch" | "wishlist" | "fotos" | "ceremoniemeesters" | "onsverhaal"
+type PageId = "Home" | "Programma" | "RSVP" | "Informatie" | "Cadeautips" | "Fotos" | "Ceremoniemeesters" | "OnsVerhaal"
 type Style = "roze" | "ivoor" | "zand" | "earthy"
 type Viewport = "desktop" | "mobiel"
 type Align = "left" | "center" | "right"
@@ -213,17 +213,17 @@ const STYLE_CONFIG = {
 } as const
 
 const PAGES: PageConfig[] = [
-  { id: "home",               label: "Home",               toggleable: false },
-  { id: "onsverhaal",         label: "Ons Verhaal",        toggleable: true  },
-  { id: "programma",          label: "Programma",          toggleable: true  },
-  { id: "praktisch",          label: "Informatie",         toggleable: true  },
-  { id: "wishlist",           label: "Cadeautips",         toggleable: true  },
-  { id: "ceremoniemeesters",  label: "Ceremoniemeesters",  toggleable: true  },
-  { id: "rsvp",               label: "RSVP",               toggleable: false },
-  { id: "fotos",              label: "Foto's",             toggleable: true  },
+  { id: "Home",               label: "Home",               toggleable: false },
+  { id: "OnsVerhaal",         label: "Ons Verhaal",        toggleable: true  },
+  { id: "Programma",          label: "Programma",          toggleable: true  },
+  { id: "Informatie",          label: "Informatie",         toggleable: true  },
+  { id: "Cadeautips",           label: "Cadeautips",         toggleable: true  },
+  { id: "Ceremoniemeesters",  label: "Ceremoniemeesters",  toggleable: true  },
+  { id: "RSVP",               label: "RSVP",               toggleable: false },
+  { id: "Fotos",              label: "Foto's",             toggleable: true  },
 ]
 
-const CONTROLS_PAGES = new Set<PageId>(["home", "ceremoniemeesters", "programma", "rsvp", "onsverhaal", "praktisch", "wishlist"])
+const CONTROLS_PAGES = new Set<PageId>(["Home", "Ceremoniemeesters", "Programma", "RSVP", "OnsVerhaal", "Informatie", "Cadeautips"])
 
 const TYPE_LABEL: Record<EventType, string> = {
   bruiloft: "Bruiloft", verjaardag: "Verjaardag", evenement: "Evenement",
@@ -243,9 +243,9 @@ export default function BouwenPage() {
   const [storyImageError, setStoryImageError] = useState<string | null>(null)
   const [draft, setDraft] = useState<Draft | null>(null)
   const [active, setActive] = useState<Record<PageId, boolean>>({
-    home: true, programma: true, rsvp: true, praktisch: false, wishlist: false, fotos: false, ceremoniemeesters: false, onsverhaal: false,
+    Home: true, Programma: true, RSVP: true, Informatie: false, Cadeautips: false, Fotos: false, Ceremoniemeesters: false, OnsVerhaal: false,
   })
-  const [previewPage, setPreviewPage] = useState<PageId>("home")
+  const [previewPage, setPreviewPage] = useState<PageId>("Home")
   const [editingPage, setEditingPage] = useState<PageId | null>(null)
   const [content, setContent] = useState<ContentMap>({})
   const [style, setStyle] = useState<Style>("zand")
@@ -407,7 +407,7 @@ export default function BouwenPage() {
       const url = await uploadToStorage(file, "hero-images")
       URL.revokeObjectURL(blobUrl)
       setStoryImageBlob(null)
-      updateContent("onsverhaal", { ...(content.onsverhaal ?? {}), image_url: url })
+      updateContent("OnsVerhaal", { ...(content.OnsVerhaal ?? {}), image_url: url })
     } catch (err) {
       console.error("[story] upload mislukt:", err)
       setStoryImageError("Upload mislukt — probeer opnieuw.")
@@ -452,13 +452,13 @@ export default function BouwenPage() {
 
     const mergedContent: ContentMap = {
       ...content,
-      home: {
-        ...(content.home ?? {}),
+      Home: {
+        ...(content.Home ?? {}),
         title: homeContent.title,
         body: homeContent.body,
         align: homeContent.align,
       },
-      programma: { ...(content.programma ?? {}) },
+      Programma: { ...(content.Programma ?? {}) },
     }
 
     const payload = {
@@ -570,17 +570,17 @@ export default function BouwenPage() {
   const safeNavTitle = navTitle.replace(/\n/g, " ")
   const slugPreview = draft?.slug || "jouwbruiloft"
 
-  const mastersForPreview = ((content.ceremoniemeesters?.masters as MasterPerson[] | undefined) ?? [])
+  const mastersForPreview = ((content.Ceremoniemeesters?.masters as MasterPerson[] | undefined) ?? [])
     .filter(m => m.naam || m.foto_url)
     .map(m => ({ id: m.id ?? "", naam: m.naam ?? "", telefoon: m.telefoon ?? "", email: m.email ?? "", foto_url: m.foto_url ?? null }))
 
-  const programmaItems = (content.programma?.items as ProgrammaItem[]) || []
+  const programmaItems = (content.Programma?.items as ProgrammaItem[]) || []
   const programmaItemsSorted = programmaItems.slice().sort((a, b) => a.time.localeCompare(b.time))
   const programmaItemsForPreview = programmaItemsSorted
-  const rawLayout = (content.programma?.layout as string) || "centered"
+  const rawLayout = (content.Programma?.layout as string) || "centered"
   const programLayout = (rawLayout === "bento" ? "centered" : rawLayout) as "centered" | "timeline"
-  const praktischTiles = content.praktisch?.items as PraktischTile[] | undefined
-  const wishlistItems = content.wishlist?.items as WishlistItem[] | undefined
+  const praktischTiles = content.Informatie?.items as PraktischTile[] | undefined
+  const wishlistItems = content.Cadeautips?.items as WishlistItem[] | undefined
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 font-sans antialiased overflow-hidden">
@@ -899,7 +899,7 @@ export default function BouwenPage() {
                 </div>
 
                 {/* ── Home controls ── */}
-                {previewPage === "home" && (<>
+                {previewPage === "Home" && (<>
                   <div>
                     <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Event</p>
                     <div className="flex flex-col gap-3">
@@ -1140,19 +1140,19 @@ export default function BouwenPage() {
                 </>)}
 
                 {/* ── Ceremoniemeesters controls ── */}
-                {previewPage === "ceremoniemeesters" && (
+                {previewPage === "Ceremoniemeesters" && (
                   <div className="flex flex-col gap-4">
                     <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Ceremoniemeesters</p>
                     <MastersEditor
-                      masters={(content.ceremoniemeesters?.masters as MasterPerson[] | undefined) ?? []}
-                      onChange={(masters) => updateContent("ceremoniemeesters", { ...(content.ceremoniemeesters ?? {}), masters })}
+                      masters={(content.Ceremoniemeesters?.masters as MasterPerson[] | undefined) ?? []}
+                      onChange={(masters) => updateContent("Ceremoniemeesters", { ...(content.Ceremoniemeesters ?? {}), masters })}
                     />
                     <div className="flex flex-col gap-1.5">
                       <label className="text-xs font-semibold text-gray-500">Vrije tekst onderaan</label>
                       <textarea
                         rows={4}
-                        value={typeof content.ceremoniemeesters?.text === "string" ? content.ceremoniemeesters.text : ""}
-                        onChange={(e) => updateContent("ceremoniemeesters", { ...(content.ceremoniemeesters ?? {}), text: e.target.value })}
+                        value={typeof content.Ceremoniemeesters?.text === "string" ? content.Ceremoniemeesters.text : ""}
+                        onChange={(e) => updateContent("Ceremoniemeesters", { ...(content.Ceremoniemeesters ?? {}), text: e.target.value })}
                         placeholder="Optionele tekst onderaan de pagina..."
                         className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none leading-relaxed"
                       />
@@ -1161,14 +1161,14 @@ export default function BouwenPage() {
                 )}
 
                 {/* ── Programma controls ── */}
-                {previewPage === "programma" && (
+                {previewPage === "Programma" && (
                   <div>
                     <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Weergave</p>
                     <div className="flex rounded-xl border border-gray-200 overflow-hidden mb-5">
                       {(["timeline", "centered"] as const).map((opt) => (
                         <button
                           key={opt}
-                          onClick={() => updateContent("programma", { items: programmaItems, layout: opt })}
+                          onClick={() => updateContent("Programma", { items: programmaItems, layout: opt })}
                           className={`flex-1 py-2 text-xs font-semibold transition-colors ${
                             programLayout === opt ? "bg-rose-500 text-white" : "text-gray-500 hover:bg-gray-50"
                           }`}
@@ -1188,7 +1188,7 @@ export default function BouwenPage() {
                               onChange={(e) => {
                                 const updated = [...programmaItems]
                                 updated[i] = { ...updated[i], time: e.target.value }
-                                updateContent("programma", { items: updated, layout: programLayout })
+                                updateContent("Programma", { items: updated, layout: programLayout })
                               }}
                               className="w-24 rounded-lg border border-gray-200 px-2 py-1.5 text-xs font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400"
                             />
@@ -1207,7 +1207,7 @@ export default function BouwenPage() {
                             <button
                               onClick={() => {
                                 const updated = programmaItems.filter((_, j) => j !== i)
-                                updateContent("programma", { items: updated, layout: programLayout })
+                                updateContent("Programma", { items: updated, layout: programLayout })
                               }}
                               className="text-gray-300 hover:text-red-500 transition-colors p-1"
                               title="Verwijderen"
@@ -1225,7 +1225,7 @@ export default function BouwenPage() {
                                   onClick={() => {
                                     const updated = [...programmaItems]
                                     updated[i] = { ...updated[i], iconId: icon.id }
-                                    updateContent("programma", { items: updated, layout: programLayout })
+                                    updateContent("Programma", { items: updated, layout: programLayout })
                                     setOpenIconPickerIdx(null)
                                   }}
                                   className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
@@ -1249,7 +1249,7 @@ export default function BouwenPage() {
                             onChange={(e) => {
                               const updated = [...programmaItems]
                               updated[i] = { ...updated[i], title: e.target.value }
-                              updateContent("programma", { items: updated, layout: programLayout })
+                              updateContent("Programma", { items: updated, layout: programLayout })
                             }}
                             placeholder="Titel..."
                             className="rounded-lg border border-gray-200 px-2 py-1.5 text-sm font-semibold text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400"
@@ -1260,7 +1260,7 @@ export default function BouwenPage() {
                             onChange={(e) => {
                               const updated = [...programmaItems]
                               updated[i] = { ...updated[i], description: e.target.value }
-                              updateContent("programma", { items: updated, layout: programLayout })
+                              updateContent("Programma", { items: updated, layout: programLayout })
                             }}
                             placeholder="Beschrijving..."
                             className="rounded-lg border border-gray-200 px-2 py-1.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none"
@@ -1270,7 +1270,7 @@ export default function BouwenPage() {
                       <button
                         onClick={() => {
                           const updated = [...programmaItems, { id: crypto.randomUUID(), time: "", title: "", description: "", iconId: "heart" }]
-                          updateContent("programma", { items: updated, layout: programLayout })
+                          updateContent("Programma", { items: updated, layout: programLayout })
                         }}
                         className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-emerald-200 rounded-xl py-3 text-emerald-600 hover:border-emerald-300 hover:bg-emerald-50 transition-colors mt-1"
                       >
@@ -1284,15 +1284,15 @@ export default function BouwenPage() {
                 )}
 
                 {/* ── RSVP controls ── */}
-                {previewPage === "rsvp" && (
+                {previewPage === "RSVP" && (
                   <div>
                     <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Introductietekst</p>
                     <label className="flex flex-col gap-1.5">
                       <span className="text-xs font-semibold text-gray-600">Tekst boven het formulier</span>
                       <textarea
                         rows={4}
-                        value={(content.rsvp?.text as string) ?? ""}
-                        onChange={(e) => updateContent("rsvp", { ...(content.rsvp ?? {}), text: e.target.value })}
+                        value={(content.RSVP?.text as string) ?? ""}
+                        onChange={(e) => updateContent("RSVP", { ...(content.RSVP ?? {}), text: e.target.value })}
                         placeholder="Laat weten of je erbij bent — vul het formulier in."
                         className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
                       />
@@ -1301,7 +1301,7 @@ export default function BouwenPage() {
                 )}
 
                 {/* ── Ons Verhaal controls ── */}
-                {previewPage === "onsverhaal" && (
+                {previewPage === "OnsVerhaal" && (
                   <div className="flex flex-col gap-5">
                     <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Ons Verhaal</p>
 
@@ -1310,8 +1310,8 @@ export default function BouwenPage() {
                       <span className="text-xs font-semibold text-gray-600">Titel</span>
                       <input
                         type="text"
-                        value={(content.onsverhaal?.title as string) ?? "Ons Verhaal"}
-                        onChange={(e) => updateContent("onsverhaal", { ...(content.onsverhaal ?? {}), title: e.target.value })}
+                        value={(content.OnsVerhaal?.title as string) ?? "Ons Verhaal"}
+                        onChange={(e) => updateContent("OnsVerhaal", { ...(content.OnsVerhaal ?? {}), title: e.target.value })}
                         placeholder="Ons Verhaal"
                         className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
                       />
@@ -1322,8 +1322,8 @@ export default function BouwenPage() {
                       <span className="text-xs font-semibold text-gray-600">Verhaal</span>
                       <textarea
                         rows={6}
-                        value={(content.onsverhaal?.text as string) ?? ""}
-                        onChange={(e) => updateContent("onsverhaal", { ...(content.onsverhaal ?? {}), text: e.target.value })}
+                        value={(content.OnsVerhaal?.text as string) ?? ""}
+                        onChange={(e) => updateContent("OnsVerhaal", { ...(content.OnsVerhaal ?? {}), text: e.target.value })}
                         placeholder="Vertel hier jullie verhaal..."
                         className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
                       />
@@ -1333,11 +1333,11 @@ export default function BouwenPage() {
                     <div>
                       <p className="text-xs font-semibold text-gray-600 mb-2">Foto</p>
                       {storyImageError && <p className="text-xs text-red-500 mb-2">{storyImageError}</p>}
-                      {(storyImageBlob ?? (content.onsverhaal?.image_url as string | null)) ? (
+                      {(storyImageBlob ?? (content.OnsVerhaal?.image_url as string | null)) ? (
                         <div className="flex flex-col gap-2">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
-                            src={(storyImageBlob ?? (content.onsverhaal?.image_url as string))!}
+                            src={(storyImageBlob ?? (content.OnsVerhaal?.image_url as string))!}
                             alt=""
                             className="w-full h-24 object-cover rounded-xl"
                           />
@@ -1355,7 +1355,7 @@ export default function BouwenPage() {
                               <button
                                 onClick={() => {
                                   setStoryImageBlob(null)
-                                  updateContent("onsverhaal", { ...(content.onsverhaal ?? {}), image_url: null })
+                                  updateContent("OnsVerhaal", { ...(content.OnsVerhaal ?? {}), image_url: null })
                                 }}
                                 className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors"
                               >
@@ -1385,23 +1385,23 @@ export default function BouwenPage() {
                 )}
 
                 {/* ── Praktisch controls ── */}
-                {previewPage === "praktisch" && (
+                {previewPage === "Informatie" && (
                   <div className="flex flex-col gap-4">
                     <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Informatie</p>
                     <PraktischEditor
                       tiles={praktischTiles ?? DEFAULT_PRAKTISCH_TILES}
-                      onChange={(tiles) => updateContent("praktisch", { ...(content.praktisch ?? {}), items: tiles })}
+                      onChange={(tiles) => updateContent("Informatie", { ...(content.Informatie ?? {}), items: tiles })}
                     />
                   </div>
                 )}
 
                 {/* ── Wishlist controls ── */}
-                {previewPage === "wishlist" && (
+                {previewPage === "Cadeautips" && (
                   <div className="flex flex-col gap-4">
                     <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Cadeautips</p>
                     <WishlistEditor
                       items={wishlistItems ?? DEFAULT_WISHLIST_ITEMS}
-                      onChange={(items) => updateContent("wishlist", { ...(content.wishlist ?? {}), items })}
+                      onChange={(items) => updateContent("Cadeautips", { ...(content.Cadeautips ?? {}), items })}
                     />
                   </div>
                 )}
@@ -1409,9 +1409,9 @@ export default function BouwenPage() {
                 <div className="border-t border-gray-100 pt-2">
                   <button
                     onClick={() => {
-                      if (previewPage === "programma") {
+                      if (previewPage === "Programma") {
                         const sorted = [...programmaItems].sort((a, b) => a.time.localeCompare(b.time))
-                        updateContent("programma", { items: sorted, layout: programLayout })
+                        updateContent("Programma", { items: sorted, layout: programLayout })
                       }
                       setIsEditingControls(false)
                     }}
@@ -1468,7 +1468,7 @@ export default function BouwenPage() {
                         activeType={previewPage}
                         onNavigate={(type) => { setPreviewPage(type as PageId); setIsEditingControls(false) }}
                       />
-                      {previewPage === "home" && (
+                      {previewPage === "Home" && (
                         <EventHomePreview
                           typeLabel={typeLabel}
                           title={eventName}
@@ -1493,27 +1493,27 @@ export default function BouwenPage() {
                           onNavigate={(id) => setPreviewPage(id as PageId)}
                         />
                       )}
-                      {previewPage === "ceremoniemeesters" && (
+                      {previewPage === "Ceremoniemeesters" && (
                         <EventMastersPreview
                           masters={mastersForPreview}
                           sc={sc}
-                          text={typeof content.ceremoniemeesters?.text === "string" ? content.ceremoniemeesters.text : undefined}
+                          text={typeof content.Ceremoniemeesters?.text === "string" ? content.Ceremoniemeesters.text : undefined}
                         />
                       )}
-                      {previewPage === "onsverhaal" && (
+                      {previewPage === "OnsVerhaal" && (
                         <StoryPreview
-                          title={(content.onsverhaal?.title as string) ?? "Ons Verhaal"}
-                          text={(content.onsverhaal?.text as string) ?? null}
-                          imageUrl={storyImageBlob ?? ((content.onsverhaal?.image_url as string) || null)}
-                          imagePosX={(content.onsverhaal?.image_pos_x as number) ?? 50}
-                          imagePosY={(content.onsverhaal?.image_pos_y as number) ?? 50}
+                          title={(content.OnsVerhaal?.title as string) ?? "Ons Verhaal"}
+                          text={(content.OnsVerhaal?.text as string) ?? null}
+                          imageUrl={storyImageBlob ?? ((content.OnsVerhaal?.image_url as string) || null)}
+                          imagePosX={(content.OnsVerhaal?.image_pos_x as number) ?? 50}
+                          imagePosY={(content.OnsVerhaal?.image_pos_y as number) ?? 50}
                           showOverlay={storyOverlay}
                           editable={true}
-                          onPositionChange={(x, y) => updateContent("onsverhaal", { ...(content.onsverhaal ?? {}), image_pos_x: x, image_pos_y: y })}
+                          onPositionChange={(x, y) => updateContent("OnsVerhaal", { ...(content.OnsVerhaal ?? {}), image_pos_x: x, image_pos_y: y })}
                           sc={sc}
                         />
                       )}
-                      {previewPage === "programma" && (
+                      {previewPage === "Programma" && (
                         <EventProgramPreview
                           items={programmaItemsForPreview}
                           sc={sc}
@@ -1524,16 +1524,16 @@ export default function BouwenPage() {
                               const itId = it.id ?? `${it.time}::${it.description}`
                               return itId === itemId ? { ...it, imagePosX: x } : it
                             })
-                            updateContent("programma", { items: updated, layout: programLayout })
+                            updateContent("Programma", { items: updated, layout: programLayout })
                           }}
                         />
                       )}
-                      {previewPage === "rsvp" && (
+                      {previewPage === "RSVP" && (
                         <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
                           <h2 className="text-2xl font-extrabold mb-6" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>RSVP</h2>
                           {/* max-w-lg: zelfde breedte als de echte form */}
                           <div className="flex flex-col gap-6 max-w-lg">
-                            <p className="text-sm" style={{ color: sc.bodyText }}>{(content.rsvp?.text as string) || "Laat weten of je erbij bent — vul het formulier in."}</p>
+                            <p className="text-sm" style={{ color: sc.bodyText }}>{(content.RSVP?.text as string) || "Laat weten of je erbij bent — vul het formulier in."}</p>
                             {/* Aantal personen — buiten de inner card */}
                             <div>
                               <div className="text-sm font-semibold mb-3" style={{ color: "#374151" }}>Met hoeveel personen komen jullie?</div>
@@ -1592,13 +1592,13 @@ export default function BouwenPage() {
                           </div>
                         </div>
                       )}
-                      {previewPage === "praktisch" && (
+                      {previewPage === "Informatie" && (
                         <PraktischPreview tiles={praktischTiles ?? []} sc={sc} />
                       )}
-                      {previewPage === "wishlist" && (
+                      {previewPage === "Cadeautips" && (
                         <WishlistPreview items={wishlistItems ?? []} sc={sc} />
                       )}
-                      {previewPage === "fotos" && (
+                      {previewPage === "Fotos" && (
                         <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
                           <h2 className="text-lg font-extrabold mb-6" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>Foto&apos;s</h2>
                           <div className="grid grid-cols-3 gap-2">
@@ -1855,7 +1855,7 @@ function Editor({
   content: Record<string, unknown>
   onChange: (val: Record<string, unknown>) => void
 }) {
-  if (pageId === "home") {
+  if (pageId === "Home") {
     return (
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-2">Welkomsttekst</label>
@@ -1870,7 +1870,7 @@ function Editor({
     )
   }
 
-  if (pageId === "programma") {
+  if (pageId === "Programma") {
     const items = (content.items as { time: string; description: string }[]) ?? []
     return <ProgrammaEditor items={items} onChange={(items) => onChange({ ...content, items })} />
   }

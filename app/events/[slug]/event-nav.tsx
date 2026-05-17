@@ -41,12 +41,12 @@ export default function EventNav({
 
   function isActive(type: string) {
     if (activeType !== undefined) return type === activeType
-    if (type === "home") return pathname === homeHref || pathname === basePath
+    if (type === "Home") return pathname === homeHref || pathname === basePath
     return pathname === `${basePath}/${type}`
   }
 
   function pageHref(type: string) {
-    return type === "home" ? homeHref : `${basePath}/${type}`
+    return type === "Home" ? homeHref : `${basePath}/${type}`
   }
 
   const navStyle: React.CSSProperties = {
@@ -118,7 +118,7 @@ export default function EventNav({
         {/* Title — always left on mobile; centered only on stacked desktop */}
         <a
           href={homeHref}
-          onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("home") } : undefined}
+          onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("Home") } : undefined}
           className={`flex-shrink-0 ${navLayout === "stacked" ? "@md:w-full @md:text-center" : ""}`}
           style={titleStyle}
         >
