@@ -91,6 +91,8 @@ export async function POST(request: Request) {
     nav_title?: string
     style?: string
     hero_image_url?: string | null
+    hero_image_pos_x?: number
+    hero_image_pos_y?: number
     nav_layout?: string
     use_frame?: boolean
     frame_style?: string
@@ -117,6 +119,8 @@ export async function POST(request: Request) {
     nav_title,
     style = "roze",
     hero_image_url = null,
+    hero_image_pos_x = 50,
+    hero_image_pos_y = 50,
     nav_layout = "split",
     use_frame = false,
     frame_style = null,
@@ -152,7 +156,7 @@ export async function POST(request: Request) {
       ))
       const { error: updateErr } = await db
         .from("events")
-        .update({ type, title: naam, datum, locatie, style, hero_image_url, nav_layout, nav_title: nav_title ?? naam, use_frame, frame_style, initials, frame_names, frame_location })
+        .update({ type, title: naam, datum, locatie, style, hero_image_url, hero_image_pos_x, hero_image_pos_y, nav_layout, nav_title: nav_title ?? naam, use_frame, frame_style, initials, frame_names, frame_location })
         .eq("id", event_id)
 
       if (updateErr) {
@@ -200,6 +204,8 @@ export async function POST(request: Request) {
       status: "draft",
       style,
       hero_image_url,
+      hero_image_pos_x,
+      hero_image_pos_y,
       nav_layout,
       use_frame,
       frame_style,
