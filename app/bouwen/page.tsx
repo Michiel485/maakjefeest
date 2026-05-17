@@ -283,6 +283,16 @@ export default function BouwenPage() {
       if (saved) setContent(JSON.parse(saved))
     } catch {}
 
+    try {
+      const savedHero = localStorage.getItem("sayingyes_hero_image_url")
+      if (savedHero) setHeroImageUrl(savedHero)
+    } catch {}
+
+    try {
+      const savedActive = localStorage.getItem("sayingyes_active")
+      if (savedActive) setActive(JSON.parse(savedActive))
+    } catch {}
+
     const savedId = localStorage.getItem("sayingyes_saved_event_id")
     if (savedId) setSavedEventId(savedId)
 
@@ -369,6 +379,7 @@ export default function BouwenPage() {
       console.log("[hero] geüpload naar Storage:", url)
       URL.revokeObjectURL(blobUrl)
       setHeroImageUrl(url)
+      localStorage.setItem("sayingyes_hero_image_url", url)
     } catch (err) {
       console.error("[hero] upload mislukt:", err)
       setHeroImageError("Upload mislukt — controleer je verbinding en probeer opnieuw.")
@@ -410,6 +421,7 @@ export default function BouwenPage() {
   function toggle(id: PageId) {
     setActive((prev) => {
       const next = { ...prev, [id]: !prev[id] }
+      localStorage.setItem("sayingyes_active", JSON.stringify(next))
       if (!next[previewPage]) {
         const fallback = PAGES.find((p) => next[p.id])
         if (fallback) setPreviewPage(fallback.id)
@@ -433,8 +445,10 @@ export default function BouwenPage() {
     const activePages = PAGES.filter((p) => active[p.id]).map((p) => p.id)
 
     // Hero: gebruik de permanente URL; blob-URL betekent upload nog bezig of mislukt
+    const persistedHero = typeof window !== "undefined" ? localStorage.getItem("sayingyes_hero_image_url") : null
     const heroUrl: string | null =
-      heroImageUrl && !heroImageUrl.startsWith("blob:") ? heroImageUrl : null
+      (heroImageUrl && !heroImageUrl.startsWith("blob:") ? heroImageUrl : null)
+      ?? (persistedHero && !persistedHero.startsWith("blob:") ? persistedHero : null)
 
     const mergedContent: ContentMap = {
       ...content,
@@ -951,7 +965,7 @@ export default function BouwenPage() {
                             </button>
                           </div>
                           <button
-                            onClick={() => { setHeroImageUrl(null) }}
+                            onClick={() => { setHeroImageUrl(null); localStorage.removeItem("sayingyes_hero_image_url") }}
                             className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors"
                           >
                             Verwijderen
