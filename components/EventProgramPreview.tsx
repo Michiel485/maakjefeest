@@ -233,10 +233,12 @@ interface Props {
   items: ProgramItem[]
   sc: SC
   programLayout?: ProgramLayout
+  builderMode?: boolean
+  onImagePositionChange?: (id: string, x: number, y: number) => void
 }
 
 export default function EventProgramPreview({
-  items, sc, programLayout = "centered",
+  items, sc, programLayout = "centered", builderMode, onImagePositionChange,
 }: Props) {
   const sorted = items.slice().sort((a, b) => a.time.localeCompare(b.time))
   const list = sorted.length > 0 ? sorted : PLACEHOLDER_ITEMS
