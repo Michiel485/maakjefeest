@@ -46,14 +46,15 @@ export const PROGRAM_ICONS: { id: string; label: string }[] = [
   { id: "taxi",       label: "Taxi"      },
 ]
 
-export function ProgramIcon({ iconId = "heart", size, strokeWidth, fixedHeight }: {
+export function ProgramIcon({ iconId = "heart", size, strokeWidth, fixedHeight, className }: {
   iconId?: string
-  size: number
+  size?: number
   strokeWidth: number
   fixedHeight?: boolean
+  className?: string
 }) {
   const p = {
-    width: fixedHeight ? undefined : size,
+    width: (fixedHeight || size === undefined) ? undefined : size,
     height: size,
     viewBox: "0 0 24 24",
     fill: "none",
@@ -61,6 +62,7 @@ export function ProgramIcon({ iconId = "heart", size, strokeWidth, fixedHeight }
     strokeWidth,
     strokeLinecap: "round" as const,
     strokeLinejoin: "round" as const,
+    className,
   }
 
   switch (iconId) {
@@ -214,15 +216,6 @@ export function ProgramIcon({ iconId = "heart", size, strokeWidth, fixedHeight }
 
 // ── Drag handle overlay ────────────────────────────────────────────────────
 
-function DragHandle({ size = 20 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
-      stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
-      style={{ filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.7))", opacity: 0.85 }}>
-      <path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M12 2v20M2 12h20" />
-    </svg>
-  )
-}
 
 // ── Placeholder ────────────────────────────────────────────────────────────
 
@@ -240,56 +233,38 @@ interface Props {
   items: ProgramItem[]
   sc: SC
   programLayout?: ProgramLayout
-  builderMode?: boolean
-  onImagePositionChange?: (itemId: string, x: number) => void
 }
 
 export default function EventProgramPreview({
-  items, sc, programLayout = "centered", builderMode, onImagePositionChange,
+  items, sc, programLayout = "centered",
 }: Props) {
   const sorted = items.slice().sort((a, b) => a.time.localeCompare(b.time))
   const list = sorted.length > 0 ? sorted : PLACEHOLDER_ITEMS
   const faded = items.length === 0 ? 0.3 : 1
 
-  function startDrag(e: React.MouseEvent, item: ProgramItem) {
-    if (!builderMode || !onImagePositionChange) return
-    e.preventDefault()
-    e.stopPropagation()
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-    const itemId = item.id ?? `${item.time}::${item.description}`
-    const startX = e.clientX
-    const startPosX = item.imagePosX ?? 50
-    const w = rect.width
-
-    function onMove(me: MouseEvent) {
-      if (!onImagePositionChange) return
-      // Pan: drag right → image slides right → reveal left side → posX decreases
-      const newX = Math.max(0, Math.min(100, startPosX - ((me.clientX - startX) / w) * 150))
-      onImagePositionChange(itemId, newX)
-    }
-    function onUp() {
-      window.removeEventListener("mousemove", onMove)
-      window.removeEventListener("mouseup", onUp)
-    }
-    window.addEventListener("mousemove", onMove)
-    window.addEventListener("mouseup", onUp)
-  }
-
   return (
-    <div style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
+    <div className="@container" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
       <div style={{ padding: "36px 32px 52px" }}>
-        <h2 style={{ fontSize: "1.25rem", fontWeight: 800, color: sc.headingColor, margin: "0 0 28px" }}>
+        <h2 style={{ fontSize: "2.25rem", fontWeight: sc.nameFont ? 400 : 800, color: sc.headingColor, fontFamily: sc.nameFont || sc.fontFamily, textAlign: "center", margin: "0 0 28px" }}>
           Programma
         </h2>
 
         {/* ── Centered — strict 3-column grid, text always middle ─────────── */}
         {programLayout === "centered" && (
           <div>
-            {list.map((item, i) => {
-              const isOdd = i % 2 === 0   // true = icon left, photo right
-              const posX = item.imagePosX ?? 50
-
-              const iconTimeCell = (
+            {list.map((item, i) => (
+              <div
+                key={item.id ?? i}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "110px 1fr",
+                  alignItems: "center",
+                  gap: 24,
+                  padding: "28px 0",
+                  borderBottom: i < list.length - 1 ? `1px dashed ${sc.accent}35` : "none",
+                  opacity: faded,
+                }}
+              >
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
                   <span style={{ color: sc.accent }}>
                     <ProgramIcon iconId={item.iconId} size={80} strokeWidth={1.5} />
@@ -298,132 +273,63 @@ export default function EventProgramPreview({
                     {item.time}
                   </span>
                 </div>
-              )
-
-              const textCell = (
-                <div style={{ textAlign: isOdd ? "left" : "right" }}>
+                <div>
                   {item.title && (
                     <p style={{ fontSize: "1.25rem", fontWeight: 800, color: sc.headingColor, margin: "0 0 6px", lineHeight: 1.2 }}>
                       {item.title}
                     </p>
                   )}
                   {item.description && (
-                    <p style={{ fontSize: "0.9375rem", fontWeight: 400, color: sc.bodyText, margin: 0, lineHeight: 1.6 }}>
+                    <p className="min-w-0 break-words" style={{ fontSize: "0.9375rem", fontWeight: 400, color: sc.bodyText, margin: 0, lineHeight: 1.6 }}>
                       {item.description}
                     </p>
                   )}
                 </div>
-              )
-
-              const photoCell = (
-                <div style={{ width: 128, height: 128, borderRadius: "50%", overflow: "hidden", position: "relative", flexShrink: 0 }}>
-                  {item.image_url && (
-                    <>
-                      <div
-                        onMouseDown={(e) => startDrag(e, item)}
-                        style={{ width: "100%", height: "100%", cursor: builderMode ? "grab" : undefined }}
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={item.image_url} alt=""
-                          style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: `${posX}% 50%`, display: "block", pointerEvents: "none" }}
-                        />
-                      </div>
-                      {builderMode && (
-                        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-                          <DragHandle size={24} />
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              )
-
-              return (
-                <div
-                  key={item.id ?? i}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "110px 1fr 128px",
-                    alignItems: "center",
-                    gap: 24,
-                    padding: "28px 0",
-                    borderBottom: i < list.length - 1 ? `1px dashed ${sc.accent}35` : "none",
-                    opacity: faded,
-                  }}
-                >
-                  {isOdd
-                    ? <>{iconTimeCell}{textCell}{photoCell}</>
-                    : <>{photoCell}{textCell}{iconTimeCell}</>
-                  }
-                </div>
-              )
-            })}
+              </div>
+            ))}
           </div>
         )}
 
         {/* ── Timeline ──────────────────────────────────────────────────── */}
         {programLayout === "timeline" && (
-          <div style={{ position: "relative", paddingLeft: 148 }}>
+          <div className="relative @md:pl-[148px]">
             {list.map((item, i) => {
-              const posX = item.imagePosX ?? 50
+              const isLast = i === list.length - 1
               return (
-                <div key={item.id ?? i}>
-                  {/* ── Item row ── */}
-                  <div style={{ position: "relative", opacity: faded }}>
-                    <div style={{
-                      position: "absolute", left: -148, top: 0,
-                      width: 128, height: 128, borderRadius: "50%",
-                      backgroundColor: sc.navBg, border: `3px solid ${sc.accent}55`,
-                      display: "flex", alignItems: "center", justifyContent: "center", color: sc.accent,
-                    }}>
-                      <ProgramIcon iconId={item.iconId} size={80} strokeWidth={1.5} />
-                    </div>
-                    <div style={{ paddingTop: 8, paddingBottom: 16, display: "flex", alignItems: "flex-start", gap: 20 }}>
-                      <div style={{ flex: 1 }}>
-                        <span style={{ fontSize: "1rem", fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" as const, color: sc.labelColor }}>
-                          {item.time}
-                        </span>
-                        {item.title && (
-                          <p style={{ fontSize: "1.125rem", fontWeight: 800, color: sc.headingColor, margin: "6px 0 4px", lineHeight: 1.3 }}>
-                            {item.title}
-                          </p>
-                        )}
-                        {item.description && (
-                          <p style={{ fontSize: "0.9375rem", fontWeight: 400, color: sc.bodyText, margin: item.title ? "0" : "7px 0 0", lineHeight: 1.4 }}>
-                            {item.description}
-                          </p>
-                        )}
-                      </div>
-                      {item.image_url && (
-                        <div
-                          onMouseDown={(e) => startDrag(e, item)}
-                          style={{
-                            width: 128, height: 128, borderRadius: "50%", overflow: "hidden", flexShrink: 0,
-                            position: "relative", cursor: builderMode ? "grab" : undefined,
-                          }}
-                        >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={item.image_url} alt=""
-                            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: `${posX}% 50%` }}
-                          />
-                          {builderMode && (
-                            <div style={{ position: "absolute", inset: 0, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                              <DragHandle size={22} />
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  {/* ── Fixed-height connector spacer between items ── */}
-                  {i < list.length - 1 && (
-                    <div style={{ position: "relative", height: 52, opacity: faded }}>
-                      <div style={{
-                        position: "absolute", left: -84, top: 0, bottom: 0,
-                        width: 3, borderRadius: 2, backgroundColor: `${sc.accent}35`,
-                      }} />
-                    </div>
+                <div
+                  key={item.id ?? i}
+                  className={`relative pl-[68px] @md:pl-0 ${isLast ? "pb-0" : "pb-4 @md:pb-3"}`}
+                  style={{ opacity: faded }}
+                >
+                  {/* ── Connector line: mobile center = left-[34px] (6px+28px), desktop = @md:left-[-84px] ── */}
+                  {!isLast && (
+                    <div
+                      className="absolute left-[34px] top-7 bottom-[-16px] @md:left-[-84px] @md:top-16 @md:bottom-[-12px] w-[3px] rounded-sm z-0"
+                      style={{ backgroundColor: `${sc.accent}35` }}
+                    />
                   )}
+                  {/* ── Icon circle ── */}
+                  <div
+                    className="absolute left-[6px] top-0 w-14 h-14 @md:left-[-148px] @md:w-32 @md:h-32 rounded-full flex items-center justify-center z-[2]"
+                    style={{ backgroundColor: sc.navBg, border: `4px solid ${sc.accent}55`, color: sc.accent }}
+                  >
+                    <ProgramIcon iconId={item.iconId} strokeWidth={1.5} className="w-8 h-8 @md:w-20 @md:h-20" />
+                  </div>
+                  {/* ── Content ── */}
+                  <div className="relative z-[1] pt-1 min-w-0 @md:pt-4">
+                    <h3
+                      className="text-base font-extrabold leading-tight min-w-0 break-words @md:text-2xl mb-1 @md:mb-2"
+                    >
+                      <span style={{ color: sc.labelColor }} className="mr-2">{item.time}</span>
+                      {item.title && <span style={{ color: sc.headingColor }}>{item.title}</span>}
+                    </h3>
+                    <p
+                      className="text-sm font-normal leading-relaxed min-w-0 break-words @md:text-lg @md:min-h-[6rem]"
+                      style={{ color: sc.bodyText }}
+                    >
+                      {item.description ?? ""}
+                    </p>
+                  </div>
                 </div>
               )
             })}

@@ -16,9 +16,9 @@ const DEFAULT_PROGRAMMA = {
 
 const DEFAULT_PRAKTISCH = {
   items: [
-    { label: "Dresscode",    value: "Festive / Smart Casual" },
-    { label: "Parkeren",     value: "Gratis parkeren aanwezig op het terrein" },
-    { label: "Overnachten",  value: "Zie de link op de website voor hotelinfo" },
+    { id: "1", iconId: "dresscode",  title: "Dresscode",      text: "Wij zien jullie graag in feestelijke kleding. Voel je vooral comfortabel, maar laat de spijkerbroek liever thuis!" },
+    { id: "2", iconId: "cutlery",    title: "Dieetwensen",    text: "Heb je speciale dieetwensen of allergieën? Laat het onze ceremoniemeester uiterlijk 4 weken van tevoren weten, dan houdt de catering daar graag rekening mee." },
+    { id: "3", iconId: "geen_smart", title: "Geen telefoons", text: "Wij willen onze ceremonie graag 'unplugged' beleven. Geniet in het moment met ons mee en laat de telefoons lekker in de tas zitten. Onze fotograaf legt alles vast!" },
   ],
 }
 
@@ -52,16 +52,6 @@ export default function AanmakenPage() {
 
   const [form, setForm] = useState({ naam1: "", naam2: "", datum: "", email: "", slug: "" })
 
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("sayingyes_draft")
-      if (saved) {
-        const { naam1 = "", naam2 = "", datum = "", email = "", slug = "" } = JSON.parse(saved)
-        setForm({ naam1, naam2, datum, email, slug })
-      }
-    } catch {}
-  }, [])
-
   const [slugStatus, setSlugStatus] = useState<SlugStatus>("idle")
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -82,7 +72,14 @@ export default function AanmakenPage() {
   }
 
   useEffect(() => {
-    if (form.slug) scheduleSlugCheck(form.slug)
+    try {
+      const saved = localStorage.getItem("sayingyes_draft")
+      if (saved) {
+        const { naam1 = "", naam2 = "", datum = "", email = "", slug = "" } = JSON.parse(saved)
+        setForm({ naam1, naam2, datum, email, slug })
+        if (slug) scheduleSlugCheck(sanitizeSlug(slug))
+      }
+    } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -92,7 +89,7 @@ export default function AanmakenPage() {
     scheduleSlugCheck(sanitizeSlug(formatted))
   }
 
-  function handleStart(e: React.FormEvent) {
+  function handleStart(e: React.SyntheticEvent) {
     e.preventDefault()
     const cleanSlug = sanitizeSlug(form.slug)
     if (!cleanSlug || slugStatus !== "available") return
@@ -106,7 +103,7 @@ export default function AanmakenPage() {
       naam1: form.naam1.trim(),
       naam2: form.naam2.trim(),
       slug: cleanSlug,
-      nav_title: eventTitle,
+      nav_title: frameNames,
       datum: form.datum,
       locatie: "Stadhuis Amersfoort",
       email: form.email,

@@ -4,6 +4,9 @@ import { getStyleConfig, type SC } from "@/lib/event-styles"
 import RsvpForm from "../rsvp-form"
 import EventMastersPreview from "@/components/EventMastersPreview"
 import EventProgramPreview from "@/components/EventProgramPreview"
+import StoryPreview from "@/components/StoryPreview"
+import PraktischPreview, { type PraktischTile } from "@/components/PraktischPreview"
+import WishlistPreview, { type WishlistItem } from "@/components/WishlistPreview"
 
 interface Page {
   id: string
@@ -41,6 +44,20 @@ export default async function EventSubPage({
 
   const sc = getStyleConfig(event.style)
 
+  if (page.type === "onsverhaal") {
+    const c = page.content ?? {}
+    return (
+      <StoryPreview
+        title={typeof c.title === "string" ? c.title : null}
+        text={typeof c.text === "string" ? c.text : null}
+        imageUrl={typeof c.image_url === "string" ? c.image_url : null}
+        imagePosX={typeof c.image_pos_x === "number" ? c.image_pos_x : 50}
+        imagePosY={typeof c.image_pos_y === "number" ? c.image_pos_y : 50}
+        sc={sc}
+      />
+    )
+  }
+
   if (page.type === "programma") {
     const items = Array.isArray(page.content?.items)
       ? (page.content.items as { id?: string; time: string; title?: string; description: string; iconId?: string; image_url?: string | null; imagePosX?: number }[])
@@ -48,6 +65,16 @@ export default async function EventSubPage({
     const rawLayout = (page.content?.layout as string) || "centered"
     const programLayout = (rawLayout === "bento" ? "centered" : rawLayout) as "centered" | "timeline"
     return <EventProgramPreview items={items} sc={sc} programLayout={programLayout} />
+  }
+
+  if (page.type === "praktisch") {
+    const tiles = Array.isArray(page.content?.items) ? (page.content.items as PraktischTile[]) : []
+    return <PraktischPreview tiles={tiles} sc={sc} />
+  }
+
+  if (page.type === "wishlist") {
+    const items = Array.isArray(page.content?.items) ? (page.content.items as WishlistItem[]) : []
+    return <WishlistPreview items={items} sc={sc} />
   }
 
   return (
@@ -77,45 +104,6 @@ function PageContent({ page, sc, eventId }: { page: Page; sc: SC; eventId: strin
     )
   }
 
-  if (page.type === "praktisch") {
-    const items = Array.isArray(c.items) ? (c.items as { label: string; value: string }[]) : []
-    if (items.length === 0) return <Placeholder sc={sc}>Praktische informatie wordt binnenkort toegevoegd.</Placeholder>
-    return (
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 }}>
-        {items.map((item, i) => (
-          <div key={i} style={{ borderRadius: 14, border: `1px solid ${sc.accent}20`, backgroundColor: `${sc.accent}06`, padding: 18 }}>
-            <p style={{ fontSize: "0.6875rem", fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 4, color: sc.labelColor }}>
-              {item.label}
-            </p>
-            <p style={{ fontWeight: 600, color: sc.headingColor, margin: 0, fontSize: "0.9375rem" }}>{item.value}</p>
-          </div>
-        ))}
-      </div>
-    )
-  }
-
-  if (page.type === "wishlist") {
-    const items = Array.isArray(c.items) ? (c.items as { name: string; url?: string; price?: string }[]) : []
-    if (items.length === 0) return <Placeholder sc={sc}>De wishlist wordt binnenkort toegevoegd.</Placeholder>
-    return (
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 }}>
-        {items.map((item, i) => (
-          <div key={i} style={{ borderRadius: 14, border: `1px solid ${sc.accent}20`, padding: 18, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-            <div>
-              <p style={{ fontWeight: 600, fontSize: "0.9375rem", color: sc.headingColor, margin: 0 }}>{item.name}</p>
-              {item.price && <p style={{ fontSize: "0.8125rem", color: sc.bodyText, margin: "3px 0 0" }}>{item.price}</p>}
-            </div>
-            {item.url && (
-              <a href={item.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.8125rem", fontWeight: 700, padding: "6px 14px", borderRadius: 8, border: `1px solid ${sc.accent}40`, color: sc.accent, textDecoration: "none", flexShrink: 0 }}>
-                Bekijk
-              </a>
-            )}
-          </div>
-        ))}
-      </div>
-    )
-  }
-
   if (page.type === "ceremoniemeesters") {
     const rawMasters = Array.isArray(c.masters) ? (c.masters as { naam?: string; telefoon?: string; email?: string; foto_url?: string | null }[]) : []
     const masters = rawMasters.map((m) => ({
@@ -124,7 +112,8 @@ function PageContent({ page, sc, eventId }: { page: Page; sc: SC; eventId: strin
       email: m.email ?? "",
       foto_url: m.foto_url ?? null,
     }))
-    return <EventMastersPreview masters={masters} sc={sc} />
+    const text = typeof c.text === "string" ? c.text : undefined
+    return <EventMastersPreview masters={masters} sc={sc} text={text} />
   }
 
   if (page.type === "fotos") {

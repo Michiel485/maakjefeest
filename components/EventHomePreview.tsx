@@ -112,12 +112,12 @@ export default function EventHomePreview({
   const safeZoneClass = isDiamond ? "w-[80%] mx-auto" : "w-[65%] mx-auto"
 
   return (
-    <>
+    <div className="@container">
       {/* ── Hero: only rendered when a photo is set ── */}
       {hasPhoto && (
         <section
           ref={heroRef}
-          className={`relative w-full h-[300px] md:h-[420px] overflow-hidden select-none ${
+          className={`relative w-full h-[300px] @md:h-[420px] overflow-hidden select-none ${
             editableHero ? heroDragging ? "cursor-grabbing" : "cursor-grab" : ""
           }`}
           onMouseDown={editableHero ? (e) => { e.preventDefault(); startHeroDrag(e.clientX, e.clientY) } : undefined}
@@ -149,19 +149,18 @@ export default function EventHomePreview({
               className="absolute inset-0"
               style={
                 sc.floral
-                  ? { background: "linear-gradient(to bottom, rgba(28,25,23,0.22) 0%, rgba(28,25,23,0.54) 100%)" }
-                  : { backgroundColor: sc.accent, opacity: 0.45 }
+                  ? { background: "linear-gradient(to bottom, rgba(28,25,23,0.12) 0%, rgba(28,25,23,0.44) 100%)" }
+                  : { backgroundColor: sc.accent, opacity: 0.35 }
               }
             />
           )}
 
           <div className="absolute inset-0 flex items-center justify-center px-8 text-center">
             <h1
-              className="leading-tight whitespace-pre-wrap"
+              className={`leading-tight whitespace-pre-wrap text-4xl ${sc.nameFont ? "@md:text-[4.5rem]" : "@md:text-6xl"}`}
               style={{
                 color: "#fff",
                 fontFamily: nameFont,
-                fontSize: sc.nameFont ? "3.5rem" : "3rem",
                 fontWeight: sc.nameFont ? 400 : 800,
                 filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.75))",
               }}
@@ -334,6 +333,6 @@ export default function EventHomePreview({
           )}
         </div>
       )}
-    </>
+    </div>
   )
 }

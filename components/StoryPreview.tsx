@@ -9,6 +9,7 @@ export interface StoryPreviewProps {
   imageUrl: string | null
   imagePosX?: number
   imagePosY?: number
+  showOverlay?: boolean
   editable?: boolean
   onPositionChange?: (x: number, y: number) => void
   sc: SC
@@ -24,6 +25,7 @@ export default function StoryPreview({
   imageUrl,
   imagePosX = 50,
   imagePosY = 50,
+  showOverlay = true,
   editable = false,
   onPositionChange,
   sc,
@@ -49,7 +51,6 @@ export default function StoryPreview({
     const deltaX = clientX - lastPointer.current.x
     const deltaY = clientY - lastPointer.current.y
     lastPointer.current = { x: clientX, y: clientY }
-
     setPos(prev => ({
       x: clamp(prev.x - (deltaX / rect.width) * 100, 0, 100),
       y: clamp(prev.y - (deltaY / rect.height) * 100, 0, 100),
@@ -64,94 +65,119 @@ export default function StoryPreview({
   }, [dragging, pos, onPositionChange])
 
   return (
-    <div
-      className="flex flex-col md:flex-row"
-      style={{ backgroundColor: sc.bodyBg, minHeight: "100%" }}
-    >
-      {/* ── Foto-kant ── */}
-      <div
-        ref={containerRef}
-        className={`relative w-full h-[40vh] md:h-auto md:w-1/2 flex-shrink-0 md:min-h-[520px] overflow-hidden select-none ${
-          editable && imageUrl
-            ? dragging
-              ? "cursor-grabbing"
-              : "cursor-grab"
-            : ""
-        }`}
-        onMouseDown={editable ? (e) => { e.preventDefault(); startDrag(e.clientX, e.clientY) } : undefined}
-        onMouseMove={editable ? (e) => moveDrag(e.clientX, e.clientY) : undefined}
-        onMouseUp={editable ? endDrag : undefined}
-        onMouseLeave={editable ? endDrag : undefined}
-        onTouchStart={editable ? (e) => { startDrag(e.touches[0].clientX, e.touches[0].clientY) } : undefined}
-        onTouchMove={editable ? (e) => { e.preventDefault(); moveDrag(e.touches[0].clientX, e.touches[0].clientY) } : undefined}
-        onTouchEnd={editable ? endDrag : undefined}
-      >
-        {imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={imageUrl}
-            alt=""
-            draggable={false}
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{ objectPosition }}
-          />
-        ) : (
-          <div
-            className="absolute inset-0 flex items-center justify-center"
-            style={{ backgroundColor: sc.accent, opacity: 0.12 }}
-          />
-        )}
+    <div className="@container" style={{ backgroundColor: sc.navBg }}>
+      <div className="flex flex-col @md:flex-row @md:min-h-[520px]">
 
-        {editable && imageUrl && !dragging && (
-          <div className="absolute bottom-3 left-0 right-0 flex justify-center pointer-events-none">
-            <span
-              className="text-xs px-3 py-1 rounded-full opacity-80"
-              style={{ backgroundColor: "rgba(0,0,0,0.5)", color: "#fff" }}
+        {/* ── Foto-kolom ── */}
+        <div
+          ref={containerRef}
+          className={`relative w-full h-[280px] @md:h-auto @md:w-1/2 flex-shrink-0 overflow-hidden select-none ${
+            editable && imageUrl
+              ? dragging ? "cursor-grabbing" : "cursor-grab"
+              : ""
+          }`}
+          onMouseDown={editable ? (e) => { e.preventDefault(); startDrag(e.clientX, e.clientY) } : undefined}
+          onMouseMove={editable ? (e) => moveDrag(e.clientX, e.clientY) : undefined}
+          onMouseUp={editable ? endDrag : undefined}
+          onMouseLeave={editable ? endDrag : undefined}
+          onTouchStart={editable ? (e) => { startDrag(e.touches[0].clientX, e.touches[0].clientY) } : undefined}
+          onTouchMove={editable ? (e) => { e.preventDefault(); moveDrag(e.touches[0].clientX, e.touches[0].clientY) } : undefined}
+          onTouchEnd={editable ? endDrag : undefined}
+        >
+          {imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={imageUrl}
+              alt=""
+              draggable={false}
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ objectPosition }}
+            />
+          ) : (
+            <div
+              className="absolute inset-0"
+              style={{ backgroundColor: sc.accent, opacity: 0.12 }}
+            />
+          )}
+
+          {/* Overlay — zelfde logica als de Hero, alleen als showOverlay aan staat */}
+          {imageUrl && showOverlay && (
+            <div
+              className="absolute inset-0"
+              style={
+                sc.floral
+                  ? { background: "linear-gradient(to bottom, rgba(28,25,23,0.12) 0%, rgba(28,25,23,0.44) 100%)" }
+                  : { backgroundColor: sc.accent, opacity: 0.35 }
+              }
+            />
+          )}
+
+          {/* Zachte randovergang naar de tekstkolom: mobiel = onderaan, desktop = rechts */}
+          {imageUrl && (
+            <>
+              <div
+                className="absolute bottom-0 left-0 right-0 h-8 @md:hidden"
+                style={{ background: `linear-gradient(to bottom, transparent, ${sc.navBg})` }}
+              />
+              <div
+                className="absolute top-0 right-0 bottom-0 w-12 hidden @md:block"
+                style={{ background: `linear-gradient(to right, transparent, ${sc.navBg})` }}
+              />
+            </>
+          )}
+
+          {editable && imageUrl && !dragging && (
+            <div className="absolute bottom-3 left-0 right-0 flex justify-center pointer-events-none">
+              <span
+                className="text-xs px-3 py-1 rounded-full opacity-80"
+                style={{ backgroundColor: "rgba(0,0,0,0.5)", color: "#fff" }}
+              >
+                Sleep om te positioneren
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* ── Tekst-kolom ── */}
+        <div
+          className="flex flex-col justify-center items-center @md:items-start text-center @md:text-left px-8 py-10 @md:px-14 @md:py-16 @md:w-1/2"
+          style={{ backgroundColor: sc.navBg }}
+        >
+          {title && (
+            <h2
+              className="mb-4 leading-tight"
+              style={{
+                fontFamily: nameFont,
+                color: sc.headingColor,
+                fontSize: sc.nameFont ? "2.5rem" : "2rem",
+                fontWeight: sc.nameFont ? 400 : 700,
+              }}
             >
-              Sleep om te positioneren
-            </span>
-          </div>
-        )}
-      </div>
+              {title}
+            </h2>
+          )}
 
-      {/* ── Tekst-kant ── */}
-      <div
-        className="flex flex-col justify-center px-8 md:px-14 py-12 md:w-1/2"
-        style={{ backgroundColor: sc.navBg }}
-      >
-        {title && (
-          <h2
-            className="mb-5 leading-tight"
-            style={{
-              fontFamily: nameFont,
-              color: sc.headingColor,
-              fontSize: sc.nameFont ? "2.5rem" : "2rem",
-              fontWeight: sc.nameFont ? 400 : 700,
-            }}
-          >
-            {title}
-          </h2>
-        )}
+          {text ? (
+            <p
+              className="leading-relaxed whitespace-pre-wrap max-w-prose"
+              style={{
+                fontFamily: sc.fontFamily,
+                color: sc.bodyText,
+                fontSize: "1rem",
+              }}
+            >
+              {text}
+            </p>
+          ) : (
+            <p
+              className="italic text-sm"
+              style={{ fontFamily: sc.fontFamily, color: sc.bodyText, opacity: 0.45 }}
+            >
+              Schrijf jullie verhaal in de sidebar...
+            </p>
+          )}
+        </div>
 
-        {text ? (
-          <p
-            className="leading-relaxed whitespace-pre-wrap"
-            style={{
-              fontFamily: sc.fontFamily,
-              color: sc.bodyText,
-              fontSize: "1rem",
-            }}
-          >
-            {text}
-          </p>
-        ) : (
-          <p
-            className="italic text-sm"
-            style={{ fontFamily: sc.fontFamily, color: sc.bodyText, opacity: 0.45 }}
-          >
-            Schrijf jullie verhaal in de sidebar...
-          </p>
-        )}
       </div>
     </div>
   )

@@ -4,6 +4,9 @@ import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import EventHomePreview from "@/components/EventHomePreview"
+import EventNav from "@/app/events/[slug]/event-nav"
+import PraktischPreview, { DEFAULT_PRAKTISCH_TILES, type PraktischTile } from "@/components/PraktischPreview"
+import WishlistPreview, { DEFAULT_WISHLIST_ITEMS, type WishlistItem } from "@/components/WishlistPreview"
 import EventMastersPreview from "@/components/EventMastersPreview"
 import EventProgramPreview, { PROGRAM_ICONS, ProgramIcon } from "@/components/EventProgramPreview"
 import StoryPreview from "@/components/StoryPreview"
@@ -23,6 +26,7 @@ interface HomeContent {
 }
 
 interface MasterPerson {
+  id?: string
   naam: string
   telefoon: string
   email: string
@@ -39,6 +43,7 @@ interface Draft {
   nav_title?: string
   style?: string
   heroOverlay?: boolean
+  storyOverlay?: boolean
   homeContent?: HomeContent
   navLayout?: 'stacked' | 'split' | 'left'
   use_frame?: boolean
@@ -59,7 +64,6 @@ interface PageConfig {
 }
 
 interface ProgrammaItem { id?: string; time: string; title?: string; description: string; iconId?: string; image_url?: string | null; imagePosX?: number }
-interface PraktischItem { label: string; value: string }
 
 type ContentMap = Partial<Record<PageId, Record<string, unknown>>>
 type StyleConfig = typeof STYLE_CONFIG[Style]
@@ -212,14 +216,14 @@ const PAGES: PageConfig[] = [
   { id: "home",               label: "Home",               toggleable: false },
   { id: "onsverhaal",         label: "Ons Verhaal",        toggleable: true  },
   { id: "programma",          label: "Programma",          toggleable: true  },
-  { id: "praktisch",          label: "Praktisch",          toggleable: true  },
-  { id: "wishlist",           label: "Wishlist",           toggleable: true  },
+  { id: "praktisch",          label: "Informatie",         toggleable: true  },
+  { id: "wishlist",           label: "Cadeautips",         toggleable: true  },
   { id: "ceremoniemeesters",  label: "Ceremoniemeesters",  toggleable: true  },
   { id: "rsvp",               label: "RSVP",               toggleable: false },
   { id: "fotos",              label: "Foto's",             toggleable: true  },
 ]
 
-const CONTROLS_PAGES = new Set<PageId>(["home", "ceremoniemeesters", "programma", "rsvp", "onsverhaal"])
+const CONTROLS_PAGES = new Set<PageId>(["home", "ceremoniemeesters", "programma", "rsvp", "onsverhaal", "praktisch", "wishlist"])
 
 const TYPE_LABEL: Record<EventType, string> = {
   bruiloft: "Bruiloft", verjaardag: "Verjaardag", evenement: "Evenement",
@@ -251,14 +255,7 @@ export default function BouwenPage() {
   const canvasContainerRef = useRef<HTMLDivElement>(null)
   const [canvasScale, setCanvasScale] = useState(1)
   const [zoomMultiplier, setZoomMultiplier] = useState(1)
-  const [masterPhotoUrls, setMasterPhotoUrls] = useState<[string | null, string | null]>([null, null])
-  const [masterUploading, setMasterUploading] = useState<[boolean, boolean]>([false, false])
-  const [programUploadIndex, setProgramUploadIndex] = useState<number | null>(null)
   const [openIconPickerIdx, setOpenIconPickerIdx] = useState<number | null>(null)
-  const masterPhotoRef0 = useRef<HTMLInputElement>(null)
-  const masterPhotoRef1 = useRef<HTMLInputElement>(null)
-  const programPhotoRef = useRef<HTMLInputElement>(null)
-  const [programBlobUrls, setProgramBlobUrls] = useState<Record<string, string>>({})
   const [programUploadingIds, setProgramUploadingIds] = useState<Set<string>>(new Set())
   const [publishing, setPublishing] = useState(false)
   const [publishError, setPublishError] = useState<string | null>(null)
@@ -422,90 +419,6 @@ export default function BouwenPage() {
     })
   }
 
-  async function handleMasterPhotoUpload(e: React.ChangeEvent<HTMLInputElement>, index: 0 | 1) {
-    const file = e.target.files?.[0]
-    e.target.value = ""
-    if (!file) return
-    const supported = ["image/jpeg", "image/png", "image/webp", "image/gif"]
-    if (!supported.includes(file.type)) return
-
-    const blobUrl = URL.createObjectURL(file)
-    setMasterPhotoUrls((prev) => { const n = [...prev] as [string | null, string | null]; n[index] = blobUrl; return n })
-    setMasterUploading((prev) => { const n = [...prev] as [boolean, boolean]; n[index] = true; return n })
-
-    try {
-      const url = await uploadToStorage(file, "hero-images")
-      console.log(`[master ${index}] geüpload naar Storage:`, url)
-      URL.revokeObjectURL(blobUrl)
-      setMasterPhotoUrls((prev) => { const n = [...prev] as [string | null, string | null]; n[index] = url; return n })
-      // Persist real URL into content so doSave() picks it up
-      setContent((prev) => {
-        const rawM = (prev.ceremoniemeesters?.masters as Partial<MasterPerson>[] | undefined) ?? []
-        const updated: Partial<MasterPerson>[] = [{ ...rawM[0] }, { ...rawM[1] }]
-        updated[index] = { ...updated[index], foto_url: url }
-        const next = { ...prev, ceremoniemeesters: { masters: updated } }
-        localStorage.setItem("sayingyes_content", JSON.stringify(next))
-        return next
-      })
-    } catch (err) {
-      console.error(`[master ${index}] upload mislukt:`, err)
-      URL.revokeObjectURL(blobUrl)
-      setMasterPhotoUrls((prev) => { const n = [...prev] as [string | null, string | null]; n[index] = null; return n })
-    } finally {
-      setMasterUploading((prev) => { const n = [...prev] as [boolean, boolean]; n[index] = false; return n })
-    }
-  }
-
-  async function handleProgramPhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    e.target.value = ""
-    if (!file || programUploadIndex === null) return
-    const supported = ["image/jpeg", "image/png", "image/webp", "image/gif"]
-    if (!supported.includes(file.type)) return
-
-    // Snapshot index before clearing it
-    const idx = programUploadIndex
-    setProgramUploadIndex(null)
-
-    // Ensure item has an ID
-    let item = programmaItems[idx]
-    if (!item) return
-    if (!item.id) {
-      item = { ...item, id: crypto.randomUUID() }
-      const updated = [...programmaItems]
-      updated[idx] = item
-      updateContent("programma", { items: updated, layout: programLayout })
-    }
-    const itemId = item.id!
-
-    // Show blob preview immediately
-    const blobUrl = URL.createObjectURL(file)
-    if (programBlobUrls[itemId]) URL.revokeObjectURL(programBlobUrls[itemId])
-    setProgramBlobUrls((prev) => ({ ...prev, [itemId]: blobUrl }))
-    setProgramUploadingIds((prev) => new Set([...prev, itemId]))
-
-    try {
-      const url = await uploadToStorage(file, "hero-images")
-      console.log(`[programma] foto geüpload voor item ${itemId}:`, url)
-      URL.revokeObjectURL(blobUrl)
-      setProgramBlobUrls((prev) => { const n = { ...prev }; delete n[itemId]; return n })
-      // Persist real URL into content
-      setContent((prev) => {
-        const items = [...((prev.programma?.items as ProgrammaItem[]) ?? [])]
-        const i2 = items.findIndex((it) => it.id === itemId)
-        if (i2 !== -1) items[i2] = { ...items[i2], image_url: url }
-        const next = { ...prev, programma: { ...(prev.programma ?? {}), items } }
-        localStorage.setItem("sayingyes_content", JSON.stringify(next))
-        return next
-      })
-    } catch (err) {
-      console.error(`[programma] foto upload mislukt voor item ${itemId}:`, err)
-      // Blob stays alive so photo remains visible in UI
-    } finally {
-      setProgramUploadingIds((prev) => { const n = new Set(prev); n.delete(itemId); return n })
-    }
-  }
-
   function openEditor(id: PageId) {
     setPreviewPage(id)
     if (!CONTROLS_PAGES.has(id)) setEditingPage(id)
@@ -531,7 +444,6 @@ export default function BouwenPage() {
         body: homeContent.body,
         align: homeContent.align,
       },
-      ceremoniemeesters: { masters: mastersData },
       programma: { ...(content.programma ?? {}) },
     }
 
@@ -625,7 +537,7 @@ export default function BouwenPage() {
     }
   }
 
-  const anyUploading = heroUploading || masterUploading[0] || masterUploading[1] || programUploadingIds.size > 0 || storyUploading
+  const anyUploading = heroUploading || programUploadingIds.size > 0 || storyUploading
 
   const sc = STYLE_CONFIG[style]
   const canvasWidth = viewport === "mobiel" ? 390 : 1024
@@ -637,31 +549,24 @@ export default function BouwenPage() {
   const eventLocatie = draft?.locatie || ""
   const typeLabel = draft?.type ? TYPE_LABEL[draft.type] : "Evenement"
   const heroOverlay = draft?.heroOverlay ?? true
+  const storyOverlay = draft?.storyOverlay ?? true
   const homeContent: HomeContent = draft?.homeContent ?? { title: "", body: "", align: "center" }
   const navLayout = (draft?.navLayout ?? 'split') as 'stacked' | 'split' | 'left'
-  const navTitle = draft?.frame_names ?? draft?.nav_title ?? draft?.naam ?? ""
+  const navTitle = draft?.nav_title ?? draft?.frame_names ?? draft?.naam ?? ""
   const safeNavTitle = navTitle.replace(/\n/g, " ")
   const slugPreview = draft?.slug || "jouwbruiloft"
 
-  const emptyMaster: MasterPerson = { naam: "", telefoon: "", email: "", foto_url: null }
-  const rawMasters = (content.ceremoniemeesters?.masters as Partial<MasterPerson>[] | undefined) ?? []
-  const mastersData: [MasterPerson, MasterPerson] = [
-    { ...emptyMaster, ...rawMasters[0] },
-    { ...emptyMaster, ...rawMasters[1] },
-  ]
-  const mastersForPreview = [
-    { ...mastersData[0], foto_url: masterPhotoUrls[0] ?? mastersData[0].foto_url },
-    { ...mastersData[1], foto_url: masterPhotoUrls[1] ?? mastersData[1].foto_url },
-  ]
+  const mastersForPreview = ((content.ceremoniemeesters?.masters as MasterPerson[] | undefined) ?? [])
+    .filter(m => m.naam || m.foto_url)
+    .map(m => ({ id: m.id ?? "", naam: m.naam ?? "", telefoon: m.telefoon ?? "", email: m.email ?? "", foto_url: m.foto_url ?? null }))
 
   const programmaItems = (content.programma?.items as ProgrammaItem[]) || []
   const programmaItemsSorted = programmaItems.slice().sort((a, b) => a.time.localeCompare(b.time))
-  const programmaItemsForPreview = programmaItemsSorted.map((it) =>
-    it.id && programBlobUrls[it.id] ? { ...it, image_url: programBlobUrls[it.id] } : it
-  )
+  const programmaItemsForPreview = programmaItemsSorted
   const rawLayout = (content.programma?.layout as string) || "centered"
   const programLayout = (rawLayout === "bento" ? "centered" : rawLayout) as "centered" | "timeline"
-  const praktischItems = (content.praktisch?.items as PraktischItem[]) || []
+  const praktischTiles = content.praktisch?.items as PraktischTile[] | undefined
+  const wishlistItems = content.wishlist?.items as WishlistItem[] | undefined
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 font-sans antialiased overflow-hidden">
@@ -1221,85 +1126,25 @@ export default function BouwenPage() {
                 </>)}
 
                 {/* ── Ceremoniemeesters controls ── */}
-                {previewPage === "ceremoniemeesters" && (<>
-                  {([0, 1] as const).map((i) => (
-                    <div key={i}>
-                      <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">
-                        Ceremoniemeester {i + 1}{i === 1 && <span className="normal-case font-normal ml-1 text-gray-300">(optioneel)</span>}
-                      </p>
-                      <div className="flex flex-col gap-3">
-                        {masterPhotoUrls[i] ? (
-                          <div className="flex flex-col gap-2">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={masterPhotoUrls[i]!} alt="" className="w-16 h-16 rounded-full object-cover" />
-                            <button
-                              onClick={() => setMasterPhotoUrls((prev) => { const n: [string | null, string | null] = [...prev] as [string | null, string | null]; n[i] = null; return n })}
-                              className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors self-start"
-                            >
-                              Foto verwijderen
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => (i === 0 ? masterPhotoRef0 : masterPhotoRef1).current?.click()}
-                            className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-gray-200 rounded-xl py-4 text-gray-400 hover:border-rose-300 hover:text-rose-500 transition-colors"
-                          >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            Foto uploaden
-                          </button>
-                        )}
-                        <label className="flex flex-col gap-1.5">
-                          <span className="text-xs font-semibold text-gray-600">Naam</span>
-                          <input
-                            type="text"
-                            value={mastersData[i].naam}
-                            onChange={(e) => {
-                              const updated = [...mastersData] as [MasterPerson, MasterPerson]
-                              updated[i] = { ...updated[i], naam: e.target.value }
-                              updateContent("ceremoniemeesters", { masters: updated })
-                            }}
-                            placeholder="Volledige naam"
-                            className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                          />
-                        </label>
-                        <label className="flex flex-col gap-1.5">
-                          <span className="text-xs font-semibold text-gray-600">Telefoon</span>
-                          <input
-                            type="tel"
-                            value={mastersData[i].telefoon}
-                            onChange={(e) => {
-                              const updated = [...mastersData] as [MasterPerson, MasterPerson]
-                              updated[i] = { ...updated[i], telefoon: e.target.value }
-                              updateContent("ceremoniemeesters", { masters: updated })
-                            }}
-                            placeholder="+31 6 12345678"
-                            className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                          />
-                        </label>
-                        <label className="flex flex-col gap-1.5">
-                          <span className="text-xs font-semibold text-gray-600">E-mail</span>
-                          <input
-                            type="email"
-                            value={mastersData[i].email}
-                            onChange={(e) => {
-                              const updated = [...mastersData] as [MasterPerson, MasterPerson]
-                              updated[i] = { ...updated[i], email: e.target.value }
-                              updateContent("ceremoniemeesters", { masters: updated })
-                            }}
-                            placeholder="naam@voorbeeld.nl"
-                            className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                          />
-                        </label>
-                      </div>
-                      {i === 0 && <div className="border-t border-gray-100 mt-6" />}
+                {previewPage === "ceremoniemeesters" && (
+                  <div className="flex flex-col gap-4">
+                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Ceremoniemeesters</p>
+                    <MastersEditor
+                      masters={(content.ceremoniemeesters?.masters as MasterPerson[] | undefined) ?? []}
+                      onChange={(masters) => updateContent("ceremoniemeesters", { ...(content.ceremoniemeesters ?? {}), masters })}
+                    />
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-gray-500">Vrije tekst onderaan</label>
+                      <textarea
+                        rows={4}
+                        value={typeof content.ceremoniemeesters?.text === "string" ? content.ceremoniemeesters.text : ""}
+                        onChange={(e) => updateContent("ceremoniemeesters", { ...(content.ceremoniemeesters ?? {}), text: e.target.value })}
+                        placeholder="Optionele tekst onderaan de pagina..."
+                        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none leading-relaxed"
+                      />
                     </div>
-                  ))}
-                  <input ref={masterPhotoRef0} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={(e) => handleMasterPhotoUpload(e, 0)} />
-                  <input ref={masterPhotoRef1} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={(e) => handleMasterPhotoUpload(e, 1)} />
-                </>)}
+                  </div>
+                )}
 
                 {/* ── Programma controls ── */}
                 {previewPage === "programma" && (
@@ -1347,20 +1192,6 @@ export default function BouwenPage() {
                             </button>
                             <button
                               onClick={() => {
-                                setProgramUploadIndex(i)
-                                programPhotoRef.current?.click()
-                              }}
-                              className="ml-auto flex items-center gap-1 px-2 py-1 rounded-lg border border-gray-200 bg-white text-xs font-semibold text-gray-500 hover:border-rose-300 hover:text-rose-500 transition-colors"
-                              title="Foto toevoegen"
-                            >
-                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                              </svg>
-                              <span>Foto</span>
-                            </button>
-                            <button
-                              onClick={() => {
                                 const updated = programmaItems.filter((_, j) => j !== i)
                                 updateContent("programma", { items: updated, layout: programLayout })
                               }}
@@ -1398,66 +1229,6 @@ export default function BouwenPage() {
                               ))}
                             </div>
                           )}
-                          {((item.id && programBlobUrls[item.id]) || item.image_url) && (() => {
-                            const photoUrl = (item.id && programBlobUrls[item.id]) || item.image_url!
-                            return (
-                              <div className="flex flex-col items-center gap-1.5 py-1">
-                                <div className="relative">
-                                  {/* Round photo preview — drag left/right to pan */}
-                                  <div
-                                    style={{ width: 80, height: 80, borderRadius: "50%", overflow: "hidden", cursor: "ew-resize", userSelect: "none", flexShrink: 0 }}
-                                    onMouseDown={(e) => {
-                                      e.preventDefault()
-                                      const startX = e.clientX
-                                      const startPosX = item.imagePosX ?? 50
-                                      function onMove(me: MouseEvent) {
-                                        const newX = Math.max(0, Math.min(100, startPosX - (me.clientX - startX)))
-                                        const updated = [...programmaItems]
-                                        updated[i] = { ...updated[i], imagePosX: newX }
-                                        updateContent("programma", { items: updated, layout: programLayout })
-                                      }
-                                      function onUp() {
-                                        window.removeEventListener("mousemove", onMove)
-                                        window.removeEventListener("mouseup", onUp)
-                                      }
-                                      window.addEventListener("mousemove", onMove)
-                                      window.addEventListener("mouseup", onUp)
-                                    }}
-                                  >
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img
-                                      src={photoUrl}
-                                      alt=""
-                                      style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: `${item.imagePosX ?? 50}% 50%`, display: "block", pointerEvents: "none" }}
-                                    />
-                                  </div>
-                                  {/* Pan hint arrows */}
-                                  <div className="absolute inset-0 rounded-full flex items-center justify-between px-1.5 pointer-events-none">
-                                    <span className="text-white text-sm font-bold leading-none" style={{ filter: "drop-shadow(0 0 2px rgba(0,0,0,0.8))", opacity: 0.7 }}>‹</span>
-                                    <span className="text-white text-sm font-bold leading-none" style={{ filter: "drop-shadow(0 0 2px rgba(0,0,0,0.8))", opacity: 0.7 }}>›</span>
-                                  </div>
-                                  {/* Remove button */}
-                                  <button
-                                    onClick={() => {
-                                      if (item.id && programBlobUrls[item.id]) {
-                                        URL.revokeObjectURL(programBlobUrls[item.id])
-                                        setProgramBlobUrls((prev) => { const n = { ...prev }; delete n[item.id!]; return n })
-                                      }
-                                      const updated = [...programmaItems]
-                                      updated[i] = { ...updated[i], image_url: null }
-                                      updateContent("programma", { items: updated, layout: programLayout })
-                                    }}
-                                    className="absolute -top-1 -right-1 bg-white rounded-full p-0.5 text-gray-400 hover:text-red-500 transition-colors shadow-sm border border-gray-100"
-                                  >
-                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                  </button>
-                                </div>
-                                <p className="text-[10px] text-gray-400">Sleep om bij te snijden</p>
-                              </div>
-                            )
-                          })()}
                           <input
                             type="text"
                             value={item.title ?? ""}
@@ -1495,13 +1266,6 @@ export default function BouwenPage() {
                         Onderdeel toevoegen
                       </button>
                     </div>
-                    <input
-                      ref={programPhotoRef}
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp,image/gif"
-                      className="hidden"
-                      onChange={handleProgramPhotoUpload}
-                    />
                   </div>
                 )}
 
@@ -1564,15 +1328,26 @@ export default function BouwenPage() {
                             className="w-full h-24 object-cover rounded-xl"
                           />
                           {!storyUploading && (
-                            <button
-                              onClick={() => {
-                                setStoryImageBlob(null)
-                                updateContent("onsverhaal", { ...(content.onsverhaal ?? {}), image_url: null })
-                              }}
-                              className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors self-end"
-                            >
-                              Verwijderen
-                            </button>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-semibold text-gray-600">Kleur overlay</span>
+                                <button
+                                  onClick={() => updateDraft({ storyOverlay: !storyOverlay })}
+                                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${storyOverlay ? "bg-pink-400" : "bg-gray-200"}`}
+                                >
+                                  <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${storyOverlay ? "translate-x-4" : "translate-x-0.5"}`} />
+                                </button>
+                              </div>
+                              <button
+                                onClick={() => {
+                                  setStoryImageBlob(null)
+                                  updateContent("onsverhaal", { ...(content.onsverhaal ?? {}), image_url: null })
+                                }}
+                                className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors"
+                              >
+                                Verwijderen
+                              </button>
+                            </div>
                           )}
                           {storyUploading && <p className="text-xs text-gray-400">Uploading...</p>}
                         </div>
@@ -1592,6 +1367,28 @@ export default function BouwenPage() {
                       <input ref={storyFileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={handleStoryImageUpload} />
 
                     </div>
+                  </div>
+                )}
+
+                {/* ── Praktisch controls ── */}
+                {previewPage === "praktisch" && (
+                  <div className="flex flex-col gap-4">
+                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Informatie</p>
+                    <PraktischEditor
+                      tiles={praktischTiles ?? DEFAULT_PRAKTISCH_TILES}
+                      onChange={(tiles) => updateContent("praktisch", { ...(content.praktisch ?? {}), items: tiles })}
+                    />
+                  </div>
+                )}
+
+                {/* ── Wishlist controls ── */}
+                {previewPage === "wishlist" && (
+                  <div className="flex flex-col gap-4">
+                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Cadeautips</p>
+                    <WishlistEditor
+                      items={wishlistItems ?? DEFAULT_WISHLIST_ITEMS}
+                      onChange={(items) => updateContent("wishlist", { ...(content.wishlist ?? {}), items })}
+                    />
                   </div>
                 )}
 
@@ -1649,55 +1446,14 @@ export default function BouwenPage() {
                           {slugPreview}.sayingyes.nl
                         </div>
                       </div>
-                      {navLayout === 'left' ? (
-                        <nav className="px-5 py-4 border-b flex items-center gap-6 flex-wrap" style={{ backgroundColor: sc.navBg, borderColor: `${sc.accent}22` }}>
-                          <span className="font-bold whitespace-nowrap flex-shrink-0 overflow-hidden text-ellipsis" style={{ color: sc.accent, fontFamily: sc.fontFamily, maxWidth: sc.floral ? 260 : 200, fontSize: sc.floral ? "1.25rem" : "0.9375rem", fontWeight: 800, letterSpacing: sc.floral ? "0.01em" : "-0.02em" }}>{safeNavTitle}</span>
-                          <div className="flex items-center flex-wrap gap-1">
-                            {activePagesOrdered.map((page) => (
-                              <button
-                                key={page.id}
-                                onClick={() => { setPreviewPage(page.id); setIsEditingControls(false) }}
-                                className="font-semibold px-2.5 py-1.5 rounded-lg transition-colors"
-                                style={page.id === previewPage ? { color: sc.accent, backgroundColor: `${sc.accent}15`, fontSize: sc.floral ? "1rem" : "0.8125rem" } : { color: sc.navText, fontSize: sc.floral ? "1rem" : "0.8125rem" }}
-                              >
-                                {page.label}
-                              </button>
-                            ))}
-                          </div>
-                        </nav>
-                      ) : navLayout === 'split' ? (
-                        <nav className="px-5 py-4 border-b flex items-center justify-between gap-4" style={{ backgroundColor: sc.navBg, borderColor: `${sc.accent}22` }}>
-                          <span className="font-bold whitespace-nowrap flex-shrink-0 overflow-hidden text-ellipsis" style={{ color: sc.accent, fontFamily: sc.fontFamily, maxWidth: sc.floral ? 260 : 200, fontSize: sc.floral ? "1.25rem" : "0.9375rem", fontWeight: 800, letterSpacing: sc.floral ? "0.01em" : "-0.02em" }}>{safeNavTitle}</span>
-                          <div className="flex items-center flex-wrap justify-end gap-1">
-                            {activePagesOrdered.map((page) => (
-                              <button
-                                key={page.id}
-                                onClick={() => { setPreviewPage(page.id); setIsEditingControls(false) }}
-                                className="font-semibold px-2.5 py-1.5 rounded-lg transition-colors"
-                                style={page.id === previewPage ? { color: sc.accent, backgroundColor: `${sc.accent}15`, fontSize: sc.floral ? "1rem" : "0.8125rem" } : { color: sc.navText, fontSize: sc.floral ? "1rem" : "0.8125rem" }}
-                              >
-                                {page.label}
-                              </button>
-                            ))}
-                          </div>
-                        </nav>
-                      ) : (
-                        <nav className="px-5 py-5 border-b flex flex-col items-center gap-2" style={{ backgroundColor: sc.navBg, borderColor: `${sc.accent}22` }}>
-                          <span className="font-bold text-center whitespace-nowrap overflow-hidden text-ellipsis" style={{ color: sc.accent, fontFamily: sc.fontFamily, maxWidth: sc.floral ? 260 : 200, fontSize: sc.floral ? "1.25rem" : "0.9375rem", fontWeight: 800, letterSpacing: sc.floral ? "0.01em" : "-0.02em" }}>{safeNavTitle}</span>
-                          <div className="flex items-center flex-wrap justify-center gap-1">
-                            {activePagesOrdered.map((page) => (
-                              <button
-                                key={page.id}
-                                onClick={() => { setPreviewPage(page.id); setIsEditingControls(false) }}
-                                className="font-semibold px-2.5 py-1.5 rounded-lg transition-colors"
-                                style={page.id === previewPage ? { color: sc.accent, backgroundColor: `${sc.accent}15`, fontSize: sc.floral ? "1rem" : "0.8125rem" } : { color: sc.navText, fontSize: sc.floral ? "1rem" : "0.8125rem" }}
-                              >
-                                {page.label}
-                              </button>
-                            ))}
-                          </div>
-                        </nav>
-                      )}
+                      <EventNav
+                        title={safeNavTitle}
+                        pages={activePagesOrdered.map((p) => ({ type: p.id, title: p.label }))}
+                        sc={sc}
+                        navLayout={navLayout}
+                        activeType={previewPage}
+                        onNavigate={(type) => { setPreviewPage(type as PageId); setIsEditingControls(false) }}
+                      />
                       {previewPage === "home" && (
                         <EventHomePreview
                           typeLabel={typeLabel}
@@ -1724,14 +1480,11 @@ export default function BouwenPage() {
                         />
                       )}
                       {previewPage === "ceremoniemeesters" && (
-                        <>
-                          <div style={{ padding: "28px 32px 0", backgroundColor: sc.navBg }}>
-                            <h2 style={{ fontSize: "1.125rem", fontWeight: 800, color: sc.headingColor, fontFamily: sc.fontFamily, margin: 0 }}>
-                              Ceremoniemeesters
-                            </h2>
-                          </div>
-                          <EventMastersPreview masters={mastersForPreview} sc={sc} />
-                        </>
+                        <EventMastersPreview
+                          masters={mastersForPreview}
+                          sc={sc}
+                          text={typeof content.ceremoniemeesters?.text === "string" ? content.ceremoniemeesters.text : undefined}
+                        />
                       )}
                       {previewPage === "onsverhaal" && (
                         <StoryPreview
@@ -1740,6 +1493,7 @@ export default function BouwenPage() {
                           imageUrl={storyImageBlob ?? ((content.onsverhaal?.image_url as string) || null)}
                           imagePosX={(content.onsverhaal?.image_pos_x as number) ?? 50}
                           imagePosY={(content.onsverhaal?.image_pos_y as number) ?? 50}
+                          showOverlay={storyOverlay}
                           editable={true}
                           onPositionChange={(x, y) => updateContent("onsverhaal", { ...(content.onsverhaal ?? {}), image_pos_x: x, image_pos_y: y })}
                           sc={sc}
@@ -1825,37 +1579,10 @@ export default function BouwenPage() {
                         </div>
                       )}
                       {previewPage === "praktisch" && (
-                        <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
-                          <h2 className="text-lg font-extrabold mb-6" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>Praktische info</h2>
-                          {praktischItems.length > 0
-                            ? praktischItems.map((item, i) => (
-                                <div key={i} className="mb-4">
-                                  <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: sc.labelColor }}>{item.label}</p>
-                                  <p className="text-sm font-semibold" style={{ color: sc.headingColor }}>{item.value}</p>
-                                </div>
-                              ))
-                            : [["Locatie", eventLocatie || "Nog in te vullen"], ["Datum", eventDate]].map(([k, v]) => (
-                                <div key={k} className="mb-4">
-                                  <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: sc.labelColor }}>{k}</p>
-                                  <p className="text-sm font-semibold" style={{ color: sc.headingColor }}>{v}</p>
-                                </div>
-                              ))
-                          }
-                        </div>
+                        <PraktischPreview tiles={praktischTiles ?? []} sc={sc} />
                       )}
                       {previewPage === "wishlist" && (
-                        <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
-                          <h2 className="text-lg font-extrabold mb-6" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>Wishlist</h2>
-                          <div className="grid grid-cols-2 gap-3">
-                            {[1, 2, 3, 4].map((n) => (
-                              <div key={n} className="rounded-2xl border p-4" style={{ borderColor: `${sc.accent}20` }}>
-                                <div className="h-16 rounded-xl mb-3" style={{ backgroundColor: `${sc.accent}12` }} />
-                                <div className="h-2.5 rounded-full w-3/4 mb-1.5" style={{ backgroundColor: `${sc.accent}18` }} />
-                                <div className="h-2 rounded-full w-1/2" style={{ backgroundColor: `${sc.accent}10` }} />
-                              </div>
-                            ))}
-                          </div>
-                        </div>
+                        <WishlistPreview items={wishlistItems ?? []} sc={sc} />
                       )}
                       {previewPage === "fotos" && (
                         <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
@@ -2134,11 +1861,6 @@ function Editor({
     return <ProgrammaEditor items={items} onChange={(items) => onChange({ ...content, items })} />
   }
 
-  if (pageId === "praktisch") {
-    const items = (content.items as { label: string; value: string }[]) ?? []
-    return <PraktischEditor items={items} onChange={(items) => onChange({ ...content, items })} />
-  }
-
   return (
     <div>
       <label className="block text-sm font-semibold text-gray-700 mb-2">Tekst</label>
@@ -2194,45 +1916,397 @@ function ProgrammaEditor({
   )
 }
 
-function PraktischEditor({
-  items, onChange,
+function MastersEditor({
+  masters: initialMasters,
+  onChange,
 }: {
-  items: { label: string; value: string }[]
-  onChange: (items: { label: string; value: string }[]) => void
+  masters: MasterPerson[]
+  onChange: (masters: MasterPerson[]) => void
 }) {
-  const [newLabel, setNewLabel] = useState("")
-  const [newValue, setNewValue] = useState("")
+  const [masters, setMasters] = useState<MasterPerson[]>(() =>
+    initialMasters.map(m => ({ ...m, id: m.id ?? (Date.now().toString() + Math.random()) }))
+  )
+  const [uploading, setUploading] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const pendingIdRef = useRef<string | null>(null)
+
+  const seededRef = useRef(false)
+  useEffect(() => {
+    if (seededRef.current) return
+    seededRef.current = true
+    onChange(masters)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  function update(id: string, patch: Partial<MasterPerson>) {
+    setMasters(prev => {
+      const next = prev.map(m => m.id === id ? { ...m, ...patch } : m)
+      onChange(next.map(m => ({ ...m, foto_url: m.foto_url?.startsWith("blob:") ? null : m.foto_url })))
+      return next
+    })
+  }
 
   function add() {
-    if (!newLabel.trim() || !newValue.trim()) return
-    onChange([...items, { label: newLabel.trim(), value: newValue.trim() }])
-    setNewLabel(""); setNewValue("")
+    setMasters(prev => {
+      const next = [...prev, { id: Date.now().toString(), naam: "", telefoon: "", email: "", foto_url: null }]
+      onChange(next)
+      return next
+    })
+  }
+
+  function remove(id: string) {
+    setMasters(prev => {
+      const next = prev.filter(m => m.id !== id)
+      onChange(next)
+      return next
+    })
+  }
+
+  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ""
+    const masterId = pendingIdRef.current
+    if (!file || !masterId) return
+    const blobUrl = URL.createObjectURL(file)
+    setMasters(prev => prev.map(m => m.id === masterId ? { ...m, foto_url: blobUrl } : m))
+    setUploading(masterId)
+    try {
+      const url = await uploadToStorage(file, "hero-images")
+      URL.revokeObjectURL(blobUrl)
+      update(masterId, { foto_url: url })
+    } catch {
+      URL.revokeObjectURL(blobUrl)
+      setMasters(prev => prev.map(m => m.id === masterId ? { ...m, foto_url: null } : m))
+    } finally {
+      setUploading(null)
+      pendingIdRef.current = null
+    }
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      {items.length > 0 && (
-        <div className="flex flex-col gap-2">
-          {items.map((item, i) => (
-            <div key={i} className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3">
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">{item.label}</p>
-                <p className="text-sm text-gray-700 truncate">{item.value}</p>
-              </div>
-              <button onClick={() => onChange(items.filter((_, idx) => idx !== i))} className="text-gray-300 hover:text-red-400 transition-colors">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+    <div className="flex flex-col gap-3">
+      {masters.map((master) => (
+        <div key={master.id} className="flex flex-col gap-2 bg-gray-50 rounded-xl p-3">
+          {/* Header: label + trash */}
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Ceremoniemeester</span>
+            <button
+              onClick={() => remove(master.id!)}
+              className="text-gray-300 hover:text-red-500 transition-colors p-1"
+              aria-label="Verwijder ceremoniemeester"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+          {/* Foto */}
+          {master.foto_url ? (
+            <div className="flex items-center gap-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={master.foto_url} alt="" className={`w-12 h-12 rounded-full object-cover ${uploading === master.id ? "opacity-50" : ""}`} />
+              {uploading === master.id ? (
+                <span className="text-xs text-gray-400">Uploaden...</span>
+              ) : (
+                <button onClick={() => update(master.id!, { foto_url: null })} className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors">
+                  Foto verwijderen
+                </button>
+              )}
             </div>
-          ))}
+          ) : (
+            <button
+              onClick={() => { pendingIdRef.current = master.id!; fileInputRef.current?.click() }}
+              disabled={uploading !== null}
+              className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-gray-200 rounded-xl py-4 text-gray-400 hover:border-rose-300 hover:text-rose-500 disabled:opacity-50 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Foto uploaden
+            </button>
+          )}
+          {/* Naam */}
+          <input
+            type="text"
+            value={master.naam}
+            onChange={(e) => update(master.id!, { naam: e.target.value })}
+            placeholder="Volledige naam"
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400"
+          />
+          {/* Telefoon */}
+          <input
+            type="tel"
+            value={master.telefoon}
+            onChange={(e) => update(master.id!, { telefoon: e.target.value })}
+            placeholder="+31 6 12345678"
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400"
+          />
+          {/* E-mail */}
+          <input
+            type="email"
+            value={master.email}
+            onChange={(e) => update(master.id!, { email: e.target.value })}
+            placeholder="naam@voorbeeld.nl"
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400"
+          />
         </div>
-      )}
-      <div className="flex gap-2">
-        <input type="text" placeholder="Label (bijv. Parkeren)" value={newLabel} onChange={(e) => setNewLabel(e.target.value)} className="w-36 rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400" />
-        <input type="text" placeholder="Waarde" value={newValue} onChange={(e) => setNewValue(e.target.value)} onKeyDown={(e) => e.key === "Enter" && add()} className="flex-1 rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400" />
-        <button onClick={add} className="flex-shrink-0 bg-rose-500 hover:bg-rose-600 text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-colors">Voeg toe</button>
-      </div>
+      ))}
+      <button
+        onClick={add}
+        className="flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-gray-200 rounded-xl py-3 text-gray-400 hover:border-rose-300 hover:text-rose-500 transition-colors"
+      >
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
+        Ceremoniemeester toevoegen
+      </button>
+      <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={handlePhotoUpload} />
+    </div>
+  )
+}
+
+function WishlistEditor({
+  items: initialItems,
+  onChange,
+}: {
+  items: WishlistItem[]
+  onChange: (items: WishlistItem[]) => void
+}) {
+  const [items, setItems] = useState<WishlistItem[]>(initialItems)
+  const [openPickerId, setOpenPickerId] = useState<string | null>(null)
+
+  const seededRef = useRef(false)
+  useEffect(() => {
+    if (seededRef.current) return
+    seededRef.current = true
+    onChange(items)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  function update(id: string, patch: Partial<WishlistItem>) {
+    setItems(prev => {
+      const next = prev.map(it => it.id === id ? { ...it, ...patch } : it)
+      onChange(next)
+      return next
+    })
+  }
+
+  function add() {
+    setItems(prev => {
+      const next = [...prev, { id: Date.now().toString(), iconId: "heart", title: "Nieuw blok", text: "" }]
+      onChange(next)
+      return next
+    })
+  }
+
+  function remove(id: string) {
+    setItems(prev => {
+      const next = prev.filter(it => it.id !== id)
+      onChange(next)
+      return next
+    })
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {items.map((item) => (
+        <div key={item.id} className="flex flex-col gap-2 bg-gray-50 rounded-xl p-3">
+          {/* Rij 1: Titel */}
+          <input
+            type="text"
+            value={item.title}
+            onChange={(e) => update(item.id, { title: e.target.value })}
+            placeholder="Titel"
+            className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400"
+          />
+          {/* Rij 2: Icoon-picker + Verwijder */}
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setOpenPickerId(openPickerId === item.id ? null : item.id)}
+              className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-semibold transition-colors ${
+                openPickerId === item.id
+                  ? "border-rose-400 bg-rose-50 text-rose-600"
+                  : "border-gray-200 bg-white text-gray-500 hover:border-rose-300 hover:text-rose-500"
+              }`}
+            >
+              <ProgramIcon iconId={item.iconId} size={14} strokeWidth={2} />
+              <span>Icoon</span>
+            </button>
+            <button
+              onClick={() => remove(item.id)}
+              className="text-gray-300 hover:text-red-500 transition-colors p-1"
+              aria-label="Verwijder blok"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+          {/* Icoon grid picker */}
+          {openPickerId === item.id && (
+            <div className="grid grid-cols-3 gap-1 p-2 bg-white rounded-xl border border-gray-100 shadow-sm">
+              {PROGRAM_ICONS.map((icon) => (
+                <button
+                  key={icon.id}
+                  onClick={() => { update(item.id, { iconId: icon.id }); setOpenPickerId(null) }}
+                  className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
+                    item.iconId === icon.id
+                      ? "bg-rose-50 text-rose-500"
+                      : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"
+                  }`}
+                  title={icon.label}
+                >
+                  <div className="h-9 flex items-center justify-center">
+                    <ProgramIcon iconId={icon.id} size={36} strokeWidth={2} fixedHeight />
+                  </div>
+                  <span className="text-[11px] leading-tight w-full text-center break-words">{icon.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          {/* Rij 3: Beschrijving */}
+          <textarea
+            rows={3}
+            value={item.text}
+            onChange={(e) => update(item.id, { text: e.target.value })}
+            placeholder="Beschrijving..."
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none"
+          />
+        </div>
+      ))}
+      <button
+        onClick={add}
+        className="flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-gray-200 rounded-xl py-3 text-gray-400 hover:border-rose-300 hover:text-rose-500 transition-colors"
+      >
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
+        Informatieblok toevoegen
+      </button>
+    </div>
+  )
+}
+
+function PraktischEditor({
+  tiles: initialTiles,
+  onChange,
+}: {
+  tiles: PraktischTile[]
+  onChange: (tiles: PraktischTile[]) => void
+}) {
+  const [tiles, setTiles] = useState<PraktischTile[]>(initialTiles)
+  const [openPickerId, setOpenPickerId] = useState<string | null>(null)
+
+  // Seed content state immediately so defaults are persisted even without user edits
+  const seededRef = useRef(false)
+  useEffect(() => {
+    if (seededRef.current) return
+    seededRef.current = true
+    onChange(tiles)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  function update(id: string, patch: Partial<PraktischTile>) {
+    setTiles(prev => {
+      const next = prev.map(t => t.id === id ? { ...t, ...patch } : t)
+      onChange(next)
+      return next
+    })
+  }
+
+  function add() {
+    setTiles(prev => {
+      const next = [...prev, { id: Date.now().toString(), iconId: "heart", title: "Nieuw blok", text: "" }]
+      onChange(next)
+      return next
+    })
+  }
+
+  function remove(id: string) {
+    setTiles(prev => {
+      const next = prev.filter(t => t.id !== id)
+      onChange(next)
+      return next
+    })
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {tiles.map((tile) => (
+        <div key={tile.id} className="flex flex-col gap-2 bg-gray-50 rounded-xl p-3">
+          {/* Rij 1: Titel (volle breedte) */}
+          <input
+            type="text"
+            value={tile.title}
+            onChange={(e) => update(tile.id, { title: e.target.value })}
+            placeholder="Titel"
+            className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400"
+          />
+          {/* Rij 2: Icoon-picker + Verwijder */}
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setOpenPickerId(openPickerId === tile.id ? null : tile.id)}
+              className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-semibold transition-colors ${
+                openPickerId === tile.id
+                  ? "border-rose-400 bg-rose-50 text-rose-600"
+                  : "border-gray-200 bg-white text-gray-500 hover:border-rose-300 hover:text-rose-500"
+              }`}
+            >
+              <ProgramIcon iconId={tile.iconId} size={14} strokeWidth={2} />
+              <span>Icoon</span>
+            </button>
+            <button
+              onClick={() => remove(tile.id)}
+              className="text-gray-300 hover:text-red-500 transition-colors p-1"
+              aria-label="Verwijder blok"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+          {/* Icon grid picker */}
+          {openPickerId === tile.id && (
+            <div className="grid grid-cols-3 gap-1 p-2 bg-white rounded-xl border border-gray-100 shadow-sm">
+              {PROGRAM_ICONS.map((icon) => (
+                <button
+                  key={icon.id}
+                  onClick={() => { update(tile.id, { iconId: icon.id }); setOpenPickerId(null) }}
+                  className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
+                    tile.iconId === icon.id
+                      ? "bg-rose-50 text-rose-500"
+                      : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"
+                  }`}
+                  title={icon.label}
+                >
+                  <div className="h-9 flex items-center justify-center">
+                    <ProgramIcon iconId={icon.id} size={36} strokeWidth={2} fixedHeight />
+                  </div>
+                  <span className="text-[11px] leading-tight w-full text-center break-words">{icon.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          {/* Rij 3: Beschrijving (volle breedte) */}
+          <textarea
+            rows={3}
+            value={tile.text}
+            onChange={(e) => update(tile.id, { text: e.target.value })}
+            placeholder="Beschrijving..."
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none"
+          />
+        </div>
+      ))}
+      <button
+        onClick={add}
+        className="flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-gray-200 rounded-xl py-3 text-gray-400 hover:border-rose-300 hover:text-rose-500 transition-colors"
+      >
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
+        Informatieblok toevoegen
+      </button>
     </div>
   )
 }
