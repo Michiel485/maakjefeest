@@ -12,6 +12,7 @@ import EventProgramPreview, { PROGRAM_ICONS, ProgramIcon } from "@/components/Ev
 import StoryPreview from "@/components/StoryPreview"
 import { formatDate } from "@/lib/event-styles"
 import { createClient } from "@/lib/supabase"
+import { eventSiteUrl } from "@/lib/site-url"
 
 type EventType = "bruiloft" | "verjaardag" | "evenement"
 type PageId = "Home" | "Programma" | "RSVP" | "Informatie" | "Cadeautips" | "Fotos" | "Ceremoniemeesters" | "OnsVerhaal"
@@ -257,6 +258,7 @@ export default function BouwenPage() {
   const [zoomMultiplier, setZoomMultiplier] = useState(1)
   const [openIconPickerIdx, setOpenIconPickerIdx] = useState<number | null>(null)
   const [programUploadingIds, setProgramUploadingIds] = useState<Set<string>>(new Set())
+  const [isPublished, setIsPublished] = useState(false)
   const [publishing, setPublishing] = useState(false)
   const [publishError, setPublishError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -324,6 +326,7 @@ export default function BouwenPage() {
           setStyle(((event.style as string) || "zand") as Style)
           setContent(newContent)
           setActive(newActive)
+          setIsPublished(event.status === "published")
           const heroUrl = event.hero_image_url as string | null
           if (heroUrl) {
             setHeroImageUrl(heroUrl)
@@ -706,29 +709,43 @@ export default function BouwenPage() {
               )}
             </button>
 
-            {/* Publiceren */}
-            <button
-              onClick={handlePublish}
-              disabled={publishing || anyUploading}
-              className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-300 disabled:cursor-not-allowed text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-md shadow-emerald-100 hover:shadow-lg hover:-translate-y-0.5 disabled:shadow-none disabled:translate-y-0 transition-all"
-            >
-              {publishing ? (
-                <>
-                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                  </svg>
-                  Bezig...
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                  Publiceren voor €24
-                </>
-              )}
-            </button>
+            {/* Publiceren / Bekijk live site */}
+            {isPublished ? (
+              <a
+                href={eventSiteUrl(slugPreview)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-md shadow-emerald-100 hover:shadow-lg hover:-translate-y-0.5 transition-all"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                Bekijk live site
+              </a>
+            ) : (
+              <button
+                onClick={handlePublish}
+                disabled={publishing || anyUploading}
+                className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-300 disabled:cursor-not-allowed text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-md shadow-emerald-100 hover:shadow-lg hover:-translate-y-0.5 disabled:shadow-none disabled:translate-y-0 transition-all"
+              >
+                {publishing ? (
+                  <>
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                    </svg>
+                    Bezig...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Publiceren voor €24
+                  </>
+                )}
+              </button>
+            )}
           </div>
           {(publishError || saveError) && (
             <p className="text-xs text-red-500 font-medium">{publishError || saveError}</p>

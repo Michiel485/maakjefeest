@@ -12,7 +12,7 @@ export default async function EventHomePage({
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, type, title, datum, locatie, style, hero_image_url")
+    .select("id, type, title, datum, locatie, style, hero_image_url, hero_image_pos_x, hero_image_pos_y, use_frame, frame_style, initials, frame_names, frame_location")
     .eq("slug", slug)
     .eq("status", "published")
     .single()
@@ -46,6 +46,13 @@ export default async function EventHomePage({
       locatie={event.locatie ?? null}
       heroImageUrl={event.hero_image_url ?? null}
       heroOverlay={true}
+      heroPosX={event.hero_image_pos_x ?? 50}
+      heroPosY={event.hero_image_pos_y ?? 50}
+      useFrame={event.use_frame ?? false}
+      frameStyle={event.frame_style ?? null}
+      initials={event.initials ?? null}
+      frameNames={event.frame_names ?? null}
+      frameLocation={event.frame_location ?? null}
       homeTitle={typeof c.title === "string" ? c.title : null}
       homeBody={typeof c.body === "string" ? c.body : null}
       homeAlign={(c.align as "left" | "center" | "right") ?? "center"}
