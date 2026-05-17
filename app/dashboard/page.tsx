@@ -61,7 +61,7 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
           </a>
         )}
         <Link
-          href="/bouwen"
+          href={`/bouwen?event_id=${event.id}`}
           className="text-sm bg-rose-500 hover:bg-rose-600 text-white font-bold px-4 py-2 rounded-xl transition-colors whitespace-nowrap"
         >
           Verder bewerken

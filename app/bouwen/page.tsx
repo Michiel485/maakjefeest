@@ -270,6 +270,76 @@ export default function BouwenPage() {
   const [autoSavePending, setAutoSavePending] = useState(false)
 
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const urlEventId = urlParams.get("event_id")
+
+    if (urlEventId) {
+      // Load full event from server, overwriting any stale localStorage
+      setSavedEventId(urlEventId)
+      fetch(`/api/drafts/${urlEventId}`)
+        .then((r) => r.json())
+        .then(({ event, pages }: { event: Record<string, unknown>; pages: Array<{ type: string; content: Record<string, unknown>; is_enabled: boolean }> }) => {
+          if (!event) { router.replace("/aanmaken"); return }
+
+          const newContent: ContentMap = {}
+          const newActive: Record<PageId, boolean> = {
+            Home: false, Programma: false, RSVP: false, Informatie: false,
+            Cadeautips: false, Fotos: false, Ceremoniemeesters: false, OnsVerhaal: false,
+          }
+          let restoredHomeContent: HomeContent | undefined
+          for (const page of pages) {
+            const t = page.type as PageId
+            if (page.is_enabled) newActive[t] = true
+            newContent[t] = page.content
+            if (t === "Home" && page.content) {
+              restoredHomeContent = {
+                title: (page.content.title as string) ?? "",
+                body: (page.content.body as string) ?? "",
+                align: (page.content.align as Align) ?? "center",
+              }
+            }
+          }
+
+          const restoredDraft: Draft = {
+            type: (event.type as EventType) ?? "bruiloft",
+            naam: (event.title as string) ?? "",
+            datum: (event.datum as string) ?? "",
+            locatie: (event.locatie as string) ?? "",
+            email: "",
+            slug: (event.slug as string) ?? "",
+            nav_title: (event.nav_title as string) ?? undefined,
+            style: (event.style as string) ?? "zand",
+            navLayout: (event.nav_layout as Draft["navLayout"]) ?? "split",
+            use_frame: (event.use_frame as boolean) ?? false,
+            frame_style: (event.frame_style as string) ?? undefined,
+            initials: (event.initials as string) ?? undefined,
+            frame_names: (event.frame_names as string) ?? undefined,
+            frame_location: (event.frame_location as string) ?? undefined,
+            hero_image_pos_x: (event.hero_image_pos_x as number) ?? 50,
+            hero_image_pos_y: (event.hero_image_pos_y as number) ?? 50,
+            homeContent: restoredHomeContent,
+          }
+
+          setDraft(restoredDraft)
+          setStyle(((event.style as string) || "zand") as Style)
+          setContent(newContent)
+          setActive(newActive)
+          const heroUrl = event.hero_image_url as string | null
+          if (heroUrl) {
+            setHeroImageUrl(heroUrl)
+            localStorage.setItem("sayingyes_hero_image_url", heroUrl)
+          }
+
+          localStorage.setItem("sayingyes_draft", JSON.stringify(restoredDraft))
+          localStorage.setItem("sayingyes_content", JSON.stringify(newContent))
+          localStorage.setItem("sayingyes_active", JSON.stringify(newActive))
+          localStorage.setItem("sayingyes_saved_event_id", urlEventId)
+        })
+        .catch(() => router.replace("/aanmaken"))
+      return
+    }
+
+    // No URL param — load from localStorage as usual
     try {
       const raw = localStorage.getItem("sayingyes_draft")
       if (!raw) { router.replace("/aanmaken"); return }
@@ -463,6 +533,7 @@ export default function BouwenPage() {
 
     const payload = {
       ...draft,
+      style,           // always use the builder's active style state, never draft.style
       hero_image_url: heroUrl,
       nav_layout: navLayout,
       pages: activePages,

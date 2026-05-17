@@ -103,6 +103,7 @@ export default function AanmakenPage() {
       naam1: form.naam1.trim(),
       naam2: form.naam2.trim(),
       slug: cleanSlug,
+      style: "zand",
       nav_title: frameNames,
       datum: form.datum,
       locatie: "Stadhuis Amersfoort",
@@ -121,8 +122,8 @@ export default function AanmakenPage() {
     }
 
     const content = {
-      programma: DEFAULT_PROGRAMMA,
-      praktisch: DEFAULT_PRAKTISCH,
+      Programma: DEFAULT_PROGRAMMA,
+      Informatie: DEFAULT_PRAKTISCH,
     }
 
     localStorage.setItem("sayingyes_draft", JSON.stringify(draft))
