@@ -1,0 +1,15 @@
+export const TITLE_FONT_OPTIONS = [
+  { id: "playfair",   label: "Playfair Display",  cssVar: "--font-playfair",   weight: 700 },
+  { id: "greatvibes", label: "Great Vibes",        cssVar: "--font-greatvibes", weight: 400 },
+  { id: "cormorant",  label: "Cormorant Garamond", cssVar: "--font-cormorant",  weight: 300 },
+  { id: "montserrat", label: "Montserrat",          cssVar: "--font-montserrat", weight: 700 },
+  { id: "cinzel",     label: "Cinzel",              cssVar: "--font-cinzel",     weight: 400 },
+  { id: "dancing",    label: "Dancing Script",      cssVar: "--font-dancing",    weight: 400 },
+] as const
+
+export type TitleFontId = typeof TITLE_FONT_OPTIONS[number]["id"]
+
+export function getTitleFont(id?: string | null) {
+  const opt = TITLE_FONT_OPTIONS.find(f => f.id === id) ?? TITLE_FONT_OPTIONS[0]
+  return { family: `var(${opt.cssVar})`, weight: opt.weight }
+}

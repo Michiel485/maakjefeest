@@ -1,3 +1,5 @@
+import { getTitleFont } from "./title-fonts"
+
 export const STYLE_CONFIG = {
   roze: {
     accent: "#E8627A",
@@ -82,6 +84,8 @@ export interface SC {
   bodyBg: string
   floral: boolean
   fontImport: string | null
+  titleFont: string
+  titleFontWeight: number
 }
 
 export const TYPE_LABEL: Record<string, string> = {
@@ -90,8 +94,10 @@ export const TYPE_LABEL: Record<string, string> = {
   evenement: "Evenement",
 }
 
-export function getStyleConfig(style: string): SC {
-  return (style in STYLE_CONFIG ? STYLE_CONFIG[style as Style] : STYLE_CONFIG.roze) as SC
+export function getStyleConfig(style: string, titleFontId?: string | null): SC {
+  const base = style in STYLE_CONFIG ? STYLE_CONFIG[style as Style] : STYLE_CONFIG.roze
+  const { family, weight } = getTitleFont(titleFontId)
+  return { ...base, titleFont: family, titleFontWeight: weight }
 }
 
 export function formatDate(iso: string) {

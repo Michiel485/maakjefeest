@@ -26,7 +26,7 @@ export default function EventMastersPreview({ masters, sc, text }: EventMastersP
       {/* Paginatitel */}
       <p
         className="text-4xl text-center mb-8 max-w-fit mx-auto"
-        style={{ color: sc.headingColor, fontFamily: sc.nameFont || sc.fontFamily, fontWeight: sc.nameFont ? 400 : 800 }}
+        style={{ color: sc.headingColor, fontFamily: sc.titleFont, fontWeight: sc.titleFontWeight }}
       >
         Ceremoniemeesters
       </p>

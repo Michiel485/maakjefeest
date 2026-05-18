@@ -11,6 +11,7 @@ import EventMastersPreview from "@/components/EventMastersPreview"
 import EventProgramPreview, { PROGRAM_ICONS, ProgramIcon, DEFAULT_PROGRAM_ITEMS } from "@/components/EventProgramPreview"
 import StoryPreview from "@/components/StoryPreview"
 import { formatDate } from "@/lib/event-styles"
+import { TITLE_FONT_OPTIONS, getTitleFont } from "@/lib/title-fonts"
 import { createClient } from "@/lib/supabase"
 import { eventSiteUrl } from "@/lib/site-url"
 
@@ -43,6 +44,7 @@ interface Draft {
   slug?: string
   nav_title?: string
   style?: string
+  title_font?: string
   heroOverlay?: boolean
   storyOverlay?: boolean
   homeContent?: HomeContent
@@ -250,6 +252,7 @@ export default function BouwenPage() {
   const [editingPage, setEditingPage] = useState<PageId | null>(null)
   const [content, setContent] = useState<ContentMap>({})
   const [style, setStyle] = useState<Style>("zand")
+  const [titleFont, setTitleFont] = useState<string>("playfair")
   const [viewport, setViewport] = useState<Viewport>("desktop")
   const [heroImageError, setHeroImageError] = useState<string | null>(null)
   const [isEditingControls, setIsEditingControls] = useState(false)
@@ -311,6 +314,7 @@ export default function BouwenPage() {
             slug: (event.slug as string) ?? "",
             nav_title: (event.nav_title as string) ?? undefined,
             style: (event.style as string) ?? "zand",
+            title_font: (event.title_font as string) ?? "playfair",
             navLayout: (event.nav_layout as Draft["navLayout"]) ?? "split",
             use_frame: (event.use_frame as boolean) ?? false,
             frame_style: (event.frame_style as string) ?? undefined,
@@ -329,6 +333,7 @@ export default function BouwenPage() {
 
           setDraft(restoredDraft)
           setStyle(((event.style as string) || "zand") as Style)
+          setTitleFont((event.title_font as string) || "playfair")
           setContent(newContent)
           setActive(newActive)
           setIsPublished(event.status === "published")
@@ -354,6 +359,7 @@ export default function BouwenPage() {
       const parsed = JSON.parse(raw)
       setDraft(parsed)
       if (parsed.style) setStyle(parsed.style as Style)
+      if (parsed.title_font) setTitleFont(parsed.title_font as string)
     } catch { router.replace("/aanmaken") }
 
     try {
@@ -440,6 +446,11 @@ export default function BouwenPage() {
   function saveStyle(s: Style) {
     setStyle(s)
     updateDraft({ style: s })
+  }
+
+  function saveTitleFont(id: string) {
+    setTitleFont(id)
+    updateDraft({ title_font: id })
   }
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -553,6 +564,7 @@ export default function BouwenPage() {
     const payload = {
       ...draft,
       style,           // always use the builder's active style state, never draft.style
+      title_font: titleFont,
       hero_image_url: heroUrl,
       nav_layout: navLayout,
       pages: activePages,
@@ -643,7 +655,8 @@ export default function BouwenPage() {
 
   const anyUploading = heroUploading || programUploadingIds.size > 0 || storyUploading
 
-  const sc = STYLE_CONFIG[style]
+  const { family: titleFontFamily, weight: titleFontWeight } = getTitleFont(titleFont)
+  const sc = { ...STYLE_CONFIG[style], titleFont: titleFontFamily, titleFontWeight }
   const canvasWidth = viewport === "mobiel" ? 390 : 1024
 
   const activePagesOrdered = PAGES.filter((p) => active[p.id])
@@ -796,6 +809,36 @@ export default function BouwenPage() {
                   </div>
                   {style === s.id && (
                     <svg className="w-3.5 h-3.5 text-rose-500 flex-shrink-0 ml-auto" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Lettertype titels */}
+          <div className="px-5 pt-5 pb-4 border-b border-gray-100">
+            <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Lettertype titels</p>
+            <div className="grid grid-cols-2 gap-2">
+              {TITLE_FONT_OPTIONS.map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => saveTitleFont(f.id)}
+                  className={`rounded-xl border px-3 py-2.5 text-left transition-all ${
+                    titleFont === f.id
+                      ? "border-rose-300 bg-rose-50 ring-2 ring-rose-300 ring-offset-1"
+                      : "border-gray-100 hover:border-gray-200 hover:bg-gray-50"
+                  }`}
+                >
+                  <p
+                    className="text-sm leading-tight truncate"
+                    style={{ fontFamily: `var(${f.cssVar})`, fontWeight: f.weight }}
+                  >
+                    {f.label}
+                  </p>
+                  {titleFont === f.id && (
+                    <svg className="w-3 h-3 text-rose-500 mt-1" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
                   )}

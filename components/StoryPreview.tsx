@@ -30,7 +30,6 @@ export default function StoryPreview({
   onPositionChange,
   sc,
 }: StoryPreviewProps) {
-  const nameFont = sc.nameFont || sc.fontFamily
 
   const [pos, setPos] = useState({ x: imagePosX, y: imagePosY })
   const [dragging, setDragging] = useState(false)
@@ -147,10 +146,10 @@ export default function StoryPreview({
             <h2
               className="mb-4 leading-tight"
               style={{
-                fontFamily: nameFont,
+                fontFamily: sc.titleFont,
                 color: sc.headingColor,
-                fontSize: sc.nameFont ? "2.5rem" : "2rem",
-                fontWeight: sc.nameFont ? 400 : 700,
+                fontSize: "2.25rem",
+                fontWeight: sc.titleFontWeight,
               }}
             >
               {title}

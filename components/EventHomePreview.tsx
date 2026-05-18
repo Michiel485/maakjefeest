@@ -87,8 +87,7 @@ export default function EventHomePreview({
     onHeroPositionChange?.(heroPos.x, heroPos.y)
   }, [heroDragging, heroPos, onHeroPositionChange])
 
-  // Calligraphy font for names; serif fallback for other themes
-  const nameFont = sc.nameFont || (sc.floral ? sc.fontFamily : "'Georgia', serif")
+  const isBoldTitle = sc.titleFontWeight >= 700
 
   // Texts shown inside the frame — dedicated fields take priority over event data
   const frameDisplayNames    = (frameNames    && frameNames.trim())    ? frameNames    : title
@@ -157,11 +156,11 @@ export default function EventHomePreview({
 
           <div className="absolute inset-0 flex items-center justify-center px-8 text-center">
             <h1
-              className={`leading-tight whitespace-pre-wrap text-4xl ${sc.nameFont ? "@md:text-[4.5rem]" : "@md:text-6xl"}`}
+              className={`leading-tight whitespace-pre-wrap text-4xl ${isBoldTitle ? "@md:text-6xl" : "@md:text-[4.5rem]"}`}
               style={{
                 color: "#fff",
-                fontFamily: nameFont,
-                fontWeight: sc.nameFont ? 400 : 800,
+                fontFamily: sc.titleFont,
+                fontWeight: sc.titleFontWeight,
                 filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.75))",
               }}
             >
@@ -197,7 +196,8 @@ export default function EventHomePreview({
                 <p
                   className="fk-initials uppercase text-center"
                   style={{
-                    fontFamily: sc.fontFamily,
+                    fontFamily: sc.titleFont,
+                    fontWeight: sc.titleFontWeight,
                     color: sc.headingColor,
                     overflow: "hidden",
                     textOverflow: "ellipsis",
@@ -212,10 +212,9 @@ export default function EventHomePreview({
               <p
                 className="fk-names text-center leading-[0.9]"
                 style={{
-                  fontFamily: nameFont,
+                  fontFamily: sc.titleFont,
+                  fontWeight: sc.titleFontWeight,
                   color: sc.headingColor,
-                  fontStyle: sc.nameFont ? "normal" : "italic",
-                  fontWeight: sc.nameFont ? 400 : 300,
                   whiteSpace: "pre-wrap",
                   wordBreak: "break-word",
                   maxWidth: "100%",

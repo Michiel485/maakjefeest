@@ -30,7 +30,7 @@ export default function WishlistPreview({
     <div className="@container px-6 py-10" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
       <p
         className="text-4xl text-center mb-8"
-        style={{ color: sc.headingColor, fontFamily: sc.nameFont || sc.fontFamily, fontWeight: sc.nameFont ? 400 : 800 }}
+        style={{ color: sc.headingColor, fontFamily: sc.titleFont, fontWeight: sc.titleFontWeight }}
       >
         Cadeautips
       </p>
