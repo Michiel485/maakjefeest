@@ -14,7 +14,8 @@
       "Bash(python scripts/remove_outer_white.py)",
       "Bash(python scripts/remove_gold_leaves.py)",
       "Bash(python scripts/sample_colors.py)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(git commit -m ' *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\m.vanbendegem_smartp\\Desktop\\SpeedDate\\maakjefeest\\app\\events\\[slug]\\[pagina]"
