@@ -186,7 +186,7 @@ export default function EventHomePreview({
             `}</style>
 
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`/frames/${frameStyle}.png.png`} alt="" className="w-full h-auto block" />
+            <img src={`${process.env.NEXT_PUBLIC_ASSET_ORIGIN ?? ""}/frames/${frameStyle}.png.png`} alt="" className="w-full h-auto block" />
 
             <div
               className="absolute inset-0 flex flex-col items-center justify-center"

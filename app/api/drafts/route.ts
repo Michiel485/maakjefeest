@@ -156,7 +156,7 @@ export async function POST(request: Request) {
       ))
       const { error: updateErr } = await db
         .from("events")
-        .update({ type, title: naam, datum, locatie, style, hero_image_url, hero_image_pos_x, hero_image_pos_y, nav_layout, nav_title: nav_title ?? naam, use_frame, frame_style, initials, frame_names, frame_location })
+        .update({ type, title: naam, datum, locatie, style, hero_image_url, hero_image_pos_x: Math.round(hero_image_pos_x), hero_image_pos_y: Math.round(hero_image_pos_y), nav_layout, nav_title: nav_title ?? naam, use_frame, frame_style, initials, frame_names, frame_location })
         .eq("id", event_id)
 
       if (updateErr) {
@@ -204,8 +204,8 @@ export async function POST(request: Request) {
       status: "draft",
       style,
       hero_image_url,
-      hero_image_pos_x,
-      hero_image_pos_y,
+      hero_image_pos_x: Math.round(hero_image_pos_x),
+      hero_image_pos_y: Math.round(hero_image_pos_y),
       nav_layout,
       use_frame,
       frame_style,
