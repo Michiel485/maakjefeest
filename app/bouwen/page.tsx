@@ -301,6 +301,8 @@ export default function BouwenPage() {
   const [authEmail, setAuthEmail] = useState("")
   const [authSent, setAuthSent] = useState(false)
   const [authLoading, setAuthLoading] = useState(false)
+  const [showDashboardModal, setShowDashboardModal] = useState(false)
+  const [dashboardLoading, setDashboardLoading] = useState(false)
   const [autoSavePending, setAutoSavePending] = useState(false)
 
   useEffect(() => {
@@ -676,6 +678,36 @@ export default function BouwenPage() {
     await performSave()
   }
 
+  async function handleDashboardClick() {
+    if (!savedEventId) {
+      setShowDashboardModal(true)
+      return
+    }
+    const { data: { user } } = await createClient().auth.getUser()
+    if (!user) { setShowAuthModal(true); return }
+    setDashboardLoading(true)
+    try {
+      await doSave()
+      router.push(`/dashboard?event_id=${savedEventId}`)
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Opslaan mislukt")
+      setDashboardLoading(false)
+    }
+  }
+
+  async function handleDashboardModalSave() {
+    const { data: { user } } = await createClient().auth.getUser()
+    if (!user) { setShowDashboardModal(false); setShowAuthModal(true); return }
+    setDashboardLoading(true)
+    try {
+      const { id } = await doSave()
+      router.push(`/dashboard?event_id=${id}`)
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Opslaan mislukt")
+      setDashboardLoading(false)
+    }
+  }
+
   async function handleAuthSubmit(e: React.FormEvent) {
     e.preventDefault()
     setAuthLoading(true)
@@ -749,6 +781,25 @@ export default function BouwenPage() {
         <span className="text-sm font-bold text-rose-600 tracking-tight hidden sm:block">Saying Yes</span>
         <div className="flex flex-col items-end gap-1">
           <div className="flex items-center gap-2">
+            {/* Mijn Dashboard */}
+            <button
+              onClick={handleDashboardClick}
+              disabled={dashboardLoading || anyUploading}
+              className="inline-flex items-center gap-1.5 bg-white hover:bg-amber-50 disabled:opacity-50 text-amber-700 text-sm font-bold px-4 py-2.5 rounded-xl border border-amber-200 shadow-sm hover:shadow hover:-translate-y-0.5 disabled:translate-y-0 transition-all"
+            >
+              {dashboardLoading ? (
+                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                </svg>
+              )}
+              Mijn Dashboard
+            </button>
+
             {/* Opslaan */}
             <button
               onClick={handleSave}
@@ -1730,7 +1781,7 @@ export default function BouwenPage() {
                       )}
                       {previewPage === "RSVP" && (
                         <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
-                          <h2 className="text-2xl font-extrabold mb-6" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>RSVP</h2>
+                          <h2 className="text-2xl mb-6" style={{ color: sc.headingColor, fontFamily: sc.fontPageTitles, fontWeight: sc.fontPageTitlesWeight }}>RSVP</h2>
                           {/* max-w-lg: zelfde breedte als de echte form */}
                           <div className="flex flex-col gap-6 max-w-lg">
                             <p className="text-sm" style={{ color: sc.bodyText }}>{(content.RSVP?.text as string) || "Laat weten of je erbij bent — vul het formulier in."}</p>
@@ -1838,6 +1889,44 @@ export default function BouwenPage() {
       </div>
 
       {/* ── Auth modal ── */}
+      {showDashboardModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setShowDashboardModal(false)}
+        >
+          <div
+            className="bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: "#fef3c7" }}>
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} style={{ color: "#b45309" }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-extrabold text-gray-900 text-center mb-2">Ontgrendel je Gasten Dashboard!</h3>
+            <p className="text-sm text-gray-500 text-center mb-6 leading-relaxed">
+              Sla je website op om direct toegang te krijgen tot je persoonlijke dashboard. Daar kun je straks je gastenlijst beheren en RSVP&apos;s bijhouden!
+            </p>
+            <button
+              onClick={handleDashboardModalSave}
+              disabled={dashboardLoading}
+              className="w-full font-bold py-3 rounded-xl text-sm transition-colors mb-2 disabled:opacity-60"
+              style={{ backgroundColor: "#b45309", color: "#fff" }}
+              onMouseEnter={(e) => { if (!dashboardLoading) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#92400e" }}
+              onMouseLeave={(e) => { if (!dashboardLoading) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#b45309" }}
+            >
+              {dashboardLoading ? "Opslaan..." : "Nu Opslaan & Doorgaan"}
+            </button>
+            <button
+              onClick={() => setShowDashboardModal(false)}
+              className="w-full text-center text-sm text-gray-400 hover:text-gray-600 py-1"
+            >
+              Annuleren
+            </button>
+          </div>
+        </div>
+      )}
+
       {showAuthModal && (
         <div
           className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"

@@ -102,6 +102,9 @@ export default async function EventSubPage({
       : "Laat weten of je erbij bent — vul het formulier in."
     return (
       <div style={{ padding: "36px 32px 64px" }}>
+        <h1 style={{ fontSize: "1.75rem", fontWeight: sc.fontPageTitlesWeight, color: sc.headingColor, fontFamily: sc.fontPageTitles, margin: "0 0 28px" }}>
+          {page.title}
+        </h1>
         <div style={{ borderRadius: 16, border: `1px solid ${sc.accent}20`, backgroundColor: `${sc.accent}08`, padding: "28px 32px" }}>
           <p style={{ fontSize: "0.9375rem", marginBottom: 24, color: sc.bodyText }}>{introText}</p>
           <RsvpForm eventId={event.id} accentColor={sc.accent} />

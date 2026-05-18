@@ -45,9 +45,6 @@ export default async function EventHomePage({
   })
   const c = homePage?.content ?? {}
 
-  // TIJDELIJK DEBUG — verwijder na diagnose
-  console.log("[live] event data:", JSON.stringify({ use_frame: event.use_frame, frame_style: event.frame_style, initials: event.initials, style: event.style }))
-
   return (
     <EventHomePreview
       typeLabel={TYPE_LABEL[event.type] ?? "Evenement"}
