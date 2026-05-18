@@ -1905,7 +1905,7 @@ export default function BouwenPage() {
             </div>
             <h3 className="text-lg font-extrabold text-gray-900 text-center mb-2">Ontgrendel je Gasten Dashboard!</h3>
             <p className="text-sm text-gray-500 text-center mb-6 leading-relaxed">
-              Sla je website op om direct toegang te krijgen tot je persoonlijke dashboard. Daar kun je straks je gastenlijst beheren en RSVP&apos;s bijhouden!
+              Sla je website gratis op om direct toegang te krijgen tot je persoonlijke dashboard. Daar kun je straks je gastenlijst beheren en RSVP&apos;s bijhouden!
             </p>
             <button
               onClick={handleDashboardModalSave}
