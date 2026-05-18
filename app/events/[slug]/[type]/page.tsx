@@ -77,34 +77,8 @@ export default async function EventSubPage({
     return <WishlistPreview items={items} sc={sc} />
   }
 
-  return (
-    <div style={{ padding: "36px 32px 64px" }}>
-      <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: sc.headingColor, fontFamily: sc.fontFamily, margin: "0 0 28px" }}>
-        {page.title}
-      </h1>
-      <PageContent page={page} sc={sc} eventId={event.id} />
-    </div>
-  )
-}
-
-function PageContent({ page, sc, eventId }: { page: Page; sc: SC; eventId: string }) {
-  const c = page.content ?? {}
-
-  if (page.type === "RSVP") {
-    const introText = (typeof page.content?.text === "string" && page.content.text)
-      ? page.content.text
-      : "Laat weten of je erbij bent — vul het formulier in."
-    return (
-      <div style={{ borderRadius: 16, border: `1px solid ${sc.accent}20`, backgroundColor: `${sc.accent}08`, padding: "28px 32px" }}>
-        <p style={{ fontSize: "0.9375rem", marginBottom: 24, color: sc.bodyText }}>
-          {introText}
-        </p>
-        <RsvpForm eventId={eventId} accentColor={sc.accent} />
-      </div>
-    )
-  }
-
   if (page.type === "Ceremoniemeesters") {
+    const c = page.content ?? {}
     const rawMasters = Array.isArray(c.masters) ? (c.masters as { naam?: string; telefoon?: string; email?: string; foto_url?: string | null }[]) : []
     const masters = rawMasters.map((m) => ({
       naam: m.naam ?? "",
@@ -116,22 +90,50 @@ function PageContent({ page, sc, eventId }: { page: Page; sc: SC; eventId: strin
     return <EventMastersPreview masters={masters} sc={sc} text={text} />
   }
 
-  if (page.type === "Fotos") {
-    const urls = Array.isArray(c.urls) ? (c.urls as string[]) : []
-    if (urls.length === 0) return <Placeholder sc={sc}>Foto&apos;s worden binnenkort toegevoegd.</Placeholder>
+  if (page.type === "RSVP") {
+    const c = page.content ?? {}
+    const introText = (typeof c.text === "string" && c.text)
+      ? c.text
+      : "Laat weten of je erbij bent — vul het formulier in."
     return (
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-        {urls.map((url, i) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img key={i} src={url} alt="" style={{ borderRadius: 12, aspectRatio: "1", objectFit: "cover", width: "100%", display: "block" }} />
-        ))}
+      <div style={{ padding: "36px 32px 64px" }}>
+        <div style={{ borderRadius: 16, border: `1px solid ${sc.accent}20`, backgroundColor: `${sc.accent}08`, padding: "28px 32px" }}>
+          <p style={{ fontSize: "0.9375rem", marginBottom: 24, color: sc.bodyText }}>{introText}</p>
+          <RsvpForm eventId={event.id} accentColor={sc.accent} />
+        </div>
       </div>
     )
   }
 
-  const text = typeof c.text === "string" ? c.text : null
-  if (!text) return <Placeholder sc={sc}>Inhoud wordt binnenkort toegevoegd.</Placeholder>
-  return <p style={{ lineHeight: 1.75, whiteSpace: "pre-wrap", fontSize: "0.9375rem", color: sc.bodyText, margin: 0 }}>{text}</p>
+  if (page.type === "Fotos") {
+    const c = page.content ?? {}
+    const urls = Array.isArray(c.urls) ? (c.urls as string[]) : []
+    return (
+      <div style={{ padding: "36px 32px 64px" }}>
+        {urls.length === 0 ? (
+          <Placeholder sc={sc}>Foto&apos;s worden binnenkort toegevoegd.</Placeholder>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+            {urls.map((url, i) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img key={i} src={url} alt="" style={{ borderRadius: 12, aspectRatio: "1", objectFit: "cover", width: "100%", display: "block" }} />
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ padding: "36px 32px 64px" }}>
+      <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: sc.headingColor, fontFamily: sc.fontFamily, margin: "0 0 28px" }}>
+        {page.title}
+      </h1>
+      <p style={{ lineHeight: 1.75, whiteSpace: "pre-wrap", fontSize: "0.9375rem", color: sc.bodyText, margin: 0 }}>
+        {typeof (page.content ?? {}).text === "string" ? (page.content as Record<string, unknown>).text as string : ""}
+      </p>
+    </div>
+  )
 }
 
 function Placeholder({ children, sc }: { children: React.ReactNode; sc: SC }) {
@@ -141,3 +143,4 @@ function Placeholder({ children, sc }: { children: React.ReactNode; sc: SC }) {
     </div>
   )
 }
+
