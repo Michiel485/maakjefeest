@@ -4,7 +4,8 @@
       "Bash(npm install *)",
       "Bash(xargs grep *)",
       "Bash(git add *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(git commit -m ' *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\m.vanbendegem_smartp\\Desktop\\SpeedDate\\maakjefeest\\app\\api\\events",
