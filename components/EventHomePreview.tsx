@@ -29,6 +29,7 @@ export interface EventHomePreviewProps {
   frameNames?: string | null
   frameLocation?: string | null
   onNavigate?: (pageId: string) => void
+  rsvpHref?: string
 }
 
 export default function EventHomePreview({
@@ -53,6 +54,7 @@ export default function EventHomePreview({
   frameNames,
   frameLocation,
   onNavigate,
+  rsvpHref = "/RSVP",
 }: EventHomePreviewProps) {
   const hasPhoto = !!heroImageUrl
   const showOverlay = hasPhoto && heroOverlay
@@ -179,8 +181,8 @@ export default function EventHomePreview({
             style={{ containerType: "inline-size" } as React.CSSProperties}
           >
             <style>{`
-              .fk-initials  { font-size: clamp(1.2rem, 8cqi,  4.5rem); line-height: 1; letter-spacing: 0.2em; }
-              .fk-names     { font-size: clamp(1rem,   5.5cqi, 3rem);   line-height: 1.25; }
+              .fk-initials  { font-size: clamp(1.2rem, 8cqi,  4.5rem); line-height: 2; letter-spacing: 0.2em; padding-block: 0.15em; }
+              .fk-names     { font-size: clamp(1rem,   5.5cqi, 3rem);   line-height: 1.8; padding-block: 0.1em; }
               .fk-detail    { font-size: clamp(0.6rem, 1.8cqi, 0.85rem); letter-spacing: 0.18em; }
             `}</style>
 
@@ -189,7 +191,6 @@ export default function EventHomePreview({
 
             <div
               className="absolute inset-0 flex flex-col items-center justify-center"
-              style={{ overflow: "hidden" }}
             >
               <div className={`flex flex-col items-center gap-[2cqi] ${safeZoneClass}`}>
               {initials && (
@@ -199,8 +200,6 @@ export default function EventHomePreview({
                     fontFamily: sc.fontInitials,
                     fontWeight: sc.fontInitialsWeight,
                     color: sc.headingColor,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
                     whiteSpace: "nowrap",
                     maxWidth: "100%",
                   }}
@@ -210,7 +209,7 @@ export default function EventHomePreview({
               )}
 
               <p
-                className="fk-names text-center leading-[0.9]"
+                className="fk-names text-center"
                 style={{
                   fontFamily: sc.fontFrameNames,
                   fontWeight: sc.fontFrameNamesWeight,
@@ -279,7 +278,7 @@ export default function EventHomePreview({
 
         {/* ── CTA ── */}
         <a
-          href="/rsvp"
+          href={rsvpHref}
           onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("RSVP") } : undefined}
           className="mt-6 inline-block text-sm font-bold px-7 py-3 rounded-xl"
           style={{

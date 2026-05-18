@@ -10,6 +10,7 @@ export default async function EventHomePage({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
+  const basePath = process.env.NODE_ENV === "production" ? "" : `/events/${slug}`
   const supabase = createServiceClient()
 
   const { data: event } = await supabase
@@ -66,6 +67,7 @@ export default async function EventHomePage({
       homeTitle={typeof c.title === "string" ? c.title : null}
       homeBody={typeof c.body === "string" ? c.body : null}
       homeAlign={(c.align as "left" | "center" | "right") ?? "center"}
+      rsvpHref={`${basePath}/RSVP`}
       sc={sc}
     />
   )
