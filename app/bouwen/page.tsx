@@ -544,6 +544,10 @@ export default function BouwenPage() {
         align: homeContent.align,
       },
       Programma: { ...(content.Programma ?? {}) },
+      OnsVerhaal: {
+        ...(content.OnsVerhaal ?? {}),
+        title: (content.OnsVerhaal?.title as string) ?? "Ons Verhaal",
+      },
     }
 
     const payload = {

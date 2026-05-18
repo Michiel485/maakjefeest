@@ -65,8 +65,8 @@ export default function StoryPreview({
   }, [dragging, pos, onPositionChange])
 
   return (
-    <div className="@container" style={{ backgroundColor: sc.navBg }}>
-      <div className="flex flex-col @md:flex-row @md:min-h-[520px]">
+    <div className="@container flex flex-col flex-grow" style={{ backgroundColor: sc.navBg }}>
+      <div className="flex flex-col @md:flex-row flex-grow" style={{ minHeight: "420px" }}>
 
         {/* ── Foto-kolom ── */}
         <div
