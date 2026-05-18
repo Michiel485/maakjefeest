@@ -14,7 +14,7 @@ export default async function EventHomePage({
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, type, title, datum, locatie, style, title_font, hero_image_url, hero_image_pos_x, hero_image_pos_y, use_frame, frame_style, initials, frame_names, frame_location")
+    .select("id, type, title, datum, locatie, style, font_hero, font_initials, font_frame_names, font_page_titles, hero_image_url, hero_image_pos_x, hero_image_pos_y, use_frame, frame_style, initials, frame_names, frame_location")
     .eq("slug", slug)
     .eq("status", "published")
     .single()
@@ -36,7 +36,12 @@ export default async function EventHomePage({
     .eq("is_enabled", true)
     .single()
 
-  const sc = getStyleConfig(event.style, event.title_font as string | null)
+  const sc = getStyleConfig(event.style, {
+    fontHero:       event.font_hero        as string | null,
+    fontInitials:   event.font_initials    as string | null,
+    fontFrameNames: event.font_frame_names as string | null,
+    fontPageTitles: event.font_page_titles as string | null,
+  })
   const c = homePage?.content ?? {}
 
   // TIJDELIJK DEBUG — verwijder na diagnose

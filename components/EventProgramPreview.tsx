@@ -247,7 +247,7 @@ export default function EventProgramPreview({
   return (
     <div className="@container" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
       <div style={{ padding: "36px 32px 52px" }}>
-        <h2 style={{ fontSize: "2.25rem", fontWeight: sc.titleFontWeight, color: sc.headingColor, fontFamily: sc.titleFont, textAlign: "center", margin: "0 0 28px" }}>
+        <h2 style={{ fontSize: "2.25rem", fontWeight: sc.fontPageTitlesWeight, color: sc.headingColor, fontFamily: sc.fontPageTitles, textAlign: "center", margin: "0 0 28px" }}>
           Programma
         </h2>
 

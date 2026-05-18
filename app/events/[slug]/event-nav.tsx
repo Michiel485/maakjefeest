@@ -14,8 +14,8 @@ interface SC {
   navText: string
   fontFamily: string
   floral?: boolean
-  titleFont?: string
-  titleFontWeight?: number
+  fontFrameNames?: string
+  fontFrameNamesWeight?: number
 }
 
 export default function EventNav({
@@ -100,9 +100,9 @@ export default function EventNav({
 
   const titleStyle: React.CSSProperties = {
     fontSize: sc.floral ? "1.25rem" : "0.9375rem",
-    fontWeight: sc.titleFontWeight ?? 800,
+    fontWeight: sc.fontFrameNamesWeight ?? 800,
     letterSpacing: sc.floral ? "0.01em" : "-0.02em",
-    fontFamily: sc.titleFont ?? sc.fontFamily,
+    fontFamily: sc.fontFrameNames ?? sc.fontFamily,
     color: sc.accent,
     textDecoration: "none",
     whiteSpace: "nowrap",

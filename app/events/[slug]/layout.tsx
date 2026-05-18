@@ -16,7 +16,7 @@ export default async function EventLayout({
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, title, nav_title, frame_names, style, title_font, nav_layout")
+    .select("id, title, nav_title, frame_names, style, font_frame_names, nav_layout")
     .eq("slug", slug)
     .eq("status", "published")
     .single()
@@ -30,7 +30,9 @@ export default async function EventLayout({
     .eq("is_enabled", true)
     .order("order", { ascending: true })
 
-  const sc = getStyleConfig(event.style, event.title_font as string | null)
+  const sc = getStyleConfig(event.style, {
+    fontFrameNames: event.font_frame_names as string | null,
+  })
   const pageList = pages ?? []
 
   const basePath = process.env.NODE_ENV === "production" ? "" : `/events/${slug}`

@@ -146,10 +146,10 @@ export default function StoryPreview({
             <h2
               className="mb-4 leading-tight"
               style={{
-                fontFamily: sc.titleFont,
+                fontFamily: sc.fontPageTitles,
                 color: sc.headingColor,
                 fontSize: "2.25rem",
-                fontWeight: sc.titleFontWeight,
+                fontWeight: sc.fontPageTitlesWeight,
               }}
             >
               {title}

@@ -84,8 +84,14 @@ export interface SC {
   bodyBg: string
   floral: boolean
   fontImport: string | null
-  titleFont: string
-  titleFontWeight: number
+  fontHero: string
+  fontHeroWeight: number
+  fontInitials: string
+  fontInitialsWeight: number
+  fontFrameNames: string
+  fontFrameNamesWeight: number
+  fontPageTitles: string
+  fontPageTitlesWeight: number
 }
 
 export const TYPE_LABEL: Record<string, string> = {
@@ -94,10 +100,27 @@ export const TYPE_LABEL: Record<string, string> = {
   evenement: "Evenement",
 }
 
-export function getStyleConfig(style: string, titleFontId?: string | null): SC {
+export function getStyleConfig(
+  style: string,
+  fonts?: {
+    fontHero?: string | null
+    fontInitials?: string | null
+    fontFrameNames?: string | null
+    fontPageTitles?: string | null
+  } | null
+): SC {
   const base = style in STYLE_CONFIG ? STYLE_CONFIG[style as Style] : STYLE_CONFIG.roze
-  const { family, weight } = getTitleFont(titleFontId)
-  return { ...base, titleFont: family, titleFontWeight: weight }
+  const hero  = getTitleFont(fonts?.fontHero)
+  const ini   = getTitleFont(fonts?.fontInitials)
+  const fn    = getTitleFont(fonts?.fontFrameNames)
+  const pt    = getTitleFont(fonts?.fontPageTitles)
+  return {
+    ...base,
+    fontHero: hero.family,           fontHeroWeight: hero.weight,
+    fontInitials: ini.family,        fontInitialsWeight: ini.weight,
+    fontFrameNames: fn.family,       fontFrameNamesWeight: fn.weight,
+    fontPageTitles: pt.family,       fontPageTitlesWeight: pt.weight,
+  }
 }
 
 export function formatDate(iso: string) {

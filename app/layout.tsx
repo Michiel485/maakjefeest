@@ -5,7 +5,7 @@ import {
   Playfair_Display,
   Great_Vibes,
   Cormorant_Garamond,
-  Montserrat,
+  Pinyon_Script,
   Cinzel,
   Dancing_Script,
 } from "next/font/google";
@@ -39,10 +39,10 @@ const cormorantGaramond = Cormorant_Garamond({
   weight: ["300", "400", "600"],
 });
 
-const montserrat = Montserrat({
-  variable: "--font-montserrat",
+const pinyonScript = Pinyon_Script({
+  variable: "--font-pinyonscript",
   subsets: ["latin"],
-  weight: ["400", "700"],
+  weight: "400",
 });
 
 const cinzel = Cinzel({
@@ -70,7 +70,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${playfairDisplay.variable} ${greatVibes.variable} ${cormorantGaramond.variable} ${montserrat.variable} ${cinzel.variable} ${dancingScript.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${playfairDisplay.variable} ${greatVibes.variable} ${cormorantGaramond.variable} ${pinyonScript.variable} ${cinzel.variable} ${dancingScript.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

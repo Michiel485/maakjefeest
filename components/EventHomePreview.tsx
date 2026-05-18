@@ -87,7 +87,7 @@ export default function EventHomePreview({
     onHeroPositionChange?.(heroPos.x, heroPos.y)
   }, [heroDragging, heroPos, onHeroPositionChange])
 
-  const isBoldTitle = sc.titleFontWeight >= 700
+  const isBoldHero = sc.fontHeroWeight >= 700
 
   // Texts shown inside the frame — dedicated fields take priority over event data
   const frameDisplayNames    = (frameNames    && frameNames.trim())    ? frameNames    : title
@@ -156,11 +156,11 @@ export default function EventHomePreview({
 
           <div className="absolute inset-0 flex items-center justify-center px-8 text-center">
             <h1
-              className={`leading-tight whitespace-pre-wrap text-4xl ${isBoldTitle ? "@md:text-6xl" : "@md:text-[4.5rem]"}`}
+              className={`leading-tight whitespace-pre-wrap text-4xl ${isBoldHero ? "@md:text-6xl" : "@md:text-[4.5rem]"}`}
               style={{
                 color: "#fff",
-                fontFamily: sc.titleFont,
-                fontWeight: sc.titleFontWeight,
+                fontFamily: sc.fontHero,
+                fontWeight: sc.fontHeroWeight,
                 filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.75))",
               }}
             >
@@ -196,8 +196,8 @@ export default function EventHomePreview({
                 <p
                   className="fk-initials uppercase text-center"
                   style={{
-                    fontFamily: sc.titleFont,
-                    fontWeight: sc.titleFontWeight,
+                    fontFamily: sc.fontInitials,
+                    fontWeight: sc.fontInitialsWeight,
                     color: sc.headingColor,
                     overflow: "hidden",
                     textOverflow: "ellipsis",
@@ -212,8 +212,8 @@ export default function EventHomePreview({
               <p
                 className="fk-names text-center leading-[0.9]"
                 style={{
-                  fontFamily: sc.titleFont,
-                  fontWeight: sc.titleFontWeight,
+                  fontFamily: sc.fontFrameNames,
+                  fontWeight: sc.fontFrameNamesWeight,
                   color: sc.headingColor,
                   whiteSpace: "pre-wrap",
                   wordBreak: "break-word",

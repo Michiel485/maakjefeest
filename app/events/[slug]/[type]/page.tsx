@@ -25,7 +25,7 @@ export default async function EventSubPage({
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, style, title_font")
+    .select("id, style, font_hero, font_initials, font_frame_names, font_page_titles")
     .eq("slug", slug)
     .eq("status", "published")
     .single()
@@ -42,7 +42,12 @@ export default async function EventSubPage({
 
   if (!page) notFound()
 
-  const sc = getStyleConfig(event.style, event.title_font as string | null)
+  const sc = getStyleConfig(event.style, {
+    fontHero:       event.font_hero        as string | null,
+    fontInitials:   event.font_initials    as string | null,
+    fontFrameNames: event.font_frame_names as string | null,
+    fontPageTitles: event.font_page_titles as string | null,
+  })
 
   if (page.type === "OnsVerhaal") {
     const c = page.content ?? {}

@@ -27,7 +27,7 @@ export default function PraktischPreview({
     <div className="@container px-6 py-10" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
       <p
         className="text-4xl text-center mb-8"
-        style={{ color: sc.headingColor, fontFamily: sc.titleFont, fontWeight: sc.titleFontWeight }}
+        style={{ color: sc.headingColor, fontFamily: sc.fontPageTitles, fontWeight: sc.fontPageTitlesWeight }}
       >
         Praktische Informatie
       </p>

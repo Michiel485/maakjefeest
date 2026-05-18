@@ -90,7 +90,10 @@ export async function POST(request: Request) {
     slug?: string
     nav_title?: string
     style?: string
-    title_font?: string
+    font_hero?: string
+    font_initials?: string
+    font_frame_names?: string
+    font_page_titles?: string
     hero_image_url?: string | null
     hero_image_pos_x?: number
     hero_image_pos_y?: number
@@ -119,7 +122,10 @@ export async function POST(request: Request) {
     slug: providedSlug,
     nav_title,
     style = "roze",
-    title_font = "playfair",
+    font_hero = "pinyonscript",
+    font_initials = "pinyonscript",
+    font_frame_names = "pinyonscript",
+    font_page_titles = "playfair",
     hero_image_url = null,
     hero_image_pos_x = 50,
     hero_image_pos_y = 50,
@@ -158,7 +164,7 @@ export async function POST(request: Request) {
       ))
       const { error: updateErr } = await db
         .from("events")
-        .update({ type, title: naam, datum, locatie, style, title_font, hero_image_url, hero_image_pos_x: Math.round(hero_image_pos_x), hero_image_pos_y: Math.round(hero_image_pos_y), nav_layout, nav_title: nav_title ?? naam, use_frame, frame_style, initials, frame_names, frame_location })
+        .update({ type, title: naam, datum, locatie, style, font_hero, font_initials, font_frame_names, font_page_titles, hero_image_url, hero_image_pos_x: Math.round(hero_image_pos_x), hero_image_pos_y: Math.round(hero_image_pos_y), nav_layout, nav_title: nav_title ?? naam, use_frame, frame_style, initials, frame_names, frame_location })
         .eq("id", event_id)
 
       if (updateErr) {
@@ -205,7 +211,10 @@ export async function POST(request: Request) {
       slug,
       status: "draft",
       style,
-      title_font,
+      font_hero,
+      font_initials,
+      font_frame_names,
+      font_page_titles,
       hero_image_url,
       hero_image_pos_x: Math.round(hero_image_pos_x),
       hero_image_pos_y: Math.round(hero_image_pos_y),
