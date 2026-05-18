@@ -6,11 +6,11 @@ import { useRouter } from "next/navigation"
 const DEFAULT_PROGRAMMA = {
   layout: "timeline",
   items: [
-    { id: "1", time: "12:00", title: "Ontvangst",   description: "Welkom bij de receptie met een drankje en hapje.",    iconId: "welkom"   },
-    { id: "2", time: "14:00", title: "Ceremonie",   description: "De officiële huwelijksceremonie.",                   iconId: "ringen"   },
-    { id: "3", time: "15:30", title: "Receptie",    description: "Proost op het gelukkige paar!",                      iconId: "toost"    },
-    { id: "4", time: "18:30", title: "Diner",       description: "Geniet van een heerlijk driegangendiner.",           iconId: "cutlery"  },
-    { id: "5", time: "20:30", title: "Avondfeest",  description: "Dans de nacht weg met het bruidspaar.",              iconId: "feest"    },
+    { id: "p1", time: "13:00", title: "Aankomst",  description: "Welkom bij onze trouwdag",  iconId: "welkom"  },
+    { id: "p2", time: "14:00", title: "Ceremonie", description: "Het ja-woord moment",        iconId: "ringen"  },
+    { id: "p3", time: "17:00", title: "Borrel",    description: "Toasten op het geluk",       iconId: "toost"   },
+    { id: "p4", time: "19:00", title: "Diner",     description: "Geniet van het feestmaal",   iconId: "cutlery" },
+    { id: "p5", time: "22:00", title: "Feest",     description: "Dansen tot in de nacht",     iconId: "feest"   },
   ],
 }
 

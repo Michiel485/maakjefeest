@@ -217,14 +217,14 @@ export function ProgramIcon({ iconId = "heart", size, strokeWidth, fixedHeight, 
 // ── Drag handle overlay ────────────────────────────────────────────────────
 
 
-// ── Placeholder ────────────────────────────────────────────────────────────
+// ── Default items (used as seed in the builder) ────────────────────────────
 
-const PLACEHOLDER_ITEMS: ProgramItem[] = [
-  { id: "p1", time: "13:00", title: "Aankomst",  description: "Welkom bij onze trouwdag",    iconId: "church"    },
-  { id: "p2", time: "14:00", title: "Ceremonie", description: "Het ja-woord moment",          iconId: "speech"     },
-  { id: "p3", time: "17:00", title: "Borrel",    description: "Toasten op het geluk",         iconId: "toost" },
-  { id: "p4", time: "19:00", title: "Diner",     description: "Geniet van het feestmaal",     iconId: "cutlery"   },
-  { id: "p5", time: "22:00", title: "Feest",     description: "Dansen tot in de nacht",       iconId: "heart"     },
+export const DEFAULT_PROGRAM_ITEMS: ProgramItem[] = [
+  { id: "p1", time: "13:00", title: "Aankomst",  description: "Welkom bij onze trouwdag",  iconId: "welkom"  },
+  { id: "p2", time: "14:00", title: "Ceremonie", description: "Het ja-woord moment",        iconId: "ringen"  },
+  { id: "p3", time: "17:00", title: "Borrel",    description: "Toasten op het geluk",       iconId: "toost"   },
+  { id: "p4", time: "19:00", title: "Diner",     description: "Geniet van het feestmaal",   iconId: "cutlery" },
+  { id: "p5", time: "22:00", title: "Feest",     description: "Dansen tot in de nacht",     iconId: "feest"   },
 ]
 
 // ── Component ──────────────────────────────────────────────────────────────
@@ -241,8 +241,8 @@ export default function EventProgramPreview({
   items, sc, programLayout = "centered", builderMode, onImagePositionChange,
 }: Props) {
   const sorted = items.slice().sort((a, b) => a.time.localeCompare(b.time))
-  const list = sorted.length > 0 ? sorted : PLACEHOLDER_ITEMS
-  const faded = items.length === 0 ? 0.3 : 1
+  const list = sorted
+  const faded = 1
 
   return (
     <div className="@container" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>

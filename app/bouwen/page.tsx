@@ -8,7 +8,7 @@ import EventNav from "@/app/events/[slug]/event-nav"
 import PraktischPreview, { DEFAULT_PRAKTISCH_TILES, type PraktischTile } from "@/components/PraktischPreview"
 import WishlistPreview, { DEFAULT_WISHLIST_ITEMS, type WishlistItem } from "@/components/WishlistPreview"
 import EventMastersPreview from "@/components/EventMastersPreview"
-import EventProgramPreview, { PROGRAM_ICONS, ProgramIcon } from "@/components/EventProgramPreview"
+import EventProgramPreview, { PROGRAM_ICONS, ProgramIcon, DEFAULT_PROGRAM_ITEMS } from "@/components/EventProgramPreview"
 import StoryPreview from "@/components/StoryPreview"
 import { formatDate } from "@/lib/event-styles"
 import { createClient } from "@/lib/supabase"
@@ -322,6 +322,11 @@ export default function BouwenPage() {
             homeContent: restoredHomeContent,
           }
 
+          // Seed programma defaults if not yet set
+          if (!newContent.Programma?.items || (newContent.Programma.items as unknown[]).length === 0) {
+            newContent.Programma = { ...(newContent.Programma ?? {}), items: DEFAULT_PROGRAM_ITEMS, layout: "timeline" }
+          }
+
           setDraft(restoredDraft)
           setStyle(((event.style as string) || "zand") as Style)
           setContent(newContent)
@@ -353,7 +358,14 @@ export default function BouwenPage() {
 
     try {
       const saved = localStorage.getItem("sayingyes_content")
-      if (saved) setContent(JSON.parse(saved))
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (!parsed.Programma?.items || parsed.Programma.items.length === 0) {
+          parsed.Programma = { ...(parsed.Programma ?? {}), items: DEFAULT_PROGRAM_ITEMS, layout: "timeline" }
+          localStorage.setItem("sayingyes_content", JSON.stringify(parsed))
+        }
+        setContent(parsed)
+      }
     } catch {}
 
     try {
