@@ -2,6 +2,8 @@ import { createServiceClient } from "@/lib/supabase"
 import { getStyleConfig } from "@/lib/event-styles"
 import EventNav from "./event-nav"
 
+export const dynamic = "force-dynamic"
+
 export default async function EventLayout({
   children,
   params,

@@ -2,6 +2,8 @@ import { createServiceClient } from "@/lib/supabase"
 import { getStyleConfig, TYPE_LABEL, formatDate } from "@/lib/event-styles"
 import EventHomePreview from "@/components/EventHomePreview"
 
+export const dynamic = "force-dynamic"
+
 export default async function EventHomePage({
   params,
 }: {
@@ -36,6 +38,9 @@ export default async function EventHomePage({
 
   const sc = getStyleConfig(event.style)
   const c = homePage?.content ?? {}
+
+  // TIJDELIJK DEBUG — verwijder na diagnose
+  console.log("[live] event data:", JSON.stringify({ use_frame: event.use_frame, frame_style: event.frame_style, initials: event.initials, style: event.style }))
 
   return (
     <EventHomePreview
