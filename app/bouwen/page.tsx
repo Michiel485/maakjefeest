@@ -1286,16 +1286,39 @@ export default function BouwenPage() {
                       {programmaItems.map((item, i) => (
                         <div key={item.id ?? i} className="flex flex-col gap-1.5 bg-gray-50 rounded-xl p-3">
                           <div className="flex items-center gap-2">
-                            <input
-                              type="time"
-                              value={item.time}
-                              onChange={(e) => {
-                                const updated = [...programmaItems]
-                                updated[i] = { ...updated[i], time: e.target.value }
-                                updateContent("Programma", { items: updated, layout: programLayout })
-                              }}
-                              className="w-24 rounded-lg border border-gray-200 px-2 py-1.5 text-xs font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400"
-                            />
+                            <div className="flex items-center gap-1">
+                              {/* Uur */}
+                              <select
+                                value={item.time ? item.time.split(":")[0] : "12"}
+                                onChange={(e) => {
+                                  const min = item.time ? item.time.split(":")[1] ?? "00" : "00"
+                                  const updated = [...programmaItems]
+                                  updated[i] = { ...updated[i], time: `${e.target.value}:${min}` }
+                                  updateContent("Programma", { items: updated, layout: programLayout })
+                                }}
+                                className="rounded-lg border border-gray-200 px-1.5 py-1.5 text-xs font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 bg-white cursor-pointer"
+                              >
+                                {Array.from({ length: 18 }, (_, k) => String(k + 6).padStart(2, "0")).map(h => (
+                                  <option key={h} value={h}>{h}</option>
+                                ))}
+                              </select>
+                              <span className="text-xs font-bold text-gray-500">:</span>
+                              {/* Minuten */}
+                              <select
+                                value={item.time ? (["00","15","30","45"].includes(item.time.split(":")[1]) ? item.time.split(":")[1] : "00") : "00"}
+                                onChange={(e) => {
+                                  const hr = item.time ? item.time.split(":")[0] ?? "12" : "12"
+                                  const updated = [...programmaItems]
+                                  updated[i] = { ...updated[i], time: `${hr}:${e.target.value}` }
+                                  updateContent("Programma", { items: updated, layout: programLayout })
+                                }}
+                                className="rounded-lg border border-gray-200 px-1.5 py-1.5 text-xs font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 bg-white cursor-pointer"
+                              >
+                                {["00","15","30","45"].map(m => (
+                                  <option key={m} value={m}>{m}</option>
+                                ))}
+                              </select>
+                            </div>
                             <button
                               onClick={() => setOpenIconPickerIdx(openIconPickerIdx === i ? null : i)}
                               className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-xs font-semibold transition-colors ${
