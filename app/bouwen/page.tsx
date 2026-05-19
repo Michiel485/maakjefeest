@@ -147,25 +147,27 @@ async function uploadToStorage(file: File, bucket: string): Promise<string> {
 const STYLES: { id: Style; label: string; sub: string; dot: string; border: string; active: string }[] = [
   { id: "zand",   label: "Gold & Ivory",      sub: "Clean, licht & tijdloos",   dot: "bg-[#E6D5B8]",    border: "border-[#E6D5B8]/60",    active: "ring-[#E6D5B8]"     },
   { id: "ivoor",  label: "Pampas & Pearl",    sub: "Luchtig, wild & vrij",      dot: "bg-[#C8D4C0]",    border: "border-[#C8D4C0]/60",    active: "ring-[#9CA996]"     },
-  { id: "roze",   label: "Terracotta & Gold", sub: "Warm, modern & feestelijk", dot: "bg-[#C86F59]",    border: "border-[#C86F59]/40",    active: "ring-[#C86F59]"     },
+  { id: "roze",   label: "Terracotta & Gold", sub: "Mediterraans, rijk & gedurfd", dot: "bg-[#D07C60]", border: "border-[#C5A059]/50",   active: "ring-[#C5A059]"     },
   { id: "earthy", label: "Earthy & Warm",     sub: "Diep, aards & gedurfd",     dot: "bg-[#8B5E3C]",    border: "border-[#8B5E3C]/40",    active: "ring-[#8B5E3C]"     },
 ]
 
 const STYLE_CONFIG = {
   roze: {
-    accent: "#E8627A",
-    heroGradient: "linear-gradient(135deg, #fff0f3, #fce7e7, #fff5ee)",
-    fontFamily: "Inter, sans-serif",
+    accent: "#C5A059",
+    heroGradient: "linear-gradient(135deg, #FDFBF7, #F5E8D8, #EACFB5)",
+    fontFamily: "var(--font-lora), serif",
     nameFont: null as string | null,
-    navBg: "#ffffff",
-    navText: "#374151",
-    headingColor: "#1a1a1a",
-    bodyText: "#4b5563",
-    buttonBg: "#E8627A",
+    navBg: "#FDFBF7",
+    navText: "#4A2E1C",
+    headingColor: "#3A1E0D",
+    bodyText: "#7A4835",
+    buttonBg: "#D07C60",
     buttonText: "#ffffff",
-    labelColor: "#E8627A",
-    bodyBg: "#f1f5f9",
-    floral: false as boolean,
+    labelColor: "#C5A059",
+    bodyBg: "#F5EDE0",
+    floral: true as boolean,
+    floralFilter: "sepia(0.35) saturate(2.2) hue-rotate(-15deg)" as string | null,
+    bodyLetterSpacing: "0.03em",
     fontImport: null as string | null,
   },
   ivoor: {
@@ -182,6 +184,8 @@ const STYLE_CONFIG = {
     labelColor: "#B5A898",
     bodyBg: "#EBE6DF",
     floral: false as boolean,
+    floralFilter: null as string | null,
+    bodyLetterSpacing: "normal",
     fontImport: null as string | null,
   },
   zand: {
@@ -198,6 +202,8 @@ const STYLE_CONFIG = {
     labelColor: "#C5A059",
     bodyBg: "#F3EFEA",
     floral: false as boolean,
+    floralFilter: null as string | null,
+    bodyLetterSpacing: "normal",
     fontImport: "@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Pinyon+Script&display=swap');",
   },
   earthy: {
@@ -214,6 +220,8 @@ const STYLE_CONFIG = {
     labelColor: "#A0785A",
     bodyBg: "#F0E8DC",
     floral: false as boolean,
+    floralFilter: null as string | null,
+    bodyLetterSpacing: "normal",
     fontImport: null as string | null,
   },
 } as const
@@ -1699,7 +1707,7 @@ export default function BouwenPage() {
               <div ref={canvasContainerRef} className="flex-1 overflow-y-auto bg-gray-100 p-6">
                 <div className="mx-auto" style={{ width: `${Math.round(canvasWidth * canvasScale * zoomMultiplier)}px` }}>
                   <div style={{ width: canvasWidth, transform: `scale(${canvasScale * zoomMultiplier})`, transformOrigin: "top left" }}>
-                    <div className="rounded-2xl shadow-xl overflow-clip relative" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
+                    <div className="rounded-2xl shadow-xl overflow-clip relative" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily, letterSpacing: sc.bodyLetterSpacing }}>
                       {sc.fontImport && <style>{sc.fontImport}</style>}
                       <div className="bg-gray-50 border-b border-gray-200 px-4 py-2 flex items-center gap-2">
                         <div className="flex gap-1.5 flex-shrink-0">
@@ -1873,6 +1881,7 @@ export default function BouwenPage() {
                               mixBlendMode: "multiply",
                               userSelect: "none",
                               pointerEvents: "none",
+                              filter: sc.floralFilter ?? undefined,
                             }}
                           />
                         </div>

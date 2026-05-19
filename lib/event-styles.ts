@@ -2,19 +2,21 @@ import { getTitleFont } from "./title-fonts"
 
 export const STYLE_CONFIG = {
   roze: {
-    accent: "#E8627A",
-    heroGradient: "linear-gradient(135deg, #fff0f3, #fce7e7, #fff5ee)",
-    fontFamily: "Inter, sans-serif",
+    accent: "#C5A059",
+    heroGradient: "linear-gradient(135deg, #FDFBF7, #F5E8D8, #EACFB5)",
+    fontFamily: "var(--font-lora), serif",
     nameFont: null as string | null,
-    navBg: "#ffffff",
-    navText: "#374151",
-    headingColor: "#1a1a1a",
-    bodyText: "#4b5563",
-    buttonBg: "#E8627A",
+    navBg: "#FDFBF7",
+    navText: "#4A2E1C",
+    headingColor: "#3A1E0D",
+    bodyText: "#7A4835",
+    buttonBg: "#D07C60",
     buttonText: "#ffffff",
-    labelColor: "#E8627A",
-    bodyBg: "#f1f5f9",
-    floral: false as boolean,
+    labelColor: "#C5A059",
+    bodyBg: "#F5EDE0",
+    floral: true as boolean,
+    floralFilter: "sepia(0.35) saturate(2.2) hue-rotate(-15deg)" as string | null,
+    bodyLetterSpacing: "0.03em",
     fontImport: null as string | null,
   },
   ivoor: {
@@ -31,6 +33,8 @@ export const STYLE_CONFIG = {
     labelColor: "#B5A898",
     bodyBg: "#EBE6DF",
     floral: false as boolean,
+    floralFilter: null as string | null,
+    bodyLetterSpacing: "normal",
     fontImport: null as string | null,
   },
   zand: {
@@ -47,6 +51,8 @@ export const STYLE_CONFIG = {
     labelColor: "#C5A059",
     bodyBg: "#F3EFEA",
     floral: false as boolean,
+    floralFilter: null as string | null,
+    bodyLetterSpacing: "normal",
     fontImport: "@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Pinyon+Script&display=swap');",
   },
   earthy: {
@@ -63,6 +69,8 @@ export const STYLE_CONFIG = {
     labelColor: "#A0785A",
     bodyBg: "#F0E8DC",
     floral: false as boolean,
+    floralFilter: null as string | null,
+    bodyLetterSpacing: "normal",
     fontImport: null as string | null,
   },
 } as const
@@ -83,6 +91,8 @@ export interface SC {
   labelColor: string
   bodyBg: string
   floral: boolean
+  floralFilter: string | null
+  bodyLetterSpacing: string
   fontImport: string | null
   fontHero: string
   fontHeroWeight: number
