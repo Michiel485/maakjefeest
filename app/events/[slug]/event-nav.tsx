@@ -83,21 +83,21 @@ export default function EventNav({
   const desktopNavClass =
     navLayout === "stacked"
       ? "@md:flex-col @md:items-center @md:gap-2 @md:py-5"
+      // left + split: wrap at @md (title centered top, links centered below); open to native at @2xl
       : navLayout === "left"
-      ? "@md:justify-start @md:gap-6"
-      // split: wrap at @md so title is on its own row, full split at @2xl
+      ? "@md:flex-wrap @md:justify-center @md:gap-y-2 @2xl:flex-nowrap @2xl:justify-start @2xl:gap-6"
       : "@md:flex-wrap @md:justify-center @md:gap-y-2 @2xl:flex-nowrap @2xl:justify-between"
 
   const desktopLinksClass =
     navLayout === "stacked"
       ? "hidden @md:flex items-center flex-wrap justify-center gap-1 @md:w-full"
       : navLayout === "left"
-      ? "hidden @md:flex items-center flex-wrap gap-1"
+      ? "hidden @md:flex items-center flex-wrap justify-center gap-1"
       : "hidden @md:flex items-center flex-wrap justify-center @2xl:justify-end gap-1" // split
 
-  // Title maxWidth — stacked and split-at-@md should be unrestricted for centering
+  // Title maxWidth — all wrapping layouts should be unrestricted so centered row works
   const titleMaxWidth =
-    navLayout === "stacked" || navLayout === "split" ? "none" : sc.floral ? "260px" : "200px"
+    navLayout === "stacked" || navLayout === "split" || navLayout === "left" ? "none" : sc.floral ? "260px" : "200px"
 
   const titleStyle: React.CSSProperties = {
     fontSize: sc.floral ? "1.25rem" : "0.9375rem",
@@ -126,7 +126,7 @@ export default function EventNav({
           className={`flex-shrink-0 ${
             navLayout === "stacked"
               ? "@md:w-full @md:text-center"
-              : navLayout === "split"
+              : navLayout === "split" || navLayout === "left"
               ? "@md:block @md:w-full @md:text-center @2xl:inline-block @2xl:w-auto @2xl:text-left"
               : ""
           }`}
