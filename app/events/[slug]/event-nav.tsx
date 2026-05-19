@@ -104,7 +104,7 @@ export default function EventNav({
     fontWeight: sc.fontFrameNamesWeight ?? 800,
     letterSpacing: sc.floral ? "0.01em" : "-0.02em",
     fontFamily: sc.fontFrameNames ?? sc.fontFamily,
-    color: sc.accent,
+    color: sc.navText,
     textDecoration: "none",
     whiteSpace: "nowrap",
     overflow: "hidden",

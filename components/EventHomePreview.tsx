@@ -192,7 +192,7 @@ export default function EventHomePreview({
             <div
               className="absolute inset-0 flex flex-col items-center justify-center"
             >
-              <div className={`flex flex-col items-center gap-[0.8cqi] ${safeZoneClass}`} style={{ transform: "translateY(-6%)" }}>
+              <div className={`flex flex-col items-center ${safeZoneClass}`} style={{ transform: "translateY(-6%)" }}>
               {initials && (
                 <p
                   className="fk-initials uppercase text-center"
@@ -209,7 +209,7 @@ export default function EventHomePreview({
               )}
 
               <p
-                className="fk-names text-center"
+                className={`fk-names text-center ${initials ? "mt-[0.5cqi]" : ""}`}
                 style={{
                   fontFamily: sc.fontFrameNames,
                   fontWeight: sc.fontFrameNamesWeight,
@@ -224,7 +224,7 @@ export default function EventHomePreview({
 
               {datumFormatted && (
                 <p
-                  className="fk-detail uppercase text-center"
+                  className="fk-detail uppercase text-center mt-[1.1cqi]"
                   style={{
                     fontFamily: sc.fontFamily,
                     color: sc.bodyText,
@@ -240,7 +240,7 @@ export default function EventHomePreview({
 
               {frameDisplayLocation && (
                 <p
-                  className="fk-detail text-center"
+                  className="fk-detail text-center mt-[0.4cqi]"
                   style={{
                     fontFamily: sc.fontFamily,
                     color: sc.bodyText,
