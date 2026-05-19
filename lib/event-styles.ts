@@ -3,7 +3,7 @@ import { getTitleFont } from "./title-fonts"
 export const STYLE_CONFIG = {
   roze: {
     accent: "#C5A059",
-    heroGradient: "linear-gradient(135deg, #EBC0B4, #E2A796, #D99080)",
+    heroGradient: "linear-gradient(135deg, #C87A68, #B86050, #A85040)",
     fontFamily: "var(--font-lora), serif",
     nameFont: null as string | null,
     navBg: "#E2A796",
@@ -13,7 +13,11 @@ export const STYLE_CONFIG = {
     buttonBg: "#C5A059",
     buttonText: "#ffffff",
     labelColor: "#C5A059",
-    bodyBg: "#D99080",
+    bodyBg: "#B56C5A",
+    bodyBackground: "url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n' x='0' y='0'><feTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4' stitchTiles='stitch'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='0.06'/></svg>\") repeat, #B56C5A" as string | null,
+    cardBg: "#1E1A18" as string | null,
+    cardText: "#FAF6F0" as string | null,
+    goldBorder: true as boolean,
     floral: false as boolean,
     floralFilter: null as string | null,
     bodyLetterSpacing: "0.02em",
@@ -33,6 +37,10 @@ export const STYLE_CONFIG = {
     buttonText: "#ffffff",
     labelColor: "#B5A898",
     bodyBg: "#EBE6DF",
+    bodyBackground: null as string | null,
+    cardBg: null as string | null,
+    cardText: null as string | null,
+    goldBorder: false as boolean,
     floral: false as boolean,
     floralFilter: null as string | null,
     bodyLetterSpacing: "normal",
@@ -52,6 +60,10 @@ export const STYLE_CONFIG = {
     buttonText: "#ffffff",
     labelColor: "#C5A059",
     bodyBg: "#F3EFEA",
+    bodyBackground: null as string | null,
+    cardBg: null as string | null,
+    cardText: null as string | null,
+    goldBorder: false as boolean,
     floral: false as boolean,
     floralFilter: null as string | null,
     bodyLetterSpacing: "normal",
@@ -71,6 +83,10 @@ export const STYLE_CONFIG = {
     buttonText: "#ffffff",
     labelColor: "#8A4B53",
     bodyBg: "#ECEBE4",
+    bodyBackground: null as string | null,
+    cardBg: null as string | null,
+    cardText: null as string | null,
+    goldBorder: false as boolean,
     floral: false as boolean,
     floralFilter: null as string | null,
     bodyLetterSpacing: "normal",
@@ -96,6 +112,10 @@ export interface SC {
   bodyBg: string
   floral: boolean
   floralFilter: string | null
+  bodyBackground: string | null
+  cardBg: string | null
+  cardText: string | null
+  goldBorder: boolean
   bodyLetterSpacing: string
   bodyFontWeight: string
   fontImport: string | null

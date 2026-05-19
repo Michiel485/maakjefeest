@@ -38,7 +38,7 @@ export default async function EventLayout({
   const basePath = process.env.NODE_ENV === "production" ? "" : `/events/${slug}`
 
   return (
-    <div className="min-h-screen sm:py-12" style={{ fontFamily: sc.fontFamily, backgroundColor: sc.bodyBg, letterSpacing: sc.bodyLetterSpacing, fontWeight: sc.bodyFontWeight }}>
+    <div className="min-h-screen sm:py-12" style={{ fontFamily: sc.fontFamily, background: sc.bodyBackground ?? sc.bodyBg, letterSpacing: sc.bodyLetterSpacing, fontWeight: sc.bodyFontWeight }}>
       {sc.fontImport && <style>{sc.fontImport}</style>}
       {sc.floral && (
         <style>{`

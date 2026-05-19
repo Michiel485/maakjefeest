@@ -19,6 +19,23 @@ export const DEFAULT_WISHLIST_ITEMS: WishlistItem[] = [
   },
 ]
 
+function CardWrapper({ sc, className, children }: { sc: SC; className?: string; children: React.ReactNode }) {
+  if (sc.goldBorder && sc.cardBg) {
+    return (
+      <div className={className} style={{ background: "linear-gradient(135deg, #D4AF37, #FFF2CD 50%, #AA771C)", padding: 2, borderRadius: 18 }}>
+        <div className="flex flex-col items-center text-center px-6 py-8 gap-3" style={{ backgroundColor: sc.cardBg, borderRadius: 16, height: "100%" }}>
+          {children}
+        </div>
+      </div>
+    )
+  }
+  return (
+    <div className={`${className ?? ""} flex flex-col items-center text-center rounded-2xl px-6 py-8 gap-3`} style={{ backgroundColor: `${sc.accent}08`, border: `1px solid ${sc.accent}20` }}>
+      {children}
+    </div>
+  )
+}
+
 export default function WishlistPreview({
   items,
   sc,
@@ -36,23 +53,19 @@ export default function WishlistPreview({
       </p>
       <div className="flex flex-wrap justify-center gap-5">
         {items.map((item) => (
-          <div
-            key={item.id}
-            className="w-full @md:w-[calc(33.333%-1rem)] flex flex-col items-center text-center rounded-2xl px-6 py-8 gap-3"
-            style={{ backgroundColor: `${sc.accent}08`, border: `1px solid ${sc.accent}20` }}
-          >
+          <CardWrapper key={item.id} sc={sc} className="w-full @md:w-[calc(33.333%-1rem)]">
             <span style={{ color: sc.accent }}>
               <ProgramIcon iconId={item.iconId} strokeWidth={1.5} className="w-16 h-16" />
             </span>
-            <p className="font-extrabold text-base leading-tight" style={{ color: sc.headingColor }}>
+            <p className="font-extrabold text-base leading-tight" style={{ color: sc.goldBorder ? (sc.cardText ?? sc.headingColor) : sc.headingColor }}>
               {item.title}
             </p>
             {item.text && (
-              <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: sc.bodyText }}>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: sc.goldBorder ? (sc.cardText ?? sc.bodyText) : sc.bodyText }}>
                 {item.text}
               </p>
             )}
-          </div>
+          </CardWrapper>
         ))}
       </div>
     </div>

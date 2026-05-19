@@ -253,42 +253,51 @@ export default function EventProgramPreview({
 
         {/* ── Centered — strict 3-column grid, text always middle ─────────── */}
         {programLayout === "centered" && (
-          <div>
-            {list.map((item, i) => (
-              <div
-                key={item.id ?? i}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "110px 1fr",
-                  alignItems: "center",
-                  gap: 24,
-                  padding: "28px 0",
-                  borderBottom: i < list.length - 1 ? `1px dashed ${sc.accent}35` : "none",
-                  opacity: faded,
-                }}
-              >
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-                  <span style={{ color: sc.accent }}>
-                    <ProgramIcon iconId={item.iconId} size={80} strokeWidth={1.5} />
-                  </span>
-                  <span style={{ fontSize: "1.75rem", fontWeight: 700, color: sc.labelColor, letterSpacing: "0.02em", lineHeight: 1 }}>
-                    {item.time}
-                  </span>
+          <div style={{ display: "flex", flexDirection: "column", gap: sc.goldBorder ? 12 : 0 }}>
+            {list.map((item, i) => {
+              const inner = (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "110px 1fr",
+                    alignItems: "center",
+                    gap: 24,
+                    padding: sc.goldBorder ? "24px 28px" : "28px 0",
+                    borderBottom: !sc.goldBorder && i < list.length - 1 ? `1px dashed ${sc.accent}35` : "none",
+                    opacity: faded,
+                  }}
+                >
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+                    <span style={{ color: sc.accent }}>
+                      <ProgramIcon iconId={item.iconId} size={80} strokeWidth={1.5} />
+                    </span>
+                    <span style={{ fontSize: "1.75rem", fontWeight: 700, color: sc.labelColor, letterSpacing: "0.02em", lineHeight: 1 }}>
+                      {item.time}
+                    </span>
+                  </div>
+                  <div>
+                    {item.title && (
+                      <p style={{ fontSize: "1.25rem", fontWeight: 800, color: sc.goldBorder ? (sc.cardText ?? sc.headingColor) : sc.headingColor, margin: "0 0 6px", lineHeight: 1.2 }}>
+                        {item.title}
+                      </p>
+                    )}
+                    {item.description && (
+                      <p className="min-w-0 break-words" style={{ fontSize: "0.9375rem", fontWeight: 400, color: sc.goldBorder ? (sc.cardText ?? sc.bodyText) : sc.bodyText, margin: 0, lineHeight: 1.6 }}>
+                        {item.description}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  {item.title && (
-                    <p style={{ fontSize: "1.25rem", fontWeight: 800, color: sc.headingColor, margin: "0 0 6px", lineHeight: 1.2 }}>
-                      {item.title}
-                    </p>
-                  )}
-                  {item.description && (
-                    <p className="min-w-0 break-words" style={{ fontSize: "0.9375rem", fontWeight: 400, color: sc.bodyText, margin: 0, lineHeight: 1.6 }}>
-                      {item.description}
-                    </p>
-                  )}
-                </div>
-              </div>
-            ))}
+              )
+              if (sc.goldBorder && sc.cardBg) {
+                return (
+                  <div key={item.id ?? i} style={{ background: "linear-gradient(135deg, #D4AF37, #FFF2CD 50%, #AA771C)", padding: 2, borderRadius: 16 }}>
+                    <div style={{ backgroundColor: sc.cardBg, borderRadius: 14 }}>{inner}</div>
+                  </div>
+                )
+              }
+              return <div key={item.id ?? i}>{inner}</div>
+            })}
           </div>
         )}
 

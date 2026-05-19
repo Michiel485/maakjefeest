@@ -100,15 +100,28 @@ export default async function EventSubPage({
     const introText = (typeof c.text === "string" && c.text)
       ? c.text
       : "Laat weten of je erbij bent — vul het formulier in."
+    const cardInner = (
+      <>
+        <p style={{ fontSize: "0.9375rem", marginBottom: 24, color: sc.goldBorder ? (sc.cardText ?? sc.bodyText) : sc.bodyText }}>{introText}</p>
+        <RsvpForm eventId={event.id} accentColor={sc.accent} />
+      </>
+    )
     return (
       <div style={{ padding: "36px 32px 64px" }}>
         <h1 style={{ fontSize: "1.75rem", fontWeight: sc.fontPageTitlesWeight, color: sc.headingColor, fontFamily: sc.fontPageTitles, margin: "0 0 28px" }}>
           {page.title}
         </h1>
-        <div style={{ borderRadius: 16, border: `1px solid ${sc.accent}20`, backgroundColor: `${sc.accent}08`, padding: "28px 32px" }}>
-          <p style={{ fontSize: "0.9375rem", marginBottom: 24, color: sc.bodyText }}>{introText}</p>
-          <RsvpForm eventId={event.id} accentColor={sc.accent} />
-        </div>
+        {sc.goldBorder && sc.cardBg ? (
+          <div style={{ background: "linear-gradient(135deg, #D4AF37, #FFF2CD 50%, #AA771C)", padding: 2, borderRadius: 18 }}>
+            <div style={{ backgroundColor: sc.cardBg, borderRadius: 16, padding: "28px 32px" }}>
+              {cardInner}
+            </div>
+          </div>
+        ) : (
+          <div style={{ borderRadius: 16, border: `1px solid ${sc.accent}20`, backgroundColor: `${sc.accent}08`, padding: "28px 32px" }}>
+            {cardInner}
+          </div>
+        )}
       </div>
     )
   }
