@@ -148,26 +148,27 @@ const STYLES: { id: Style; label: string; sub: string; dot: string; border: stri
   { id: "zand",   label: "Gold & Ivory",      sub: "Clean, licht & tijdloos",   dot: "bg-[#E6D5B8]",    border: "border-[#E6D5B8]/60",    active: "ring-[#E6D5B8]"     },
   { id: "ivoor",  label: "Pampas & Pearl",    sub: "Luchtig, wild & vrij",      dot: "bg-[#C8D4C0]",    border: "border-[#C8D4C0]/60",    active: "ring-[#9CA996]"     },
   { id: "roze",   label: "Terracotta & Gold", sub: "Mediterraans, rijk & gedurfd", dot: "bg-[#D07C60]", border: "border-[#C5A059]/50",   active: "ring-[#C5A059]"     },
-  { id: "earthy", label: "Earthy & Warm",     sub: "Diep, aards & gedurfd",     dot: "bg-[#8B5E3C]",    border: "border-[#8B5E3C]/40",    active: "ring-[#8B5E3C]"     },
+  { id: "earthy", label: "Earthy & Warm",     sub: "Modern rustiek & betoverend", dot: "bg-[#5A6B5D]",   border: "border-[#5A6B5D]/50",   active: "ring-[#5A6B5D]"     },
 ]
 
 const STYLE_CONFIG = {
   roze: {
-    accent: "#C5A059",
-    heroGradient: "linear-gradient(135deg, #FDFBF7, #F5E8D8, #EACFB5)",
+    accent: "#D4AF37",
+    heroGradient: "linear-gradient(135deg, #C87A65, #B86248, #A8523A)",
     fontFamily: "var(--font-lora), serif",
     nameFont: null as string | null,
-    navBg: "#FDFBF7",
-    navText: "#4A2E1C",
-    headingColor: "#3A1E0D",
-    bodyText: "#7A4835",
-    buttonBg: "#D07C60",
-    buttonText: "#ffffff",
-    labelColor: "#C5A059",
-    bodyBg: "#F5EDE0",
-    floral: true as boolean,
-    floralFilter: "sepia(0.35) saturate(2.2) hue-rotate(-15deg)" as string | null,
-    bodyLetterSpacing: "0.03em",
+    navBg: "#C87A65",
+    navText: "#FAF6F0",
+    headingColor: "#FAF6F0",
+    bodyText: "#F5ECD8",
+    buttonBg: "#D4AF37",
+    buttonText: "#2A1A0D",
+    labelColor: "#D4AF37",
+    bodyBg: "#B85C48",
+    floral: false as boolean,
+    floralFilter: null as string | null,
+    bodyLetterSpacing: "0.02em",
+    bodyFontWeight: "400",
     fontImport: null as string | null,
   },
   ivoor: {
@@ -186,6 +187,7 @@ const STYLE_CONFIG = {
     floral: false as boolean,
     floralFilter: null as string | null,
     bodyLetterSpacing: "normal",
+    bodyFontWeight: "400",
     fontImport: null as string | null,
   },
   zand: {
@@ -204,24 +206,26 @@ const STYLE_CONFIG = {
     floral: false as boolean,
     floralFilter: null as string | null,
     bodyLetterSpacing: "normal",
+    bodyFontWeight: "400",
     fontImport: "@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Pinyon+Script&display=swap');",
   },
   earthy: {
-    accent: "#A0785A",
-    heroGradient: "linear-gradient(135deg, #FAF5EE, #F0E6D8, #E8D9C8)",
+    accent: "#5A6B5D",
+    heroGradient: "linear-gradient(135deg, #EDE9E1, #DDD5C5, #CABFAB)",
     fontFamily: "var(--font-lora), serif",
     nameFont: null as string | null,
-    navBg: "#FAF7F2",
-    navText: "#3D2B1F",
-    headingColor: "#2C1A0E",
-    bodyText: "#5C4033",
-    buttonBg: "#A0785A",
+    navBg: "#F5F2ED",
+    navText: "#2A1A10",
+    headingColor: "#2A1A10",
+    bodyText: "#4A3728",
+    buttonBg: "#5A6B5D",
     buttonText: "#ffffff",
-    labelColor: "#A0785A",
-    bodyBg: "#F0E8DC",
-    floral: false as boolean,
-    floralFilter: null as string | null,
+    labelColor: "#8A4B53",
+    bodyBg: "#ECEBE4",
+    floral: true as boolean,
+    floralFilter: "brightness(0.8) contrast(1.15) saturate(1.6) sepia(0.55) hue-rotate(20deg)" as string | null,
     bodyLetterSpacing: "normal",
+    bodyFontWeight: "500",
     fontImport: null as string | null,
   },
 } as const
@@ -1707,7 +1711,7 @@ export default function BouwenPage() {
               <div ref={canvasContainerRef} className="flex-1 overflow-y-auto bg-gray-100 p-6">
                 <div className="mx-auto" style={{ width: `${Math.round(canvasWidth * canvasScale * zoomMultiplier)}px` }}>
                   <div style={{ width: canvasWidth, transform: `scale(${canvasScale * zoomMultiplier})`, transformOrigin: "top left" }}>
-                    <div className="rounded-2xl shadow-xl overflow-clip relative" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily, letterSpacing: sc.bodyLetterSpacing }}>
+                    <div className="rounded-2xl shadow-xl overflow-clip relative" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily, letterSpacing: sc.bodyLetterSpacing, fontWeight: sc.bodyFontWeight }}>
                       {sc.fontImport && <style>{sc.fontImport}</style>}
                       <div className="bg-gray-50 border-b border-gray-200 px-4 py-2 flex items-center gap-2">
                         <div className="flex gap-1.5 flex-shrink-0">

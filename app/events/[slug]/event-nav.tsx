@@ -85,18 +85,19 @@ export default function EventNav({
       ? "@md:flex-col @md:items-center @md:gap-2 @md:py-5"
       : navLayout === "left"
       ? "@md:justify-start @md:gap-6"
-      : "" // split: justify-between already in mobile base
+      // split: wrap at @md so title is on its own row, full split at @2xl
+      : "@md:flex-wrap @md:justify-center @md:gap-y-2 @2xl:flex-nowrap @2xl:justify-between"
 
   const desktopLinksClass =
     navLayout === "stacked"
       ? "hidden @md:flex items-center flex-wrap justify-center gap-1 @md:w-full"
       : navLayout === "left"
       ? "hidden @md:flex items-center flex-wrap gap-1"
-      : "hidden @md:flex items-center flex-wrap justify-end gap-1" // split
+      : "hidden @md:flex items-center flex-wrap justify-center @2xl:justify-end gap-1" // split
 
-  // Title maxWidth — stacked desktop should be unrestricted for centering
+  // Title maxWidth — stacked and split-at-@md should be unrestricted for centering
   const titleMaxWidth =
-    navLayout === "stacked" ? "none" : sc.floral ? "260px" : "200px"
+    navLayout === "stacked" || navLayout === "split" ? "none" : sc.floral ? "260px" : "200px"
 
   const titleStyle: React.CSSProperties = {
     fontSize: sc.floral ? "1.25rem" : "0.9375rem",
@@ -122,7 +123,13 @@ export default function EventNav({
         <a
           href={homeHref}
           onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("Home") } : undefined}
-          className={`flex-shrink-0 ${navLayout === "stacked" ? "@md:w-full @md:text-center" : ""}`}
+          className={`flex-shrink-0 ${
+            navLayout === "stacked"
+              ? "@md:w-full @md:text-center"
+              : navLayout === "split"
+              ? "@md:block @md:w-full @md:text-center @2xl:inline-block @2xl:w-auto @2xl:text-left"
+              : ""
+          }`}
           style={titleStyle}
         >
           {safeTitle}
