@@ -181,7 +181,7 @@ export default function EventHomePreview({
             style={{ containerType: "inline-size" } as React.CSSProperties}
           >
             <style>{`
-              .fk-initials  { font-size: clamp(1.2rem, 8cqi,  4.5rem); line-height: 1.1; letter-spacing: 0.2em; padding-top: 0.35em; }
+              .fk-initials  { font-size: clamp(1.2rem, 8cqi,  4.5rem); line-height: 1.1; letter-spacing: 0.2em; padding-top: 0.35em; padding-bottom: 0.45em; }
               .fk-names     { font-size: clamp(1rem,   5.5cqi, 3rem);   line-height: 1.2; }
               .fk-detail    { font-size: clamp(0.6rem, 1.8cqi, 0.85rem); letter-spacing: 0.18em; }
             `}</style>
@@ -192,7 +192,7 @@ export default function EventHomePreview({
             <div
               className="absolute inset-0 flex flex-col items-center justify-center"
             >
-              <div className={`flex flex-col items-center gap-[0.8cqi] ${safeZoneClass}`}>
+              <div className={`flex flex-col items-center gap-[0.8cqi] ${safeZoneClass}`} style={{ transform: "translateY(-6%)" }}>
               {initials && (
                 <p
                   className="fk-initials uppercase text-center"
