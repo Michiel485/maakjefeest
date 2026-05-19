@@ -112,10 +112,8 @@ export default async function EventSubPage({
           {page.title}
         </h1>
         {sc.goldBorder && sc.cardBg ? (
-          <div style={{ background: "linear-gradient(135deg, #D4AF37, #FFF2CD 50%, #AA771C)", padding: 2, borderRadius: 18 }}>
-            <div style={{ backgroundColor: sc.cardBg, borderRadius: 16, padding: "28px 32px" }}>
-              {cardInner}
-            </div>
+          <div style={{ backgroundColor: sc.cardBg, border: `2px solid ${sc.accent}`, borderRadius: 16, padding: "28px 32px" }}>
+            {cardInner}
           </div>
         ) : (
           <div style={{ borderRadius: 16, border: `1px solid ${sc.accent}20`, backgroundColor: `${sc.accent}08`, padding: "28px 32px" }}>

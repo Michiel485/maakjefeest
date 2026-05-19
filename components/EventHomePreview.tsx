@@ -311,7 +311,7 @@ export default function EventHomePreview({
 
       {/* ── Home content ── */}
       {(homeTitle || homeBody) && (
-        <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
+        <div className="px-8 py-10" style={{ backgroundColor: sc.bodyBackground ? "transparent" : sc.navBg }}>
           {homeTitle && (
             <p
               className={`font-bold mb-2 whitespace-pre-wrap ${sc.floral ? "text-xl" : "text-base"}`}

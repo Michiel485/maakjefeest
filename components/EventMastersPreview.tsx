@@ -21,7 +21,7 @@ export default function EventMastersPreview({ masters, sc, text }: EventMastersP
   const visible = masters.filter((m) => m.naam || m.foto_url)
 
   return (
-    <div className="@container px-6 py-10" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
+    <div className="@container px-6 py-10" style={{ backgroundColor: sc.bodyBackground ? "transparent" : sc.navBg, fontFamily: sc.fontFamily }}>
 
       {/* Paginatitel */}
       <p

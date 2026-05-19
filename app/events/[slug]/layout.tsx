@@ -56,7 +56,7 @@ export default async function EventLayout({
       )}
 
       <div className={`max-w-4xl mx-auto sm:shadow-2xl sm:rounded-2xl overflow-clip flex flex-col relative${sc.floral ? " bohemian-scale" : ""}`}
-        style={{ backgroundColor: sc.navBg }}>
+        style={{ background: sc.bodyBackground ?? sc.navBg }}>
 
         <EventNav title={(event.nav_title as string | null) || event.title} pages={pageList} sc={sc} navLayout={(event.nav_layout ?? "split") as "stacked" | "split" | "left"} basePath={basePath} />
 

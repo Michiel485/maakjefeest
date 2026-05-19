@@ -245,7 +245,7 @@ export default function EventProgramPreview({
   const faded = 1
 
   return (
-    <div className="@container" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
+    <div className="@container" style={{ backgroundColor: sc.bodyBackground ? "transparent" : sc.navBg, fontFamily: sc.fontFamily }}>
       <div style={{ padding: "36px 32px 52px" }}>
         <h2 style={{ fontSize: "2.25rem", fontWeight: sc.fontPageTitlesWeight, color: sc.headingColor, fontFamily: sc.fontPageTitles, textAlign: "center", margin: "0 0 28px" }}>
           Programma
@@ -291,8 +291,8 @@ export default function EventProgramPreview({
               )
               if (sc.goldBorder && sc.cardBg) {
                 return (
-                  <div key={item.id ?? i} style={{ background: "linear-gradient(135deg, #D4AF37, #FFF2CD 50%, #AA771C)", padding: 2, borderRadius: 16 }}>
-                    <div style={{ backgroundColor: sc.cardBg, borderRadius: 14 }}>{inner}</div>
+                  <div key={item.id ?? i} style={{ backgroundColor: sc.cardBg, border: `2px solid ${sc.accent}`, borderRadius: 16, overflow: "hidden" }}>
+                    {inner}
                   </div>
                 )
               }

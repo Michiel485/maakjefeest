@@ -22,10 +22,11 @@ export const DEFAULT_WISHLIST_ITEMS: WishlistItem[] = [
 function CardWrapper({ sc, className, children }: { sc: SC; className?: string; children: React.ReactNode }) {
   if (sc.goldBorder && sc.cardBg) {
     return (
-      <div className={className} style={{ background: "linear-gradient(135deg, #D4AF37, #FFF2CD 50%, #AA771C)", padding: 2, borderRadius: 18 }}>
-        <div className="flex flex-col items-center text-center px-6 py-8 gap-3" style={{ backgroundColor: sc.cardBg, borderRadius: 16, height: "100%" }}>
-          {children}
-        </div>
+      <div
+        className={`${className ?? ""} flex flex-col items-center text-center px-6 py-8 gap-3`}
+        style={{ backgroundColor: sc.cardBg, border: `2px solid ${sc.accent}`, borderRadius: 18 }}
+      >
+        {children}
       </div>
     )
   }
@@ -44,7 +45,7 @@ export default function WishlistPreview({
   sc: SC
 }) {
   return (
-    <div className="@container px-6 py-10" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
+    <div className="@container px-6 py-10" style={{ backgroundColor: sc.bodyBackground ? "transparent" : sc.navBg, fontFamily: sc.fontFamily }}>
       <p
         className="text-4xl text-center mb-8"
         style={{ color: sc.headingColor, fontFamily: sc.fontPageTitles, fontWeight: sc.fontPageTitlesWeight }}
