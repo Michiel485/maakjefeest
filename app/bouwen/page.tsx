@@ -385,6 +385,7 @@ export default function BouwenPage() {
             frame_location: (event.frame_location as string) ?? undefined,
             hero_image_pos_x: (event.hero_image_pos_x as number) ?? 50,
             hero_image_pos_y: (event.hero_image_pos_y as number) ?? 50,
+            heroOverlay: (event.hero_overlay as boolean) ?? true,
             homeContent: restoredHomeContent,
           }
 
@@ -637,6 +638,7 @@ export default function BouwenPage() {
       font_frame_names: fontFrameNames,
       font_page_titles: fontPageTitles,
       hero_image_url: heroUrl,
+      heroOverlay: draft?.heroOverlay ?? true,
       nav_layout: navLayout,
       pages: activePages,
       content: mergedContent,
@@ -646,6 +648,7 @@ export default function BouwenPage() {
       "[save] verstuur naar /api/drafts",
       "| event_id:", payload.event_id,
       "| hero_image_url:", payload.hero_image_url,
+      "| heroOverlay:", payload.heroOverlay,
       "| programma items:", (programmaItems).map((it) => ({ id: it.id, image_url: it.image_url })),
     )
 
