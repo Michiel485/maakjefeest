@@ -30,7 +30,7 @@ export async function GET(
 
   const { data: event } = await service
     .from("events")
-    .select("id, slug, type, title, datum, locatie, style, font_hero, font_initials, font_frame_names, font_page_titles, hero_image_url, hero_overlay, nav_layout, nav_title, use_frame, frame_style, initials, frame_names, frame_location, frame_initials_size, frame_names_size, hero_image_pos_x, hero_image_pos_y, status")
+    .select("id, slug, type, title, datum, locatie, style, font_hero, font_initials, font_frame_names, font_page_titles, hero_image_url, hero_overlay, nav_layout, nav_title, use_frame, frame_style, initials, frame_names, frame_location, frame_initials_size, frame_names_size, frame_date_size, frame_location_size, hero_image_pos_x, hero_image_pos_y, status")
     .eq("id", event_id)
     .eq("user_email", user.email)
     .single()

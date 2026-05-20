@@ -29,6 +29,8 @@ export interface EventHomePreviewProps {
   frameLocation?: string | null
   frameInitialsSize?: number
   frameNamesSize?: number
+  frameDateSize?: number
+  frameLocationSize?: number
   onNavigate?: (pageId: string) => void
   rsvpHref?: string
 }
@@ -55,6 +57,8 @@ export default function EventHomePreview({
   frameLocation,
   frameInitialsSize = 8,
   frameNamesSize = 5.5,
+  frameDateSize = 1.8,
+  frameLocationSize = 1.8,
   onNavigate,
   rsvpHref = "/RSVP",
 }: EventHomePreviewProps) {
@@ -193,7 +197,8 @@ export default function EventHomePreview({
             <style>{`
               .fk-initials  { font-size: clamp(1.2rem, ${frameInitialsSize}cqi, 4.5rem); line-height: 1.1; letter-spacing: 0.2em; padding-top: 0.35em; padding-bottom: 0.08em; }
               .fk-names     { font-size: clamp(1rem,   ${frameNamesSize}cqi,    3rem);   line-height: 1.2; }
-              .fk-detail    { font-size: clamp(0.6rem, 1.8cqi, 0.85rem); letter-spacing: 0.18em; }
+              .fk-date      { font-size: clamp(0.5rem, ${frameDateSize}cqi,     1.2rem); letter-spacing: 0.18em; }
+              .fk-location  { font-size: clamp(0.5rem, ${frameLocationSize}cqi, 1.2rem); }
             `}</style>
 
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -234,7 +239,7 @@ export default function EventHomePreview({
 
               {datumFormatted && (
                 <p
-                  className="fk-detail uppercase text-center mt-[1.1cqi]"
+                  className="fk-date uppercase text-center mt-[1.1cqi]"
                   style={{
                     fontFamily: sc.fontFamily,
                     color: sc.bodyText,
@@ -250,7 +255,7 @@ export default function EventHomePreview({
 
               {frameDisplayLocation && (
                 <p
-                  className="fk-detail text-center mt-[0.4cqi]"
+                  className="fk-location text-center mt-[0.4cqi]"
                   style={{
                     fontFamily: sc.fontFamily,
                     color: sc.bodyText,

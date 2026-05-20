@@ -59,6 +59,8 @@ interface Draft {
   frame_location?: string
   frameInitialsSize?: number
   frameNamesSize?: number
+  frameDateSize?: number
+  frameLocationSize?: number
   naam1?: string
   naam2?: string
   hero_image_pos_x?: number
@@ -387,6 +389,8 @@ export default function BouwenPage() {
             frame_location: (event.frame_location as string) ?? undefined,
             frameInitialsSize: (event.frame_initials_size as number) ?? undefined,
             frameNamesSize: (event.frame_names_size as number) ?? undefined,
+            frameDateSize: (event.frame_date_size as number) ?? undefined,
+            frameLocationSize: (event.frame_location_size as number) ?? undefined,
             hero_image_pos_x: (event.hero_image_pos_x as number) ?? 50,
             hero_image_pos_y: (event.hero_image_pos_y as number) ?? 50,
             heroOverlay: (event.hero_overlay as boolean) ?? true,
@@ -1272,21 +1276,30 @@ export default function BouwenPage() {
 
                       {draft?.use_frame && (<>
                         {/* Initialen */}
-                        <label className="flex flex-col gap-1.5">
+                        <div className="flex flex-col gap-1.5">
                           <span className="text-xs font-semibold text-gray-600">Initialen</span>
                           <input
                             type="text"
-                            maxLength={5}
                             value={draft?.initials ?? ""}
                             onChange={(e) => updateDraft({ initials: e.target.value })}
                             placeholder="bijv. M | W"
                             className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
                           />
                           <FontSelect value={fontInitials} onChange={saveFontInitials} />
-                        </label>
+                          <div className="flex items-center justify-between mt-0.5">
+                            <span className="text-xs text-gray-500">Lettergrootte</span>
+                            <span className="text-xs text-gray-400">{draft?.frameInitialsSize ?? 8}</span>
+                          </div>
+                          <input
+                            type="range" min={4} max={14} step={0.5}
+                            value={draft?.frameInitialsSize ?? 8}
+                            onChange={(e) => updateDraft({ frameInitialsSize: Number(e.target.value) })}
+                            className="w-full accent-rose-400"
+                          />
+                        </div>
 
                         {/* Namen in kader */}
-                        <label className="flex flex-col gap-1.5">
+                        <div className="flex flex-col gap-1.5">
                           <span className="text-xs font-semibold text-gray-600">Namen in kader</span>
                           <textarea
                             rows={2}
@@ -1296,10 +1309,35 @@ export default function BouwenPage() {
                             className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all resize-none"
                           />
                           <FontSelect value={fontFrameNames} onChange={saveFontFrameNames} />
-                        </label>
+                          <div className="flex items-center justify-between mt-0.5">
+                            <span className="text-xs text-gray-500">Lettergrootte</span>
+                            <span className="text-xs text-gray-400">{draft?.frameNamesSize ?? 5.5}</span>
+                          </div>
+                          <input
+                            type="range" min={2} max={9} step={0.5}
+                            value={draft?.frameNamesSize ?? 5.5}
+                            onChange={(e) => updateDraft({ frameNamesSize: Number(e.target.value) })}
+                            className="w-full accent-rose-400"
+                          />
+                        </div>
+
+                        {/* Datum in kader */}
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-xs font-semibold text-gray-600">Datum (wordt automatisch ingevuld)</span>
+                          <div className="flex items-center justify-between mt-0.5">
+                            <span className="text-xs text-gray-500">Lettergrootte</span>
+                            <span className="text-xs text-gray-400">{draft?.frameDateSize ?? 1.8}</span>
+                          </div>
+                          <input
+                            type="range" min={0.8} max={4} step={0.1}
+                            value={draft?.frameDateSize ?? 1.8}
+                            onChange={(e) => updateDraft({ frameDateSize: Number(e.target.value) })}
+                            className="w-full accent-rose-400"
+                          />
+                        </div>
 
                         {/* Locatie in kader */}
-                        <label className="flex flex-col gap-1.5">
+                        <div className="flex flex-col gap-1.5">
                           <span className="text-xs font-semibold text-gray-600">Locatie in kader</span>
                           <input
                             type="text"
@@ -1308,7 +1346,17 @@ export default function BouwenPage() {
                             placeholder="bijv. Kasteel de Haar"
                             className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
                           />
-                        </label>
+                          <div className="flex items-center justify-between mt-0.5">
+                            <span className="text-xs text-gray-500">Lettergrootte</span>
+                            <span className="text-xs text-gray-400">{draft?.frameLocationSize ?? 1.8}</span>
+                          </div>
+                          <input
+                            type="range" min={0.8} max={4} step={0.1}
+                            value={draft?.frameLocationSize ?? 1.8}
+                            onChange={(e) => updateDraft({ frameLocationSize: Number(e.target.value) })}
+                            className="w-full accent-rose-400"
+                          />
+                        </div>
 
                         {/* Kader grid */}
                         <div className="flex flex-col gap-1.5">
@@ -1321,8 +1369,8 @@ export default function BouwenPage() {
                               { id: "terra-diamond",    label: "Terra Ruit",      file: "terra-diamond.png.png"    },
                               { id: "earthy-circle",    label: "Earthy Cirkel",   file: "earthy-circle.png.png"    },
                               { id: "earthy-diamond",   label: "Earthy Ruit",     file: "earthy-diamond.png.png"   },
-                              { id: "olive-rectangle",  label: "Olive Rechthoek", file: "olive-rectangle.png.PNG"  },
-                              { id: "olive-square",     label: "Olive Vierkant",  file: "olive-square.png.png"     },
+                              { id: "olive-rectangle",  label: "Olijf Rechthoek", file: "olive-rectangle.png.PNG"  },
+                              { id: "olive-square",     label: "Olijf Vierkant",  file: "olive-square.png.png"     },
                             ]).map((frame) => {
                               const isActive = (draft?.frame_style ?? "gold-circle") === frame.id
                               return (
@@ -1355,33 +1403,6 @@ export default function BouwenPage() {
                           </div>
                         </div>
 
-                        {/* Lettergrootte initialen */}
-                        <div className="flex flex-col gap-1.5">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-semibold text-gray-600">Grootte initialen</span>
-                            <span className="text-xs text-gray-400">{draft?.frameInitialsSize ?? 8}</span>
-                          </div>
-                          <input
-                            type="range" min={4} max={14} step={0.5}
-                            value={draft?.frameInitialsSize ?? 8}
-                            onChange={(e) => updateDraft({ frameInitialsSize: Number(e.target.value) })}
-                            className="w-full accent-rose-400"
-                          />
-                        </div>
-
-                        {/* Lettergrootte namen */}
-                        <div className="flex flex-col gap-1.5">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-semibold text-gray-600">Grootte namen</span>
-                            <span className="text-xs text-gray-400">{draft?.frameNamesSize ?? 5.5}</span>
-                          </div>
-                          <input
-                            type="range" min={2} max={9} step={0.5}
-                            value={draft?.frameNamesSize ?? 5.5}
-                            onChange={(e) => updateDraft({ frameNamesSize: Number(e.target.value) })}
-                            className="w-full accent-rose-400"
-                          />
-                        </div>
                       </>)}
 
                     </div>
@@ -1803,6 +1824,8 @@ export default function BouwenPage() {
                           frameLocation={draft?.frame_location}
                           frameInitialsSize={draft?.frameInitialsSize}
                           frameNamesSize={draft?.frameNamesSize}
+                          frameDateSize={draft?.frameDateSize}
+                          frameLocationSize={draft?.frameLocationSize}
                           heroPosX={draft?.hero_image_pos_x ?? 50}
                           heroPosY={draft?.hero_image_pos_y ?? 50}
                           editableHero={true}
