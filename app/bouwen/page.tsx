@@ -57,6 +57,8 @@ interface Draft {
   initials?: string
   frame_names?: string
   frame_location?: string
+  frameInitialsSize?: number
+  frameNamesSize?: number
   naam1?: string
   naam2?: string
   hero_image_pos_x?: number
@@ -383,6 +385,8 @@ export default function BouwenPage() {
             initials: (event.initials as string) ?? undefined,
             frame_names: (event.frame_names as string) ?? undefined,
             frame_location: (event.frame_location as string) ?? undefined,
+            frameInitialsSize: (event.frame_initials_size as number) ?? undefined,
+            frameNamesSize: (event.frame_names_size as number) ?? undefined,
             hero_image_pos_x: (event.hero_image_pos_x as number) ?? 50,
             hero_image_pos_y: (event.hero_image_pos_y as number) ?? 50,
             heroOverlay: (event.hero_overlay as boolean) ?? true,
@@ -1311,13 +1315,14 @@ export default function BouwenPage() {
                           <span className="text-xs font-semibold text-gray-600">Kader stijl</span>
                           <div className="grid grid-cols-3 gap-2">
                             {([
-                              { id: "gold-circle",   label: "Gold Cirkel"   },
-                              { id: "gold-diamond",  label: "Gold Ruit"     },
-                              { id: "terra-circle",  label: "Terra Cirkel"  },
-                              { id: "terra-diamond", label: "Terra Ruit"    },
-                              { id: "earthy-circle", label: "Earthy Cirkel" },
-                              { id: "earthy-diamond",label: "Earthy Ruit"   },
-                            ] as const).map((frame) => {
+                              { id: "gold-circle",      label: "Gold Cirkel",     file: "gold-circle.png.png"      },
+                              { id: "gold-diamond",     label: "Gold Ruit",       file: "gold-diamond.png.png"     },
+                              { id: "terra-circle",     label: "Terra Cirkel",    file: "terra-circle.png.png"     },
+                              { id: "terra-diamond",    label: "Terra Ruit",      file: "terra-diamond.png.png"    },
+                              { id: "earthy-circle",    label: "Earthy Cirkel",   file: "earthy-circle.png.png"    },
+                              { id: "earthy-diamond",   label: "Earthy Ruit",     file: "earthy-diamond.png.png"   },
+                              { id: "olive-rectangle",  label: "Olive Rechthoek", file: "olive-rectangle.png.PNG"  },
+                            ]).map((frame) => {
                               const isActive = (draft?.frame_style ?? "gold-circle") === frame.id
                               return (
                                 <button
@@ -1332,7 +1337,7 @@ export default function BouwenPage() {
                                 >
                                   {/* eslint-disable-next-line @next/next/no-img-element */}
                                   <img
-                                    src={`/frames/${frame.id}.png.png`}
+                                    src={`/frames/${frame.file}`}
                                     alt={frame.label}
                                     className="w-full h-full object-cover"
                                   />
@@ -1347,6 +1352,34 @@ export default function BouwenPage() {
                               )
                             })}
                           </div>
+                        </div>
+
+                        {/* Lettergrootte initialen */}
+                        <div className="flex flex-col gap-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold text-gray-600">Grootte initialen</span>
+                            <span className="text-xs text-gray-400">{draft?.frameInitialsSize ?? 8}</span>
+                          </div>
+                          <input
+                            type="range" min={4} max={14} step={0.5}
+                            value={draft?.frameInitialsSize ?? 8}
+                            onChange={(e) => updateDraft({ frameInitialsSize: Number(e.target.value) })}
+                            className="w-full accent-rose-400"
+                          />
+                        </div>
+
+                        {/* Lettergrootte namen */}
+                        <div className="flex flex-col gap-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold text-gray-600">Grootte namen</span>
+                            <span className="text-xs text-gray-400">{draft?.frameNamesSize ?? 5.5}</span>
+                          </div>
+                          <input
+                            type="range" min={2} max={9} step={0.5}
+                            value={draft?.frameNamesSize ?? 5.5}
+                            onChange={(e) => updateDraft({ frameNamesSize: Number(e.target.value) })}
+                            className="w-full accent-rose-400"
+                          />
                         </div>
                       </>)}
 
@@ -1753,7 +1786,7 @@ export default function BouwenPage() {
                       {previewPage === "Home" && (
                         <EventHomePreview
                           typeLabel={typeLabel}
-                          title={eventName}
+                          title={draft?.naam ?? ""}
                           datum={draft?.datum || null}
                           datumFormatted={draft?.datum ? formatDate(draft.datum) : null}
                           locatie={eventLocatie || null}
@@ -1768,6 +1801,8 @@ export default function BouwenPage() {
                           initials={draft?.initials}
                           frameNames={draft?.frame_names}
                           frameLocation={draft?.frame_location}
+                          frameInitialsSize={draft?.frameInitialsSize}
+                          frameNamesSize={draft?.frameNamesSize}
                           heroPosX={draft?.hero_image_pos_x ?? 50}
                           heroPosY={draft?.hero_image_pos_y ?? 50}
                           editableHero={true}

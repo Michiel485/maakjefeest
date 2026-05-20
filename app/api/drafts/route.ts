@@ -104,6 +104,8 @@ export async function POST(request: Request) {
     initials?: string
     frame_names?: string
     frame_location?: string
+    frameInitialsSize?: number | null
+    frameNamesSize?: number | null
     pages: string[]
     content?: Record<string, Record<string, unknown>>
     event_id?: string
@@ -137,12 +139,14 @@ export async function POST(request: Request) {
     initials = null,
     frame_names = null,
     frame_location = null,
+    frameInitialsSize = null,
+    frameNamesSize = null,
     pages,
     content = {},
     event_id,
   } = body
 
-  if (!type || !naam) {
+  if (!type) {
     return Response.json({ error: "Verplichte velden ontbreken" }, { status: 400 })
   }
 
@@ -166,7 +170,7 @@ export async function POST(request: Request) {
       ))
       const { error: updateErr } = await db
         .from("events")
-        .update({ type, title: naam, datum, locatie, style, font_hero, font_initials, font_frame_names, font_page_titles, hero_image_url, hero_image_pos_x: Math.round(hero_image_pos_x), hero_image_pos_y: Math.round(hero_image_pos_y), hero_overlay: heroOverlay, nav_layout, nav_title: nav_title ?? naam, use_frame, frame_style, initials, frame_names, frame_location })
+        .update({ type, title: naam, datum, locatie, style, font_hero, font_initials, font_frame_names, font_page_titles, hero_image_url, hero_image_pos_x: Math.round(hero_image_pos_x), hero_image_pos_y: Math.round(hero_image_pos_y), hero_overlay: heroOverlay, nav_layout, nav_title: nav_title ?? naam, use_frame, frame_style, initials, frame_names, frame_location, frame_initials_size: frameInitialsSize, frame_names_size: frameNamesSize })
         .eq("id", event_id)
 
       if (updateErr) {
@@ -227,6 +231,8 @@ export async function POST(request: Request) {
       initials,
       frame_names,
       frame_location,
+      frame_initials_size: frameInitialsSize,
+      frame_names_size: frameNamesSize,
     })
     .select("id, slug")
     .single()

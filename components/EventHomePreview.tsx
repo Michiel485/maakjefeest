@@ -28,6 +28,8 @@ export interface EventHomePreviewProps {
   initials?: string | null
   frameNames?: string | null
   frameLocation?: string | null
+  frameInitialsSize?: number
+  frameNamesSize?: number
   onNavigate?: (pageId: string) => void
   rsvpHref?: string
 }
@@ -53,6 +55,8 @@ export default function EventHomePreview({
   initials,
   frameNames,
   frameLocation,
+  frameInitialsSize = 8,
+  frameNamesSize = 5.5,
   onNavigate,
   rsvpHref = "/RSVP",
 }: EventHomePreviewProps) {
@@ -107,10 +111,17 @@ export default function EventHomePreview({
     else                 countdownText = `JUST MARRIED • ${datumFormatted ?? ""}`
   }
 
-  // Safe zone: diamonds are widest at center, circles taper from sides
-  const isCircle  = frameStyle?.includes("circle")
-  const isDiamond = frameStyle?.includes("diamond")
-  const safeZoneClass = isDiamond ? "w-[80%] mx-auto" : "w-[65%] mx-auto"
+  // Frame filename: olive-rectangle uses .png.PNG, all others .png.png
+  const FRAME_FILE: Record<string, string> = {
+    "olive-rectangle": "olive-rectangle.png.PNG",
+  }
+  const frameFile = (id: string) => FRAME_FILE[id] ?? `${id}.png.png`
+
+  // Safe zone: diamonds are widest at center, circles taper from sides, rectangle is wide
+  const isCircle    = frameStyle?.includes("circle")
+  const isDiamond   = frameStyle?.includes("diamond")
+  const isRectangle = frameStyle?.includes("rectangle")
+  const safeZoneClass = isDiamond ? "w-[80%] mx-auto" : isRectangle ? "w-[72%] mx-auto" : "w-[65%] mx-auto"
 
   return (
     <div className="@container">
@@ -156,19 +167,21 @@ export default function EventHomePreview({
             />
           )}
 
-          <div className="absolute inset-0 flex items-center justify-center px-8 text-center">
-            <h1
-              className={`leading-tight whitespace-pre-wrap text-4xl ${isBoldHero ? "@md:text-6xl" : "@md:text-[4.5rem]"}`}
-              style={{
-                color: "#fff",
-                fontFamily: sc.fontHero,
-                fontWeight: sc.fontHeroWeight,
-                filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.75))",
-              }}
-            >
-              {title}
-            </h1>
-          </div>
+          {title && (
+            <div className="absolute inset-0 flex items-center justify-center px-8 text-center">
+              <h1
+                className={`leading-tight whitespace-pre-wrap text-4xl ${isBoldHero ? "@md:text-6xl" : "@md:text-[4.5rem]"}`}
+                style={{
+                  color: "#fff",
+                  fontFamily: sc.fontHero,
+                  fontWeight: sc.fontHeroWeight,
+                  filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.75))",
+                }}
+              >
+                {title}
+              </h1>
+            </div>
+          )}
         </section>
       )}
 
@@ -181,13 +194,13 @@ export default function EventHomePreview({
             style={{ containerType: "inline-size" } as React.CSSProperties}
           >
             <style>{`
-              .fk-initials  { font-size: clamp(1.2rem, 8cqi,  4.5rem); line-height: 1.1; letter-spacing: 0.2em; padding-top: 0.35em; padding-bottom: 0.08em; }
-              .fk-names     { font-size: clamp(1rem,   5.5cqi, 3rem);   line-height: 1.2; }
+              .fk-initials  { font-size: clamp(1.2rem, ${frameInitialsSize}cqi, 4.5rem); line-height: 1.1; letter-spacing: 0.2em; padding-top: 0.35em; padding-bottom: 0.08em; }
+              .fk-names     { font-size: clamp(1rem,   ${frameNamesSize}cqi,    3rem);   line-height: 1.2; }
               .fk-detail    { font-size: clamp(0.6rem, 1.8cqi, 0.85rem); letter-spacing: 0.18em; }
             `}</style>
 
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`${process.env.NEXT_PUBLIC_ASSET_ORIGIN ?? ""}/frames/${frameStyle}.png.png`} alt="" className="w-full h-auto block" />
+            <img src={`${process.env.NEXT_PUBLIC_ASSET_ORIGIN ?? ""}/frames/${frameFile(frameStyle!)}`} alt="" className="w-full h-auto block" />
 
             <div
               className="absolute inset-0 flex flex-col items-center justify-center"
