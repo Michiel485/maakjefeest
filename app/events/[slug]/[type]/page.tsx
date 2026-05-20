@@ -58,6 +58,7 @@ export default async function EventSubPage({
         imageUrl={typeof c.image_url === "string" ? c.image_url : null}
         imagePosX={typeof c.image_pos_x === "number" ? c.image_pos_x : 50}
         imagePosY={typeof c.image_pos_y === "number" ? c.image_pos_y : 50}
+        showOverlay={typeof c.show_overlay === "boolean" ? c.show_overlay : true}
         sc={sc}
       />
     )

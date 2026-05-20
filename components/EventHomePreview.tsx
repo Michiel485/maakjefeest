@@ -195,10 +195,10 @@ export default function EventHomePreview({
             style={{ containerType: "inline-size" } as React.CSSProperties}
           >
             <style>{`
-              .fk-initials  { font-size: clamp(1.2rem, ${frameInitialsSize}cqi, 4.5rem); line-height: 1.1; letter-spacing: 0.2em; padding-top: 0.35em; padding-bottom: 0.08em; }
-              .fk-names     { font-size: clamp(1rem,   ${frameNamesSize}cqi,    3rem);   line-height: 1.2; }
-              .fk-date      { font-size: clamp(0.5rem, ${frameDateSize}cqi,     1.2rem); letter-spacing: 0.18em; }
-              .fk-location  { font-size: clamp(0.5rem, ${frameLocationSize}cqi, 1.2rem); }
+              .fk-initials  { font-size: clamp(1.2rem, ${frameInitialsSize}cqi, 8rem);   line-height: 1.1; letter-spacing: 0.2em; padding-top: 0.35em; padding-bottom: 0.08em; }
+              .fk-names     { font-size: clamp(1rem,   ${frameNamesSize}cqi,    6rem);   line-height: 1.2; }
+              .fk-date      { font-size: clamp(0.5rem, ${frameDateSize}cqi,     3rem);   letter-spacing: 0.18em; }
+              .fk-location  { font-size: clamp(0.5rem, ${frameLocationSize}cqi, 3rem);   }
             `}</style>
 
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -210,7 +210,7 @@ export default function EventHomePreview({
               <div className={`flex flex-col items-center ${safeZoneClass}`} style={{ transform: "translateY(-9%)" }}>
               {initials && (
                 <p
-                  className="fk-initials uppercase text-center"
+                  className="fk-initials text-center"
                   style={{
                     fontFamily: sc.fontInitials,
                     fontWeight: sc.fontInitialsWeight,
