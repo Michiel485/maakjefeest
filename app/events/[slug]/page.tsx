@@ -47,7 +47,6 @@ export default async function EventHomePage({
 
   return (
     <EventHomePreview
-      typeLabel={TYPE_LABEL[event.type] ?? "Evenement"}
       title={event.title}
       datum={event.datum ?? null}
       datumFormatted={event.datum ? formatDate(event.datum) : null}

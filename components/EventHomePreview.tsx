@@ -8,7 +8,6 @@ function clamp(v: number, min: number, max: number) {
 }
 
 export interface EventHomePreviewProps {
-  typeLabel: string
   title: string
   datumFormatted: string | null
   locatie: string | null
@@ -35,7 +34,6 @@ export interface EventHomePreviewProps {
 }
 
 export default function EventHomePreview({
-  typeLabel,
   title,
   datum,
   datumFormatted,
@@ -118,9 +116,8 @@ export default function EventHomePreview({
   const frameFile = (id: string) => FRAME_FILE[id] ?? `${id}.png.png`
 
   // Safe zone: diamonds are widest at center, circles taper from sides, rectangle is wide
-  const isCircle    = frameStyle?.includes("circle")
   const isDiamond   = frameStyle?.includes("diamond")
-  const isRectangle = frameStyle?.includes("rectangle")
+  const isRectangle = frameStyle?.includes("rectangle") || frameStyle?.includes("square")
   const safeZoneClass = isDiamond ? "w-[80%] mx-auto" : isRectangle ? "w-[72%] mx-auto" : "w-[65%] mx-auto"
 
   return (

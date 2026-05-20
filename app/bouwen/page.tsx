@@ -1322,6 +1322,7 @@ export default function BouwenPage() {
                               { id: "earthy-circle",    label: "Earthy Cirkel",   file: "earthy-circle.png.png"    },
                               { id: "earthy-diamond",   label: "Earthy Ruit",     file: "earthy-diamond.png.png"   },
                               { id: "olive-rectangle",  label: "Olive Rechthoek", file: "olive-rectangle.png.PNG"  },
+                              { id: "olive-square",     label: "Olive Vierkant",  file: "olive-square.png.png"     },
                             ]).map((frame) => {
                               const isActive = (draft?.frame_style ?? "gold-circle") === frame.id
                               return (
@@ -1785,7 +1786,6 @@ export default function BouwenPage() {
                       />
                       {previewPage === "Home" && (
                         <EventHomePreview
-                          typeLabel={typeLabel}
                           title={draft?.naam ?? ""}
                           datum={draft?.datum || null}
                           datumFormatted={draft?.datum ? formatDate(draft.datum) : null}
