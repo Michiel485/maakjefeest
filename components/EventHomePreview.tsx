@@ -282,7 +282,7 @@ export default function EventHomePreview({
                 <a
                   href={rsvpHref}
                   onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("RSVP") } : undefined}
-                  className="inline-block text-sm font-bold px-7 py-3 rounded-xl"
+                  className="inline-block text-xs @md:text-sm font-bold px-3.5 py-1.5 @md:px-7 @md:py-3 rounded-lg @md:rounded-xl"
                   style={{
                     backgroundColor: sc.buttonBg,
                     color: sc.buttonText,
