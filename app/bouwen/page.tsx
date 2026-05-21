@@ -1368,7 +1368,7 @@ export default function BouwenPage() {
                               { id: "terra-diamond",    label: "Terra Ruit",      file: "terra-diamond.png.png"    },
                               { id: "earthy-circle",    label: "Earthy Cirkel",   file: "earthy-circle.png.png"    },
                               { id: "earthy-diamond",   label: "Earthy Ruit",     file: "earthy-diamond.png.png"   },
-                              { id: "olive-rectangle",  label: "Olijf Rechthoek", file: "olive-rectangle.png.PNG"  },
+                              { id: "bloem2-breed",     label: "Bloem 2 Breed",   file: "Bloem2-breed.png"         },
                               { id: "olive-square",     label: "Olijf Vierkant",  file: "olive-square.png.png"     },
                               { id: "bloem-rechthoek",  label: "Bloem Breed",     file: "Bloem-rechthoek.png"      },
                             ]).map((frame) => {

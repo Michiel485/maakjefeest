@@ -117,11 +117,12 @@ export default function EventHomePreview({
   const FRAME_FILE: Record<string, string> = {
     "olive-rectangle":  "olive-rectangle.png.PNG",
     "bloem-rechthoek":  "Bloem-rechthoek.png",
+    "bloem2-breed":     "Bloem2-breed.png",
   }
   const frameFile = (id: string) => FRAME_FILE[id] ?? `${id}.png.png`
 
   // Full-width frames fill the section without max-w-2xl cap
-  const isFullWidth = frameStyle === "bloem-rechthoek"
+  const isFullWidth = frameStyle === "bloem-rechthoek" || frameStyle === "bloem2-breed"
 
   // Safe zone: diamonds widest at center, circles taper, rectangles/squares wide, bloem narrower center
   const isDiamond   = frameStyle?.includes("diamond")
