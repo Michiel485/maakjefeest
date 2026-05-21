@@ -1199,18 +1199,16 @@ export default function BouwenPage() {
                           onChange={(e) => updateDraft({ datum: e.target.value })}
                           className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
                         />
-                        {!draft?.use_frame && (<>
-                          <div className="flex items-center justify-between mt-0.5">
-                            <span className="text-xs text-gray-500">Lettergrootte</span>
-                            <span className="text-xs text-gray-400">{draft?.frameDateSize ?? 1.8}</span>
-                          </div>
-                          <input
-                            type="range" min={0.8} max={8} step={0.1}
-                            value={draft?.frameDateSize ?? 1.8}
-                            onChange={(e) => updateDraft({ frameDateSize: Number(e.target.value) })}
-                            className="w-full accent-rose-400"
-                          />
-                        </>)}
+                        <div className="flex items-center justify-between mt-0.5">
+                          <span className="text-xs text-gray-500">Lettergrootte</span>
+                          <span className="text-xs text-gray-400">{draft?.frameDateSize ?? 1.8}</span>
+                        </div>
+                        <input
+                          type="range" min={0.8} max={8} step={0.1}
+                          value={draft?.frameDateSize ?? 1.8}
+                          onChange={(e) => updateDraft({ frameDateSize: Number(e.target.value) })}
+                          className="w-full accent-rose-400"
+                        />
                       </div>
                       {!draft?.use_frame && (
                         <label className="flex flex-col gap-1.5">
@@ -1359,21 +1357,6 @@ export default function BouwenPage() {
                           />
                         </div>
 
-                        {/* Datum in kader */}
-                        <div className="flex flex-col gap-1.5">
-                          <span className="text-xs font-semibold text-gray-600">Datum (wordt overgenomen van evenementgegevens)</span>
-                          <div className="flex items-center justify-between mt-0.5">
-                            <span className="text-xs text-gray-500">Lettergrootte</span>
-                            <span className="text-xs text-gray-400">{draft?.frameDateSize ?? 1.8}</span>
-                          </div>
-                          <input
-                            type="range" min={0.8} max={8} step={0.1}
-                            value={draft?.frameDateSize ?? 1.8}
-                            onChange={(e) => updateDraft({ frameDateSize: Number(e.target.value) })}
-                            className="w-full accent-rose-400"
-                          />
-                        </div>
-
                         {/* Kader grid */}
                         <div className="flex flex-col gap-1.5">
                           <span className="text-xs font-semibold text-gray-600">Kader stijl</span>
@@ -1387,6 +1370,7 @@ export default function BouwenPage() {
                               { id: "earthy-diamond",   label: "Earthy Ruit",     file: "earthy-diamond.png.png"   },
                               { id: "olive-rectangle",  label: "Olijf Rechthoek", file: "olive-rectangle.png.PNG"  },
                               { id: "olive-square",     label: "Olijf Vierkant",  file: "olive-square.png.png"     },
+                              { id: "bloem-rechthoek",  label: "Bloem Breed",     file: "Bloem-rechthoek.png"      },
                             ]).map((frame) => {
                               const isActive = (draft?.frame_style ?? "gold-circle") === frame.id
                               return (

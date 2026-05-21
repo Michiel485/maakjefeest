@@ -113,16 +113,20 @@ export default function EventHomePreview({
     else                 countdownText = `JUST MARRIED • ${datumFormatted ?? ""}`
   }
 
-  // Frame filename: olive-rectangle uses .png.PNG, all others .png.png
+  // Frame filename exceptions (non-.png.png files)
   const FRAME_FILE: Record<string, string> = {
-    "olive-rectangle": "olive-rectangle.png.PNG",
+    "olive-rectangle":  "olive-rectangle.png.PNG",
+    "bloem-rechthoek":  "Bloem-rechthoek.png",
   }
   const frameFile = (id: string) => FRAME_FILE[id] ?? `${id}.png.png`
 
-  // Safe zone: diamonds are widest at center, circles taper from sides, rectangle is wide
+  // Full-width frames fill the section without max-w-2xl cap
+  const isFullWidth = frameStyle === "bloem-rechthoek"
+
+  // Safe zone: diamonds widest at center, circles taper, rectangles/squares wide, bloem narrower center
   const isDiamond   = frameStyle?.includes("diamond")
   const isRectangle = frameStyle?.includes("rectangle") || frameStyle?.includes("square")
-  const safeZoneClass = isDiamond ? "w-[80%] mx-auto" : isRectangle ? "w-[72%] mx-auto" : "w-[65%] mx-auto"
+  const safeZoneClass = isDiamond ? "w-[80%] mx-auto" : isFullWidth ? "w-[50%] mx-auto" : isRectangle ? "w-[72%] mx-auto" : "w-[65%] mx-auto"
 
   return (
     <div className="@container">
@@ -187,11 +191,11 @@ export default function EventHomePreview({
       )}
 
       {/* ── Luxe Trouwkaart + CTA ── */}
-      <section className="w-full px-6 pt-6 pb-8 flex flex-col items-center" style={{ backgroundColor: sc.bodyBg }}>
+      <section className={`w-full pt-6 pb-8 flex flex-col items-center ${isFullWidth ? "px-0" : "px-6"}`} style={{ backgroundColor: sc.bodyBg }}>
         {useFrame && frameStyle ? (
           /* Container-query wrapper — text scales proportionally with the image */
           <div
-            className="relative w-full max-w-2xl"
+            className={`relative w-full ${isFullWidth ? "" : "max-w-2xl"}`}
             style={{ containerType: "inline-size" } as React.CSSProperties}
           >
             <style>{`
