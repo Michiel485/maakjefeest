@@ -191,7 +191,10 @@ export default function EventHomePreview({
       )}
 
       {/* ── Luxe Trouwkaart + CTA ── */}
-      <section className={`w-full pt-6 pb-8 flex flex-col items-center ${isFullWidth ? "px-0" : "px-6"}`} style={{ backgroundColor: sc.bodyBg }}>
+      <section
+        className={`w-full flex flex-col items-center ${isFullWidth ? "pt-0 pb-0 px-0" : "pt-6 pb-8 px-6"}`}
+        style={{ backgroundColor: sc.bodyBg }}
+      >
         {useFrame && frameStyle ? (
           /* Container-query wrapper — text scales proportionally with the image */
           <div
@@ -208,72 +211,90 @@ export default function EventHomePreview({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={`${process.env.NEXT_PUBLIC_ASSET_ORIGIN ?? ""}/frames/${frameFile(frameStyle!)}`} alt="" className="w-full h-auto block" />
 
-            <div
-              className="absolute inset-0 flex flex-col items-center justify-center"
-            >
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
               <div className={`flex flex-col items-center ${safeZoneClass}`} style={{ transform: "translateY(-9%)" }}>
-              {initials && (
+                {initials && (
+                  <p
+                    className="fk-initials text-center"
+                    style={{
+                      fontFamily: sc.fontInitials,
+                      fontWeight: sc.fontInitialsWeight,
+                      color: sc.headingColor,
+                      whiteSpace: "nowrap",
+                      maxWidth: "100%",
+                    }}
+                  >
+                    {initials}
+                  </p>
+                )}
+
                 <p
-                  className="fk-initials text-center"
+                  className={`fk-names text-center ${initials ? "mt-[0.25cqi]" : ""}`}
                   style={{
-                    fontFamily: sc.fontInitials,
-                    fontWeight: sc.fontInitialsWeight,
+                    fontFamily: sc.fontFrameNames,
+                    fontWeight: sc.fontFrameNamesWeight,
                     color: sc.headingColor,
-                    whiteSpace: "nowrap",
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-word",
                     maxWidth: "100%",
                   }}
                 >
-                  {initials}
+                  {frameDisplayNames}
                 </p>
-              )}
 
-              <p
-                className={`fk-names text-center ${initials ? "mt-[0.25cqi]" : ""}`}
-                style={{
-                  fontFamily: sc.fontFrameNames,
-                  fontWeight: sc.fontFrameNamesWeight,
-                  color: sc.headingColor,
-                  whiteSpace: "pre-wrap",
-                  wordBreak: "break-word",
-                  maxWidth: "100%",
-                }}
-              >
-                {frameDisplayNames}
-              </p>
+                {datumFormatted && (
+                  <p
+                    className="fk-date uppercase text-center mt-[1.1cqi]"
+                    style={{
+                      fontFamily: sc.fontFamily,
+                      color: sc.bodyText,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      maxWidth: "100%",
+                    }}
+                  >
+                    {datumFormatted}
+                  </p>
+                )}
 
-              {datumFormatted && (
-                <p
-                  className="fk-date uppercase text-center mt-[1.1cqi]"
-                  style={{
-                    fontFamily: sc.fontFamily,
-                    color: sc.bodyText,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                    maxWidth: "100%",
-                  }}
-                >
-                  {datumFormatted}
-                </p>
-              )}
-
-              {frameDisplayLocation && (
-                <p
-                  className="fk-location text-center mt-[0.4cqi]"
-                  style={{
-                    fontFamily: sc.fontFamily,
-                    color: sc.bodyText,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                    maxWidth: "100%",
-                  }}
-                >
-                  {frameDisplayLocation}
-                </p>
-              )}
+                {frameDisplayLocation && (
+                  <p
+                    className="fk-location text-center mt-[0.4cqi]"
+                    style={{
+                      fontFamily: sc.fontFamily,
+                      color: sc.bodyText,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      maxWidth: "100%",
+                    }}
+                  >
+                    {frameDisplayLocation}
+                  </p>
+                )}
               </div>
             </div>
+
+            {/* CTA inside frame for full-width frames */}
+            {isFullWidth && (
+              <div className="absolute inset-x-0 flex justify-center" style={{ top: "74%" }}>
+                <a
+                  href={rsvpHref}
+                  onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("RSVP") } : undefined}
+                  className="inline-block text-sm font-bold px-7 py-3 rounded-xl"
+                  style={{
+                    backgroundColor: sc.buttonBg,
+                    color: sc.buttonText,
+                    textDecoration: "none",
+                    boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
+                    fontFamily: sc.fontFamily,
+                  }}
+                >
+                  Meld je aan
+                </a>
+              </div>
+            )}
           </div>
         ) : (
           /* No frame: only date + location, minimal */
@@ -294,21 +315,23 @@ export default function EventHomePreview({
           </div>
         )}
 
-        {/* ── CTA ── */}
-        <a
-          href={rsvpHref}
-          onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("RSVP") } : undefined}
-          className="mt-6 inline-block text-sm font-bold px-7 py-3 rounded-xl"
-          style={{
-            backgroundColor: sc.buttonBg,
-            color: sc.buttonText,
-            textDecoration: "none",
-            boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
-            fontFamily: sc.fontFamily,
-          }}
-        >
-          Meld je aan
-        </a>
+        {/* CTA below frame — only for non-full-width frames and no-frame layout */}
+        {!isFullWidth && (
+          <a
+            href={rsvpHref}
+            onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("RSVP") } : undefined}
+            className="mt-6 inline-block text-sm font-bold px-7 py-3 rounded-xl"
+            style={{
+              backgroundColor: sc.buttonBg,
+              color: sc.buttonText,
+              textDecoration: "none",
+              boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
+              fontFamily: sc.fontFamily,
+            }}
+          >
+            Meld je aan
+          </a>
+        )}
       </section>
 
       {/* ── Countdown strip ── */}
