@@ -1212,16 +1212,18 @@ export default function BouwenPage() {
                           />
                         </>)}
                       </div>
-                      <label className="flex flex-col gap-1.5">
-                        <span className="text-xs font-semibold text-gray-600">Locatie</span>
-                        <input
-                          type="text"
-                          value={draft?.locatie ?? ""}
-                          onChange={(e) => updateDraft({ locatie: e.target.value })}
-                          placeholder="Bijv. Kasteel de Haar, Utrecht"
-                          className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                        />
-                      </label>
+                      {!draft?.use_frame && (
+                        <label className="flex flex-col gap-1.5">
+                          <span className="text-xs font-semibold text-gray-600">Locatie</span>
+                          <input
+                            type="text"
+                            value={draft?.locatie ?? ""}
+                            onChange={(e) => updateDraft({ locatie: e.target.value })}
+                            placeholder="Bijv. Kasteel de Haar, Utrecht"
+                            className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                          />
+                        </label>
+                      )}
                     </div>
                   </div>
 
@@ -1353,6 +1355,21 @@ export default function BouwenPage() {
                             type="range" min={0.8} max={8} step={0.1}
                             value={draft?.frameLocationSize ?? 1.8}
                             onChange={(e) => updateDraft({ frameLocationSize: Number(e.target.value) })}
+                            className="w-full accent-rose-400"
+                          />
+                        </div>
+
+                        {/* Datum in kader */}
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-xs font-semibold text-gray-600">Datum (wordt overgenomen van evenementgegevens)</span>
+                          <div className="flex items-center justify-between mt-0.5">
+                            <span className="text-xs text-gray-500">Lettergrootte</span>
+                            <span className="text-xs text-gray-400">{draft?.frameDateSize ?? 1.8}</span>
+                          </div>
+                          <input
+                            type="range" min={0.8} max={8} step={0.1}
+                            value={draft?.frameDateSize ?? 1.8}
+                            onChange={(e) => updateDraft({ frameDateSize: Number(e.target.value) })}
                             className="w-full accent-rose-400"
                           />
                         </div>

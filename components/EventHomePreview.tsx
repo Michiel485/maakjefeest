@@ -237,6 +237,22 @@ export default function EventHomePreview({
                 {frameDisplayNames}
               </p>
 
+              {datumFormatted && (
+                <p
+                  className="fk-date uppercase text-center mt-[1.1cqi]"
+                  style={{
+                    fontFamily: sc.fontFamily,
+                    color: sc.bodyText,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    maxWidth: "100%",
+                  }}
+                >
+                  {datumFormatted}
+                </p>
+              )}
+
               {frameDisplayLocation && (
                 <p
                   className="fk-location text-center mt-[0.4cqi]"
