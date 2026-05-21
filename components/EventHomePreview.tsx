@@ -278,7 +278,7 @@ export default function EventHomePreview({
 
             {/* CTA inside frame for full-width frames */}
             {isFullWidth && (
-              <div className="absolute inset-x-0 flex justify-center" style={{ top: "74%" }}>
+              <div className="absolute inset-x-0 flex justify-center" style={{ top: "82%" }}>
                 <a
                   href={rsvpHref}
                   onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("RSVP") } : undefined}
