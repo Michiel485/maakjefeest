@@ -3,9 +3,11 @@ import { createServiceClient } from "@/lib/supabase"
 interface GuestInput {
   name: string
   email?: string
-  guest_type: "daggast" | "avondgast"
+  guest_type?: "daggast" | "avondgast"
   dietary?: string
   is_primary: boolean
+  attending?: string
+  message?: string
 }
 
 export async function POST(request: Request) {
@@ -43,10 +45,11 @@ export async function POST(request: Request) {
     submission_id,
     name: g.name,
     email: g.email || null,
-    attending: "yes",
+    attending: g.attending ?? "yes",
     is_primary: g.is_primary,
-    guest_type: g.guest_type,
+    guest_type: g.guest_type ?? "daggast",
     dietary: g.dietary || null,
+    message: g.message || null,
   }))
 
   const { error } = await supabase.from("rsvp").insert(rows)

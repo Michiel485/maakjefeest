@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react"
 
+type Attending = "yes" | "no"
+
 interface Guest {
   name: string
   email: string
@@ -18,8 +20,10 @@ export default function RsvpForm({
   eventId: string
   accentColor?: string
 }) {
+  const [attending, setAttending] = useState<Attending>("yes")
   const [count, setCount] = useState(1)
   const [guests, setGuests] = useState<Guest[]>([defaultGuest()])
+  const [message, setMessage] = useState("")
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle")
 
   useEffect(() => {
@@ -39,19 +43,22 @@ export default function RsvpForm({
     e.preventDefault()
     setStatus("sending")
     try {
+      const guestPayload =
+        attending === "no"
+          ? [{ name: guests[0].name, email: guests[0].email || undefined, is_primary: true, attending: "no", message: message || undefined }]
+          : guests.map((g, i) => ({
+              name: g.name,
+              email: g.email || undefined,
+              guest_type: g.guest_type,
+              dietary: g.dietary || undefined,
+              is_primary: i === 0,
+              attending: "yes",
+            }))
+
       const res = await fetch("/api/rsvp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          event_id: eventId,
-          guests: guests.map((g, i) => ({
-            name: g.name,
-            email: g.email || undefined,
-            guest_type: g.guest_type,
-            dietary: g.dietary || undefined,
-            is_primary: i === 0,
-          })),
-        }),
+        body: JSON.stringify({ event_id: eventId, guests: guestPayload }),
       })
       if (!res.ok) throw new Error()
       setStatus("sent")
@@ -61,6 +68,21 @@ export default function RsvpForm({
   }
 
   if (status === "sent") {
+    if (attending === "no") {
+      return (
+        <div className="rounded-2xl bg-amber-50 border border-amber-100 p-8 text-center">
+          <div className="w-12 h-12 rounded-full bg-amber-400 flex items-center justify-center mx-auto mb-4">
+            <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+          </div>
+          <p className="font-bold text-gray-900 mb-1">Afmelding ontvangen.</p>
+          <p className="text-sm text-gray-500">
+            Jammer dat je er niet bij kunt zijn — bedankt voor het laten weten!
+          </p>
+        </div>
+      )
+    }
     return (
       <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-8 text-center">
         <div className="w-12 h-12 rounded-full bg-emerald-500 flex items-center justify-center mx-auto mb-4">
@@ -80,33 +102,66 @@ export default function RsvpForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6 max-w-lg">
+
+      {/* ── Aanwezigheid keuze ── */}
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-3">
-          Met hoeveel personen komen jullie?
+          Ben je erbij?
         </label>
-        <div className="flex gap-2 flex-wrap">
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-            <button
-              key={n}
-              type="button"
-              onClick={() => setCount(n)}
-              className="w-10 h-10 rounded-xl font-bold text-sm transition-all"
-              style={{
-                backgroundColor: count === n ? accentColor : "transparent",
-                color: count === n ? "#fff" : "#6b7280",
-                border: `2px solid ${count === n ? accentColor : "#e5e7eb"}`,
-              }}
-            >
-              {n}
-            </button>
-          ))}
+        <div className="flex flex-col gap-2 sm:flex-row">
+          {(["yes", "no"] as Attending[]).map((val) => {
+            const active = attending === val
+            return (
+              <button
+                key={val}
+                type="button"
+                onClick={() => setAttending(val)}
+                className="flex-1 py-3 px-4 rounded-xl font-semibold text-sm transition-all text-left flex items-center gap-3"
+                style={{
+                  backgroundColor: active ? (val === "yes" ? "#ecfdf5" : "#fff7ed") : "#f9fafb",
+                  border: `2px solid ${active ? (val === "yes" ? "#10b981" : "#f59e0b") : "#e5e7eb"}`,
+                  color: active ? (val === "yes" ? "#065f46" : "#92400e") : "#6b7280",
+                }}
+              >
+                <span className="text-base">{val === "yes" ? "✓" : "✕"}</span>
+                {val === "yes" ? "Ja, ik ben erbij!" : "Nee, ik kan helaas niet komen."}
+              </button>
+            )
+          })}
         </div>
       </div>
 
-      {guests.map((guest, i) => (
+      {/* ── Aanwezig: aantal personen ── */}
+      {attending === "yes" && (
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-3">
+            Met hoeveel personen komen jullie?
+          </label>
+          <div className="flex gap-2 flex-wrap">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setCount(n)}
+                className="w-10 h-10 rounded-xl font-bold text-sm transition-all"
+                style={{
+                  backgroundColor: count === n ? accentColor : "transparent",
+                  color: count === n ? "#fff" : "#6b7280",
+                  border: `2px solid ${count === n ? accentColor : "#e5e7eb"}`,
+                }}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Gast(en) gegevens ── */}
+      {guests.slice(0, attending === "no" ? 1 : count).map((guest, i) => (
         <div key={i} className="rounded-2xl border border-gray-100 bg-gray-50 p-5 flex flex-col gap-4">
           <p className="text-xs font-bold uppercase tracking-widest text-gray-400">
-            {i === 0 ? "Hoofdgast" : `Gast ${i + 1}`}
+            {attending === "no" ? "Jouw gegevens" : i === 0 ? "Hoofdgast" : `Gast ${i + 1}`}
           </p>
 
           <div>
@@ -122,40 +177,44 @@ export default function RsvpForm({
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Type gast</label>
-            <div className="flex gap-2">
-              {(["daggast", "avondgast"] as const).map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => updateGuest(i, "guest_type", t)}
-                  className="flex-1 py-2 rounded-xl font-semibold text-sm transition-all"
-                  style={{
-                    backgroundColor: guest.guest_type === t ? accentColor : "transparent",
-                    color: guest.guest_type === t ? "#fff" : "#6b7280",
-                    border: `2px solid ${guest.guest_type === t ? accentColor : "#e5e7eb"}`,
-                  }}
-                >
-                  {t === "daggast" ? "Daggast" : "Avondgast"}
-                </button>
-              ))}
+          {attending === "yes" && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Type gast</label>
+              <div className="flex gap-2">
+                {(["daggast", "avondgast"] as const).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => updateGuest(i, "guest_type", t)}
+                    className="flex-1 py-2 rounded-xl font-semibold text-sm transition-all"
+                    style={{
+                      backgroundColor: guest.guest_type === t ? accentColor : "transparent",
+                      color: guest.guest_type === t ? "#fff" : "#6b7280",
+                      border: `2px solid ${guest.guest_type === t ? accentColor : "#e5e7eb"}`,
+                    }}
+                  >
+                    {t === "daggast" ? "Daggast" : "Avondgast"}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-              Dieetwensen / Allergieën
-            </label>
-            <input
-              type="text"
-              placeholder="Bijv. vegetarisch, notenallergie"
-              value={guest.dietary}
-              onChange={(e) => updateGuest(i, "dietary", e.target.value)}
-              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-all shadow-sm"
-              style={{ "--tw-ring-color": `${accentColor}33` } as React.CSSProperties}
-            />
-          </div>
+          {attending === "yes" && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                Dieetwensen / Allergieën
+              </label>
+              <input
+                type="text"
+                placeholder="Bijv. vegetarisch, notenallergie"
+                value={guest.dietary}
+                onChange={(e) => updateGuest(i, "dietary", e.target.value)}
+                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-all shadow-sm"
+                style={{ "--tw-ring-color": `${accentColor}33` } as React.CSSProperties}
+              />
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">
@@ -174,6 +233,24 @@ export default function RsvpForm({
         </div>
       ))}
 
+      {/* ── Berichtje bij afmelding ── */}
+      {attending === "no" && (
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+            Lief berichtje voor het bruidspaar{" "}
+            <span className="text-gray-400 font-normal">(optioneel)</span>
+          </label>
+          <textarea
+            rows={3}
+            placeholder="Jullie zijn een prachtig stel en ik wens jullie veel geluk!"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-all shadow-sm resize-none"
+            style={{ "--tw-ring-color": `${accentColor}33` } as React.CSSProperties}
+          />
+        </div>
+      )}
+
       {status === "error" && (
         <p className="text-sm text-red-500">Er ging iets mis. Probeer het opnieuw.</p>
       )}
@@ -182,7 +259,7 @@ export default function RsvpForm({
         type="submit"
         disabled={status === "sending"}
         className="w-full flex items-center justify-center gap-2 text-white font-bold py-3.5 rounded-xl shadow-md transition-all hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed"
-        style={{ backgroundColor: accentColor }}
+        style={{ backgroundColor: attending === "no" ? "#f59e0b" : accentColor }}
       >
         {status === "sending" ? (
           <>
@@ -192,6 +269,8 @@ export default function RsvpForm({
             </svg>
             Versturen...
           </>
+        ) : attending === "no" ? (
+          "Afmelding versturen"
         ) : count === 1 ? (
           "Aanmelden"
         ) : (

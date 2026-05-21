@@ -9,6 +9,8 @@ export interface RsvpRow {
   guest_type: string
   dietary: string | null
   is_primary: boolean
+  attending: string | null
+  message: string | null
   created_at: string
 }
 
@@ -26,9 +28,10 @@ export default function RsvpSection({
 }) {
   const eventMap = Object.fromEntries(events.map((e) => [e.id, e.title]))
 
-  const total = rsvps.length
-  const daggasten = rsvps.filter((r) => r.guest_type === "daggast").length
-  const avondgasten = rsvps.filter((r) => r.guest_type === "avondgast").length
+  const attending = rsvps.filter((r) => r.attending !== "no")
+  const declined  = rsvps.filter((r) => r.attending === "no")
+  const daggasten  = attending.filter((r) => r.guest_type === "daggast").length
+  const avondgasten = attending.filter((r) => r.guest_type === "avondgast").length
 
   const submissionGroups = rsvps.reduce<Record<string, RsvpRow[]>>((acc, row) => {
     const key = row.submission_id ?? row.id
@@ -44,12 +47,14 @@ export default function RsvpSection({
   })
 
   function exportCsv() {
-    const headers = ["Naam", "E-mail", "Type", "Dieetwensen", "Event", "Datum"]
+    const headers = ["Naam", "E-mail", "Status", "Type", "Dieetwensen", "Berichtje", "Event", "Datum"]
     const rows = rsvps.map((r) => [
       r.name,
       r.email ?? "",
+      r.attending === "no" ? "Afwezig" : "Aanwezig",
       r.guest_type,
       r.dietary ?? "",
+      r.message ?? "",
       eventMap[r.event_id] ?? r.event_id,
       new Date(r.created_at).toLocaleDateString("nl-NL"),
     ])
@@ -82,10 +87,12 @@ export default function RsvpSection({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-3 gap-4">
-        <KpiCard label="Totaal gasten" value={total} />
-        <KpiCard label="Daggasten" value={daggasten} />
-        <KpiCard label="Avondgasten" value={avondgasten} />
+      {/* KPI cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <KpiCard label="Aanwezig" value={attending.length} color="emerald" />
+        <KpiCard label="Afgemeld" value={declined.length} color="rose" />
+        <KpiCard label="Daggasten" value={daggasten} color="blue" />
+        <KpiCard label="Avondgasten" value={avondgasten} color="purple" />
       </div>
 
       <div className="flex items-center justify-between">
@@ -106,49 +113,72 @@ export default function RsvpSection({
           <thead>
             <tr className="border-b border-gray-100">
               <th className="text-left px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-400">Naam</th>
-              <th className="text-left px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-400">Type</th>
-              <th className="text-left px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-400 hidden sm:table-cell">E-mail</th>
-              <th className="text-left px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-400 hidden md:table-cell">Dieetwensen</th>
+              <th className="text-left px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-400">Status</th>
+              <th className="text-left px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-400 hidden sm:table-cell">Type</th>
+              <th className="text-left px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-400 hidden md:table-cell">E-mail</th>
+              <th className="text-left px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-400 hidden lg:table-cell">Dieetwensen / Berichtje</th>
               <th className="text-left px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-400 hidden lg:table-cell">Aangemeld</th>
             </tr>
           </thead>
           <tbody>
             {sortedGroups.flatMap((group, gi) => {
-              const rows = group.map((row) => (
-                <tr
-                  key={row.id}
-                  className={`border-b border-gray-50 ${gi % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}
-                >
-                  <td className="px-5 py-3 font-medium text-gray-900">
-                    {row.name}
-                    {row.is_primary && (
-                      <span className="ml-2 text-xs bg-rose-50 text-rose-500 font-semibold px-1.5 py-0.5 rounded-full">
-                        hoofd
+              const rows = group.map((row) => {
+                const isDeclined = row.attending === "no"
+                return (
+                  <tr
+                    key={row.id}
+                    className={`border-b border-gray-50 ${gi % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}
+                  >
+                    <td className="px-5 py-3 font-medium text-gray-900">
+                      {row.name}
+                      {row.is_primary && (
+                        <span className="ml-2 text-xs bg-rose-50 text-rose-500 font-semibold px-1.5 py-0.5 rounded-full">
+                          hoofd
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-5 py-3">
+                      <span
+                        className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                          isDeclined
+                            ? "bg-rose-50 text-rose-600"
+                            : "bg-emerald-50 text-emerald-600"
+                        }`}
+                      >
+                        {isDeclined ? "Afwezig" : "Aanwezig"}
                       </span>
-                    )}
-                  </td>
-                  <td className="px-5 py-3">
-                    <span
-                      className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                        row.guest_type === "daggast"
-                          ? "bg-blue-50 text-blue-600"
-                          : "bg-purple-50 text-purple-600"
-                      }`}
-                    >
-                      {row.guest_type}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3 text-gray-500 hidden sm:table-cell">{row.email ?? "—"}</td>
-                  <td className="px-5 py-3 text-gray-500 hidden md:table-cell">{row.dietary ?? "—"}</td>
-                  <td className="px-5 py-3 text-gray-400 text-xs hidden lg:table-cell">
-                    {new Date(row.created_at).toLocaleDateString("nl-NL")}
-                  </td>
-                </tr>
-              ))
+                    </td>
+                    <td className="px-5 py-3 hidden sm:table-cell">
+                      {isDeclined ? (
+                        <span className="text-gray-300">—</span>
+                      ) : (
+                        <span
+                          className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                            row.guest_type === "daggast"
+                              ? "bg-blue-50 text-blue-600"
+                              : "bg-purple-50 text-purple-600"
+                          }`}
+                        >
+                          {row.guest_type}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-5 py-3 text-gray-500 hidden md:table-cell">{row.email ?? "—"}</td>
+                    <td className="px-5 py-3 text-gray-500 hidden lg:table-cell">
+                      {isDeclined && row.message
+                        ? <span className="italic text-gray-400">"{row.message}"</span>
+                        : (row.dietary ?? "—")}
+                    </td>
+                    <td className="px-5 py-3 text-gray-400 text-xs hidden lg:table-cell">
+                      {new Date(row.created_at).toLocaleDateString("nl-NL")}
+                    </td>
+                  </tr>
+                )
+              })
               const sep =
                 gi < sortedGroups.length - 1 ? (
                   <tr key={`sep-${gi}`}>
-                    <td colSpan={5} className="h-px p-0 bg-gray-200" />
+                    <td colSpan={6} className="h-px p-0 bg-gray-200" />
                   </tr>
                 ) : null
               return sep ? [...rows, sep] : rows
@@ -160,10 +190,16 @@ export default function RsvpSection({
   )
 }
 
-function KpiCard({ label, value }: { label: string; value: number }) {
+function KpiCard({ label, value, color }: { label: string; value: number; color: "emerald" | "rose" | "blue" | "purple" }) {
+  const styles = {
+    emerald: "text-emerald-600",
+    rose:    "text-rose-500",
+    blue:    "text-blue-600",
+    purple:  "text-purple-600",
+  }
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm text-center">
-      <p className="text-3xl font-extrabold text-gray-900">{value}</p>
+      <p className={`text-3xl font-extrabold ${styles[color]}`}>{value}</p>
       <p className="text-xs text-gray-400 mt-1">{label}</p>
     </div>
   )
