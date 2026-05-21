@@ -1199,9 +1199,9 @@ export default function BouwenPage() {
                           onChange={(e) => updateDraft({ datum: e.target.value })}
                           className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
                         />
-                        {draft?.use_frame && (<>
+                        {!draft?.use_frame && (<>
                           <div className="flex items-center justify-between mt-0.5">
-                            <span className="text-xs text-gray-500">Lettergrootte in kader</span>
+                            <span className="text-xs text-gray-500">Lettergrootte</span>
                             <span className="text-xs text-gray-400">{draft?.frameDateSize ?? 1.8}</span>
                           </div>
                           <input

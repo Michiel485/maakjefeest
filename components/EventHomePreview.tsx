@@ -237,22 +237,6 @@ export default function EventHomePreview({
                 {frameDisplayNames}
               </p>
 
-              {datumFormatted && (
-                <p
-                  className="fk-date uppercase text-center mt-[1.1cqi]"
-                  style={{
-                    fontFamily: sc.fontFamily,
-                    color: sc.bodyText,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                    maxWidth: "100%",
-                  }}
-                >
-                  {datumFormatted}
-                </p>
-              )}
-
               {frameDisplayLocation && (
                 <p
                   className="fk-location text-center mt-[0.4cqi]"
@@ -276,8 +260,8 @@ export default function EventHomePreview({
           <div className="flex flex-col items-center gap-2 pt-4 pb-0 text-center">
             {datumFormatted && (
               <p
-                className="text-sm uppercase tracking-[0.18em] font-medium"
-                style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}
+                className="uppercase tracking-[0.18em] font-medium"
+                style={{ color: sc.headingColor, fontFamily: sc.fontFamily, fontSize: `${(frameDateSize * 0.5).toFixed(2)}rem` }}
               >
                 {datumFormatted}
               </p>
