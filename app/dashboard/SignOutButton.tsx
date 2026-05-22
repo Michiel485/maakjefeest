@@ -14,7 +14,10 @@ export function SignOutButton() {
   return (
     <button
       onClick={handleSignOut}
-      className="text-sm text-gray-500 hover:text-gray-900 font-medium transition-colors"
+      className="text-sm font-medium transition-colors"
+      style={{ color: "#8A7E72" }}
+      onMouseEnter={(e) => (e.currentTarget.style.color = "#C5A059")}
+      onMouseLeave={(e) => (e.currentTarget.style.color = "#8A7E72")}
     >
       Uitloggen
     </button>

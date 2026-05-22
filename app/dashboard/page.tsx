@@ -6,6 +6,14 @@ import { SignOutButton } from "./SignOutButton"
 import RsvpSection, { type RsvpRow } from "./RsvpSection"
 import { eventSiteUrl, eventSiteLabel } from "@/lib/site-url"
 
+const GOLD       = "#C5A059"
+const GOLD_LIGHT = "#E8D5A3"
+const GOLD_BG    = "#FBF5E8"
+const CHARCOAL   = "#1A1A1A"
+const IVORY      = "#FAF7F2"
+const IVORY_CARD = "#F5EFE4"
+const BODY       = "#5C5248"
+
 type Event = {
   id: string
   slug: string
@@ -24,29 +32,34 @@ const TYPE_LABEL: Record<string, string> = {
 function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean }) {
   const typeLabel = TYPE_LABEL[event.type] ?? event.type
   const date = new Date(event.created_at).toLocaleDateString("nl-NL", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
+    day: "numeric", month: "long", year: "numeric",
   })
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-6 flex items-center justify-between gap-4 shadow-sm">
+    <div
+      className="rounded-2xl p-6 flex items-center justify-between gap-4"
+      style={{ backgroundColor: IVORY_CARD, border: `1px solid ${GOLD_LIGHT}` }}
+    >
       <div className="min-w-0">
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-xs font-semibold text-gray-400">{typeLabel}</span>
-          {isDraft && (
-            <span className="text-xs bg-amber-100 text-amber-600 font-semibold px-2 py-0.5 rounded-full">
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="text-xs font-semibold uppercase tracking-[0.1em]" style={{ color: GOLD }}>{typeLabel}</span>
+          {isDraft ? (
+            <span className="text-xs bg-amber-100 text-amber-700 font-semibold px-2 py-0.5 rounded-full">
               Concept
             </span>
-          )}
-          {!isDraft && (
-            <span className="text-xs bg-emerald-100 text-emerald-600 font-semibold px-2 py-0.5 rounded-full">
+          ) : (
+            <span className="text-xs bg-emerald-100 text-emerald-700 font-semibold px-2 py-0.5 rounded-full">
               Live
             </span>
           )}
         </div>
-        <h3 className="font-bold text-gray-900 truncate">{event.title}</h3>
-        <p className="text-xs text-gray-400 mt-0.5">Opgeslagen op {date}</p>
+        <h3
+          className="truncate text-lg"
+          style={{ fontFamily: "var(--font-cormorant)", fontWeight: 700, color: CHARCOAL }}
+        >
+          {event.title}
+        </h3>
+        <p className="text-xs mt-0.5" style={{ color: BODY }}>Opgeslagen op {date}</p>
       </div>
       <div className="flex items-center gap-3 flex-shrink-0">
         {!isDraft && (
@@ -54,7 +67,8 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
             href={eventSiteUrl(event.slug)}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-gray-500 hover:text-rose-500 font-medium transition-colors whitespace-nowrap"
+            className="text-sm font-medium transition-colors whitespace-nowrap"
+            style={{ color: BODY }}
             title={eventSiteLabel(event.slug)}
           >
             Bekijken →
@@ -62,7 +76,8 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
         )}
         <Link
           href={`/bouwen?event_id=${event.id}`}
-          className="text-sm bg-rose-500 hover:bg-rose-600 text-white font-bold px-4 py-2 rounded-xl transition-colors whitespace-nowrap"
+          className="text-sm font-semibold px-4 py-2 rounded-xl transition-all hover:-translate-y-0.5 whitespace-nowrap"
+          style={{ backgroundColor: CHARCOAL, color: IVORY }}
         >
           Verder bewerken
         </Link>
@@ -71,12 +86,20 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
   )
 }
 
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <h2
+      className="text-xs font-semibold uppercase tracking-[0.18em]"
+      style={{ color: GOLD }}
+    >
+      {children}
+    </h2>
+  )
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
+  const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect("/inloggen")
 
   const service = createServiceClient()
@@ -87,7 +110,7 @@ export default async function DashboardPage() {
     .order("created_at", { ascending: false })
 
   const published = (events ?? []).filter((e: Event) => e.status === "published")
-  const drafts = (events ?? []).filter((e: Event) => e.status === "draft")
+  const drafts    = (events ?? []).filter((e: Event) => e.status === "draft")
   const firstName = user.email?.split("@")[0] ?? "daar"
 
   let rsvps: RsvpRow[] = []
@@ -102,10 +125,19 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-10">
+    <div className="min-h-screen" style={{ backgroundColor: IVORY }}>
+
+      {/* Nav */}
+      <header
+        className="sticky top-0 z-10"
+        style={{ backgroundColor: IVORY, borderBottom: `1px solid ${GOLD_LIGHT}` }}
+      >
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="text-lg font-bold text-rose-600 tracking-tight">
+          <Link
+            href="/"
+            className="text-2xl tracking-wide transition-opacity hover:opacity-70"
+            style={{ fontFamily: "var(--font-cormorant)", color: CHARCOAL, fontWeight: 600 }}
+          >
             Saying Yes
           </Link>
           <SignOutButton />
@@ -113,51 +145,76 @@ export default async function DashboardPage() {
       </header>
 
       <main className="max-w-5xl mx-auto px-6 py-12">
+
         {/* Welcome */}
         <div className="mb-12">
-          <h1 className="text-3xl font-extrabold text-gray-900 mb-2">
-            Welkom, {firstName}!
+          <h1
+            className="mb-2"
+            style={{
+              fontFamily: "var(--font-cormorant)",
+              fontSize: "clamp(1.8rem, 4vw, 2.5rem)",
+              fontWeight: 700,
+              color: CHARCOAL,
+            }}
+          >
+            Welkom, {firstName}
           </h1>
-          <p className="text-gray-500">
+          <p className="text-sm" style={{ color: BODY }}>
             Hier vind je al jullie bruiloftsprojecten en RSVP-aanmeldingen.
           </p>
+          {/* Thin gold rule */}
+          <div className="flex items-center gap-3 mt-6">
+            <div style={{ width: 32, height: 1, backgroundColor: GOLD_LIGHT }} />
+            <svg width="6" height="6" viewBox="0 0 8 8" fill={GOLD_LIGHT}>
+              <path d="M4 0 L8 4 L4 8 L0 4 Z" />
+            </svg>
+            <div style={{ flex: 1, height: 1, backgroundColor: GOLD_LIGHT }} />
+          </div>
         </div>
 
         {/* Live websites */}
         <section className="mb-10">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-gray-400">
-              Live bruiloftswebsites
-            </h2>
+          <div className="flex items-center justify-between mb-5">
+            <SectionLabel>Live bruiloftswebsites</SectionLabel>
             <Link
               href="/aanmaken"
-              className="text-sm font-semibold text-rose-500 hover:text-rose-600 transition-colors"
+              className="text-sm font-semibold transition-colors"
+              style={{ color: GOLD }}
             >
-              + Nieuwe bruiloft
+              + Nieuwe aanmaken
             </Link>
           </div>
+
           {published.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-gray-100 p-10 text-center shadow-sm">
-              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <div
+              className="rounded-2xl p-10 text-center"
+              style={{ backgroundColor: IVORY_CARD, border: `1px solid ${GOLD_LIGHT}` }}
+            >
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4"
+                style={{ backgroundColor: GOLD_BG, border: `1px solid ${GOLD_LIGHT}` }}
+              >
+                <svg className="w-5 h-5" style={{ color: GOLD }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253" />
                 </svg>
               </div>
-              <p className="text-gray-400 text-sm mb-4">
-                Nog geen live bruiloftswebsite. Bouw er een en publiceer hem voor eenmalig €24!
+              <p className="text-sm mb-5" style={{ color: BODY }}>
+                Nog geen live bruiloftswebsite. Bouw er een en publiceer hem voor eenmalig €39,99.
               </p>
               <Link
                 href="/aanmaken"
-                className="inline-flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-colors"
+                className="inline-flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-xl transition-all hover:-translate-y-0.5"
+                style={{ backgroundColor: CHARCOAL, color: IVORY }}
               >
                 Start nu gratis
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
               </Link>
             </div>
           ) : (
             <div className="flex flex-col gap-4">
-              {published.map((ev: Event) => (
-                <EventCard key={ev.id} event={ev} />
-              ))}
+              {published.map((ev: Event) => <EventCard key={ev.id} event={ev} />)}
             </div>
           )}
         </section>
@@ -165,24 +222,26 @@ export default async function DashboardPage() {
         {/* Drafts */}
         {drafts.length > 0 && (
           <section className="mb-10">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">
-              Opgeslagen concepten
-            </h2>
+            <div className="mb-5">
+              <SectionLabel>Opgeslagen concepten</SectionLabel>
+            </div>
             <div className="flex flex-col gap-4">
-              {drafts.map((ev: Event) => (
-                <EventCard key={ev.id} event={ev} isDraft />
-              ))}
+              {drafts.map((ev: Event) => <EventCard key={ev.id} event={ev} isDraft />)}
             </div>
           </section>
         )}
 
         {/* RSVP */}
         <section>
-          <h2 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">
-            RSVP-aanmeldingen
-          </h2>
-          <RsvpSection rsvps={rsvps} events={published.map((e: Event) => ({ id: e.id, title: e.title }))} />
+          <div className="mb-5">
+            <SectionLabel>RSVP-aanmeldingen</SectionLabel>
+          </div>
+          <RsvpSection
+            rsvps={rsvps}
+            events={published.map((e: Event) => ({ id: e.id, title: e.title }))}
+          />
         </section>
+
       </main>
     </div>
   )
