@@ -81,11 +81,27 @@ export default function LanguageSwitcher({
     return () => document.removeEventListener("mousedown", onOutsideClick)
   }, [])
 
+  function fireCombo(combo: HTMLSelectElement, value: string) {
+    combo.value = value
+    combo.dispatchEvent(new Event("change", { bubbles: true }))
+    combo.dispatchEvent(new Event("input",  { bubbles: true }))
+  }
+
   function triggerTranslate(code: string) {
     const combo = document.querySelector(".goog-te-combo") as HTMLSelectElement | null
     if (!combo) return
-    combo.value = code
-    combo.dispatchEvent(new Event("change"))
+
+    if (code === "nl") {
+      // For the base language: clear first, then set nl — shakes loose any
+      // partially-translated state Google's engine may be stuck in.
+      fireCombo(combo, "")
+      setTimeout(() => fireCombo(combo, "nl"), 50)
+      setTimeout(() => fireCombo(combo, "nl"), 200)
+    } else {
+      fireCombo(combo, code)
+      setTimeout(() => fireCombo(combo, code), 50)
+      setTimeout(() => fireCombo(combo, code), 200)
+    }
   }
 
   function selectLang(lang: (typeof LANGS)[number]) {
