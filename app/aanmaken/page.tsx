@@ -2,6 +2,15 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
+
+const GOLD       = "#C5A059"
+const GOLD_LIGHT = "#E8D5A3"
+const GOLD_BG    = "#FBF5E8"
+const CHARCOAL   = "#1A1A1A"
+const IVORY      = "#FAF7F2"
+const IVORY_CARD = "#F5EFE4"
+const BODY       = "#5C5248"
 
 const DEFAULT_PROGRAMMA = {
   layout: "timeline",
@@ -28,7 +37,6 @@ function buildInitials(naam1: string, naam2: string): string {
   return a && b ? `${a}|${b}` : "M|L"
 }
 
-// Live formatting during typing — keeps trailing hyphen so space→hyphen is visible
 function formatSlugInput(value: string): string {
   return value
     .toLowerCase()
@@ -40,18 +48,18 @@ function formatSlugInput(value: string): string {
     .replace(/-{2,}/g, "-")
 }
 
-// Final cleanup for availability checks and submission
 function sanitizeSlug(value: string): string {
   return formatSlugInput(value).replace(/^-+|-+$/g, "")
 }
 
 type SlugStatus = "idle" | "checking" | "available" | "taken" | "invalid"
 
+const inputBase = "w-full rounded-2xl border bg-white px-4 py-3.5 text-sm placeholder-gray-400 focus:outline-none transition-all"
+const inputStyle: React.CSSProperties = { color: CHARCOAL, borderColor: GOLD_LIGHT }
+
 export default function AanmakenPage() {
   const router = useRouter()
-
   const [form, setForm] = useState({ naam1: "", naam2: "", datum: "", email: "", slug: "" })
-
   const [slugStatus, setSlugStatus] = useState<SlugStatus>("idle")
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -138,47 +146,90 @@ export default function AanmakenPage() {
     sanitizeSlug(form.slug).length >= 3 &&
     slugStatus === "available"
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-orange-50 font-sans antialiased">
+  const slugBorderColor =
+    slugStatus === "available" ? "#10b981"
+    : slugStatus === "taken"   ? "#ef4444"
+    : GOLD_LIGHT
 
-      {/* Decorative circles */}
-      <div className="pointer-events-none fixed -top-20 -left-20 w-80 h-80 rounded-full bg-rose-200 opacity-20 blur-3xl" />
-      <div className="pointer-events-none fixed -bottom-20 -right-20 w-96 h-96 rounded-full bg-orange-200 opacity-20 blur-3xl" />
+  return (
+    <div style={{ backgroundColor: IVORY }} className="min-h-screen antialiased">
+
+      {/* Subtle background warmth */}
+      <div
+        className="pointer-events-none fixed inset-0"
+        style={{ background: `radial-gradient(ellipse 80% 50% at 50% 0%, ${GOLD_BG} 0%, transparent 60%)`, zIndex: 0 }}
+      />
 
       {/* Nav */}
       <header className="relative z-10 flex items-center justify-between px-8 py-5 max-w-3xl mx-auto">
-        <a href="/" className="text-lg font-bold text-rose-600 tracking-tight">Saying Yes</a>
-        <a href="/" className="text-sm font-medium text-gray-500 hover:text-rose-600 transition-colors flex items-center gap-1">
+        <Link
+          href="/"
+          className="text-2xl tracking-wide transition-opacity hover:opacity-70"
+          style={{ fontFamily: "var(--font-cormorant)", color: CHARCOAL, fontWeight: 600 }}
+        >
+          Saying Yes
+        </Link>
+        <Link
+          href="/"
+          className="flex items-center gap-1.5 text-sm font-medium transition-colors"
+          style={{ color: BODY }}
+        >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
           Terug
-        </a>
+        </Link>
       </header>
 
-      <main className="relative z-10 max-w-lg mx-auto px-6 pb-20 pt-2">
+      <main className="relative z-10 max-w-lg mx-auto px-6 pb-24 pt-4">
 
-        {/* Header */}
+        {/* Page header */}
         <div className="mb-10">
-          <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-rose-100 text-rose-500 text-xs font-semibold px-4 py-1.5 rounded-full mb-5 shadow-sm">
-            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
+          <div
+            className="inline-flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-full mb-6 tracking-wide"
+            style={{ border: `1px solid ${GOLD_LIGHT}`, backgroundColor: GOLD_BG, color: GOLD }}
+          >
+            <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor">
+              <path d="M4 0 L8 4 L4 8 L0 4 Z" />
             </svg>
-            Bruiloftswebsite
+            Jullie bruiloftswebsite
           </div>
-          <h1 className="text-3xl font-extrabold text-gray-900 mb-2 leading-tight">
-            Vertel ons over jullie<br />grote dag
+
+          <h1
+            className="leading-[1.1] mb-4"
+            style={{
+              fontFamily: "var(--font-cormorant)",
+              fontSize: "clamp(2rem, 5vw, 2.75rem)",
+              fontWeight: 700,
+              color: CHARCOAL,
+            }}
+          >
+            Vertel ons over<br />
+            jullie grote dag
           </h1>
-          <p className="text-gray-500 text-sm leading-relaxed">
+
+          <p className="text-sm leading-relaxed" style={{ color: BODY }}>
             We gebruiken dit om jullie bruiloftswebsite alvast klaar te zetten — inclusief programma en praktische info.
+            Alles is achteraf nog aanpasbaar.
           </p>
+
+          {/* Thin gold ornament */}
+          <div className="flex items-center gap-3 mt-7">
+            <div style={{ width: 40, height: 1, backgroundColor: GOLD_LIGHT }} />
+            <svg width="7" height="7" viewBox="0 0 8 8" fill={GOLD_LIGHT}>
+              <path d="M4 0 L8 4 L4 8 L0 4 Z" />
+            </svg>
+            <div style={{ flex: 1, height: 1, backgroundColor: GOLD_LIGHT }} />
+          </div>
         </div>
 
-        <form onSubmit={handleStart} className="flex flex-col gap-5">
+        <form onSubmit={handleStart} className="flex flex-col gap-6">
 
-          {/* Namen bruidspaar */}
+          {/* Namen */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Namen Bruidspaar</label>
+            <label className="block text-xs font-semibold uppercase tracking-[0.12em] mb-2" style={{ color: GOLD }}>
+              Namen bruidspaar
+            </label>
             <div className="grid grid-cols-2 gap-3">
               <input
                 type="text"
@@ -186,7 +237,8 @@ export default function AanmakenPage() {
                 placeholder="bijv. Michiel"
                 value={form.naam1}
                 onChange={(e) => setForm({ ...form, naam1: e.target.value })}
-                className="rounded-2xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-400 transition-all shadow-sm"
+                className={inputBase}
+                style={{ ...inputStyle, boxShadow: "0 1px 4px rgba(197,160,89,0.08)" }}
               />
               <input
                 type="text"
@@ -194,15 +246,16 @@ export default function AanmakenPage() {
                 placeholder="bijv. Lindsey"
                 value={form.naam2}
                 onChange={(e) => setForm({ ...form, naam2: e.target.value })}
-                className="rounded-2xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-400 transition-all shadow-sm"
+                className={inputBase}
+                style={{ ...inputStyle, boxShadow: "0 1px 4px rgba(197,160,89,0.08)" }}
               />
             </div>
           </div>
 
           {/* Slug */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-              Kies jullie unieke website link
+            <label className="block text-xs font-semibold uppercase tracking-[0.12em] mb-2" style={{ color: GOLD }}>
+              Jullie unieke websitelink
             </label>
             <div className="relative">
               <input
@@ -211,17 +264,17 @@ export default function AanmakenPage() {
                 placeholder="bijv. sanne-en-tom"
                 value={form.slug}
                 onChange={(e) => handleSlugInput(e.target.value)}
-                className={`w-full rounded-2xl border bg-white px-4 py-3 pr-10 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-all shadow-sm ${
-                  slugStatus === "available"
-                    ? "border-emerald-300 focus:ring-emerald-200 focus:border-emerald-400"
-                    : slugStatus === "taken"
-                    ? "border-red-300 focus:ring-red-200 focus:border-red-400"
-                    : "border-gray-200 focus:ring-rose-300 focus:border-rose-400"
-                }`}
+                className={inputBase}
+                style={{
+                  ...inputStyle,
+                  borderColor: slugBorderColor,
+                  paddingRight: "2.75rem",
+                  boxShadow: "0 1px 4px rgba(197,160,89,0.08)",
+                }}
               />
               <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
                 {slugStatus === "checking" && (
-                  <svg className="w-4 h-4 text-gray-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" style={{ color: GOLD_LIGHT }}>
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                   </svg>
@@ -238,69 +291,89 @@ export default function AanmakenPage() {
                 )}
               </div>
             </div>
-
-            <div className="mt-1.5 flex flex-col gap-0.5">
-              <p className="text-xs text-gray-400">Alleen kleine letters, cijfers en streepjes zijn toegestaan.</p>
+            <div className="mt-2 flex flex-col gap-0.5">
               {form.slug ? (
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Jouw link wordt:{" "}
-                  <span className="font-semibold text-gray-700">{sanitizeSlug(form.slug)}.sayingyes.nl</span>
+                <p className="text-xs" style={{ color: BODY }}>
+                  Jouw link:{" "}
+                  <span className="font-semibold" style={{ color: CHARCOAL }}>
+                    {sanitizeSlug(form.slug)}.sayingyes.nl
+                  </span>
                 </p>
               ) : (
-                <p className="text-xs text-gray-400 mt-0.5">Bijv. sanne-en-tom.sayingyes.nl</p>
+                <p className="text-xs" style={{ color: BODY }}>
+                  Bijv. <span style={{ color: CHARCOAL }}>sanne-en-tom.sayingyes.nl</span>
+                </p>
               )}
               {slugStatus === "available" && (
-                <p className="text-xs font-medium text-emerald-600">Beschikbaar!</p>
+                <p className="text-xs font-semibold text-emerald-600">Beschikbaar!</p>
               )}
               {slugStatus === "taken" && (
-                <p className="text-xs font-medium text-red-500">Al bezet — kies een andere naam</p>
+                <p className="text-xs font-semibold text-red-500">Al bezet — kies een andere naam</p>
               )}
               {slugStatus === "invalid" && (
-                <p className="text-xs text-gray-400">Minimaal 3 tekens vereist</p>
+                <p className="text-xs" style={{ color: BODY }}>Minimaal 3 tekens vereist</p>
               )}
             </div>
           </div>
 
           {/* Datum */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Trouwdatum</label>
+            <label className="block text-xs font-semibold uppercase tracking-[0.12em] mb-2" style={{ color: GOLD }}>
+              Trouwdatum
+            </label>
             <input
               type="date"
               required
               value={form.datum}
               onChange={(e) => setForm({ ...form, datum: e.target.value })}
-              className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-400 transition-all shadow-sm"
+              className={inputBase}
+              style={{ ...inputStyle, boxShadow: "0 1px 4px rgba(197,160,89,0.08)" }}
             />
           </div>
 
           {/* E-mail */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">E-mailadres</label>
+            <label className="block text-xs font-semibold uppercase tracking-[0.12em] mb-2" style={{ color: GOLD }}>
+              E-mailadres
+            </label>
             <input
               type="email"
               required
               placeholder="jouw@email.nl"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-400 transition-all shadow-sm"
+              className={inputBase}
+              style={{ ...inputStyle, boxShadow: "0 1px 4px rgba(197,160,89,0.08)" }}
             />
-            <p className="text-xs text-gray-400 mt-1.5">Voor je inloglink en bevestiging — nooit voor spam.</p>
+            <p className="text-xs mt-1.5" style={{ color: BODY }}>
+              Voor je inloglink en bevestiging — nooit voor spam.
+            </p>
           </div>
 
-          <div className="flex items-start gap-2.5 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5">
-            <svg className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          {/* Info box */}
+          <div
+            className="flex items-start gap-3 rounded-2xl px-4 py-4"
+            style={{ backgroundColor: GOLD_BG, border: `1px solid ${GOLD_LIGHT}` }}
+          >
+            <svg width="16" height="16" viewBox="0 0 8 8" fill={GOLD} className="flex-shrink-0 mt-0.5">
+              <path d="M4 0 L8 4 L4 8 L0 4 Z" />
             </svg>
-            <p className="text-sm text-slate-600 leading-snug">
+            <p className="text-sm leading-snug" style={{ color: BODY }}>
               Geen stress — je kunt al deze gegevens later nog aanpassen in de builder.
             </p>
           </div>
 
-          <div className="pt-1">
+          {/* Submit */}
+          <div className="pt-2">
             <button
               type="submit"
               disabled={!canSubmit}
-              className="w-full inline-flex items-center justify-center gap-2 bg-rose-500 hover:bg-rose-600 disabled:bg-rose-300 disabled:cursor-not-allowed text-white font-bold px-8 py-3.5 rounded-2xl shadow-lg shadow-rose-200 hover:shadow-xl hover:-translate-y-0.5 disabled:shadow-none disabled:translate-y-0 transition-all"
+              className="w-full inline-flex items-center justify-center gap-2.5 font-semibold px-8 py-4 rounded-2xl transition-all hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40 disabled:translate-y-0"
+              style={{
+                backgroundColor: canSubmit ? CHARCOAL : "#6B6460",
+                color: IVORY,
+                boxShadow: canSubmit ? "0 8px 32px rgba(26,26,26,0.18)" : "none",
+              }}
             >
               Start bouwen
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -308,10 +381,26 @@ export default function AanmakenPage() {
               </svg>
             </button>
             {!canSubmit && form.slug && slugStatus !== "checking" && slugStatus !== "idle" && (
-              <p className="text-xs text-center text-gray-400 mt-2">
-                {slugStatus === "taken" ? "Kies eerst een beschikbare website link" : "Vul een geldige website link in"}
+              <p className="text-xs text-center mt-2" style={{ color: BODY }}>
+                {slugStatus === "taken"
+                  ? "Kies eerst een beschikbare websitelink"
+                  : "Vul een geldige websitelink in (minimaal 3 tekens)"}
               </p>
             )}
+          </div>
+
+          {/* Trust signal */}
+          <div className="flex items-center justify-center gap-6 pt-2">
+            {[
+              { icon: "✦", label: "Eenmalig €39,99" },
+              { icon: "✦", label: "1 jaar online" },
+              { icon: "✦", label: "Geen abonnement" },
+            ].map(({ icon, label }) => (
+              <div key={label} className="flex items-center gap-1.5 text-xs" style={{ color: BODY }}>
+                <span style={{ color: GOLD, fontSize: "0.5rem" }}>{icon}</span>
+                {label}
+              </div>
+            ))}
           </div>
 
         </form>
