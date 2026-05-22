@@ -12,7 +12,8 @@ export interface RsvpRow {
   attending: string | null
   message: string | null
   song: string | null
-  bus: boolean | null
+  overnachting: boolean | null
+  custom_answer: boolean | null
   created_at: string
 }
 
@@ -30,9 +31,9 @@ export default function RsvpSection({
 }) {
   const eventMap = Object.fromEntries(events.map((e) => [e.id, e.title]))
 
-  const attending  = rsvps.filter((r) => r.attending !== "no")
-  const declined   = rsvps.filter((r) => r.attending === "no")
-  const daggasten  = attending.filter((r) => r.guest_type === "daggast").length
+  const attending   = rsvps.filter((r) => r.attending !== "no")
+  const declined    = rsvps.filter((r) => r.attending === "no")
+  const daggasten   = attending.filter((r) => r.guest_type === "daggast").length
   const avondgasten = attending.filter((r) => r.guest_type === "avondgast").length
 
   const submissionGroups = rsvps.reduce<Record<string, RsvpRow[]>>((acc, row) => {
@@ -49,7 +50,7 @@ export default function RsvpSection({
   })
 
   function exportCsv() {
-    const headers = ["Naam", "E-mail", "Status", "Type", "Dieetwensen", "Berichtje", "Song Request", "Bus", "Event", "Datum"]
+    const headers = ["Naam", "E-mail", "Status", "Type", "Dieetwensen", "Berichtje", "Song Request", "Overnachting", "Extra vraag", "Event", "Datum"]
     const rows = rsvps.map((r) => [
       r.name,
       r.email ?? "",
@@ -58,7 +59,8 @@ export default function RsvpSection({
       r.dietary ?? "",
       r.message ?? "",
       r.song ?? "",
-      r.bus === true ? "Ja" : r.bus === false ? "Nee" : "",
+      r.overnachting === true ? "Ja" : r.overnachting === false ? "Nee" : "",
+      r.custom_answer === true ? "Ja" : r.custom_answer === false ? "Nee" : "",
       eventMap[r.event_id] ?? r.event_id,
       new Date(r.created_at).toLocaleDateString("nl-NL"),
     ])
@@ -131,7 +133,8 @@ export default function RsvpSection({
                 const detailParts: string[] = []
                 if (!isDeclined && row.dietary) detailParts.push(row.dietary)
                 if (!isDeclined && row.song) detailParts.push(`🎵 ${row.song}`)
-                if (!isDeclined && row.bus !== null) detailParts.push(`Bus: ${row.bus ? "Ja" : "Nee"}`)
+                if (!isDeclined && row.overnachting !== null) detailParts.push(`Overnachting: ${row.overnachting ? "Ja" : "Nee"}`)
+                if (!isDeclined && row.custom_answer !== null) detailParts.push(`Extra vraag: ${row.custom_answer ? "Ja" : "Nee"}`)
                 if (isDeclined && row.message) detailParts.push(`"${row.message}"`)
 
                 return (
@@ -150,9 +153,7 @@ export default function RsvpSection({
                     <td className="px-5 py-3">
                       <span
                         className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                          isDeclined
-                            ? "bg-rose-50 text-rose-600"
-                            : "bg-emerald-50 text-emerald-600"
+                          isDeclined ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600"
                         }`}
                       >
                         {isDeclined ? "Afwezig" : "Aanwezig"}

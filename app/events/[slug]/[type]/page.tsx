@@ -104,7 +104,8 @@ export default async function EventSubPage({
     const rsvpGuestTypes = Array.isArray(c.guestTypes) ? (c.guestTypes as string[]) : ["daggast", "avondgast"]
     const rsvpShowSong = typeof c.showSongRequest === "boolean" ? c.showSongRequest : false
     const rsvpDeadline = typeof c.deadline === "string" && c.deadline ? c.deadline : null
-    const rsvpShowBus = typeof c.showBus === "boolean" ? c.showBus : false
+    const rsvpShowOvernachting = typeof c.showOvernachting === "boolean" ? c.showOvernachting : (typeof c.showBus === "boolean" ? c.showBus : false)
+    const rsvpCustomQuestion = typeof c.customQuestion === "string" && c.customQuestion.trim() ? c.customQuestion : null
     const cardInner = (
       <>
         <p style={{ fontSize: "0.9375rem", marginBottom: 24, color: sc.goldBorder ? (sc.cardText ?? sc.bodyText) : sc.bodyText }}>{introText}</p>
@@ -114,7 +115,8 @@ export default async function EventSubPage({
           guestTypes={rsvpGuestTypes}
           showSongRequest={rsvpShowSong}
           deadline={rsvpDeadline}
-          showBus={rsvpShowBus}
+          showOvernachting={rsvpShowOvernachting}
+          customQuestion={rsvpCustomQuestion}
         />
       </>
     )

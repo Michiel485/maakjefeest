@@ -807,11 +807,12 @@ export default function BouwenPage() {
   const programLayout = (rawLayout === "bento" ? "centered" : rawLayout) as "centered" | "timeline"
   const praktischTiles = content.Informatie?.items as PraktischTile[] | undefined
   const wishlistItems = content.Cadeautips?.items as WishlistItem[] | undefined
-  const rsvpGuestTypes = (content.RSVP?.guestTypes as string[] | undefined) ?? ["daggast", "avondgast"]
-  const rsvpShowSong   = (content.RSVP?.showSongRequest as boolean) ?? false
-  const rsvpShowBus    = (content.RSVP?.showBus as boolean) ?? false
-  const rsvpDeadline   = (content.RSVP?.deadline as string | null) ?? null
-  const rsvpDeadlinePassed = rsvpDeadline ? new Date() > new Date(rsvpDeadline) : false
+  const rsvpGuestTypes        = (content.RSVP?.guestTypes as string[] | undefined) ?? ["daggast", "avondgast"]
+  const rsvpShowSong          = (content.RSVP?.showSongRequest as boolean) ?? false
+  const rsvpShowOvernachting  = (content.RSVP?.showOvernachting as boolean) ?? false
+  const rsvpCustomQuestion    = (content.RSVP?.customQuestion as string) ?? ""
+  const rsvpDeadline          = (content.RSVP?.deadline as string | null) ?? null
+  const rsvpDeadlinePassed    = rsvpDeadline ? new Date() > new Date(rsvpDeadline) : false
   const RSVP_GUEST_LABELS: Record<string, string> = { daggast: "Daggast", avondgast: "Avondgast", receptiegast: "Receptiegast" }
 
   return (
@@ -1705,20 +1706,36 @@ export default function BouwenPage() {
                       </label>
                     </div>
 
-                    {/* Busvraag */}
+                    {/* Overnachting */}
                     <div>
-                      <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Vervoer</p>
+                      <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Overnachting</p>
                       <label className="flex items-start gap-3 cursor-pointer select-none">
                         <input
                           type="checkbox"
                           className="mt-0.5"
-                          checked={(content.RSVP?.showBus as boolean) ?? false}
-                          onChange={(e) => updateContent("RSVP", { ...(content.RSVP ?? {}), showBus: e.target.checked })}
+                          checked={(content.RSVP?.showOvernachting as boolean) ?? false}
+                          onChange={(e) => updateContent("RSVP", { ...(content.RSVP ?? {}), showOvernachting: e.target.checked })}
                         />
                         <span className="text-sm text-gray-700">
-                          Busvraag tonen<br />
-                          <span className="text-xs text-gray-400">&ldquo;Maak je gebruik van de georganiseerde bus?&rdquo;</span>
+                          Overnachtingsvraag tonen<br />
+                          <span className="text-xs text-gray-400">&ldquo;Blijven jullie overnachten?&rdquo;</span>
                         </span>
+                      </label>
+                    </div>
+
+                    {/* Eigen Ja/Nee-vraag */}
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Eigen Ja/Nee-vraag</p>
+                      <label className="flex flex-col gap-1.5">
+                        <span className="text-xs font-semibold text-gray-600">Stel je eigen vraag</span>
+                        <input
+                          type="text"
+                          value={(content.RSVP?.customQuestion as string) ?? ""}
+                          onChange={(e) => updateContent("RSVP", { ...(content.RSVP ?? {}), customQuestion: e.target.value })}
+                          placeholder="Bijv. Komen jullie naar het afterparty?"
+                          className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                        />
+                        <span className="text-xs text-gray-400">Laat leeg om uit te schakelen.</span>
                       </label>
                     </div>
                   </div>
@@ -2046,21 +2063,13 @@ export default function BouwenPage() {
                                     </div>
                                   </div>
                                 )}
-                                {/* Busvraag */}
-                                {rsvpShowBus && (
-                                  <div>
-                                    <div className="text-sm font-semibold mb-3" style={{ color: "#374151" }}>
-                                      Maak je gebruik van de georganiseerde bus?
-                                    </div>
-                                    <div className="flex gap-2">
-                                      {["Ja", "Nee"].map((lbl) => (
-                                        <div key={lbl} className="flex-1 h-11 rounded-xl flex items-center justify-center text-sm font-semibold"
-                                          style={{ backgroundColor: "#f9fafb", border: "2px solid #e5e7eb", color: "#6b7280" }}>
-                                          {lbl}
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
+                                {/* Overnachting */}
+                                {rsvpShowOvernachting && (
+                                  <PreviewYesNo label="Blijven jullie overnachten?" />
+                                )}
+                                {/* Eigen vraag */}
+                                {rsvpCustomQuestion.trim() && (
+                                  <PreviewYesNo label={rsvpCustomQuestion} />
                                 )}
                                 {/* Aanmelden knop */}
                                 <div className="w-full h-12 rounded-xl flex items-center justify-center text-sm font-bold shadow-md"
@@ -2219,6 +2228,22 @@ export default function BouwenPage() {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+function PreviewYesNo({ label }: { label: string }) {
+  return (
+    <div>
+      <div className="text-sm font-semibold mb-3" style={{ color: "#374151" }}>{label}</div>
+      <div className="flex gap-2">
+        {["Ja", "Nee"].map((lbl) => (
+          <div key={lbl} className="flex-1 h-11 rounded-xl flex items-center justify-center text-sm font-semibold"
+            style={{ backgroundColor: "#f9fafb", border: "2px solid #e5e7eb", color: "#6b7280" }}>
+            {lbl}
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

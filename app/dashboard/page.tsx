@@ -95,7 +95,7 @@ export default async function DashboardPage() {
     const eventIds = published.map((e: Event) => e.id)
     const { data: rsvpData } = await service
       .from("rsvp")
-      .select("id, event_id, submission_id, name, email, guest_type, dietary, is_primary, attending, message, song, bus, created_at")
+      .select("id, event_id, submission_id, name, email, guest_type, dietary, is_primary, attending, message, song, overnachting, custom_answer, created_at")
       .in("event_id", eventIds)
       .order("created_at", { ascending: false })
     rsvps = (rsvpData ?? []) as RsvpRow[]

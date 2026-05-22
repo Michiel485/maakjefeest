@@ -27,14 +27,16 @@ export default function RsvpForm({
   guestTypes = ["daggast", "avondgast"],
   showSongRequest = false,
   deadline = null,
-  showBus = false,
+  showOvernachting = false,
+  customQuestion = null,
 }: {
   eventId: string
   accentColor?: string
   guestTypes?: string[]
   showSongRequest?: boolean
   deadline?: string | null
-  showBus?: boolean
+  showOvernachting?: boolean
+  customQuestion?: string | null
 }) {
   const defaultType = guestTypes[0] ?? "daggast"
   const [attending, setAttending] = useState<Attending>("yes")
@@ -42,10 +44,12 @@ export default function RsvpForm({
   const [guests, setGuests] = useState<Guest[]>([makeDefaultGuest(defaultType)])
   const [message, setMessage] = useState("")
   const [song, setSong] = useState("")
-  const [bus, setBus] = useState<boolean | null>(null)
+  const [overnachting, setOvernachting] = useState<boolean | null>(null)
+  const [customAnswer, setCustomAnswer] = useState<boolean | null>(null)
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle")
 
   const isDeadlinePassed = deadline ? new Date() > new Date(deadline) : false
+  const hasCustomQuestion = typeof customQuestion === "string" && customQuestion.trim().length > 0
 
   useEffect(() => {
     setGuests((prev) => {
@@ -75,7 +79,8 @@ export default function RsvpForm({
               is_primary: i === 0,
               attending: "yes",
               ...(i === 0 && showSongRequest && song ? { song } : {}),
-              ...(i === 0 && showBus && bus !== null ? { bus } : {}),
+              ...(i === 0 && showOvernachting && overnachting !== null ? { overnachting } : {}),
+              ...(i === 0 && hasCustomQuestion && customAnswer !== null ? { custom_answer: customAnswer } : {}),
             }))
 
       const res = await fetch("/api/rsvp", {
@@ -267,7 +272,7 @@ export default function RsvpForm({
         </div>
       ))}
 
-      {/* ── Song request (hoofdgast) ── */}
+      {/* ── Song request ── */}
       {attending === "yes" && showSongRequest && (
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-1.5">
@@ -285,33 +290,22 @@ export default function RsvpForm({
         </div>
       )}
 
-      {/* ── Busvraag ── */}
-      {attending === "yes" && showBus && (
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-3">
-            Maak je gebruik van de georganiseerde bus?
-          </label>
-          <div className="flex gap-2">
-            {([true, false] as const).map((val) => {
-              const active = bus === val
-              return (
-                <button
-                  key={String(val)}
-                  type="button"
-                  onClick={() => setBus(val)}
-                  className="flex-1 py-3 px-4 rounded-xl font-semibold text-sm transition-all"
-                  style={{
-                    backgroundColor: active ? (val ? "#ecfdf5" : "#fff7ed") : "#f9fafb",
-                    border: `2px solid ${active ? (val ? "#10b981" : "#f59e0b") : "#e5e7eb"}`,
-                    color: active ? (val ? "#065f46" : "#92400e") : "#6b7280",
-                  }}
-                >
-                  {val ? "Ja" : "Nee"}
-                </button>
-              )
-            })}
-          </div>
-        </div>
+      {/* ── Overnachting ── */}
+      {attending === "yes" && showOvernachting && (
+        <YesNoQuestion
+          question="Blijven jullie overnachten?"
+          value={overnachting}
+          onChange={setOvernachting}
+        />
+      )}
+
+      {/* ── Eigen vraag ── */}
+      {attending === "yes" && hasCustomQuestion && (
+        <YesNoQuestion
+          question={customQuestion!}
+          value={customAnswer}
+          onChange={setCustomAnswer}
+        />
       )}
 
       {/* ── Berichtje bij afmelding ── */}
@@ -359,5 +353,41 @@ export default function RsvpForm({
         )}
       </button>
     </form>
+  )
+}
+
+function YesNoQuestion({
+  question,
+  value,
+  onChange,
+}: {
+  question: string
+  value: boolean | null
+  onChange: (v: boolean) => void
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-3">{question}</label>
+      <div className="flex gap-2">
+        {([true, false] as const).map((val) => {
+          const active = value === val
+          return (
+            <button
+              key={String(val)}
+              type="button"
+              onClick={() => onChange(val)}
+              className="flex-1 py-3 px-4 rounded-xl font-semibold text-sm transition-all"
+              style={{
+                backgroundColor: active ? (val ? "#ecfdf5" : "#fff7ed") : "#f9fafb",
+                border: `2px solid ${active ? (val ? "#10b981" : "#f59e0b") : "#e5e7eb"}`,
+                color: active ? (val ? "#065f46" : "#92400e") : "#6b7280",
+              }}
+            >
+              {val ? "Ja" : "Nee"}
+            </button>
+          )
+        })}
+      </div>
+    </div>
   )
 }
