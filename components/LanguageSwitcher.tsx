@@ -96,7 +96,7 @@ export default function LanguageSwitcher({
   }
 
   return (
-    <div ref={containerRef} style={{ position: "relative", display: "inline-block" }}>
+    <div ref={containerRef} translate="no" style={{ position: "relative", display: "inline-block" }}>
       {/* Trigger */}
       <button
         onClick={() => setOpen((v) => !v)}
