@@ -10,6 +10,7 @@ import WishlistPreview, { DEFAULT_WISHLIST_ITEMS, type WishlistItem } from "@/co
 import EventMastersPreview from "@/components/EventMastersPreview"
 import EventProgramPreview, { PROGRAM_ICONS, ProgramIcon, DEFAULT_PROGRAM_ITEMS } from "@/components/EventProgramPreview"
 import StoryPreview from "@/components/StoryPreview"
+import FotosPreview from "@/components/FotosPreview"
 import { formatDate } from "@/lib/event-styles"
 import { TITLE_FONT_OPTIONS, getTitleFont } from "@/lib/title-fonts"
 import { createClient } from "@/lib/supabase"
@@ -261,7 +262,8 @@ const PAGES: PageConfig[] = [
   { id: "Fotos",              label: "Foto's",             toggleable: true  },
 ]
 
-const CONTROLS_PAGES = new Set<PageId>(["Home", "Ceremoniemeesters", "Programma", "RSVP", "OnsVerhaal", "Informatie", "Cadeautips"])
+const CONTROLS_PAGES = new Set<PageId>(["Home", "Ceremoniemeesters", "Programma", "RSVP", "OnsVerhaal", "Informatie", "Cadeautips", "Fotos"])
+const MAX_FOTOS = 60
 
 const TYPE_LABEL: Record<EventType, string> = {
   bruiloft: "Bruiloft", verjaardag: "Verjaardag", evenement: "Evenement",
@@ -296,12 +298,15 @@ export default function BouwenPage() {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const storyFileInputRef = useRef<HTMLInputElement>(null)
+  const fotosFileInputRef = useRef<HTMLInputElement>(null)
 
   const [heroImageUrl, setHeroImageUrl] = useState<string | null>(null)
   const [heroUploading, setHeroUploading] = useState(false)
   const [storyImageBlob, setStoryImageBlob] = useState<string | null>(null)
   const [storyUploading, setStoryUploading] = useState(false)
   const [storyImageError, setStoryImageError] = useState<string | null>(null)
+  const [fotosUploading, setFotosUploading] = useState(false)
+  const [fotosUploadError, setFotosUploadError] = useState<string | null>(null)
   const [draft, setDraft] = useState<Draft | null>(null)
   const [active, setActive] = useState<Record<PageId, boolean>>({
     Home: true, Programma: true, RSVP: true, Informatie: false, Cadeautips: false, Fotos: false, Ceremoniemeesters: false, OnsVerhaal: false,
@@ -592,6 +597,39 @@ export default function BouwenPage() {
     }
   }
 
+  async function handleFotosUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []).filter(f =>
+      ["image/jpeg", "image/png", "image/webp"].includes(f.type)
+    )
+    e.target.value = ""
+    if (!files.length) return
+
+    const currentUrls = (content.Fotos?.urls as string[] | undefined) ?? []
+    const slots = MAX_FOTOS - currentUrls.length
+    const toUpload = files.slice(0, slots)
+    if (!toUpload.length) return
+
+    setFotosUploadError(null)
+    setFotosUploading(true)
+    const accumulated = [...currentUrls]
+    try {
+      for (const file of toUpload) {
+        const url = await uploadToStorage(file, "hero-images")
+        accumulated.push(url)
+        updateContent("Fotos", { ...(content.Fotos ?? {}), urls: [...accumulated] })
+      }
+    } catch {
+      setFotosUploadError("Upload mislukt — controleer je verbinding en probeer opnieuw.")
+    } finally {
+      setFotosUploading(false)
+    }
+  }
+
+  function deleteFotosImage(idx: number) {
+    const urls = (content.Fotos?.urls as string[] | undefined) ?? []
+    updateContent("Fotos", { ...(content.Fotos ?? {}), urls: urls.filter((_, i) => i !== idx) })
+  }
+
   function toggle(id: PageId) {
     setActive((prev) => {
       const next = { ...prev, [id]: !prev[id] }
@@ -807,6 +845,7 @@ export default function BouwenPage() {
   const programLayout = (rawLayout === "bento" ? "centered" : rawLayout) as "centered" | "timeline"
   const praktischTiles = content.Informatie?.items as PraktischTile[] | undefined
   const wishlistItems = content.Cadeautips?.items as WishlistItem[] | undefined
+  const fotosUrls  = (content.Fotos?.urls as string[] | undefined) ?? []
   const rsvpGuestTypes        = (content.RSVP?.guestTypes as string[] | undefined) ?? ["daggast", "avondgast"]
   const rsvpShowSong          = (content.RSVP?.showSongRequest as boolean) ?? false
   const rsvpShowOvernachting  = (content.RSVP?.showOvernachting as boolean) ?? false
@@ -1860,6 +1899,102 @@ export default function BouwenPage() {
                   </div>
                 )}
 
+                {/* ── Foto's controls ── */}
+                {previewPage === "Fotos" && (
+                  <div className="flex flex-col gap-5">
+                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Foto&apos;s</p>
+
+                    <label className="flex flex-col gap-1.5">
+                      <span className="text-xs font-semibold text-gray-600">Paginatitel</span>
+                      <input
+                        type="text"
+                        value={(content.Fotos?.title as string) ?? "Foto's"}
+                        onChange={(e) => updateContent("Fotos", { ...(content.Fotos ?? {}), title: e.target.value })}
+                        placeholder="Foto's"
+                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                      />
+                    </label>
+
+                    <label className="flex flex-col gap-1.5">
+                      <span className="text-xs font-semibold text-gray-600">Introductietekst <span className="font-normal text-gray-400">(optioneel)</span></span>
+                      <textarea
+                        rows={2}
+                        value={(content.Fotos?.intro as string) ?? ""}
+                        onChange={(e) => updateContent("Fotos", { ...(content.Fotos ?? {}), intro: e.target.value })}
+                        placeholder="Bijv. Geniet hier na van de foto's van onze mooie dag."
+                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
+                      />
+                    </label>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-xs font-semibold text-gray-600">
+                          {fotosUrls.length} / {MAX_FOTOS} foto&apos;s
+                        </span>
+                        <span className="text-xs text-gray-400">{MAX_FOTOS - fotosUrls.length} plaatsen over</span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-rose-400 transition-all"
+                          style={{ width: `${Math.min(100, (fotosUrls.length / MAX_FOTOS) * 100)}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {fotosUploadError && <p className="text-xs text-red-500">{fotosUploadError}</p>}
+
+                    <button
+                      type="button"
+                      disabled={fotosUploading || fotosUrls.length >= MAX_FOTOS}
+                      onClick={() => fotosFileInputRef.current?.click()}
+                      className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl border-2 border-dashed border-gray-200 text-sm font-semibold text-gray-400 hover:border-rose-300 hover:text-rose-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {fotosUploading ? (
+                        <>
+                          <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                          </svg>
+                          Uploaden...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          {fotosUrls.length >= MAX_FOTOS ? "Limiet bereikt" : "Foto's toevoegen"}
+                        </>
+                      )}
+                    </button>
+                    <input
+                      ref={fotosFileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      multiple
+                      className="hidden"
+                      onChange={handleFotosUpload}
+                    />
+
+                    {fotosUrls.length > 0 && (
+                      <div className="grid grid-cols-3 gap-1.5">
+                        {fotosUrls.map((url, i) => (
+                          <div key={i} className="relative aspect-square group">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={url} alt="" className="w-full h-full object-cover rounded-lg" />
+                            <button
+                              onClick={() => deleteFotosImage(i)}
+                              className="absolute top-0.5 right-0.5 w-5 h-5 bg-black/50 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="border-t border-gray-100 pt-2">
                   <button
                     onClick={() => {
@@ -2105,14 +2240,12 @@ export default function BouwenPage() {
                         <WishlistPreview items={wishlistItems ?? []} sc={sc} />
                       )}
                       {previewPage === "Fotos" && (
-                        <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
-                          <h2 className="text-lg font-extrabold mb-6" style={{ color: sc.headingColor, fontFamily: sc.fontFamily }}>Foto&apos;s</h2>
-                          <div className="grid grid-cols-3 gap-2">
-                            {[1, 2, 3, 4, 5, 6].map((n) => (
-                              <div key={n} className="aspect-square rounded-xl" style={{ backgroundColor: `${sc.accent}12` }} />
-                            ))}
-                          </div>
-                        </div>
+                        <FotosPreview
+                          title={(content.Fotos?.title as string) || "Foto's"}
+                          intro={(content.Fotos?.intro as string) || null}
+                          urls={fotosUrls}
+                          sc={sc}
+                        />
                       )}
                       {sc.floral && (
                         <div className="w-full flex justify-center" style={{ backgroundColor: sc.navBg, marginTop: "-20px" }}>

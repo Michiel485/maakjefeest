@@ -7,6 +7,7 @@ import EventProgramPreview from "@/components/EventProgramPreview"
 import StoryPreview from "@/components/StoryPreview"
 import PraktischPreview, { type PraktischTile } from "@/components/PraktischPreview"
 import WishlistPreview, { type WishlistItem } from "@/components/WishlistPreview"
+import FotosPreview from "@/components/FotosPreview"
 
 interface Page {
   id: string
@@ -143,20 +144,9 @@ export default async function EventSubPage({
   if (page.type === "Fotos") {
     const c = page.content ?? {}
     const urls = Array.isArray(c.urls) ? (c.urls as string[]) : []
-    return (
-      <div style={{ padding: "36px 32px 64px" }}>
-        {urls.length === 0 ? (
-          <Placeholder sc={sc}>Foto&apos;s worden binnenkort toegevoegd.</Placeholder>
-        ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-            {urls.map((url, i) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img key={i} src={url} alt="" style={{ borderRadius: 12, aspectRatio: "1", objectFit: "cover", width: "100%", display: "block" }} />
-            ))}
-          </div>
-        )}
-      </div>
-    )
+    const fotosTitle = typeof c.title === "string" && c.title.trim() ? c.title : page.title
+    const fotosIntro = typeof c.intro === "string" && c.intro.trim() ? c.intro : null
+    return <FotosPreview title={fotosTitle} intro={fotosIntro} urls={urls} sc={sc} />
   }
 
   return (
