@@ -25,6 +25,8 @@ const LANGS = [
   { code: "it", label: "IT", name: "Italiano" },
 ]
 
+const LS_KEY = "gt-lang"
+
 interface Props {
   accent?: string
   textColor?: string
@@ -36,8 +38,14 @@ export default function LanguageSwitcher({
   textColor = "#2D2926",
   bgColor = "#FFFFFF",
 }: Props) {
+  // Lazy initialiser — reads localStorage so the label survives Google Translate's
+  // DOM rewrites which can remount this component and reset plain useState.
+  const [current, setCurrent] = useState(() => {
+    if (typeof window === "undefined") return LANGS[0]
+    const saved = localStorage.getItem(LS_KEY)
+    return LANGS.find((l) => l.code === saved) ?? LANGS[0]
+  })
   const [open, setOpen] = useState(false)
-  const [current, setCurrent] = useState(LANGS[0])
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -83,6 +91,7 @@ export default function LanguageSwitcher({
   function selectLang(lang: (typeof LANGS)[number]) {
     setCurrent(lang)
     setOpen(false)
+    localStorage.setItem(LS_KEY, lang.code)
     triggerTranslate(lang.code)
   }
 

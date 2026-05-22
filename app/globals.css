@@ -31,24 +31,46 @@ body {
 
 /* ── Google Translate: hide all native UI ──────────────────────────────────────── */
 
-/* Top banner iframe */
-iframe.goog-te-banner-frame { display: none !important; }
+/* Top banner iframe — target every way Google can inject it */
+.goog-te-banner-frame,
+iframe.goog-te-banner-frame,
+body > .skiptranslate iframe {
+  display: none !important;
+}
 
-/* Newer obfuscated banner wrapper */
+/* The .skiptranslate wrapper Google appends directly to <body> */
+body > .skiptranslate {
+  display: none !important;
+}
+
+/* Obfuscated banner wrapper classes (change with Google updates) */
 .VIpgJd-ZVi9od-aZ2wEe-wOHMyf,
-.VIpgJd-ZVi9od-aZ2wEe-wOHMyf-ti6hGc { display: none !important; }
+.VIpgJd-ZVi9od-aZ2wEe-wOHMyf-ti6hGc,
+.VIpgJd-yAWNEb-VIpgJd-fmcmS-sn54Q {
+  display: none !important;
+}
 
-/* Tooltip, balloon, hover popups */
+/* Translated-word tooltip / hover popover */
 #goog-gt-tt,
 .goog-te-balloon-frame,
+.goog-te-balloon-frame *,
 .goog-tooltip,
-.goog-tooltip-content { display: none !important; }
+.goog-tooltip-content {
+  display: none !important;
+}
 
-/* The hidden widget container we inject */
+/* Remove the dotted highlight underline on translated words */
+.goog-text-highlight {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Our own hidden widget container */
 #google_translate_element { display: none !important; }
 
-/* Neutralise the body top-offset Google injects to make room for the banner */
-body { top: 0 !important; }
+/* Neutralise the body/html top-offset Google injects for its banner bar.
+   !important overrides both stylesheet rules and inline style attributes. */
+html, body { top: 0 !important; }
 
 /* ─────────────────────────────────────────────────────────────────────────────── */
 
