@@ -72,12 +72,13 @@ export default function RsvpForm({
     e.preventDefault()
     setStatus("sending")
     try {
+      const primaryEmail = guests[0].email
       const guestPayload =
         attending === "no"
-          ? [{ name: guests[0].name, email: guests[0].email || undefined, is_primary: true, attending: "no", message: message || undefined }]
+          ? [{ name: guests[0].name, email: primaryEmail || undefined, is_primary: true, attending: "no", message: message || undefined }]
           : guests.map((g, i) => ({
               name: g.name,
-              email: g.email || undefined,
+              email: g.email || (i > 0 && primaryEmail ? primaryEmail : undefined),
               guest_type: g.guest_type,
               dietary: g.dietary || undefined,
               is_primary: i === 0,
