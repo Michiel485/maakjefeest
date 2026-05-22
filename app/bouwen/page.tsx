@@ -811,6 +811,7 @@ export default function BouwenPage() {
   const rsvpShowSong          = (content.RSVP?.showSongRequest as boolean) ?? false
   const rsvpShowOvernachting  = (content.RSVP?.showOvernachting as boolean) ?? false
   const rsvpCustomQuestion    = (content.RSVP?.customQuestion as string) ?? ""
+  const rsvpCustomQuestion2   = (content.RSVP?.customQuestion2 as string) ?? ""
   const rsvpDeadline          = (content.RSVP?.deadline as string | null) ?? null
   const rsvpDeadlinePassed    = rsvpDeadline ? new Date() > new Date(rsvpDeadline) : false
   const RSVP_GUEST_LABELS: Record<string, string> = { daggast: "Daggast", avondgast: "Avondgast", receptiegast: "Receptiegast" }
@@ -1737,6 +1738,18 @@ export default function BouwenPage() {
                         />
                         <span className="text-xs text-gray-400">Laat leeg om uit te schakelen.</span>
                       </label>
+
+                      <label className="flex flex-col gap-1.5">
+                        <span className="text-xs font-semibold text-gray-600">Stel je eigen vraag 2</span>
+                        <input
+                          type="text"
+                          value={(content.RSVP?.customQuestion2 as string) ?? ""}
+                          onChange={(e) => updateContent("RSVP", { ...(content.RSVP ?? {}), customQuestion2: e.target.value })}
+                          placeholder="Bijv. Doen jullie mee met het spel?"
+                          className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                        />
+                        <span className="text-xs text-gray-400">Laat leeg om uit te schakelen.</span>
+                      </label>
                     </div>
                   </div>
                 )}
@@ -2067,9 +2080,13 @@ export default function BouwenPage() {
                                 {rsvpShowOvernachting && (
                                   <PreviewYesNo label="Blijven jullie overnachten?" />
                                 )}
-                                {/* Eigen vraag */}
+                                {/* Eigen vraag 1 */}
                                 {rsvpCustomQuestion.trim() && (
                                   <PreviewYesNo label={rsvpCustomQuestion} />
+                                )}
+                                {/* Eigen vraag 2 */}
+                                {rsvpCustomQuestion2.trim() && (
+                                  <PreviewYesNo label={rsvpCustomQuestion2} />
                                 )}
                                 {/* Aanmelden knop */}
                                 <div className="w-full h-12 rounded-xl flex items-center justify-center text-sm font-bold shadow-md"

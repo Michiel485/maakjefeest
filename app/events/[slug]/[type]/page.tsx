@@ -106,6 +106,7 @@ export default async function EventSubPage({
     const rsvpDeadline = typeof c.deadline === "string" && c.deadline ? c.deadline : null
     const rsvpShowOvernachting = typeof c.showOvernachting === "boolean" ? c.showOvernachting : (typeof c.showBus === "boolean" ? c.showBus : false)
     const rsvpCustomQuestion = typeof c.customQuestion === "string" && c.customQuestion.trim() ? c.customQuestion : null
+    const rsvpCustomQuestion2 = typeof c.customQuestion2 === "string" && c.customQuestion2.trim() ? c.customQuestion2 : null
     const cardInner = (
       <>
         <p style={{ fontSize: "0.9375rem", marginBottom: 24, color: sc.goldBorder ? (sc.cardText ?? sc.bodyText) : sc.bodyText }}>{introText}</p>
@@ -117,6 +118,7 @@ export default async function EventSubPage({
           deadline={rsvpDeadline}
           showOvernachting={rsvpShowOvernachting}
           customQuestion={rsvpCustomQuestion}
+          customQuestion2={rsvpCustomQuestion2}
         />
       </>
     )

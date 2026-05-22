@@ -11,6 +11,7 @@ interface GuestInput {
   song?: string
   overnachting?: boolean
   custom_answer?: boolean
+  custom_answer_2?: boolean
 }
 
 export async function POST(request: Request) {
@@ -56,6 +57,7 @@ export async function POST(request: Request) {
     song: g.song || null,
     overnachting: g.overnachting ?? null,
     custom_answer: g.custom_answer ?? null,
+    custom_answer_2: g.custom_answer_2 ?? null,
   }))
 
   const { error } = await supabase.from("rsvp").insert(rows)

@@ -14,6 +14,7 @@ export interface RsvpRow {
   song: string | null
   overnachting: boolean | null
   custom_answer: boolean | null
+  custom_answer_2: boolean | null
   created_at: string
 }
 
@@ -31,10 +32,17 @@ export default function RsvpSection({
 }) {
   const eventMap = Object.fromEntries(events.map((e) => [e.id, e.title]))
 
-  const attending   = rsvps.filter((r) => r.attending !== "no")
-  const declined    = rsvps.filter((r) => r.attending === "no")
-  const daggasten   = attending.filter((r) => r.guest_type === "daggast").length
-  const avondgasten = attending.filter((r) => r.guest_type === "avondgast").length
+  const attending      = rsvps.filter((r) => r.attending !== "no")
+  const declined       = rsvps.filter((r) => r.attending === "no")
+  const daggasten      = attending.filter((r) => r.guest_type === "daggast").length
+  const avondgasten    = attending.filter((r) => r.guest_type === "avondgast").length
+  const receptiegasten = attending.filter((r) => r.guest_type === "receptiegast").length
+
+  const hasReceptiegasten = attending.some((r) => r.guest_type === "receptiegast")
+  const hasSong           = rsvps.some((r) => r.song)
+  const hasOvernachting   = rsvps.some((r) => r.overnachting !== null)
+  const hasCustomAnswer   = rsvps.some((r) => r.custom_answer !== null)
+  const hasCustomAnswer2  = rsvps.some((r) => r.custom_answer_2 !== null)
 
   const submissionGroups = rsvps.reduce<Record<string, RsvpRow[]>>((acc, row) => {
     const key = row.submission_id ?? row.id
@@ -50,17 +58,26 @@ export default function RsvpSection({
   })
 
   function exportCsv() {
-    const headers = ["Naam", "E-mail", "Status", "Type", "Dieetwensen", "Berichtje", "Song Request", "Overnachting", "Extra vraag", "Event", "Datum"]
+    const headers = [
+      "Naam", "E-mail", "Status", "Type",
+      "Dieetwensen",
+      ...(hasSong ? ["Song Request"] : []),
+      ...(hasOvernachting ? ["Overnachting"] : []),
+      ...(hasCustomAnswer ? ["Extra vraag 1"] : []),
+      ...(hasCustomAnswer2 ? ["Extra vraag 2"] : []),
+      "Berichtje", "Event", "Datum",
+    ]
     const rows = rsvps.map((r) => [
       r.name,
       r.email ?? "",
       r.attending === "no" ? "Afwezig" : "Aanwezig",
       r.guest_type,
       r.dietary ?? "",
+      ...(hasSong ? [r.song ?? ""] : []),
+      ...(hasOvernachting ? [r.overnachting === true ? "Ja" : r.overnachting === false ? "Nee" : ""] : []),
+      ...(hasCustomAnswer ? [r.custom_answer === true ? "Ja" : r.custom_answer === false ? "Nee" : ""] : []),
+      ...(hasCustomAnswer2 ? [r.custom_answer_2 === true ? "Ja" : r.custom_answer_2 === false ? "Nee" : ""] : []),
       r.message ?? "",
-      r.song ?? "",
-      r.overnachting === true ? "Ja" : r.overnachting === false ? "Nee" : "",
-      r.custom_answer === true ? "Ja" : r.custom_answer === false ? "Nee" : "",
       eventMap[r.event_id] ?? r.event_id,
       new Date(r.created_at).toLocaleDateString("nl-NL"),
     ])
@@ -94,11 +111,12 @@ export default function RsvpSection({
   return (
     <div className="flex flex-col gap-6">
       {/* KPI cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className={`grid gap-4 ${hasReceptiegasten ? "grid-cols-2 sm:grid-cols-5" : "grid-cols-2 sm:grid-cols-4"}`}>
         <KpiCard label="Aanwezig" value={attending.length} color="emerald" />
         <KpiCard label="Afgemeld" value={declined.length} color="rose" />
         <KpiCard label="Daggasten" value={daggasten} color="blue" />
         <KpiCard label="Avondgasten" value={avondgasten} color="purple" />
+        {hasReceptiegasten && <KpiCard label="Receptiegasten" value={receptiegasten} color="teal" />}
       </div>
 
       <div className="flex items-center justify-between">
@@ -114,29 +132,27 @@ export default function RsvpSection({
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100">
-              <th className="text-left px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-400">Naam</th>
-              <th className="text-left px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-400">Status</th>
-              <th className="text-left px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-400 hidden sm:table-cell">Type</th>
-              <th className="text-left px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-400 hidden md:table-cell">E-mail</th>
-              <th className="text-left px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-400 hidden lg:table-cell">Details</th>
-              <th className="text-left px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-400 hidden lg:table-cell">Aangemeld</th>
+              <Th>Naam</Th>
+              <Th>Status</Th>
+              <Th className="hidden sm:table-cell">Type</Th>
+              <Th className="hidden md:table-cell">E-mail</Th>
+              <Th className="hidden lg:table-cell">Dieetwensen</Th>
+              {hasSong && <Th className="hidden xl:table-cell">Song</Th>}
+              {hasOvernachting && <Th className="hidden xl:table-cell">Overnachting</Th>}
+              {hasCustomAnswer && <Th className="hidden xl:table-cell">Extra vraag 1</Th>}
+              {hasCustomAnswer2 && <Th className="hidden xl:table-cell">Extra vraag 2</Th>}
+              <Th className="hidden lg:table-cell">Berichtje</Th>
+              <Th className="hidden lg:table-cell">Aangemeld</Th>
             </tr>
           </thead>
           <tbody>
             {sortedGroups.flatMap((group, gi) => {
               const rows = group.map((row) => {
                 const isDeclined = row.attending === "no"
-                const detailParts: string[] = []
-                if (!isDeclined && row.dietary) detailParts.push(row.dietary)
-                if (!isDeclined && row.song) detailParts.push(`🎵 ${row.song}`)
-                if (!isDeclined && row.overnachting !== null) detailParts.push(`Overnachting: ${row.overnachting ? "Ja" : "Nee"}`)
-                if (!isDeclined && row.custom_answer !== null) detailParts.push(`Extra vraag: ${row.custom_answer ? "Ja" : "Nee"}`)
-                if (isDeclined && row.message) detailParts.push(`"${row.message}"`)
-
                 return (
                   <tr
                     key={row.id}
@@ -163,25 +179,35 @@ export default function RsvpSection({
                       {isDeclined ? (
                         <span className="text-gray-300">—</span>
                       ) : (
-                        <span
-                          className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                            row.guest_type === "daggast"
-                              ? "bg-blue-50 text-blue-600"
-                              : row.guest_type === "avondgast"
-                              ? "bg-purple-50 text-purple-600"
-                              : "bg-teal-50 text-teal-600"
-                          }`}
-                        >
-                          {row.guest_type}
-                        </span>
+                        <GuestTypeBadge type={row.guest_type} />
                       )}
                     </td>
                     <td className="px-5 py-3 text-gray-500 hidden md:table-cell">{row.email ?? "—"}</td>
                     <td className="px-5 py-3 text-gray-500 hidden lg:table-cell">
-                      {detailParts.length > 0
-                        ? <span className={isDeclined ? "italic text-gray-400" : ""}>{detailParts.join(" · ")}</span>
-                        : <span className="text-gray-300">—</span>
-                      }
+                      {row.dietary ? row.dietary : <span className="text-gray-300">—</span>}
+                    </td>
+                    {hasSong && (
+                      <td className="px-5 py-3 text-gray-500 hidden xl:table-cell">
+                        {row.song ? row.song : <span className="text-gray-300">—</span>}
+                      </td>
+                    )}
+                    {hasOvernachting && (
+                      <td className="px-5 py-3 hidden xl:table-cell">
+                        <BoolBadge value={row.overnachting} />
+                      </td>
+                    )}
+                    {hasCustomAnswer && (
+                      <td className="px-5 py-3 hidden xl:table-cell">
+                        <BoolBadge value={row.custom_answer} />
+                      </td>
+                    )}
+                    {hasCustomAnswer2 && (
+                      <td className="px-5 py-3 hidden xl:table-cell">
+                        <BoolBadge value={row.custom_answer_2} />
+                      </td>
+                    )}
+                    <td className="px-5 py-3 text-gray-400 italic text-xs hidden lg:table-cell">
+                      {isDeclined && row.message ? `"${row.message}"` : <span className="text-gray-300">—</span>}
                     </td>
                     <td className="px-5 py-3 text-gray-400 text-xs hidden lg:table-cell">
                       {new Date(row.created_at).toLocaleDateString("nl-NL")}
@@ -192,7 +218,7 @@ export default function RsvpSection({
               const sep =
                 gi < sortedGroups.length - 1 ? (
                   <tr key={`sep-${gi}`}>
-                    <td colSpan={6} className="h-px p-0 bg-gray-200" />
+                    <td colSpan={99} className="h-px p-0 bg-gray-200" />
                   </tr>
                 ) : null
               return sep ? [...rows, sep] : rows
@@ -204,12 +230,47 @@ export default function RsvpSection({
   )
 }
 
-function KpiCard({ label, value, color }: { label: string; value: number; color: "emerald" | "rose" | "blue" | "purple" }) {
+function Th({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <th className={`text-left px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-400 ${className ?? ""}`}>
+      {children}
+    </th>
+  )
+}
+
+function GuestTypeBadge({ type }: { type: string }) {
+  const styles: Record<string, string> = {
+    daggast:      "bg-blue-50 text-blue-600",
+    avondgast:    "bg-purple-50 text-purple-600",
+    receptiegast: "bg-teal-50 text-teal-600",
+  }
+  return (
+    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${styles[type] ?? "bg-gray-100 text-gray-600"}`}>
+      {type}
+    </span>
+  )
+}
+
+function BoolBadge({ value }: { value: boolean | null }) {
+  if (value === null) return <span className="text-gray-300">—</span>
+  return (
+    <span
+      className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+        value ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-500"
+      }`}
+    >
+      {value ? "Ja" : "Nee"}
+    </span>
+  )
+}
+
+function KpiCard({ label, value, color }: { label: string; value: number; color: "emerald" | "rose" | "blue" | "purple" | "teal" }) {
   const styles = {
     emerald: "text-emerald-600",
     rose:    "text-rose-500",
     blue:    "text-blue-600",
     purple:  "text-purple-600",
+    teal:    "text-teal-600",
   }
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm text-center">

@@ -29,6 +29,7 @@ export default function RsvpForm({
   deadline = null,
   showOvernachting = false,
   customQuestion = null,
+  customQuestion2 = null,
 }: {
   eventId: string
   accentColor?: string
@@ -37,6 +38,7 @@ export default function RsvpForm({
   deadline?: string | null
   showOvernachting?: boolean
   customQuestion?: string | null
+  customQuestion2?: string | null
 }) {
   const defaultType = guestTypes[0] ?? "daggast"
   const [attending, setAttending] = useState<Attending>("yes")
@@ -46,10 +48,12 @@ export default function RsvpForm({
   const [song, setSong] = useState("")
   const [overnachting, setOvernachting] = useState<boolean | null>(null)
   const [customAnswer, setCustomAnswer] = useState<boolean | null>(null)
+  const [customAnswer2, setCustomAnswer2] = useState<boolean | null>(null)
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle")
 
   const isDeadlinePassed = deadline ? new Date() > new Date(deadline) : false
-  const hasCustomQuestion = typeof customQuestion === "string" && customQuestion.trim().length > 0
+  const hasCustomQ1 = typeof customQuestion === "string" && customQuestion.trim().length > 0
+  const hasCustomQ2 = typeof customQuestion2 === "string" && customQuestion2.trim().length > 0
 
   useEffect(() => {
     setGuests((prev) => {
@@ -80,7 +84,8 @@ export default function RsvpForm({
               attending: "yes",
               ...(i === 0 && showSongRequest && song ? { song } : {}),
               ...(i === 0 && showOvernachting && overnachting !== null ? { overnachting } : {}),
-              ...(i === 0 && hasCustomQuestion && customAnswer !== null ? { custom_answer: customAnswer } : {}),
+              ...(i === 0 && hasCustomQ1 && customAnswer !== null ? { custom_answer: customAnswer } : {}),
+              ...(i === 0 && hasCustomQ2 && customAnswer2 !== null ? { custom_answer_2: customAnswer2 } : {}),
             }))
 
       const res = await fetch("/api/rsvp", {
@@ -116,9 +121,7 @@ export default function RsvpForm({
             </svg>
           </div>
           <p className="font-bold text-gray-900 mb-1">Afmelding ontvangen.</p>
-          <p className="text-sm text-gray-500">
-            Jammer dat je er niet bij kunt zijn — bedankt voor het laten weten!
-          </p>
+          <p className="text-sm text-gray-500">Jammer dat je er niet bij kunt zijn — bedankt voor het laten weten!</p>
         </div>
       )
     }
@@ -131,9 +134,7 @@ export default function RsvpForm({
         </div>
         <p className="font-bold text-gray-900 mb-1">Aanmelding ontvangen!</p>
         <p className="text-sm text-gray-500">
-          {count === 1
-            ? "Bedankt voor je aanmelding — we zien je graag!"
-            : `Bedankt! ${count} personen zijn ingeschreven.`}
+          {count === 1 ? "Bedankt voor je aanmelding — we zien je graag!" : `Bedankt! ${count} personen zijn ingeschreven.`}
         </p>
       </div>
     )
@@ -144,9 +145,7 @@ export default function RsvpForm({
 
       {/* ── Ben je erbij? ── */}
       <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-3">
-          Ben je erbij?
-        </label>
+        <label className="block text-sm font-semibold text-gray-700 mb-3">Ben je erbij?</label>
         <div className="flex flex-col gap-2 sm:flex-row">
           {(["yes", "no"] as Attending[]).map((val) => {
             const active = attending === val
@@ -173,9 +172,7 @@ export default function RsvpForm({
       {/* ── Aantal personen ── */}
       {attending === "yes" && (
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-3">
-            Met hoeveel personen komen jullie?
-          </label>
+          <label className="block text-sm font-semibold text-gray-700 mb-3">Met hoeveel personen komen jullie?</label>
           <div className="flex gap-2 flex-wrap">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
               <button
@@ -241,9 +238,7 @@ export default function RsvpForm({
 
           {attending === "yes" && (
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                Dieetwensen / Allergieën
-              </label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Dieetwensen / Allergieën</label>
               <input
                 type="text"
                 placeholder="Bijv. vegetarisch, notenallergie"
@@ -292,20 +287,17 @@ export default function RsvpForm({
 
       {/* ── Overnachting ── */}
       {attending === "yes" && showOvernachting && (
-        <YesNoQuestion
-          question="Blijven jullie overnachten?"
-          value={overnachting}
-          onChange={setOvernachting}
-        />
+        <YesNoQuestion question="Blijven jullie overnachten?" value={overnachting} onChange={setOvernachting} />
       )}
 
-      {/* ── Eigen vraag ── */}
-      {attending === "yes" && hasCustomQuestion && (
-        <YesNoQuestion
-          question={customQuestion!}
-          value={customAnswer}
-          onChange={setCustomAnswer}
-        />
+      {/* ── Eigen vraag 1 ── */}
+      {attending === "yes" && hasCustomQ1 && (
+        <YesNoQuestion question={customQuestion!} value={customAnswer} onChange={setCustomAnswer} />
+      )}
+
+      {/* ── Eigen vraag 2 ── */}
+      {attending === "yes" && hasCustomQ2 && (
+        <YesNoQuestion question={customQuestion2!} value={customAnswer2} onChange={setCustomAnswer2} />
       )}
 
       {/* ── Berichtje bij afmelding ── */}
@@ -344,13 +336,7 @@ export default function RsvpForm({
             </svg>
             Versturen...
           </>
-        ) : attending === "no" ? (
-          "Afmelding versturen"
-        ) : count === 1 ? (
-          "Aanmelden"
-        ) : (
-          `${count} personen aanmelden`
-        )}
+        ) : attending === "no" ? "Afmelding versturen" : count === 1 ? "Aanmelden" : `${count} personen aanmelden`}
       </button>
     </form>
   )
