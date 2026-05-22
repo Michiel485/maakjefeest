@@ -3,11 +3,13 @@ import { createServiceClient } from "@/lib/supabase"
 interface GuestInput {
   name: string
   email?: string
-  guest_type?: "daggast" | "avondgast"
+  guest_type?: string
   dietary?: string
   is_primary: boolean
   attending?: string
   message?: string
+  song?: string
+  bus?: boolean
 }
 
 export async function POST(request: Request) {
@@ -50,6 +52,8 @@ export async function POST(request: Request) {
     guest_type: g.guest_type ?? "daggast",
     dietary: g.dietary || null,
     message: g.message || null,
+    song: g.song || null,
+    bus: g.bus ?? null,
   }))
 
   const { error } = await supabase.from("rsvp").insert(rows)

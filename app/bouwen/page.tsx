@@ -807,6 +807,12 @@ export default function BouwenPage() {
   const programLayout = (rawLayout === "bento" ? "centered" : rawLayout) as "centered" | "timeline"
   const praktischTiles = content.Informatie?.items as PraktischTile[] | undefined
   const wishlistItems = content.Cadeautips?.items as WishlistItem[] | undefined
+  const rsvpGuestTypes = (content.RSVP?.guestTypes as string[] | undefined) ?? ["daggast", "avondgast"]
+  const rsvpShowSong   = (content.RSVP?.showSongRequest as boolean) ?? false
+  const rsvpShowBus    = (content.RSVP?.showBus as boolean) ?? false
+  const rsvpDeadline   = (content.RSVP?.deadline as string | null) ?? null
+  const rsvpDeadlinePassed = rsvpDeadline ? new Date() > new Date(rsvpDeadline) : false
+  const RSVP_GUEST_LABELS: Record<string, string> = { daggast: "Daggast", avondgast: "Avondgast", receptiegast: "Receptiegast" }
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 font-sans antialiased overflow-hidden">
@@ -1622,18 +1628,99 @@ export default function BouwenPage() {
 
                 {/* ── RSVP controls ── */}
                 {previewPage === "RSVP" && (
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Introductietekst</p>
-                    <label className="flex flex-col gap-1.5">
-                      <span className="text-xs font-semibold text-gray-600">Tekst boven het formulier</span>
-                      <textarea
-                        rows={4}
-                        value={(content.RSVP?.text as string) ?? ""}
-                        onChange={(e) => updateContent("RSVP", { ...(content.RSVP ?? {}), text: e.target.value })}
-                        placeholder="Laat weten of je erbij bent — vul het formulier in."
-                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
-                      />
-                    </label>
+                  <div className="flex flex-col gap-5">
+                    {/* Introductietekst */}
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Introductietekst</p>
+                      <label className="flex flex-col gap-1.5">
+                        <span className="text-xs font-semibold text-gray-600">Tekst boven het formulier</span>
+                        <textarea
+                          rows={3}
+                          value={(content.RSVP?.text as string) ?? ""}
+                          onChange={(e) => updateContent("RSVP", { ...(content.RSVP ?? {}), text: e.target.value })}
+                          placeholder="Laat weten of je erbij bent — vul het formulier in."
+                          className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
+                        />
+                      </label>
+                    </div>
+
+                    {/* Type gasten */}
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Type gasten</p>
+                      <div className="flex flex-col gap-2">
+                        {(["daggast", "avondgast", "receptiegast"] as const).map((t) => {
+                          const current = (content.RSVP?.guestTypes as string[]) ?? ["daggast", "avondgast"]
+                          const label = t === "daggast" ? "Daggast" : t === "avondgast" ? "Avondgast" : "Receptiegast"
+                          return (
+                            <label key={t} className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
+                              <input
+                                type="checkbox"
+                                className="rounded"
+                                checked={current.includes(t)}
+                                onChange={(e) => {
+                                  const updated = e.target.checked
+                                    ? [...current, t]
+                                    : current.filter((x) => x !== t)
+                                  if (updated.length > 0) {
+                                    updateContent("RSVP", { ...(content.RSVP ?? {}), guestTypes: updated })
+                                  }
+                                }}
+                              />
+                              {label}
+                            </label>
+                          )
+                        })}
+                      </div>
+                    </div>
+
+                    {/* RSVP Sluitingsdatum */}
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Sluitingsdatum</p>
+                      <label className="flex flex-col gap-1.5">
+                        <span className="text-xs font-semibold text-gray-600">Aanmelden niet meer mogelijk na</span>
+                        <input
+                          type="date"
+                          value={(content.RSVP?.deadline as string) ?? ""}
+                          onChange={(e) => updateContent("RSVP", { ...(content.RSVP ?? {}), deadline: e.target.value || null })}
+                          className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                        />
+                        <span className="text-xs text-gray-400">Laat leeg voor geen sluitingsdatum.</span>
+                      </label>
+                    </div>
+
+                    {/* Song request */}
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">DJ-tip / Song Request</p>
+                      <label className="flex items-start gap-3 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          className="mt-0.5"
+                          checked={(content.RSVP?.showSongRequest as boolean) ?? false}
+                          onChange={(e) => updateContent("RSVP", { ...(content.RSVP ?? {}), showSongRequest: e.target.checked })}
+                        />
+                        <span className="text-sm text-gray-700">
+                          Vraag om een song request<br />
+                          <span className="text-xs text-gray-400">&ldquo;Welk nummer brengt jou gegarandeerd naar de dansvloer?&rdquo;</span>
+                        </span>
+                      </label>
+                    </div>
+
+                    {/* Busvraag */}
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Vervoer</p>
+                      <label className="flex items-start gap-3 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          className="mt-0.5"
+                          checked={(content.RSVP?.showBus as boolean) ?? false}
+                          onChange={(e) => updateContent("RSVP", { ...(content.RSVP ?? {}), showBus: e.target.checked })}
+                        />
+                        <span className="text-sm text-gray-700">
+                          Busvraag tonen<br />
+                          <span className="text-xs text-gray-400">&ldquo;Maak je gebruik van de georganiseerde bus?&rdquo;</span>
+                        </span>
+                      </label>
+                    </div>
                   </div>
                 )}
 
@@ -1871,64 +1958,117 @@ export default function BouwenPage() {
                       {previewPage === "RSVP" && (
                         <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
                           <h2 className="text-2xl mb-6" style={{ color: sc.headingColor, fontFamily: sc.fontPageTitles, fontWeight: sc.fontPageTitlesWeight }}>RSVP</h2>
-                          {/* max-w-lg: zelfde breedte als de echte form */}
                           <div className="flex flex-col gap-6 max-w-lg">
                             <p className="text-sm" style={{ color: sc.bodyText }}>{(content.RSVP?.text as string) || "Laat weten of je erbij bent — vul het formulier in."}</p>
-                            {/* Aantal personen — buiten de inner card */}
-                            <div>
-                              <div className="text-sm font-semibold mb-3" style={{ color: "#374151" }}>Met hoeveel personen komen jullie?</div>
-                              <div className="flex gap-2 flex-wrap">
-                                {[1,2,3,4,5,6,7,8].map((n) => (
-                                  <div key={n} className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold"
-                                    style={n === 1
-                                      ? { backgroundColor: sc.accent, color: "#fff", border: `2px solid ${sc.accent}` }
-                                      : { backgroundColor: "transparent", color: "#6b7280", border: "2px solid #e5e7eb" }
-                                    }>
-                                    {n}
-                                  </div>
-                                ))}
+                            {rsvpDeadlinePassed ? (
+                              <div className="rounded-2xl p-6 text-center" style={{ backgroundColor: "#f9fafb", border: "1px solid #e5e7eb" }}>
+                                <div className="text-sm font-bold text-gray-700 mb-1">Aanmelden is gesloten</div>
+                                <div className="text-xs text-gray-500">De uiterste RSVP-datum is verstreken.</div>
                               </div>
-                            </div>
-                            {/* Hoofdgast inner card — bg-gray-50 border-gray-100, net als de echte form */}
-                            <div className="rounded-2xl p-5 flex flex-col gap-4" style={{ backgroundColor: "#f9fafb", border: "1px solid #f3f4f6" }}>
-                              <div className="text-xs font-bold uppercase tracking-widest" style={{ color: "#9ca3af" }}>Hoofdgast</div>
-                              <div>
-                                <div className="text-sm font-semibold mb-1.5" style={{ color: "#374151" }}>Naam *</div>
-                                <div className="w-full h-10 rounded-xl border border-gray-200 bg-white px-4 flex items-center shadow-sm">
-                                  <span className="text-sm text-gray-400">Voornaam</span>
-                                </div>
-                              </div>
-                              <div>
-                                <div className="text-sm font-semibold mb-1.5" style={{ color: "#374151" }}>Type gast</div>
-                                <div className="flex gap-2">
-                                  <div className="flex-1 h-9 rounded-xl flex items-center justify-center text-sm font-semibold"
-                                    style={{ backgroundColor: sc.accent, color: "#fff", border: `2px solid ${sc.accent}` }}>
-                                    Daggast
-                                  </div>
-                                  <div className="flex-1 h-9 rounded-xl flex items-center justify-center text-sm font-semibold text-gray-500"
-                                    style={{ border: "2px solid #e5e7eb" }}>
-                                    Avondgast
+                            ) : (
+                              <>
+                                {/* Ben je erbij? */}
+                                <div>
+                                  <div className="text-sm font-semibold mb-3" style={{ color: "#374151" }}>Ben je erbij?</div>
+                                  <div className="flex flex-col gap-2 sm:flex-row">
+                                    <div className="flex-1 py-3 px-4 rounded-xl font-semibold text-sm flex items-center gap-3"
+                                      style={{ backgroundColor: "#ecfdf5", border: "2px solid #10b981", color: "#065f46" }}>
+                                      <span>✓</span> Ja, ik ben erbij!
+                                    </div>
+                                    <div className="flex-1 py-3 px-4 rounded-xl font-semibold text-sm flex items-center gap-3"
+                                      style={{ backgroundColor: "#f9fafb", border: "2px solid #e5e7eb", color: "#6b7280" }}>
+                                      <span>✕</span> Nee, ik kan helaas niet komen.
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                              <div>
-                                <div className="text-sm font-semibold mb-1.5" style={{ color: "#374151" }}>Dieetwensen / Allergieën</div>
-                                <div className="w-full h-10 rounded-xl border border-gray-200 bg-white px-4 flex items-center shadow-sm">
-                                  <span className="text-sm text-gray-400">Bijv. vegetarisch, notenallergie</span>
+                                {/* Aantal personen */}
+                                <div>
+                                  <div className="text-sm font-semibold mb-3" style={{ color: "#374151" }}>Met hoeveel personen komen jullie?</div>
+                                  <div className="flex gap-2 flex-wrap">
+                                    {[1,2,3,4,5,6,7,8].map((n) => (
+                                      <div key={n} className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold"
+                                        style={n === 1
+                                          ? { backgroundColor: sc.accent, color: "#fff", border: `2px solid ${sc.accent}` }
+                                          : { backgroundColor: "transparent", color: "#6b7280", border: "2px solid #e5e7eb" }
+                                        }>
+                                        {n}
+                                      </div>
+                                    ))}
+                                  </div>
                                 </div>
-                              </div>
-                              <div>
-                                <div className="text-sm font-semibold mb-1.5" style={{ color: "#374151" }}>E-mailadres *</div>
-                                <div className="w-full h-10 rounded-xl border border-gray-200 bg-white px-4 flex items-center shadow-sm">
-                                  <span className="text-sm text-gray-400">jouw@email.nl</span>
+                                {/* Hoofdgast card */}
+                                <div className="rounded-2xl p-5 flex flex-col gap-4" style={{ backgroundColor: "#f9fafb", border: "1px solid #f3f4f6" }}>
+                                  <div className="text-xs font-bold uppercase tracking-widest" style={{ color: "#9ca3af" }}>Hoofdgast</div>
+                                  <div>
+                                    <div className="text-sm font-semibold mb-1.5" style={{ color: "#374151" }}>Naam *</div>
+                                    <div className="w-full h-10 rounded-xl border border-gray-200 bg-white px-4 flex items-center shadow-sm">
+                                      <span className="text-sm text-gray-400">Voornaam</span>
+                                    </div>
+                                  </div>
+                                  {rsvpGuestTypes.length > 1 && (
+                                    <div>
+                                      <div className="text-sm font-semibold mb-1.5" style={{ color: "#374151" }}>Type gast</div>
+                                      <div className="flex gap-2 flex-wrap">
+                                        {rsvpGuestTypes.map((t, ti) => (
+                                          <div key={t} className="flex-1 h-9 rounded-xl flex items-center justify-center text-sm font-semibold"
+                                            style={ti === 0
+                                              ? { backgroundColor: sc.accent, color: "#fff", border: `2px solid ${sc.accent}` }
+                                              : { backgroundColor: "transparent", color: "#6b7280", border: "2px solid #e5e7eb" }
+                                            }>
+                                            {RSVP_GUEST_LABELS[t] ?? t}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                  <div>
+                                    <div className="text-sm font-semibold mb-1.5" style={{ color: "#374151" }}>Dieetwensen / Allergieën</div>
+                                    <div className="w-full h-10 rounded-xl border border-gray-200 bg-white px-4 flex items-center shadow-sm">
+                                      <span className="text-sm text-gray-400">Bijv. vegetarisch, notenallergie</span>
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <div className="text-sm font-semibold mb-1.5" style={{ color: "#374151" }}>E-mailadres *</div>
+                                    <div className="w-full h-10 rounded-xl border border-gray-200 bg-white px-4 flex items-center shadow-sm">
+                                      <span className="text-sm text-gray-400">jouw@email.nl</span>
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
-                            </div>
-                            {/* Aanmelden knop buiten de inner card */}
-                            <div className="w-full h-12 rounded-xl flex items-center justify-center text-sm font-bold shadow-md"
-                              style={{ backgroundColor: sc.accent, color: "#fff" }}>
-                              Aanmelden
-                            </div>
+                                {/* Song request */}
+                                {rsvpShowSong && (
+                                  <div>
+                                    <div className="text-sm font-semibold mb-1.5" style={{ color: "#374151" }}>
+                                      Welk nummer brengt jou gegarandeerd naar de dansvloer?{" "}
+                                      <span style={{ color: "#9ca3af", fontWeight: 400 }}>(optioneel)</span>
+                                    </div>
+                                    <div className="w-full h-10 rounded-xl border border-gray-200 bg-white px-4 flex items-center shadow-sm">
+                                      <span className="text-sm text-gray-400">Artiest — Nummertitel</span>
+                                    </div>
+                                  </div>
+                                )}
+                                {/* Busvraag */}
+                                {rsvpShowBus && (
+                                  <div>
+                                    <div className="text-sm font-semibold mb-3" style={{ color: "#374151" }}>
+                                      Maak je gebruik van de georganiseerde bus?
+                                    </div>
+                                    <div className="flex gap-2">
+                                      {["Ja", "Nee"].map((lbl) => (
+                                        <div key={lbl} className="flex-1 h-11 rounded-xl flex items-center justify-center text-sm font-semibold"
+                                          style={{ backgroundColor: "#f9fafb", border: "2px solid #e5e7eb", color: "#6b7280" }}>
+                                          {lbl}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                {/* Aanmelden knop */}
+                                <div className="w-full h-12 rounded-xl flex items-center justify-center text-sm font-bold shadow-md"
+                                  style={{ backgroundColor: sc.accent, color: "#fff" }}>
+                                  Aanmelden
+                                </div>
+                              </>
+                            )}
                           </div>
                         </div>
                       )}

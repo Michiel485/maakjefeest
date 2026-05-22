@@ -7,33 +7,54 @@ type Attending = "yes" | "no"
 interface Guest {
   name: string
   email: string
-  guest_type: "daggast" | "avondgast"
+  guest_type: string
   dietary: string
 }
 
-const defaultGuest = (): Guest => ({ name: "", email: "", guest_type: "daggast", dietary: "" })
+const makeDefaultGuest = (defaultType: string): Guest => ({
+  name: "", email: "", guest_type: defaultType, dietary: "",
+})
+
+const GUEST_TYPE_LABELS: Record<string, string> = {
+  daggast: "Daggast",
+  avondgast: "Avondgast",
+  receptiegast: "Receptiegast",
+}
 
 export default function RsvpForm({
   eventId,
   accentColor = "#E8627A",
+  guestTypes = ["daggast", "avondgast"],
+  showSongRequest = false,
+  deadline = null,
+  showBus = false,
 }: {
   eventId: string
   accentColor?: string
+  guestTypes?: string[]
+  showSongRequest?: boolean
+  deadline?: string | null
+  showBus?: boolean
 }) {
+  const defaultType = guestTypes[0] ?? "daggast"
   const [attending, setAttending] = useState<Attending>("yes")
   const [count, setCount] = useState(1)
-  const [guests, setGuests] = useState<Guest[]>([defaultGuest()])
+  const [guests, setGuests] = useState<Guest[]>([makeDefaultGuest(defaultType)])
   const [message, setMessage] = useState("")
+  const [song, setSong] = useState("")
+  const [bus, setBus] = useState<boolean | null>(null)
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle")
+
+  const isDeadlinePassed = deadline ? new Date() > new Date(deadline) : false
 
   useEffect(() => {
     setGuests((prev) => {
       if (count > prev.length) {
-        return [...prev, ...Array.from({ length: count - prev.length }, defaultGuest)]
+        return [...prev, ...Array.from({ length: count - prev.length }, () => makeDefaultGuest(defaultType))]
       }
       return prev.slice(0, count)
     })
-  }, [count])
+  }, [count, defaultType])
 
   function updateGuest(i: number, field: keyof Guest, value: string) {
     setGuests((prev) => prev.map((g, idx) => (idx === i ? { ...g, [field]: value } : g)))
@@ -53,6 +74,8 @@ export default function RsvpForm({
               dietary: g.dietary || undefined,
               is_primary: i === 0,
               attending: "yes",
+              ...(i === 0 && showSongRequest && song ? { song } : {}),
+              ...(i === 0 && showBus && bus !== null ? { bus } : {}),
             }))
 
       const res = await fetch("/api/rsvp", {
@@ -65,6 +88,17 @@ export default function RsvpForm({
     } catch {
       setStatus("error")
     }
+  }
+
+  if (isDeadlinePassed) {
+    return (
+      <div className="rounded-2xl bg-gray-50 border border-gray-200 p-8 text-center">
+        <p className="font-bold text-gray-700 mb-2">Aanmelden is gesloten</p>
+        <p className="text-sm text-gray-500">
+          De uiterste RSVP-datum is verstreken. Neem contact op met het bruidspaar of de ceremoniemeester.
+        </p>
+      </div>
+    )
   }
 
   if (status === "sent") {
@@ -103,7 +137,7 @@ export default function RsvpForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6 max-w-lg">
 
-      {/* ── Aanwezigheid keuze ── */}
+      {/* ── Ben je erbij? ── */}
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-3">
           Ben je erbij?
@@ -131,7 +165,7 @@ export default function RsvpForm({
         </div>
       </div>
 
-      {/* ── Aanwezig: aantal personen ── */}
+      {/* ── Aantal personen ── */}
       {attending === "yes" && (
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-3">
@@ -177,11 +211,11 @@ export default function RsvpForm({
             />
           </div>
 
-          {attending === "yes" && (
+          {attending === "yes" && guestTypes.length > 1 && (
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">Type gast</label>
-              <div className="flex gap-2">
-                {(["daggast", "avondgast"] as const).map((t) => (
+              <div className="flex gap-2 flex-wrap">
+                {guestTypes.map((t) => (
                   <button
                     key={t}
                     type="button"
@@ -193,7 +227,7 @@ export default function RsvpForm({
                       border: `2px solid ${guest.guest_type === t ? accentColor : "#e5e7eb"}`,
                     }}
                   >
-                    {t === "daggast" ? "Daggast" : "Avondgast"}
+                    {GUEST_TYPE_LABELS[t] ?? t}
                   </button>
                 ))}
               </div>
@@ -232,6 +266,53 @@ export default function RsvpForm({
           </div>
         </div>
       ))}
+
+      {/* ── Song request (hoofdgast) ── */}
+      {attending === "yes" && showSongRequest && (
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+            Welk nummer brengt jou gegarandeerd naar de dansvloer?{" "}
+            <span className="text-gray-400 font-normal">(optioneel)</span>
+          </label>
+          <input
+            type="text"
+            placeholder="Artiest — Nummertitel"
+            value={song}
+            onChange={(e) => setSong(e.target.value)}
+            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-all shadow-sm"
+            style={{ "--tw-ring-color": `${accentColor}33` } as React.CSSProperties}
+          />
+        </div>
+      )}
+
+      {/* ── Busvraag ── */}
+      {attending === "yes" && showBus && (
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-3">
+            Maak je gebruik van de georganiseerde bus?
+          </label>
+          <div className="flex gap-2">
+            {([true, false] as const).map((val) => {
+              const active = bus === val
+              return (
+                <button
+                  key={String(val)}
+                  type="button"
+                  onClick={() => setBus(val)}
+                  className="flex-1 py-3 px-4 rounded-xl font-semibold text-sm transition-all"
+                  style={{
+                    backgroundColor: active ? (val ? "#ecfdf5" : "#fff7ed") : "#f9fafb",
+                    border: `2px solid ${active ? (val ? "#10b981" : "#f59e0b") : "#e5e7eb"}`,
+                    color: active ? (val ? "#065f46" : "#92400e") : "#6b7280",
+                  }}
+                >
+                  {val ? "Ja" : "Nee"}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* ── Berichtje bij afmelding ── */}
       {attending === "no" && (

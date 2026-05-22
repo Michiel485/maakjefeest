@@ -101,10 +101,21 @@ export default async function EventSubPage({
     const introText = (typeof c.text === "string" && c.text)
       ? c.text
       : "Laat weten of je erbij bent — vul het formulier in."
+    const rsvpGuestTypes = Array.isArray(c.guestTypes) ? (c.guestTypes as string[]) : ["daggast", "avondgast"]
+    const rsvpShowSong = typeof c.showSongRequest === "boolean" ? c.showSongRequest : false
+    const rsvpDeadline = typeof c.deadline === "string" && c.deadline ? c.deadline : null
+    const rsvpShowBus = typeof c.showBus === "boolean" ? c.showBus : false
     const cardInner = (
       <>
         <p style={{ fontSize: "0.9375rem", marginBottom: 24, color: sc.goldBorder ? (sc.cardText ?? sc.bodyText) : sc.bodyText }}>{introText}</p>
-        <RsvpForm eventId={event.id} accentColor={sc.accent} />
+        <RsvpForm
+          eventId={event.id}
+          accentColor={sc.accent}
+          guestTypes={rsvpGuestTypes}
+          showSongRequest={rsvpShowSong}
+          deadline={rsvpDeadline}
+          showBus={rsvpShowBus}
+        />
       </>
     )
     return (

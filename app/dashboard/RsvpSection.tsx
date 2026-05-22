@@ -11,6 +11,8 @@ export interface RsvpRow {
   is_primary: boolean
   attending: string | null
   message: string | null
+  song: string | null
+  bus: boolean | null
   created_at: string
 }
 
@@ -28,8 +30,8 @@ export default function RsvpSection({
 }) {
   const eventMap = Object.fromEntries(events.map((e) => [e.id, e.title]))
 
-  const attending = rsvps.filter((r) => r.attending !== "no")
-  const declined  = rsvps.filter((r) => r.attending === "no")
+  const attending  = rsvps.filter((r) => r.attending !== "no")
+  const declined   = rsvps.filter((r) => r.attending === "no")
   const daggasten  = attending.filter((r) => r.guest_type === "daggast").length
   const avondgasten = attending.filter((r) => r.guest_type === "avondgast").length
 
@@ -47,7 +49,7 @@ export default function RsvpSection({
   })
 
   function exportCsv() {
-    const headers = ["Naam", "E-mail", "Status", "Type", "Dieetwensen", "Berichtje", "Event", "Datum"]
+    const headers = ["Naam", "E-mail", "Status", "Type", "Dieetwensen", "Berichtje", "Song Request", "Bus", "Event", "Datum"]
     const rows = rsvps.map((r) => [
       r.name,
       r.email ?? "",
@@ -55,6 +57,8 @@ export default function RsvpSection({
       r.guest_type,
       r.dietary ?? "",
       r.message ?? "",
+      r.song ?? "",
+      r.bus === true ? "Ja" : r.bus === false ? "Nee" : "",
       eventMap[r.event_id] ?? r.event_id,
       new Date(r.created_at).toLocaleDateString("nl-NL"),
     ])
@@ -116,7 +120,7 @@ export default function RsvpSection({
               <th className="text-left px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-400">Status</th>
               <th className="text-left px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-400 hidden sm:table-cell">Type</th>
               <th className="text-left px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-400 hidden md:table-cell">E-mail</th>
-              <th className="text-left px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-400 hidden lg:table-cell">Dieetwensen / Berichtje</th>
+              <th className="text-left px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-400 hidden lg:table-cell">Details</th>
               <th className="text-left px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-400 hidden lg:table-cell">Aangemeld</th>
             </tr>
           </thead>
@@ -124,6 +128,12 @@ export default function RsvpSection({
             {sortedGroups.flatMap((group, gi) => {
               const rows = group.map((row) => {
                 const isDeclined = row.attending === "no"
+                const detailParts: string[] = []
+                if (!isDeclined && row.dietary) detailParts.push(row.dietary)
+                if (!isDeclined && row.song) detailParts.push(`🎵 ${row.song}`)
+                if (!isDeclined && row.bus !== null) detailParts.push(`Bus: ${row.bus ? "Ja" : "Nee"}`)
+                if (isDeclined && row.message) detailParts.push(`"${row.message}"`)
+
                 return (
                   <tr
                     key={row.id}
@@ -156,7 +166,9 @@ export default function RsvpSection({
                           className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                             row.guest_type === "daggast"
                               ? "bg-blue-50 text-blue-600"
-                              : "bg-purple-50 text-purple-600"
+                              : row.guest_type === "avondgast"
+                              ? "bg-purple-50 text-purple-600"
+                              : "bg-teal-50 text-teal-600"
                           }`}
                         >
                           {row.guest_type}
@@ -165,9 +177,10 @@ export default function RsvpSection({
                     </td>
                     <td className="px-5 py-3 text-gray-500 hidden md:table-cell">{row.email ?? "—"}</td>
                     <td className="px-5 py-3 text-gray-500 hidden lg:table-cell">
-                      {isDeclined && row.message
-                        ? <span className="italic text-gray-400">"{row.message}"</span>
-                        : (row.dietary ?? "—")}
+                      {detailParts.length > 0
+                        ? <span className={isDeclined ? "italic text-gray-400" : ""}>{detailParts.join(" · ")}</span>
+                        : <span className="text-gray-300">—</span>
+                      }
                     </td>
                     <td className="px-5 py-3 text-gray-400 text-xs hidden lg:table-cell">
                       {new Date(row.created_at).toLocaleDateString("nl-NL")}
