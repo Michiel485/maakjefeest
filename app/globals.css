@@ -29,6 +29,29 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* ── Google Translate: hide all native UI ──────────────────────────────────────── */
+
+/* Top banner iframe */
+iframe.goog-te-banner-frame { display: none !important; }
+
+/* Newer obfuscated banner wrapper */
+.VIpgJd-ZVi9od-aZ2wEe-wOHMyf,
+.VIpgJd-ZVi9od-aZ2wEe-wOHMyf-ti6hGc { display: none !important; }
+
+/* Tooltip, balloon, hover popups */
+#goog-gt-tt,
+.goog-te-balloon-frame,
+.goog-tooltip,
+.goog-tooltip-content { display: none !important; }
+
+/* The hidden widget container we inject */
+#google_translate_element { display: none !important; }
+
+/* Neutralise the body top-offset Google injects to make room for the banner */
+body { top: 0 !important; }
+
+/* ─────────────────────────────────────────────────────────────────────────────── */
+
 /* Make the entire time input clickable — stretch the picker indicator over the full field */
 input[type="time"] {
   position: relative;
