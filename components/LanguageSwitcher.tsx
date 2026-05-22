@@ -46,9 +46,23 @@ export default function LanguageSwitcher({
     return LANGS.find((l) => l.code === saved) ?? LANGS[0]
   })
   const [open, setOpen] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null)
+  const containerRef  = useRef<HTMLDivElement>(null)
+  const originalTitle = useRef("")
 
   useEffect(() => {
+    // Protect the browser tab title — Google Translate rewrites document.title;
+    // watch the <title> element and immediately restore the original value.
+    originalTitle.current = document.title
+    const titleEl = document.querySelector("title")
+    if (titleEl) {
+      const mo = new MutationObserver(() => {
+        if (document.title !== originalTitle.current) {
+          document.title = originalTitle.current
+        }
+      })
+      mo.observe(titleEl, { childList: true, subtree: true, characterData: true })
+    }
+
     // Inject hidden Google Translate mount point once
     if (!document.getElementById("google_translate_element")) {
       const el = document.createElement("div")
@@ -92,8 +106,12 @@ export default function LanguageSwitcher({
     if (!combo) return
 
     if (code === "nl") {
-      // For the base language: clear first, then set nl — shakes loose any
-      // partially-translated state Google's engine may be stuck in.
+      // Clear the googtrans cookie so GT knows the page is already in its base language.
+      const host = window.location.hostname
+      document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
+      document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${host}`
+
+      // Triple-fire to shake loose any partially-translated state.
       fireCombo(combo, "")
       setTimeout(() => fireCombo(combo, "nl"), 50)
       setTimeout(() => fireCombo(combo, "nl"), 200)

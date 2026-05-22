@@ -125,7 +125,7 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: IVORY }}>
+    <div translate="no" className="min-h-screen" style={{ backgroundColor: IVORY }}>
 
       {/* Nav */}
       <header

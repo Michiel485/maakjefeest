@@ -856,7 +856,7 @@ export default function BouwenPage() {
   const RSVP_GUEST_LABELS: Record<string, string> = { daggast: "Daggast", avondgast: "Avondgast", receptiegast: "Receptiegast" }
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50 font-sans antialiased overflow-hidden">
+    <div translate="no" className="h-screen flex flex-col bg-gray-50 font-sans antialiased overflow-hidden">
 
       {/* ── Top bar ── */}
       <header className="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-100 shadow-sm flex-shrink-0 z-10">
