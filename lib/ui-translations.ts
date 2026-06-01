@@ -1,4 +1,4 @@
-export type UILocale = "nl" | "en" | "de" | "fr" | "es"
+export type UILocale = "nl" | "en" | "de" | "fr" | "es" | "it"
 
 export const uiTranslations = {
   nl: {
@@ -50,6 +50,16 @@ export const uiTranslations = {
     ceremoniemeesters: "Maestros de Ceremonia",
     rsvp: "RSVP",
     fotos: "Fotos",
+  },
+  it: {
+    home: "Home",
+    verhaal: "La nostra storia",
+    programma: "Programma",
+    informatie: "Informazioni",
+    cadeautips: "Idee regalo",
+    ceremoniemeesters: "Maestri di Cerimonia",
+    rsvp: "RSVP",
+    fotos: "Foto",
   },
 } as const
 
