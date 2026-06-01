@@ -2,6 +2,8 @@
 
 import type { SC } from "@/lib/event-styles"
 import { ProgramIcon } from "./EventProgramPreview"
+import { useUILocale } from "@/hooks/useUILocale"
+import { getUILabel } from "@/lib/ui-translations"
 
 export interface WishlistItem {
   id: string
@@ -44,13 +46,14 @@ export default function WishlistPreview({
   items: WishlistItem[]
   sc: SC
 }) {
+  const locale = useUILocale()
   return (
     <div className="@container px-6 py-10" style={{ backgroundColor: sc.bodyBackground ? "transparent" : sc.navBg, fontFamily: sc.fontFamily }}>
       <p
-        className="text-4xl text-center mb-8"
+        className="notranslate text-4xl text-center mb-8"
         style={{ color: sc.headingColor, fontFamily: sc.fontPageTitles, fontWeight: sc.fontPageTitlesWeight }}
       >
-        Cadeautips
+        {getUILabel(locale, "cadeautips")}
       </p>
       <div className="flex flex-wrap justify-center gap-5">
         {items.map((item) => (

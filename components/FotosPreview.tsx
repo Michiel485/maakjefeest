@@ -1,24 +1,34 @@
+"use client"
+
 import { type SC } from "@/lib/event-styles"
+import { useUILocale } from "@/hooks/useUILocale"
+import { getUILabel } from "@/lib/ui-translations"
 
 interface Props {
   title?: string | null
   intro?: string | null
   urls: string[]
   sc: SC
+  useTranslatedTitle?: boolean
 }
 
-export default function FotosPreview({ title, intro, urls, sc }: Props) {
+export default function FotosPreview({ title, intro, urls, sc, useTranslatedTitle }: Props) {
+  const locale = useUILocale()
+  const displayTitle = useTranslatedTitle ? getUILabel(locale, "fotos") : title
   return (
     <div style={{ padding: "36px 32px 64px", backgroundColor: sc.navBg }}>
-      {title && (
-        <h1 style={{
-          fontSize: "1.75rem",
-          fontWeight: sc.fontPageTitlesWeight,
-          color: sc.headingColor,
-          fontFamily: sc.fontPageTitles,
-          margin: "0 0 16px",
-        }}>
-          {title}
+      {displayTitle && (
+        <h1
+          className="notranslate"
+          style={{
+            fontSize: "1.75rem",
+            fontWeight: sc.fontPageTitlesWeight,
+            color: sc.headingColor,
+            fontFamily: sc.fontPageTitles,
+            margin: "0 0 16px",
+          }}
+        >
+          {displayTitle}
         </h1>
       )}
       {intro && (

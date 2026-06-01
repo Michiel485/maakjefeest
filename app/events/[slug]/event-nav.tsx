@@ -3,6 +3,8 @@
 import { usePathname } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
 import LanguageSwitcher from "@/components/LanguageSwitcher"
+import { useUILocale } from "@/hooks/useUILocale"
+import { getUILabel, PAGE_TYPE_TO_KEY } from "@/lib/ui-translations"
 
 interface NavPage {
   type: string
@@ -37,6 +39,7 @@ export default function EventNav({
   activeType?: string
 }) {
   const pathname = usePathname()
+  const locale = useUILocale()
   const [menuOpen, setMenuOpen] = useState(false)
   // linksBelow: true = links on row 2 (not enough space for single row)
   const [linksBelow, setLinksBelow] = useState(false)
@@ -128,16 +131,20 @@ export default function EventNav({
     textOverflow: "ellipsis",
   }
 
-  const pageLinks = pages.map((page) => (
-    <a
-      key={page.type}
-      href={pageHref(page.type)}
-      onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate(page.type) } : undefined}
-      style={pageLinkStyle(isActive(page.type))}
-    >
-      {page.title}
-    </a>
-  ))
+  const pageLinks = pages.map((page) => {
+    const key = PAGE_TYPE_TO_KEY[page.type]
+    const label = key ? getUILabel(locale, key) : page.title
+    return (
+      <a
+        key={page.type}
+        href={pageHref(page.type)}
+        onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate(page.type) } : undefined}
+        style={pageLinkStyle(isActive(page.type))}
+      >
+        {label}
+      </a>
+    )
+  })
 
   const linksJustify = navLayout === "left" ? "justify-start" : "justify-center"
 
@@ -145,7 +152,7 @@ export default function EventNav({
   if (navLayout === "stacked") {
     return (
       <div className="@container">
-        <nav className="sticky top-0 z-50 px-8 border-b backdrop-blur-sm" style={navStyle}>
+        <nav className="notranslate sticky top-0 z-50 px-8 border-b backdrop-blur-sm" style={navStyle}>
           {/* Mobile row */}
           <div className="flex items-center justify-between py-4 gap-4 @md:hidden">
             <a href={homeHref} onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("Home") } : undefined} style={titleStyle}>
@@ -178,7 +185,7 @@ export default function EventNav({
           </div>
         </nav>
         {menuOpen && (
-          <div className="@md:hidden border-b px-6 py-3 flex flex-col gap-1" style={{ backgroundColor: `${sc.navBg}f2`, borderColor: `${sc.accent}20`, fontFamily: sc.fontFamily }} onClick={() => setMenuOpen(false)}>
+          <div className="notranslate @md:hidden border-b px-6 py-3 flex flex-col gap-1" style={{ backgroundColor: `${sc.navBg}f2`, borderColor: `${sc.accent}20`, fontFamily: sc.fontFamily }} onClick={() => setMenuOpen(false)}>
             {pageLinks}
           </div>
         )}
@@ -191,7 +198,7 @@ export default function EventNav({
   // linksBelow=true  → two rows:   [title][controls] / [links]
   return (
     <div className="@container">
-      <nav ref={navRef} className="sticky top-0 z-50 px-8 border-b backdrop-blur-sm" style={navStyle}>
+      <nav ref={navRef} className="notranslate sticky top-0 z-50 px-8 border-b backdrop-blur-sm" style={navStyle}>
 
         {/* Top strip: title + (links when single-row) + controls */}
         <div className="flex items-center justify-between gap-4 py-4">
@@ -240,7 +247,7 @@ export default function EventNav({
 
       {/* Mobile dropdown */}
       {menuOpen && (
-        <div className="@md:hidden border-b px-6 py-3 flex flex-col gap-1" style={{ backgroundColor: `${sc.navBg}f2`, borderColor: `${sc.accent}20`, fontFamily: sc.fontFamily }} onClick={() => setMenuOpen(false)}>
+        <div className="notranslate @md:hidden border-b px-6 py-3 flex flex-col gap-1" style={{ backgroundColor: `${sc.navBg}f2`, borderColor: `${sc.accent}20`, fontFamily: sc.fontFamily }} onClick={() => setMenuOpen(false)}>
           {pageLinks}
         </div>
       )}

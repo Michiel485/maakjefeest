@@ -126,6 +126,7 @@ export default function LanguageSwitcher({
     setCurrent(lang)
     setOpen(false)
     localStorage.setItem(LS_KEY, lang.code)
+    window.dispatchEvent(new CustomEvent("gt-lang-changed", { detail: lang.code }))
     triggerTranslate(lang.code)
   }
 

@@ -146,7 +146,7 @@ export default async function EventSubPage({
     const urls = Array.isArray(c.urls) ? (c.urls as string[]) : []
     const fotosTitle = typeof c.title === "string" && c.title.trim() ? c.title : page.title
     const fotosIntro = typeof c.intro === "string" && c.intro.trim() ? c.intro : null
-    return <FotosPreview title={fotosTitle} intro={fotosIntro} urls={urls} sc={sc} />
+    return <FotosPreview title={fotosTitle} intro={fotosIntro} urls={urls} sc={sc} useTranslatedTitle />
   }
 
   return (
