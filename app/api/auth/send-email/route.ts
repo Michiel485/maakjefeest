@@ -53,7 +53,9 @@ async function verifyHookSignature(request: Request, rawBody: string): Promise<b
 interface HookPayload {
   user: {
     email: string
-    email_confirmed_at: string | null
+    created_at?: string
+    email_confirmed_at?: string | null
+    [key: string]: unknown
   }
   email_data: {
     token_hash: string
@@ -93,10 +95,21 @@ export async function POST(request: Request) {
     `?token=${token_hash}&type=${email_action_type}` +
     `&redirect_to=${encodeURIComponent(redirect_to)}`
 
-  // Supabase always sends email_action_type "magiclink" for signInWithOtp(),
-  // even for brand-new users. The only reliable way to distinguish new from
-  // returning is email_confirmed_at: null means never confirmed = new user.
-  const isNewUser = !user.email_confirmed_at
+  // Log the full user object once so we can see exactly what Supabase sends.
+  console.log("[send-email] user payload:", JSON.stringify(user))
+
+  // Supabase always sends email_action_type "magiclink" for signInWithOtp().
+  // Detect new users via created_at: if the account was created within the
+  // last 5 minutes it must be a first-time login.
+  const isNewUser = (() => {
+    if (user.created_at) {
+      const ageMs = Date.now() - new Date(user.created_at).getTime()
+      return ageMs < 5 * 60 * 1000 // younger than 5 minutes
+    }
+    // Fallback: no created_at → check email_confirmed_at
+    return !user.email_confirmed_at
+  })()
+  console.log("[send-email] isNewUser:", isNewUser, "| created_at:", user.created_at)
 
   const result = isNewUser
     ? await sendSignupWelcomeMagicLink({ toEmail: user.email, magicLink })
