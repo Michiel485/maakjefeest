@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { NavLoginButton } from "@/components/NavLoginButton"
+import ResetGoogleTranslate from "@/components/ResetGoogleTranslate"
 
 const GOLD       = "#C5A059"
 const GOLD_LIGHT = "#E8D5A3"
@@ -26,6 +27,7 @@ function GoldDivider() {
 export default function Home() {
   return (
     <div style={{ backgroundColor: IVORY }} className="min-h-screen antialiased">
+      <ResetGoogleTranslate />
 
       {/* ── Nav ── */}
       <header className="flex items-center justify-between px-8 py-5 max-w-6xl mx-auto">

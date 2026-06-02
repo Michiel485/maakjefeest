@@ -1,5 +1,5 @@
 import { createServiceClient } from "@/lib/supabase"
-import { sendRSVPConfirmation } from "@/lib/mail"
+import { sendRSVPConfirmation, sendAdminRSVPNotification } from "@/lib/mail"
 
 interface GuestInput {
   name: string
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, title")
+    .select("id, title, user_id")
     .eq("id", event_id)
     .eq("status", "published")
     .single()
@@ -68,22 +68,42 @@ export async function POST(request: Request) {
     return Response.json({ error: "Kon aanmelding niet opslaan" }, { status: 500 })
   }
 
+  const ev          = event as { id: string; title?: string; user_id?: string }
+  const eventTitle  = ev.title ?? "het evenement"
+  const guestPayload = rows.map((r) => ({
+    name:         r.name,
+    attending:    r.attending,
+    guest_type:   r.guest_type,
+    dietary:      r.dietary,
+    song:         r.song,
+    overnachting: r.overnachting,
+    message:      r.message,
+  }))
+
   const primaryGuest = guests.find((g) => g.is_primary) ?? guests[0]
+
+  // Confirmation mail to the guest
   if (primaryGuest.email) {
     await sendRSVPConfirmation({
       toEmail:     primaryGuest.email,
       primaryName: primaryGuest.name,
-      eventTitle:  (event as { id: string; title?: string }).title ?? "het evenement",
-      guests: rows.map((r) => ({
-        name:         r.name,
-        attending:    r.attending,
-        guest_type:   r.guest_type,
-        dietary:      r.dietary,
-        song:         r.song,
-        overnachting: r.overnachting,
-        message:      r.message,
-      })),
+      eventTitle,
+      guests:      guestPayload,
     })
+  }
+
+  // Notification mail to the event owner
+  if (ev.user_id) {
+    const { data: adminUser } = await supabase.auth.admin.getUserById(ev.user_id)
+    const adminEmail = adminUser?.user?.email
+    if (adminEmail) {
+      await sendAdminRSVPNotification({
+        toEmail:     adminEmail,
+        eventTitle,
+        primaryName: primaryGuest.name,
+        guests:      guestPayload,
+      })
+    }
   }
 
   return Response.json({ success: true, count: guests.length }, { status: 201 })

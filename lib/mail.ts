@@ -75,9 +75,9 @@ export async function sendRSVPConfirmation(data: RSVPConfirmationData) {
 
         <!-- Header -->
         <tr>
-          <td style="background:linear-gradient(135deg,#c9a96e 0%,#a8834a 100%);padding:40px 40px 32px;text-align:center;">
-            <p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:0.12em;color:rgba(255,255,255,0.75);text-transform:uppercase;">SayingYes</p>
-            <h1 style="margin:0;font-size:26px;font-weight:800;color:#ffffff;line-height:1.2;">${headline}</h1>
+          <td bgcolor="#c9a96e" style="background-color:#c9a96e;padding:40px 40px 32px;text-align:center;">
+            <p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:0.12em;color:#f5ead6;text-transform:uppercase;">SayingYes</p>
+            <h1 style="margin:0;font-size:26px;font-weight:800;color:#111827;line-height:1.2;">${headline}</h1>
           </td>
         </tr>
 
@@ -140,6 +140,126 @@ export async function sendRSVPConfirmation(data: RSVPConfirmationData) {
     return { success: true, id: result?.id }
   } catch (err) {
     console.error("[mail] Unexpected error sending RSVP confirmation:", err)
+    return { success: false, error: err }
+  }
+}
+
+// ── Admin RSVP Notification ───────────────────────────────────────────────────
+
+export interface AdminRSVPNotificationData {
+  toEmail: string
+  eventTitle: string
+  primaryName: string
+  guests: RSVPGuest[]
+}
+
+export async function sendAdminRSVPNotification(data: AdminRSVPNotificationData) {
+  const { toEmail, eventTitle, primaryName, guests } = data
+
+  const attendingCount = guests.filter((g) => g.attending !== "no").length
+  const decliningCount = guests.filter((g) => g.attending === "no").length
+  const isDecline      = attendingCount === 0
+
+  const guestRows = guests
+    .map((g) => {
+      const status = g.attending === "no" ? "Afgemeld" : g.guest_type ?? "Daggast"
+      const extras = [
+        g.dietary            ? `Dieet: ${g.dietary}`   : null,
+        g.overnachting === true  ? "Overnachting: ja"  : null,
+        g.overnachting === false ? "Overnachting: nee" : null,
+        g.song               ? `Liedje: ${g.song}`     : null,
+      ].filter(Boolean)
+
+      return `
+        <tr>
+          <td style="padding:10px 16px;border-bottom:1px solid #f0ede8;font-weight:600;color:#111827;">${g.name}</td>
+          <td style="padding:10px 16px;border-bottom:1px solid #f0ede8;color:#374151;">${status}</td>
+          <td style="padding:10px 16px;border-bottom:1px solid #f0ede8;color:#6b7280;font-size:13px;">${extras.join(" · ") || "—"}</td>
+        </tr>`
+    })
+    .join("")
+
+  const messageBlock =
+    guests[0]?.message
+      ? `<div style="margin:20px 0 0;padding:14px 18px;background:#faf8f5;border-left:3px solid #c9a96e;border-radius:0 8px 8px 0;color:#374151;font-style:italic;font-size:14px;line-height:1.6;">
+           "${guests[0].message}"
+         </div>`
+      : ""
+
+  const summaryLine = isDecline
+    ? `<strong style="color:#111827;">${primaryName}</strong> heeft zich <span style="color:#dc2626;font-weight:700;">afgemeld</span>.`
+    : `<strong style="color:#111827;">${primaryName}</strong> heeft zich <span style="color:#16a34a;font-weight:700;">aangemeld</span> — ${attendingCount} gast${attendingCount !== 1 ? "en" : ""} komen, ${decliningCount} afgemeld.`
+
+  const html = `<!DOCTYPE html>
+<html lang="nl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+        <!-- Header -->
+        <tr>
+          <td bgcolor="#1f2937" style="background-color:#1f2937;padding:32px 40px;text-align:center;">
+            <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:0.14em;color:#9ca3af;text-transform:uppercase;">Beheerdersbericht · SayingYes</p>
+            <h1 style="margin:0;font-size:22px;font-weight:800;color:#f9fafb;line-height:1.3;">Nieuwe RSVP ontvangen 🍾</h1>
+            <p style="margin:8px 0 0;font-size:14px;color:#d1d5db;">${eventTitle}</p>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding:32px 40px 28px;">
+            <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.65;">${summaryLine}</p>
+
+            <!-- Guest table -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-radius:10px;overflow:hidden;border:1px solid #e5e7eb;">
+              <thead>
+                <tr bgcolor="#f9fafb" style="background-color:#f9fafb;">
+                  <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.08em;color:#6b7280;text-transform:uppercase;border-bottom:1px solid #e5e7eb;">Naam</th>
+                  <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.08em;color:#6b7280;text-transform:uppercase;border-bottom:1px solid #e5e7eb;">Status</th>
+                  <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.08em;color:#6b7280;text-transform:uppercase;border-bottom:1px solid #e5e7eb;">Extra</th>
+                </tr>
+              </thead>
+              <tbody>${guestRows}</tbody>
+            </table>
+
+            ${messageBlock}
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="padding:20px 40px 28px;text-align:center;border-top:1px solid #f3f4f6;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;">
+              Automatisch bericht van <strong style="color:#6b7280;">SayingYes</strong> &nbsp;·&nbsp; sayingyes.nl
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+
+  try {
+    const { data: result, error } = await getResend().emails.send({
+      from:    FROM,
+      to:      [toEmail],
+      subject: `Nieuwe RSVP ontvangen voor ${eventTitle}! 🍾`,
+      html,
+    })
+
+    if (error) {
+      console.error("[mail] Admin RSVP notification error:", error)
+      return { success: false, error }
+    }
+
+    console.log("[mail] Admin RSVP notification sent →", toEmail, "| id:", result?.id)
+    return { success: true, id: result?.id }
+  } catch (err) {
+    console.error("[mail] Unexpected error sending admin notification:", err)
     return { success: false, error: err }
   }
 }
