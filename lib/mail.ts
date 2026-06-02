@@ -1,8 +1,11 @@
 import { Resend } from "resend"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 const FROM = "SayingYes <info@sayingyes.nl>"
+
+function getResend() {
+  if (!process.env.RESEND_API_KEY) throw new Error("RESEND_API_KEY is not set")
+  return new Resend(process.env.RESEND_API_KEY)
+}
 
 export interface RSVPGuest {
   name: string
@@ -119,7 +122,7 @@ export async function sendRSVPConfirmation(data: RSVPConfirmationData) {
 </html>`
 
   try {
-    const { data: result, error } = await resend.emails.send({
+    const { data: result, error } = await getResend().emails.send({
       from: FROM,
       to:   [toEmail],
       subject: isDecline
@@ -214,7 +217,7 @@ export async function sendMagicLink({
 </html>`
 
   try {
-    const { data: result, error } = await resend.emails.send({
+    const { data: result, error } = await getResend().emails.send({
       from:    FROM,
       to:      [toEmail],
       subject: "Je inloglink voor SayingYes",
