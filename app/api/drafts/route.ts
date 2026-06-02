@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr"
 import { createServiceClient } from "@/lib/supabase"
 import { cookies } from "next/headers"
+import { sendFirstSaveWelcomeEmail } from "@/lib/mail"
 
 async function getAuthClient() {
   const cookieStore = await cookies()
@@ -85,6 +86,8 @@ export async function POST(request: Request) {
   let body: {
     type: string
     naam: string
+    naam1?: string
+    naam2?: string
     datum?: string
     locatie?: string
     slug?: string
@@ -122,6 +125,8 @@ export async function POST(request: Request) {
   const {
     type,
     naam,
+    naam1,
+    naam2,
     datum = "",
     locatie = "",
     slug: providedSlug,
@@ -263,5 +268,17 @@ export async function POST(request: Request) {
   }
 
   console.log("[drafts] nieuw event aangemaakt, id:", event.id, "slug:", event.slug)
+
+  // First-save welcome mail — only fires on INSERT, never on UPDATE.
+  const n1 = naam1?.trim()
+  const n2 = naam2?.trim()
+  const greetingName = n1 && n2 ? `${n1} & ${n2}` : n1 ?? n2 ?? naam ?? user.email
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://sayingyes.nl"
+  await sendFirstSaveWelcomeEmail(
+    user.email,
+    greetingName,
+    `${baseUrl}/dashboard`
+  )
+
   return Response.json({ id: event.id, slug: event.slug }, { status: 201 })
 }

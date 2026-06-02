@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import Stripe from "stripe"
 import { revalidatePath } from "next/cache"
 import { createServiceClient } from "@/lib/supabase"
+import { sendWebsiteLiveEmail } from "@/lib/mail"
 
 export const dynamic = "force-dynamic"
 
@@ -44,11 +45,24 @@ export async function POST(request: Request) {
         stripe_payment_id: session.payment_intent as string,
       })
       .eq("id", event_id)
-      .select("slug")
+      .select("slug, title, user_id")
       .single()
 
     if (updatedEvent?.slug) {
       revalidatePath(`/events/${updatedEvent.slug}`, "layout")
+    }
+
+    if (updatedEvent?.slug && updatedEvent?.user_id) {
+      const { data: ownerData } = await supabase.auth.admin.getUserById(updatedEvent.user_id)
+      const ownerEmail = ownerData?.user?.email
+      if (ownerEmail) {
+        const websiteUrl = `${process.env.NEXT_PUBLIC_BASE_URL ?? "https://sayingyes.nl"}/events/${updatedEvent.slug}`
+        await sendWebsiteLiveEmail(
+          ownerEmail,
+          updatedEvent.title ?? "jullie",
+          websiteUrl
+        )
+      }
     }
   }
 
