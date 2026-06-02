@@ -163,9 +163,9 @@ export async function sendMagicLink({
 
         <!-- Header -->
         <tr>
-          <td style="background:linear-gradient(135deg,#c9a96e 0%,#a8834a 100%);padding:44px 40px 36px;text-align:center;">
-            <p style="margin:0 0 10px;font-size:12px;font-weight:700;letter-spacing:0.14em;color:rgba(255,255,255,0.7);text-transform:uppercase;">SayingYes</p>
-            <h1 style="margin:0;font-size:26px;font-weight:800;color:#ffffff;line-height:1.25;">Welkom terug 👋</h1>
+          <td bgcolor="#c9a96e" style="background-color:#c9a96e;padding:44px 40px 36px;text-align:center;">
+            <p style="margin:0 0 10px;font-size:12px;font-weight:700;letter-spacing:0.14em;color:#f5ead6;text-transform:uppercase;">SayingYes</p>
+            <h1 style="margin:0;font-size:26px;font-weight:800;color:#111827;line-height:1.25;">Welkom terug 👋</h1>
           </td>
         </tr>
 
@@ -180,12 +180,12 @@ export async function sendMagicLink({
             </p>
 
             <!-- CTA button -->
-            <table width="100%" cellpadding="0" cellspacing="0">
+            <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
               <tr>
-                <td align="center">
+                <td bgcolor="#c9a96e" style="background-color:#c9a96e;border-radius:10px;">
                   <a
                     href="${magicLink}"
-                    style="display:inline-block;background:linear-gradient(135deg,#c9a96e 0%,#a8834a 100%);color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:15px 40px;border-radius:12px;letter-spacing:0.02em;"
+                    style="display:inline-block;background-color:#c9a96e;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:15px 40px;border-radius:10px;letter-spacing:0.02em;mso-padding-alt:15px 40px;"
                   >
                     Inloggen bij SayingYes
                   </a>
