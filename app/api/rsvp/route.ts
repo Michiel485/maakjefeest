@@ -1,4 +1,5 @@
 import { createServiceClient } from "@/lib/supabase"
+import { sendRSVPConfirmation } from "@/lib/mail"
 
 interface GuestInput {
   name: string
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
 
   const { data: event } = await supabase
     .from("events")
-    .select("id")
+    .select("id, title")
     .eq("id", event_id)
     .eq("status", "published")
     .single()
@@ -65,6 +66,24 @@ export async function POST(request: Request) {
   if (error) {
     console.error("RSVP insert error:", error)
     return Response.json({ error: "Kon aanmelding niet opslaan" }, { status: 500 })
+  }
+
+  const primaryGuest = guests.find((g) => g.is_primary) ?? guests[0]
+  if (primaryGuest.email) {
+    await sendRSVPConfirmation({
+      toEmail:     primaryGuest.email,
+      primaryName: primaryGuest.name,
+      eventTitle:  (event as { id: string; title?: string }).title ?? "het evenement",
+      guests: rows.map((r) => ({
+        name:         r.name,
+        attending:    r.attending,
+        guest_type:   r.guest_type,
+        dietary:      r.dietary,
+        song:         r.song,
+        overnachting: r.overnachting,
+        message:      r.message,
+      })),
+    })
   }
 
   return Response.json({ success: true, count: guests.length }, { status: 201 })
