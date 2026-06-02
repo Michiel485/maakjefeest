@@ -1,4 +1,4 @@
-import { sendMagicLink } from "@/lib/mail"
+import { sendMagicLink, sendSignupWelcomeMagicLink } from "@/lib/mail"
 
 // Supabase Auth Hooks use the Standard Webhooks spec:
 // https://docs.svix.com/receiving/verifying-payloads/how
@@ -90,7 +90,9 @@ export async function POST(request: Request) {
     `?token=${token_hash}&type=${email_action_type}` +
     `&redirect_to=${encodeURIComponent(redirect_to)}`
 
-  const result = await sendMagicLink({ toEmail: user.email, magicLink })
+  const result = email_action_type === "signup"
+    ? await sendSignupWelcomeMagicLink({ toEmail: user.email, magicLink })
+    : await sendMagicLink({ toEmail: user.email, magicLink })
 
   if (!result.success) {
     return Response.json({ error: "Failed to send email" }, { status: 500 })

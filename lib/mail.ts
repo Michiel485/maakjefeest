@@ -535,6 +535,133 @@ export async function sendWebsiteLiveEmail(
   }
 }
 
+// ── Signup Welcome + Magic Link (combined, one email for new users) ───────────
+
+export async function sendSignupWelcomeMagicLink({
+  toEmail,
+  magicLink,
+}: {
+  toEmail: string
+  magicLink: string
+}) {
+  const html = `<!DOCTYPE html>
+<html lang="nl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f1ec;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f1ec;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);">
+
+        <!-- Header -->
+        <tr>
+          <td bgcolor="#c9a96e" style="background-color:#c9a96e;padding:44px 40px 36px;text-align:center;">
+            <p style="margin:0 0 10px;font-size:12px;font-weight:700;letter-spacing:0.14em;color:#f5ead6;text-transform:uppercase;">SayingYes</p>
+            <h1 style="margin:0;font-size:26px;font-weight:800;color:#111827;line-height:1.25;">Ja, de basis staat! 💍</h1>
+            <p style="margin:10px 0 0;font-size:14px;color:#2d1f0e;font-weight:500;">Welkom bij SayingYes</p>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding:36px 40px 0;">
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.7;">
+              Gefeliciteerd! De allereerste stap is gezet: jullie hebben de basisgegevens van jullie bruiloft succesvol opgeslagen. Klik op de knop hieronder om je account te bevestigen en verder te gaan met bouwen.
+            </p>
+
+            <!-- Steps block -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+              <tr>
+                <td style="background-color:#faf7f2;border:1px solid #e8dcc8;border-radius:12px;padding:20px 24px;">
+                  <p style="margin:0 0 14px;font-size:14px;font-weight:700;color:#111827;">Wat staat er klaar na je eerste login?</p>
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td style="padding:7px 0;border-bottom:1px solid #ede9e0;">
+                        <p style="margin:0;font-size:13px;color:#374151;line-height:1.6;"><strong style="color:#111827;">🎨 Kies een stijl</strong> — Selecteer een template dat matcht met jullie grote dag.</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:7px 0;border-bottom:1px solid #ede9e0;">
+                        <p style="margin:0;font-size:13px;color:#374151;line-height:1.6;"><strong style="color:#111827;">📍 Locaties &amp; Tijden</strong> — Voeg de ceremonie en het feest toe aan de tijdlijn.</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:7px 0;">
+                        <p style="margin:0;font-size:13px;color:#374151;line-height:1.6;"><strong style="color:#111827;">💌 RSVP klaarzetten</strong> — Bepaal welke vragen jullie gasten moeten beantwoorden.</p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+
+            <!-- CTA button -->
+            <table cellpadding="0" cellspacing="0" style="margin:0 0 32px;">
+              <tr>
+                <td bgcolor="#c9a96e" style="background-color:#c9a96e;border-radius:10px;">
+                  <a
+                    href="${magicLink}"
+                    style="display:inline-block;background-color:#c9a96e;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:14px 36px;border-radius:10px;letter-spacing:0.02em;mso-padding-alt:14px 36px;"
+                  >
+                    Account bevestigen &amp; verder bouwen →
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Fallback link -->
+            <p style="margin:0 0 36px;font-size:12px;color:#b0a494;line-height:1.6;">
+              Werkt de knop niet? Kopieer dan deze link:<br>
+              <a href="${magicLink}" style="color:#c9a96e;word-break:break-all;">${magicLink}</a>
+            </p>
+          </td>
+        </tr>
+
+        <!-- Sign-off -->
+        <tr>
+          <td style="padding:0 40px 32px;">
+            <p style="margin:0;font-size:15px;color:#374151;line-height:1.7;">
+              Heel veel plezier met het ontwerpen van jullie website,<br>
+              <strong style="color:#111827;">Het team van SayingYes.nl</strong>
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="padding:20px 40px 28px;text-align:center;border-top:1px solid #f0ede8;">
+            <p style="margin:0;font-size:12px;color:#bdb0a0;">
+              Verstuurd via <strong style="color:#9b8b6a;">SayingYes</strong> &nbsp;·&nbsp; sayingyes.nl
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+
+  try {
+    const { data: result, error } = await getResend().emails.send({
+      from:    FROM,
+      to:      [toEmail],
+      subject: "Ja, de basis staat! 💍 Welkom bij SayingYes",
+      html,
+    })
+
+    if (error) {
+      console.error("[mail] Signup welcome magic link error:", error)
+      return { success: false, error }
+    }
+
+    console.log("[mail] Signup welcome magic link sent →", toEmail, "| id:", result?.id)
+    return { success: true, id: result?.id }
+  } catch (err) {
+    console.error("[mail] Unexpected error sending signup welcome magic link:", err)
+    return { success: false, error: err }
+  }
+}
+
 // ── Magic Link ────────────────────────────────────────────────────────────────
 
 export async function sendMagicLink({

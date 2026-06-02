@@ -2237,7 +2237,7 @@ export default function BouwenPage() {
                         <PraktischPreview tiles={praktischTiles ?? []} sc={sc} />
                       )}
                       {previewPage === "Cadeautips" && (
-                        <WishlistPreview items={wishlistItems ?? []} sc={sc} />
+                        <WishlistPreview items={wishlistItems?.length ? wishlistItems : DEFAULT_WISHLIST_ITEMS} sc={sc} />
                       )}
                       {previewPage === "Fotos" && (
                         <FotosPreview
