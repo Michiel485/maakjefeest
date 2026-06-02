@@ -51,7 +51,10 @@ async function verifyHookSignature(request: Request, rawBody: string): Promise<b
 }
 
 interface HookPayload {
-  user: { email: string }
+  user: {
+    email: string
+    email_confirmed_at: string | null
+  }
   email_data: {
     token_hash: string
     redirect_to: string
@@ -90,7 +93,12 @@ export async function POST(request: Request) {
     `?token=${token_hash}&type=${email_action_type}` +
     `&redirect_to=${encodeURIComponent(redirect_to)}`
 
-  const result = email_action_type === "signup"
+  // Supabase always sends email_action_type "magiclink" for signInWithOtp(),
+  // even for brand-new users. The only reliable way to distinguish new from
+  // returning is email_confirmed_at: null means never confirmed = new user.
+  const isNewUser = !user.email_confirmed_at
+
+  const result = isNewUser
     ? await sendSignupWelcomeMagicLink({ toEmail: user.email, magicLink })
     : await sendMagicLink({ toEmail: user.email, magicLink })
 
