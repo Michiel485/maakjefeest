@@ -38,31 +38,32 @@ export async function POST(request: Request) {
 
     const supabase = createServiceClient()
 
-    const { data: updatedEvent } = await supabase
+    const { data: updatedEvent, error: updateError } = await supabase
       .from("events")
       .update({
         status: "published",
         stripe_payment_id: session.payment_intent as string,
       })
       .eq("id", event_id)
-      .select("slug, title, user_id")
+      .select("slug, title, user_email")
       .single()
+
+    if (updateError) {
+      console.error("[webhook] update error:", updateError)
+      return NextResponse.json({ error: "DB update failed" }, { status: 500 })
+    }
 
     if (updatedEvent?.slug) {
       revalidatePath(`/events/${updatedEvent.slug}`, "layout")
     }
 
-    if (updatedEvent?.slug && updatedEvent?.user_id) {
-      const { data: ownerData } = await supabase.auth.admin.getUserById(updatedEvent.user_id)
-      const ownerEmail = ownerData?.user?.email
-      if (ownerEmail) {
-        const websiteUrl = `${process.env.NEXT_PUBLIC_BASE_URL ?? "https://sayingyes.nl"}/events/${updatedEvent.slug}`
-        await sendWebsiteLiveEmail(
-          ownerEmail,
-          updatedEvent.title ?? "jullie",
-          websiteUrl
-        )
-      }
+    if (updatedEvent?.slug && updatedEvent?.user_email) {
+      const websiteUrl = `${process.env.NEXT_PUBLIC_BASE_URL ?? "https://sayingyes.nl"}/events/${updatedEvent.slug}`
+      await sendWebsiteLiveEmail(
+        updatedEvent.user_email,
+        updatedEvent.title ?? "jullie",
+        websiteUrl
+      )
     }
   }
 
