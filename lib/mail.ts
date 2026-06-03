@@ -181,43 +181,66 @@ export async function sendFirstSaveWelcomeEmail(
               Wat ontzettend te gek dat jullie SayingYes gebruiken om jullie gasten straks in stijl te informeren. We gaan er samen iets prachtigs van maken.
             </p>
 
-            <!-- Steps block -->
+            <!-- Card -->
             <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
               <tr>
-                <td style="background-color:#faf7f2;border:1px solid #e8dcc8;border-radius:12px;padding:22px 24px;">
-                  <p style="margin:0 0 16px;font-size:14px;font-weight:700;color:#111827;">Wat staat er nu voor jullie klaar?</p>
-                  <p style="margin:0 0 14px;font-size:13px;color:#374151;line-height:1.6;">
-                    De basis staat veilig. Nu begint het leuke werk! Stap voor stap kunnen jullie de pagina inkleuren:
-                  </p>
+                <td style="background-color:#faf7f2;border:1px solid #e8dcc8;border-radius:12px;padding:24px 24px 20px;">
+
+                  <!-- Steps -->
+                  <p style="margin:0 0 14px;font-size:14px;font-weight:700;color:#111827;">Wat staat er klaar na je eerste login?</p>
                   <table width="100%" cellpadding="0" cellspacing="0">
                     <tr>
-                      <td style="padding:8px 0;border-bottom:1px solid #ede9e0;">
-                        <p style="margin:0;font-size:13px;color:#374151;line-height:1.6;">
-                          <strong style="color:#111827;">🎨 Kies een stijl</strong> — Selecteer een template dat perfect matcht met de sfeer van jullie grote dag.
-                        </p>
+                      <td style="padding:7px 0;border-bottom:1px solid #ede9e0;">
+                        <p style="margin:0;font-size:13px;color:#374151;line-height:1.6;"><strong style="color:#111827;">🎨 Kies een stijl</strong> — Selecteer een template dat matcht met jullie grote dag.</p>
                       </td>
                     </tr>
                     <tr>
-                      <td style="padding:8px 0;border-bottom:1px solid #ede9e0;">
-                        <p style="margin:0;font-size:13px;color:#374151;line-height:1.6;">
-                          <strong style="color:#111827;">📍 Locaties &amp; Tijden</strong> — Voeg de ceremonie, het feest of het diner toe aan de handige tijdlijn.
-                        </p>
+                      <td style="padding:7px 0;border-bottom:1px solid #ede9e0;">
+                        <p style="margin:0;font-size:13px;color:#374151;line-height:1.6;"><strong style="color:#111827;">📍 Locaties &amp; Tijden</strong> — Voeg ceremonies en feesten toe aan de handige tijdlijn.</p>
                       </td>
                     </tr>
                     <tr>
-                      <td style="padding:8px 0;">
-                        <p style="margin:0;font-size:13px;color:#374151;line-height:1.6;">
-                          <strong style="color:#111827;">💌 RSVP klaarzetten</strong> — Bepaal welke vragen jullie gasten moeten beantwoorden (dieetwensen, nummers voor de DJ).
-                        </p>
+                      <td style="padding:7px 0;">
+                        <p style="margin:0;font-size:13px;color:#374151;line-height:1.6;"><strong style="color:#111827;">💌 RSVP klaarzetten</strong> — Bepaal welke vragen gasten moeten beantwoorden.</p>
                       </td>
                     </tr>
                   </table>
+
+                  <!-- Divider -->
+                  <table width="100%" cellpadding="0" cellspacing="0" style="margin:18px 0;">
+                    <tr>
+                      <td style="border-top:1px solid #ddd3be;font-size:0;line-height:0;">&nbsp;</td>
+                    </tr>
+                  </table>
+
+                  <!-- Pricing -->
+                  <p style="margin:0 0 8px;font-size:14px;font-weight:700;color:#111827;">Transparant &amp; scherp geprijsd 🥂</p>
+                  <p style="margin:0 0 10px;font-size:13px;color:#374151;line-height:1.65;">
+                    Bij SayingYes houden we van duidelijke taal. Omdat we ons platform slim en efficiënt hebben ingericht, bieden we een van de scherpste tarieven van Nederland aan: <strong style="color:#111827;">eenmalig &euro;&nbsp;45,99</strong> voor een heel jaar live.
+                  </p>
+                  <p style="margin:0 0 0;font-size:13px;color:#374151;line-height:1.65;">
+                    Geen addertjes onder het gras: de site verloopt na een jaar volledig automatisch, dus jullie zitten nooit vast aan een ongewenst abonnement. Wel flexibel verlengen om de trouwfoto&rsquo;s nog te delen? Dat kan daarna simpel per 6 maanden voor &euro;&nbsp;20,-.
+                  </p>
+
+                  <!-- Divider -->
+                  <table width="100%" cellpadding="0" cellspacing="0" style="margin:18px 0;">
+                    <tr>
+                      <td style="border-top:1px solid #ddd3be;font-size:0;line-height:0;">&nbsp;</td>
+                    </tr>
+                  </table>
+
+                  <!-- Feedback -->
+                  <p style="margin:0 0 8px;font-size:14px;font-weight:700;color:#111827;">Idee&euml;n of suggesties? 🛠️</p>
+                  <p style="margin:0;font-size:13px;color:#374151;line-height:1.65;">
+                    Ons platform staat als een huis en we verwelkomen dagelijks volop nieuwe bruidsparen. Achter de schermen zit ons sterke ontwikkelingsteam echter nooit stil. Mis je een specifieke functie of heb je idee&euml;n om SayingYes n&oacute;g beter te maken? Stuur een mailtje naar <a href="mailto:ideen@sayingyes.nl" style="color:#c9a96e;text-decoration:none;font-weight:600;">ideen@sayingyes.nl</a>. We horen het heel graag!
+                  </p>
+
                 </td>
               </tr>
             </table>
 
-            <p style="margin:0 0 28px;font-size:15px;color:#374151;line-height:1.7;">
-              Geen stress, je hoeft het niet in één avond af te maken. Alles wordt tussentijds automatisch opgeslagen. Klik op de knop hieronder om direct verder te bouwen:
+            <p style="margin:0 0 20px;font-size:15px;color:#374151;line-height:1.7;">
+              Alles wordt tussentijds automatisch opgeslagen. Klik op de knop hieronder om direct verder te bouwen:
             </p>
 
             <!-- CTA button -->
@@ -233,10 +256,6 @@ export async function sendFirstSaveWelcomeEmail(
                 </td>
               </tr>
             </table>
-
-            <p style="margin:0 0 36px;font-size:15px;color:#374151;line-height:1.7;">
-              Mocht je ergens tegenaan lopen, of heb je een gouden tip voor ons platform? Reageer dan simpelweg op deze e-mail. We kijken persoonlijk met je mee!
-            </p>
           </td>
         </tr>
 

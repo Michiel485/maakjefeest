@@ -5,6 +5,7 @@ import { createServiceClient } from "@/lib/supabase"
 import { SignOutButton } from "./SignOutButton"
 import RsvpSection, { type RsvpRow } from "./RsvpSection"
 import { eventSiteUrl, eventSiteLabel } from "@/lib/site-url"
+import SlugEditor from "./SlugEditor"
 
 const GOLD       = "#C5A059"
 const GOLD_LIGHT = "#E8D5A3"
@@ -60,6 +61,10 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
           {event.title}
         </h3>
         <p className="text-xs mt-0.5" style={{ color: BODY }}>Opgeslagen op {date}</p>
+        <p className="text-xs mt-1 font-mono" style={{ color: `${BODY}80` }}>
+          {isDraft ? `sayingyes.nl/events/${event.slug}` : `${event.slug}.sayingyes.nl`}
+        </p>
+        <SlugEditor eventId={event.id} currentSlug={event.slug} isLive={!isDraft} />
       </div>
       <div className="flex items-center gap-3 flex-shrink-0">
         {!isDraft && (
