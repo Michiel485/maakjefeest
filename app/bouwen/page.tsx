@@ -340,7 +340,11 @@ export default function BouwenPage() {
   const [authLoading, setAuthLoading] = useState(false)
   const [showDashboardModal, setShowDashboardModal] = useState(false)
   const [dashboardLoading, setDashboardLoading] = useState(false)
-  const [autoSavePending, setAutoSavePending] = useState(false)
+  const [autoSavePending, setAutoSavePending]   = useState(false)
+  const [slugEditOpen, setSlugEditOpen]         = useState(false)
+  const [slugValue, setSlugValue]               = useState("")
+  const [slugError, setSlugError]               = useState<string | null>(null)
+  const [slugSaving, setSlugSaving]             = useState(false)
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
@@ -834,6 +838,30 @@ export default function BouwenPage() {
   const safeNavTitle = navTitle.replace(/\n/g, " ")
   const slugPreview = draft?.slug || "jouwbruiloft"
 
+  function sanitizeSlugInput(value: string): string {
+    return value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")
+  }
+
+  async function handleSlugSave() {
+    const newSlug = sanitizeSlugInput(slugValue)
+    if (!newSlug || newSlug.length < 3) { setSlugError("Minimaal 3 tekens vereist."); return }
+    if (!savedEventId) { setSlugError("Sla de site eerst op."); return }
+    setSlugSaving(true); setSlugError(null)
+    try {
+      const res  = await fetch("/api/event/update-slug", {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventId: savedEventId, newSlug }),
+      })
+      const json = await res.json()
+      if (!res.ok) { setSlugError(json.error ?? "Er ging iets mis.") }
+      else {
+        setDraft((d) => d ? { ...d, slug: newSlug } : d)
+        setSlugEditOpen(false)
+      }
+    } catch { setSlugError("Netwerkfout. Probeer opnieuw.") }
+    finally { setSlugSaving(false) }
+  }
+
   const mastersForPreview = ((content.Ceremoniemeesters?.masters as MasterPerson[] | undefined) ?? [])
     .filter(m => m.naam || m.foto_url)
     .map(m => ({ id: m.id ?? "", naam: m.naam ?? "", telefoon: m.telefoon ?? "", email: m.email ?? "", foto_url: m.foto_url ?? null }))
@@ -1101,7 +1129,57 @@ export default function BouwenPage() {
             </div>
           </div>
 
-          <div className="mt-auto px-5 py-5 border-t border-gray-100">
+          <div className="mt-auto px-5 py-5 border-t border-gray-100 flex flex-col gap-3">
+
+            {/* URL editor */}
+            <div className="rounded-xl bg-gray-50 border border-gray-200 p-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">Jouw URL</p>
+              {!slugEditOpen ? (
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[11px] text-gray-500 font-mono truncate">{slugPreview}.sayingyes.nl</p>
+                  {savedEventId && (
+                    <button
+                      onClick={() => { setSlugValue(slugPreview); setSlugError(null); setSlugEditOpen(true) }}
+                      className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+                    >
+                      ✏️
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1.5">
+                  <input
+                    autoFocus
+                    value={slugValue}
+                    onChange={(e) => { setSlugValue(sanitizeSlugInput(e.target.value)); setSlugError(null) }}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleSlugSave(); if (e.key === "Escape") setSlugEditOpen(false) }}
+                    className="w-full text-xs rounded-lg px-2 py-1.5 outline-none font-mono"
+                    style={{ border: `1px solid ${slugError ? "#dc2626" : "#d1d5db"}`, color: "#111827" }}
+                    placeholder={slugPreview}
+                    maxLength={60}
+                  />
+                  {slugError && <p className="text-[10px] text-red-500">{slugError}</p>}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSlugSave}
+                      disabled={slugSaving}
+                      className="text-[11px] font-semibold px-2.5 py-1 rounded-lg transition-colors"
+                      style={{ backgroundColor: slugSaving ? "#d1d5db" : "#1A1A1A", color: "#fff" }}
+                    >
+                      {slugSaving ? "…" : "Opslaan"}
+                    </button>
+                    <button
+                      onClick={() => setSlugEditOpen(false)}
+                      className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      Annuleren
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Event info */}
             <div className="rounded-xl bg-rose-50 border border-rose-100 p-3.5">
               <p className="text-xs font-bold text-rose-700 mb-0.5">{typeLabel}</p>
               <p className="text-xs text-rose-500 leading-relaxed truncate">{eventName}</p>

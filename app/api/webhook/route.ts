@@ -45,7 +45,7 @@ export async function POST(request: Request) {
         stripe_payment_id: session.payment_intent as string,
       })
       .eq("id", event_id)
-      .select("slug, title, user_email")
+      .select("slug, title, frame_names, user_email")
       .single()
 
     if (updateError) {
@@ -58,12 +58,11 @@ export async function POST(request: Request) {
     }
 
     if (updatedEvent?.slug && updatedEvent?.user_email) {
-      const websiteUrl = `${process.env.NEXT_PUBLIC_BASE_URL ?? "https://sayingyes.nl"}/events/${updatedEvent.slug}`
-      await sendWebsiteLiveEmail(
-        updatedEvent.user_email,
-        updatedEvent.title ?? "jullie",
-        websiteUrl
-      )
+      // Subdomain URL (live sites always run on <slug>.sayingyes.nl)
+      const websiteUrl = `https://${updatedEvent.slug}.sayingyes.nl`
+      // frame_names = "Michiel & Lindsey"; fall back to title if not set
+      const names = updatedEvent.frame_names || updatedEvent.title || "jullie"
+      await sendWebsiteLiveEmail(updatedEvent.user_email, names, websiteUrl)
     }
   }
 

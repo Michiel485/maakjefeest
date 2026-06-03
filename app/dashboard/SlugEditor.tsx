@@ -13,14 +13,11 @@ interface Props {
   isLive: boolean
 }
 
-function toSlugPreview(value: string): string {
+function sanitize(value: string): string {
   return value
     .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/&/g, "en")
-    .replace(/[^a-z0-9-]+/g, "-")
-    .replace(/^-+|-+$/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "")
 }
 
 export default function SlugEditor({ eventId, currentSlug, isLive }: Props) {
@@ -42,7 +39,7 @@ export default function SlugEditor({ eventId, currentSlug, isLive }: Props) {
   }, [open, currentSlug])
 
   async function handleSave() {
-    const slug = toSlugPreview(value)
+    const slug = sanitize(value)
     if (!slug || slug.length < 3) {
       setError("Minimaal 3 tekens vereist.")
       return
@@ -82,52 +79,33 @@ export default function SlugEditor({ eventId, currentSlug, isLive }: Props) {
     )
   }
 
-  const preview = toSlugPreview(value)
+  const preview = sanitize(value)
 
   return (
     <div className="mt-2 flex flex-col gap-1.5">
       <div className="flex items-center gap-1.5">
         <span className="text-xs" style={{ color: `${BODY}70`, whiteSpace: "nowrap" }}>
-          {isLive ? `${preview}.sayingyes.nl` : "sayingyes.nl/events/"}
+          {isLive ? `${preview}.sayingyes.nl` : `sayingyes.nl/events/${preview}`}
         </span>
-        {!isLive && (
-          <input
-            ref={inputRef}
-            value={value}
-            onChange={(e) => { setValue(e.target.value); setError(null) }}
-            onKeyDown={(e) => { if (e.key === "Enter") handleSave(); if (e.key === "Escape") setOpen(false) }}
-            className="text-xs rounded-lg px-2 py-1 outline-none min-w-0"
-            style={{
-              border: `1px solid ${error ? "#dc2626" : GOLD}60`,
-              color: CHARCOAL,
-              width: "140px",
-              fontFamily: "monospace",
-            }}
-            onFocus={(e) => (e.currentTarget.style.borderColor = GOLD)}
-            onBlur={(e)  => (e.currentTarget.style.borderColor = error ? "#dc2626" : `${GOLD}60`)}
-            placeholder={currentSlug}
-            maxLength={60}
-          />
-        )}
-        {isLive && (
-          <input
-            ref={inputRef}
-            value={value}
-            onChange={(e) => { setValue(e.target.value); setError(null) }}
-            onKeyDown={(e) => { if (e.key === "Enter") handleSave(); if (e.key === "Escape") setOpen(false) }}
-            className="text-xs rounded-lg px-2 py-1 outline-none min-w-0"
-            style={{
-              border: `1px solid ${error ? "#dc2626" : GOLD}60`,
-              color: CHARCOAL,
-              width: "140px",
-              fontFamily: "monospace",
-            }}
-            onFocus={(e) => (e.currentTarget.style.borderColor = GOLD)}
-            onBlur={(e)  => (e.currentTarget.style.borderColor = error ? "#dc2626" : `${GOLD}60`)}
-            placeholder={currentSlug}
-            maxLength={60}
-          />
-        )}
+      </div>
+      <div className="flex items-center gap-1.5">
+        <input
+          ref={inputRef}
+          value={value}
+          onChange={(e) => { setValue(sanitize(e.target.value)); setError(null) }}
+          onKeyDown={(e) => { if (e.key === "Enter") handleSave(); if (e.key === "Escape") setOpen(false) }}
+          className="text-xs rounded-lg px-2 py-1 outline-none min-w-0"
+          style={{
+            border: `1px solid ${error ? "#dc2626" : GOLD}60`,
+            color: CHARCOAL,
+            width: "160px",
+            fontFamily: "monospace",
+          }}
+          onFocus={(e) => (e.currentTarget.style.borderColor = GOLD)}
+          onBlur={(e)  => (e.currentTarget.style.borderColor = error ? "#dc2626" : `${GOLD}60`)}
+          placeholder={currentSlug}
+          maxLength={60}
+        />
       </div>
 
       {error && <p className="text-xs" style={{ color: "#dc2626" }}>{error}</p>}

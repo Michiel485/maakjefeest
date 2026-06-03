@@ -8,7 +8,8 @@ function toSlug(value: string): string {
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
     .replace(/&/g, "en")
-    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]+/g, "")
     .replace(/^-+|-+$/g, "")
 }
 
