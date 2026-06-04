@@ -18,7 +18,7 @@ import { eventSiteUrl } from "@/lib/site-url"
 
 type EventType = "bruiloft" | "verjaardag" | "evenement"
 type PageId = "Home" | "Programma" | "RSVP" | "Informatie" | "Cadeautips" | "Fotos" | "Ceremoniemeesters" | "OnsVerhaal"
-type Style = "roze" | "ivoor" | "zand" | "earthy"
+type Style = "roze" | "ivoor" | "zand" | "earthy" | "emerald"
 type Viewport = "desktop" | "mobiel"
 type Align = "left" | "center" | "right"
 
@@ -153,7 +153,8 @@ const STYLES: { id: Style; label: string; sub: string; dot: string; border: stri
   { id: "zand",   label: "Gold & Ivory",      sub: "Clean, licht & tijdloos",   dot: "bg-[#E6D5B8]",    border: "border-[#E6D5B8]/60",    active: "ring-[#E6D5B8]"     },
   { id: "ivoor",  label: "Pampas & Pearl",    sub: "Luchtig, wild & vrij",      dot: "bg-[#C8D4C0]",    border: "border-[#C8D4C0]/60",    active: "ring-[#9CA996]"     },
   { id: "roze",   label: "Terracotta & Gold", sub: "Mediterraans, rijk & gedurfd", dot: "bg-[#D07C60]", border: "border-[#C5A059]/50",   active: "ring-[#C5A059]"     },
-  { id: "earthy", label: "Earthy & Warm",     sub: "Modern rustiek & betoverend", dot: "bg-[#5A6B5D]",   border: "border-[#5A6B5D]/50",   active: "ring-[#5A6B5D]"     },
+  { id: "earthy",   label: "Earthy & Warm",     sub: "Modern rustiek & betoverend",  dot: "bg-[#5A6B5D]",   border: "border-[#5A6B5D]/50",   active: "ring-[#5A6B5D]"   },
+  { id: "emerald",  label: "Emerald Luxury",    sub: "Donker, diep & luxueus",       dot: "bg-[#07353A]",   border: "border-[#D59C76]/50",   active: "ring-[#D59C76]"   },
 ]
 
 const STYLE_CONFIG = {
@@ -246,6 +247,29 @@ const STYLE_CONFIG = {
     floral: false as boolean,
     floralFilter: null as string | null,
     bodyLetterSpacing: "normal",
+    bodyFontWeight: "500",
+    fontImport: null as string | null,
+  },
+  emerald: {
+    accent: "#D59C76",
+    heroGradient: "linear-gradient(160deg, #07353A 0%, #0A4550 60%, #0D5058 100%)",
+    fontFamily: "var(--font-montserrat), sans-serif",
+    nameFont: "var(--font-cinzel), serif" as string | null,
+    navBg: "#07353A",
+    navText: "#FFFFFF",
+    headingColor: "#D59C76",
+    bodyText: "#E8DDD0",
+    buttonBg: "#D59C76",
+    buttonText: "#07353A",
+    labelColor: "#D59C76",
+    bodyBg: "#07353A",
+    bodyBackground: null as string | null,
+    cardBg: "#0D4A52" as string | null,
+    cardText: "#FFFFFF" as string | null,
+    goldBorder: true as boolean,
+    floral: false as boolean,
+    floralFilter: null as string | null,
+    bodyLetterSpacing: "0.08em",
     bodyFontWeight: "500",
     fontImport: null as string | null,
   },

@@ -38,9 +38,10 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
 
   return (
     <div
-      className="rounded-2xl p-6 flex items-center justify-between gap-4"
+      className="rounded-2xl p-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between md:gap-4 md:p-6"
       style={{ backgroundColor: IVORY_CARD, border: `1px solid ${GOLD_LIGHT}` }}
     >
+      {/* Text section */}
       <div className="min-w-0">
         <div className="flex items-center gap-2 mb-1.5">
           <span className="text-xs font-semibold uppercase tracking-[0.1em]" style={{ color: GOLD }}>{typeLabel}</span>
@@ -55,7 +56,7 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
           )}
         </div>
         <h3
-          className="truncate text-lg"
+          className="text-lg"
           style={{ fontFamily: "var(--font-cormorant)", fontWeight: 700, color: CHARCOAL }}
         >
           {event.title}
@@ -64,15 +65,19 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
         <p className="text-xs mt-1 font-mono" style={{ color: `${BODY}80` }}>
           {isDraft ? `sayingyes.nl/events/${event.slug}` : `${event.slug}.sayingyes.nl`}
         </p>
-        <SlugEditor eventId={event.id} currentSlug={event.slug} isLive={!isDraft} />
+        <div className="mt-2">
+          <SlugEditor eventId={event.id} currentSlug={event.slug} isLive={!isDraft} />
+        </div>
       </div>
-      <div className="flex items-center gap-3 flex-shrink-0">
+
+      {/* Actions */}
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3 md:flex-shrink-0">
         {!isDraft && (
           <a
             href={eventSiteUrl(event.slug)}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm font-medium transition-colors whitespace-nowrap"
+            className="text-sm font-medium text-center py-2 md:py-0 transition-colors"
             style={{ color: BODY }}
             title={eventSiteLabel(event.slug)}
           >
@@ -81,7 +86,7 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
         )}
         <Link
           href={`/bouwen?event_id=${event.id}`}
-          className="text-sm font-semibold px-4 py-2 rounded-xl transition-all hover:-translate-y-0.5 whitespace-nowrap"
+          className="text-sm font-semibold px-4 py-3 md:py-2 rounded-xl text-center transition-all hover:-translate-y-0.5 w-full md:w-auto"
           style={{ backgroundColor: CHARCOAL, color: IVORY }}
         >
           Verder bewerken
@@ -137,7 +142,7 @@ export default async function DashboardPage() {
         className="sticky top-0 z-10"
         style={{ backgroundColor: IVORY, borderBottom: `1px solid ${GOLD_LIGHT}` }}
       >
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
           <Link
             href="/"
             className="text-2xl tracking-wide transition-opacity hover:opacity-70"
@@ -149,7 +154,7 @@ export default async function DashboardPage() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-12">
+      <main className="max-w-5xl mx-auto px-4 md:px-6 py-8 md:py-12">
 
         {/* Welcome */}
         <div className="mb-12">
