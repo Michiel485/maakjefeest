@@ -180,6 +180,7 @@ const STYLE_CONFIG = {
     bodyLetterSpacing: "0.02em",
     bodyFontWeight: "400",
     fontImport: null as string | null,
+    frameBodyText: null as string | null,
   },
   ivoor: {
     accent: "#9CA996",
@@ -203,6 +204,7 @@ const STYLE_CONFIG = {
     bodyLetterSpacing: "normal",
     bodyFontWeight: "400",
     fontImport: null as string | null,
+    frameBodyText: null as string | null,
   },
   zand: {
     accent: "#C5A059",
@@ -226,6 +228,7 @@ const STYLE_CONFIG = {
     bodyLetterSpacing: "normal",
     bodyFontWeight: "400",
     fontImport: "@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Pinyon+Script&display=swap');",
+    frameBodyText: null as string | null,
   },
   earthy: {
     accent: "#5A6B5D",
@@ -249,6 +252,7 @@ const STYLE_CONFIG = {
     bodyLetterSpacing: "normal",
     bodyFontWeight: "500",
     fontImport: null as string | null,
+    frameBodyText: null as string | null,
   },
   emerald: {
     accent: "#D59C76",
@@ -272,6 +276,7 @@ const STYLE_CONFIG = {
     bodyLetterSpacing: "0.08em",
     bodyFontWeight: "500",
     fontImport: null as string | null,
+    frameBodyText: "#2A1A10" as string | null,
   },
 } as const
 

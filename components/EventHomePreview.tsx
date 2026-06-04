@@ -248,7 +248,7 @@ export default function EventHomePreview({
                     className="fk-date uppercase text-center mt-[1.1cqi]"
                     style={{
                       fontFamily: sc.fontFamily,
-                      color: sc.bodyText,
+                      color: sc.frameBodyText ?? sc.bodyText,
                       overflow: "hidden",
                       textOverflow: "ellipsis",
                       whiteSpace: "nowrap",
@@ -264,7 +264,7 @@ export default function EventHomePreview({
                     className="fk-location text-center mt-[0.4cqi]"
                     style={{
                       fontFamily: sc.fontFamily,
-                      color: sc.bodyText,
+                      color: sc.frameBodyText ?? sc.bodyText,
                       overflow: "hidden",
                       textOverflow: "ellipsis",
                       whiteSpace: "nowrap",
