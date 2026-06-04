@@ -884,10 +884,10 @@ export default function BouwenPage() {
   const RSVP_GUEST_LABELS: Record<string, string> = { daggast: "Daggast", avondgast: "Avondgast", receptiegast: "Receptiegast" }
 
   return (
-    <div translate="no" className="h-screen flex flex-col bg-gray-50 font-sans antialiased overflow-hidden">
+    <div translate="no" className="min-h-screen md:h-screen flex flex-col bg-gray-50 font-sans antialiased md:overflow-hidden">
 
       {/* ── Top bar ── */}
-      <header className="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-100 shadow-sm flex-shrink-0 z-10">
+      <header className="flex items-center justify-between px-4 md:px-6 py-3 bg-white border-b border-gray-100 shadow-sm flex-shrink-0 z-10">
         <Link href="/aanmaken" className="flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-rose-600 transition-colors">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -901,7 +901,7 @@ export default function BouwenPage() {
             <button
               onClick={handleDashboardClick}
               disabled={dashboardLoading || anyUploading}
-              className="inline-flex items-center gap-1.5 bg-white hover:bg-amber-50 disabled:opacity-50 text-amber-700 text-sm font-bold px-4 py-2.5 rounded-xl border border-amber-200 shadow-sm hover:shadow hover:-translate-y-0.5 disabled:translate-y-0 transition-all"
+              className="inline-flex items-center gap-1.5 bg-white hover:bg-amber-50 disabled:opacity-50 text-amber-700 text-sm font-bold px-3 md:px-4 py-2.5 rounded-xl border border-amber-200 shadow-sm hover:shadow hover:-translate-y-0.5 disabled:translate-y-0 transition-all"
             >
               {dashboardLoading ? (
                 <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -913,14 +913,14 @@ export default function BouwenPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
                 </svg>
               )}
-              Mijn Dashboard
+              <span className="hidden sm:inline">Mijn Dashboard</span>
             </button>
 
             {/* Opslaan */}
             <button
               onClick={handleSave}
               disabled={saving || anyUploading}
-              className="inline-flex items-center gap-1.5 bg-white hover:bg-gray-50 disabled:bg-gray-50 text-gray-700 text-sm font-bold px-4 py-2.5 rounded-xl border border-gray-200 shadow-sm hover:shadow hover:-translate-y-0.5 disabled:translate-y-0 transition-all"
+              className="inline-flex items-center gap-1.5 bg-white hover:bg-gray-50 disabled:bg-gray-50 text-gray-700 text-sm font-bold px-3 md:px-4 py-2.5 rounded-xl border border-gray-200 shadow-sm hover:shadow hover:-translate-y-0.5 disabled:translate-y-0 transition-all"
             >
               {anyUploading ? (
                 <>
@@ -950,7 +950,7 @@ export default function BouwenPage() {
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                   </svg>
-                  Opslaan
+                  <span className="hidden sm:inline">Opslaan</span>
                 </>
               )}
             </button>
@@ -1000,10 +1000,17 @@ export default function BouwenPage() {
       </header>
 
       {/* ── Body ── */}
-      <div className="flex flex-1 min-h-0">
+      <div className="flex flex-1 md:min-h-0">
 
         {/* ── Sidebar ── */}
-        <aside className="w-60 flex-shrink-0 bg-white border-r border-gray-100 flex flex-col overflow-y-auto">
+        <aside className="w-full md:w-60 md:flex-shrink-0 bg-white border-r border-gray-100 flex flex-col overflow-y-auto">
+
+          {/* Mobile tip — only visible on small screens */}
+          <div className="block md:hidden mx-4 mt-4 mb-1 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
+            <p className="text-xs text-amber-800 leading-relaxed">
+              ✨ <strong>Tip:</strong> Willen jullie het complete design live bekijken en de styling aanpassen? Open SayingYes dan op een desktop of laptop!
+            </p>
+          </div>
 
           {/* Stijl kiezer */}
           <div className="px-5 pt-6 pb-4 border-b border-gray-100">
@@ -1188,8 +1195,8 @@ export default function BouwenPage() {
           </div>
         </aside>
 
-        {/* ── Main panel ── */}
-        <main className="flex-1 flex flex-col overflow-hidden bg-gray-100">
+        {/* ── Main panel ── hidden on mobile, visible on desktop ── */}
+        <main className="hidden md:flex flex-1 flex-col overflow-hidden bg-gray-100">
           <div className="flex items-center justify-between px-4 py-2 bg-gray-100 border-b border-gray-200 flex-shrink-0">
             {editingPage ? (
               <div className="flex items-center gap-3">
