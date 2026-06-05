@@ -220,7 +220,7 @@ export default function EventHomePreview({
                     style={{
                       fontFamily: sc.fontInitials,
                       fontWeight: sc.fontInitialsWeight,
-                      color: sc.headingColor,
+                      color: sc.frameBodyText ?? sc.headingColor,
                       whiteSpace: "nowrap",
                       maxWidth: "100%",
                     }}
@@ -234,7 +234,7 @@ export default function EventHomePreview({
                   style={{
                     fontFamily: sc.fontFrameNames,
                     fontWeight: sc.fontFrameNamesWeight,
-                    color: sc.headingColor,
+                    color: sc.frameBodyText ?? sc.headingColor,
                     whiteSpace: "pre-wrap",
                     wordBreak: "break-word",
                     maxWidth: "100%",

@@ -380,8 +380,46 @@ export default function BouwenPage() {
     const urlEventId = urlParams.get("event_id")
 
     if (urlEventId) {
-      // Load full event from server, overwriting any stale localStorage
       setSavedEventId(urlEventId)
+      const localEventId = localStorage.getItem("sayingyes_saved_event_id")
+
+      // F5 / same-tab reload: localStorage already has data for this event_id.
+      // Load from localStorage to preserve any unsaved edits.
+      if (localEventId === urlEventId) {
+        try {
+          const raw = localStorage.getItem("sayingyes_draft")
+          if (!raw) throw new Error("no draft")
+          const parsed = JSON.parse(raw)
+          setDraft(parsed)
+          if (parsed.style)            setStyle(parsed.style as Style)
+          if (parsed.font_hero)        setFontHero(parsed.font_hero as string)
+          if (parsed.font_initials)    setFontInitials(parsed.font_initials as string)
+          if (parsed.font_frame_names) setFontFrameNames(parsed.font_frame_names as string)
+          if (parsed.font_page_titles) setFontPageTitles(parsed.font_page_titles as string)
+        } catch { /* fall through to server fetch below */ }
+        try {
+          const saved = localStorage.getItem("sayingyes_content")
+          if (saved) {
+            const parsed = JSON.parse(saved)
+            if (!parsed.Programma?.items || parsed.Programma.items.length === 0) {
+              parsed.Programma = { ...(parsed.Programma ?? {}), items: DEFAULT_PROGRAM_ITEMS, layout: "timeline" }
+            }
+            setContent(parsed)
+          }
+        } catch {}
+        try {
+          const savedHero = localStorage.getItem("sayingyes_hero_image_url")
+          if (savedHero) setHeroImageUrl(savedHero)
+        } catch {}
+        try {
+          const savedActive = localStorage.getItem("sayingyes_active")
+          if (savedActive) setActive(JSON.parse(savedActive))
+        } catch {}
+        setIsPublished(localStorage.getItem("sayingyes_is_published") === "1")
+        return
+      }
+
+      // First load of a (different) event_id → fetch from server
       fetch(`/api/drafts/${urlEventId}`)
         .then((r) => r.json())
         .then(({ event, pages }: { event: Record<string, unknown>; pages: Array<{ type: string; content: Record<string, unknown>; is_enabled: boolean }> }) => {
@@ -441,6 +479,7 @@ export default function BouwenPage() {
             newContent.Programma = { ...(newContent.Programma ?? {}), items: DEFAULT_PROGRAM_ITEMS, layout: "timeline" }
           }
 
+          const published = event.status === "published"
           setDraft(restoredDraft)
           setStyle(((event.style as string) || "zand") as Style)
           setFontHero((event.font_hero as string) || "pinyonscript")
@@ -449,7 +488,7 @@ export default function BouwenPage() {
           setFontPageTitles((event.font_page_titles as string) || "playfair")
           setContent(newContent)
           setActive(newActive)
-          setIsPublished(event.status === "published")
+          setIsPublished(published)
           const heroUrl = event.hero_image_url as string | null
           if (heroUrl) {
             setHeroImageUrl(heroUrl)
@@ -460,6 +499,7 @@ export default function BouwenPage() {
           localStorage.setItem("sayingyes_content", JSON.stringify(newContent))
           localStorage.setItem("sayingyes_active", JSON.stringify(newActive))
           localStorage.setItem("sayingyes_saved_event_id", urlEventId)
+          localStorage.setItem("sayingyes_is_published", published ? "1" : "0")
         })
         .catch(() => router.replace("/aanmaken"))
       return
@@ -743,6 +783,7 @@ export default function BouwenPage() {
     if (!res.ok) throw new Error(json.error || "Opslaan mislukt")
 
     localStorage.setItem("sayingyes_saved_event_id", json.id)
+    localStorage.setItem("sayingyes_is_published", isPublished ? "1" : "0")
     setSavedEventId(json.id)
     return json as { id: string; slug: string }
   }
