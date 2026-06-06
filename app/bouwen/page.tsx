@@ -1082,6 +1082,54 @@ export default function BouwenPage() {
             </p>
           </div>
 
+          {/* URL editor */}
+          <div className="px-5 pt-5 pb-4 border-b border-gray-100">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">Jouw URL</p>
+            {!slugEditOpen ? (
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[11px] text-gray-500 font-mono truncate">{slugPreview}.sayingyes.nl</p>
+                {savedEventId && (
+                  <button
+                    onClick={() => { setSlugValue(slugPreview); setSlugError(null); setSlugEditOpen(true) }}
+                    className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+                  >
+                    ✏️
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1.5">
+                <input
+                  autoFocus
+                  value={slugValue}
+                  onChange={(e) => { setSlugValue(sanitizeSlugInput(e.target.value)); setSlugError(null) }}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleSlugSave(); if (e.key === "Escape") setSlugEditOpen(false) }}
+                  className="w-full text-xs rounded-lg px-2 py-1.5 outline-none font-mono"
+                  style={{ border: `1px solid ${slugError ? "#dc2626" : "#d1d5db"}`, color: "#111827" }}
+                  placeholder={slugPreview}
+                  maxLength={60}
+                />
+                {slugError && <p className="text-[10px] text-red-500">{slugError}</p>}
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSlugSave}
+                    disabled={slugSaving}
+                    className="text-[11px] font-semibold px-2.5 py-1 rounded-lg transition-colors"
+                    style={{ backgroundColor: slugSaving ? "#d1d5db" : "#1A1A1A", color: "#fff" }}
+                  >
+                    {slugSaving ? "…" : "Opslaan"}
+                  </button>
+                  <button
+                    onClick={() => setSlugEditOpen(false)}
+                    className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    Annuleren
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Stijl kiezer */}
           <div className="px-5 pt-6 pb-4 border-b border-gray-100">
             <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Stijl</p>
@@ -1131,6 +1179,17 @@ export default function BouwenPage() {
                 </button>
               ))}
             </div>
+            <label className="flex flex-col gap-1.5 mt-3">
+              <span className="text-xs font-semibold text-gray-600">Navigatietitel</span>
+              <input
+                type="text"
+                value={draft?.nav_title ?? draft?.naam ?? ""}
+                onChange={(e) => updateDraft({ nav_title: e.target.value })}
+                placeholder="Bijv. Sanne & Tom"
+                className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+              />
+              <p className="text-[10px] text-gray-400 leading-snug">Naam in de menubalk van de website</p>
+            </label>
           </div>
 
           {/* Lettertype paginatitels */}
@@ -1206,63 +1265,6 @@ export default function BouwenPage() {
             </div>
           </div>
 
-          <div className="mt-auto px-5 py-5 border-t border-gray-100 flex flex-col gap-3">
-
-            {/* URL editor */}
-            <div className="rounded-xl bg-gray-50 border border-gray-200 p-3">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">Jouw URL</p>
-              {!slugEditOpen ? (
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-[11px] text-gray-500 font-mono truncate">{slugPreview}.sayingyes.nl</p>
-                  {savedEventId && (
-                    <button
-                      onClick={() => { setSlugValue(slugPreview); setSlugError(null); setSlugEditOpen(true) }}
-                      className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
-                    >
-                      ✏️
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <div className="flex flex-col gap-1.5">
-                  <input
-                    autoFocus
-                    value={slugValue}
-                    onChange={(e) => { setSlugValue(sanitizeSlugInput(e.target.value)); setSlugError(null) }}
-                    onKeyDown={(e) => { if (e.key === "Enter") handleSlugSave(); if (e.key === "Escape") setSlugEditOpen(false) }}
-                    className="w-full text-xs rounded-lg px-2 py-1.5 outline-none font-mono"
-                    style={{ border: `1px solid ${slugError ? "#dc2626" : "#d1d5db"}`, color: "#111827" }}
-                    placeholder={slugPreview}
-                    maxLength={60}
-                  />
-                  {slugError && <p className="text-[10px] text-red-500">{slugError}</p>}
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleSlugSave}
-                      disabled={slugSaving}
-                      className="text-[11px] font-semibold px-2.5 py-1 rounded-lg transition-colors"
-                      style={{ backgroundColor: slugSaving ? "#d1d5db" : "#1A1A1A", color: "#fff" }}
-                    >
-                      {slugSaving ? "…" : "Opslaan"}
-                    </button>
-                    <button
-                      onClick={() => setSlugEditOpen(false)}
-                      className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                      Annuleren
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Event info */}
-            <div className="rounded-xl bg-rose-50 border border-rose-100 p-3.5">
-              <p className="text-xs font-bold text-rose-700 mb-0.5">{typeLabel}</p>
-              <p className="text-xs text-rose-500 leading-relaxed truncate">{eventName}</p>
-              {eventLocatie && <p className="text-xs text-rose-400 truncate mt-0.5">{eventLocatie}</p>}
-            </div>
-          </div>
         </aside>
 
         {/* ── Main panel ── hidden on mobile, visible on desktop ── */}
@@ -1382,17 +1384,7 @@ export default function BouwenPage() {
                         />
                         <FontSelect value={fontHero} onChange={saveFontHero} />
                       </label>
-                      <label className="flex flex-col gap-1.5">
-                        <span className="text-xs font-semibold text-gray-600">Navigatietitel</span>
-                        <input
-                          type="text"
-                          value={draft?.nav_title ?? draft?.naam ?? ""}
-                          onChange={(e) => updateDraft({ nav_title: e.target.value })}
-                          placeholder="Bijv. Sanne & Tom"
-                          className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                        />
-                        <p className="text-[10px] text-gray-400 leading-snug">Naam in de menubalk van de website</p>
-                      </label>
+
                       <div className="flex flex-col gap-1.5">
                         <span className="text-xs font-semibold text-gray-600">Datum</span>
                         <input
