@@ -39,6 +39,9 @@ interface HomepageSettings {
   datumFont: string
   datumSize: number
   titlePosition: 'over' | 'under'
+  initialsVisible: boolean
+  frameNamesVisible: boolean
+  datumVisible: boolean
 }
 
 const DEFAULT_HOMEPAGE_SETTINGS: HomepageSettings = {
@@ -52,6 +55,9 @@ const DEFAULT_HOMEPAGE_SETTINGS: HomepageSettings = {
   datumFont: 'playfair',
   datumSize: 1.6,
   titlePosition: 'over',
+  initialsVisible: true,
+  frameNamesVisible: true,
+  datumVisible: true,
 }
 
 interface MasterPerson {
@@ -1414,13 +1420,13 @@ export default function BouwenPage() {
                 {/* ── Home controls ── */}
                 {previewPage === "Home" && (<>
 
-                  {/* Layout picker */}
+                  {/* 1. Layout picker */}
                   <div>
                     <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Lay-out</p>
                     <div className="flex gap-2">
                       {([
-                        { id: 'editorial', label: 'Layout 1', sub: 'Editorial' },
-                        { id: 'modern',    label: 'Layout 2', sub: 'Modern'    },
+                        { id: 'editorial', label: 'Tijdloos',        sub: 'Layout 1' },
+                        { id: 'modern',    label: 'Gedeelde Liefde', sub: 'Layout 2' },
                       ] as const).map((opt) => (
                         <button
                           key={opt.id}
@@ -1440,138 +1446,7 @@ export default function BouwenPage() {
 
                   <div className="border-t border-gray-100" />
 
-                  {/* Text fields with gear system */}
-                  <div className="flex flex-col gap-4">
-
-                    {/* Subtitel */}
-                    <div className="flex flex-col gap-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-gray-600">Subtitel (Intro)</span>
-                        <button
-                          onClick={() => setHpOpenGear(hpOpenGear === 'subtitle' ? null : 'subtitle')}
-                          title="Stijl aanpassen"
-                          className={`p-1 rounded-lg transition-colors ${hpOpenGear === 'subtitle' ? 'bg-rose-50 text-rose-500' : 'text-gray-300 hover:text-gray-500'}`}
-                        >
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                        </button>
-                      </div>
-                      <input
-                        type="text"
-                        value={hpSettings.subtitleText}
-                        onChange={(e) => updateHpSettings({ subtitleText: e.target.value })}
-                        placeholder="bijv. Samen vieren we de liefde"
-                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                      />
-                      {hpOpenGear === 'subtitle' && (
-                        <div className="flex flex-col gap-2 bg-gray-50 rounded-xl p-3 border border-gray-100">
-                          <FontSelect value={hpSettings.subtitleFont} onChange={(v) => updateHpSettings({ subtitleFont: v })} />
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">Grootte</span>
-                            <span className="text-xs text-gray-400">{hpSettings.subtitleSize}rem</span>
-                          </div>
-                          <input type="range" min={0.7} max={2.5} step={0.1}
-                            value={hpSettings.subtitleSize}
-                            onChange={(e) => updateHpSettings({ subtitleSize: Number(e.target.value) })}
-                            className="w-full accent-rose-400"
-                          />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Hoofdtitel */}
-                    <div className="flex flex-col gap-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-gray-600">Hoofdtitel (Namen)</span>
-                        <div className="flex items-center gap-1.5">
-                          {hpSettings.layout === 'editorial' && (
-                            <button
-                              onClick={() => updateHpSettings({ hoofdtitelVisible: !hpSettings.hoofdtitelVisible })}
-                              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.hoofdtitelVisible ? 'bg-pink-400' : 'bg-gray-200'}`}
-                              title="Titel tonen"
-                            >
-                              <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.hoofdtitelVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
-                            </button>
-                          )}
-                          <button
-                            onClick={() => setHpOpenGear(hpOpenGear === 'hoofdtitel' ? null : 'hoofdtitel')}
-                            title="Stijl aanpassen"
-                            className={`p-1 rounded-lg transition-colors ${hpOpenGear === 'hoofdtitel' ? 'bg-rose-50 text-rose-500' : 'text-gray-300 hover:text-gray-500'}`}
-                          >
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                      <textarea
-                        rows={2}
-                        value={draft?.naam ?? ""}
-                        onChange={(e) => updateDraft({ naam: e.target.value })}
-                        placeholder="Bijv. Bruiloft Michiel & Lisa"
-                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
-                      />
-                      {hpOpenGear === 'hoofdtitel' && (
-                        <div className="flex flex-col gap-2 bg-gray-50 rounded-xl p-3 border border-gray-100">
-                          <FontSelect value={hpSettings.hoofdtitelFont} onChange={(v) => updateHpSettings({ hoofdtitelFont: v })} />
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">Grootte (Elegant / Modern)</span>
-                            <span className="text-xs text-gray-400">{hpSettings.hoofdtitelSize}rem</span>
-                          </div>
-                          <input type="range" min={2} max={10} step={0.25}
-                            value={hpSettings.hoofdtitelSize}
-                            onChange={(e) => updateHpSettings({ hoofdtitelSize: Number(e.target.value) })}
-                            className="w-full accent-rose-400"
-                          />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Datum */}
-                    <div className="flex flex-col gap-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-gray-600">Datum</span>
-                        <button
-                          onClick={() => setHpOpenGear(hpOpenGear === 'datum' ? null : 'datum')}
-                          title="Stijl aanpassen"
-                          className={`p-1 rounded-lg transition-colors ${hpOpenGear === 'datum' ? 'bg-rose-50 text-rose-500' : 'text-gray-300 hover:text-gray-500'}`}
-                        >
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                        </button>
-                      </div>
-                      <input
-                        type="date"
-                        value={draft?.datum ?? ""}
-                        onChange={(e) => updateDraft({ datum: e.target.value })}
-                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                      />
-                      {hpOpenGear === 'datum' && (
-                        <div className="flex flex-col gap-2 bg-gray-50 rounded-xl p-3 border border-gray-100">
-                          <FontSelect value={hpSettings.datumFont} onChange={(v) => updateHpSettings({ datumFont: v })} />
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">Grootte</span>
-                            <span className="text-xs text-gray-400">{hpSettings.datumSize}rem</span>
-                          </div>
-                          <input type="range" min={0.7} max={3} step={0.1}
-                            value={hpSettings.datumSize}
-                            onChange={(e) => updateHpSettings({ datumSize: Number(e.target.value) })}
-                            className="w-full accent-rose-400"
-                          />
-                        </div>
-                      )}
-                    </div>
-
-                  </div>
-
-                  <div className="border-t border-gray-100" />
-
-                  {/* Headerfoto — both layouts */}
+                  {/* 2. Headerfoto & Overlay — both layouts */}
                   <div>
                     <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Headerfoto</p>
                     {heroImageUrl ? (
@@ -1579,20 +1454,18 @@ export default function BouwenPage() {
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={heroImageUrl} alt="" className="w-full h-24 object-cover rounded-xl" />
                         <div className="flex items-center justify-between">
-                          {hpSettings.layout === 'editorial' && (
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-semibold text-gray-600">Kleur overlay</span>
-                              <button
-                                onClick={() => updateDraft({ heroOverlay: !heroOverlay })}
-                                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${heroOverlay ? "bg-pink-400" : "bg-gray-200"}`}
-                              >
-                                <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${heroOverlay ? "translate-x-4" : "translate-x-0.5"}`} />
-                              </button>
-                            </div>
-                          )}
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-gray-600">Kleur overlay</span>
+                            <button
+                              onClick={() => updateDraft({ heroOverlay: !heroOverlay })}
+                              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${heroOverlay ? "bg-pink-400" : "bg-gray-200"}`}
+                            >
+                              <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${heroOverlay ? "translate-x-4" : "translate-x-0.5"}`} />
+                            </button>
+                          </div>
                           <button
                             onClick={() => { setHeroImageUrl(null); localStorage.removeItem("sayingyes_hero_image_url") }}
-                            className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors ml-auto"
+                            className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors"
                           >
                             Verwijderen
                           </button>
@@ -1616,26 +1489,64 @@ export default function BouwenPage() {
                     <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={handleImageUpload} />
                   </div>
 
-                  {/* Layout 1 (editorial) specific options */}
+                  {/* Tijdloos (editorial) specific options */}
                   {hpSettings.layout === 'editorial' && (<>
 
                     <div className="border-t border-gray-100" />
 
-                    {/* Title position — only when photo exists */}
+                    {/* 3. Hoofdtitel (Namen) */}
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-gray-600">Hoofdtitel (Namen)</span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => updateHpSettings({ hoofdtitelVisible: !hpSettings.hoofdtitelVisible })}
+                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.hoofdtitelVisible ? 'bg-pink-400' : 'bg-gray-200'}`}
+                            title="Tonen"
+                          >
+                            <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.hoofdtitelVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                          </button>
+                          <button
+                            onClick={() => setHpOpenGear(hpOpenGear === 'hoofdtitel' ? null : 'hoofdtitel')}
+                            title="Stijl aanpassen"
+                            className={`p-1 rounded-lg transition-colors ${hpOpenGear === 'hoofdtitel' ? 'bg-rose-50 text-rose-500' : 'text-gray-300 hover:text-gray-500'}`}
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                          </button>
+                        </div>
+                      </div>
+                      <textarea
+                        rows={2}
+                        value={draft?.naam ?? ""}
+                        onChange={(e) => updateDraft({ naam: e.target.value })}
+                        placeholder="Bijv. Bruiloft Michiel & Lisa"
+                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
+                      />
+                      {hpOpenGear === 'hoofdtitel' && (
+                        <div className="flex flex-col gap-2 bg-gray-50 rounded-xl p-3 border border-gray-100">
+                          <FontSelect value={hpSettings.hoofdtitelFont} onChange={(v) => updateHpSettings({ hoofdtitelFont: v })} />
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-500">Grootte</span>
+                            <span className="text-xs text-gray-400">{hpSettings.hoofdtitelSize}rem</span>
+                          </div>
+                          <input type="range" min={2} max={10} step={0.25} value={hpSettings.hoofdtitelSize} onChange={(e) => updateHpSettings({ hoofdtitelSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 4. Hoofdtitel positie — only when photo exists */}
                     {heroImageUrl && hpSettings.hoofdtitelVisible && (
                       <div>
-                        <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Titelpositie</p>
+                        <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Hoofdtitel positie</p>
                         <div className="flex rounded-xl border border-gray-200 overflow-hidden">
                           {([
-                            { id: 'over', label: 'Over foto' },
+                            { id: 'over',  label: 'Over foto'  },
                             { id: 'under', label: 'Onder foto' },
                           ] as const).map((opt) => (
                             <button
                               key={opt.id}
                               onClick={() => updateHpSettings({ titlePosition: opt.id })}
-                              className={`flex-1 py-2 text-xs font-semibold transition-colors ${
-                                hpSettings.titlePosition === opt.id ? 'bg-rose-500 text-white' : 'text-gray-500 hover:bg-gray-50'
-                              }`}
+                              className={`flex-1 py-2 text-xs font-semibold transition-colors ${hpSettings.titlePosition === opt.id ? 'bg-rose-500 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
                             >
                               {opt.label}
                             </button>
@@ -1644,160 +1555,211 @@ export default function BouwenPage() {
                       </div>
                     )}
 
-                    {/* Luxe Trouwkaart */}
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Luxe Trouwkaart</p>
-                      <div className="flex flex-col gap-4">
+                    <div className="border-t border-gray-100" />
 
-                        {/* Toggle */}
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold text-gray-600">Toon grafisch kader</span>
-                          <button
-                            onClick={() => updateDraft({ use_frame: !(draft?.use_frame ?? false) })}
-                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${draft?.use_frame ? "bg-pink-500" : "bg-gray-200"}`}
-                          >
-                            <span className={`absolute h-4 w-4 rounded-full bg-white transition-transform shadow-sm ${draft?.use_frame ? "translate-x-6" : "translate-x-1"}`} />
-                          </button>
-                        </div>
-
-                        {draft?.use_frame && (<>
-                          {/* Initialen */}
-                          <div className="flex flex-col gap-1.5">
-                            <span className="text-xs font-semibold text-gray-600">Initialen</span>
-                            <input
-                              type="text"
-                              value={draft?.initials ?? ""}
-                              onChange={(e) => updateDraft({ initials: e.target.value })}
-                              placeholder="bijv. M | W"
-                              className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                            />
-                            <FontSelect value={fontInitials} onChange={saveFontInitials} />
-                            <div className="flex items-center justify-between mt-0.5">
-                              <span className="text-xs text-gray-500">Lettergrootte</span>
-                              <span className="text-xs text-gray-400">{draft?.frameInitialsSize ?? 8}</span>
-                            </div>
-                            <input
-                              type="range" min={4} max={18} step={0.5}
-                              value={draft?.frameInitialsSize ?? 8}
-                              onChange={(e) => updateDraft({ frameInitialsSize: Number(e.target.value) })}
-                              className="w-full accent-rose-400"
-                            />
-                          </div>
-
-                          {/* Namen in kader */}
-                          <div className="flex flex-col gap-1.5">
-                            <span className="text-xs font-semibold text-gray-600">Namen in kader</span>
-                            <textarea
-                              rows={2}
-                              value={draft?.frame_names ?? ""}
-                              onChange={(e) => updateDraft({ frame_names: e.target.value })}
-                              placeholder={"bijv. Michiel\n& Lindsey"}
-                              className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all resize-none"
-                            />
-                            <FontSelect value={fontFrameNames} onChange={saveFontFrameNames} />
-                            <div className="flex items-center justify-between mt-0.5">
-                              <span className="text-xs text-gray-500">Lettergrootte</span>
-                              <span className="text-xs text-gray-400">{draft?.frameNamesSize ?? 5.5}</span>
-                            </div>
-                            <input
-                              type="range" min={2} max={13} step={0.5}
-                              value={draft?.frameNamesSize ?? 5.5}
-                              onChange={(e) => updateDraft({ frameNamesSize: Number(e.target.value) })}
-                              className="w-full accent-rose-400"
-                            />
-                          </div>
-
-                          {/* Locatie in kader */}
-                          <div className="flex flex-col gap-1.5">
-                            <span className="text-xs font-semibold text-gray-600">Locatie in kader</span>
-                            <input
-                              type="text"
-                              value={draft?.frame_location ?? ""}
-                              onChange={(e) => updateDraft({ frame_location: e.target.value })}
-                              placeholder="bijv. Kasteel de Haar"
-                              className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                            />
-                            <div className="flex items-center justify-between mt-0.5">
-                              <span className="text-xs text-gray-500">Lettergrootte</span>
-                              <span className="text-xs text-gray-400">{draft?.frameLocationSize ?? 1.8}</span>
-                            </div>
-                            <input
-                              type="range" min={0.8} max={8} step={0.1}
-                              value={draft?.frameLocationSize ?? 1.8}
-                              onChange={(e) => updateDraft({ frameLocationSize: Number(e.target.value) })}
-                              className="w-full accent-rose-400"
-                            />
-                          </div>
-
-                          {/* Kader grid */}
-                          <div className="flex flex-col gap-1.5">
-                            <span className="text-xs font-semibold text-gray-600">Kader stijl</span>
-                            <div className="grid grid-cols-3 gap-2">
-                              {([
-                                { id: "gold-circle",      label: "Gold Cirkel",     file: "gold-circle.png.png"      },
-                                { id: "gold-diamond",     label: "Gold Ruit",       file: "gold-diamond.png.png"     },
-                                { id: "terra-circle",     label: "Terra Cirkel",    file: "terra-circle.png.png"     },
-                                { id: "terra-diamond",    label: "Terra Ruit",      file: "terra-diamond.png.png"    },
-                                { id: "earthy-circle",    label: "Earthy Cirkel",   file: "earthy-circle.png.png"    },
-                                { id: "earthy-diamond",   label: "Earthy Ruit",     file: "earthy-diamond.png.png"   },
-                                { id: "bloem2-breed",     label: "Bloem 2 Breed",   file: "Bloem2-breed.png"         },
-                                { id: "olive-square",     label: "Olijf Vierkant",  file: "olive-square.png.png"     },
-                                { id: "bloem-rechthoek",  label: "Bloem Breed",     file: "Bloem-rechthoek.png"      },
-                              ]).map((frame) => {
-                                const isActive = (draft?.frame_style ?? "gold-circle") === frame.id
-                                return (
-                                  <button
-                                    key={frame.id}
-                                    onClick={() => updateDraft({ frame_style: frame.id })}
-                                    title={frame.label}
-                                    className={`relative rounded-xl overflow-hidden border-2 transition-all aspect-square ${
-                                      isActive
-                                        ? "border-rose-400 ring-2 ring-rose-300 ring-offset-1"
-                                        : "border-gray-100 hover:border-gray-300"
-                                    }`}
-                                  >
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img
-                                      src={`/frames/${frame.file}`}
-                                      alt={frame.label}
-                                      className="w-full h-full object-cover"
-                                    />
-                                    {isActive && (
-                                      <div className="absolute inset-0 bg-rose-500 bg-opacity-10 flex items-center justify-center">
-                                        <svg className="w-4 h-4 text-rose-500" fill="currentColor" viewBox="0 0 20 20">
-                                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                        </svg>
-                                      </div>
-                                    )}
-                                  </button>
-                                )
-                              })}
-                            </div>
-                          </div>
-
-                          {/* Datum in kader */}
-                          <div className="flex flex-col gap-1.5">
-                            <span className="text-xs font-semibold text-gray-600">Datum lettergrootte</span>
-                            <div className="flex items-center justify-between mt-0.5">
-                              <span className="text-xs text-gray-500">Grootte</span>
-                              <span className="text-xs text-gray-400">{draft?.frameDateSize ?? 1.8}</span>
-                            </div>
-                            <input
-                              type="range" min={0.8} max={8} step={0.1}
-                              value={draft?.frameDateSize ?? 1.8}
-                              onChange={(e) => updateDraft({ frameDateSize: Number(e.target.value) })}
-                              className="w-full accent-rose-400"
-                            />
-                          </div>
-
-                        </>)}
-
+                    {/* 5. Subtitel (Intro) */}
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-gray-600">Subtitel (Intro)</span>
+                        <button
+                          onClick={() => setHpOpenGear(hpOpenGear === 'subtitle' ? null : 'subtitle')}
+                          title="Stijl aanpassen"
+                          className={`p-1 rounded-lg transition-colors ${hpOpenGear === 'subtitle' ? 'bg-rose-50 text-rose-500' : 'text-gray-300 hover:text-gray-500'}`}
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        </button>
                       </div>
+                      <input
+                        type="text"
+                        value={hpSettings.subtitleText}
+                        onChange={(e) => updateHpSettings({ subtitleText: e.target.value })}
+                        placeholder="bijv. Samen vieren we de liefde"
+                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                      />
+                      {hpOpenGear === 'subtitle' && (
+                        <div className="flex flex-col gap-2 bg-gray-50 rounded-xl p-3 border border-gray-100">
+                          <FontSelect value={hpSettings.subtitleFont} onChange={(v) => updateHpSettings({ subtitleFont: v })} />
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-500">Grootte</span>
+                            <span className="text-xs text-gray-400">{hpSettings.subtitleSize}rem</span>
+                          </div>
+                          <input type="range" min={0.7} max={2.5} step={0.1} value={hpSettings.subtitleSize} onChange={(e) => updateHpSettings({ subtitleSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                        </div>
+                      )}
                     </div>
 
                     <div className="border-t border-gray-100" />
 
-                    {/* Welkomstbericht */}
+                    {/* 6. Toon grafisch kader + kader keuze */}
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-gray-600">Luxe Trouwkaart</span>
+                        <button
+                          onClick={() => updateDraft({ use_frame: !(draft?.use_frame ?? false) })}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${draft?.use_frame ? "bg-pink-500" : "bg-gray-200"}`}
+                        >
+                          <span className={`absolute h-4 w-4 rounded-full bg-white transition-transform shadow-sm ${draft?.use_frame ? "translate-x-6" : "translate-x-1"}`} />
+                        </button>
+                      </div>
+                      {draft?.use_frame && (
+                        <div className="grid grid-cols-3 gap-2">
+                          {([
+                            { id: "gold-circle",     label: "Gold Cirkel",    file: "gold-circle.png.png"    },
+                            { id: "gold-diamond",    label: "Gold Ruit",      file: "gold-diamond.png.png"   },
+                            { id: "terra-circle",    label: "Terra Cirkel",   file: "terra-circle.png.png"   },
+                            { id: "terra-diamond",   label: "Terra Ruit",     file: "terra-diamond.png.png"  },
+                            { id: "earthy-circle",   label: "Earthy Cirkel",  file: "earthy-circle.png.png"  },
+                            { id: "earthy-diamond",  label: "Earthy Ruit",    file: "earthy-diamond.png.png" },
+                            { id: "bloem2-breed",    label: "Bloem 2 Breed",  file: "Bloem2-breed.png"       },
+                            { id: "olive-square",    label: "Olijf Vierkant", file: "olive-square.png.png"   },
+                            { id: "bloem-rechthoek", label: "Bloem Breed",    file: "Bloem-rechthoek.png"    },
+                          ]).map((frame) => {
+                            const isActive = (draft?.frame_style ?? "gold-circle") === frame.id
+                            return (
+                              <button
+                                key={frame.id}
+                                onClick={() => updateDraft({ frame_style: frame.id })}
+                                title={frame.label}
+                                className={`relative rounded-xl overflow-hidden border-2 transition-all aspect-square ${isActive ? "border-rose-400 ring-2 ring-rose-300 ring-offset-1" : "border-gray-100 hover:border-gray-300"}`}
+                              >
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={`/frames/${frame.file}`} alt={frame.label} className="w-full h-full object-cover" />
+                                {isActive && (
+                                  <div className="absolute inset-0 bg-rose-500 bg-opacity-10 flex items-center justify-center">
+                                    <svg className="w-4 h-4 text-rose-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                                  </div>
+                                )}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="border-t border-gray-100" />
+
+                    {/* 7. Initialen */}
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-gray-600">Initialen</span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => updateHpSettings({ initialsVisible: !hpSettings.initialsVisible })}
+                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.initialsVisible ? 'bg-pink-400' : 'bg-gray-200'}`}
+                            title="Tonen"
+                          >
+                            <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.initialsVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                          </button>
+                          <button
+                            onClick={() => setHpOpenGear(hpOpenGear === 'initialen' ? null : 'initialen')}
+                            title="Stijl aanpassen"
+                            className={`p-1 rounded-lg transition-colors ${hpOpenGear === 'initialen' ? 'bg-rose-50 text-rose-500' : 'text-gray-300 hover:text-gray-500'}`}
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                          </button>
+                        </div>
+                      </div>
+                      <input
+                        type="text"
+                        value={draft?.initials ?? ""}
+                        onChange={(e) => updateDraft({ initials: e.target.value })}
+                        placeholder="bijv. M | W"
+                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                      />
+                      {hpOpenGear === 'initialen' && (
+                        <div className="flex flex-col gap-2 bg-gray-50 rounded-xl p-3 border border-gray-100">
+                          <FontSelect value={fontInitials} onChange={saveFontInitials} />
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-500">Grootte</span>
+                            <span className="text-xs text-gray-400">{draft?.frameInitialsSize ?? 8}</span>
+                          </div>
+                          <input type="range" min={4} max={18} step={0.5} value={draft?.frameInitialsSize ?? 8} onChange={(e) => updateDraft({ frameInitialsSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 8. Namen in kader */}
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-gray-600">Namen in kader</span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => updateHpSettings({ frameNamesVisible: !hpSettings.frameNamesVisible })}
+                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.frameNamesVisible ? 'bg-pink-400' : 'bg-gray-200'}`}
+                            title="Tonen"
+                          >
+                            <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.frameNamesVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                          </button>
+                          <button
+                            onClick={() => setHpOpenGear(hpOpenGear === 'framenamen' ? null : 'framenamen')}
+                            title="Stijl aanpassen"
+                            className={`p-1 rounded-lg transition-colors ${hpOpenGear === 'framenamen' ? 'bg-rose-50 text-rose-500' : 'text-gray-300 hover:text-gray-500'}`}
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                          </button>
+                        </div>
+                      </div>
+                      <textarea
+                        rows={2}
+                        value={draft?.frame_names ?? ""}
+                        onChange={(e) => updateDraft({ frame_names: e.target.value })}
+                        placeholder={"bijv. Michiel\n& Lindsey"}
+                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all resize-none"
+                      />
+                      {hpOpenGear === 'framenamen' && (
+                        <div className="flex flex-col gap-2 bg-gray-50 rounded-xl p-3 border border-gray-100">
+                          <FontSelect value={fontFrameNames} onChange={saveFontFrameNames} />
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-500">Grootte</span>
+                            <span className="text-xs text-gray-400">{draft?.frameNamesSize ?? 5.5}</span>
+                          </div>
+                          <input type="range" min={2} max={13} step={0.5} value={draft?.frameNamesSize ?? 5.5} onChange={(e) => updateDraft({ frameNamesSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 9. Datum */}
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-gray-600">Datum</span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => updateHpSettings({ datumVisible: !hpSettings.datumVisible })}
+                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.datumVisible ? 'bg-pink-400' : 'bg-gray-200'}`}
+                            title="Tonen"
+                          >
+                            <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.datumVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                          </button>
+                          <button
+                            onClick={() => setHpOpenGear(hpOpenGear === 'datum' ? null : 'datum')}
+                            title="Stijl aanpassen"
+                            className={`p-1 rounded-lg transition-colors ${hpOpenGear === 'datum' ? 'bg-rose-50 text-rose-500' : 'text-gray-300 hover:text-gray-500'}`}
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                          </button>
+                        </div>
+                      </div>
+                      <input
+                        type="date"
+                        value={draft?.datum ?? ""}
+                        onChange={(e) => updateDraft({ datum: e.target.value })}
+                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                      />
+                      {hpOpenGear === 'datum' && (
+                        <div className="flex flex-col gap-2 bg-gray-50 rounded-xl p-3 border border-gray-100">
+                          <FontSelect value={hpSettings.datumFont} onChange={(v) => updateHpSettings({ datumFont: v })} />
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-500">Grootte</span>
+                            <span className="text-xs text-gray-400">{hpSettings.datumSize}rem</span>
+                          </div>
+                          <input type="range" min={0.7} max={3} step={0.1} value={hpSettings.datumSize} onChange={(e) => updateHpSettings({ datumSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="border-t border-gray-100" />
+
+                    {/* 10 + 11. Welkomstbericht */}
                     <div>
                       <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Welkomstbericht</p>
                       <div className="flex flex-col gap-3">

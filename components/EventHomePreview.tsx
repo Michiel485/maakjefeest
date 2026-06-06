@@ -15,6 +15,9 @@ export interface HomepageSettings {
   datumFont: string
   datumSize: number
   titlePosition: 'over' | 'under'
+  initialsVisible: boolean
+  frameNamesVisible: boolean
+  datumVisible: boolean
 }
 
 function clamp(v: number, min: number, max: number) {
@@ -409,7 +412,23 @@ export default function EventHomePreview({
                 <GoldDivider accent={sc.accent} />
               </>
             )}
-            {datumFormatted && (
+            {(hp?.initialsVisible !== false) && initials && (
+              <>
+                <p style={{ fontFamily: sc.fontInitials, fontWeight: sc.fontInitialsWeight, fontSize: `${(frameInitialsSize * 0.5).toFixed(1)}rem`, color: sc.headingColor, letterSpacing: '0.2em' }}>
+                  {initials}
+                </p>
+                <GoldDivider accent={sc.accent} />
+              </>
+            )}
+            {(hp?.frameNamesVisible !== false) && frameNames && frameNames.trim() && (
+              <>
+                <p style={{ fontFamily: sc.fontFrameNames, fontWeight: sc.fontFrameNamesWeight, fontSize: `${(frameNamesSize * 0.5).toFixed(1)}rem`, color: sc.headingColor, whiteSpace: 'pre-wrap', lineHeight: 1.2 }}>
+                  {frameNames}
+                </p>
+                <GoldDivider accent={sc.accent} />
+              </>
+            )}
+            {(hp?.datumVisible !== false) && datumFormatted && (
               <>
                 <p style={datumStyleHp}>{datumFormatted}</p>
                 <GoldDivider accent={sc.accent} />
@@ -453,15 +472,17 @@ export default function EventHomePreview({
 
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <div className={`flex flex-col items-center ${safeZoneClass}`} style={{ transform: "translateY(-9%)" }}>
-                  {initials && (
+                  {(hp?.initialsVisible !== false) && initials && (
                     <p className="fk-initials text-center" style={{ fontFamily: sc.fontInitials, fontWeight: sc.fontInitialsWeight, color: sc.frameBodyText ?? sc.headingColor, whiteSpace: "nowrap", maxWidth: "100%" }}>
                       {initials}
                     </p>
                   )}
-                  <p className={`fk-names text-center ${initials ? "mt-[0.25cqi]" : ""}`} style={{ fontFamily: sc.fontFrameNames, fontWeight: sc.fontFrameNamesWeight, color: sc.frameBodyText ?? sc.headingColor, whiteSpace: "pre-wrap", wordBreak: "break-word", maxWidth: "100%" }}>
-                    {frameDisplayNames}
-                  </p>
-                  {datumFormatted && (
+                  {(hp?.frameNamesVisible !== false) && (
+                    <p className={`fk-names text-center ${(hp?.initialsVisible !== false) && initials ? "mt-[0.25cqi]" : ""}`} style={{ fontFamily: sc.fontFrameNames, fontWeight: sc.fontFrameNamesWeight, color: sc.frameBodyText ?? sc.headingColor, whiteSpace: "pre-wrap", wordBreak: "break-word", maxWidth: "100%" }}>
+                      {frameDisplayNames}
+                    </p>
+                  )}
+                  {(hp?.datumVisible !== false) && datumFormatted && (
                     <p className="fk-date uppercase text-center mt-[1.1cqi]" style={{ fontFamily: sc.fontFamily, color: sc.frameBodyText ?? sc.bodyText, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>
                       {datumFormatted}
                     </p>
