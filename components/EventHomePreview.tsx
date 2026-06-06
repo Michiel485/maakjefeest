@@ -338,7 +338,7 @@ export default function EventHomePreview({
   const heroSection = hasPhoto ? (
     <section
       ref={heroRef}
-      className={`relative w-full h-[300px] @md:h-[420px] overflow-hidden select-none ${
+      className={`relative w-full aspect-[21/9] overflow-hidden select-none ${
         editableHero ? heroDragging ? "cursor-grabbing" : "cursor-grab" : ""
       }`}
       onMouseDown={editableHero ? (e) => { e.preventDefault(); startHeroDrag(e.clientX, e.clientY) } : undefined}
@@ -379,12 +379,11 @@ export default function EventHomePreview({
         <div className="absolute inset-0 flex items-center justify-center px-8 text-center">
           <h1
             {...fieldClick('hoofdtitel')}
-            className="leading-tight whitespace-pre-wrap"
+            className="hp-hoofdtitel leading-tight whitespace-pre-wrap"
             style={{
               color: "#fff",
               fontFamily: hp?.hoofdtitelFont ? hoofdtitelFontResult.family : sc.fontHero,
               fontWeight: hp?.hoofdtitelFont ? hoofdtitelFontResult.weight : sc.fontHeroWeight,
-              fontSize: `${hp?.hoofdtitelSize ?? 5.5}rem`,
               filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.75))",
             }}
           >
@@ -397,14 +396,13 @@ export default function EventHomePreview({
 
   // Title under photo (or no photo): show above frame / elegant divider
   const titleUnderSection = showTitleUnderPhoto && title ? (
-    <div className="flex flex-col items-center text-center px-8 pt-8 pb-2" style={{ backgroundColor: sc.bodyBg }}>
+    <div className="flex flex-col items-center text-center px-8 pt-4 @md:pt-8 pb-2" style={{ backgroundColor: sc.bodyBg }}>
       <h1
         {...fieldClick('hoofdtitel')}
-        className="leading-tight whitespace-pre-wrap"
+        className="hp-hoofdtitel leading-tight whitespace-pre-wrap"
         style={{
           fontFamily: hoofdtitelFontResult.family,
           fontWeight: hoofdtitelFontResult.weight,
-          fontSize: `${hp?.hoofdtitelSize ?? 5.5}rem`,
           color: sc.headingColor,
         }}
       >
@@ -415,6 +413,22 @@ export default function EventHomePreview({
 
   return (
     <div className="@container">
+      <style>{`
+        .hp-subtitle   { font-size: ${((hp?.subtitleSize   ?? 1.1) * 0.65).toFixed(3)}rem; }
+        .hp-hoofdtitel { font-size: ${((hp?.hoofdtitelSize ?? 5.5) * 0.55).toFixed(3)}rem; }
+        .hp-initialen  { font-size: ${(frameInitialsSize * 0.30).toFixed(3)}rem; }
+        .hp-namen      { font-size: ${(frameNamesSize    * 0.30).toFixed(3)}rem; }
+        .hp-datum      { font-size: ${((hp?.datumSize    ?? 1.6) * 0.65).toFixed(3)}rem; }
+        .hp-locatie    { font-size: ${((hp?.locatieSize  ?? 1.1) * 0.65).toFixed(3)}rem; }
+        @container (min-width: 560px) {
+          .hp-subtitle   { font-size: ${(hp?.subtitleSize   ?? 1.1).toFixed(3)}rem; }
+          .hp-hoofdtitel { font-size: ${(hp?.hoofdtitelSize ?? 5.5).toFixed(3)}rem; }
+          .hp-initialen  { font-size: ${(frameInitialsSize * 0.5).toFixed(3)}rem; }
+          .hp-namen      { font-size: ${(frameNamesSize    * 0.5).toFixed(3)}rem; }
+          .hp-datum      { font-size: ${(hp?.datumSize    ?? 1.6).toFixed(3)}rem; }
+          .hp-locatie    { font-size: ${(hp?.locatieSize  ?? 1.1).toFixed(3)}rem; }
+        }
+      `}</style>
       {heroSection}
 
       {/* Title under photo (if applicable) */}
@@ -430,33 +444,34 @@ export default function EventHomePreview({
       >
         {elegantMode ? (
           /* ── Elegant Divider composition ── */
-          <div className="w-full max-w-3xl flex flex-col items-center text-center py-8 gap-4">
+          <>
+          <div className="w-full max-w-3xl flex flex-col items-center text-center py-4 @md:py-8 gap-2 @md:gap-4">
             {/* Subtitle + Hoofdtitel gegroepeerd met halve ruimte ertussen */}
-            <div className="flex flex-col items-center gap-2 w-full">
+            <div className="flex flex-col items-center gap-1 @md:gap-2 w-full">
               {(hp?.subtitleVisible !== false) && hp?.subtitleText && (
-                <p {...fieldClick('subtitle')} style={subtitleStyle}>{hp.subtitleText}</p>
+                <p {...fieldClick('subtitle')} className="hp-subtitle" style={{ ...subtitleStyle, fontSize: undefined }}>{hp.subtitleText}</p>
               )}
               {(hp?.hoofdtitelVisible !== false) && !hasPhoto && title && (
-                <h1 {...fieldClick('hoofdtitel')} style={hoofdtitelStyle}>{title}</h1>
+                <h1 {...fieldClick('hoofdtitel')} className="hp-hoofdtitel" style={{ ...hoofdtitelStyle, fontSize: undefined }}>{title}</h1>
               )}
             </div>
             {(hp?.initialsVisible !== false) && initials && (
-              <p {...fieldClick('initialen')} style={{ fontFamily: sc.fontInitials, fontWeight: sc.fontInitialsWeight, fontSize: `${(frameInitialsSize * 0.5).toFixed(1)}rem`, color: sc.headingColor, letterSpacing: '0.2em', whiteSpace: 'nowrap' }}>
+              <p {...fieldClick('initialen')} className="hp-initialen" style={{ fontFamily: sc.fontInitials, fontWeight: sc.fontInitialsWeight, color: sc.headingColor, letterSpacing: '0.2em', whiteSpace: 'nowrap' }}>
                 {initials}
               </p>
             )}
             {(hp?.frameNamesVisible !== false) && frameNames && frameNames.trim() && (
-              <p {...fieldClick('namen')} style={{ fontFamily: sc.fontFrameNames, fontWeight: sc.fontFrameNamesWeight, fontSize: `${(frameNamesSize * 0.5).toFixed(1)}rem`, color: sc.headingColor, whiteSpace: 'pre-wrap', lineHeight: 1.2, wordBreak: 'keep-all' }}>
+              <p {...fieldClick('namen')} className="hp-namen" style={{ fontFamily: sc.fontFrameNames, fontWeight: sc.fontFrameNamesWeight, color: sc.headingColor, whiteSpace: 'pre-wrap', lineHeight: 1.2, wordBreak: 'keep-all' }}>
                 {frameNames}
               </p>
             )}
             {(hp?.datumVisible !== false) && datumFormatted && (
-              <p {...fieldClick('datum')} style={datumStyleHp}>{datumFormatted}</p>
+              <p {...fieldClick('datum')} className="hp-datum" style={{ ...datumStyleHp, fontSize: undefined }}>{datumFormatted}</p>
             )}
             {(hp?.locatieVisible !== false) && frameDisplayLocation && (
-              <p {...fieldClick('locatie')} style={locatieStyleHp}>{frameDisplayLocation}</p>
+              <p {...fieldClick('locatie')} className="hp-locatie" style={{ ...locatieStyleHp, fontSize: undefined }}>{frameDisplayLocation}</p>
             )}
-            <div className="my-4" />
+            <div className="my-2 @md:my-4" />
             <a
               href={rsvpHref}
               onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("RSVP") } : undefined}
@@ -472,6 +487,7 @@ export default function EventHomePreview({
               Meld je aan
             </a>
           </div>
+          </>
         ) : useFrame && frameStyle ? (
           /* ── Luxe Trouwkaart (frame) ── */
           <>
