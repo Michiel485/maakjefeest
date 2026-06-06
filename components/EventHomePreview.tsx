@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState, useCallback } from "react"
+import { useRef, useState, useCallback, useEffect } from "react"
 import type { SC } from "@/lib/event-styles"
 import { getTitleFont } from "@/lib/title-fonts"
 
