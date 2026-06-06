@@ -438,7 +438,7 @@ export default function EventHomePreview({
             {(hp?.locatieVisible !== false) && frameDisplayLocation && (
               <p style={locatieStyleHp}>{frameDisplayLocation}</p>
             )}
-            <GoldDivider accent={sc.accent} />
+            <div className="my-4" />
             <a
               href={rsvpHref}
               onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("RSVP") } : undefined}
