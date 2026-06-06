@@ -24,6 +24,7 @@ const GUEST_TYPE_LABELS: Record<string, string> = {
 export default function RsvpForm({
   eventId,
   accentColor = "#E8627A",
+  labelColor = "#374151",
   guestTypes = ["daggast", "avondgast"],
   showSongRequest = false,
   deadline = null,
@@ -33,6 +34,7 @@ export default function RsvpForm({
 }: {
   eventId: string
   accentColor?: string
+  labelColor?: string
   guestTypes?: string[]
   showSongRequest?: boolean
   deadline?: string | null
@@ -146,7 +148,7 @@ export default function RsvpForm({
 
       {/* ── Ben je erbij? ── */}
       <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-3">Ben je erbij?</label>
+        <label className="block text-sm font-semibold mb-3" style={{ color: labelColor }}>Ben je erbij?</label>
         <div className="flex flex-col gap-2 sm:flex-row">
           {(["yes", "no"] as Attending[]).map((val) => {
             const active = attending === val
@@ -173,7 +175,7 @@ export default function RsvpForm({
       {/* ── Aantal personen ── */}
       {attending === "yes" && (
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-3">Met hoeveel personen komen jullie?</label>
+          <label className="block text-sm font-semibold mb-3" style={{ color: labelColor }}>Met hoeveel personen komen jullie?</label>
           <div className="flex gap-2 flex-wrap">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
               <button
@@ -202,7 +204,7 @@ export default function RsvpForm({
           </p>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Naam *</label>
+            <label className="block text-sm font-semibold mb-1.5" style={{ color: labelColor }}>Naam *</label>
             <input
               type="text"
               required
@@ -216,7 +218,7 @@ export default function RsvpForm({
 
           {attending === "yes" && guestTypes.length > 1 && (
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Type gast</label>
+              <label className="block text-sm font-semibold mb-1.5" style={{ color: labelColor }}>Type gast</label>
               <div className="flex gap-2 flex-wrap">
                 {guestTypes.map((t) => (
                   <button
@@ -239,7 +241,7 @@ export default function RsvpForm({
 
           {attending === "yes" && (
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Dieetwensen / Allergieën</label>
+              <label className="block text-sm font-semibold mb-1.5" style={{ color: labelColor }}>Dieetwensen / Allergieën</label>
               <input
                 type="text"
                 placeholder="Bijv. vegetarisch, notenallergie"
@@ -252,7 +254,7 @@ export default function RsvpForm({
           )}
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+            <label className="block text-sm font-semibold mb-1.5" style={{ color: labelColor }}>
               E-mailadres {i === 0 ? "*" : "(optioneel)"}
             </label>
             <input
@@ -271,7 +273,7 @@ export default function RsvpForm({
       {/* ── Song request ── */}
       {attending === "yes" && showSongRequest && (
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+          <label className="block text-sm font-semibold mb-1.5" style={{ color: labelColor }}>
             Welk nummer brengt jou gegarandeerd naar de dansvloer?{" "}
             <span className="text-gray-400 font-normal">(optioneel)</span>
           </label>
@@ -288,23 +290,23 @@ export default function RsvpForm({
 
       {/* ── Overnachting ── */}
       {attending === "yes" && showOvernachting && (
-        <YesNoQuestion question="Blijven jullie overnachten?" value={overnachting} onChange={setOvernachting} />
+        <YesNoQuestion question="Blijven jullie overnachten?" value={overnachting} onChange={setOvernachting} labelColor={labelColor} />
       )}
 
       {/* ── Eigen vraag 1 ── */}
       {attending === "yes" && hasCustomQ1 && (
-        <YesNoQuestion question={customQuestion!} value={customAnswer} onChange={setCustomAnswer} />
+        <YesNoQuestion question={customQuestion!} value={customAnswer} onChange={setCustomAnswer} labelColor={labelColor} />
       )}
 
       {/* ── Eigen vraag 2 ── */}
       {attending === "yes" && hasCustomQ2 && (
-        <YesNoQuestion question={customQuestion2!} value={customAnswer2} onChange={setCustomAnswer2} />
+        <YesNoQuestion question={customQuestion2!} value={customAnswer2} onChange={setCustomAnswer2} labelColor={labelColor} />
       )}
 
       {/* ── Berichtje bij afmelding ── */}
       {attending === "no" && (
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+          <label className="block text-sm font-semibold mb-1.5" style={{ color: labelColor }}>
             Lief berichtje voor het bruidspaar{" "}
             <span className="text-gray-400 font-normal">(optioneel)</span>
           </label>
@@ -347,14 +349,16 @@ function YesNoQuestion({
   question,
   value,
   onChange,
+  labelColor = "#374151",
 }: {
   question: string
   value: boolean | null
   onChange: (v: boolean) => void
+  labelColor?: string
 }) {
   return (
     <div>
-      <label className="block text-sm font-semibold text-gray-700 mb-3">{question}</label>
+      <label className="block text-sm font-semibold mb-3" style={{ color: labelColor }}>{question}</label>
       <div className="flex gap-2">
         {([true, false] as const).map((val) => {
           const active = value === val

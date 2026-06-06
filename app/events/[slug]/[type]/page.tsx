@@ -114,6 +114,7 @@ export default async function EventSubPage({
         <RsvpForm
           eventId={event.id}
           accentColor={sc.accent}
+          labelColor={sc.goldBorder ? (sc.cardText ?? sc.bodyText) : sc.bodyText}
           guestTypes={rsvpGuestTypes}
           showSongRequest={rsvpShowSong}
           deadline={rsvpDeadline}
