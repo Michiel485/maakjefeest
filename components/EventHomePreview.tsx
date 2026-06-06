@@ -19,6 +19,9 @@ export interface HomepageSettings {
   frameNamesVisible: boolean
   datumVisible: boolean
   subtitleVisible: boolean
+  locatieVisible: boolean
+  locatieFont: string
+  locatieSize: number
 }
 
 function clamp(v: number, min: number, max: number) {
@@ -157,9 +160,10 @@ export default function EventHomePreview({
 
   // ── Resolve hp settings fonts ──────────────────────────────────────────────
   const hp = homepageSettings
-  const subtitleFontResult  = getTitleFont(hp?.subtitleFont)
+  const subtitleFontResult   = getTitleFont(hp?.subtitleFont)
   const hoofdtitelFontResult = getTitleFont(hp?.hoofdtitelFont)
-  const datumFontResult     = getTitleFont(hp?.datumFont)
+  const datumFontResult      = getTitleFont(hp?.datumFont)
+  const locatieFontResult    = getTitleFont(hp?.locatieFont)
 
   const subtitleStyle: React.CSSProperties = {
     fontFamily: subtitleFontResult.family,
@@ -185,6 +189,14 @@ export default function EventHomePreview({
     color: sc.accent,
     letterSpacing: '0.12em',
     textTransform: 'uppercase',
+  }
+
+  const locatieStyleHp: React.CSSProperties = {
+    fontFamily: locatieFontResult.family,
+    fontWeight: locatieFontResult.weight,
+    fontSize: `${hp?.locatieSize ?? 1.1}rem`,
+    color: sc.bodyText,
+    letterSpacing: '0.04em',
   }
 
   // ── Layout 2: Modern split-screen ─────────────────────────────────────────
@@ -423,6 +435,9 @@ export default function EventHomePreview({
             {(hp?.datumVisible !== false) && datumFormatted && (
               <p style={datumStyleHp}>{datumFormatted}</p>
             )}
+            {(hp?.locatieVisible !== false) && frameDisplayLocation && (
+              <p style={locatieStyleHp}>{frameDisplayLocation}</p>
+            )}
             <GoldDivider accent={sc.accent} />
             <a
               href={rsvpHref}
@@ -477,7 +492,7 @@ export default function EventHomePreview({
                       {datumFormatted}
                     </p>
                   )}
-                  {frameDisplayLocation && (
+                  {(hp?.locatieVisible !== false) && frameDisplayLocation && (
                     <p className="fk-location text-center mt-[0.4cqi]" style={{ fontFamily: sc.fontFamily, color: sc.frameBodyText ?? sc.bodyText, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>
                       {frameDisplayLocation}
                     </p>

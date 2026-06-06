@@ -43,6 +43,9 @@ interface HomepageSettings {
   frameNamesVisible: boolean
   datumVisible: boolean
   subtitleVisible: boolean
+  locatieVisible: boolean
+  locatieFont: string
+  locatieSize: number
 }
 
 const DEFAULT_HOMEPAGE_SETTINGS: HomepageSettings = {
@@ -60,6 +63,9 @@ const DEFAULT_HOMEPAGE_SETTINGS: HomepageSettings = {
   initialsVisible: true,
   frameNamesVisible: true,
   datumVisible: true,
+  locatieVisible: true,
+  locatieFont: 'montserrat',
+  locatieSize: 1.1,
 }
 
 interface MasterPerson {
@@ -1511,7 +1517,7 @@ export default function BouwenPage() {
                           <button
                             onClick={() => setHpOpenGear(hpOpenGear === 'hoofdtitel' ? null : 'hoofdtitel')}
                             title="Stijl aanpassen"
-                            className={`p-1 rounded-lg transition-colors ${hpOpenGear === 'hoofdtitel' ? 'bg-rose-50 text-rose-500' : 'text-gray-300 hover:text-gray-500'}`}
+                            className={`p-1 rounded-lg transition-colors ${hpOpenGear === 'hoofdtitel' ? 'bg-rose-50 text-rose-500' : 'bg-gray-100 text-gray-500 border border-gray-200 hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200'}`}
                           >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                           </button>
@@ -1574,7 +1580,7 @@ export default function BouwenPage() {
                           <button
                             onClick={() => setHpOpenGear(hpOpenGear === 'subtitle' ? null : 'subtitle')}
                             title="Stijl aanpassen"
-                            className={`p-1 rounded-lg transition-colors ${hpOpenGear === 'subtitle' ? 'bg-rose-50 text-rose-500' : 'text-gray-300 hover:text-gray-500'}`}
+                            className={`p-1 rounded-lg transition-colors ${hpOpenGear === 'subtitle' ? 'bg-rose-50 text-rose-500' : 'bg-gray-100 text-gray-500 border border-gray-200 hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200'}`}
                           >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                           </button>
@@ -1664,7 +1670,7 @@ export default function BouwenPage() {
                           <button
                             onClick={() => setHpOpenGear(hpOpenGear === 'initialen' ? null : 'initialen')}
                             title="Stijl aanpassen"
-                            className={`p-1 rounded-lg transition-colors ${hpOpenGear === 'initialen' ? 'bg-rose-50 text-rose-500' : 'text-gray-300 hover:text-gray-500'}`}
+                            className={`p-1 rounded-lg transition-colors ${hpOpenGear === 'initialen' ? 'bg-rose-50 text-rose-500' : 'bg-gray-100 text-gray-500 border border-gray-200 hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200'}`}
                           >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                           </button>
@@ -1704,7 +1710,7 @@ export default function BouwenPage() {
                           <button
                             onClick={() => setHpOpenGear(hpOpenGear === 'framenamen' ? null : 'framenamen')}
                             title="Stijl aanpassen"
-                            className={`p-1 rounded-lg transition-colors ${hpOpenGear === 'framenamen' ? 'bg-rose-50 text-rose-500' : 'text-gray-300 hover:text-gray-500'}`}
+                            className={`p-1 rounded-lg transition-colors ${hpOpenGear === 'framenamen' ? 'bg-rose-50 text-rose-500' : 'bg-gray-100 text-gray-500 border border-gray-200 hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200'}`}
                           >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                           </button>
@@ -1744,7 +1750,7 @@ export default function BouwenPage() {
                           <button
                             onClick={() => setHpOpenGear(hpOpenGear === 'datum' ? null : 'datum')}
                             title="Stijl aanpassen"
-                            className={`p-1 rounded-lg transition-colors ${hpOpenGear === 'datum' ? 'bg-rose-50 text-rose-500' : 'text-gray-300 hover:text-gray-500'}`}
+                            className={`p-1 rounded-lg transition-colors ${hpOpenGear === 'datum' ? 'bg-rose-50 text-rose-500' : 'bg-gray-100 text-gray-500 border border-gray-200 hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200'}`}
                           >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                           </button>
@@ -1759,11 +1765,75 @@ export default function BouwenPage() {
                       {hpOpenGear === 'datum' && (
                         <div className="flex flex-col gap-2 bg-gray-50 rounded-xl p-3 border border-gray-100">
                           <FontSelect value={hpSettings.datumFont} onChange={(v) => updateHpSettings({ datumFont: v })} />
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">Grootte</span>
-                            <span className="text-xs text-gray-400">{hpSettings.datumSize}rem</span>
-                          </div>
-                          <input type="range" min={0.7} max={3} step={0.1} value={hpSettings.datumSize} onChange={(e) => updateHpSettings({ datumSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                          {draft?.use_frame ? (
+                            <>
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500">Grootte in kader</span>
+                                <span className="text-xs text-gray-400">{draft?.frameDateSize ?? 1.8}</span>
+                              </div>
+                              <input type="range" min={0.3} max={6} step={0.1} value={draft?.frameDateSize ?? 1.8} onChange={(e) => updateDraft({ frameDateSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                            </>
+                          ) : (
+                            <>
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500">Grootte</span>
+                                <span className="text-xs text-gray-400">{hpSettings.datumSize}rem</span>
+                              </div>
+                              <input type="range" min={0.7} max={3} step={0.1} value={hpSettings.datumSize} onChange={(e) => updateHpSettings({ datumSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Locatie */}
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-gray-600">Locatie</span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => updateHpSettings({ locatieVisible: !hpSettings.locatieVisible })}
+                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.locatieVisible ? 'bg-pink-400' : 'bg-gray-200'}`}
+                            title="Tonen"
+                          >
+                            <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.locatieVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                          </button>
+                          <button
+                            onClick={() => setHpOpenGear(hpOpenGear === 'locatie' ? null : 'locatie')}
+                            title="Stijl aanpassen"
+                            className={`p-1 rounded-lg transition-colors ${hpOpenGear === 'locatie' ? 'bg-rose-50 text-rose-500 border border-rose-200' : 'bg-gray-100 text-gray-500 border border-gray-200 hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200'}`}
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                          </button>
+                        </div>
+                      </div>
+                      <input
+                        type="text"
+                        value={draft?.frame_location ?? ""}
+                        onChange={(e) => updateDraft({ frame_location: e.target.value })}
+                        placeholder="bijv. Kasteel de Haar"
+                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                      />
+                      {hpOpenGear === 'locatie' && (
+                        <div className="flex flex-col gap-2 bg-gray-50 rounded-xl p-3 border border-gray-100">
+                          <FontSelect value={hpSettings.locatieFont} onChange={(v) => updateHpSettings({ locatieFont: v })} />
+                          {draft?.use_frame ? (
+                            <>
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500">Grootte in kader</span>
+                                <span className="text-xs text-gray-400">{draft?.frameLocationSize ?? 1.8}</span>
+                              </div>
+                              <input type="range" min={0.3} max={6} step={0.1} value={draft?.frameLocationSize ?? 1.8} onChange={(e) => updateDraft({ frameLocationSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                            </>
+                          ) : (
+                            <>
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500">Grootte</span>
+                                <span className="text-xs text-gray-400">{hpSettings.locatieSize}rem</span>
+                              </div>
+                              <input type="range" min={0.7} max={3} step={0.1} value={hpSettings.locatieSize} onChange={(e) => updateHpSettings({ locatieSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                            </>
+                          )}
                         </div>
                       )}
                     </div>
