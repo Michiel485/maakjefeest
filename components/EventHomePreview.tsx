@@ -112,6 +112,12 @@ export default function EventHomePreview({
 
   const [heroPos, setHeroPos] = useState({ x: heroPosX, y: heroPosY })
   const [heroDragging, setHeroDragging] = useState(false)
+
+  useEffect(() => {
+    if (!heroDragging) {
+      setHeroPos({ x: heroPosX, y: heroPosY })
+    }
+  }, [heroPosX, heroPosY]) // eslint-disable-line react-hooks/exhaustive-deps
   const heroRef = useRef<HTMLElement>(null)
   const lastHeroPointer = useRef<{ x: number; y: number } | null>(null)
 
