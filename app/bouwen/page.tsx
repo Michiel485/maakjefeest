@@ -418,6 +418,13 @@ export default function BouwenPage() {
   const [hpSettings, setHpSettings] = useState<HomepageSettings>(DEFAULT_HOMEPAGE_SETTINGS)
   const [hpOpenGear, setHpOpenGear] = useState<string | null>(null)
 
+  function handlePreviewFieldClick(field: string) {
+    setHpOpenGear(field)
+    setTimeout(() => {
+      document.getElementById(`hp-field-${field}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 50)
+  }
+
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
     const urlEventId = urlParams.get("event_id")
@@ -1503,7 +1510,7 @@ export default function BouwenPage() {
                     <div className="border-t border-gray-100" />
 
                     {/* 3. Hoofdtitel (Namen) */}
-                    <div className="flex flex-col gap-1.5">
+                    <div id="hp-field-hoofdtitel" className="flex flex-col gap-1.5">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-semibold text-gray-600">Hoofdtitel (Namen)</span>
                         <div className="flex items-center gap-1.5">
@@ -1564,7 +1571,7 @@ export default function BouwenPage() {
                     <div className="border-t border-gray-100" />
 
                     {/* 5. Subtitel (Intro) */}
-                    <div className="flex flex-col gap-1.5">
+                    <div id="hp-field-subtitle" className="flex flex-col gap-1.5">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-semibold text-gray-600">Subtitel (Intro)</span>
                         <div className="flex items-center gap-1.5">
@@ -1654,7 +1661,7 @@ export default function BouwenPage() {
                     <div className="border-t border-gray-100" />
 
                     {/* 7. Initialen */}
-                    <div className="flex flex-col gap-1.5">
+                    <div id="hp-field-initialen" className="flex flex-col gap-1.5">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-semibold text-gray-600">Initialen</span>
                         <div className="flex items-center gap-1.5">
@@ -1694,7 +1701,7 @@ export default function BouwenPage() {
                     </div>
 
                     {/* 8. Namen in kader */}
-                    <div className="flex flex-col gap-1.5">
+                    <div id="hp-field-namen" className="flex flex-col gap-1.5">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-semibold text-gray-600">Namen in kader</span>
                         <div className="flex items-center gap-1.5">
@@ -1734,7 +1741,7 @@ export default function BouwenPage() {
                     </div>
 
                     {/* 9. Datum */}
-                    <div className="flex flex-col gap-1.5">
+                    <div id="hp-field-datum" className="flex flex-col gap-1.5">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-semibold text-gray-600">Datum</span>
                         <div className="flex items-center gap-1.5">
@@ -1785,7 +1792,7 @@ export default function BouwenPage() {
                     </div>
 
                     {/* Locatie */}
-                    <div className="flex flex-col gap-1.5">
+                    <div id="hp-field-locatie" className="flex flex-col gap-1.5">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-semibold text-gray-600">Locatie</span>
                         <div className="flex items-center gap-1.5">
@@ -2469,6 +2476,7 @@ export default function BouwenPage() {
                           onHeroPositionChange={(x, y) => updateDraft({ hero_image_pos_x: x, hero_image_pos_y: y })}
                           onNavigate={(id) => setPreviewPage(id as PageId)}
                           homepageSettings={hpSettings}
+                          onFieldClick={handlePreviewFieldClick}
                         />
                       )}
                       {previewPage === "Ceremoniemeesters" && (

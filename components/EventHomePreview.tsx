@@ -67,6 +67,7 @@ export interface EventHomePreviewProps {
   onNavigate?: (pageId: string) => void
   rsvpHref?: string
   homepageSettings?: HomepageSettings | null
+  onFieldClick?: (field: string) => void
 }
 
 export default function EventHomePreview({
@@ -96,9 +97,18 @@ export default function EventHomePreview({
   onNavigate,
   rsvpHref = "/RSVP",
   homepageSettings,
+  onFieldClick,
 }: EventHomePreviewProps) {
   const hasPhoto = !!heroImageUrl
   const showOverlay = hasPhoto && heroOverlay
+
+  const fieldClick = onFieldClick
+    ? (field: string): React.HTMLAttributes<HTMLElement> => ({
+        onClick: (e: React.MouseEvent) => { e.stopPropagation(); onFieldClick(field) },
+        style: { cursor: 'pointer' },
+        title: 'Klik om te bewerken',
+      })
+    : () => ({})
 
   const [heroPos, setHeroPos] = useState({ x: heroPosX, y: heroPosY })
   const [heroDragging, setHeroDragging] = useState(false)
@@ -362,6 +372,7 @@ export default function EventHomePreview({
       {showTitleOverPhoto && title && (
         <div className="absolute inset-0 flex items-center justify-center px-8 text-center">
           <h1
+            {...fieldClick('hoofdtitel')}
             className="leading-tight whitespace-pre-wrap"
             style={{
               color: "#fff",
@@ -382,6 +393,7 @@ export default function EventHomePreview({
   const titleUnderSection = showTitleUnderPhoto && title ? (
     <div className="flex flex-col items-center text-center px-8 pt-8 pb-2" style={{ backgroundColor: sc.bodyBg }}>
       <h1
+        {...fieldClick('hoofdtitel')}
         className="leading-tight whitespace-pre-wrap"
         style={{
           fontFamily: hoofdtitelFontResult.family,
@@ -416,27 +428,27 @@ export default function EventHomePreview({
             {/* Subtitle + Hoofdtitel gegroepeerd met halve ruimte ertussen */}
             <div className="flex flex-col items-center gap-2 w-full">
               {(hp?.subtitleVisible !== false) && hp?.subtitleText && (
-                <p style={subtitleStyle}>{hp.subtitleText}</p>
+                <p {...fieldClick('subtitle')} style={subtitleStyle}>{hp.subtitleText}</p>
               )}
               {(hp?.hoofdtitelVisible !== false) && !hasPhoto && title && (
-                <h1 style={hoofdtitelStyle}>{title}</h1>
+                <h1 {...fieldClick('hoofdtitel')} style={hoofdtitelStyle}>{title}</h1>
               )}
             </div>
             {(hp?.initialsVisible !== false) && initials && (
-              <p style={{ fontFamily: sc.fontInitials, fontWeight: sc.fontInitialsWeight, fontSize: `${(frameInitialsSize * 0.5).toFixed(1)}rem`, color: sc.headingColor, letterSpacing: '0.2em', whiteSpace: 'nowrap' }}>
+              <p {...fieldClick('initialen')} style={{ fontFamily: sc.fontInitials, fontWeight: sc.fontInitialsWeight, fontSize: `${(frameInitialsSize * 0.5).toFixed(1)}rem`, color: sc.headingColor, letterSpacing: '0.2em', whiteSpace: 'nowrap' }}>
                 {initials}
               </p>
             )}
             {(hp?.frameNamesVisible !== false) && frameNames && frameNames.trim() && (
-              <p style={{ fontFamily: sc.fontFrameNames, fontWeight: sc.fontFrameNamesWeight, fontSize: `${(frameNamesSize * 0.5).toFixed(1)}rem`, color: sc.headingColor, whiteSpace: 'pre-wrap', lineHeight: 1.2, wordBreak: 'keep-all' }}>
+              <p {...fieldClick('namen')} style={{ fontFamily: sc.fontFrameNames, fontWeight: sc.fontFrameNamesWeight, fontSize: `${(frameNamesSize * 0.5).toFixed(1)}rem`, color: sc.headingColor, whiteSpace: 'pre-wrap', lineHeight: 1.2, wordBreak: 'keep-all' }}>
                 {frameNames}
               </p>
             )}
             {(hp?.datumVisible !== false) && datumFormatted && (
-              <p style={datumStyleHp}>{datumFormatted}</p>
+              <p {...fieldClick('datum')} style={datumStyleHp}>{datumFormatted}</p>
             )}
             {(hp?.locatieVisible !== false) && frameDisplayLocation && (
-              <p style={locatieStyleHp}>{frameDisplayLocation}</p>
+              <p {...fieldClick('locatie')} style={locatieStyleHp}>{frameDisplayLocation}</p>
             )}
             <div className="my-4" />
             <a
@@ -459,7 +471,7 @@ export default function EventHomePreview({
           <>
             {/* Subtitle above frame */}
             {(hp?.subtitleVisible !== false) && hp?.subtitleText && (
-              <p className="text-center mb-4" style={subtitleStyle}>{hp.subtitleText}</p>
+              <p {...fieldClick('subtitle')} className="text-center mb-4" style={subtitleStyle}>{hp.subtitleText}</p>
             )}
             <div
               className={`relative w-full ${isFullWidth ? "" : "max-w-2xl"}`}
@@ -478,22 +490,22 @@ export default function EventHomePreview({
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <div className={`flex flex-col items-center ${safeZoneClass}`} style={{ transform: "translateY(-9%)" }}>
                   {(hp?.initialsVisible !== false) && initials && (
-                    <p className="fk-initials text-center" style={{ fontFamily: sc.fontInitials, fontWeight: sc.fontInitialsWeight, color: sc.frameBodyText ?? sc.headingColor, whiteSpace: "nowrap", maxWidth: "100%" }}>
+                    <p {...fieldClick('initialen')} className="fk-initials text-center" style={{ fontFamily: sc.fontInitials, fontWeight: sc.fontInitialsWeight, color: sc.frameBodyText ?? sc.headingColor, whiteSpace: "nowrap", maxWidth: "100%" }}>
                       {initials}
                     </p>
                   )}
                   {(hp?.frameNamesVisible !== false) && (
-                    <p className={`fk-names text-center ${(hp?.initialsVisible !== false) && initials ? "mt-[0.25cqi]" : ""}`} style={{ fontFamily: sc.fontFrameNames, fontWeight: sc.fontFrameNamesWeight, color: sc.frameBodyText ?? sc.headingColor, whiteSpace: "pre-wrap", wordBreak: "break-word", maxWidth: "100%" }}>
+                    <p {...fieldClick('namen')} className={`fk-names text-center ${(hp?.initialsVisible !== false) && initials ? "mt-[0.25cqi]" : ""}`} style={{ fontFamily: sc.fontFrameNames, fontWeight: sc.fontFrameNamesWeight, color: sc.frameBodyText ?? sc.headingColor, whiteSpace: "pre-wrap", wordBreak: "break-word", maxWidth: "100%" }}>
                       {frameDisplayNames}
                     </p>
                   )}
                   {(hp?.datumVisible !== false) && datumFormatted && (
-                    <p className="fk-date uppercase text-center mt-[1.1cqi]" style={{ fontFamily: sc.fontFamily, color: sc.frameBodyText ?? sc.bodyText, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>
+                    <p {...fieldClick('datum')} className="fk-date uppercase text-center mt-[1.1cqi]" style={{ fontFamily: sc.fontFamily, color: sc.frameBodyText ?? sc.bodyText, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>
                       {datumFormatted}
                     </p>
                   )}
                   {(hp?.locatieVisible !== false) && frameDisplayLocation && (
-                    <p className="fk-location text-center mt-[0.4cqi]" style={{ fontFamily: sc.fontFamily, color: sc.frameBodyText ?? sc.bodyText, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>
+                    <p {...fieldClick('locatie')} className="fk-location text-center mt-[0.4cqi]" style={{ fontFamily: sc.fontFamily, color: sc.frameBodyText ?? sc.bodyText, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>
                       {frameDisplayLocation}
                     </p>
                   )}
