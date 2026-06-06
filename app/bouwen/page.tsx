@@ -1594,7 +1594,7 @@ export default function BouwenPage() {
                             <span className="text-xs text-gray-500">Grootte</span>
                             <span className="text-xs text-gray-400">{hpSettings.subtitleSize}rem</span>
                           </div>
-                          <input type="range" min={0.7} max={2.5} step={0.1} value={hpSettings.subtitleSize} onChange={(e) => updateHpSettings({ subtitleSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                          <input type="range" min={0.7} max={5} step={0.1} value={hpSettings.subtitleSize} onChange={(e) => updateHpSettings({ subtitleSize: Number(e.target.value) })} className="w-full accent-rose-400" />
                         </div>
                       )}
                     </div>

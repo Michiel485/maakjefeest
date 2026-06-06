@@ -400,20 +400,23 @@ export default function EventHomePreview({
       >
         {elegantMode ? (
           /* ── Elegant Divider composition ── */
-          <div className="w-full max-w-md flex flex-col items-center text-center py-8 gap-3">
-            {(hp?.subtitleVisible !== false) && hp?.subtitleText && (
-              <p style={subtitleStyle}>{hp.subtitleText}</p>
-            )}
-            {(hp?.hoofdtitelVisible !== false) && !hasPhoto && title && (
-              <h1 style={hoofdtitelStyle}>{title}</h1>
-            )}
+          <div className="w-full max-w-3xl flex flex-col items-center text-center py-8 gap-4">
+            {/* Subtitle + Hoofdtitel gegroepeerd met halve ruimte ertussen */}
+            <div className="flex flex-col items-center gap-2 w-full">
+              {(hp?.subtitleVisible !== false) && hp?.subtitleText && (
+                <p style={subtitleStyle}>{hp.subtitleText}</p>
+              )}
+              {(hp?.hoofdtitelVisible !== false) && !hasPhoto && title && (
+                <h1 style={hoofdtitelStyle}>{title}</h1>
+              )}
+            </div>
             {(hp?.initialsVisible !== false) && initials && (
-              <p style={{ fontFamily: sc.fontInitials, fontWeight: sc.fontInitialsWeight, fontSize: `${(frameInitialsSize * 0.5).toFixed(1)}rem`, color: sc.headingColor, letterSpacing: '0.2em' }}>
+              <p style={{ fontFamily: sc.fontInitials, fontWeight: sc.fontInitialsWeight, fontSize: `${(frameInitialsSize * 0.5).toFixed(1)}rem`, color: sc.headingColor, letterSpacing: '0.2em', whiteSpace: 'nowrap' }}>
                 {initials}
               </p>
             )}
             {(hp?.frameNamesVisible !== false) && frameNames && frameNames.trim() && (
-              <p style={{ fontFamily: sc.fontFrameNames, fontWeight: sc.fontFrameNamesWeight, fontSize: `${(frameNamesSize * 0.5).toFixed(1)}rem`, color: sc.headingColor, whiteSpace: 'pre-wrap', lineHeight: 1.2 }}>
+              <p style={{ fontFamily: sc.fontFrameNames, fontWeight: sc.fontFrameNamesWeight, fontSize: `${(frameNamesSize * 0.5).toFixed(1)}rem`, color: sc.headingColor, whiteSpace: 'pre-wrap', lineHeight: 1.2, wordBreak: 'keep-all' }}>
                 {frameNames}
               </p>
             )}
