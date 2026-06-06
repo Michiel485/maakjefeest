@@ -11,6 +11,7 @@ export const TITLE_FONT_OPTIONS = [
   { id: "windsong",     label: "WindSong",              cssVar: "--font-windsong",     weight: 400 },
   { id: "allura",       label: "Allura",                cssVar: "--font-allura",        weight: 400 },
   { id: "bodonimoda",   label: "Bodoni Moda",           cssVar: "--font-bodonimoda",    weight: 400 },
+  { id: "italiana",     label: "Italiana",              cssVar: "--font-italiana",       weight: 400 },
 ] as const
 
 export type TitleFontId = typeof TITLE_FONT_OPTIONS[number]["id"]

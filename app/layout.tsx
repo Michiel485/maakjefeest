@@ -14,6 +14,7 @@ import {
   WindSong,
   Allura,
   Bodoni_Moda,
+  Italiana,
 } from "next/font/google";
 import "./globals.css";
 
@@ -99,6 +100,12 @@ const bodoniModa = Bodoni_Moda({
   weight: ["400", "700"],
 });
 
+const italiana = Italiana({
+  variable: "--font-italiana",
+  subsets: ["latin"],
+  weight: "400",
+});
+
 export const metadata: Metadata = {
   title: "Saying Yes — Jullie bruiloftswebsite",
   description: "Bouw in minuten een prachtige bruiloftswebsite. Eenmalig €39,99 voor een jaar. Deel het programma, verzamel RSVP's en beheer alles in jullie dashboard.",
@@ -112,7 +119,7 @@ export default function RootLayout({
   return (
     <html
       lang="nl"
-      className={`${geistSans.variable} ${geistMono.variable} ${playfairDisplay.variable} ${greatVibes.variable} ${cormorantGaramond.variable} ${pinyonScript.variable} ${cinzel.variable} ${dancingScript.variable} ${montserrat.variable} ${marcellus.variable} ${lora.variable} ${windSong.variable} ${allura.variable} ${bodoniModa.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${playfairDisplay.variable} ${greatVibes.variable} ${cormorantGaramond.variable} ${pinyonScript.variable} ${cinzel.variable} ${dancingScript.variable} ${montserrat.variable} ${marcellus.variable} ${lora.variable} ${windSong.variable} ${allura.variable} ${bodoniModa.variable} ${italiana.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

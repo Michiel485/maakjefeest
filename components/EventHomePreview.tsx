@@ -18,6 +18,7 @@ export interface HomepageSettings {
   initialsVisible: boolean
   frameNamesVisible: boolean
   datumVisible: boolean
+  subtitleVisible: boolean
 }
 
 function clamp(v: number, min: number, max: number) {
@@ -233,7 +234,7 @@ export default function EventHomePreview({
             style={{ backgroundColor: sc.bodyBg }}
           >
             <div className="flex flex-col items-center text-center gap-5 max-w-sm w-full">
-              {hp.subtitleText && (
+              {(hp.subtitleVisible !== false) && hp.subtitleText && (
                 <p style={subtitleStyle}>{hp.subtitleText}</p>
               )}
               {(hp.hoofdtitelVisible !== false) && title && (
@@ -398,46 +399,31 @@ export default function EventHomePreview({
       >
         {elegantMode ? (
           /* ── Elegant Divider composition ── */
-          <div className="w-full max-w-md flex flex-col items-center text-center py-8">
-            <GoldDivider accent={sc.accent} />
-            {hp?.subtitleText && (
-              <>
-                <p style={subtitleStyle}>{hp.subtitleText}</p>
-                <GoldDivider accent={sc.accent} />
-              </>
+          <div className="w-full max-w-md flex flex-col items-center text-center py-8 gap-3">
+            {(hp?.subtitleVisible !== false) && hp?.subtitleText && (
+              <p style={subtitleStyle}>{hp.subtitleText}</p>
             )}
             {(hp?.hoofdtitelVisible !== false) && !hasPhoto && title && (
-              <>
-                <h1 style={hoofdtitelStyle}>{title}</h1>
-                <GoldDivider accent={sc.accent} />
-              </>
+              <h1 style={hoofdtitelStyle}>{title}</h1>
             )}
             {(hp?.initialsVisible !== false) && initials && (
-              <>
-                <p style={{ fontFamily: sc.fontInitials, fontWeight: sc.fontInitialsWeight, fontSize: `${(frameInitialsSize * 0.5).toFixed(1)}rem`, color: sc.headingColor, letterSpacing: '0.2em' }}>
-                  {initials}
-                </p>
-                <GoldDivider accent={sc.accent} />
-              </>
+              <p style={{ fontFamily: sc.fontInitials, fontWeight: sc.fontInitialsWeight, fontSize: `${(frameInitialsSize * 0.5).toFixed(1)}rem`, color: sc.headingColor, letterSpacing: '0.2em' }}>
+                {initials}
+              </p>
             )}
             {(hp?.frameNamesVisible !== false) && frameNames && frameNames.trim() && (
-              <>
-                <p style={{ fontFamily: sc.fontFrameNames, fontWeight: sc.fontFrameNamesWeight, fontSize: `${(frameNamesSize * 0.5).toFixed(1)}rem`, color: sc.headingColor, whiteSpace: 'pre-wrap', lineHeight: 1.2 }}>
-                  {frameNames}
-                </p>
-                <GoldDivider accent={sc.accent} />
-              </>
+              <p style={{ fontFamily: sc.fontFrameNames, fontWeight: sc.fontFrameNamesWeight, fontSize: `${(frameNamesSize * 0.5).toFixed(1)}rem`, color: sc.headingColor, whiteSpace: 'pre-wrap', lineHeight: 1.2 }}>
+                {frameNames}
+              </p>
             )}
             {(hp?.datumVisible !== false) && datumFormatted && (
-              <>
-                <p style={datumStyleHp}>{datumFormatted}</p>
-                <GoldDivider accent={sc.accent} />
-              </>
+              <p style={datumStyleHp}>{datumFormatted}</p>
             )}
+            <GoldDivider accent={sc.accent} />
             <a
               href={rsvpHref}
               onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("RSVP") } : undefined}
-              className="mt-4 inline-block text-sm font-bold px-7 py-3 rounded-xl"
+              className="inline-block text-sm font-bold px-7 py-3 rounded-xl"
               style={{
                 backgroundColor: sc.buttonBg,
                 color: sc.buttonText,
