@@ -421,8 +421,18 @@ export default function BouwenPage() {
   function handlePreviewFieldClick(field: string) {
     setHpOpenGear(field)
     setTimeout(() => {
-      document.getElementById(`hp-field-${field}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    }, 50)
+      const el = document.getElementById(`hp-field-${field}`)
+      if (!el) return
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      const input = el.querySelector<HTMLInputElement | HTMLTextAreaElement>(
+        'input:not([type="range"]):not([type="checkbox"]):not([type="file"]), textarea'
+      )
+      if (input) {
+        input.focus()
+        const len = input.value.length
+        input.setSelectionRange(len, len)
+      }
+    }, 80)
   }
 
   useEffect(() => {
@@ -1713,9 +1723,9 @@ export default function BouwenPage() {
                             <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.frameNamesVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
                           </button>
                           <button
-                            onClick={() => setHpOpenGear(hpOpenGear === 'framenamen' ? null : 'framenamen')}
+                            onClick={() => setHpOpenGear(hpOpenGear === 'namen' ? null : 'namen')}
                             title="Stijl aanpassen"
-                            className={`p-1 rounded-lg transition-colors ${hpOpenGear === 'framenamen' ? 'bg-rose-50 text-rose-500' : 'bg-gray-100 text-gray-500 border border-gray-200 hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200'}`}
+                            className={`p-1 rounded-lg transition-colors ${hpOpenGear === 'namen' ? 'bg-rose-50 text-rose-500' : 'bg-gray-100 text-gray-500 border border-gray-200 hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200'}`}
                           >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                           </button>
@@ -1728,7 +1738,7 @@ export default function BouwenPage() {
                         placeholder={"bijv. Michiel\n& Lindsey"}
                         className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all resize-none"
                       />
-                      {hpOpenGear === 'framenamen' && (
+                      {hpOpenGear === 'namen' && (
                         <div className="flex flex-col gap-2 bg-gray-50 rounded-xl p-3 border border-gray-100">
                           <FontSelect value={fontFrameNames} onChange={saveFontFrameNames} />
                           <div className="flex items-center justify-between">
