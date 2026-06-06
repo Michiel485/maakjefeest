@@ -1425,8 +1425,8 @@ export default function BouwenPage() {
                     <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Lay-out</p>
                     <div className="flex gap-2">
                       {([
-                        { id: 'editorial', label: 'Tijdloos',        sub: 'Layout 1' },
-                        { id: 'modern',    label: 'Gedeelde Liefde', sub: 'Layout 2' },
+                        { id: 'editorial', label: 'Kader',  sub: 'Layout 1' },
+                        { id: 'modern',    label: 'Modern', sub: 'Layout 2' },
                       ] as const).map((opt) => (
                         <button
                           key={opt.id}
