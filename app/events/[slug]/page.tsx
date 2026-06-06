@@ -1,6 +1,6 @@
 import { createServiceClient } from "@/lib/supabase"
 import { getStyleConfig, TYPE_LABEL, formatDate } from "@/lib/event-styles"
-import EventHomePreview from "@/components/EventHomePreview"
+import EventHomePreview, { type HomepageSettings } from "@/components/EventHomePreview"
 
 export const dynamic = "force-dynamic"
 
@@ -15,7 +15,7 @@ export default async function EventHomePage({
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, type, title, datum, locatie, style, font_hero, font_initials, font_frame_names, font_page_titles, hero_image_url, hero_image_pos_x, hero_image_pos_y, hero_overlay, use_frame, frame_style, initials, frame_names, frame_location, frame_initials_size, frame_names_size, frame_date_size, frame_location_size")
+    .select("id, type, title, datum, locatie, style, font_hero, font_initials, font_frame_names, font_page_titles, hero_image_url, hero_image_pos_x, hero_image_pos_y, hero_overlay, use_frame, frame_style, initials, frame_names, frame_location, frame_initials_size, frame_names_size, frame_date_size, frame_location_size, homepage_settings")
     .eq("slug", slug)
     .eq("status", "published")
     .single()
@@ -69,6 +69,7 @@ export default async function EventHomePage({
       homeAlign={(c.align as "left" | "center" | "right") ?? "center"}
       rsvpHref={`${basePath}/RSVP`}
       sc={sc}
+      homepageSettings={(event.homepage_settings as HomepageSettings | null) ?? null}
     />
   )
 }

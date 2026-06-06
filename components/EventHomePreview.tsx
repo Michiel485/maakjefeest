@@ -2,9 +2,35 @@
 
 import { useRef, useState, useCallback } from "react"
 import type { SC } from "@/lib/event-styles"
+import { getTitleFont } from "@/lib/title-fonts"
+
+export interface HomepageSettings {
+  layout: 'editorial' | 'modern'
+  subtitleText: string
+  subtitleFont: string
+  subtitleSize: number
+  hoofdtitelVisible: boolean
+  hoofdtitelFont: string
+  hoofdtitelSize: number
+  datumFont: string
+  datumSize: number
+  titlePosition: 'over' | 'under'
+}
 
 function clamp(v: number, min: number, max: number) {
   return Math.min(max, Math.max(min, v))
+}
+
+function GoldDivider({ accent }: { accent: string }) {
+  return (
+    <div className="flex items-center gap-3 my-4 w-full">
+      <div style={{ flex: 1, height: 1, backgroundColor: `${accent}60` }} />
+      <svg width="6" height="6" viewBox="0 0 8 8" fill={accent}>
+        <path d="M4 0 L8 4 L4 8 L0 4 Z" />
+      </svg>
+      <div style={{ flex: 1, height: 1, backgroundColor: `${accent}60` }} />
+    </div>
+  )
 }
 
 export interface EventHomePreviewProps {
@@ -33,6 +59,7 @@ export interface EventHomePreviewProps {
   frameLocationSize?: number
   onNavigate?: (pageId: string) => void
   rsvpHref?: string
+  homepageSettings?: HomepageSettings | null
 }
 
 export default function EventHomePreview({
@@ -61,6 +88,7 @@ export default function EventHomePreview({
   frameLocationSize = 1.8,
   onNavigate,
   rsvpHref = "/RSVP",
+  homepageSettings,
 }: EventHomePreviewProps) {
   const hasPhoto = !!heroImageUrl
   const showOverlay = hasPhoto && heroOverlay
@@ -97,11 +125,10 @@ export default function EventHomePreview({
 
   const isBoldHero = sc.fontHeroWeight >= 700
 
-  // Texts shown inside the frame — dedicated fields take priority over event data
   const frameDisplayNames    = (frameNames    && frameNames.trim())    ? frameNames    : title
   const frameDisplayLocation = (frameLocation && frameLocation.trim()) ? frameLocation : (locatie ?? "")
 
-  // Countdown: strip timezone/time noise by normalising both dates to midnight
+  // Countdown
   let countdownText = "NOG ... DAGEN • TOT WE JA ZEGGEN"
   if (datum) {
     const today = new Date(); today.setHours(0, 0, 0, 0)
@@ -113,198 +140,359 @@ export default function EventHomePreview({
     else                 countdownText = `JUST MARRIED • ${datumFormatted ?? ""}`
   }
 
-  // Frame filename exceptions (non-.png.png files)
   const FRAME_FILE: Record<string, string> = {
     "olive-rectangle":  "olive-rectangle.png.PNG",
     "bloem-rechthoek":  "Bloem-rechthoek.png",
     "bloem2-breed":     "Bloem2-breed.png",
   }
   const frameFile = (id: string) => FRAME_FILE[id] ?? `${id}.png.png`
-
-  // Full-width frames fill the section without max-w-2xl cap
   const isFullWidth = frameStyle === "bloem-rechthoek" || frameStyle === "bloem2-breed"
-
-  // Safe zone: diamonds widest at center, circles taper, rectangles/squares wide, bloem narrower center
   const isDiamond   = frameStyle?.includes("diamond")
   const isRectangle = frameStyle?.includes("rectangle") || frameStyle?.includes("square")
   const safeZoneClass = isDiamond ? "w-[80%] mx-auto" : isFullWidth ? "w-[50%] mx-auto" : isRectangle ? "w-[72%] mx-auto" : "w-[65%] mx-auto"
 
-  return (
-    <div className="@container">
-      {/* ── Hero: only rendered when a photo is set ── */}
-      {hasPhoto && (
-        <section
-          ref={heroRef}
-          className={`relative w-full h-[300px] @md:h-[420px] overflow-hidden select-none ${
-            editableHero ? heroDragging ? "cursor-grabbing" : "cursor-grab" : ""
-          }`}
-          onMouseDown={editableHero ? (e) => { e.preventDefault(); startHeroDrag(e.clientX, e.clientY) } : undefined}
-          onMouseMove={editableHero ? (e) => moveHeroDrag(e.clientX, e.clientY) : undefined}
-          onMouseUp={editableHero ? endHeroDrag : undefined}
-          onMouseLeave={editableHero ? endHeroDrag : undefined}
-          onTouchStart={editableHero ? (e) => startHeroDrag(e.touches[0].clientX, e.touches[0].clientY) : undefined}
-          onTouchMove={editableHero ? (e) => { e.preventDefault(); moveHeroDrag(e.touches[0].clientX, e.touches[0].clientY) } : undefined}
-          onTouchEnd={editableHero ? endHeroDrag : undefined}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={heroImageUrl!}
-            alt=""
-            draggable={false}
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{ objectPosition: `${heroPos.x}% ${heroPos.y}%` }}
-          />
-          {editableHero && !heroDragging && (
-            <div className="absolute bottom-3 left-0 right-0 flex justify-center pointer-events-none">
-              <span className="text-xs px-3 py-1 rounded-full opacity-80" style={{ backgroundColor: "rgba(0,0,0,0.5)", color: "#fff" }}>
-                Sleep om te positioneren
-              </span>
-            </div>
-          )}
+  // ── Resolve hp settings fonts ──────────────────────────────────────────────
+  const hp = homepageSettings
+  const subtitleFontResult  = getTitleFont(hp?.subtitleFont)
+  const hoofdtitelFontResult = getTitleFont(hp?.hoofdtitelFont)
+  const datumFontResult     = getTitleFont(hp?.datumFont)
 
-          {showOverlay && (
-            <div
-              className="absolute inset-0"
-              style={
-                sc.floral
-                  ? { background: "linear-gradient(to bottom, rgba(28,25,23,0.12) 0%, rgba(28,25,23,0.44) 100%)" }
-                  : { backgroundColor: sc.accent, opacity: 0.35 }
-              }
-            />
-          )}
+  const subtitleStyle: React.CSSProperties = {
+    fontFamily: subtitleFontResult.family,
+    fontWeight: subtitleFontResult.weight,
+    fontSize: `${hp?.subtitleSize ?? 1.1}rem`,
+    color: sc.bodyText,
+    letterSpacing: '0.02em',
+  }
 
-          {title && (
-            <div className="absolute inset-0 flex items-center justify-center px-8 text-center">
-              <h1
-                className={`leading-tight whitespace-pre-wrap text-4xl ${isBoldHero ? "@md:text-6xl" : "@md:text-[4.5rem]"}`}
+  const hoofdtitelStyle: React.CSSProperties = {
+    fontFamily: hoofdtitelFontResult.family,
+    fontWeight: hoofdtitelFontResult.weight,
+    fontSize: `${hp?.hoofdtitelSize ?? 5.5}rem`,
+    color: sc.headingColor,
+    lineHeight: 1.1,
+    whiteSpace: 'pre-wrap',
+  }
+
+  const datumStyleHp: React.CSSProperties = {
+    fontFamily: datumFontResult.family,
+    fontWeight: datumFontResult.weight,
+    fontSize: `${hp?.datumSize ?? 1.6}rem`,
+    color: sc.accent,
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase',
+  }
+
+  // ── Layout 2: Modern split-screen ─────────────────────────────────────────
+  if (hp?.layout === 'modern') {
+    return (
+      <div className="@container">
+        {/* Split: photo left, text right */}
+        <div className="flex flex-col @md:flex-row min-h-[70vh]">
+
+          {/* Photo panel (left on desktop, top on mobile) */}
+          <div className="@md:w-1/2 h-64 @md:h-auto relative overflow-hidden"
+            onMouseDown={editableHero ? (e) => { e.preventDefault(); startHeroDrag(e.clientX, e.clientY) } : undefined}
+            onMouseMove={editableHero ? (e) => moveHeroDrag(e.clientX, e.clientY) : undefined}
+            onMouseUp={editableHero ? endHeroDrag : undefined}
+            onMouseLeave={editableHero ? endHeroDrag : undefined}
+            onTouchStart={editableHero ? (e) => startHeroDrag(e.touches[0].clientX, e.touches[0].clientY) : undefined}
+            onTouchMove={editableHero ? (e) => { e.preventDefault(); moveHeroDrag(e.touches[0].clientX, e.touches[0].clientY) } : undefined}
+            onTouchEnd={editableHero ? endHeroDrag : undefined}
+            style={{ cursor: editableHero && heroImageUrl ? (heroDragging ? 'grabbing' : 'grab') : 'default' }}
+          >
+            {heroImageUrl ? (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={heroImageUrl}
+                  alt=""
+                  draggable={false}
+                  className="absolute inset-0 w-full h-full object-cover select-none"
+                  style={{ objectPosition: `${heroPos.x}% ${heroPos.y}%` }}
+                />
+                {editableHero && !heroDragging && (
+                  <div className="absolute bottom-3 left-0 right-0 flex justify-center pointer-events-none">
+                    <span className="text-xs px-3 py-1 rounded-full opacity-80" style={{ backgroundColor: "rgba(0,0,0,0.5)", color: "#fff" }}>
+                      Sleep om te positioneren
+                    </span>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="w-full h-full" style={{ backgroundColor: `${sc.accent}30` }} />
+            )}
+          </div>
+
+          {/* Text panel (right on desktop, bottom on mobile) */}
+          <div
+            className="@md:w-1/2 flex items-center justify-center px-10 py-14 @md:py-20"
+            style={{ backgroundColor: sc.bodyBg }}
+          >
+            <div className="flex flex-col items-center text-center gap-5 max-w-sm w-full">
+              {hp.subtitleText && (
+                <p style={subtitleStyle}>{hp.subtitleText}</p>
+              )}
+              {(hp.hoofdtitelVisible !== false) && title && (
+                <h1 style={{ ...hoofdtitelStyle, fontSize: `clamp(2rem, ${hp?.hoofdtitelSize ?? 5.5}rem, ${(hp?.hoofdtitelSize ?? 5.5) * 1.2}rem)` }}>
+                  {title}
+                </h1>
+              )}
+              {datumFormatted && (
+                <p style={datumStyleHp}>{datumFormatted}</p>
+              )}
+              <a
+                href={rsvpHref}
+                onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("RSVP") } : undefined}
+                className="mt-4 inline-block text-sm font-bold px-7 py-3 rounded-xl"
                 style={{
-                  color: "#fff",
-                  fontFamily: sc.fontHero,
-                  fontWeight: sc.fontHeroWeight,
-                  filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.75))",
+                  backgroundColor: sc.buttonBg,
+                  color: sc.buttonText,
+                  textDecoration: "none",
+                  boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
+                  fontFamily: sc.fontFamily,
                 }}
               >
-                {title}
-              </h1>
+                Meld je aan
+              </a>
             </div>
-          )}
-        </section>
-      )}
+          </div>
+        </div>
 
-      {/* ── Luxe Trouwkaart + CTA ── */}
+        {/* Countdown strip */}
+        {datum && (
+          <div
+            className="w-full py-3 text-center"
+            style={{
+              backgroundColor: sc.bodyBg,
+              borderTop: `1px solid ${sc.accent}50`,
+              borderBottom: `1px solid ${sc.accent}50`,
+            }}
+          >
+            <p className="text-sm font-medium uppercase" style={{ color: sc.accent, letterSpacing: "0.18em", fontFamily: sc.fontFamily }}>
+              {countdownText}
+            </p>
+          </div>
+        )}
+
+        {/* Welcome content */}
+        {(homeTitle || homeBody) && (
+          <div className="px-8 py-10" style={{ backgroundColor: sc.bodyBackground ? "transparent" : sc.navBg }}>
+            {homeTitle && (
+              <p className="font-bold mb-2 whitespace-pre-wrap text-base" style={{ color: sc.headingColor, fontFamily: sc.fontFamily, textAlign: homeAlign }}>
+                {homeTitle}
+              </p>
+            )}
+            {homeBody && (
+              <p className="leading-relaxed whitespace-pre-wrap text-[0.9375rem]" style={{ color: sc.bodyText, fontFamily: sc.fontFamily, textAlign: homeAlign }}>
+                {homeBody}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // ── Layout 1: Editorial (existing behavior + enhancements) ─────────────────
+
+  const showTitleOverPhoto = hasPhoto && (hp?.titlePosition ?? 'over') === 'over' && (hp?.hoofdtitelVisible !== false)
+  const showTitleUnderPhoto = (hp?.hoofdtitelVisible !== false) && (
+    !hasPhoto || (hp?.titlePosition === 'under')
+  )
+  // "Elegant Divider" mode: no frame, show subtitle/title/date as composition
+  const elegantMode = !useFrame
+
+  const heroSection = hasPhoto ? (
+    <section
+      ref={heroRef}
+      className={`relative w-full h-[300px] @md:h-[420px] overflow-hidden select-none ${
+        editableHero ? heroDragging ? "cursor-grabbing" : "cursor-grab" : ""
+      }`}
+      onMouseDown={editableHero ? (e) => { e.preventDefault(); startHeroDrag(e.clientX, e.clientY) } : undefined}
+      onMouseMove={editableHero ? (e) => moveHeroDrag(e.clientX, e.clientY) : undefined}
+      onMouseUp={editableHero ? endHeroDrag : undefined}
+      onMouseLeave={editableHero ? endHeroDrag : undefined}
+      onTouchStart={editableHero ? (e) => startHeroDrag(e.touches[0].clientX, e.touches[0].clientY) : undefined}
+      onTouchMove={editableHero ? (e) => { e.preventDefault(); moveHeroDrag(e.touches[0].clientX, e.touches[0].clientY) } : undefined}
+      onTouchEnd={editableHero ? endHeroDrag : undefined}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={heroImageUrl!}
+        alt=""
+        draggable={false}
+        className="absolute inset-0 w-full h-full object-cover"
+        style={{ objectPosition: `${heroPos.x}% ${heroPos.y}%` }}
+      />
+      {editableHero && !heroDragging && (
+        <div className="absolute bottom-3 left-0 right-0 flex justify-center pointer-events-none">
+          <span className="text-xs px-3 py-1 rounded-full opacity-80" style={{ backgroundColor: "rgba(0,0,0,0.5)", color: "#fff" }}>
+            Sleep om te positioneren
+          </span>
+        </div>
+      )}
+      {showOverlay && (
+        <div
+          className="absolute inset-0"
+          style={
+            sc.floral
+              ? { background: "linear-gradient(to bottom, rgba(28,25,23,0.12) 0%, rgba(28,25,23,0.44) 100%)" }
+              : { backgroundColor: sc.accent, opacity: 0.35 }
+          }
+        />
+      )}
+      {/* Title OVER the photo */}
+      {showTitleOverPhoto && title && (
+        <div className="absolute inset-0 flex items-center justify-center px-8 text-center">
+          <h1
+            className={`leading-tight whitespace-pre-wrap text-4xl ${isBoldHero ? "@md:text-6xl" : "@md:text-[4.5rem]"}`}
+            style={{
+              color: "#fff",
+              fontFamily: hp?.hoofdtitelFont ? hoofdtitelFontResult.family : sc.fontHero,
+              fontWeight: hp?.hoofdtitelFont ? hoofdtitelFontResult.weight : sc.fontHeroWeight,
+              filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.75))",
+            }}
+          >
+            {title}
+          </h1>
+        </div>
+      )}
+    </section>
+  ) : null
+
+  // Title under photo (or no photo): show above frame / elegant divider
+  const titleUnderSection = showTitleUnderPhoto && title ? (
+    <div className="flex flex-col items-center text-center px-8 pt-8 pb-2" style={{ backgroundColor: sc.bodyBg }}>
+      <h1
+        className="leading-tight whitespace-pre-wrap"
+        style={{
+          fontFamily: hoofdtitelFontResult.family,
+          fontWeight: hoofdtitelFontResult.weight,
+          fontSize: `${hp?.hoofdtitelSize ?? 5.5}rem`,
+          color: sc.headingColor,
+        }}
+      >
+        {title}
+      </h1>
+    </div>
+  ) : null
+
+  return (
+    <div className="@container">
+      {heroSection}
+
+      {/* Title under photo (if applicable) */}
+      {hasPhoto && showTitleUnderPhoto && titleUnderSection}
+
+      {/* No photo → title above frame/divider */}
+      {!hasPhoto && showTitleUnderPhoto && titleUnderSection}
+
+      {/* Card / Elegant Divider section */}
       <section
         className={`w-full flex flex-col items-center ${isFullWidth ? "pt-0 pb-0 px-0" : "pt-6 pb-8 px-6"}`}
         style={{ backgroundColor: sc.bodyBg }}
       >
-        {useFrame && frameStyle ? (
-          /* Container-query wrapper — text scales proportionally with the image */
-          <div
-            className={`relative w-full ${isFullWidth ? "" : "max-w-2xl"}`}
-            style={{ containerType: "inline-size" } as React.CSSProperties}
-          >
-            <style>{`
-              .fk-initials  { font-size: clamp(1.2rem, ${frameInitialsSize}cqi, 8rem);   line-height: 1.1; letter-spacing: 0.2em; padding-top: 0.35em; padding-bottom: 0.08em; }
-              .fk-names     { font-size: clamp(1rem,   ${frameNamesSize}cqi,    6rem);   line-height: 1.2; }
-              .fk-date      { font-size: clamp(0.5rem, ${frameDateSize}cqi,     3rem);   letter-spacing: 0.18em; }
-              .fk-location  { font-size: clamp(0.5rem, ${frameLocationSize}cqi, 3rem);   }
-            `}</style>
-
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`${process.env.NEXT_PUBLIC_ASSET_ORIGIN ?? ""}/frames/${frameFile(frameStyle!)}`} alt="" className="w-full h-auto block" />
-
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <div className={`flex flex-col items-center ${safeZoneClass}`} style={{ transform: "translateY(-9%)" }}>
-                {initials && (
-                  <p
-                    className="fk-initials text-center"
-                    style={{
-                      fontFamily: sc.fontInitials,
-                      fontWeight: sc.fontInitialsWeight,
-                      color: sc.frameBodyText ?? sc.headingColor,
-                      whiteSpace: "nowrap",
-                      maxWidth: "100%",
-                    }}
-                  >
-                    {initials}
-                  </p>
-                )}
-
-                <p
-                  className={`fk-names text-center ${initials ? "mt-[0.25cqi]" : ""}`}
-                  style={{
-                    fontFamily: sc.fontFrameNames,
-                    fontWeight: sc.fontFrameNamesWeight,
-                    color: sc.frameBodyText ?? sc.headingColor,
-                    whiteSpace: "pre-wrap",
-                    wordBreak: "break-word",
-                    maxWidth: "100%",
-                  }}
-                >
-                  {frameDisplayNames}
-                </p>
-
-                {datumFormatted && (
-                  <p
-                    className="fk-date uppercase text-center mt-[1.1cqi]"
-                    style={{
-                      fontFamily: sc.fontFamily,
-                      color: sc.frameBodyText ?? sc.bodyText,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      maxWidth: "100%",
-                    }}
-                  >
-                    {datumFormatted}
-                  </p>
-                )}
-
-                {frameDisplayLocation && (
-                  <p
-                    className="fk-location text-center mt-[0.4cqi]"
-                    style={{
-                      fontFamily: sc.fontFamily,
-                      color: sc.frameBodyText ?? sc.bodyText,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      maxWidth: "100%",
-                    }}
-                  >
-                    {frameDisplayLocation}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* CTA inside frame for full-width frames */}
-            {isFullWidth && (
-              <div className="absolute inset-x-0 flex justify-center" style={{ top: "82%" }}>
-                <a
-                  href={rsvpHref}
-                  onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("RSVP") } : undefined}
-                  className="inline-block text-xs @md:text-sm font-bold px-3.5 py-1.5 @md:px-7 @md:py-3 rounded-lg @md:rounded-xl"
-                  style={{
-                    backgroundColor: sc.buttonBg,
-                    color: sc.buttonText,
-                    textDecoration: "none",
-                    boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
-                    fontFamily: sc.fontFamily,
-                  }}
-                >
-                  Meld je aan
-                </a>
-              </div>
+        {elegantMode ? (
+          /* ── Elegant Divider composition ── */
+          <div className="w-full max-w-md flex flex-col items-center text-center py-8">
+            <GoldDivider accent={sc.accent} />
+            {hp?.subtitleText && (
+              <>
+                <p style={subtitleStyle}>{hp.subtitleText}</p>
+                <GoldDivider accent={sc.accent} />
+              </>
             )}
+            {(hp?.hoofdtitelVisible !== false) && !hasPhoto && title && (
+              <>
+                <h1 style={hoofdtitelStyle}>{title}</h1>
+                <GoldDivider accent={sc.accent} />
+              </>
+            )}
+            {datumFormatted && (
+              <>
+                <p style={datumStyleHp}>{datumFormatted}</p>
+                <GoldDivider accent={sc.accent} />
+              </>
+            )}
+            <a
+              href={rsvpHref}
+              onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("RSVP") } : undefined}
+              className="mt-4 inline-block text-sm font-bold px-7 py-3 rounded-xl"
+              style={{
+                backgroundColor: sc.buttonBg,
+                color: sc.buttonText,
+                textDecoration: "none",
+                boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
+                fontFamily: sc.fontFamily,
+              }}
+            >
+              Meld je aan
+            </a>
           </div>
+        ) : useFrame && frameStyle ? (
+          /* ── Luxe Trouwkaart (frame) ── */
+          <>
+            {/* Subtitle above frame */}
+            {hp?.subtitleText && (
+              <p className="text-center mb-4" style={subtitleStyle}>{hp.subtitleText}</p>
+            )}
+            <div
+              className={`relative w-full ${isFullWidth ? "" : "max-w-2xl"}`}
+              style={{ containerType: "inline-size" } as React.CSSProperties}
+            >
+              <style>{`
+                .fk-initials  { font-size: clamp(1.2rem, ${frameInitialsSize}cqi, 8rem);   line-height: 1.1; letter-spacing: 0.2em; padding-top: 0.35em; padding-bottom: 0.08em; }
+                .fk-names     { font-size: clamp(1rem,   ${frameNamesSize}cqi,    6rem);   line-height: 1.2; }
+                .fk-date      { font-size: clamp(0.5rem, ${frameDateSize}cqi,     3rem);   letter-spacing: 0.18em; }
+                .fk-location  { font-size: clamp(0.5rem, ${frameLocationSize}cqi, 3rem);   }
+              `}</style>
+
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={`${process.env.NEXT_PUBLIC_ASSET_ORIGIN ?? ""}/frames/${frameFile(frameStyle!)}`} alt="" className="w-full h-auto block" />
+
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <div className={`flex flex-col items-center ${safeZoneClass}`} style={{ transform: "translateY(-9%)" }}>
+                  {initials && (
+                    <p className="fk-initials text-center" style={{ fontFamily: sc.fontInitials, fontWeight: sc.fontInitialsWeight, color: sc.frameBodyText ?? sc.headingColor, whiteSpace: "nowrap", maxWidth: "100%" }}>
+                      {initials}
+                    </p>
+                  )}
+                  <p className={`fk-names text-center ${initials ? "mt-[0.25cqi]" : ""}`} style={{ fontFamily: sc.fontFrameNames, fontWeight: sc.fontFrameNamesWeight, color: sc.frameBodyText ?? sc.headingColor, whiteSpace: "pre-wrap", wordBreak: "break-word", maxWidth: "100%" }}>
+                    {frameDisplayNames}
+                  </p>
+                  {datumFormatted && (
+                    <p className="fk-date uppercase text-center mt-[1.1cqi]" style={{ fontFamily: sc.fontFamily, color: sc.frameBodyText ?? sc.bodyText, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>
+                      {datumFormatted}
+                    </p>
+                  )}
+                  {frameDisplayLocation && (
+                    <p className="fk-location text-center mt-[0.4cqi]" style={{ fontFamily: sc.fontFamily, color: sc.frameBodyText ?? sc.bodyText, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>
+                      {frameDisplayLocation}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {isFullWidth && (
+                <div className="absolute inset-x-0 flex justify-center" style={{ top: "82%" }}>
+                  <a
+                    href={rsvpHref}
+                    onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("RSVP") } : undefined}
+                    className="inline-block text-xs @md:text-sm font-bold px-3.5 py-1.5 @md:px-7 @md:py-3 rounded-lg @md:rounded-xl"
+                    style={{ backgroundColor: sc.buttonBg, color: sc.buttonText, textDecoration: "none", boxShadow: "0 4px 14px rgba(0,0,0,0.15)", fontFamily: sc.fontFamily }}
+                  >
+                    Meld je aan
+                  </a>
+                </div>
+              )}
+            </div>
+          </>
         ) : (
           /* No frame: only date + location, minimal */
           <div className="flex flex-col items-center gap-2 pt-4 pb-0 text-center">
             {datumFormatted && (
-              <p
-                className="uppercase tracking-[0.18em] font-medium"
-                style={{ color: sc.headingColor, fontFamily: sc.fontFamily, fontSize: `${(frameDateSize * 0.5).toFixed(2)}rem` }}
-              >
+              <p className="uppercase tracking-[0.18em] font-medium" style={{ color: sc.headingColor, fontFamily: sc.fontFamily, fontSize: `${(frameDateSize * 0.5).toFixed(2)}rem` }}>
                 {datumFormatted}
               </p>
             )}
@@ -316,58 +504,36 @@ export default function EventHomePreview({
           </div>
         )}
 
-        {/* CTA below frame — only for non-full-width frames and no-frame layout */}
-        {!isFullWidth && (
+        {/* CTA below frame — only for non-full-width frames */}
+        {useFrame && frameStyle && !isFullWidth && (
           <a
             href={rsvpHref}
             onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("RSVP") } : undefined}
             className="mt-6 inline-block text-sm font-bold px-7 py-3 rounded-xl"
-            style={{
-              backgroundColor: sc.buttonBg,
-              color: sc.buttonText,
-              textDecoration: "none",
-              boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
-              fontFamily: sc.fontFamily,
-            }}
+            style={{ backgroundColor: sc.buttonBg, color: sc.buttonText, textDecoration: "none", boxShadow: "0 4px 14px rgba(0,0,0,0.15)", fontFamily: sc.fontFamily }}
           >
             Meld je aan
           </a>
         )}
       </section>
 
-      {/* ── Countdown strip ── */}
-      <div
-        className="w-full py-3 text-center"
-        style={{
-          backgroundColor: sc.bodyBg,
-          borderTop: `1px solid ${sc.accent}50`,
-          borderBottom: `1px solid ${sc.accent}50`,
-        }}
-      >
-        <p
-          className="text-sm font-medium uppercase"
-          style={{ color: sc.accent, letterSpacing: "0.18em", fontFamily: sc.fontFamily }}
-        >
+      {/* Countdown strip */}
+      <div className="w-full py-3 text-center" style={{ backgroundColor: sc.bodyBg, borderTop: `1px solid ${sc.accent}50`, borderBottom: `1px solid ${sc.accent}50` }}>
+        <p className="text-sm font-medium uppercase" style={{ color: sc.accent, letterSpacing: "0.18em", fontFamily: sc.fontFamily }}>
           {countdownText}
         </p>
       </div>
 
-      {/* ── Home content ── */}
+      {/* Home content (Welkomstbericht) */}
       {(homeTitle || homeBody) && (
         <div className="px-8 py-10" style={{ backgroundColor: sc.bodyBackground ? "transparent" : sc.navBg }}>
           {homeTitle && (
-            <p
-              className={`font-bold mb-2 whitespace-pre-wrap ${sc.floral ? "text-xl" : "text-base"}`}
-              style={{ color: sc.headingColor, fontFamily: sc.fontFamily, textAlign: homeAlign }}
-            >
+            <p className={`font-bold mb-2 whitespace-pre-wrap ${sc.floral ? "text-xl" : "text-base"}`} style={{ color: sc.headingColor, fontFamily: sc.fontFamily, textAlign: homeAlign }}>
               {homeTitle}
             </p>
           )}
           {homeBody && (
-            <p
-              className={`leading-relaxed whitespace-pre-wrap ${sc.floral ? "text-lg" : "text-[0.9375rem]"}`}
-              style={{ color: sc.bodyText, fontFamily: sc.fontFamily, textAlign: homeAlign }}
-            >
+            <p className={`leading-relaxed whitespace-pre-wrap ${sc.floral ? "text-lg" : "text-[0.9375rem]"}`} style={{ color: sc.bodyText, fontFamily: sc.fontFamily, textAlign: homeAlign }}>
               {homeBody}
             </p>
           )}

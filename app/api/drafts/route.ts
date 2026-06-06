@@ -111,6 +111,7 @@ export async function POST(request: Request) {
     pages: string[]
     content?: Record<string, Record<string, unknown>>
     event_id?: string
+    homepage_settings?: Record<string, unknown> | null
   }
 
   try {
@@ -148,6 +149,7 @@ export async function POST(request: Request) {
     pages,
     content = {},
     event_id,
+    homepage_settings = null,
   } = body
 
   if (!type) {
@@ -174,7 +176,7 @@ export async function POST(request: Request) {
       ))
       const { error: updateErr } = await db
         .from("events")
-        .update({ type, title: naam, datum, locatie, style, font_hero, font_initials, font_frame_names, font_page_titles, hero_image_url, hero_image_pos_x: Math.round(hero_image_pos_x), hero_image_pos_y: Math.round(hero_image_pos_y), hero_overlay: heroOverlay, nav_layout, nav_title: nav_title ?? naam, use_frame, frame_style, initials, frame_names, frame_location, frame_initials_size: frameInitialsSize, frame_names_size: frameNamesSize, frame_date_size: frameDateSize, frame_location_size: frameLocationSize })
+        .update({ type, title: naam, datum, locatie, style, font_hero, font_initials, font_frame_names, font_page_titles, hero_image_url, hero_image_pos_x: Math.round(hero_image_pos_x), hero_image_pos_y: Math.round(hero_image_pos_y), hero_overlay: heroOverlay, nav_layout, nav_title: nav_title ?? naam, use_frame, frame_style, initials, frame_names, frame_location, frame_initials_size: frameInitialsSize, frame_names_size: frameNamesSize, frame_date_size: frameDateSize, frame_location_size: frameLocationSize, homepage_settings })
         .eq("id", event_id)
 
       if (updateErr) {
@@ -239,6 +241,7 @@ export async function POST(request: Request) {
       frame_names_size: frameNamesSize,
       frame_date_size: frameDateSize,
       frame_location_size: frameLocationSize,
+      homepage_settings,
     })
     .select("id, slug")
     .single()
