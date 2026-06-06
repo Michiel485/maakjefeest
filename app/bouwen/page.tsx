@@ -1538,30 +1538,28 @@ export default function BouwenPage() {
                             <span className="text-xs text-gray-400">{hpSettings.hoofdtitelSize}rem</span>
                           </div>
                           <input type="range" min={2} max={10} step={0.25} value={hpSettings.hoofdtitelSize} onChange={(e) => updateHpSettings({ hoofdtitelSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                          {heroImageUrl && (
+                            <>
+                              <p className="text-xs text-gray-500 mt-1">Positie</p>
+                              <div className="flex rounded-xl border border-gray-200 overflow-hidden bg-white">
+                                {([
+                                  { id: 'over',  label: 'Over foto'  },
+                                  { id: 'under', label: 'Onder foto' },
+                                ] as const).map((opt) => (
+                                  <button
+                                    key={opt.id}
+                                    onClick={() => updateHpSettings({ titlePosition: opt.id })}
+                                    className={`flex-1 py-2 text-xs font-semibold transition-colors ${hpSettings.titlePosition === opt.id ? 'bg-rose-500 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+                                  >
+                                    {opt.label}
+                                  </button>
+                                ))}
+                              </div>
+                            </>
+                          )}
                         </div>
                       )}
                     </div>
-
-                    {/* 4. Hoofdtitel positie — only when photo exists */}
-                    {heroImageUrl && hpSettings.hoofdtitelVisible && (
-                      <div>
-                        <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Hoofdtitel positie</p>
-                        <div className="flex rounded-xl border border-gray-200 overflow-hidden">
-                          {([
-                            { id: 'over',  label: 'Over foto'  },
-                            { id: 'under', label: 'Onder foto' },
-                          ] as const).map((opt) => (
-                            <button
-                              key={opt.id}
-                              onClick={() => updateHpSettings({ titlePosition: opt.id })}
-                              className={`flex-1 py-2 text-xs font-semibold transition-colors ${hpSettings.titlePosition === opt.id ? 'bg-rose-500 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
-                            >
-                              {opt.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
 
                     <div className="border-t border-gray-100" />
 

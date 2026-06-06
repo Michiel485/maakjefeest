@@ -458,7 +458,7 @@ export default function EventHomePreview({
           /* ── Luxe Trouwkaart (frame) ── */
           <>
             {/* Subtitle above frame */}
-            {hp?.subtitleText && (
+            {(hp?.subtitleVisible !== false) && hp?.subtitleText && (
               <p className="text-center mb-4" style={subtitleStyle}>{hp.subtitleText}</p>
             )}
             <div
