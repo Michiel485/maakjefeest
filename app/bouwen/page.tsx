@@ -2289,7 +2289,7 @@ export default function BouwenPage() {
                               <>
                                 {/* Ben je erbij? */}
                                 <div>
-                                  <div className="text-sm font-semibold mb-3" style={{ color: "#374151" }}>Ben je erbij?</div>
+                                  <div className="text-sm font-semibold mb-3" style={{ color: sc.bodyText }}>Ben je erbij?</div>
                                   <div className="flex flex-col gap-2 sm:flex-row">
                                     <div className="flex-1 py-3 px-4 rounded-xl font-semibold text-sm flex items-center gap-3"
                                       style={{ backgroundColor: "#ecfdf5", border: "2px solid #10b981", color: "#065f46" }}>
@@ -2303,7 +2303,7 @@ export default function BouwenPage() {
                                 </div>
                                 {/* Aantal personen */}
                                 <div>
-                                  <div className="text-sm font-semibold mb-3" style={{ color: "#374151" }}>Met hoeveel personen komen jullie?</div>
+                                  <div className="text-sm font-semibold mb-3" style={{ color: sc.bodyText }}>Met hoeveel personen komen jullie?</div>
                                   <div className="flex gap-2 flex-wrap">
                                     {[1,2,3,4,5,6,7,8].map((n) => (
                                       <div key={n} className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold"
