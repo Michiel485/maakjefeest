@@ -350,11 +350,12 @@ export default function EventHomePreview({
       {showTitleOverPhoto && title && (
         <div className="absolute inset-0 flex items-center justify-center px-8 text-center">
           <h1
-            className={`leading-tight whitespace-pre-wrap text-4xl ${isBoldHero ? "@md:text-6xl" : "@md:text-[4.5rem]"}`}
+            className="leading-tight whitespace-pre-wrap"
             style={{
               color: "#fff",
               fontFamily: hp?.hoofdtitelFont ? hoofdtitelFontResult.family : sc.fontHero,
               fontWeight: hp?.hoofdtitelFont ? hoofdtitelFontResult.weight : sc.fontHeroWeight,
+              fontSize: `${hp?.hoofdtitelSize ?? 5.5}rem`,
               filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.75))",
             }}
           >
