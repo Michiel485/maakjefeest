@@ -121,9 +121,9 @@ export default function EventNav({
 
   const titleStyle: React.CSSProperties = {
     fontSize: sc.floral ? "1.25rem" : "0.9375rem",
-    fontWeight: sc.fontFrameNamesWeight ?? 800,
+    fontWeight: 700,
     letterSpacing: sc.floral ? "0.01em" : "-0.02em",
-    fontFamily: sc.fontFrameNames ?? sc.fontFamily,
+    fontFamily: sc.fontFamily,
     color: sc.navText,
     textDecoration: "none",
     whiteSpace: "nowrap",
