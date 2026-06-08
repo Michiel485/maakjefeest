@@ -243,6 +243,19 @@ export default function EventHomePreview({
                   className="absolute inset-0 w-full h-full object-cover select-none"
                   style={{ objectPosition: `${heroPos.x}% ${heroPos.y}%` }}
                 />
+                {/* Hoofdtitel overlay op foto wanneer "Over foto" gekozen */}
+                {(hp.hoofdtitelVisible !== false) && title && (hp.titlePosition ?? 'under') === 'over' && (
+                  <div className="absolute inset-0 flex items-end p-6 @md:p-10"
+                    style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 55%)' }}
+                  >
+                    <h1
+                      {...fieldClick('hoofdtitel')}
+                      style={{ ...hoofdtitelStyle, color: '#fff', fontSize: `clamp(1.8rem, ${hp.hoofdtitelSize ?? 5.5}rem, ${(hp.hoofdtitelSize ?? 5.5) * 1.2}rem)`, lineHeight: 1.1, textShadow: '0 2px 12px rgba(0,0,0,0.4)' }}
+                    >
+                      {title}
+                    </h1>
+                  </div>
+                )}
                 {editableHero && !heroDragging && (
                   <div className="absolute bottom-3 left-0 right-0 flex justify-center pointer-events-none">
                     <span className="text-xs px-3 py-1 rounded-full opacity-80" style={{ backgroundColor: "rgba(0,0,0,0.5)", color: "#fff" }}>
@@ -265,10 +278,29 @@ export default function EventHomePreview({
               {(hp.subtitleVisible !== false) && hp.subtitleText && (
                 <p {...fieldClick('subtitle')} style={subtitleStyle}>{hp.subtitleText}</p>
               )}
-              {(hp.hoofdtitelVisible !== false) && title && (
+              {/* Hoofdtitel in tekstvlak wanneer "In tekstvlak" (under) gekozen */}
+              {(hp.hoofdtitelVisible !== false) && title && (hp.titlePosition ?? 'under') !== 'over' && (
                 <h1 {...fieldClick('hoofdtitel')} style={{ ...hoofdtitelStyle, fontSize: `clamp(2rem, ${hp?.hoofdtitelSize ?? 5.5}rem, ${(hp?.hoofdtitelSize ?? 5.5) * 1.2}rem)` }}>
                   {title}
                 </h1>
+              )}
+              {/* Initialen */}
+              {(hp.initialsVisible !== false) && initials && (
+                <p
+                  {...fieldClick('initialen')}
+                  style={{ fontFamily: sc.fontInitials, fontWeight: sc.fontInitialsWeight, fontSize: `${frameInitialsSize * 0.5}rem`, color: sc.accent, letterSpacing: '0.2em', whiteSpace: 'nowrap' }}
+                >
+                  {initials}
+                </p>
+              )}
+              {/* Namen in kader */}
+              {(hp.frameNamesVisible !== false) && frameNames && frameNames.trim() && (
+                <p
+                  {...fieldClick('namen')}
+                  style={{ fontFamily: sc.fontFrameNames, fontWeight: sc.fontFrameNamesWeight, fontSize: `clamp(1.5rem, ${frameNamesSize * 0.5}rem, ${frameNamesSize * 0.6}rem)`, color: sc.headingColor, whiteSpace: 'pre-wrap', lineHeight: 1.2 }}
+                >
+                  {frameNames}
+                </p>
               )}
               {(hp.datumVisible !== false) && datumFormatted && (
                 <p {...fieldClick('datum')} style={datumStyleHp}>{datumFormatted}</p>

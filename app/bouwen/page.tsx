@@ -1549,13 +1549,13 @@ export default function BouwenPage() {
                             <span className="text-xs text-gray-400">{hpSettings.hoofdtitelSize}rem</span>
                           </div>
                           <input type="range" min={2} max={10} step={0.25} value={hpSettings.hoofdtitelSize} onChange={(e) => updateHpSettings({ hoofdtitelSize: Number(e.target.value) })} className="w-full accent-rose-400" />
-                          {heroImageUrl && hpSettings.layout === 'editorial' && (
+                          {heroImageUrl && (
                             <>
                               <p className="text-xs text-gray-500 mt-1">Positie</p>
                               <div className="flex rounded-xl border border-gray-200 overflow-hidden bg-white">
                                 {([
                                   { id: 'over',  label: 'Over foto'  },
-                                  { id: 'under', label: 'Onder foto' },
+                                  { id: 'under', label: hpSettings.layout === 'modern' ? 'In tekstvlak' : 'Onder foto' },
                                 ] as const).map((opt) => (
                                   <button
                                     key={opt.id}
