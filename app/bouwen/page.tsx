@@ -1530,19 +1530,14 @@ export default function BouwenPage() {
                           >
                             <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.hoofdtitelVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
                           </button>
-                          <button
-                            onClick={() => setHpOpenGear(hpOpenGear === 'hoofdtitel' ? null : 'hoofdtitel')}
-                            title="Stijl aanpassen"
-                            className={`p-1 rounded-lg transition-colors ${hpOpenGear === 'hoofdtitel' ? 'bg-rose-50 text-rose-500' : 'bg-gray-100 text-gray-500 border border-gray-200 hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200'}`}
-                          >
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                          </button>
+                          <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'hoofdtitel' ? 'bg-rose-50 text-rose-400' : 'text-gray-300'}`}>Aa</span>
                         </div>
                       </div>
                       <textarea
                         rows={2}
                         value={draft?.naam ?? ""}
                         onChange={(e) => updateDraft({ naam: e.target.value })}
+                        onFocus={() => setHpOpenGear('hoofdtitel')}
                         placeholder="Bijv. Bruiloft Michiel & Lisa"
                         className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
                       />
@@ -1591,19 +1586,14 @@ export default function BouwenPage() {
                           >
                             <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.subtitleVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
                           </button>
-                          <button
-                            onClick={() => setHpOpenGear(hpOpenGear === 'subtitle' ? null : 'subtitle')}
-                            title="Stijl aanpassen"
-                            className={`p-1 rounded-lg transition-colors ${hpOpenGear === 'subtitle' ? 'bg-rose-50 text-rose-500' : 'bg-gray-100 text-gray-500 border border-gray-200 hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200'}`}
-                          >
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                          </button>
+                          <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'subtitle' ? 'bg-rose-50 text-rose-400' : 'text-gray-300'}`}>Aa</span>
                         </div>
                       </div>
                       <input
                         type="text"
                         value={hpSettings.subtitleText}
                         onChange={(e) => updateHpSettings({ subtitleText: e.target.value })}
+                        onFocus={() => setHpOpenGear('subtitle')}
                         placeholder="bijv. Samen vieren we de liefde"
                         className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
                       />
@@ -1683,19 +1673,14 @@ export default function BouwenPage() {
                           >
                             <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.initialsVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
                           </button>
-                          <button
-                            onClick={() => setHpOpenGear(hpOpenGear === 'initialen' ? null : 'initialen')}
-                            title="Stijl aanpassen"
-                            className={`p-1 rounded-lg transition-colors ${hpOpenGear === 'initialen' ? 'bg-rose-50 text-rose-500' : 'bg-gray-100 text-gray-500 border border-gray-200 hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200'}`}
-                          >
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                          </button>
+                          <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'initialen' ? 'bg-rose-50 text-rose-400' : 'text-gray-300'}`}>Aa</span>
                         </div>
                       </div>
                       <input
                         type="text"
                         value={draft?.initials ?? ""}
                         onChange={(e) => updateDraft({ initials: e.target.value })}
+                        onFocus={() => setHpOpenGear('initialen')}
                         placeholder="bijv. M | W"
                         className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
                       />
@@ -1723,19 +1708,14 @@ export default function BouwenPage() {
                           >
                             <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.frameNamesVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
                           </button>
-                          <button
-                            onClick={() => setHpOpenGear(hpOpenGear === 'namen' ? null : 'namen')}
-                            title="Stijl aanpassen"
-                            className={`p-1 rounded-lg transition-colors ${hpOpenGear === 'namen' ? 'bg-rose-50 text-rose-500' : 'bg-gray-100 text-gray-500 border border-gray-200 hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200'}`}
-                          >
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                          </button>
+                          <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'namen' ? 'bg-rose-50 text-rose-400' : 'text-gray-300'}`}>Aa</span>
                         </div>
                       </div>
                       <textarea
                         rows={2}
                         value={draft?.frame_names ?? ""}
                         onChange={(e) => updateDraft({ frame_names: e.target.value })}
+                        onFocus={() => setHpOpenGear('namen')}
                         placeholder={"bijv. Michiel\n& Lindsey"}
                         className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all resize-none"
                       />
@@ -1763,19 +1743,14 @@ export default function BouwenPage() {
                           >
                             <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.datumVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
                           </button>
-                          <button
-                            onClick={() => setHpOpenGear(hpOpenGear === 'datum' ? null : 'datum')}
-                            title="Stijl aanpassen"
-                            className={`p-1 rounded-lg transition-colors ${hpOpenGear === 'datum' ? 'bg-rose-50 text-rose-500' : 'bg-gray-100 text-gray-500 border border-gray-200 hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200'}`}
-                          >
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                          </button>
+                          <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'datum' ? 'bg-rose-50 text-rose-400' : 'text-gray-300'}`}>Aa</span>
                         </div>
                       </div>
                       <input
                         type="date"
                         value={draft?.datum ?? ""}
                         onChange={(e) => updateDraft({ datum: e.target.value })}
+                        onFocus={() => setHpOpenGear('datum')}
                         className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
                       />
                       {hpOpenGear === 'datum' && (
@@ -1814,19 +1789,14 @@ export default function BouwenPage() {
                           >
                             <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.locatieVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
                           </button>
-                          <button
-                            onClick={() => setHpOpenGear(hpOpenGear === 'locatie' ? null : 'locatie')}
-                            title="Stijl aanpassen"
-                            className={`p-1 rounded-lg transition-colors ${hpOpenGear === 'locatie' ? 'bg-rose-50 text-rose-500 border border-rose-200' : 'bg-gray-100 text-gray-500 border border-gray-200 hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200'}`}
-                          >
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                          </button>
+                          <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'locatie' ? 'bg-rose-50 text-rose-400' : 'text-gray-300'}`}>Aa</span>
                         </div>
                       </div>
                       <input
                         type="text"
                         value={draft?.frame_location ?? ""}
                         onChange={(e) => updateDraft({ frame_location: e.target.value })}
+                        onFocus={() => setHpOpenGear('locatie')}
                         placeholder="bijv. Kasteel de Haar"
                         className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
                       />
