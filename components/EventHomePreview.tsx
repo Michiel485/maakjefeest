@@ -263,15 +263,18 @@ export default function EventHomePreview({
           >
             <div className="flex flex-col items-center text-center gap-5 max-w-sm w-full">
               {(hp.subtitleVisible !== false) && hp.subtitleText && (
-                <p style={subtitleStyle}>{hp.subtitleText}</p>
+                <p {...fieldClick('subtitle')} style={subtitleStyle}>{hp.subtitleText}</p>
               )}
               {(hp.hoofdtitelVisible !== false) && title && (
-                <h1 style={{ ...hoofdtitelStyle, fontSize: `clamp(2rem, ${hp?.hoofdtitelSize ?? 5.5}rem, ${(hp?.hoofdtitelSize ?? 5.5) * 1.2}rem)` }}>
+                <h1 {...fieldClick('hoofdtitel')} style={{ ...hoofdtitelStyle, fontSize: `clamp(2rem, ${hp?.hoofdtitelSize ?? 5.5}rem, ${(hp?.hoofdtitelSize ?? 5.5) * 1.2}rem)` }}>
                   {title}
                 </h1>
               )}
-              {datumFormatted && (
-                <p style={datumStyleHp}>{datumFormatted}</p>
+              {(hp.datumVisible !== false) && datumFormatted && (
+                <p {...fieldClick('datum')} style={datumStyleHp}>{datumFormatted}</p>
+              )}
+              {(hp.locatieVisible !== false) && locatie && (
+                <p {...fieldClick('locatie')} style={locatieStyleHp}>{locatie}</p>
               )}
               <a
                 href={rsvpHref}

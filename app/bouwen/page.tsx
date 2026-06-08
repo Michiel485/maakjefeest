@@ -1514,8 +1514,7 @@ export default function BouwenPage() {
                     <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={handleImageUpload} />
                   </div>
 
-                  {/* Tijdloos (editorial) specific options */}
-                  {hpSettings.layout === 'editorial' && (<>
+                  {/* Shared options for all layouts */}
 
                     <div className="border-t border-gray-100" />
 
@@ -1555,7 +1554,7 @@ export default function BouwenPage() {
                             <span className="text-xs text-gray-400">{hpSettings.hoofdtitelSize}rem</span>
                           </div>
                           <input type="range" min={2} max={10} step={0.25} value={hpSettings.hoofdtitelSize} onChange={(e) => updateHpSettings({ hoofdtitelSize: Number(e.target.value) })} className="w-full accent-rose-400" />
-                          {heroImageUrl && (
+                          {heroImageUrl && hpSettings.layout === 'editorial' && (
                             <>
                               <p className="text-xs text-gray-500 mt-1">Positie</p>
                               <div className="flex rounded-xl border border-gray-200 overflow-hidden bg-white">
@@ -1620,6 +1619,7 @@ export default function BouwenPage() {
                       )}
                     </div>
 
+                    {hpSettings.layout === 'editorial' && (<>
                     <div className="border-t border-gray-100" />
 
                     {/* 6. Toon grafisch kader + kader keuze */}
@@ -1667,6 +1667,7 @@ export default function BouwenPage() {
                         </div>
                       )}
                     </div>
+                    </>)}
 
                     <div className="border-t border-gray-100" />
 
@@ -1897,8 +1898,6 @@ export default function BouwenPage() {
                         </div>
                       </div>
                     </div>
-
-                  </>)}
 
                 </>)}
 
