@@ -63,7 +63,31 @@ export async function POST(request: Request) {
     ...(g.custom_answer_2 != null ? { custom_answer_2: g.custom_answer_2 } : {}),
   }))
 
-  const { error } = await supabase.from("rsvp").insert(rows)
+  let { error } = await supabase.from("rsvp").insert(rows)
+
+  // If the full insert fails due to missing migration columns, fall back to base schema columns only.
+  // This happens when the multi-guest migration hasn't been run in Supabase yet.
+  if (error) {
+    const isMissingColumn =
+      error.code === "42703" ||
+      (error.message ?? "").toLowerCase().includes("column") ||
+      (error.message ?? "").toLowerCase().includes("does not exist") ||
+      (error.message ?? "").toLowerCase().includes("could not find")
+
+    if (isMissingColumn) {
+      console.warn("RSVP: extended columns missing, falling back to base schema:", error.message)
+      const baseRows = rows.map((r) => ({
+        event_id: r.event_id,
+        name: r.name,
+        // Base schema may have email NOT NULL — use empty string as fallback
+        email: r.email || "",
+        attending: r.attending,
+        message: r.message || null,
+      }))
+      const fallback = await supabase.from("rsvp").insert(baseRows)
+      error = fallback.error
+    }
+  }
 
   if (error) {
     console.error("RSVP insert error:", error)
