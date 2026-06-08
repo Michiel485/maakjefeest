@@ -26,6 +26,8 @@ interface HomeContent {
   title: string
   body: string   // HTML from contenteditable
   align: Align
+  titleSize?: number
+  bodySize?: number
 }
 
 interface HomepageSettings {
@@ -815,6 +817,8 @@ export default function BouwenPage() {
         title: homeContent.title,
         body: homeContent.body,
         align: homeContent.align,
+        titleSize: homeContent.titleSize,
+        bodySize: homeContent.bodySize,
       },
       Programma: { ...(content.Programma ?? {}) },
       OnsVerhaal: {
@@ -1830,7 +1834,7 @@ export default function BouwenPage() {
                     <div>
                       <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Welkomstbericht</p>
                       <div className="flex flex-col gap-3">
-                        <label className="flex flex-col gap-1.5">
+                        <div className="flex flex-col gap-1.5">
                           <span className="text-xs font-semibold text-gray-600">Titel</span>
                           <input
                             type="text"
@@ -1839,8 +1843,13 @@ export default function BouwenPage() {
                             placeholder="Optionele titel"
                             className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
                           />
-                        </label>
-                        <label className="flex flex-col gap-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-500">Grootte</span>
+                            <span className="text-xs text-gray-400">{homeContent.titleSize ?? 1.0}rem</span>
+                          </div>
+                          <input type="range" min={0.7} max={3} step={0.05} value={homeContent.titleSize ?? 1.0} onChange={(e) => updateDraft({ homeContent: { ...homeContent, titleSize: Number(e.target.value) } })} className="w-full accent-rose-400" />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
                           <span className="text-xs font-semibold text-gray-600">Tekst</span>
                           <textarea
                             rows={5}
@@ -1849,7 +1858,12 @@ export default function BouwenPage() {
                             placeholder="Schrijf een welkomstbericht voor je gasten..."
                             className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
                           />
-                        </label>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-500">Grootte</span>
+                            <span className="text-xs text-gray-400">{homeContent.bodySize ?? 0.9375}rem</span>
+                          </div>
+                          <input type="range" min={0.7} max={2.5} step={0.05} value={homeContent.bodySize ?? 0.9375} onChange={(e) => updateDraft({ homeContent: { ...homeContent, bodySize: Number(e.target.value) } })} className="w-full accent-rose-400" />
+                        </div>
                         <div className="flex flex-col gap-1.5">
                           <span className="text-xs font-semibold text-gray-600">Uitlijning</span>
                           <div className="flex gap-1.5">
@@ -2439,6 +2453,8 @@ export default function BouwenPage() {
                           homeTitle={homeContent.title || null}
                           homeBody={homeContent.body || null}
                           homeAlign={homeContent.align}
+                          homeTitleSize={homeContent.titleSize}
+                          homeBodySize={homeContent.bodySize}
                           sc={sc}
                           useFrame={draft?.use_frame}
                           frameStyle={draft?.frame_style}

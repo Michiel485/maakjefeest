@@ -67,6 +67,8 @@ export default async function EventHomePage({
       homeTitle={typeof c.title === "string" ? c.title : null}
       homeBody={typeof c.body === "string" ? c.body : null}
       homeAlign={(c.align as "left" | "center" | "right") ?? "center"}
+      homeTitleSize={typeof c.titleSize === "number" ? c.titleSize : undefined}
+      homeBodySize={typeof c.bodySize === "number" ? c.bodySize : undefined}
       rsvpHref={`${basePath}/RSVP`}
       sc={sc}
       homepageSettings={(event.homepage_settings as HomepageSettings | null) ?? null}

@@ -54,6 +54,8 @@ export interface EventHomePreviewProps {
   homeTitle: string | null
   homeBody: string | null
   homeAlign: "left" | "center" | "right"
+  homeTitleSize?: number
+  homeBodySize?: number
   sc: SC
   useFrame?: boolean
   frameStyle?: string | null
@@ -84,6 +86,8 @@ export default function EventHomePreview({
   homeTitle,
   homeBody,
   homeAlign,
+  homeTitleSize,
+  homeBodySize,
   sc,
   useFrame = false,
   frameStyle,
@@ -346,12 +350,12 @@ export default function EventHomePreview({
         {(homeTitle || homeBody) && (
           <div className="px-8 py-10" style={{ backgroundColor: sc.bodyBackground ? "transparent" : sc.navBg }}>
             {homeTitle && (
-              <p className="font-bold mb-2 whitespace-pre-wrap text-base" style={{ color: sc.headingColor, fontFamily: sc.fontFamily, textAlign: homeAlign }}>
+              <p className="font-bold mb-2 whitespace-pre-wrap" style={{ fontSize: `${homeTitleSize ?? 1.0}rem`, color: sc.headingColor, fontFamily: sc.fontFamily, textAlign: homeAlign }}>
                 {homeTitle}
               </p>
             )}
             {homeBody && (
-              <p className="leading-relaxed whitespace-pre-wrap text-[0.9375rem]" style={{ color: sc.bodyText, fontFamily: sc.fontFamily, textAlign: homeAlign }}>
+              <p className="leading-relaxed whitespace-pre-wrap" style={{ fontSize: `${homeBodySize ?? 0.9375}rem`, color: sc.bodyText, fontFamily: sc.fontFamily, textAlign: homeAlign }}>
                 {homeBody}
               </p>
             )}
@@ -623,12 +627,12 @@ export default function EventHomePreview({
       {(homeTitle || homeBody) && (
         <div className="px-8 py-10" style={{ backgroundColor: sc.bodyBackground ? "transparent" : sc.navBg }}>
           {homeTitle && (
-            <p className={`font-bold mb-2 whitespace-pre-wrap ${sc.floral ? "text-xl" : "text-base"}`} style={{ color: sc.headingColor, fontFamily: sc.fontFamily, textAlign: homeAlign }}>
+            <p className="font-bold mb-2 whitespace-pre-wrap" style={{ fontSize: `${homeTitleSize ?? (sc.floral ? 1.25 : 1.0)}rem`, color: sc.headingColor, fontFamily: sc.fontFamily, textAlign: homeAlign }}>
               {homeTitle}
             </p>
           )}
           {homeBody && (
-            <p className={`leading-relaxed whitespace-pre-wrap ${sc.floral ? "text-lg" : "text-[0.9375rem]"}`} style={{ color: sc.bodyText, fontFamily: sc.fontFamily, textAlign: homeAlign }}>
+            <p className="leading-relaxed whitespace-pre-wrap" style={{ fontSize: `${homeBodySize ?? (sc.floral ? 1.125 : 0.9375)}rem`, color: sc.bodyText, fontFamily: sc.fontFamily, textAlign: homeAlign }}>
               {homeBody}
             </p>
           )}
