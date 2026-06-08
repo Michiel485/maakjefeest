@@ -55,17 +55,19 @@ export async function POST(request: Request) {
     guest_type: g.guest_type ?? "daggast",
     dietary: g.dietary || null,
     message: g.message || null,
-    song: g.song || null,
-    overnachting: g.overnachting ?? null,
-    custom_answer: g.custom_answer ?? null,
-    custom_answer_2: g.custom_answer_2 ?? null,
+    // Only include optional extended columns when they have an actual value,
+    // so missing DB columns don't cause an insert error.
+    ...(g.song != null        ? { song: g.song }                     : {}),
+    ...(g.overnachting != null ? { overnachting: g.overnachting }    : {}),
+    ...(g.custom_answer != null ? { custom_answer: g.custom_answer } : {}),
+    ...(g.custom_answer_2 != null ? { custom_answer_2: g.custom_answer_2 } : {}),
   }))
 
   const { error } = await supabase.from("rsvp").insert(rows)
 
   if (error) {
     console.error("RSVP insert error:", error)
-    return Response.json({ error: "Kon aanmelding niet opslaan" }, { status: 500 })
+    return Response.json({ error: "Kon aanmelding niet opslaan", detail: error.message }, { status: 500 })
   }
 
   const ev          = event as { id: string; title?: string; user_id?: string }

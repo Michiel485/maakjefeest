@@ -139,6 +139,14 @@ create policy "No anon access" on magic_links
 -- alter table rsvp alter column email drop not null;
 -- create index if not exists rsvp_submission_id_idx on rsvp(submission_id);
 
+-- ── Migration: RSVP extended fields ──────────────────────────────────────────────────────
+-- Run these in the Supabase SQL editor if the columns don't exist yet:
+--
+-- alter table rsvp add column if not exists song text;
+-- alter table rsvp add column if not exists overnachting boolean;
+-- alter table rsvp add column if not exists custom_answer boolean;
+-- alter table rsvp add column if not exists custom_answer_2 boolean;
+
 -- ── Migration: Supabase Auth columns (run after enabling Auth in Supabase dashboard) ──────
 -- The events table uses user_email (text) for ownership. When using Supabase Auth,
 -- auth.jwt() ->> 'email' returns the authenticated user's email, so existing RLS
