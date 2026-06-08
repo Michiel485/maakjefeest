@@ -557,12 +557,12 @@ export default function EventHomePreview({
                     </p>
                   )}
                   {(hp?.datumVisible !== false) && datumFormatted && (
-                    <p {...fieldClick('datum')} className="fk-date uppercase text-center mt-[1.1cqi]" style={{ fontFamily: sc.fontFamily, color: sc.frameBodyText ?? sc.bodyText, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>
+                    <p {...fieldClick('datum')} className="fk-date uppercase text-center mt-[1.1cqi]" style={{ fontFamily: datumFontResult.family, fontWeight: datumFontResult.weight, color: sc.frameBodyText ?? sc.bodyText, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>
                       {datumFormatted}
                     </p>
                   )}
                   {(hp?.locatieVisible !== false) && frameDisplayLocation && (
-                    <p {...fieldClick('locatie')} className="fk-location text-center mt-[0.4cqi]" style={{ fontFamily: sc.fontFamily, color: sc.frameBodyText ?? sc.bodyText, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>
+                    <p {...fieldClick('locatie')} className="fk-location text-center mt-[0.4cqi]" style={{ fontFamily: locatieFontResult.family, fontWeight: locatieFontResult.weight, color: sc.frameBodyText ?? sc.bodyText, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>
                       {frameDisplayLocation}
                     </p>
                   )}
