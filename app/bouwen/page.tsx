@@ -421,7 +421,11 @@ export default function BouwenPage() {
   const [hpOpenGear, setHpOpenGear] = useState<string | null>(null)
 
   function handlePreviewFieldClick(field: string) {
+    // Ensure Home controls sidebar is open
+    setPreviewPage("Home")
+    setIsEditingControls(true)
     setHpOpenGear(field)
+    // Wait for sidebar to render before scrolling/focusing
     setTimeout(() => {
       const el = document.getElementById(`hp-field-${field}`)
       if (!el) return
@@ -434,7 +438,7 @@ export default function BouwenPage() {
         const len = input.value.length
         input.setSelectionRange(len, len)
       }
-    }, 80)
+    }, 150)
   }
 
   useEffect(() => {
@@ -1476,7 +1480,7 @@ export default function BouwenPage() {
                   <div className="border-t border-gray-100" />
 
                   {/* 2. Headerfoto & Overlay — both layouts */}
-                  <div>
+                  <div id="hp-field-headerfoto">
                     <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Headerfoto</p>
                     {heroImageUrl ? (
                       <div className="flex flex-col gap-3">
@@ -1834,7 +1838,7 @@ export default function BouwenPage() {
                     <div>
                       <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Welkomstbericht</p>
                       <div className="flex flex-col gap-3">
-                        <div className="flex flex-col gap-1.5">
+                        <div id="hp-field-welkomst-titel" className="flex flex-col gap-1.5">
                           <span className="text-xs font-semibold text-gray-600">Titel</span>
                           <input
                             type="text"
@@ -1849,7 +1853,7 @@ export default function BouwenPage() {
                           </div>
                           <input type="range" min={0.7} max={3} step={0.05} value={homeContent.titleSize ?? 1.0} onChange={(e) => updateDraft({ homeContent: { ...homeContent, titleSize: Number(e.target.value) } })} className="w-full accent-rose-400" />
                         </div>
-                        <div className="flex flex-col gap-1.5">
+                        <div id="hp-field-welkomst-tekst" className="flex flex-col gap-1.5">
                           <span className="text-xs font-semibold text-gray-600">Tekst</span>
                           <textarea
                             rows={5}

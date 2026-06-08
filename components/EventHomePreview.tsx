@@ -108,9 +108,9 @@ export default function EventHomePreview({
 
   const fieldClick = onFieldClick
     ? (field: string): React.HTMLAttributes<HTMLElement> => ({
-        onClick: (e: React.MouseEvent) => { e.stopPropagation(); onFieldClick(field) },
+        onDoubleClick: (e: React.MouseEvent) => { e.stopPropagation(); onFieldClick(field) },
         style: { cursor: 'pointer' },
-        title: 'Klik om te bewerken',
+        title: 'Dubbelklik om te bewerken',
       })
     : () => ({})
 
@@ -235,6 +235,7 @@ export default function EventHomePreview({
             onTouchStart={editableHero ? (e) => startHeroDrag(e.touches[0].clientX, e.touches[0].clientY) : undefined}
             onTouchMove={editableHero ? (e) => { e.preventDefault(); moveHeroDrag(e.touches[0].clientX, e.touches[0].clientY) } : undefined}
             onTouchEnd={editableHero ? endHeroDrag : undefined}
+            onDoubleClick={onFieldClick ? (e) => { e.stopPropagation(); onFieldClick('headerfoto') } : undefined}
             style={{ cursor: editableHero && heroImageUrl ? (heroDragging ? 'grabbing' : 'grab') : 'default' }}
           >
             {heroImageUrl ? (
@@ -350,12 +351,12 @@ export default function EventHomePreview({
         {(homeTitle || homeBody) && (
           <div className="px-8 py-10" style={{ backgroundColor: sc.bodyBackground ? "transparent" : sc.navBg }}>
             {homeTitle && (
-              <p className="font-bold mb-2 whitespace-pre-wrap" style={{ fontSize: `${homeTitleSize ?? 1.0}rem`, color: sc.headingColor, fontFamily: sc.fontFamily, textAlign: homeAlign }}>
+              <p {...fieldClick('welkomst-titel')} className="font-bold mb-2 whitespace-pre-wrap" style={{ fontSize: `${homeTitleSize ?? 1.0}rem`, color: sc.headingColor, fontFamily: sc.fontFamily, textAlign: homeAlign }}>
                 {homeTitle}
               </p>
             )}
             {homeBody && (
-              <p className="leading-relaxed whitespace-pre-wrap" style={{ fontSize: `${homeBodySize ?? 0.9375}rem`, color: sc.bodyText, fontFamily: sc.fontFamily, textAlign: homeAlign }}>
+              <p {...fieldClick('welkomst-tekst')} className="leading-relaxed whitespace-pre-wrap" style={{ fontSize: `${homeBodySize ?? 0.9375}rem`, color: sc.bodyText, fontFamily: sc.fontFamily, textAlign: homeAlign }}>
                 {homeBody}
               </p>
             )}
@@ -387,6 +388,7 @@ export default function EventHomePreview({
       onTouchStart={editableHero ? (e) => startHeroDrag(e.touches[0].clientX, e.touches[0].clientY) : undefined}
       onTouchMove={editableHero ? (e) => { e.preventDefault(); moveHeroDrag(e.touches[0].clientX, e.touches[0].clientY) } : undefined}
       onTouchEnd={editableHero ? endHeroDrag : undefined}
+      onDoubleClick={onFieldClick ? (e) => { e.stopPropagation(); onFieldClick('headerfoto') } : undefined}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
@@ -627,12 +629,12 @@ export default function EventHomePreview({
       {(homeTitle || homeBody) && (
         <div className="px-8 py-10" style={{ backgroundColor: sc.bodyBackground ? "transparent" : sc.navBg }}>
           {homeTitle && (
-            <p className="font-bold mb-2 whitespace-pre-wrap" style={{ fontSize: `${homeTitleSize ?? (sc.floral ? 1.25 : 1.0)}rem`, color: sc.headingColor, fontFamily: sc.fontFamily, textAlign: homeAlign }}>
+            <p {...fieldClick('welkomst-titel')} className="font-bold mb-2 whitespace-pre-wrap" style={{ fontSize: `${homeTitleSize ?? (sc.floral ? 1.25 : 1.0)}rem`, color: sc.headingColor, fontFamily: sc.fontFamily, textAlign: homeAlign }}>
               {homeTitle}
             </p>
           )}
           {homeBody && (
-            <p className="leading-relaxed whitespace-pre-wrap" style={{ fontSize: `${homeBodySize ?? (sc.floral ? 1.125 : 0.9375)}rem`, color: sc.bodyText, fontFamily: sc.fontFamily, textAlign: homeAlign }}>
+            <p {...fieldClick('welkomst-tekst')} className="leading-relaxed whitespace-pre-wrap" style={{ fontSize: `${homeBodySize ?? (sc.floral ? 1.125 : 0.9375)}rem`, color: sc.bodyText, fontFamily: sc.fontFamily, textAlign: homeAlign }}>
               {homeBody}
             </p>
           )}
