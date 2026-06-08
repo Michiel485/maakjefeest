@@ -365,6 +365,8 @@ export default function Home() {
         <span style={{ fontFamily: "var(--font-cormorant)", fontSize: "1rem", color: "#8A7E72", fontWeight: 600 }}>Saying Yes</span>
         <span className="mx-3" style={{ color: "#2A2218" }}>·</span>
         © {new Date().getFullYear()}
+        <span className="mx-3" style={{ color: "#2A2218" }}>·</span>
+        <a href="/privacy" style={{ color: "#4A4030", textDecoration: "none" }} onMouseOver={e => (e.currentTarget.style.color = "#8A7E72")} onMouseOut={e => (e.currentTarget.style.color = "#4A4030")}>Privacy &amp; Cookies</a>
       </footer>
     </div>
   )
