@@ -180,6 +180,8 @@ export function getStyleConfig(
   const pt    = getTitleFont(fonts?.fontPageTitles)
   return {
     ...base,
+    // User-chosen font becomes the global fallback for all body/UI text
+    fontFamily: fonts?.fontPageTitles ? pt.family : base.fontFamily,
     fontHero: hero.family,           fontHeroWeight: hero.weight,
     fontInitials: ini.family,        fontInitialsWeight: ini.weight,
     fontFrameNames: fn.family,       fontFrameNamesWeight: fn.weight,

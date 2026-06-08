@@ -1266,10 +1266,10 @@ export default function BouwenPage() {
             </label>
           </div>
 
-          {/* Lettertype paginatitels */}
+          {/* Basislettertype */}
           <div className="px-5 pt-5 pb-4 border-b border-gray-100">
-            <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Lettertype paginatitels</p>
-            <p className="text-[10px] text-gray-400 mb-2 leading-snug">Hoofding op o.a. Programma, Informatie, Ons Verhaal</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Basislettertype</p>
+            <p className="text-[10px] text-gray-400 mb-2 leading-snug">Bepaalt het basislettertype voor alle titels, de datumcounter, het welkomstbericht en de overige pagina-inhoud.</p>
             <FontSelect value={fontPageTitles} onChange={saveFontPageTitles} />
           </div>
 
