@@ -384,7 +384,8 @@ export default function BouwenPage() {
     Home: true, Programma: true, RSVP: true, Informatie: false, Cadeautips: false, Fotos: false, Ceremoniemeesters: false, OnsVerhaal: false,
   })
   const [previewPage, setPreviewPage] = useState<PageId>("Home")
-  const [editingPage, setEditingPage] = useState<PageId | null>(null)
+  const [activeSection, setActiveSection] = useState<'algemeen' | 'paginas' | 'url' | null>('paginas')
+  const [activeSubPage, setActiveSubPage] = useState<PageId | null>('Home')
   const [content, setContent] = useState<ContentMap>({})
   const [style, setStyle] = useState<Style>("zand")
   const [fontHero, setFontHero] = useState("pinyonscript")
@@ -393,7 +394,6 @@ export default function BouwenPage() {
   const [fontPageTitles, setFontPageTitles] = useState("playfair")
   const [viewport, setViewport] = useState<Viewport>("desktop")
   const [heroImageError, setHeroImageError] = useState<string | null>(null)
-  const [isEditingControls, setIsEditingControls] = useState(false)
   const canvasContainerRef = useRef<HTMLDivElement>(null)
   const [canvasScale, setCanvasScale] = useState(1)
   const [zoomMultiplier, setZoomMultiplier] = useState(1)
@@ -423,7 +423,8 @@ export default function BouwenPage() {
   function handlePreviewFieldClick(field: string) {
     // Ensure Home controls sidebar is open
     setPreviewPage("Home")
-    setIsEditingControls(true)
+    setActiveSection('paginas')
+    setActiveSubPage('Home')
     setHpOpenGear(field)
     // Wait for sidebar to render before scrolling/focusing
     setTimeout(() => {
@@ -640,7 +641,7 @@ export default function BouwenPage() {
       setCanvasScale(Math.min(1, Math.max(0.4, (el.clientWidth - 48) / cw)))
     })
     return () => cancelAnimationFrame(id)
-  }, [isEditingControls, viewport])
+  }, [viewport])
 
   useEffect(() => {
     if (!autoSavePending || !draft) return
@@ -790,14 +791,8 @@ export default function BouwenPage() {
         const fallback = PAGES.find((p) => next[p.id])
         if (fallback) setPreviewPage(fallback.id)
       }
-      if (editingPage === id && !next[id]) setEditingPage(null)
       return next
     })
-  }
-
-  function openEditor(id: PageId) {
-    setPreviewPage(id)
-    if (!CONTROLS_PAGES.has(id)) setEditingPage(id)
   }
 
   // ── Shared core: stuurt opgeslagen state op via /api/drafts ─────────────────
@@ -1036,6 +1031,12 @@ export default function BouwenPage() {
   const rsvpDeadlinePassed    = rsvpDeadline ? new Date() > new Date(rsvpDeadline) : false
   const RSVP_GUEST_LABELS: Record<string, string> = { daggast: "Daggast", avondgast: "Avondgast", receptiegast: "Receptiegast" }
 
+  const Chevron = ({ open }: { open: boolean }) => (
+    <svg className={`w-4 h-4 text-gray-400 transition-transform duration-200 flex-shrink-0 ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+    </svg>
+  )
+
   return (
     <div translate="no" className="min-h-screen md:h-screen flex flex-col bg-gray-50 font-sans antialiased md:overflow-hidden">
 
@@ -1156,7 +1157,7 @@ export default function BouwenPage() {
       <div className="flex flex-1 md:min-h-0">
 
         {/* ── Sidebar ── */}
-        <aside className="w-full md:w-60 md:flex-shrink-0 bg-white border-r border-gray-100 flex flex-col overflow-y-auto">
+        <aside className="w-full md:w-80 md:flex-shrink-0 bg-white border-r border-gray-100 flex flex-col overflow-y-auto">
 
           {/* Mobile tip — only visible on small screens */}
           <div className="block md:hidden mx-4 mt-4 mb-1 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
@@ -1165,9 +1166,1062 @@ export default function BouwenPage() {
             </p>
           </div>
 
-          {/* URL editor */}
-          <div className="px-5 pt-5 pb-4 border-b border-gray-100">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">Jouw URL</p>
+          {/* ── 1. ALGEMEEN ── */}
+          <div className="border-b border-gray-100">
+            <button
+              onClick={() => setActiveSection(prev => prev === 'algemeen' ? null : 'algemeen')}
+              className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-gray-50 transition-colors"
+            >
+              <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Algemeen</span>
+              <Chevron open={activeSection === 'algemeen'} />
+            </button>
+            {activeSection === 'algemeen' && (
+              <div className="px-5 pb-5 flex flex-col gap-5">
+
+                {/* Stijl kiezer */}
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Stijl</p>
+                  <div className="flex flex-col gap-2">
+                    {STYLES.map((s) => (
+                      <button
+                        key={s.id}
+                        onClick={() => saveStyle(s.id)}
+                        className={`flex items-center gap-3 w-full rounded-xl border px-3 py-2.5 text-left transition-all ${
+                          style === s.id
+                            ? `${s.border} bg-gray-50 ring-2 ${s.active} ring-offset-1`
+                            : `border-gray-100 hover:border-gray-200 hover:bg-gray-50`
+                        }`}
+                      >
+                        <span className={`w-5 h-5 rounded-full flex-shrink-0 ${s.dot}`} />
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-gray-800 leading-tight">{s.label}</p>
+                          <p className="text-[10px] text-gray-400 truncate">{s.sub}</p>
+                        </div>
+                        {style === s.id && (
+                          <svg className="w-3.5 h-3.5 text-rose-500 flex-shrink-0 ml-auto" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Nav layout + Navigatietitel */}
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Navigatie</p>
+                  <div className="flex rounded-xl border border-gray-200 overflow-hidden">
+                    {(['left', 'split', 'stacked'] as const).map((opt) => (
+                      <button
+                        key={opt}
+                        onClick={() => {
+                          const next = { ...draft, navLayout: opt } as Draft
+                          setDraft(next)
+                          localStorage.setItem("sayingyes_draft", JSON.stringify(next))
+                        }}
+                        className={`flex-1 py-2 text-xs font-semibold transition-colors ${
+                          navLayout === opt ? 'bg-rose-500 text-white' : 'text-gray-500 hover:bg-gray-50'
+                        }`}
+                      >
+                        {opt === 'left' ? 'Links' : opt === 'split' ? 'Verdeeld' : 'Gecentreerd'}
+                      </button>
+                    ))}
+                  </div>
+                  <label className="flex flex-col gap-1.5 mt-3">
+                    <span className="text-xs font-semibold text-gray-600">Navigatietitel</span>
+                    <input
+                      type="text"
+                      value={draft?.nav_title ?? draft?.naam ?? ""}
+                      onChange={(e) => updateDraft({ nav_title: e.target.value })}
+                      placeholder="Bijv. Sanne & Tom"
+                      className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                    />
+                    <p className="text-[10px] text-gray-400 leading-snug">Naam in de menubalk van de website</p>
+                  </label>
+                </div>
+
+                {/* Basislettertype */}
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Basislettertype</p>
+                  <FontSelect value={fontPageTitles} onChange={saveFontPageTitles} />
+                </div>
+
+              </div>
+            )}
+          </div>
+
+          {/* ── 2. PAGINA'S ── */}
+          <div className="border-b border-gray-100 flex-1">
+            <button
+              onClick={() => setActiveSection(prev => prev === 'paginas' ? null : 'paginas')}
+              className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-gray-50 transition-colors"
+            >
+              <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Pagina&apos;s</span>
+              <Chevron open={activeSection === 'paginas'} />
+            </button>
+            {activeSection === 'paginas' && (
+              <div>
+                {PAGES.map((page) => {
+                  const isOn = active[page.id]
+                  const isExpanded = activeSubPage === page.id && isOn
+                  return (
+                    <div key={page.id} className="border-t border-gray-100">
+                      {/* Page row */}
+                      <div className="flex items-center justify-between px-4 py-2.5">
+                        <button
+                          onClick={() => {
+                            if (!isOn) return
+                            setPreviewPage(page.id)
+                            setActiveSubPage(prev => prev === page.id ? null : page.id)
+                          }}
+                          className={`flex items-center gap-2 flex-1 min-w-0 text-left ${isOn ? 'cursor-pointer' : 'cursor-default'}`}
+                        >
+                          <span className={`transition-transform duration-200 flex-shrink-0 ${isOn && isExpanded ? 'rotate-90' : ''}`}>
+                            {isOn ? (
+                              <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                              </svg>
+                            ) : (
+                              <span className="w-3.5 h-3.5 block" />
+                            )}
+                          </span>
+                          <span className={`text-sm font-medium truncate ${isOn ? "text-gray-800" : "text-gray-400"}`}>
+                            {page.label}
+                          </span>
+                        </button>
+                        {page.toggleable ? (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); toggle(page.id) }}
+                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors flex-shrink-0 ${isOn ? "bg-pink-500" : "bg-gray-200"}`}
+                          >
+                            <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform ${isOn ? "translate-x-4" : "translate-x-0.5"}`} />
+                          </button>
+                        ) : (
+                          <span className="text-[10px] bg-gray-100 text-gray-400 rounded-md px-1.5 py-0.5 font-semibold flex-shrink-0">aan</span>
+                        )}
+                      </div>
+
+                      {/* Inline page controls */}
+                      {isExpanded && (
+                        <div className="border-t border-gray-100 bg-gray-50/50 px-5 pt-4 pb-5 flex flex-col gap-5">
+
+                          {/* ── Home controls ── */}
+                          {page.id === 'Home' && (<>
+
+                            {/* Lay-out */}
+                            <div>
+                              <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Lay-out</p>
+                              <div className="flex gap-2">
+                                {([
+                                  { id: 'editorial', label: 'Kader',  sub: 'Layout 1' },
+                                  { id: 'modern',    label: 'Modern', sub: 'Layout 2' },
+                                ] as const).map((opt) => (
+                                  <button
+                                    key={opt.id}
+                                    onClick={() => updateHpSettings({ layout: opt.id })}
+                                    className={`flex-1 flex flex-col items-center py-2.5 px-2 rounded-xl border text-xs font-semibold transition-all ${
+                                      hpSettings.layout === opt.id
+                                        ? 'border-rose-400 bg-rose-50 text-rose-600 ring-2 ring-rose-200'
+                                        : 'border-gray-200 text-gray-400 hover:border-gray-300'
+                                    }`}
+                                  >
+                                    <span className="font-bold">{opt.label}</span>
+                                    <span className="text-[10px] font-normal opacity-70">{opt.sub}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="border-t border-gray-100" />
+
+                            {/* Headerfoto */}
+                            <div id="hp-field-headerfoto">
+                              <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Headerfoto</p>
+                              {heroImageUrl ? (
+                                <div className="flex flex-col gap-3">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={heroImageUrl} alt="" className="w-full h-24 object-cover rounded-xl" />
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs font-semibold text-gray-600">Kleur overlay</span>
+                                      <button
+                                        onClick={() => updateDraft({ heroOverlay: !heroOverlay })}
+                                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${heroOverlay ? "bg-pink-400" : "bg-gray-200"}`}
+                                      >
+                                        <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${heroOverlay ? "translate-x-4" : "translate-x-0.5"}`} />
+                                      </button>
+                                    </div>
+                                    <button
+                                      onClick={() => { setHeroImageUrl(null); localStorage.removeItem("sayingyes_hero_image_url") }}
+                                      className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors"
+                                    >
+                                      Verwijderen
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div>
+                                  {heroImageError && <p className="text-xs text-red-500 mb-2 leading-snug">{heroImageError}</p>}
+                                  <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-gray-200 rounded-xl py-5 text-gray-400 hover:border-rose-300 hover:text-rose-500 transition-colors"
+                                  >
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    Foto uploaden
+                                  </button>
+                                </div>
+                              )}
+                              <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={handleImageUpload} />
+                            </div>
+
+                            <div className="border-t border-gray-100" />
+
+                            {/* Hoofdtitel */}
+                            <div id="hp-field-hoofdtitel" className="flex flex-col gap-1.5">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-semibold text-gray-600">Hoofdtitel (Namen)</span>
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    onClick={() => updateHpSettings({ hoofdtitelVisible: !hpSettings.hoofdtitelVisible })}
+                                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.hoofdtitelVisible ? 'bg-pink-400' : 'bg-gray-200'}`}
+                                  >
+                                    <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.hoofdtitelVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                                  </button>
+                                  <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'hoofdtitel' ? 'bg-rose-50 text-rose-400' : 'text-gray-300'}`}>Aa</span>
+                                </div>
+                              </div>
+                              <textarea
+                                rows={2}
+                                value={draft?.naam ?? ""}
+                                onChange={(e) => updateDraft({ naam: e.target.value })}
+                                onFocus={() => setHpOpenGear('hoofdtitel')}
+                                placeholder="Bijv. Bruiloft Michiel & Lisa"
+                                className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
+                              />
+                              {hpOpenGear === 'hoofdtitel' && (
+                                <div className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-gray-200">
+                                  <FontSelect value={hpSettings.hoofdtitelFont} onChange={(v) => updateHpSettings({ hoofdtitelFont: v })} />
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs text-gray-500">Grootte</span>
+                                    <span className="text-xs text-gray-400">{hpSettings.hoofdtitelSize}rem</span>
+                                  </div>
+                                  <input type="range" min={2} max={10} step={0.25} value={hpSettings.hoofdtitelSize} onChange={(e) => updateHpSettings({ hoofdtitelSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                                  {heroImageUrl && (
+                                    <>
+                                      <p className="text-xs text-gray-500 mt-1">Positie</p>
+                                      <div className="flex rounded-xl border border-gray-200 overflow-hidden bg-white">
+                                        {([
+                                          { id: 'over',  label: 'Over foto'  },
+                                          { id: 'under', label: hpSettings.layout === 'modern' ? 'In tekstvlak' : 'Onder foto' },
+                                        ] as const).map((opt) => (
+                                          <button
+                                            key={opt.id}
+                                            onClick={() => updateHpSettings({ titlePosition: opt.id })}
+                                            className={`flex-1 py-2 text-xs font-semibold transition-colors ${hpSettings.titlePosition === opt.id ? 'bg-rose-500 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+                                          >
+                                            {opt.label}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="border-t border-gray-100" />
+
+                            {/* Subtitel */}
+                            <div id="hp-field-subtitle" className="flex flex-col gap-1.5">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-semibold text-gray-600">Subtitel (Intro)</span>
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    onClick={() => updateHpSettings({ subtitleVisible: !hpSettings.subtitleVisible })}
+                                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.subtitleVisible ? 'bg-pink-400' : 'bg-gray-200'}`}
+                                  >
+                                    <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.subtitleVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                                  </button>
+                                  <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'subtitle' ? 'bg-rose-50 text-rose-400' : 'text-gray-300'}`}>Aa</span>
+                                </div>
+                              </div>
+                              <input
+                                type="text"
+                                value={hpSettings.subtitleText}
+                                onChange={(e) => updateHpSettings({ subtitleText: e.target.value })}
+                                onFocus={() => setHpOpenGear('subtitle')}
+                                placeholder="bijv. Samen vieren we de liefde"
+                                className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                              />
+                              {hpOpenGear === 'subtitle' && (
+                                <div className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-gray-200">
+                                  <FontSelect value={hpSettings.subtitleFont} onChange={(v) => updateHpSettings({ subtitleFont: v })} />
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs text-gray-500">Grootte</span>
+                                    <span className="text-xs text-gray-400">{hpSettings.subtitleSize}rem</span>
+                                  </div>
+                                  <input type="range" min={0.7} max={5} step={0.1} value={hpSettings.subtitleSize} onChange={(e) => updateHpSettings({ subtitleSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                                </div>
+                              )}
+                            </div>
+
+                            {hpSettings.layout === 'editorial' && (<>
+                            <div className="border-t border-gray-100" />
+
+                            {/* Luxe Trouwkaart */}
+                            <div className="flex flex-col gap-3">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-semibold text-gray-600">Luxe Trouwkaart</span>
+                                <button
+                                  onClick={() => updateDraft({ use_frame: !(draft?.use_frame ?? false) })}
+                                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${draft?.use_frame ? "bg-pink-500" : "bg-gray-200"}`}
+                                >
+                                  <span className={`absolute h-4 w-4 rounded-full bg-white transition-transform shadow-sm ${draft?.use_frame ? "translate-x-6" : "translate-x-1"}`} />
+                                </button>
+                              </div>
+                              {draft?.use_frame && (
+                                <div className="grid grid-cols-3 gap-2">
+                                  {([
+                                    { id: "gold-circle",     label: "Gold Cirkel",    file: "gold-circle.png.png"    },
+                                    { id: "gold-diamond",    label: "Gold Ruit",      file: "gold-diamond.png.png"   },
+                                    { id: "terra-circle",    label: "Terra Cirkel",   file: "terra-circle.png.png"   },
+                                    { id: "terra-diamond",   label: "Terra Ruit",     file: "terra-diamond.png.png"  },
+                                    { id: "earthy-circle",   label: "Earthy Cirkel",  file: "earthy-circle.png.png"  },
+                                    { id: "earthy-diamond",  label: "Earthy Ruit",    file: "earthy-diamond.png.png" },
+                                    { id: "bloem2-breed",    label: "Bloem 2 Breed",  file: "Bloem2-breed.png"       },
+                                    { id: "olive-square",    label: "Olijf Vierkant", file: "olive-square.png.png"   },
+                                    { id: "bloem-rechthoek", label: "Bloem Breed",    file: "Bloem-rechthoek.png"    },
+                                  ]).map((frame) => {
+                                    const isActive = (draft?.frame_style ?? "gold-circle") === frame.id
+                                    return (
+                                      <button
+                                        key={frame.id}
+                                        onClick={() => updateDraft({ frame_style: frame.id })}
+                                        title={frame.label}
+                                        className={`relative rounded-xl overflow-hidden border-2 transition-all aspect-square ${isActive ? "border-rose-400 ring-2 ring-rose-300 ring-offset-1" : "border-gray-100 hover:border-gray-300"}`}
+                                      >
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={`/frames/${frame.file}`} alt={frame.label} className="w-full h-full object-cover" />
+                                        {isActive && (
+                                          <div className="absolute inset-0 bg-rose-500 bg-opacity-10 flex items-center justify-center">
+                                            <svg className="w-4 h-4 text-rose-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                                          </div>
+                                        )}
+                                      </button>
+                                    )
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                            </>)}
+
+                            <div className="border-t border-gray-100" />
+
+                            {/* Initialen */}
+                            <div id="hp-field-initialen" className="flex flex-col gap-1.5">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-semibold text-gray-600">Initialen</span>
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    onClick={() => updateHpSettings({ initialsVisible: !hpSettings.initialsVisible })}
+                                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.initialsVisible ? 'bg-pink-400' : 'bg-gray-200'}`}
+                                  >
+                                    <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.initialsVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                                  </button>
+                                  <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'initialen' ? 'bg-rose-50 text-rose-400' : 'text-gray-300'}`}>Aa</span>
+                                </div>
+                              </div>
+                              <input
+                                type="text"
+                                value={draft?.initials ?? ""}
+                                onChange={(e) => updateDraft({ initials: e.target.value })}
+                                onFocus={() => setHpOpenGear('initialen')}
+                                placeholder="bijv. M | W"
+                                className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                              />
+                              {hpOpenGear === 'initialen' && (
+                                <div className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-gray-200">
+                                  <FontSelect value={fontInitials} onChange={saveFontInitials} />
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs text-gray-500">Grootte</span>
+                                    <span className="text-xs text-gray-400">{draft?.frameInitialsSize ?? 8}</span>
+                                  </div>
+                                  <input type="range" min={4} max={18} step={0.5} value={draft?.frameInitialsSize ?? 8} onChange={(e) => updateDraft({ frameInitialsSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Namen in kader */}
+                            <div id="hp-field-namen" className="flex flex-col gap-1.5">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-semibold text-gray-600">Namen in kader</span>
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    onClick={() => updateHpSettings({ frameNamesVisible: !hpSettings.frameNamesVisible })}
+                                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.frameNamesVisible ? 'bg-pink-400' : 'bg-gray-200'}`}
+                                  >
+                                    <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.frameNamesVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                                  </button>
+                                  <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'namen' ? 'bg-rose-50 text-rose-400' : 'text-gray-300'}`}>Aa</span>
+                                </div>
+                              </div>
+                              <textarea
+                                rows={2}
+                                value={draft?.frame_names ?? ""}
+                                onChange={(e) => updateDraft({ frame_names: e.target.value })}
+                                onFocus={() => setHpOpenGear('namen')}
+                                placeholder={"bijv. Michiel\n& Lindsey"}
+                                className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all resize-none"
+                              />
+                              {hpOpenGear === 'namen' && (
+                                <div className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-gray-200">
+                                  <FontSelect value={fontFrameNames} onChange={saveFontFrameNames} />
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs text-gray-500">Grootte</span>
+                                    <span className="text-xs text-gray-400">{draft?.frameNamesSize ?? 5.5}</span>
+                                  </div>
+                                  <input type="range" min={2} max={13} step={0.5} value={draft?.frameNamesSize ?? 5.5} onChange={(e) => updateDraft({ frameNamesSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Datum */}
+                            <div id="hp-field-datum" className="flex flex-col gap-1.5">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-semibold text-gray-600">Datum</span>
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    onClick={() => updateHpSettings({ datumVisible: !hpSettings.datumVisible })}
+                                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.datumVisible ? 'bg-pink-400' : 'bg-gray-200'}`}
+                                  >
+                                    <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.datumVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                                  </button>
+                                  <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'datum' ? 'bg-rose-50 text-rose-400' : 'text-gray-300'}`}>Aa</span>
+                                </div>
+                              </div>
+                              <input
+                                type="date"
+                                value={draft?.datum ?? ""}
+                                onChange={(e) => updateDraft({ datum: e.target.value })}
+                                onFocus={() => setHpOpenGear('datum')}
+                                className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                              />
+                              {hpOpenGear === 'datum' && (
+                                <div className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-gray-200">
+                                  <FontSelect value={hpSettings.datumFont} onChange={(v) => updateHpSettings({ datumFont: v })} />
+                                  {draft?.use_frame ? (
+                                    <>
+                                      <div className="flex items-center justify-between">
+                                        <span className="text-xs text-gray-500">Grootte in kader</span>
+                                        <span className="text-xs text-gray-400">{draft?.frameDateSize ?? 1.8}</span>
+                                      </div>
+                                      <input type="range" min={0.3} max={6} step={0.1} value={draft?.frameDateSize ?? 1.8} onChange={(e) => updateDraft({ frameDateSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                                    </>
+                                  ) : (
+                                    <>
+                                      <div className="flex items-center justify-between">
+                                        <span className="text-xs text-gray-500">Grootte</span>
+                                        <span className="text-xs text-gray-400">{hpSettings.datumSize}rem</span>
+                                      </div>
+                                      <input type="range" min={0.7} max={3} step={0.1} value={hpSettings.datumSize} onChange={(e) => updateHpSettings({ datumSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                                    </>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Locatie */}
+                            <div id="hp-field-locatie" className="flex flex-col gap-1.5">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-semibold text-gray-600">Locatie</span>
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    onClick={() => updateHpSettings({ locatieVisible: !hpSettings.locatieVisible })}
+                                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.locatieVisible ? 'bg-pink-400' : 'bg-gray-200'}`}
+                                  >
+                                    <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.locatieVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                                  </button>
+                                  <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'locatie' ? 'bg-rose-50 text-rose-400' : 'text-gray-300'}`}>Aa</span>
+                                </div>
+                              </div>
+                              <input
+                                type="text"
+                                value={draft?.frame_location ?? ""}
+                                onChange={(e) => updateDraft({ frame_location: e.target.value })}
+                                onFocus={() => setHpOpenGear('locatie')}
+                                placeholder="bijv. Kasteel de Haar"
+                                className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                              />
+                              {hpOpenGear === 'locatie' && (
+                                <div className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-gray-200">
+                                  <FontSelect value={hpSettings.locatieFont} onChange={(v) => updateHpSettings({ locatieFont: v })} />
+                                  {draft?.use_frame ? (
+                                    <>
+                                      <div className="flex items-center justify-between">
+                                        <span className="text-xs text-gray-500">Grootte in kader</span>
+                                        <span className="text-xs text-gray-400">{draft?.frameLocationSize ?? 1.8}</span>
+                                      </div>
+                                      <input type="range" min={0.3} max={6} step={0.1} value={draft?.frameLocationSize ?? 1.8} onChange={(e) => updateDraft({ frameLocationSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                                    </>
+                                  ) : (
+                                    <>
+                                      <div className="flex items-center justify-between">
+                                        <span className="text-xs text-gray-500">Grootte</span>
+                                        <span className="text-xs text-gray-400">{hpSettings.locatieSize}rem</span>
+                                      </div>
+                                      <input type="range" min={0.7} max={3} step={0.1} value={hpSettings.locatieSize} onChange={(e) => updateHpSettings({ locatieSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                                    </>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="border-t border-gray-100" />
+
+                            {/* Welkomstbericht */}
+                            <div>
+                              <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Welkomstbericht</p>
+                              <div className="flex flex-col gap-3">
+                                <div id="hp-field-welkomst-titel" className="flex flex-col gap-1.5">
+                                  <span className="text-xs font-semibold text-gray-600">Titel</span>
+                                  <input
+                                    type="text"
+                                    value={homeContent.title}
+                                    onChange={(e) => updateDraft({ homeContent: { ...homeContent, title: e.target.value } })}
+                                    placeholder="Optionele titel"
+                                    className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                                  />
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs text-gray-500">Grootte</span>
+                                    <span className="text-xs text-gray-400">{homeContent.titleSize ?? 1.0}rem</span>
+                                  </div>
+                                  <input type="range" min={0.7} max={3} step={0.05} value={homeContent.titleSize ?? 1.0} onChange={(e) => updateDraft({ homeContent: { ...homeContent, titleSize: Number(e.target.value) } })} className="w-full accent-rose-400" />
+                                </div>
+                                <div id="hp-field-welkomst-tekst" className="flex flex-col gap-1.5">
+                                  <span className="text-xs font-semibold text-gray-600">Tekst</span>
+                                  <textarea
+                                    rows={5}
+                                    value={homeContent.body}
+                                    onChange={(e) => updateDraft({ homeContent: { ...homeContent, body: e.target.value } })}
+                                    placeholder="Schrijf een welkomstbericht voor je gasten..."
+                                    className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
+                                  />
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs text-gray-500">Grootte</span>
+                                    <span className="text-xs text-gray-400">{homeContent.bodySize ?? 0.9375}rem</span>
+                                  </div>
+                                  <input type="range" min={0.7} max={2.5} step={0.05} value={homeContent.bodySize ?? 0.9375} onChange={(e) => updateDraft({ homeContent: { ...homeContent, bodySize: Number(e.target.value) } })} className="w-full accent-rose-400" />
+                                </div>
+                                <div className="flex flex-col gap-1.5">
+                                  <span className="text-xs font-semibold text-gray-600">Uitlijning</span>
+                                  <div className="flex gap-1.5">
+                                    {(["left", "center", "right"] as const).map((a) => (
+                                      <button
+                                        key={a}
+                                        onClick={() => updateDraft({ homeContent: { ...homeContent, align: a } })}
+                                        className={`flex-1 flex items-center justify-center py-2 rounded-lg border transition-all ${homeContent.align === a ? "border-rose-300 bg-rose-50 text-rose-600" : "border-gray-200 text-gray-400 hover:border-gray-300"}`}
+                                      >
+                                        {a === "left" && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h10M4 18h12" /></svg>}
+                                        {a === "center" && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M7 12h10M6 18h12" /></svg>}
+                                        {a === "right" && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M10 12h10M8 18h12" /></svg>}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                          </>)}
+
+                          {/* ── Ceremoniemeesters controls ── */}
+                          {page.id === 'Ceremoniemeesters' && (
+                            <div className="flex flex-col gap-4">
+                              <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Ceremoniemeesters</p>
+                              <MastersEditor
+                                masters={(content.Ceremoniemeesters?.masters as MasterPerson[] | undefined) ?? []}
+                                onChange={(masters) => updateContent("Ceremoniemeesters", { ...(content.Ceremoniemeesters ?? {}), masters })}
+                              />
+                              <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-semibold text-gray-500">Vrije tekst onderaan</label>
+                                <textarea
+                                  rows={4}
+                                  value={typeof content.Ceremoniemeesters?.text === "string" ? content.Ceremoniemeesters.text : ""}
+                                  onChange={(e) => updateContent("Ceremoniemeesters", { ...(content.Ceremoniemeesters ?? {}), text: e.target.value })}
+                                  placeholder="Optionele tekst onderaan de pagina..."
+                                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none leading-relaxed"
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {/* ── Programma controls ── */}
+                          {page.id === 'Programma' && (
+                            <div>
+                              <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Weergave</p>
+                              <div className="flex rounded-xl border border-gray-200 overflow-hidden mb-5">
+                                {(["timeline", "centered"] as const).map((opt) => (
+                                  <button
+                                    key={opt}
+                                    onClick={() => updateContent("Programma", { items: programmaItems, layout: opt })}
+                                    className={`flex-1 py-2 text-xs font-semibold transition-colors ${
+                                      programLayout === opt ? "bg-rose-500 text-white" : "text-gray-500 hover:bg-gray-50"
+                                    }`}
+                                  >
+                                    {opt === "timeline" ? "Tijdlijn" : "Gecentreerd"}
+                                  </button>
+                                ))}
+                              </div>
+                              <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Onderdelen</p>
+                              <div className="flex flex-col gap-2">
+                                {programmaItems.map((item, i) => (
+                                  <div key={item.id ?? i} className="flex flex-col gap-1.5 bg-white rounded-xl p-3 border border-gray-100">
+                                    <div className="flex items-center gap-2">
+                                      <div className="flex items-center gap-1">
+                                        <select
+                                          value={item.time ? item.time.split(":")[0] : "12"}
+                                          onChange={(e) => {
+                                            const min = item.time ? item.time.split(":")[1] ?? "00" : "00"
+                                            const updated = [...programmaItems]
+                                            updated[i] = { ...updated[i], time: `${e.target.value}:${min}` }
+                                            updateContent("Programma", { items: updated, layout: programLayout })
+                                          }}
+                                          className="rounded-lg border border-gray-200 px-1.5 py-1.5 text-xs font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 bg-white cursor-pointer"
+                                        >
+                                          {Array.from({ length: 18 }, (_, k) => String(k + 6).padStart(2, "0")).map(h => (
+                                            <option key={h} value={h}>{h}</option>
+                                          ))}
+                                        </select>
+                                        <span className="text-xs font-bold text-gray-500">:</span>
+                                        <select
+                                          value={item.time ? (["00","15","30","45"].includes(item.time.split(":")[1]) ? item.time.split(":")[1] : "00") : "00"}
+                                          onChange={(e) => {
+                                            const hr = item.time ? item.time.split(":")[0] ?? "12" : "12"
+                                            const updated = [...programmaItems]
+                                            updated[i] = { ...updated[i], time: `${hr}:${e.target.value}` }
+                                            updateContent("Programma", { items: updated, layout: programLayout })
+                                          }}
+                                          className="rounded-lg border border-gray-200 px-1.5 py-1.5 text-xs font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 bg-white cursor-pointer"
+                                        >
+                                          {["00","15","30","45"].map(m => (
+                                            <option key={m} value={m}>{m}</option>
+                                          ))}
+                                        </select>
+                                      </div>
+                                      <button
+                                        onClick={() => setOpenIconPickerIdx(openIconPickerIdx === i ? null : i)}
+                                        className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-xs font-semibold transition-colors ${
+                                          openIconPickerIdx === i
+                                            ? "border-rose-400 bg-rose-50 text-rose-600"
+                                            : "border-gray-200 bg-white text-gray-500 hover:border-rose-300 hover:text-rose-500"
+                                        }`}
+                                      >
+                                        <ProgramIcon iconId={item.iconId ?? "heart"} size={14} strokeWidth={2} />
+                                        <span>Icoon</span>
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          const updated = programmaItems.filter((_, j) => j !== i)
+                                          updateContent("Programma", { items: updated, layout: programLayout })
+                                        }}
+                                        className="text-gray-300 hover:text-red-500 transition-colors p-1"
+                                      >
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                      </button>
+                                    </div>
+                                    {openIconPickerIdx === i && (
+                                      <div className="grid grid-cols-3 gap-1 p-2 bg-white rounded-xl border border-gray-100 shadow-sm">
+                                        {PROGRAM_ICONS.map((icon) => (
+                                          <button
+                                            key={icon.id}
+                                            onClick={() => {
+                                              const updated = [...programmaItems]
+                                              updated[i] = { ...updated[i], iconId: icon.id }
+                                              updateContent("Programma", { items: updated, layout: programLayout })
+                                              setOpenIconPickerIdx(null)
+                                            }}
+                                            className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
+                                              (item.iconId ?? "heart") === icon.id
+                                                ? "bg-rose-50 text-rose-500"
+                                                : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"
+                                            }`}
+                                          >
+                                            <div className="h-9 flex items-center justify-center">
+                                              <ProgramIcon iconId={icon.id} size={36} strokeWidth={2} fixedHeight />
+                                            </div>
+                                            <span className="text-[11px] leading-tight w-full text-center break-words">{icon.label}</span>
+                                          </button>
+                                        ))}
+                                      </div>
+                                    )}
+                                    <input
+                                      type="text"
+                                      value={item.title ?? ""}
+                                      onChange={(e) => {
+                                        const updated = [...programmaItems]
+                                        updated[i] = { ...updated[i], title: e.target.value }
+                                        updateContent("Programma", { items: updated, layout: programLayout })
+                                      }}
+                                      placeholder="Titel..."
+                                      className="rounded-lg border border-gray-200 px-2 py-1.5 text-sm font-semibold text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400"
+                                    />
+                                    <textarea
+                                      rows={2}
+                                      value={item.description}
+                                      onChange={(e) => {
+                                        const updated = [...programmaItems]
+                                        updated[i] = { ...updated[i], description: e.target.value }
+                                        updateContent("Programma", { items: updated, layout: programLayout })
+                                      }}
+                                      placeholder="Beschrijving..."
+                                      className="rounded-lg border border-gray-200 px-2 py-1.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none"
+                                    />
+                                  </div>
+                                ))}
+                                <button
+                                  onClick={() => {
+                                    const updated = [...programmaItems, { id: crypto.randomUUID(), time: "", title: "", description: "", iconId: "heart" }]
+                                    updateContent("Programma", { items: updated, layout: programLayout })
+                                  }}
+                                  className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-emerald-200 rounded-xl py-3 text-emerald-600 hover:border-emerald-300 hover:bg-emerald-50 transition-colors mt-1"
+                                >
+                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                                  </svg>
+                                  Onderdeel toevoegen
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* ── RSVP controls ── */}
+                          {page.id === 'RSVP' && (
+                            <div className="flex flex-col gap-5">
+                              <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Introductietekst</p>
+                                <label className="flex flex-col gap-1.5">
+                                  <span className="text-xs font-semibold text-gray-600">Tekst boven het formulier</span>
+                                  <textarea
+                                    rows={3}
+                                    value={(content.RSVP?.text as string) ?? ""}
+                                    onChange={(e) => updateContent("RSVP", { ...(content.RSVP ?? {}), text: e.target.value })}
+                                    placeholder="Laat weten of je erbij bent — vul het formulier in."
+                                    className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
+                                  />
+                                </label>
+                              </div>
+                              <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Type gasten</p>
+                                <div className="flex flex-col gap-2">
+                                  {(["daggast", "avondgast", "receptiegast"] as const).map((t) => {
+                                    const current = (content.RSVP?.guestTypes as string[]) ?? ["daggast", "avondgast"]
+                                    const label = t === "daggast" ? "Daggast" : t === "avondgast" ? "Avondgast" : "Receptiegast"
+                                    return (
+                                      <label key={t} className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
+                                        <input
+                                          type="checkbox"
+                                          className="rounded"
+                                          checked={current.includes(t)}
+                                          onChange={(e) => {
+                                            const updated = e.target.checked
+                                              ? [...current, t]
+                                              : current.filter((x) => x !== t)
+                                            if (updated.length > 0) {
+                                              updateContent("RSVP", { ...(content.RSVP ?? {}), guestTypes: updated })
+                                            }
+                                          }}
+                                        />
+                                        {label}
+                                      </label>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+                              <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Sluitingsdatum</p>
+                                <label className="flex flex-col gap-1.5">
+                                  <span className="text-xs font-semibold text-gray-600">Aanmelden niet meer mogelijk na</span>
+                                  <input
+                                    type="date"
+                                    value={(content.RSVP?.deadline as string) ?? ""}
+                                    onChange={(e) => updateContent("RSVP", { ...(content.RSVP ?? {}), deadline: e.target.value || null })}
+                                    className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                                  />
+                                  <span className="text-xs text-gray-400">Laat leeg voor geen sluitingsdatum.</span>
+                                </label>
+                              </div>
+                              <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">DJ-tip / Song Request</p>
+                                <label className="flex items-start gap-3 cursor-pointer select-none">
+                                  <input
+                                    type="checkbox"
+                                    className="mt-0.5"
+                                    checked={(content.RSVP?.showSongRequest as boolean) ?? false}
+                                    onChange={(e) => updateContent("RSVP", { ...(content.RSVP ?? {}), showSongRequest: e.target.checked })}
+                                  />
+                                  <span className="text-sm text-gray-700">
+                                    Vraag om een song request<br />
+                                    <span className="text-xs text-gray-400">&ldquo;Welk nummer brengt jou gegarandeerd naar de dansvloer?&rdquo;</span>
+                                  </span>
+                                </label>
+                              </div>
+                              <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Overnachting</p>
+                                <label className="flex items-start gap-3 cursor-pointer select-none">
+                                  <input
+                                    type="checkbox"
+                                    className="mt-0.5"
+                                    checked={(content.RSVP?.showOvernachting as boolean) ?? false}
+                                    onChange={(e) => updateContent("RSVP", { ...(content.RSVP ?? {}), showOvernachting: e.target.checked })}
+                                  />
+                                  <span className="text-sm text-gray-700">
+                                    Overnachtingsvraag tonen<br />
+                                    <span className="text-xs text-gray-400">&ldquo;Blijven jullie overnachten?&rdquo;</span>
+                                  </span>
+                                </label>
+                              </div>
+                              <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Eigen Ja/Nee-vraag</p>
+                                <label className="flex flex-col gap-1.5">
+                                  <span className="text-xs font-semibold text-gray-600">Stel je eigen vraag</span>
+                                  <input
+                                    type="text"
+                                    value={(content.RSVP?.customQuestion as string) ?? ""}
+                                    onChange={(e) => updateContent("RSVP", { ...(content.RSVP ?? {}), customQuestion: e.target.value })}
+                                    placeholder="Bijv. Komen jullie naar het afterparty?"
+                                    className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                                  />
+                                  <span className="text-xs text-gray-400">Laat leeg om uit te schakelen.</span>
+                                </label>
+                                <label className="flex flex-col gap-1.5 mt-3">
+                                  <span className="text-xs font-semibold text-gray-600">Stel je eigen vraag 2</span>
+                                  <input
+                                    type="text"
+                                    value={(content.RSVP?.customQuestion2 as string) ?? ""}
+                                    onChange={(e) => updateContent("RSVP", { ...(content.RSVP ?? {}), customQuestion2: e.target.value })}
+                                    placeholder="Bijv. Doen jullie mee met het spel?"
+                                    className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                                  />
+                                  <span className="text-xs text-gray-400">Laat leeg om uit te schakelen.</span>
+                                </label>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* ── Ons Verhaal controls ── */}
+                          {page.id === 'OnsVerhaal' && (
+                            <div className="flex flex-col gap-5">
+                              <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Ons Verhaal</p>
+                              <label className="flex flex-col gap-1.5">
+                                <span className="text-xs font-semibold text-gray-600">Titel</span>
+                                <input
+                                  type="text"
+                                  value={(content.OnsVerhaal?.title as string) ?? "Ons Verhaal"}
+                                  onChange={(e) => updateContent("OnsVerhaal", { ...(content.OnsVerhaal ?? {}), title: e.target.value })}
+                                  placeholder="Ons Verhaal"
+                                  className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                                />
+                              </label>
+                              <label className="flex flex-col gap-1.5">
+                                <span className="text-xs font-semibold text-gray-600">Verhaal</span>
+                                <textarea
+                                  rows={6}
+                                  value={(content.OnsVerhaal?.text as string) ?? ""}
+                                  onChange={(e) => updateContent("OnsVerhaal", { ...(content.OnsVerhaal ?? {}), text: e.target.value })}
+                                  placeholder="Vertel hier jullie verhaal..."
+                                  className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
+                                />
+                              </label>
+                              <div>
+                                <p className="text-xs font-semibold text-gray-600 mb-2">Foto</p>
+                                {storyImageError && <p className="text-xs text-red-500 mb-2">{storyImageError}</p>}
+                                {(storyImageBlob ?? (content.OnsVerhaal?.image_url as string | null)) ? (
+                                  <div className="flex flex-col gap-2">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                      src={(storyImageBlob ?? (content.OnsVerhaal?.image_url as string))!}
+                                      alt=""
+                                      className="w-full h-24 object-cover rounded-xl"
+                                    />
+                                    {!storyUploading && (
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-xs font-semibold text-gray-600">Kleur overlay</span>
+                                          <button
+                                            onClick={() => updateDraft({ storyOverlay: !storyOverlay })}
+                                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${storyOverlay ? "bg-pink-400" : "bg-gray-200"}`}
+                                          >
+                                            <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${storyOverlay ? "translate-x-4" : "translate-x-0.5"}`} />
+                                          </button>
+                                        </div>
+                                        <button
+                                          onClick={() => {
+                                            setStoryImageBlob(null)
+                                            updateContent("OnsVerhaal", { ...(content.OnsVerhaal ?? {}), image_url: null })
+                                          }}
+                                          className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors"
+                                        >
+                                          Verwijderen
+                                        </button>
+                                      </div>
+                                    )}
+                                    {storyUploading && <p className="text-xs text-gray-400">Uploading...</p>}
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={() => storyFileInputRef.current?.click()}
+                                    disabled={storyUploading}
+                                    className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-gray-200 rounded-xl py-5 text-gray-400 hover:border-rose-300 hover:text-rose-500 disabled:opacity-50 transition-colors"
+                                  >
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    Foto uploaden
+                                  </button>
+                                )}
+                                <input ref={storyFileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={handleStoryImageUpload} />
+                              </div>
+                            </div>
+                          )}
+
+                          {/* ── Informatie controls ── */}
+                          {page.id === 'Informatie' && (
+                            <div className="flex flex-col gap-4">
+                              <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Informatie</p>
+                              <PraktischEditor
+                                tiles={praktischTiles ?? DEFAULT_PRAKTISCH_TILES}
+                                onChange={(tiles) => updateContent("Informatie", { ...(content.Informatie ?? {}), items: tiles })}
+                              />
+                            </div>
+                          )}
+
+                          {/* ── Cadeautips controls ── */}
+                          {page.id === 'Cadeautips' && (
+                            <div className="flex flex-col gap-4">
+                              <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Cadeautips</p>
+                              <WishlistEditor
+                                items={wishlistItems ?? DEFAULT_WISHLIST_ITEMS}
+                                onChange={(items) => updateContent("Cadeautips", { ...(content.Cadeautips ?? {}), items })}
+                              />
+                            </div>
+                          )}
+
+                          {/* ── Foto's controls ── */}
+                          {page.id === 'Fotos' && (
+                            <div className="flex flex-col gap-5">
+                              <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Foto&apos;s</p>
+                              <label className="flex flex-col gap-1.5">
+                                <span className="text-xs font-semibold text-gray-600">Paginatitel</span>
+                                <input
+                                  type="text"
+                                  value={(content.Fotos?.title as string) ?? "Foto's"}
+                                  onChange={(e) => updateContent("Fotos", { ...(content.Fotos ?? {}), title: e.target.value })}
+                                  placeholder="Foto's"
+                                  className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                                />
+                              </label>
+                              <label className="flex flex-col gap-1.5">
+                                <span className="text-xs font-semibold text-gray-600">Introductietekst <span className="font-normal text-gray-400">(optioneel)</span></span>
+                                <textarea
+                                  rows={2}
+                                  value={(content.Fotos?.intro as string) ?? ""}
+                                  onChange={(e) => updateContent("Fotos", { ...(content.Fotos ?? {}), intro: e.target.value })}
+                                  placeholder="Bijv. Geniet hier na van de foto's van onze mooie dag."
+                                  className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
+                                />
+                              </label>
+                              <div>
+                                <div className="flex items-center justify-between mb-1.5">
+                                  <span className="text-xs font-semibold text-gray-600">
+                                    {fotosUrls.length} / {MAX_FOTOS} foto&apos;s
+                                  </span>
+                                  <span className="text-xs text-gray-400">{MAX_FOTOS - fotosUrls.length} plaatsen over</span>
+                                </div>
+                                <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                                  <div
+                                    className="h-full rounded-full bg-rose-400 transition-all"
+                                    style={{ width: `${Math.min(100, (fotosUrls.length / MAX_FOTOS) * 100)}%` }}
+                                  />
+                                </div>
+                              </div>
+                              {fotosUploadError && <p className="text-xs text-red-500">{fotosUploadError}</p>}
+                              <button
+                                type="button"
+                                disabled={fotosUploading || fotosUrls.length >= MAX_FOTOS}
+                                onClick={() => fotosFileInputRef.current?.click()}
+                                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl border-2 border-dashed border-gray-200 text-sm font-semibold text-gray-400 hover:border-rose-300 hover:text-rose-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {fotosUploading ? (
+                                  <>
+                                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
+                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                                    </svg>
+                                    Uploaden...
+                                  </>
+                                ) : (
+                                  <>
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    {fotosUrls.length >= MAX_FOTOS ? "Limiet bereikt" : "Foto's toevoegen"}
+                                  </>
+                                )}
+                              </button>
+                              <input
+                                ref={fotosFileInputRef}
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                multiple
+                                className="hidden"
+                                onChange={handleFotosUpload}
+                              />
+                              {fotosUrls.length > 0 && (
+                                <div className="grid grid-cols-3 gap-1.5">
+                                  {fotosUrls.map((url, i) => (
+                                    <div key={i} className="relative aspect-square group">
+                                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                                      <img src={url} alt="" className="w-full h-full object-cover rounded-lg" />
+                                      <button
+                                        onClick={() => deleteFotosImage(i)}
+                                        className="absolute top-0.5 right-0.5 w-5 h-5 bg-black/50 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all"
+                                      >
+                                        ×
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* ── 3. URL ── */}
+          <div>
+            <button
+              onClick={() => setActiveSection(prev => prev === 'url' ? null : 'url')}
+              className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-gray-50 transition-colors"
+            >
+              <span className="text-xs font-bold uppercase tracking-widest text-gray-500">URL</span>
+              <Chevron open={activeSection === 'url'} />
+            </button>
+            {activeSection === 'url' && (
+              <div className="px-5 pt-1 pb-5">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">Jouw URL</p>
             {!slugEditOpen ? (
               <div className="flex items-center justify-between gap-2">
                 <p className="text-[11px] text-gray-500 font-mono truncate">{slugPreview}.sayingyes.nl</p>
@@ -1212,139 +2266,7 @@ export default function BouwenPage() {
               </div>
             )}
           </div>
-
-          {/* Stijl kiezer */}
-          <div className="px-5 pt-6 pb-4 border-b border-gray-100">
-            <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Stijl</p>
-            <div className="flex flex-col gap-2">
-              {STYLES.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => saveStyle(s.id)}
-                  className={`flex items-center gap-3 w-full rounded-xl border px-3 py-2.5 text-left transition-all ${
-                    style === s.id
-                      ? `${s.border} bg-gray-50 ring-2 ${s.active} ring-offset-1`
-                      : `border-gray-100 hover:border-gray-200 hover:bg-gray-50`
-                  }`}
-                >
-                  <span className={`w-5 h-5 rounded-full flex-shrink-0 ${s.dot}`} />
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold text-gray-800 leading-tight">{s.label}</p>
-                    <p className="text-[10px] text-gray-400 truncate">{s.sub}</p>
-                  </div>
-                  {style === s.id && (
-                    <svg className="w-3.5 h-3.5 text-rose-500 flex-shrink-0 ml-auto" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Nav layout toggle */}
-          <div className="px-5 pt-5 pb-4 border-b border-gray-100">
-            <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Navigatie</p>
-            <div className="flex rounded-xl border border-gray-200 overflow-hidden">
-              {(['left', 'split', 'stacked'] as const).map((opt) => (
-                <button
-                  key={opt}
-                  onClick={() => {
-                    const next = { ...draft, navLayout: opt } as Draft
-                    setDraft(next)
-                    localStorage.setItem("sayingyes_draft", JSON.stringify(next))
-                  }}
-                  className={`flex-1 py-2 text-xs font-semibold transition-colors ${
-                    navLayout === opt ? 'bg-rose-500 text-white' : 'text-gray-500 hover:bg-gray-50'
-                  }`}
-                >
-                  {opt === 'left' ? 'Links' : opt === 'split' ? 'Verdeeld' : 'Gecentreerd'}
-                </button>
-              ))}
-            </div>
-            <label className="flex flex-col gap-1.5 mt-3">
-              <span className="text-xs font-semibold text-gray-600">Navigatietitel</span>
-              <input
-                type="text"
-                value={draft?.nav_title ?? draft?.naam ?? ""}
-                onChange={(e) => updateDraft({ nav_title: e.target.value })}
-                placeholder="Bijv. Sanne & Tom"
-                className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-              />
-              <p className="text-[10px] text-gray-400 leading-snug">Naam in de menubalk van de website</p>
-            </label>
-          </div>
-
-          {/* Basislettertype */}
-          <div className="px-5 pt-5 pb-4 border-b border-gray-100">
-            <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Basislettertype</p>
-            <FontSelect value={fontPageTitles} onChange={saveFontPageTitles} />
-          </div>
-
-          <div className="px-5 pt-5 pb-3">
-            <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Pagina&apos;s</p>
-            <div className="flex flex-col gap-1">
-              {PAGES.map((page) => {
-                const isOn = active[page.id]
-                const isEditing = editingPage === page.id
-                const isControlsOpen = CONTROLS_PAGES.has(page.id) && previewPage === page.id && isEditingControls
-                const buttonActive = isEditing || isControlsOpen
-                return (
-                  <div key={page.id} className={`rounded-xl transition-colors ${buttonActive ? "bg-rose-50 ring-1 ring-rose-200" : isOn ? "hover:bg-gray-50" : ""}`}>
-                    <div
-                      className="flex items-center justify-between px-3 py-2.5 cursor-pointer"
-                      onClick={() => isOn && setPreviewPage(page.id)}
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isOn ? "bg-rose-400" : "bg-gray-200"}`} />
-                        <span className={`text-sm font-medium truncate ${isOn ? "text-gray-800" : "text-gray-400"}`}>
-                          {page.label}
-                        </span>
-                      </div>
-                      {page.toggleable ? (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); toggle(page.id) }}
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${isOn ? "bg-pink-500" : "bg-gray-200"}`}
-                        >
-                          <span className={`absolute h-4 w-4 rounded-full bg-white transition-transform ${isOn ? "translate-x-6" : "translate-x-1"}`} />
-                        </button>
-                      ) : (
-                        <span className="text-[10px] bg-gray-100 text-gray-400 rounded-md px-1.5 py-0.5 font-semibold flex-shrink-0">aan</span>
-                      )}
-                    </div>
-                    {isOn && (
-                      <div className="px-3 pb-2.5">
-                        <button
-                          onClick={() => {
-                            if (CONTROLS_PAGES.has(page.id)) {
-                              setPreviewPage(page.id)
-                              if (isControlsOpen) {
-                                setIsEditingControls(false)
-                              } else {
-                                setIsEditingControls(true)
-                              }
-                            } else {
-                              setIsEditingControls(false)
-                              isEditing ? setEditingPage(null) : openEditor(page.id)
-                            }
-                          }}
-                          className={`w-full flex items-center justify-center gap-1.5 text-xs font-semibold py-1.5 rounded-lg transition-colors ${
-                            buttonActive
-                              ? "bg-rose-100 text-rose-600"
-                              : "bg-gray-100 text-gray-500 hover:bg-rose-50 hover:text-rose-600"
-                          }`}
-                        >
-                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                          </svg>
-                          {buttonActive ? "Klaar" : "Bewerken"}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
+            )}
           </div>
 
         </aside>
@@ -1352,27 +2274,8 @@ export default function BouwenPage() {
         {/* ── Main panel ── hidden on mobile, visible on desktop ── */}
         <main className="hidden md:flex flex-1 flex-col overflow-hidden bg-gray-100">
           <div className="flex items-center justify-between px-4 py-2 bg-gray-100 border-b border-gray-200 flex-shrink-0">
-            {editingPage ? (
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setEditingPage(null)}
-                  className="flex items-center gap-1 text-xs font-semibold text-gray-500 hover:text-rose-600 transition-colors"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                  </svg>
-                  Terug naar preview
-                </button>
-                <span className="text-xs text-gray-300">|</span>
-                <span className="text-xs font-bold text-rose-600 uppercase tracking-widest">
-                  {PAGES.find(p => p.id === editingPage)?.label} bewerken
-                </span>
-              </div>
-            ) : (
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Live preview</p>
-            )}
-            {!editingPage && (
-              <div className="flex items-center gap-2">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Live preview</p>
+            <div className="flex items-center gap-2">
                 {/* Zoom controls */}
                 <div className="flex items-center gap-1 bg-gray-200 rounded-lg p-0.5">
                   <button
@@ -1426,1003 +2329,12 @@ export default function BouwenPage() {
                   </button>
                 </div>
               </div>
-            )}
           </div>
 
-          {/* ── Builder layout: optional controls sidebar + canvas or editor ── */}
+          {/* ── Canvas ── */}
           <div className="flex flex-1 min-h-0 overflow-hidden">
 
-            {/* Controls sidebar — only for CONTROLS_PAGES when open */}
-            {!editingPage && CONTROLS_PAGES.has(previewPage) && isEditingControls && (
-              <div className="w-[300px] flex-shrink-0 overflow-y-auto bg-white border-r border-gray-100 p-6 flex flex-col gap-6">
-
-                {/* Top back button */}
-                <div className="flex items-center justify-between -mb-2">
-                  <button
-                    onClick={() => setIsEditingControls(false)}
-                    className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                    </svg>
-                    Sluiten
-                  </button>
-                  <span className="text-xs font-bold text-gray-700 capitalize">{previewPage}</span>
-                </div>
-
-                {/* ── Home controls ── */}
-                {previewPage === "Home" && (<>
-
-                  {/* 1. Layout picker */}
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Lay-out</p>
-                    <div className="flex gap-2">
-                      {([
-                        { id: 'editorial', label: 'Kader',  sub: 'Layout 1' },
-                        { id: 'modern',    label: 'Modern', sub: 'Layout 2' },
-                      ] as const).map((opt) => (
-                        <button
-                          key={opt.id}
-                          onClick={() => updateHpSettings({ layout: opt.id })}
-                          className={`flex-1 flex flex-col items-center py-2.5 px-2 rounded-xl border text-xs font-semibold transition-all ${
-                            hpSettings.layout === opt.id
-                              ? 'border-rose-400 bg-rose-50 text-rose-600 ring-2 ring-rose-200'
-                              : 'border-gray-200 text-gray-400 hover:border-gray-300'
-                          }`}
-                        >
-                          <span className="font-bold">{opt.label}</span>
-                          <span className="text-[10px] font-normal opacity-70">{opt.sub}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="border-t border-gray-100" />
-
-                  {/* 2. Headerfoto & Overlay — both layouts */}
-                  <div id="hp-field-headerfoto">
-                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Headerfoto</p>
-                    {heroImageUrl ? (
-                      <div className="flex flex-col gap-3">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={heroImageUrl} alt="" className="w-full h-24 object-cover rounded-xl" />
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-semibold text-gray-600">Kleur overlay</span>
-                            <button
-                              onClick={() => updateDraft({ heroOverlay: !heroOverlay })}
-                              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${heroOverlay ? "bg-pink-400" : "bg-gray-200"}`}
-                            >
-                              <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${heroOverlay ? "translate-x-4" : "translate-x-0.5"}`} />
-                            </button>
-                          </div>
-                          <button
-                            onClick={() => { setHeroImageUrl(null); localStorage.removeItem("sayingyes_hero_image_url") }}
-                            className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors"
-                          >
-                            Verwijderen
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        {heroImageError && <p className="text-xs text-red-500 mb-2 leading-snug">{heroImageError}</p>}
-                        <button
-                          onClick={() => fileInputRef.current?.click()}
-                          className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-gray-200 rounded-xl py-5 text-gray-400 hover:border-rose-300 hover:text-rose-500 transition-colors"
-                        >
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          Foto uploaden
-                        </button>
-                      </div>
-                    )}
-                    <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={handleImageUpload} />
-                  </div>
-
-                  {/* Shared options for all layouts */}
-
-                    <div className="border-t border-gray-100" />
-
-                    {/* 3. Hoofdtitel (Namen) */}
-                    <div id="hp-field-hoofdtitel" className="flex flex-col gap-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-gray-600">Hoofdtitel (Namen)</span>
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={() => updateHpSettings({ hoofdtitelVisible: !hpSettings.hoofdtitelVisible })}
-                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.hoofdtitelVisible ? 'bg-pink-400' : 'bg-gray-200'}`}
-                            title="Tonen"
-                          >
-                            <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.hoofdtitelVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
-                          </button>
-                          <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'hoofdtitel' ? 'bg-rose-50 text-rose-400' : 'text-gray-300'}`}>Aa</span>
-                        </div>
-                      </div>
-                      <textarea
-                        rows={2}
-                        value={draft?.naam ?? ""}
-                        onChange={(e) => updateDraft({ naam: e.target.value })}
-                        onFocus={() => setHpOpenGear('hoofdtitel')}
-                        placeholder="Bijv. Bruiloft Michiel & Lisa"
-                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
-                      />
-                      {hpOpenGear === 'hoofdtitel' && (
-                        <div className="flex flex-col gap-2 bg-gray-50 rounded-xl p-3 border border-gray-100">
-                          <FontSelect value={hpSettings.hoofdtitelFont} onChange={(v) => updateHpSettings({ hoofdtitelFont: v })} />
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">Grootte</span>
-                            <span className="text-xs text-gray-400">{hpSettings.hoofdtitelSize}rem</span>
-                          </div>
-                          <input type="range" min={2} max={10} step={0.25} value={hpSettings.hoofdtitelSize} onChange={(e) => updateHpSettings({ hoofdtitelSize: Number(e.target.value) })} className="w-full accent-rose-400" />
-                          {heroImageUrl && (
-                            <>
-                              <p className="text-xs text-gray-500 mt-1">Positie</p>
-                              <div className="flex rounded-xl border border-gray-200 overflow-hidden bg-white">
-                                {([
-                                  { id: 'over',  label: 'Over foto'  },
-                                  { id: 'under', label: hpSettings.layout === 'modern' ? 'In tekstvlak' : 'Onder foto' },
-                                ] as const).map((opt) => (
-                                  <button
-                                    key={opt.id}
-                                    onClick={() => updateHpSettings({ titlePosition: opt.id })}
-                                    className={`flex-1 py-2 text-xs font-semibold transition-colors ${hpSettings.titlePosition === opt.id ? 'bg-rose-500 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
-                                  >
-                                    {opt.label}
-                                  </button>
-                                ))}
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="border-t border-gray-100" />
-
-                    {/* 5. Subtitel (Intro) */}
-                    <div id="hp-field-subtitle" className="flex flex-col gap-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-gray-600">Subtitel (Intro)</span>
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={() => updateHpSettings({ subtitleVisible: !hpSettings.subtitleVisible })}
-                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.subtitleVisible ? 'bg-pink-400' : 'bg-gray-200'}`}
-                            title="Tonen"
-                          >
-                            <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.subtitleVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
-                          </button>
-                          <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'subtitle' ? 'bg-rose-50 text-rose-400' : 'text-gray-300'}`}>Aa</span>
-                        </div>
-                      </div>
-                      <input
-                        type="text"
-                        value={hpSettings.subtitleText}
-                        onChange={(e) => updateHpSettings({ subtitleText: e.target.value })}
-                        onFocus={() => setHpOpenGear('subtitle')}
-                        placeholder="bijv. Samen vieren we de liefde"
-                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                      />
-                      {hpOpenGear === 'subtitle' && (
-                        <div className="flex flex-col gap-2 bg-gray-50 rounded-xl p-3 border border-gray-100">
-                          <FontSelect value={hpSettings.subtitleFont} onChange={(v) => updateHpSettings({ subtitleFont: v })} />
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">Grootte</span>
-                            <span className="text-xs text-gray-400">{hpSettings.subtitleSize}rem</span>
-                          </div>
-                          <input type="range" min={0.7} max={5} step={0.1} value={hpSettings.subtitleSize} onChange={(e) => updateHpSettings({ subtitleSize: Number(e.target.value) })} className="w-full accent-rose-400" />
-                        </div>
-                      )}
-                    </div>
-
-                    {hpSettings.layout === 'editorial' && (<>
-                    <div className="border-t border-gray-100" />
-
-                    {/* 6. Toon grafisch kader + kader keuze */}
-                    <div className="flex flex-col gap-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-gray-600">Luxe Trouwkaart</span>
-                        <button
-                          onClick={() => updateDraft({ use_frame: !(draft?.use_frame ?? false) })}
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${draft?.use_frame ? "bg-pink-500" : "bg-gray-200"}`}
-                        >
-                          <span className={`absolute h-4 w-4 rounded-full bg-white transition-transform shadow-sm ${draft?.use_frame ? "translate-x-6" : "translate-x-1"}`} />
-                        </button>
-                      </div>
-                      {draft?.use_frame && (
-                        <div className="grid grid-cols-3 gap-2">
-                          {([
-                            { id: "gold-circle",     label: "Gold Cirkel",    file: "gold-circle.png.png"    },
-                            { id: "gold-diamond",    label: "Gold Ruit",      file: "gold-diamond.png.png"   },
-                            { id: "terra-circle",    label: "Terra Cirkel",   file: "terra-circle.png.png"   },
-                            { id: "terra-diamond",   label: "Terra Ruit",     file: "terra-diamond.png.png"  },
-                            { id: "earthy-circle",   label: "Earthy Cirkel",  file: "earthy-circle.png.png"  },
-                            { id: "earthy-diamond",  label: "Earthy Ruit",    file: "earthy-diamond.png.png" },
-                            { id: "bloem2-breed",    label: "Bloem 2 Breed",  file: "Bloem2-breed.png"       },
-                            { id: "olive-square",    label: "Olijf Vierkant", file: "olive-square.png.png"   },
-                            { id: "bloem-rechthoek", label: "Bloem Breed",    file: "Bloem-rechthoek.png"    },
-                          ]).map((frame) => {
-                            const isActive = (draft?.frame_style ?? "gold-circle") === frame.id
-                            return (
-                              <button
-                                key={frame.id}
-                                onClick={() => updateDraft({ frame_style: frame.id })}
-                                title={frame.label}
-                                className={`relative rounded-xl overflow-hidden border-2 transition-all aspect-square ${isActive ? "border-rose-400 ring-2 ring-rose-300 ring-offset-1" : "border-gray-100 hover:border-gray-300"}`}
-                              >
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={`/frames/${frame.file}`} alt={frame.label} className="w-full h-full object-cover" />
-                                {isActive && (
-                                  <div className="absolute inset-0 bg-rose-500 bg-opacity-10 flex items-center justify-center">
-                                    <svg className="w-4 h-4 text-rose-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                                  </div>
-                                )}
-                              </button>
-                            )
-                          })}
-                        </div>
-                      )}
-                    </div>
-                    </>)}
-
-                    <div className="border-t border-gray-100" />
-
-                    {/* 7. Initialen */}
-                    <div id="hp-field-initialen" className="flex flex-col gap-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-gray-600">Initialen</span>
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={() => updateHpSettings({ initialsVisible: !hpSettings.initialsVisible })}
-                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.initialsVisible ? 'bg-pink-400' : 'bg-gray-200'}`}
-                            title="Tonen"
-                          >
-                            <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.initialsVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
-                          </button>
-                          <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'initialen' ? 'bg-rose-50 text-rose-400' : 'text-gray-300'}`}>Aa</span>
-                        </div>
-                      </div>
-                      <input
-                        type="text"
-                        value={draft?.initials ?? ""}
-                        onChange={(e) => updateDraft({ initials: e.target.value })}
-                        onFocus={() => setHpOpenGear('initialen')}
-                        placeholder="bijv. M | W"
-                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                      />
-                      {hpOpenGear === 'initialen' && (
-                        <div className="flex flex-col gap-2 bg-gray-50 rounded-xl p-3 border border-gray-100">
-                          <FontSelect value={fontInitials} onChange={saveFontInitials} />
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">Grootte</span>
-                            <span className="text-xs text-gray-400">{draft?.frameInitialsSize ?? 8}</span>
-                          </div>
-                          <input type="range" min={4} max={18} step={0.5} value={draft?.frameInitialsSize ?? 8} onChange={(e) => updateDraft({ frameInitialsSize: Number(e.target.value) })} className="w-full accent-rose-400" />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* 8. Namen in kader */}
-                    <div id="hp-field-namen" className="flex flex-col gap-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-gray-600">Namen in kader</span>
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={() => updateHpSettings({ frameNamesVisible: !hpSettings.frameNamesVisible })}
-                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.frameNamesVisible ? 'bg-pink-400' : 'bg-gray-200'}`}
-                            title="Tonen"
-                          >
-                            <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.frameNamesVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
-                          </button>
-                          <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'namen' ? 'bg-rose-50 text-rose-400' : 'text-gray-300'}`}>Aa</span>
-                        </div>
-                      </div>
-                      <textarea
-                        rows={2}
-                        value={draft?.frame_names ?? ""}
-                        onChange={(e) => updateDraft({ frame_names: e.target.value })}
-                        onFocus={() => setHpOpenGear('namen')}
-                        placeholder={"bijv. Michiel\n& Lindsey"}
-                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all resize-none"
-                      />
-                      {hpOpenGear === 'namen' && (
-                        <div className="flex flex-col gap-2 bg-gray-50 rounded-xl p-3 border border-gray-100">
-                          <FontSelect value={fontFrameNames} onChange={saveFontFrameNames} />
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">Grootte</span>
-                            <span className="text-xs text-gray-400">{draft?.frameNamesSize ?? 5.5}</span>
-                          </div>
-                          <input type="range" min={2} max={13} step={0.5} value={draft?.frameNamesSize ?? 5.5} onChange={(e) => updateDraft({ frameNamesSize: Number(e.target.value) })} className="w-full accent-rose-400" />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* 9. Datum */}
-                    <div id="hp-field-datum" className="flex flex-col gap-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-gray-600">Datum</span>
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={() => updateHpSettings({ datumVisible: !hpSettings.datumVisible })}
-                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.datumVisible ? 'bg-pink-400' : 'bg-gray-200'}`}
-                            title="Tonen"
-                          >
-                            <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.datumVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
-                          </button>
-                          <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'datum' ? 'bg-rose-50 text-rose-400' : 'text-gray-300'}`}>Aa</span>
-                        </div>
-                      </div>
-                      <input
-                        type="date"
-                        value={draft?.datum ?? ""}
-                        onChange={(e) => updateDraft({ datum: e.target.value })}
-                        onFocus={() => setHpOpenGear('datum')}
-                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                      />
-                      {hpOpenGear === 'datum' && (
-                        <div className="flex flex-col gap-2 bg-gray-50 rounded-xl p-3 border border-gray-100">
-                          <FontSelect value={hpSettings.datumFont} onChange={(v) => updateHpSettings({ datumFont: v })} />
-                          {draft?.use_frame ? (
-                            <>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">Grootte in kader</span>
-                                <span className="text-xs text-gray-400">{draft?.frameDateSize ?? 1.8}</span>
-                              </div>
-                              <input type="range" min={0.3} max={6} step={0.1} value={draft?.frameDateSize ?? 1.8} onChange={(e) => updateDraft({ frameDateSize: Number(e.target.value) })} className="w-full accent-rose-400" />
-                            </>
-                          ) : (
-                            <>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">Grootte</span>
-                                <span className="text-xs text-gray-400">{hpSettings.datumSize}rem</span>
-                              </div>
-                              <input type="range" min={0.7} max={3} step={0.1} value={hpSettings.datumSize} onChange={(e) => updateHpSettings({ datumSize: Number(e.target.value) })} className="w-full accent-rose-400" />
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Locatie */}
-                    <div id="hp-field-locatie" className="flex flex-col gap-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-gray-600">Locatie</span>
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={() => updateHpSettings({ locatieVisible: !hpSettings.locatieVisible })}
-                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.locatieVisible ? 'bg-pink-400' : 'bg-gray-200'}`}
-                            title="Tonen"
-                          >
-                            <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.locatieVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
-                          </button>
-                          <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'locatie' ? 'bg-rose-50 text-rose-400' : 'text-gray-300'}`}>Aa</span>
-                        </div>
-                      </div>
-                      <input
-                        type="text"
-                        value={draft?.frame_location ?? ""}
-                        onChange={(e) => updateDraft({ frame_location: e.target.value })}
-                        onFocus={() => setHpOpenGear('locatie')}
-                        placeholder="bijv. Kasteel de Haar"
-                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                      />
-                      {hpOpenGear === 'locatie' && (
-                        <div className="flex flex-col gap-2 bg-gray-50 rounded-xl p-3 border border-gray-100">
-                          <FontSelect value={hpSettings.locatieFont} onChange={(v) => updateHpSettings({ locatieFont: v })} />
-                          {draft?.use_frame ? (
-                            <>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">Grootte in kader</span>
-                                <span className="text-xs text-gray-400">{draft?.frameLocationSize ?? 1.8}</span>
-                              </div>
-                              <input type="range" min={0.3} max={6} step={0.1} value={draft?.frameLocationSize ?? 1.8} onChange={(e) => updateDraft({ frameLocationSize: Number(e.target.value) })} className="w-full accent-rose-400" />
-                            </>
-                          ) : (
-                            <>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">Grootte</span>
-                                <span className="text-xs text-gray-400">{hpSettings.locatieSize}rem</span>
-                              </div>
-                              <input type="range" min={0.7} max={3} step={0.1} value={hpSettings.locatieSize} onChange={(e) => updateHpSettings({ locatieSize: Number(e.target.value) })} className="w-full accent-rose-400" />
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="border-t border-gray-100" />
-
-                    {/* 10 + 11. Welkomstbericht */}
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Welkomstbericht</p>
-                      <div className="flex flex-col gap-3">
-                        <div id="hp-field-welkomst-titel" className="flex flex-col gap-1.5">
-                          <span className="text-xs font-semibold text-gray-600">Titel</span>
-                          <input
-                            type="text"
-                            value={homeContent.title}
-                            onChange={(e) => updateDraft({ homeContent: { ...homeContent, title: e.target.value } })}
-                            placeholder="Optionele titel"
-                            className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                          />
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">Grootte</span>
-                            <span className="text-xs text-gray-400">{homeContent.titleSize ?? 1.0}rem</span>
-                          </div>
-                          <input type="range" min={0.7} max={3} step={0.05} value={homeContent.titleSize ?? 1.0} onChange={(e) => updateDraft({ homeContent: { ...homeContent, titleSize: Number(e.target.value) } })} className="w-full accent-rose-400" />
-                        </div>
-                        <div id="hp-field-welkomst-tekst" className="flex flex-col gap-1.5">
-                          <span className="text-xs font-semibold text-gray-600">Tekst</span>
-                          <textarea
-                            rows={5}
-                            value={homeContent.body}
-                            onChange={(e) => updateDraft({ homeContent: { ...homeContent, body: e.target.value } })}
-                            placeholder="Schrijf een welkomstbericht voor je gasten..."
-                            className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
-                          />
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">Grootte</span>
-                            <span className="text-xs text-gray-400">{homeContent.bodySize ?? 0.9375}rem</span>
-                          </div>
-                          <input type="range" min={0.7} max={2.5} step={0.05} value={homeContent.bodySize ?? 0.9375} onChange={(e) => updateDraft({ homeContent: { ...homeContent, bodySize: Number(e.target.value) } })} className="w-full accent-rose-400" />
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                          <span className="text-xs font-semibold text-gray-600">Uitlijning</span>
-                          <div className="flex gap-1.5">
-                            {(["left", "center", "right"] as const).map((a) => (
-                              <button
-                                key={a}
-                                onClick={() => updateDraft({ homeContent: { ...homeContent, align: a } })}
-                                className={`flex-1 flex items-center justify-center py-2 rounded-lg border transition-all ${homeContent.align === a ? "border-rose-300 bg-rose-50 text-rose-600" : "border-gray-200 text-gray-400 hover:border-gray-300"}`}
-                              >
-                                {a === "left" && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h10M4 18h12" /></svg>}
-                                {a === "center" && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M7 12h10M6 18h12" /></svg>}
-                                {a === "right" && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M10 12h10M8 18h12" /></svg>}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                </>)}
-
-                {/* ── Ceremoniemeesters controls ── */}
-                {previewPage === "Ceremoniemeesters" && (
-                  <div className="flex flex-col gap-4">
-                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Ceremoniemeesters</p>
-                    <MastersEditor
-                      masters={(content.Ceremoniemeesters?.masters as MasterPerson[] | undefined) ?? []}
-                      onChange={(masters) => updateContent("Ceremoniemeesters", { ...(content.Ceremoniemeesters ?? {}), masters })}
-                    />
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-semibold text-gray-500">Vrije tekst onderaan</label>
-                      <textarea
-                        rows={4}
-                        value={typeof content.Ceremoniemeesters?.text === "string" ? content.Ceremoniemeesters.text : ""}
-                        onChange={(e) => updateContent("Ceremoniemeesters", { ...(content.Ceremoniemeesters ?? {}), text: e.target.value })}
-                        placeholder="Optionele tekst onderaan de pagina..."
-                        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none leading-relaxed"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* ── Programma controls ── */}
-                {previewPage === "Programma" && (
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Weergave</p>
-                    <div className="flex rounded-xl border border-gray-200 overflow-hidden mb-5">
-                      {(["timeline", "centered"] as const).map((opt) => (
-                        <button
-                          key={opt}
-                          onClick={() => updateContent("Programma", { items: programmaItems, layout: opt })}
-                          className={`flex-1 py-2 text-xs font-semibold transition-colors ${
-                            programLayout === opt ? "bg-rose-500 text-white" : "text-gray-500 hover:bg-gray-50"
-                          }`}
-                        >
-                          {opt === "timeline" ? "Tijdlijn" : "Gecentreerd"}
-                        </button>
-                      ))}
-                    </div>
-                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Onderdelen</p>
-                    <div className="flex flex-col gap-2">
-                      {programmaItems.map((item, i) => (
-                        <div key={item.id ?? i} className="flex flex-col gap-1.5 bg-gray-50 rounded-xl p-3">
-                          <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-1">
-                              {/* Uur */}
-                              <select
-                                value={item.time ? item.time.split(":")[0] : "12"}
-                                onChange={(e) => {
-                                  const min = item.time ? item.time.split(":")[1] ?? "00" : "00"
-                                  const updated = [...programmaItems]
-                                  updated[i] = { ...updated[i], time: `${e.target.value}:${min}` }
-                                  updateContent("Programma", { items: updated, layout: programLayout })
-                                }}
-                                className="rounded-lg border border-gray-200 px-1.5 py-1.5 text-xs font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 bg-white cursor-pointer"
-                              >
-                                {Array.from({ length: 18 }, (_, k) => String(k + 6).padStart(2, "0")).map(h => (
-                                  <option key={h} value={h}>{h}</option>
-                                ))}
-                              </select>
-                              <span className="text-xs font-bold text-gray-500">:</span>
-                              {/* Minuten */}
-                              <select
-                                value={item.time ? (["00","15","30","45"].includes(item.time.split(":")[1]) ? item.time.split(":")[1] : "00") : "00"}
-                                onChange={(e) => {
-                                  const hr = item.time ? item.time.split(":")[0] ?? "12" : "12"
-                                  const updated = [...programmaItems]
-                                  updated[i] = { ...updated[i], time: `${hr}:${e.target.value}` }
-                                  updateContent("Programma", { items: updated, layout: programLayout })
-                                }}
-                                className="rounded-lg border border-gray-200 px-1.5 py-1.5 text-xs font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 bg-white cursor-pointer"
-                              >
-                                {["00","15","30","45"].map(m => (
-                                  <option key={m} value={m}>{m}</option>
-                                ))}
-                              </select>
-                            </div>
-                            <button
-                              onClick={() => setOpenIconPickerIdx(openIconPickerIdx === i ? null : i)}
-                              className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-xs font-semibold transition-colors ${
-                                openIconPickerIdx === i
-                                  ? "border-rose-400 bg-rose-50 text-rose-600"
-                                  : "border-gray-200 bg-white text-gray-500 hover:border-rose-300 hover:text-rose-500"
-                              }`}
-                              title="Icoon kiezen"
-                            >
-                              <ProgramIcon iconId={item.iconId ?? "heart"} size={14} strokeWidth={2} />
-                              <span>Icoon</span>
-                            </button>
-                            <button
-                              onClick={() => {
-                                const updated = programmaItems.filter((_, j) => j !== i)
-                                updateContent("Programma", { items: updated, layout: programLayout })
-                              }}
-                              className="text-gray-300 hover:text-red-500 transition-colors p-1"
-                              title="Verwijderen"
-                            >
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>
-                          </div>
-                          {openIconPickerIdx === i && (
-                            <div className="grid grid-cols-3 gap-1 p-2 bg-white rounded-xl border border-gray-100 shadow-sm">
-                              {PROGRAM_ICONS.map((icon) => (
-                                <button
-                                  key={icon.id}
-                                  onClick={() => {
-                                    const updated = [...programmaItems]
-                                    updated[i] = { ...updated[i], iconId: icon.id }
-                                    updateContent("Programma", { items: updated, layout: programLayout })
-                                    setOpenIconPickerIdx(null)
-                                  }}
-                                  className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
-                                    (item.iconId ?? "heart") === icon.id
-                                      ? "bg-rose-50 text-rose-500"
-                                      : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"
-                                  }`}
-                                  title={icon.label}
-                                >
-                                  <div className="h-9 flex items-center justify-center">
-                                    <ProgramIcon iconId={icon.id} size={36} strokeWidth={2} fixedHeight />
-                                  </div>
-                                  <span className="text-[11px] leading-tight w-full text-center break-words">{icon.label}</span>
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                          <input
-                            type="text"
-                            value={item.title ?? ""}
-                            onChange={(e) => {
-                              const updated = [...programmaItems]
-                              updated[i] = { ...updated[i], title: e.target.value }
-                              updateContent("Programma", { items: updated, layout: programLayout })
-                            }}
-                            placeholder="Titel..."
-                            className="rounded-lg border border-gray-200 px-2 py-1.5 text-sm font-semibold text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400"
-                          />
-                          <textarea
-                            rows={2}
-                            value={item.description}
-                            onChange={(e) => {
-                              const updated = [...programmaItems]
-                              updated[i] = { ...updated[i], description: e.target.value }
-                              updateContent("Programma", { items: updated, layout: programLayout })
-                            }}
-                            placeholder="Beschrijving..."
-                            className="rounded-lg border border-gray-200 px-2 py-1.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none"
-                          />
-                        </div>
-                      ))}
-                      <button
-                        onClick={() => {
-                          const updated = [...programmaItems, { id: crypto.randomUUID(), time: "", title: "", description: "", iconId: "heart" }]
-                          updateContent("Programma", { items: updated, layout: programLayout })
-                        }}
-                        className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-emerald-200 rounded-xl py-3 text-emerald-600 hover:border-emerald-300 hover:bg-emerald-50 transition-colors mt-1"
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                        </svg>
-                        Onderdeel toevoegen
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* ── RSVP controls ── */}
-                {previewPage === "RSVP" && (
-                  <div className="flex flex-col gap-5">
-                    {/* Introductietekst */}
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Introductietekst</p>
-                      <label className="flex flex-col gap-1.5">
-                        <span className="text-xs font-semibold text-gray-600">Tekst boven het formulier</span>
-                        <textarea
-                          rows={3}
-                          value={(content.RSVP?.text as string) ?? ""}
-                          onChange={(e) => updateContent("RSVP", { ...(content.RSVP ?? {}), text: e.target.value })}
-                          placeholder="Laat weten of je erbij bent — vul het formulier in."
-                          className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
-                        />
-                      </label>
-                    </div>
-
-                    {/* Type gasten */}
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Type gasten</p>
-                      <div className="flex flex-col gap-2">
-                        {(["daggast", "avondgast", "receptiegast"] as const).map((t) => {
-                          const current = (content.RSVP?.guestTypes as string[]) ?? ["daggast", "avondgast"]
-                          const label = t === "daggast" ? "Daggast" : t === "avondgast" ? "Avondgast" : "Receptiegast"
-                          return (
-                            <label key={t} className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
-                              <input
-                                type="checkbox"
-                                className="rounded"
-                                checked={current.includes(t)}
-                                onChange={(e) => {
-                                  const updated = e.target.checked
-                                    ? [...current, t]
-                                    : current.filter((x) => x !== t)
-                                  if (updated.length > 0) {
-                                    updateContent("RSVP", { ...(content.RSVP ?? {}), guestTypes: updated })
-                                  }
-                                }}
-                              />
-                              {label}
-                            </label>
-                          )
-                        })}
-                      </div>
-                    </div>
-
-                    {/* RSVP Sluitingsdatum */}
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Sluitingsdatum</p>
-                      <label className="flex flex-col gap-1.5">
-                        <span className="text-xs font-semibold text-gray-600">Aanmelden niet meer mogelijk na</span>
-                        <input
-                          type="date"
-                          value={(content.RSVP?.deadline as string) ?? ""}
-                          onChange={(e) => updateContent("RSVP", { ...(content.RSVP ?? {}), deadline: e.target.value || null })}
-                          className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                        />
-                        <span className="text-xs text-gray-400">Laat leeg voor geen sluitingsdatum.</span>
-                      </label>
-                    </div>
-
-                    {/* Song request */}
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">DJ-tip / Song Request</p>
-                      <label className="flex items-start gap-3 cursor-pointer select-none">
-                        <input
-                          type="checkbox"
-                          className="mt-0.5"
-                          checked={(content.RSVP?.showSongRequest as boolean) ?? false}
-                          onChange={(e) => updateContent("RSVP", { ...(content.RSVP ?? {}), showSongRequest: e.target.checked })}
-                        />
-                        <span className="text-sm text-gray-700">
-                          Vraag om een song request<br />
-                          <span className="text-xs text-gray-400">&ldquo;Welk nummer brengt jou gegarandeerd naar de dansvloer?&rdquo;</span>
-                        </span>
-                      </label>
-                    </div>
-
-                    {/* Overnachting */}
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Overnachting</p>
-                      <label className="flex items-start gap-3 cursor-pointer select-none">
-                        <input
-                          type="checkbox"
-                          className="mt-0.5"
-                          checked={(content.RSVP?.showOvernachting as boolean) ?? false}
-                          onChange={(e) => updateContent("RSVP", { ...(content.RSVP ?? {}), showOvernachting: e.target.checked })}
-                        />
-                        <span className="text-sm text-gray-700">
-                          Overnachtingsvraag tonen<br />
-                          <span className="text-xs text-gray-400">&ldquo;Blijven jullie overnachten?&rdquo;</span>
-                        </span>
-                      </label>
-                    </div>
-
-                    {/* Eigen Ja/Nee-vraag */}
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Eigen Ja/Nee-vraag</p>
-                      <label className="flex flex-col gap-1.5">
-                        <span className="text-xs font-semibold text-gray-600">Stel je eigen vraag</span>
-                        <input
-                          type="text"
-                          value={(content.RSVP?.customQuestion as string) ?? ""}
-                          onChange={(e) => updateContent("RSVP", { ...(content.RSVP ?? {}), customQuestion: e.target.value })}
-                          placeholder="Bijv. Komen jullie naar het afterparty?"
-                          className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                        />
-                        <span className="text-xs text-gray-400">Laat leeg om uit te schakelen.</span>
-                      </label>
-
-                      <label className="flex flex-col gap-1.5">
-                        <span className="text-xs font-semibold text-gray-600">Stel je eigen vraag 2</span>
-                        <input
-                          type="text"
-                          value={(content.RSVP?.customQuestion2 as string) ?? ""}
-                          onChange={(e) => updateContent("RSVP", { ...(content.RSVP ?? {}), customQuestion2: e.target.value })}
-                          placeholder="Bijv. Doen jullie mee met het spel?"
-                          className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                        />
-                        <span className="text-xs text-gray-400">Laat leeg om uit te schakelen.</span>
-                      </label>
-                    </div>
-                  </div>
-                )}
-
-                {/* ── Ons Verhaal controls ── */}
-                {previewPage === "OnsVerhaal" && (
-                  <div className="flex flex-col gap-5">
-                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Ons Verhaal</p>
-
-                    {/* Titel */}
-                    <label className="flex flex-col gap-1.5">
-                      <span className="text-xs font-semibold text-gray-600">Titel</span>
-                      <input
-                        type="text"
-                        value={(content.OnsVerhaal?.title as string) ?? "Ons Verhaal"}
-                        onChange={(e) => updateContent("OnsVerhaal", { ...(content.OnsVerhaal ?? {}), title: e.target.value })}
-                        placeholder="Ons Verhaal"
-                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                      />
-                    </label>
-
-                    {/* Verhaal tekst */}
-                    <label className="flex flex-col gap-1.5">
-                      <span className="text-xs font-semibold text-gray-600">Verhaal</span>
-                      <textarea
-                        rows={6}
-                        value={(content.OnsVerhaal?.text as string) ?? ""}
-                        onChange={(e) => updateContent("OnsVerhaal", { ...(content.OnsVerhaal ?? {}), text: e.target.value })}
-                        placeholder="Vertel hier jullie verhaal..."
-                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
-                      />
-                    </label>
-
-                    {/* Foto */}
-                    <div>
-                      <p className="text-xs font-semibold text-gray-600 mb-2">Foto</p>
-                      {storyImageError && <p className="text-xs text-red-500 mb-2">{storyImageError}</p>}
-                      {(storyImageBlob ?? (content.OnsVerhaal?.image_url as string | null)) ? (
-                        <div className="flex flex-col gap-2">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={(storyImageBlob ?? (content.OnsVerhaal?.image_url as string))!}
-                            alt=""
-                            className="w-full h-24 object-cover rounded-xl"
-                          />
-                          {!storyUploading && (
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs font-semibold text-gray-600">Kleur overlay</span>
-                                <button
-                                  onClick={() => updateDraft({ storyOverlay: !storyOverlay })}
-                                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${storyOverlay ? "bg-pink-400" : "bg-gray-200"}`}
-                                >
-                                  <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${storyOverlay ? "translate-x-4" : "translate-x-0.5"}`} />
-                                </button>
-                              </div>
-                              <button
-                                onClick={() => {
-                                  setStoryImageBlob(null)
-                                  updateContent("OnsVerhaal", { ...(content.OnsVerhaal ?? {}), image_url: null })
-                                }}
-                                className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors"
-                              >
-                                Verwijderen
-                              </button>
-                            </div>
-                          )}
-                          {storyUploading && <p className="text-xs text-gray-400">Uploading...</p>}
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => storyFileInputRef.current?.click()}
-                          disabled={storyUploading}
-                          className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-gray-200 rounded-xl py-5 text-gray-400 hover:border-rose-300 hover:text-rose-500 disabled:opacity-50 transition-colors"
-                        >
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          Foto uploaden
-                        </button>
-                      )}
-                      <input ref={storyFileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={handleStoryImageUpload} />
-
-                    </div>
-                  </div>
-                )}
-
-                {/* ── Praktisch controls ── */}
-                {previewPage === "Informatie" && (
-                  <div className="flex flex-col gap-4">
-                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Informatie</p>
-                    <PraktischEditor
-                      tiles={praktischTiles ?? DEFAULT_PRAKTISCH_TILES}
-                      onChange={(tiles) => updateContent("Informatie", { ...(content.Informatie ?? {}), items: tiles })}
-                    />
-                  </div>
-                )}
-
-                {/* ── Wishlist controls ── */}
-                {previewPage === "Cadeautips" && (
-                  <div className="flex flex-col gap-4">
-                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Cadeautips</p>
-                    <WishlistEditor
-                      items={wishlistItems ?? DEFAULT_WISHLIST_ITEMS}
-                      onChange={(items) => updateContent("Cadeautips", { ...(content.Cadeautips ?? {}), items })}
-                    />
-                  </div>
-                )}
-
-                {/* ── Foto's controls ── */}
-                {previewPage === "Fotos" && (
-                  <div className="flex flex-col gap-5">
-                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Foto&apos;s</p>
-
-                    <label className="flex flex-col gap-1.5">
-                      <span className="text-xs font-semibold text-gray-600">Paginatitel</span>
-                      <input
-                        type="text"
-                        value={(content.Fotos?.title as string) ?? "Foto's"}
-                        onChange={(e) => updateContent("Fotos", { ...(content.Fotos ?? {}), title: e.target.value })}
-                        placeholder="Foto's"
-                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                      />
-                    </label>
-
-                    <label className="flex flex-col gap-1.5">
-                      <span className="text-xs font-semibold text-gray-600">Introductietekst <span className="font-normal text-gray-400">(optioneel)</span></span>
-                      <textarea
-                        rows={2}
-                        value={(content.Fotos?.intro as string) ?? ""}
-                        onChange={(e) => updateContent("Fotos", { ...(content.Fotos ?? {}), intro: e.target.value })}
-                        placeholder="Bijv. Geniet hier na van de foto's van onze mooie dag."
-                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
-                      />
-                    </label>
-
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-xs font-semibold text-gray-600">
-                          {fotosUrls.length} / {MAX_FOTOS} foto&apos;s
-                        </span>
-                        <span className="text-xs text-gray-400">{MAX_FOTOS - fotosUrls.length} plaatsen over</span>
-                      </div>
-                      <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-rose-400 transition-all"
-                          style={{ width: `${Math.min(100, (fotosUrls.length / MAX_FOTOS) * 100)}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    {fotosUploadError && <p className="text-xs text-red-500">{fotosUploadError}</p>}
-
-                    <button
-                      type="button"
-                      disabled={fotosUploading || fotosUrls.length >= MAX_FOTOS}
-                      onClick={() => fotosFileInputRef.current?.click()}
-                      className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl border-2 border-dashed border-gray-200 text-sm font-semibold text-gray-400 hover:border-rose-300 hover:text-rose-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {fotosUploading ? (
-                        <>
-                          <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                          </svg>
-                          Uploaden...
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          {fotosUrls.length >= MAX_FOTOS ? "Limiet bereikt" : "Foto's toevoegen"}
-                        </>
-                      )}
-                    </button>
-                    <input
-                      ref={fotosFileInputRef}
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      multiple
-                      className="hidden"
-                      onChange={handleFotosUpload}
-                    />
-
-                    {fotosUrls.length > 0 && (
-                      <div className="grid grid-cols-3 gap-1.5">
-                        {fotosUrls.map((url, i) => (
-                          <div key={i} className="relative aspect-square group">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={url} alt="" className="w-full h-full object-cover rounded-lg" />
-                            <button
-                              onClick={() => deleteFotosImage(i)}
-                              className="absolute top-0.5 right-0.5 w-5 h-5 bg-black/50 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div className="border-t border-gray-100 pt-2">
-                  <button
-                    onClick={() => {
-                      if (previewPage === "Programma") {
-                        const sorted = [...programmaItems].sort((a, b) => a.time.localeCompare(b.time))
-                        updateContent("Programma", { items: sorted, layout: programLayout })
-                      }
-                      setIsEditingControls(false)
-                    }}
-                    className="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold px-5 py-3 rounded-xl shadow-md shadow-emerald-100 hover:shadow-lg hover:-translate-y-0.5 transition-all"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                    Klaar
-                  </button>
-                </div>
-
-              </div>
-              )}
-
-            {/* Editor when editing a page */}
-            {editingPage ? (
-              <div className="flex-1 overflow-y-auto p-3">
-                <div className="max-w-2xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden">
-                  <div className="px-8 py-6">
-                    <h3 className="text-base font-bold text-gray-900 mb-5">
-                      {PAGES.find(p => p.id === editingPage)?.label}
-                    </h3>
-                    <Editor
-                      pageId={editingPage}
-                      content={content[editingPage] ?? {}}
-                      onChange={(val) => updateContent(editingPage, val)}
-                    />
-                  </div>
-                </div>
-              </div>
-            ) : (
-              /* Universal scaling canvas — all pages */
+            {/* Canvas */}
               <div ref={canvasContainerRef} className="flex-1 overflow-y-auto bg-gray-100 p-6">
                 <div className="mx-auto" style={{ width: `${Math.round(canvasWidth * canvasScale * zoomMultiplier)}px` }}>
                   <div style={{ width: canvasWidth, transform: `scale(${canvasScale * zoomMultiplier})`, transformOrigin: "top left" }}>
@@ -2444,7 +2356,7 @@ export default function BouwenPage() {
                         sc={sc}
                         navLayout={navLayout}
                         activeType={previewPage}
-                        onNavigate={(type) => { setPreviewPage(type as PageId); setIsEditingControls(false) }}
+                        onNavigate={(type) => { setPreviewPage(type as PageId); setActiveSubPage(type as PageId) }}
                       />
                       {previewPage === "Home" && (
                         <EventHomePreview
@@ -2664,7 +2576,6 @@ export default function BouwenPage() {
                   </div>
                 </div>
               </div>
-            )}
 
           </div>
         </main>
