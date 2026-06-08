@@ -366,7 +366,7 @@ export default function Home() {
         <span className="mx-3" style={{ color: "#2A2218" }}>·</span>
         © {new Date().getFullYear()}
         <span className="mx-3" style={{ color: "#2A2218" }}>·</span>
-        <a href="/privacy" style={{ color: "#4A4030", textDecoration: "none" }} onMouseOver={e => (e.currentTarget.style.color = "#8A7E72")} onMouseOut={e => (e.currentTarget.style.color = "#4A4030")}>Privacy &amp; Cookies</a>
+        <a href="/privacy" className="hover:opacity-70 transition-opacity" style={{ color: "#4A4030", textDecoration: "none" }}>Privacy &amp; Cookies</a>
       </footer>
     </div>
   )
