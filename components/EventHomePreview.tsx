@@ -245,12 +245,12 @@ export default function EventHomePreview({
                 />
                 {/* Hoofdtitel overlay op foto wanneer "Over foto" gekozen */}
                 {(hp.hoofdtitelVisible !== false) && title && (hp.titlePosition ?? 'under') === 'over' && (
-                  <div className="absolute inset-0 flex items-end p-6 @md:p-10"
+                  <div className="absolute inset-0 flex items-end justify-center pb-6 @md:pb-10 px-6"
                     style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 55%)' }}
                   >
                     <h1
                       {...fieldClick('hoofdtitel')}
-                      style={{ ...hoofdtitelStyle, color: '#fff', fontSize: `clamp(1.8rem, ${hp.hoofdtitelSize ?? 5.5}rem, ${(hp.hoofdtitelSize ?? 5.5) * 1.2}rem)`, lineHeight: 1.1, textShadow: '0 2px 12px rgba(0,0,0,0.4)' }}
+                      style={{ ...hoofdtitelStyle, color: '#fff', fontSize: `clamp(1.8rem, ${hp.hoofdtitelSize ?? 5.5}rem, ${(hp.hoofdtitelSize ?? 5.5) * 1.2}rem)`, lineHeight: 1.1, textShadow: '0 2px 12px rgba(0,0,0,0.4)', textAlign: 'center' }}
                     >
                       {title}
                     </h1>
