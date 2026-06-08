@@ -961,6 +961,7 @@ export default function BouwenPage() {
   const { family: fpF, weight: fpW } = getTitleFont(fontPageTitles)
   const sc = {
     ...STYLE_CONFIG[style],
+    fontFamily: fontPageTitles ? fpF : STYLE_CONFIG[style].fontFamily,
     fontHero: fhF,        fontHeroWeight: fhW,
     fontInitials: fiF,    fontInitialsWeight: fiW,
     fontFrameNames: ffF,  fontFrameNamesWeight: ffW,
