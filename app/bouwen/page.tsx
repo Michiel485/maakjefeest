@@ -330,7 +330,7 @@ const PAGES: PageConfig[] = [
   { id: "Informatie",          label: "Informatie",         toggleable: true  },
   { id: "Cadeautips",           label: "Cadeautips",         toggleable: true  },
   { id: "Ceremoniemeesters",  label: "Ceremoniemeesters",  toggleable: true  },
-  { id: "RSVP",               label: "RSVP",               toggleable: false },
+  { id: "RSVP",               label: "RSVP",               toggleable: true  },
   { id: "Fotos",              label: "Foto's",             toggleable: true  },
 ]
 
@@ -1166,6 +1166,65 @@ export default function BouwenPage() {
             </p>
           </div>
 
+
+          {/* ── 3. URL ── */}
+          <div>
+            <button
+              onClick={() => setActiveSection(prev => prev === 'url' ? null : 'url')}
+              className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-gray-50 transition-colors"
+            >
+              <span className="text-xs font-bold uppercase tracking-widest text-gray-500">URL</span>
+              <Chevron open={activeSection === 'url'} />
+            </button>
+            {activeSection === 'url' && (
+              <div className="px-5 pt-1 pb-5">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">Jouw URL</p>
+            {!slugEditOpen ? (
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[11px] text-gray-500 font-mono truncate">{slugPreview}.sayingyes.nl</p>
+                {savedEventId && (
+                  <button
+                    onClick={() => { setSlugValue(slugPreview); setSlugError(null); setSlugEditOpen(true) }}
+                    className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+                  >
+                    ✏️
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1.5">
+                <input
+                  autoFocus
+                  value={slugValue}
+                  onChange={(e) => { setSlugValue(sanitizeSlugInput(e.target.value)); setSlugError(null) }}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleSlugSave(); if (e.key === "Escape") setSlugEditOpen(false) }}
+                  className="w-full text-xs rounded-lg px-2 py-1.5 outline-none font-mono"
+                  style={{ border: `1px solid ${slugError ? "#dc2626" : "#d1d5db"}`, color: "#111827" }}
+                  placeholder={slugPreview}
+                  maxLength={60}
+                />
+                {slugError && <p className="text-[10px] text-red-500">{slugError}</p>}
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSlugSave}
+                    disabled={slugSaving}
+                    className="text-[11px] font-semibold px-2.5 py-1 rounded-lg transition-colors"
+                    style={{ backgroundColor: slugSaving ? "#d1d5db" : "#1A1A1A", color: "#fff" }}
+                  >
+                    {slugSaving ? "…" : "Opslaan"}
+                  </button>
+                  <button
+                    onClick={() => setSlugEditOpen(false)}
+                    className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    Annuleren
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+            )}
+          </div>
           {/* ── 1. ALGEMEEN ── */}
           <div className="border-b border-gray-100">
             <button
@@ -2207,65 +2266,6 @@ export default function BouwenPage() {
                   )
                 })}
               </div>
-            )}
-          </div>
-
-          {/* ── 3. URL ── */}
-          <div>
-            <button
-              onClick={() => setActiveSection(prev => prev === 'url' ? null : 'url')}
-              className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-gray-50 transition-colors"
-            >
-              <span className="text-xs font-bold uppercase tracking-widest text-gray-500">URL</span>
-              <Chevron open={activeSection === 'url'} />
-            </button>
-            {activeSection === 'url' && (
-              <div className="px-5 pt-1 pb-5">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">Jouw URL</p>
-            {!slugEditOpen ? (
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-[11px] text-gray-500 font-mono truncate">{slugPreview}.sayingyes.nl</p>
-                {savedEventId && (
-                  <button
-                    onClick={() => { setSlugValue(slugPreview); setSlugError(null); setSlugEditOpen(true) }}
-                    className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
-                  >
-                    ✏️
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className="flex flex-col gap-1.5">
-                <input
-                  autoFocus
-                  value={slugValue}
-                  onChange={(e) => { setSlugValue(sanitizeSlugInput(e.target.value)); setSlugError(null) }}
-                  onKeyDown={(e) => { if (e.key === "Enter") handleSlugSave(); if (e.key === "Escape") setSlugEditOpen(false) }}
-                  className="w-full text-xs rounded-lg px-2 py-1.5 outline-none font-mono"
-                  style={{ border: `1px solid ${slugError ? "#dc2626" : "#d1d5db"}`, color: "#111827" }}
-                  placeholder={slugPreview}
-                  maxLength={60}
-                />
-                {slugError && <p className="text-[10px] text-red-500">{slugError}</p>}
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleSlugSave}
-                    disabled={slugSaving}
-                    className="text-[11px] font-semibold px-2.5 py-1 rounded-lg transition-colors"
-                    style={{ backgroundColor: slugSaving ? "#d1d5db" : "#1A1A1A", color: "#fff" }}
-                  >
-                    {slugSaving ? "…" : "Opslaan"}
-                  </button>
-                  <button
-                    onClick={() => setSlugEditOpen(false)}
-                    className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    Annuleren
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
             )}
           </div>
 
