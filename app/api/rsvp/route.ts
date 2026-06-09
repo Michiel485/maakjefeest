@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, title, user_id")
+    .select("id, title, user_email")
     .eq("id", event_id)
     .eq("status", "published")
     .single()
@@ -94,7 +94,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Kon aanmelding niet opslaan", detail: error.message }, { status: 500 })
   }
 
-  const ev          = event as { id: string; title?: string; user_id?: string }
+  const ev          = event as { id: string; title?: string; user_email?: string }
   const eventTitle  = ev.title ?? "het evenement"
   const guestPayload = rows.map((r) => ({
     name:         r.name,
@@ -119,17 +119,13 @@ export async function POST(request: Request) {
   }
 
   // Notification mail to the event owner
-  if (ev.user_id) {
-    const { data: adminUser } = await supabase.auth.admin.getUserById(ev.user_id)
-    const adminEmail = adminUser?.user?.email
-    if (adminEmail) {
-      await sendAdminRSVPNotification({
-        toEmail:     adminEmail,
-        eventTitle,
-        primaryName: primaryGuest.name,
-        guests:      guestPayload,
-      })
-    }
+  if (ev.user_email) {
+    await sendAdminRSVPNotification({
+      toEmail:     ev.user_email,
+      eventTitle,
+      primaryName: primaryGuest.name,
+      guests:      guestPayload,
+    })
   }
 
   return Response.json({ success: true, count: guests.length }, { status: 201 })
