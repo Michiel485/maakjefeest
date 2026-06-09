@@ -419,6 +419,7 @@ export default function BouwenPage() {
   const [slugSaving, setSlugSaving]             = useState(false)
   const [hpSettings, setHpSettings] = useState<HomepageSettings>(DEFAULT_HOMEPAGE_SETTINGS)
   const [hpOpenGear, setHpOpenGear] = useState<string | null>(null)
+  const [deleteConfirmIdx, setDeleteConfirmIdx] = useState<number | null>(null)
 
   function handlePreviewFieldClick(field: string) {
     // Ensure Home controls sidebar is open
@@ -439,6 +440,32 @@ export default function BouwenPage() {
         const len = input.value.length
         input.setSelectionRange(len, len)
       }
+    }, 150)
+  }
+
+  function handleStoryFieldDoubleClick(field: 'title' | 'text') {
+    setActiveSection('paginas')
+    setActiveSubPage('OnsVerhaal')
+    setTimeout(() => {
+      const el = document.getElementById(field === 'title' ? 'onsverhaal-title' : 'onsverhaal-text')
+      if (!el) return
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      el.focus()
+      const len = (el as HTMLInputElement | HTMLTextAreaElement).value.length
+      ;(el as HTMLInputElement | HTMLTextAreaElement).setSelectionRange(len, len)
+    }, 150)
+  }
+
+  function handleProgramItemDoubleClick(itemId: string) {
+    setActiveSection('paginas')
+    setActiveSubPage('Programma')
+    setTimeout(() => {
+      const el = document.getElementById(`programma-title-${itemId}`)
+      if (!el) return
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      el.focus()
+      const len = (el as HTMLInputElement).value.length
+      ;(el as HTMLInputElement).setSelectionRange(len, len)
     }, 150)
   }
 
@@ -1881,17 +1908,37 @@ export default function BouwenPage() {
                                         <ProgramIcon iconId={item.iconId ?? "heart"} size={14} strokeWidth={2} />
                                         <span>Icoon</span>
                                       </button>
-                                      <button
-                                        onClick={() => {
-                                          const updated = programmaItems.filter((_, j) => j !== i)
-                                          updateContent("Programma", { items: updated, layout: programLayout })
-                                        }}
-                                        className="text-gray-300 hover:text-red-500 transition-colors p-1"
-                                      >
-                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                      </button>
+                                      {deleteConfirmIdx === i ? (
+                                        <div className="flex items-center gap-1.5 bg-red-50 border border-red-200 rounded-lg px-2 py-1">
+                                          <span className="text-xs font-medium text-red-700 whitespace-nowrap">Verwijderen?</span>
+                                          <button
+                                            onClick={() => {
+                                              const updated = programmaItems.filter((_, j) => j !== i)
+                                              updateContent("Programma", { items: updated, layout: programLayout })
+                                              setDeleteConfirmIdx(null)
+                                            }}
+                                            className="text-xs font-semibold px-2 py-0.5 bg-red-500 hover:bg-red-600 text-white rounded transition-colors"
+                                          >
+                                            Ja
+                                          </button>
+                                          <button
+                                            onClick={() => setDeleteConfirmIdx(null)}
+                                            className="text-xs font-semibold px-2 py-0.5 bg-white hover:bg-gray-100 text-gray-600 border border-gray-200 rounded transition-colors"
+                                          >
+                                            Nee
+                                          </button>
+                                        </div>
+                                      ) : (
+                                        <button
+                                          onClick={() => setDeleteConfirmIdx(i)}
+                                          className="text-red-400 hover:text-red-600 transition-colors p-1"
+                                          title="Onderdeel verwijderen"
+                                        >
+                                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                          </svg>
+                                        </button>
+                                      )}
                                     </div>
                                     {openIconPickerIdx === i && (
                                       <div className="grid grid-cols-3 gap-1 p-2 bg-white rounded-xl border border-gray-100 shadow-sm">
@@ -1919,6 +1966,7 @@ export default function BouwenPage() {
                                       </div>
                                     )}
                                     <input
+                                      id={`programma-title-${item.id ?? i}`}
                                       type="text"
                                       value={item.title ?? ""}
                                       onChange={(e) => {
@@ -2079,6 +2127,7 @@ export default function BouwenPage() {
                               <label className="flex flex-col gap-1.5">
                                 <span className="text-xs font-semibold text-gray-600">Titel</span>
                                 <input
+                                  id="onsverhaal-title"
                                   type="text"
                                   value={(content.OnsVerhaal?.title as string) ?? "Ons Verhaal"}
                                   onChange={(e) => updateContent("OnsVerhaal", { ...(content.OnsVerhaal ?? {}), title: e.target.value })}
@@ -2089,6 +2138,7 @@ export default function BouwenPage() {
                               <label className="flex flex-col gap-1.5">
                                 <span className="text-xs font-semibold text-gray-600">Verhaal</span>
                                 <textarea
+                                  id="onsverhaal-text"
                                   rows={6}
                                   value={(content.OnsVerhaal?.text as string) ?? ""}
                                   onChange={(e) => updateContent("OnsVerhaal", { ...(content.OnsVerhaal ?? {}), text: e.target.value })}
@@ -2408,6 +2458,7 @@ export default function BouwenPage() {
                           showOverlay={storyOverlay}
                           editable={true}
                           onPositionChange={(x, y) => updateContent("OnsVerhaal", { ...(content.OnsVerhaal ?? {}), image_pos_x: x, image_pos_y: y })}
+                          onFieldDoubleClick={handleStoryFieldDoubleClick}
                           sc={sc}
                         />
                       )}
@@ -2424,6 +2475,7 @@ export default function BouwenPage() {
                             })
                             updateContent("Programma", { items: updated, layout: programLayout })
                           }}
+                          onItemDoubleClick={handleProgramItemDoubleClick}
                         />
                       )}
                       {previewPage === "RSVP" && (
