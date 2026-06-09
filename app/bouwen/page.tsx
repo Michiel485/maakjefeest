@@ -385,7 +385,7 @@ export default function BouwenPage() {
   })
   const [previewPage, setPreviewPage] = useState<PageId>("Home")
   const [activeSection, setActiveSection] = useState<'algemeen' | 'paginas' | 'url' | null>(null)
-  const [activeSubPage, setActiveSubPage] = useState<PageId | null>('Home')
+  const [activeSubPage, setActiveSubPage] = useState<PageId | null>(null)
   const [content, setContent] = useState<ContentMap>({})
   const [style, setStyle] = useState<Style>("zand")
   const [fontHero, setFontHero] = useState("pinyonscript")
@@ -1301,6 +1301,9 @@ export default function BouwenPage() {
                 <div>
                   <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Basislettertype</p>
                   <FontSelect value={fontPageTitles} onChange={saveFontPageTitles} />
+                  <p className="text-xs text-gray-400 mt-2 leading-relaxed">
+                    Dit lettertype wordt gebruikt voor paginatitels, sectiekoppen, namen van gasten en tijden in het programma. Lopende tekst zoals beschrijvingen en labels volgt het stijlthema.
+                  </p>
                 </div>
 
               </div>
