@@ -384,7 +384,7 @@ export default function BouwenPage() {
     Home: true, Programma: true, RSVP: true, Informatie: false, Cadeautips: false, Fotos: false, Ceremoniemeesters: false, OnsVerhaal: false,
   })
   const [previewPage, setPreviewPage] = useState<PageId>("Home")
-  const [activeSection, setActiveSection] = useState<'algemeen' | 'paginas' | 'url' | null>('paginas')
+  const [activeSection, setActiveSection] = useState<'algemeen' | 'paginas' | 'url' | null>(null)
   const [activeSubPage, setActiveSubPage] = useState<PageId | null>('Home')
   const [content, setContent] = useState<ContentMap>({})
   const [style, setStyle] = useState<Style>("zand")
@@ -1042,12 +1042,7 @@ export default function BouwenPage() {
 
       {/* ── Top bar ── */}
       <header className="flex items-center justify-between px-4 md:px-6 py-3 bg-white border-b border-gray-100 shadow-sm flex-shrink-0 z-10">
-        <Link href="/aanmaken" className="flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-rose-600 transition-colors">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Terug naar gegevens
-        </Link>
+        <span className="text-sm font-bold text-rose-600 tracking-tight sm:hidden">Saying Yes</span>
         <span className="text-sm font-bold text-rose-600 tracking-tight hidden sm:block">Saying Yes</span>
         <div className="flex flex-col items-end gap-1">
           <div className="flex items-center gap-2">
