@@ -469,6 +469,45 @@ export default function BouwenPage() {
     }, 150)
   }
 
+  function handleInfoTileDoubleClick(tileId: string, field: 'title' | 'text') {
+    setActiveSection('paginas')
+    setActiveSubPage('Informatie')
+    setTimeout(() => {
+      const el = document.getElementById(`informatie-${field}-${tileId}`)
+      if (!el) return
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      el.focus()
+      const len = (el as HTMLInputElement | HTMLTextAreaElement).value.length
+      ;(el as HTMLInputElement | HTMLTextAreaElement).setSelectionRange(len, len)
+    }, 150)
+  }
+
+  function handleWishlistItemDoubleClick(itemId: string, field: 'title' | 'text') {
+    setActiveSection('paginas')
+    setActiveSubPage('Cadeautips')
+    setTimeout(() => {
+      const el = document.getElementById(`cadeau-${field}-${itemId}`)
+      if (!el) return
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      el.focus()
+      const len = (el as HTMLInputElement | HTMLTextAreaElement).value.length
+      ;(el as HTMLInputElement | HTMLTextAreaElement).setSelectionRange(len, len)
+    }, 150)
+  }
+
+  function handleMasterDoubleClick(masterId: string) {
+    setActiveSection('paginas')
+    setActiveSubPage('Ceremoniemeesters')
+    setTimeout(() => {
+      const el = document.getElementById(`master-naam-${masterId}`)
+      if (!el) return
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      el.focus()
+      const len = (el as HTMLInputElement).value.length
+      ;(el as HTMLInputElement).setSelectionRange(len, len)
+    }, 150)
+  }
+
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
     const urlEventId = urlParams.get("event_id")
@@ -2446,6 +2485,7 @@ export default function BouwenPage() {
                           masters={mastersForPreview}
                           sc={sc}
                           text={typeof content.Ceremoniemeesters?.text === "string" ? content.Ceremoniemeesters.text : undefined}
+                          onMasterDoubleClick={handleMasterDoubleClick}
                         />
                       )}
                       {previewPage === "OnsVerhaal" && (
@@ -2592,10 +2632,10 @@ export default function BouwenPage() {
                         </div>
                       )}
                       {previewPage === "Informatie" && (
-                        <PraktischPreview tiles={praktischTiles ?? []} sc={sc} />
+                        <PraktischPreview tiles={praktischTiles ?? []} sc={sc} onTileDoubleClick={handleInfoTileDoubleClick} />
                       )}
                       {previewPage === "Cadeautips" && (
-                        <WishlistPreview items={wishlistItems?.length ? wishlistItems : DEFAULT_WISHLIST_ITEMS} sc={sc} />
+                        <WishlistPreview items={wishlistItems?.length ? wishlistItems : DEFAULT_WISHLIST_ITEMS} sc={sc} onItemDoubleClick={handleWishlistItemDoubleClick} />
                       )}
                       {previewPage === "Fotos" && (
                         <FotosPreview
@@ -3099,6 +3139,7 @@ function MastersEditor({
           )}
           {/* Naam */}
           <input
+            id={`master-naam-${master.id}`}
             type="text"
             value={master.naam}
             onChange={(e) => update(master.id!, { naam: e.target.value })}
@@ -3185,6 +3226,7 @@ function WishlistEditor({
         <div key={item.id} className="flex flex-col gap-2 bg-gray-50 rounded-xl p-3">
           {/* Rij 1: Titel */}
           <input
+            id={`cadeau-title-${item.id}`}
             type="text"
             value={item.title}
             onChange={(e) => update(item.id, { title: e.target.value })}
@@ -3238,6 +3280,7 @@ function WishlistEditor({
           )}
           {/* Rij 3: Beschrijving */}
           <textarea
+            id={`cadeau-text-${item.id}`}
             rows={3}
             value={item.text}
             onChange={(e) => update(item.id, { text: e.target.value })}
@@ -3308,6 +3351,7 @@ function PraktischEditor({
         <div key={tile.id} className="flex flex-col gap-2 bg-gray-50 rounded-xl p-3">
           {/* Rij 1: Titel (volle breedte) */}
           <input
+            id={`informatie-title-${tile.id}`}
             type="text"
             value={tile.title}
             onChange={(e) => update(tile.id, { title: e.target.value })}
@@ -3361,6 +3405,7 @@ function PraktischEditor({
           )}
           {/* Rij 3: Beschrijving (volle breedte) */}
           <textarea
+            id={`informatie-text-${tile.id}`}
             rows={3}
             value={tile.text}
             onChange={(e) => update(tile.id, { text: e.target.value })}

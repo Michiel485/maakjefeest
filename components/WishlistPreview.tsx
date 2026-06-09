@@ -42,9 +42,11 @@ function CardWrapper({ sc, className, children }: { sc: SC; className?: string; 
 export default function WishlistPreview({
   items,
   sc,
+  onItemDoubleClick,
 }: {
   items: WishlistItem[]
   sc: SC
+  onItemDoubleClick?: (itemId: string, field: 'title' | 'text') => void
 }) {
   const locale = useUILocale()
   return (
@@ -61,11 +63,21 @@ export default function WishlistPreview({
             <span style={{ color: sc.accent }}>
               <ProgramIcon iconId={item.iconId} strokeWidth={1.5} className="w-16 h-16" />
             </span>
-            <p className="font-extrabold text-base leading-tight" style={{ color: sc.goldBorder ? (sc.cardText ?? sc.headingColor) : sc.headingColor }}>
+            <p
+              className="font-extrabold text-base leading-tight"
+              style={{ color: sc.goldBorder ? (sc.cardText ?? sc.headingColor) : sc.headingColor, cursor: onItemDoubleClick ? "pointer" : undefined }}
+              onDoubleClick={onItemDoubleClick ? () => onItemDoubleClick(item.id, 'title') : undefined}
+              title={onItemDoubleClick ? "Dubbelklik om te bewerken" : undefined}
+            >
               {item.title}
             </p>
             {item.text && (
-              <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: sc.goldBorder ? (sc.cardText ?? sc.bodyText) : sc.bodyText }}>
+              <p
+                className="text-sm leading-relaxed whitespace-pre-wrap"
+                style={{ color: sc.goldBorder ? (sc.cardText ?? sc.bodyText) : sc.bodyText, cursor: onItemDoubleClick ? "pointer" : undefined }}
+                onDoubleClick={onItemDoubleClick ? () => onItemDoubleClick(item.id, 'text') : undefined}
+                title={onItemDoubleClick ? "Dubbelklik om te bewerken" : undefined}
+              >
                 {item.text}
               </p>
             )}

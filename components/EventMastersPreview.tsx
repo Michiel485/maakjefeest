@@ -12,12 +12,13 @@ export interface EventMastersPreviewProps {
   masters: Master[]
   sc: SC
   text?: string | null
+  onMasterDoubleClick?: (masterId: string) => void
 }
 
 export const DEFAULT_MASTERS_TEXT =
   "Heb je vragen over het programma, dieetwensen of wil je gewoon iets leuks overleggen voor de grote dag? Neem dan gerust contact op met een van onze ceremoniemeesters!"
 
-export default function EventMastersPreview({ masters, sc, text }: EventMastersPreviewProps) {
+export default function EventMastersPreview({ masters, sc, text, onMasterDoubleClick }: EventMastersPreviewProps) {
   const visible = masters.filter((m) => m.naam || m.foto_url)
 
   return (
@@ -80,7 +81,9 @@ export default function EventMastersPreview({ masters, sc, text }: EventMastersP
               {master.naam && (
                 <p
                   className="font-bold uppercase mb-2"
-                  style={{ letterSpacing: "0.12em", fontSize: "0.8125rem", color: sc.headingColor, fontFamily: sc.fontFamily }}
+                  style={{ letterSpacing: "0.12em", fontSize: "0.8125rem", color: sc.headingColor, fontFamily: sc.fontFamily, cursor: onMasterDoubleClick ? "pointer" : undefined }}
+                  onDoubleClick={onMasterDoubleClick && (master.id ?? i.toString()) ? () => onMasterDoubleClick(master.id ?? i.toString()) : undefined}
+                  title={onMasterDoubleClick ? "Dubbelklik om te bewerken" : undefined}
                 >
                   {master.naam}
                 </p>
