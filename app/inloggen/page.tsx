@@ -32,11 +32,12 @@ export default function InloggenPage() {
     const { error } = await createClient().auth.signInWithOtp({
       email,
       options: {
+        shouldCreateUser: false,
         emailRedirectTo: `${window.location.origin}/api/auth/callback`,
       },
     })
     if (error) {
-      setError(error.message)
+      setError("Dit e-mailadres is nog niet bij ons bekend. Controleer op typefouten of start een nieuwe website via de homepage!")
       setLoading(false)
     } else {
       setSent(true)
@@ -131,7 +132,10 @@ export default function InloggenPage() {
         </form>
 
         <p className="mt-6 text-xs text-center" style={{ color: `${BODY}80` }}>
-          Nog geen account? Je krijgt er automatisch een bij je eerste inlog.
+          Nog geen account?{" "}
+          <Link href="/" className="hover:underline" style={{ color: GOLD }}>
+            Start hier een nieuwe website.
+          </Link>
         </p>
       </div>
     </div>

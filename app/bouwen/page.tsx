@@ -944,7 +944,10 @@ export default function BouwenPage() {
     localStorage.setItem("sayingyes_pending_save", "1")
     const { error } = await createClient().auth.signInWithOtp({
       email: authEmail,
-      options: { emailRedirectTo: `${window.location.origin}/api/auth/callback?next=/bouwen` },
+      options: {
+        shouldCreateUser: true,
+        emailRedirectTo: `${window.location.origin}/api/auth/callback?next=/bouwen`,
+      },
     })
     setAuthLoading(false)
     if (error) {
@@ -2641,6 +2644,12 @@ export default function BouwenPage() {
                   className="w-full text-center text-sm text-rose-500 hover:underline font-medium"
                 >
                   Sluiten
+                </button>
+                <button
+                  onClick={() => { setAuthSent(false); localStorage.removeItem("sayingyes_pending_save") }}
+                  className="mt-2 w-full text-center text-xs text-gray-400 hover:text-gray-600 hover:underline"
+                >
+                  E-mailadres verkeerd gespeld? Klik hier om aan te passen.
                 </button>
               </>
             ) : (
