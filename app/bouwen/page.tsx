@@ -384,7 +384,7 @@ export default function BouwenPage() {
     Home: true, Programma: true, RSVP: true, Informatie: false, Cadeautips: false, Fotos: false, Ceremoniemeesters: false, OnsVerhaal: false,
   })
   const [previewPage, setPreviewPage] = useState<PageId>("Home")
-  const [activeSection, setActiveSection] = useState<'algemeen' | 'paginas' | 'url' | 'beveiliging' | null>(null)
+  const [activeSection, setActiveSection] = useState<'algemeen' | 'paginas' | 'url' | null>(null)
   const [activeSubPage, setActiveSubPage] = useState<PageId | null>(null)
   const [content, setContent] = useState<ContentMap>({})
   const [style, setStyle] = useState<Style>("zand")
@@ -1246,62 +1246,157 @@ export default function BouwenPage() {
           </div>
 
 
-          {/* ── 3. URL ── */}
+          {/* ── 3. URL & BEVEILIGING ── */}
           <div>
             <button
               onClick={() => setActiveSection(prev => prev === 'url' ? null : 'url')}
               className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-gray-50 transition-colors"
             >
-              <span className="text-xs font-bold uppercase tracking-widest text-gray-500">URL</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-gray-500">URL &amp; Beveiliging</span>
               <Chevron open={activeSection === 'url'} />
             </button>
             {activeSection === 'url' && (
-              <div className="px-5 pt-1 pb-5">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">Jouw URL</p>
-            {!slugEditOpen ? (
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-[11px] text-gray-500 font-mono truncate">{slugPreview}.sayingyes.nl</p>
-                {savedEventId && (
-                  <button
-                    onClick={() => { setSlugValue(slugPreview); setSlugError(null); setSlugEditOpen(true) }}
-                    className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
-                  >
-                    ✏️
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className="flex flex-col gap-1.5">
-                <input
-                  autoFocus
-                  value={slugValue}
-                  onChange={(e) => { setSlugValue(sanitizeSlugInput(e.target.value)); setSlugError(null) }}
-                  onKeyDown={(e) => { if (e.key === "Enter") handleSlugSave(); if (e.key === "Escape") setSlugEditOpen(false) }}
-                  className="w-full text-xs rounded-lg px-2 py-1.5 outline-none font-mono"
-                  style={{ border: `1px solid ${slugError ? "#dc2626" : "#d1d5db"}`, color: "#111827" }}
-                  placeholder={slugPreview}
-                  maxLength={60}
-                />
-                {slugError && <p className="text-[10px] text-red-500">{slugError}</p>}
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleSlugSave}
-                    disabled={slugSaving}
-                    className="text-[11px] font-semibold px-2.5 py-1 rounded-lg transition-colors"
-                    style={{ backgroundColor: slugSaving ? "#d1d5db" : "#1A1A1A", color: "#fff" }}
-                  >
-                    {slugSaving ? "…" : "Opslaan"}
-                  </button>
-                  <button
-                    onClick={() => setSlugEditOpen(false)}
-                    className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    Annuleren
-                  </button>
+              <div className="px-5 pt-1 pb-5 flex flex-col gap-5">
+
+                {/* URL */}
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">Jouw URL</p>
+                  {!slugEditOpen ? (
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-[11px] text-gray-500 font-mono truncate">{slugPreview}.sayingyes.nl</p>
+                      {savedEventId && (
+                        <button
+                          onClick={() => { setSlugValue(slugPreview); setSlugError(null); setSlugEditOpen(true) }}
+                          className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+                        >
+                          ✏️
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-1.5">
+                      <input
+                        autoFocus
+                        value={slugValue}
+                        onChange={(e) => { setSlugValue(sanitizeSlugInput(e.target.value)); setSlugError(null) }}
+                        onKeyDown={(e) => { if (e.key === "Enter") handleSlugSave(); if (e.key === "Escape") setSlugEditOpen(false) }}
+                        className="w-full text-xs rounded-lg px-2 py-1.5 outline-none font-mono"
+                        style={{ border: `1px solid ${slugError ? "#dc2626" : "#d1d5db"}`, color: "#111827" }}
+                        placeholder={slugPreview}
+                        maxLength={60}
+                      />
+                      {slugError && <p className="text-[10px] text-red-500">{slugError}</p>}
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleSlugSave}
+                          disabled={slugSaving}
+                          className="text-[11px] font-semibold px-2.5 py-1 rounded-lg transition-colors"
+                          style={{ backgroundColor: slugSaving ? "#d1d5db" : "#1A1A1A", color: "#fff" }}
+                        >
+                          {slugSaving ? "…" : "Opslaan"}
+                        </button>
+                        <button
+                          onClick={() => setSlugEditOpen(false)}
+                          className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                          Annuleren
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
+
+                {/* Divider */}
+                <div className="border-t border-gray-100" />
+
+                {/* Beveiliging */}
+                <div className="flex flex-col gap-4">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Beveiliging</p>
+
+                  {/* Toggle */}
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold text-gray-700">Website afschermen</p>
+                      <p className="text-[11px] text-gray-400 mt-0.5">Gasten moeten een code of antwoord invoeren</p>
+                    </div>
+                    <button
+                      role="switch"
+                      aria-checked={pwEnabled}
+                      onClick={() => { setPwEnabled(v => !v); setAutoSavePending(true) }}
+                      className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors cursor-pointer focus:outline-none ${pwEnabled ? "bg-emerald-500" : "bg-gray-200"}`}
+                    >
+                      <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm transform transition-transform ${pwEnabled ? "translate-x-5" : "translate-x-0"}`} />
+                    </button>
+                  </div>
+
+                  {pwEnabled && (
+                    <>
+                      {/* Type selector */}
+                      <div className="flex flex-col gap-1.5">
+                        <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-widest">Type beveiliging</p>
+                        <div className="flex rounded-xl overflow-hidden border border-gray-200">
+                          <button
+                            onClick={() => { setPwType('password'); setAutoSavePending(true) }}
+                            className={`flex-1 py-2 text-xs font-semibold transition-colors ${pwType === 'password' ? 'bg-gray-900 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+                          >
+                            Wachtwoord
+                          </button>
+                          <button
+                            onClick={() => { setPwType('secret_question'); setAutoSavePending(true) }}
+                            className={`flex-1 py-2 text-xs font-semibold transition-colors ${pwType === 'secret_question' ? 'bg-gray-900 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+                          >
+                            Geheime vraag
+                          </button>
+                        </div>
+                      </div>
+
+                      {pwType === 'password' && (
+                        <label className="flex flex-col gap-1.5">
+                          <span className="text-xs font-semibold text-gray-600">Wachtwoord voor gasten</span>
+                          <input
+                            type="text"
+                            value={pwValue}
+                            onChange={(e) => setPwValue(e.target.value)}
+                            onBlur={() => setAutoSavePending(true)}
+                            placeholder="bijv. JansenBakker2025"
+                            className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                          />
+                          <p className="text-[11px] text-gray-400">Gasten moeten dit exact invoeren (hoofdlettergevoelig).</p>
+                        </label>
+                      )}
+
+                      {pwType === 'secret_question' && (
+                        <>
+                          <label className="flex flex-col gap-1.5">
+                            <span className="text-xs font-semibold text-gray-600">Stel je vraag</span>
+                            <input
+                              type="text"
+                              value={pwQuestion}
+                              onChange={(e) => setPwQuestion(e.target.value)}
+                              onBlur={() => setAutoSavePending(true)}
+                              placeholder="bijv. Wat zijn onze achternamen?"
+                              className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                            />
+                          </label>
+                          <label className="flex flex-col gap-1.5">
+                            <span className="text-xs font-semibold text-gray-600">Het juiste antwoord</span>
+                            <input
+                              type="text"
+                              value={pwAnswer}
+                              onChange={(e) => setPwAnswer(e.target.value)}
+                              onBlur={() => setAutoSavePending(true)}
+                              placeholder="bijv. Jansen en Bakker"
+                              className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                            />
+                            <p className="text-[11px] text-gray-400">Variaties zoals &ldquo;Jansen & Bakker&rdquo; worden ook geaccepteerd (~90% gelijkenis).</p>
+                          </label>
+                        </>
+                      )}
+                    </>
+                  )}
+                </div>
+
               </div>
-            )}
-          </div>
             )}
           </div>
           {/* ── 1. ALGEMEEN ── */}
@@ -2370,108 +2465,6 @@ export default function BouwenPage() {
                     </div>
                   )
                 })}
-              </div>
-            )}
-          </div>
-
-          {/* ── 4. PRIVACY & BEVEILIGING ── */}
-          <div className="border-t border-gray-100">
-            <button
-              onClick={() => setActiveSection(prev => prev === 'beveiliging' ? null : 'beveiliging')}
-              className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-gray-50 transition-colors"
-            >
-              <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-500">
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-                Beveiliging
-              </span>
-              <Chevron open={activeSection === 'beveiliging'} />
-            </button>
-            {activeSection === 'beveiliging' && (
-              <div className="px-5 pb-6 flex flex-col gap-4">
-
-                {/* Toggle */}
-                <div className="flex items-center justify-between gap-3 pt-1">
-                  <div>
-                    <p className="text-xs font-semibold text-gray-700">Website afschermen</p>
-                    <p className="text-[11px] text-gray-400 mt-0.5">Gasten moeten een code of antwoord invoeren</p>
-                  </div>
-                  <button
-                    role="switch"
-                    aria-checked={pwEnabled}
-                    onClick={() => { setPwEnabled(v => !v); setAutoSavePending(true) }}
-                    className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors cursor-pointer focus:outline-none ${pwEnabled ? "bg-emerald-500" : "bg-gray-200"}`}
-                  >
-                    <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm transform transition-transform ${pwEnabled ? "translate-x-5" : "translate-x-0"}`} />
-                  </button>
-                </div>
-
-                {pwEnabled && (
-                  <>
-                    {/* Type selector */}
-                    <div className="flex flex-col gap-1.5">
-                      <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-widest">Type beveiliging</p>
-                      <div className="flex rounded-xl overflow-hidden border border-gray-200">
-                        <button
-                          onClick={() => { setPwType('password'); setAutoSavePending(true) }}
-                          className={`flex-1 py-2 text-xs font-semibold transition-colors ${pwType === 'password' ? 'bg-gray-900 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
-                        >
-                          Wachtwoord
-                        </button>
-                        <button
-                          onClick={() => { setPwType('secret_question'); setAutoSavePending(true) }}
-                          className={`flex-1 py-2 text-xs font-semibold transition-colors ${pwType === 'secret_question' ? 'bg-gray-900 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
-                        >
-                          Geheime vraag
-                        </button>
-                      </div>
-                    </div>
-
-                    {pwType === 'password' && (
-                      <label className="flex flex-col gap-1.5">
-                        <span className="text-xs font-semibold text-gray-600">Wachtwoord voor gasten</span>
-                        <input
-                          type="text"
-                          value={pwValue}
-                          onChange={(e) => setPwValue(e.target.value)}
-                          onBlur={() => setAutoSavePending(true)}
-                          placeholder="bijv. JansenBakker2025"
-                          className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                        />
-                        <p className="text-[11px] text-gray-400">Gasten moeten dit exact invoeren (hoofdlettergevoelig).</p>
-                      </label>
-                    )}
-
-                    {pwType === 'secret_question' && (
-                      <>
-                        <label className="flex flex-col gap-1.5">
-                          <span className="text-xs font-semibold text-gray-600">Stel je vraag</span>
-                          <input
-                            type="text"
-                            value={pwQuestion}
-                            onChange={(e) => setPwQuestion(e.target.value)}
-                            onBlur={() => setAutoSavePending(true)}
-                            placeholder="bijv. Wat zijn onze achternamen?"
-                            className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                          />
-                        </label>
-                        <label className="flex flex-col gap-1.5">
-                          <span className="text-xs font-semibold text-gray-600">Het juiste antwoord</span>
-                          <input
-                            type="text"
-                            value={pwAnswer}
-                            onChange={(e) => setPwAnswer(e.target.value)}
-                            onBlur={() => setAutoSavePending(true)}
-                            placeholder="bijv. Jansen en Bakker"
-                            className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                          />
-                          <p className="text-[11px] text-gray-400">Variaties zoals &ldquo;Jansen & Bakker&rdquo; worden ook geaccepteerd (~90% gelijkenis).</p>
-                        </label>
-                      </>
-                    )}
-                  </>
-                )}
               </div>
             )}
           </div>
