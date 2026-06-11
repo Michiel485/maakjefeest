@@ -275,17 +275,17 @@ const STYLE_CONFIG = {
   },
   earthy: {
     accent: "#5A6B5D",
-    heroGradient: "linear-gradient(135deg, #EDE9E1, #DDD5C5, #CABFAB)",
+    heroGradient: "linear-gradient(135deg, #D8D0C0, #C6BA9E, #B3A285)",
     fontFamily: "var(--font-lora), serif",
     nameFont: null as string | null,
-    navBg: "#F5F2ED",
+    navBg: "#E5DDD0",
     navText: "#2A1A10",
     headingColor: "#2A1A10",
     bodyText: "#4A3728",
     buttonBg: "#5A6B5D",
     buttonText: "#ffffff",
     labelColor: "#8A4B53",
-    bodyBg: "#ECEBE4",
+    bodyBg: "#DDD7CA",
     bodyBackground: null as string | null,
     cardBg: null as string | null,
     cardText: null as string | null,
@@ -421,7 +421,7 @@ export default function BouwenPage() {
   const [hpOpenGear, setHpOpenGear] = useState<string | null>(null)
   const [deleteConfirmIdx, setDeleteConfirmIdx] = useState<number | null>(null)
   const [openAlgSection, setOpenAlgSection] = useState<'stijl' | 'navigatie' | 'lettertype' | null>(null)
-  const [openHomeSection, setOpenHomeSection] = useState<'layout' | 'headerfoto' | 'kaders' | 'tekstvelden' | null>(null)
+  const [openHomeSection, setOpenHomeSection] = useState<'layout' | 'headerfoto' | 'kaders' | 'tekstvelden' | 'welkomst' | null>(null)
   const [pwEnabled, setPwEnabled] = useState(false)
   const [pwType, setPwType] = useState<'password' | 'secret_question'>('password')
   const [pwValue, setPwValue] = useState('')
@@ -1981,57 +1981,67 @@ export default function BouwenPage() {
                                     )}
                                   </div>
 
-                                  {/* Welkomstbericht */}
-                                  <div className="flex flex-col gap-3 border-t border-gray-100 pt-4">
-                                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Welkomstbericht</p>
-                                    <div id="hp-field-welkomst-titel" className="flex flex-col gap-1.5">
-                                      <span className="text-xs font-semibold text-gray-600">Titel</span>
-                                      <input
-                                        type="text"
-                                        value={homeContent.title}
-                                        onChange={(e) => updateDraft({ homeContent: { ...homeContent, title: e.target.value } })}
-                                        placeholder="Optionele titel"
-                                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                                      />
-                                      <div className="flex items-center justify-between">
-                                        <span className="text-xs text-gray-500">Grootte</span>
-                                        <span className="text-xs text-gray-400">{homeContent.titleSize ?? 1.0}rem</span>
-                                      </div>
-                                      <input type="range" min={0.7} max={3} step={0.05} value={homeContent.titleSize ?? 1.0} onChange={(e) => updateDraft({ homeContent: { ...homeContent, titleSize: Number(e.target.value) } })} className="w-full accent-rose-400" />
+                                </div>
+                              )}
+                            </div>
+
+                            {/* ── Welkomstbericht ── */}
+                            <div className="border-t border-gray-100">
+                              <button
+                                onClick={() => setOpenHomeSection(prev => prev === 'welkomst' ? null : 'welkomst')}
+                                className="w-full flex items-center justify-between px-5 py-2.5 hover:bg-gray-50 transition-colors"
+                              >
+                                <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Welkomstbericht</span>
+                                <Chevron open={openHomeSection === 'welkomst'} />
+                              </button>
+                              {openHomeSection === 'welkomst' && (
+                                <div className="px-5 pb-4 flex flex-col gap-3">
+                                  <div id="hp-field-welkomst-titel" className="flex flex-col gap-1.5">
+                                    <span className="text-xs font-semibold text-gray-600">Titel</span>
+                                    <input
+                                      type="text"
+                                      value={homeContent.title}
+                                      onChange={(e) => updateDraft({ homeContent: { ...homeContent, title: e.target.value } })}
+                                      placeholder="Optionele titel"
+                                      className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                                    />
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-xs text-gray-500">Grootte</span>
+                                      <span className="text-xs text-gray-400">{homeContent.titleSize ?? 1.0}rem</span>
                                     </div>
-                                    <div id="hp-field-welkomst-tekst" className="flex flex-col gap-1.5">
-                                      <span className="text-xs font-semibold text-gray-600">Tekst</span>
-                                      <textarea
-                                        rows={5}
-                                        value={homeContent.body}
-                                        onChange={(e) => updateDraft({ homeContent: { ...homeContent, body: e.target.value } })}
-                                        placeholder="Schrijf een welkomstbericht voor je gasten..."
-                                        className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
-                                      />
-                                      <div className="flex items-center justify-between">
-                                        <span className="text-xs text-gray-500">Grootte</span>
-                                        <span className="text-xs text-gray-400">{homeContent.bodySize ?? 0.9375}rem</span>
-                                      </div>
-                                      <input type="range" min={0.7} max={2.5} step={0.05} value={homeContent.bodySize ?? 0.9375} onChange={(e) => updateDraft({ homeContent: { ...homeContent, bodySize: Number(e.target.value) } })} className="w-full accent-rose-400" />
+                                    <input type="range" min={0.7} max={3} step={0.05} value={homeContent.titleSize ?? 1.0} onChange={(e) => updateDraft({ homeContent: { ...homeContent, titleSize: Number(e.target.value) } })} className="w-full accent-rose-400" />
+                                  </div>
+                                  <div id="hp-field-welkomst-tekst" className="flex flex-col gap-1.5">
+                                    <span className="text-xs font-semibold text-gray-600">Tekst</span>
+                                    <textarea
+                                      rows={5}
+                                      value={homeContent.body}
+                                      onChange={(e) => updateDraft({ homeContent: { ...homeContent, body: e.target.value } })}
+                                      placeholder="Schrijf een welkomstbericht voor je gasten..."
+                                      className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
+                                    />
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-xs text-gray-500">Grootte</span>
+                                      <span className="text-xs text-gray-400">{homeContent.bodySize ?? 0.9375}rem</span>
                                     </div>
-                                    <div className="flex flex-col gap-1.5">
-                                      <span className="text-xs font-semibold text-gray-600">Uitlijning</span>
-                                      <div className="flex gap-1.5">
-                                        {(["left", "center", "right"] as const).map((a) => (
-                                          <button
-                                            key={a}
-                                            onClick={() => updateDraft({ homeContent: { ...homeContent, align: a } })}
-                                            className={`flex-1 flex items-center justify-center py-2 rounded-lg border transition-all ${homeContent.align === a ? "border-rose-300 bg-rose-50 text-rose-600" : "border-gray-200 text-gray-400 hover:border-gray-300"}`}
-                                          >
-                                            {a === "left" && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h10M4 18h12" /></svg>}
-                                            {a === "center" && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M7 12h10M6 18h12" /></svg>}
-                                            {a === "right" && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M10 12h10M8 18h12" /></svg>}
-                                          </button>
-                                        ))}
-                                      </div>
+                                    <input type="range" min={0.7} max={2.5} step={0.05} value={homeContent.bodySize ?? 0.9375} onChange={(e) => updateDraft({ homeContent: { ...homeContent, bodySize: Number(e.target.value) } })} className="w-full accent-rose-400" />
+                                  </div>
+                                  <div className="flex flex-col gap-1.5">
+                                    <span className="text-xs font-semibold text-gray-600">Uitlijning</span>
+                                    <div className="flex gap-1.5">
+                                      {(["left", "center", "right"] as const).map((a) => (
+                                        <button
+                                          key={a}
+                                          onClick={() => updateDraft({ homeContent: { ...homeContent, align: a } })}
+                                          className={`flex-1 flex items-center justify-center py-2 rounded-lg border transition-all ${homeContent.align === a ? "border-rose-300 bg-rose-50 text-rose-600" : "border-gray-200 text-gray-400 hover:border-gray-300"}`}
+                                        >
+                                          {a === "left" && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h10M4 18h12" /></svg>}
+                                          {a === "center" && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M7 12h10M6 18h12" /></svg>}
+                                          {a === "right" && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M10 12h10M8 18h12" /></svg>}
+                                        </button>
+                                      ))}
                                     </div>
                                   </div>
-
                                 </div>
                               )}
                             </div>
