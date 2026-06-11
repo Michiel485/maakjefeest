@@ -238,7 +238,7 @@ export default function EventHomePreview({
         <div className="flex flex-col @md:flex-row min-h-[70vh]">
 
           {/* Photo panel (left on desktop, top on mobile) */}
-          <div className="@md:w-1/2 h-64 @md:h-auto relative overflow-hidden"
+          <div ref={heroRef as React.RefObject<HTMLDivElement>} className="@md:w-1/2 h-64 @md:h-auto relative overflow-hidden"
             onMouseDown={editableHero ? (e) => { e.preventDefault(); startHeroDrag(e.clientX, e.clientY) } : undefined}
             onMouseMove={editableHero ? (e) => moveHeroDrag(e.clientX, e.clientY) : undefined}
             onMouseUp={editableHero ? endHeroDrag : undefined}
