@@ -1271,7 +1271,7 @@ export default function BouwenPage() {
                 <div className="border-t border-gray-100">
                   <button
                     onClick={() => setOpenUrlSection(prev => prev === 'url' ? null : 'url')}
-                    className="flex items-center gap-2 w-full px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                   >
                     <span className={`transition-transform duration-200 flex-shrink-0 ${openUrlSection === 'url' ? 'rotate-90' : ''}`}>
                       <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -1333,7 +1333,7 @@ export default function BouwenPage() {
                 <div className="border-t border-gray-100">
                   <button
                     onClick={() => setOpenUrlSection(prev => prev === 'beveiliging' ? null : 'beveiliging')}
-                    className="flex items-center gap-2 w-full px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                   >
                     <span className={`transition-transform duration-200 flex-shrink-0 ${openUrlSection === 'beveiliging' ? 'rotate-90' : ''}`}>
                       <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -1446,7 +1446,7 @@ export default function BouwenPage() {
                 <div className="border-t border-gray-100">
                   <button
                     onClick={() => setOpenAlgSection(prev => prev === 'stijl' ? null : 'stijl')}
-                    className="flex items-center gap-2 w-full px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                   >
                     <span className={`transition-transform duration-200 flex-shrink-0 ${openAlgSection === 'stijl' ? 'rotate-90' : ''}`}>
                       <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -1487,7 +1487,7 @@ export default function BouwenPage() {
                 <div className="border-t border-gray-100">
                   <button
                     onClick={() => setOpenAlgSection(prev => prev === 'navigatie' ? null : 'navigatie')}
-                    className="flex items-center gap-2 w-full px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                   >
                     <span className={`transition-transform duration-200 flex-shrink-0 ${openAlgSection === 'navigatie' ? 'rotate-90' : ''}`}>
                       <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -1534,7 +1534,7 @@ export default function BouwenPage() {
                 <div className="border-t border-gray-100">
                   <button
                     onClick={() => setOpenAlgSection(prev => prev === 'lettertype' ? null : 'lettertype')}
-                    className="flex items-center gap-2 w-full px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                   >
                     <span className={`transition-transform duration-200 flex-shrink-0 ${openAlgSection === 'lettertype' ? 'rotate-90' : ''}`}>
                       <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -1620,7 +1620,7 @@ export default function BouwenPage() {
                             <div className="border-t border-gray-100">
                               <button
                                 onClick={() => setOpenHomeSection(prev => prev === 'layout' ? null : 'layout')}
-                                className="flex items-center gap-2 w-full px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
+                                className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                               >
                                 <span className={`transition-transform duration-200 flex-shrink-0 ${openHomeSection === 'layout' ? 'rotate-90' : ''}`}>
                                   <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -1656,7 +1656,7 @@ export default function BouwenPage() {
                             <div className="border-t border-gray-100">
                               <button
                                 onClick={() => setOpenHomeSection(prev => prev === 'headerfoto' ? null : 'headerfoto')}
-                                className="flex items-center gap-2 w-full px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
+                                className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                               >
                                 <span className={`transition-transform duration-200 flex-shrink-0 ${openHomeSection === 'headerfoto' ? 'rotate-90' : ''}`}>
                                   <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -1713,7 +1713,7 @@ export default function BouwenPage() {
                             <div className="border-t border-gray-100">
                               <button
                                 onClick={() => setOpenHomeSection(prev => prev === 'kaders' ? null : 'kaders')}
-                                className="flex items-center gap-2 w-full px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
+                                className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                               >
                                 <span className={`transition-transform duration-200 flex-shrink-0 ${openHomeSection === 'kaders' ? 'rotate-90' : ''}`}>
                                   <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -1781,7 +1781,7 @@ export default function BouwenPage() {
                             <div className="border-t border-gray-100">
                               <button
                                 onClick={() => setOpenHomeSection(prev => prev === 'tekstvelden' ? null : 'tekstvelden')}
-                                className="flex items-center gap-2 w-full px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
+                                className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                               >
                                 <span className={`transition-transform duration-200 flex-shrink-0 ${openHomeSection === 'tekstvelden' ? 'rotate-90' : ''}`}>
                                   <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -2067,7 +2067,7 @@ export default function BouwenPage() {
                             <div className="border-t border-gray-100">
                               <button
                                 onClick={() => setOpenHomeSection(prev => prev === 'welkomst' ? null : 'welkomst')}
-                                className="flex items-center gap-2 w-full px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
+                                className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                               >
                                 <span className={`transition-transform duration-200 flex-shrink-0 ${openHomeSection === 'welkomst' ? 'rotate-90' : ''}`}>
                                   <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
