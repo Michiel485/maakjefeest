@@ -295,14 +295,14 @@ export default function EventHomePreview({
             style={{ backgroundColor: sc.bodyBg }}
           >
             <div className="flex flex-col items-center text-center gap-5 max-w-sm w-full">
-              {(hp.subtitleVisible !== false) && hp.subtitleText && (
-                <p {...fieldClick('subtitle')} style={subtitleStyle}>{hp.subtitleText}</p>
-              )}
-              {/* Hoofdtitel in tekstvlak wanneer "In tekstvlak" (under) gekozen */}
+              {/* Hoofdtitel in tekstvlak wanneer "In tekstvlak" (under) gekozen — boven subtitel */}
               {(hp.hoofdtitelVisible !== false) && title && (hp.titlePosition ?? 'under') !== 'over' && (
                 <h1 {...fieldClick('hoofdtitel')} style={{ ...hoofdtitelStyle, fontSize: `clamp(2rem, ${hp?.hoofdtitelSize ?? 5.5}rem, ${(hp?.hoofdtitelSize ?? 5.5) * 1.2}rem)` }}>
                   {title}
                 </h1>
+              )}
+              {(hp.subtitleVisible !== false) && hp.subtitleText && (
+                <p {...fieldClick('subtitle')} style={subtitleStyle}>{hp.subtitleText}</p>
               )}
               {/* Initialen */}
               {(hp.initialsVisible !== false) && initials && (
