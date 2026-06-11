@@ -12,6 +12,7 @@ export const TITLE_FONT_OPTIONS = [
   { id: "montserrat",   label: "Montserrat",         cssVar: "--font-montserrat",  weight: 500 },
   { id: "pinyonscript", label: "Pinyon Script",      cssVar: "--font-pinyonscript",weight: 400 },
   { id: "playfair",     label: "Playfair Display",   cssVar: "--font-playfair",    weight: 700 },
+  { id: "prata",        label: "Prata",              cssVar: "--font-prata",       weight: 400 },
   { id: "windsong",     label: "WindSong",           cssVar: "--font-windsong",    weight: 400 },
 ] as const
 
