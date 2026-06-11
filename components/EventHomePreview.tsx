@@ -192,6 +192,8 @@ export default function EventHomePreview({
     fontSize: `${hp?.subtitleSize ?? 1.1}rem`,
     color: sc.bodyText,
     letterSpacing: '0.02em',
+    textAlign: 'center',
+    width: '100%',
   }
 
   const hoofdtitelStyle: React.CSSProperties = {
@@ -228,6 +230,8 @@ export default function EventHomePreview({
     fontSize: `${hp?.locatieSize ?? 1.1}rem`,
     color: sc.bodyText,
     letterSpacing: '0.04em',
+    textAlign: 'center',
+    width: '100%',
   }
 
   // ── Layout 2: Modern split-screen ─────────────────────────────────────────
@@ -510,12 +514,12 @@ export default function EventHomePreview({
               )}
             </div>
             {(hp?.initialsVisible !== false) && initials && (
-              <p {...fieldClick('initialen')} className="hp-initialen" style={{ fontFamily: sc.fontInitials, fontWeight: sc.fontInitialsWeight, color: sc.headingColor, letterSpacing: '0.2em', whiteSpace: 'nowrap' }}>
+              <p {...fieldClick('initialen')} className="hp-initialen" style={{ fontFamily: sc.fontInitials, fontWeight: sc.fontInitialsWeight, color: sc.headingColor, letterSpacing: '0.2em', whiteSpace: 'nowrap', textAlign: 'center', width: '100%' }}>
                 {initials}
               </p>
             )}
             {(hp?.frameNamesVisible !== false) && frameNames && frameNames.trim() && (
-              <p {...fieldClick('namen')} className="hp-namen" style={{ fontFamily: sc.fontFrameNames, fontWeight: sc.fontFrameNamesWeight, color: sc.headingColor, whiteSpace: 'pre-wrap', lineHeight: 1.2, wordBreak: 'keep-all' }}>
+              <p {...fieldClick('namen')} className="hp-namen" style={{ fontFamily: sc.fontFrameNames, fontWeight: sc.fontFrameNamesWeight, color: sc.headingColor, whiteSpace: 'pre-wrap', lineHeight: 1.2, wordBreak: 'keep-all', textAlign: 'center', width: '100%' }}>
                 {frameNames}
               </p>
             )}
