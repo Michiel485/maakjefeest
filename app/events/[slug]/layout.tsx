@@ -1,6 +1,7 @@
 import { createServiceClient } from "@/lib/supabase"
 import { getStyleConfig } from "@/lib/event-styles"
 import EventNav from "./event-nav"
+import EventGatekeeper from "@/components/EventGatekeeper"
 
 export const dynamic = "force-dynamic"
 
@@ -16,7 +17,7 @@ export default async function EventLayout({
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, title, nav_title, frame_names, style, font_frame_names, font_page_titles, nav_layout")
+    .select("id, title, nav_title, frame_names, style, font_frame_names, font_page_titles, nav_layout, pw_enabled, pw_type, pw_value, pw_question, pw_answer")
     .eq("slug", slug)
     .eq("status", "published")
     .single()
@@ -35,8 +36,53 @@ export default async function EventLayout({
     fontPageTitles:  event.font_page_titles  as string | null,
   })
   const pageList = pages ?? []
-
   const basePath = process.env.NODE_ENV === "production" ? "" : `/events/${slug}`
+
+  const pwEnabled = (event.pw_enabled as boolean) ?? false
+  const pwType = (event.pw_type as "password" | "secret_question" | null) ?? null
+  const pwValue = (event.pw_value as string | null) ?? null
+  const pwQuestion = (event.pw_question as string | null) ?? null
+  const pwAnswer = (event.pw_answer as string | null) ?? null
+
+  const siteContent = (
+    <div className={`max-w-5xl mx-auto sm:shadow-2xl sm:rounded-2xl overflow-clip flex flex-col relative${sc.floral ? " bohemian-scale" : ""}`}
+      style={{ background: sc.bodyBackground ?? sc.navBg }}>
+
+      <EventNav title={(event.nav_title as string | null) || event.title} pages={pageList} sc={sc} navLayout={(event.nav_layout ?? "split") as "stacked" | "split" | "left"} basePath={basePath} />
+
+      <main className="relative" style={{ zIndex: 1 }}>
+        {children}
+      </main>
+
+      {sc.floral && (
+        <div className="w-full flex justify-center" style={{ backgroundColor: sc.navBg, marginTop: "-20px" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/bouquet-home.png.jpg"
+            alt=""
+            aria-hidden="true"
+            style={{
+              width: "45%",
+              maxWidth: "280px",
+              display: "block",
+              mixBlendMode: "multiply",
+              userSelect: "none",
+              pointerEvents: "none",
+              filter: sc.floralFilter ?? undefined,
+            }}
+          />
+        </div>
+      )}
+
+      <footer className="py-6 text-center text-sm relative" style={{ zIndex: 1, color: sc.bodyText, borderTop: `1px solid ${sc.accent}15` }}>
+        Gemaakt met{" "}
+        <a href="https://sayingyes.nl" style={{ fontWeight: 600, color: sc.accent, textDecoration: "none" }}>
+          Saying Yes
+        </a>
+      </footer>
+
+    </div>
+  )
 
   return (
     <div className="min-h-screen sm:py-12" style={{ fontFamily: sc.fontFamily, background: sc.bodyBackground ?? sc.bodyBg, letterSpacing: sc.bodyLetterSpacing, fontWeight: sc.bodyFontWeight }}>
@@ -56,43 +102,20 @@ export default async function EventLayout({
         `}</style>
       )}
 
-      <div className={`max-w-5xl mx-auto sm:shadow-2xl sm:rounded-2xl overflow-clip flex flex-col relative${sc.floral ? " bohemian-scale" : ""}`}
-        style={{ background: sc.bodyBackground ?? sc.navBg }}>
-
-        <EventNav title={(event.nav_title as string | null) || event.title} pages={pageList} sc={sc} navLayout={(event.nav_layout ?? "split") as "stacked" | "split" | "left"} basePath={basePath} />
-
-        <main className="relative" style={{ zIndex: 1 }}>
-          {children}
-        </main>
-
-        {sc.floral && (
-          <div className="w-full flex justify-center" style={{ backgroundColor: sc.navBg, marginTop: "-20px" }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/bouquet-home.png.jpg"
-              alt=""
-              aria-hidden="true"
-              style={{
-                width: "45%",
-                maxWidth: "280px",
-                display: "block",
-                mixBlendMode: "multiply",
-                userSelect: "none",
-                pointerEvents: "none",
-                filter: sc.floralFilter ?? undefined,
-              }}
-            />
-          </div>
-        )}
-
-        <footer className="py-6 text-center text-sm relative" style={{ zIndex: 1, color: sc.bodyText, borderTop: `1px solid ${sc.accent}15` }}>
-          Gemaakt met{" "}
-          <a href="https://sayingyes.nl" style={{ fontWeight: 600, color: sc.accent, textDecoration: "none" }}>
-            Saying Yes
-          </a>
-        </footer>
-
-      </div>
+      {pwEnabled ? (
+        <EventGatekeeper
+          slug={slug}
+          pwEnabled={pwEnabled}
+          pwType={pwType}
+          pwValue={pwValue}
+          pwQuestion={pwQuestion}
+          pwAnswer={pwAnswer}
+          sc={sc}
+          eventTitle={(event.nav_title as string | null) || (event.title as string) || ""}
+        >
+          {siteContent}
+        </EventGatekeeper>
+      ) : siteContent}
     </div>
   )
 }

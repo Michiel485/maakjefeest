@@ -384,7 +384,7 @@ export default function BouwenPage() {
     Home: true, Programma: true, RSVP: true, Informatie: false, Cadeautips: false, Fotos: false, Ceremoniemeesters: false, OnsVerhaal: false,
   })
   const [previewPage, setPreviewPage] = useState<PageId>("Home")
-  const [activeSection, setActiveSection] = useState<'algemeen' | 'paginas' | 'url' | null>(null)
+  const [activeSection, setActiveSection] = useState<'algemeen' | 'paginas' | 'url' | 'beveiliging' | null>(null)
   const [activeSubPage, setActiveSubPage] = useState<PageId | null>(null)
   const [content, setContent] = useState<ContentMap>({})
   const [style, setStyle] = useState<Style>("zand")
@@ -420,6 +420,11 @@ export default function BouwenPage() {
   const [hpSettings, setHpSettings] = useState<HomepageSettings>(DEFAULT_HOMEPAGE_SETTINGS)
   const [hpOpenGear, setHpOpenGear] = useState<string | null>(null)
   const [deleteConfirmIdx, setDeleteConfirmIdx] = useState<number | null>(null)
+  const [pwEnabled, setPwEnabled] = useState(false)
+  const [pwType, setPwType] = useState<'password' | 'secret_question'>('password')
+  const [pwValue, setPwValue] = useState('')
+  const [pwQuestion, setPwQuestion] = useState('')
+  const [pwAnswer, setPwAnswer] = useState('')
 
   function handlePreviewFieldClick(field: string) {
     // Ensure Home controls sidebar is open
@@ -623,6 +628,11 @@ export default function BouwenPage() {
           if (event.homepage_settings) {
             setHpSettings({ ...DEFAULT_HOMEPAGE_SETTINGS, ...(event.homepage_settings as Partial<HomepageSettings>) })
           }
+          if (event.pw_enabled) setPwEnabled(event.pw_enabled as boolean)
+          if (event.pw_type)    setPwType(event.pw_type as 'password' | 'secret_question')
+          if (event.pw_value)   setPwValue(event.pw_value as string)
+          if (event.pw_question) setPwQuestion(event.pw_question as string)
+          if (event.pw_answer)  setPwAnswer(event.pw_answer as string)
           setContent(newContent)
           setActive(newActive)
           setIsPublished(published)
@@ -907,6 +917,11 @@ export default function BouwenPage() {
       content: mergedContent,
       event_id: savedEventId ?? undefined,
       homepage_settings: hpSettings,
+      pw_enabled: pwEnabled,
+      pw_type: pwEnabled ? pwType : null,
+      pw_value: pwEnabled && pwType === 'password' ? pwValue : null,
+      pw_question: pwEnabled && pwType === 'secret_question' ? pwQuestion : null,
+      pw_answer: pwEnabled && pwType === 'secret_question' ? pwAnswer : null,
     }
     console.log(
       "[save] verstuur naar /api/drafts",
@@ -2355,6 +2370,108 @@ export default function BouwenPage() {
                     </div>
                   )
                 })}
+              </div>
+            )}
+          </div>
+
+          {/* ── 4. PRIVACY & BEVEILIGING ── */}
+          <div className="border-t border-gray-100">
+            <button
+              onClick={() => setActiveSection(prev => prev === 'beveiliging' ? null : 'beveiliging')}
+              className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-gray-50 transition-colors"
+            >
+              <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-500">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                Beveiliging
+              </span>
+              <Chevron open={activeSection === 'beveiliging'} />
+            </button>
+            {activeSection === 'beveiliging' && (
+              <div className="px-5 pb-6 flex flex-col gap-4">
+
+                {/* Toggle */}
+                <div className="flex items-center justify-between gap-3 pt-1">
+                  <div>
+                    <p className="text-xs font-semibold text-gray-700">Website afschermen</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">Gasten moeten een code of antwoord invoeren</p>
+                  </div>
+                  <button
+                    role="switch"
+                    aria-checked={pwEnabled}
+                    onClick={() => { setPwEnabled(v => !v); setAutoSavePending(true) }}
+                    className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors cursor-pointer focus:outline-none ${pwEnabled ? "bg-emerald-500" : "bg-gray-200"}`}
+                  >
+                    <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm transform transition-transform ${pwEnabled ? "translate-x-5" : "translate-x-0"}`} />
+                  </button>
+                </div>
+
+                {pwEnabled && (
+                  <>
+                    {/* Type selector */}
+                    <div className="flex flex-col gap-1.5">
+                      <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-widest">Type beveiliging</p>
+                      <div className="flex rounded-xl overflow-hidden border border-gray-200">
+                        <button
+                          onClick={() => { setPwType('password'); setAutoSavePending(true) }}
+                          className={`flex-1 py-2 text-xs font-semibold transition-colors ${pwType === 'password' ? 'bg-gray-900 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+                        >
+                          Wachtwoord
+                        </button>
+                        <button
+                          onClick={() => { setPwType('secret_question'); setAutoSavePending(true) }}
+                          className={`flex-1 py-2 text-xs font-semibold transition-colors ${pwType === 'secret_question' ? 'bg-gray-900 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+                        >
+                          Geheime vraag
+                        </button>
+                      </div>
+                    </div>
+
+                    {pwType === 'password' && (
+                      <label className="flex flex-col gap-1.5">
+                        <span className="text-xs font-semibold text-gray-600">Wachtwoord voor gasten</span>
+                        <input
+                          type="text"
+                          value={pwValue}
+                          onChange={(e) => setPwValue(e.target.value)}
+                          onBlur={() => setAutoSavePending(true)}
+                          placeholder="bijv. JansenBakker2025"
+                          className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                        />
+                        <p className="text-[11px] text-gray-400">Gasten moeten dit exact invoeren (hoofdlettergevoelig).</p>
+                      </label>
+                    )}
+
+                    {pwType === 'secret_question' && (
+                      <>
+                        <label className="flex flex-col gap-1.5">
+                          <span className="text-xs font-semibold text-gray-600">Stel je vraag</span>
+                          <input
+                            type="text"
+                            value={pwQuestion}
+                            onChange={(e) => setPwQuestion(e.target.value)}
+                            onBlur={() => setAutoSavePending(true)}
+                            placeholder="bijv. Wat zijn onze achternamen?"
+                            className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                          />
+                        </label>
+                        <label className="flex flex-col gap-1.5">
+                          <span className="text-xs font-semibold text-gray-600">Het juiste antwoord</span>
+                          <input
+                            type="text"
+                            value={pwAnswer}
+                            onChange={(e) => setPwAnswer(e.target.value)}
+                            onBlur={() => setAutoSavePending(true)}
+                            placeholder="bijv. Jansen en Bakker"
+                            className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                          />
+                          <p className="text-[11px] text-gray-400">Variaties zoals &ldquo;Jansen & Bakker&rdquo; worden ook geaccepteerd (~90% gelijkenis).</p>
+                        </label>
+                      </>
+                    )}
+                  </>
+                )}
               </div>
             )}
           </div>

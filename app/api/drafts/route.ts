@@ -112,6 +112,11 @@ export async function POST(request: Request) {
     content?: Record<string, Record<string, unknown>>
     event_id?: string
     homepage_settings?: Record<string, unknown> | null
+    pw_enabled?: boolean
+    pw_type?: "password" | "secret_question" | null
+    pw_value?: string | null
+    pw_question?: string | null
+    pw_answer?: string | null
   }
 
   try {
@@ -150,6 +155,11 @@ export async function POST(request: Request) {
     content = {},
     event_id,
     homepage_settings = null,
+    pw_enabled = false,
+    pw_type = null,
+    pw_value = null,
+    pw_question = null,
+    pw_answer = null,
   } = body
 
   if (!type) {
@@ -176,7 +186,7 @@ export async function POST(request: Request) {
       ))
       const { error: updateErr } = await db
         .from("events")
-        .update({ type, title: naam, datum, locatie, style, font_hero, font_initials, font_frame_names, font_page_titles, hero_image_url, hero_image_pos_x: Math.round(hero_image_pos_x), hero_image_pos_y: Math.round(hero_image_pos_y), hero_overlay: heroOverlay, nav_layout, nav_title: nav_title ?? naam, use_frame, frame_style, initials, frame_names, frame_location, frame_initials_size: frameInitialsSize, frame_names_size: frameNamesSize, frame_date_size: frameDateSize, frame_location_size: frameLocationSize, homepage_settings })
+        .update({ type, title: naam, datum, locatie, style, font_hero, font_initials, font_frame_names, font_page_titles, hero_image_url, hero_image_pos_x: Math.round(hero_image_pos_x), hero_image_pos_y: Math.round(hero_image_pos_y), hero_overlay: heroOverlay, nav_layout, nav_title: nav_title ?? naam, use_frame, frame_style, initials, frame_names, frame_location, frame_initials_size: frameInitialsSize, frame_names_size: frameNamesSize, frame_date_size: frameDateSize, frame_location_size: frameLocationSize, homepage_settings, pw_enabled, pw_type, pw_value, pw_question, pw_answer })
         .eq("id", event_id)
 
       if (updateErr) {
@@ -242,6 +252,11 @@ export async function POST(request: Request) {
       frame_date_size: frameDateSize,
       frame_location_size: frameLocationSize,
       homepage_settings,
+      pw_enabled,
+      pw_type,
+      pw_value,
+      pw_question,
+      pw_answer,
     })
     .select("id, slug")
     .single()
