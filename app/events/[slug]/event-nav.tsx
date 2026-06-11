@@ -69,12 +69,12 @@ export default function EventNav({
     const ttl  = titleRef.current
     const lnks = linksRef.current
     const ctrl = ctrlRef.current
-    if (!nav || !ttl || !lnks || !ctrl) return
+    if (!nav || !lnks || !ctrl) return
 
     const padding  = 64  // px-8 on both sides
     const gaps     = 32  // gaps between title / links / controls
 
-    const titleW   = ttl.scrollWidth
+    const titleW   = ttl ? ttl.scrollWidth : 0
     const ctrlW    = ctrl.scrollWidth
 
     // Sum each link's natural (no-wrap) width + gap-1 (4px) between them
@@ -154,10 +154,7 @@ export default function EventNav({
       <div className="@container">
         <nav className="notranslate sticky top-0 z-50 px-8 border-b backdrop-blur-sm" style={navStyle}>
           {/* Mobile row */}
-          <div className="flex items-center justify-between py-4 gap-4 @md:hidden">
-            <a href={homeHref} onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("Home") } : undefined} style={titleStyle}>
-              {safeTitle}
-            </a>
+          <div className="flex items-center justify-end py-4 gap-4 @md:hidden">
             <div className="flex items-center gap-2 flex-shrink-0">
               <LanguageSwitcher accent={sc.accent} textColor={sc.navText} bgColor={sc.navBg} />
               <button
@@ -178,9 +175,6 @@ export default function EventNav({
             <div className="absolute right-0 top-1/2 -translate-y-1/2">
               <LanguageSwitcher accent={sc.accent} textColor={sc.navText} bgColor={sc.navBg} />
             </div>
-            <a href={homeHref} onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("Home") } : undefined} style={{ ...titleStyle, textAlign: "center" }}>
-              {safeTitle}
-            </a>
             <div className="flex items-center flex-wrap justify-center gap-1">{pageLinks}</div>
           </div>
         </nav>
@@ -200,17 +194,8 @@ export default function EventNav({
     <div className="@container">
       <nav ref={navRef} className="notranslate sticky top-0 z-50 px-8 border-b backdrop-blur-sm" style={navStyle}>
 
-        {/* Top strip: title + (links when single-row) + controls */}
+        {/* Top strip: (links when single-row) + controls */}
         <div className="flex items-center justify-between gap-4 py-4">
-          <a
-            ref={titleRef}
-            href={homeHref}
-            onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("Home") } : undefined}
-            style={titleStyle}
-          >
-            {safeTitle}
-          </a>
-
           {/* Links inline — shown on desktop only when they fit on one row */}
           <div
             ref={linksRef}

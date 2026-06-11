@@ -14,6 +14,7 @@ export interface HomepageSettings {
   hoofdtitelSize: number
   datumFont: string
   datumSize: number
+  datumNotatie?: 'uitgeschreven' | 'numeriek'
   titlePosition: 'over' | 'under'
   initialsVisible: boolean
   frameNamesVisible: boolean
@@ -209,7 +210,17 @@ export default function EventHomePreview({
     color: sc.accent,
     letterSpacing: '0.12em',
     textTransform: 'uppercase',
+    textAlign: 'center',
   }
+
+  const datumDisplay = (() => {
+    if (!datum) return datumFormatted
+    if ((hp?.datumNotatie ?? 'uitgeschreven') === 'numeriek') {
+      const [y, m, d] = datum.split('-')
+      return `${d}-${m}-${y}`
+    }
+    return datumFormatted
+  })()
 
   const locatieStyleHp: React.CSSProperties = {
     fontFamily: locatieFontResult.family,
@@ -307,8 +318,8 @@ export default function EventHomePreview({
                   {frameNames}
                 </p>
               )}
-              {(hp.datumVisible !== false) && datumFormatted && (
-                <p {...fieldClick('datum')} style={datumStyleHp}>{datumFormatted}</p>
+              {(hp.datumVisible !== false) && datumDisplay && (
+                <p {...fieldClick('datum')} style={datumStyleHp}>{datumDisplay}</p>
               )}
               {(hp.locatieVisible !== false) && locatie && (
                 <p {...fieldClick('locatie')} style={locatieStyleHp}>{locatie}</p>
@@ -349,17 +360,19 @@ export default function EventHomePreview({
 
         {/* Welcome content */}
         {(homeTitle || homeBody) && (
-          <div className="px-8 py-10" style={{ backgroundColor: sc.bodyBackground ? "transparent" : sc.navBg }}>
-            {homeTitle && (
-              <p {...fieldClick('welkomst-titel')} className="font-bold mb-2 whitespace-pre-wrap" style={{ fontSize: `${homeTitleSize ?? 1.0}rem`, color: sc.headingColor, fontFamily: sc.fontFamily, textAlign: homeAlign }}>
-                {homeTitle}
-              </p>
-            )}
-            {homeBody && (
-              <p {...fieldClick('welkomst-tekst')} className="leading-relaxed whitespace-pre-wrap" style={{ fontSize: `${homeBodySize ?? 0.9375}rem`, color: sc.bodyText, fontFamily: sc.fontFamily, textAlign: homeAlign }}>
-                {homeBody}
-              </p>
-            )}
+          <div className="px-8 py-10 flex flex-col items-center" style={{ backgroundColor: sc.bodyBackground ? "transparent" : sc.navBg }}>
+            <div className="max-w-2xl w-full text-center">
+              {homeTitle && (
+                <p {...fieldClick('welkomst-titel')} className="font-bold mb-2 whitespace-pre-wrap" style={{ fontSize: `${homeTitleSize ?? 1.0}rem`, color: sc.headingColor, fontFamily: sc.fontFamily, textAlign: 'center' }}>
+                  {homeTitle}
+                </p>
+              )}
+              {homeBody && (
+                <p {...fieldClick('welkomst-tekst')} className="leading-relaxed whitespace-pre-wrap" style={{ fontSize: `${homeBodySize ?? 0.9375}rem`, color: sc.bodyText, fontFamily: sc.fontFamily, textAlign: 'center' }}>
+                  {homeBody}
+                </p>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -437,7 +450,7 @@ export default function EventHomePreview({
 
   // Title under photo (or no photo): show above frame / elegant divider
   const titleUnderSection = showTitleUnderPhoto && title ? (
-    <div className="flex flex-col items-center text-center px-8 pt-4 @md:pt-8 pb-2" style={{ backgroundColor: sc.bodyBg }}>
+    <div className="flex flex-col items-center text-center px-8 pt-4 @md:pt-8 pb-0" style={{ backgroundColor: sc.bodyBg }}>
       <h1
         {...fieldClick('hoofdtitel')}
         className="hp-hoofdtitel leading-tight whitespace-pre-wrap"
@@ -480,13 +493,13 @@ export default function EventHomePreview({
 
       {/* Card / Elegant Divider section */}
       <section
-        className={`w-full flex flex-col items-center ${isFullWidth ? "pt-0 pb-0 px-0" : "pt-6 pb-8 px-6"}`}
+        className={`w-full flex flex-col items-center ${isFullWidth ? "pt-0 pb-0 px-0" : `${showTitleUnderPhoto && title ? "pt-1" : "pt-6"} pb-8 px-6`}`}
         style={{ backgroundColor: sc.bodyBg }}
       >
         {elegantMode ? (
           /* ── Elegant Divider composition ── */
           <>
-          <div className="w-full max-w-3xl flex flex-col items-center text-center py-4 @md:py-8 gap-2 @md:gap-4">
+          <div className={`w-full max-w-3xl flex flex-col items-center text-center gap-2 @md:gap-4 ${showTitleUnderPhoto && title ? "pt-1 pb-4 @md:pb-8" : "py-4 @md:py-8"}`}>
             {/* Subtitle + Hoofdtitel gegroepeerd met halve ruimte ertussen */}
             <div className="flex flex-col items-center gap-1 @md:gap-2 w-full">
               {(hp?.subtitleVisible !== false) && hp?.subtitleText && (
@@ -506,8 +519,8 @@ export default function EventHomePreview({
                 {frameNames}
               </p>
             )}
-            {(hp?.datumVisible !== false) && datumFormatted && (
-              <p {...fieldClick('datum')} className="hp-datum" style={{ ...datumStyleHp, fontSize: undefined }}>{datumFormatted}</p>
+            {(hp?.datumVisible !== false) && datumDisplay && (
+              <p {...fieldClick('datum')} className="hp-datum" style={{ ...datumStyleHp, fontSize: undefined }}>{datumDisplay}</p>
             )}
             {(hp?.locatieVisible !== false) && frameDisplayLocation && (
               <p {...fieldClick('locatie')} className="hp-locatie" style={{ ...locatieStyleHp, fontSize: undefined }}>{frameDisplayLocation}</p>
@@ -562,9 +575,9 @@ export default function EventHomePreview({
                       {frameDisplayNames}
                     </p>
                   )}
-                  {(hp?.datumVisible !== false) && datumFormatted && (
+                  {(hp?.datumVisible !== false) && datumDisplay && (
                     <p {...fieldClick('datum')} className="fk-date uppercase text-center mt-[1.1cqi]" style={{ fontFamily: datumFontResult.family, fontWeight: datumFontResult.weight, color: sc.frameBodyText ?? sc.bodyText, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>
-                      {datumFormatted}
+                      {datumDisplay}
                     </p>
                   )}
                   {(hp?.locatieVisible !== false) && frameDisplayLocation && (
@@ -592,9 +605,9 @@ export default function EventHomePreview({
         ) : (
           /* No frame: only date + location, minimal */
           <div className="flex flex-col items-center gap-2 pt-4 pb-0 text-center">
-            {datumFormatted && (
-              <p className="uppercase tracking-[0.18em] font-medium" style={{ color: sc.headingColor, fontFamily: sc.fontFamily, fontSize: `${(frameDateSize * 0.5).toFixed(2)}rem` }}>
-                {datumFormatted}
+            {datumDisplay && (
+              <p className="uppercase tracking-[0.18em] font-medium text-center" style={{ color: sc.headingColor, fontFamily: sc.fontFamily, fontSize: `${(frameDateSize * 0.5).toFixed(2)}rem` }}>
+                {datumDisplay}
               </p>
             )}
             {locatie && (
@@ -627,17 +640,19 @@ export default function EventHomePreview({
 
       {/* Home content (Welkomstbericht) */}
       {(homeTitle || homeBody) && (
-        <div className="px-8 py-10" style={{ backgroundColor: sc.bodyBackground ? "transparent" : sc.navBg }}>
-          {homeTitle && (
-            <p {...fieldClick('welkomst-titel')} className="font-bold mb-2 whitespace-pre-wrap" style={{ fontSize: `${homeTitleSize ?? (sc.floral ? 1.25 : 1.0)}rem`, color: sc.headingColor, fontFamily: sc.fontFamily, textAlign: homeAlign }}>
-              {homeTitle}
-            </p>
-          )}
-          {homeBody && (
-            <p {...fieldClick('welkomst-tekst')} className="leading-relaxed whitespace-pre-wrap" style={{ fontSize: `${homeBodySize ?? (sc.floral ? 1.125 : 0.9375)}rem`, color: sc.bodyText, fontFamily: sc.fontFamily, textAlign: homeAlign }}>
-              {homeBody}
-            </p>
-          )}
+        <div className="px-8 py-10 flex flex-col items-center" style={{ backgroundColor: sc.bodyBackground ? "transparent" : sc.navBg }}>
+          <div className="max-w-2xl w-full text-center">
+            {homeTitle && (
+              <p {...fieldClick('welkomst-titel')} className="font-bold mb-2 whitespace-pre-wrap" style={{ fontSize: `${homeTitleSize ?? (sc.floral ? 1.25 : 1.0)}rem`, color: sc.headingColor, fontFamily: sc.fontFamily, textAlign: 'center' }}>
+                {homeTitle}
+              </p>
+            )}
+            {homeBody && (
+              <p {...fieldClick('welkomst-tekst')} className="leading-relaxed whitespace-pre-wrap" style={{ fontSize: `${homeBodySize ?? (sc.floral ? 1.125 : 0.9375)}rem`, color: sc.bodyText, fontFamily: sc.fontFamily, textAlign: 'center' }}>
+                {homeBody}
+              </p>
+            )}
+          </div>
         </div>
       )}
     </div>

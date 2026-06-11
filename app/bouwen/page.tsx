@@ -40,6 +40,7 @@ interface HomepageSettings {
   hoofdtitelSize: number
   datumFont: string
   datumSize: number
+  datumNotatie: 'uitgeschreven' | 'numeriek'
   titlePosition: 'over' | 'under'
   initialsVisible: boolean
   frameNamesVisible: boolean
@@ -61,6 +62,7 @@ const DEFAULT_HOMEPAGE_SETTINGS: HomepageSettings = {
   hoofdtitelSize: 5.5,
   datumFont: 'playfair',
   datumSize: 1.6,
+  datumNotatie: 'uitgeschreven',
   titlePosition: 'over',
   initialsVisible: true,
   frameNamesVisible: true,
@@ -421,8 +423,13 @@ export default function BouwenPage() {
   const [hpOpenGear, setHpOpenGear] = useState<string | null>(null)
   const [deleteConfirmIdx, setDeleteConfirmIdx] = useState<number | null>(null)
   const [openAlgSection, setOpenAlgSection] = useState<'stijl' | 'navigatie' | 'lettertype' | null>(null)
+  const [openUrlSection, setOpenUrlSection] = useState<'url' | 'beveiliging' | null>(null)
   const [openHomeSection, setOpenHomeSection] = useState<'layout' | 'headerfoto' | 'kaders' | 'tekstvelden' | 'welkomst' | null>(null)
   const [pwEnabled, setPwEnabled] = useState(false)
+
+  useEffect(() => { if (activeSection !== 'algemeen') setOpenAlgSection(null) }, [activeSection])
+  useEffect(() => { if (activeSection !== 'url') setOpenUrlSection(null) }, [activeSection])
+  useEffect(() => { if (activeSection !== 'paginas' || activeSubPage !== 'Home') setOpenHomeSection(null) }, [activeSection, activeSubPage])
   const [pwType, setPwType] = useState<'password' | 'secret_question'>('password')
   const [pwValue, setPwValue] = useState('')
   const [pwQuestion, setPwQuestion] = useState('')
@@ -1258,143 +1265,165 @@ export default function BouwenPage() {
               <Chevron open={activeSection === 'url'} />
             </button>
             {activeSection === 'url' && (
-              <div className="px-5 pt-1 pb-5 flex flex-col gap-5">
+              <div className="flex flex-col">
 
-                {/* URL */}
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">Jouw URL</p>
-                  {!slugEditOpen ? (
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-[11px] text-gray-500 font-mono truncate">{slugPreview}.sayingyes.nl</p>
-                      {savedEventId && (
-                        <button
-                          onClick={() => { setSlugValue(slugPreview); setSlugError(null); setSlugEditOpen(true) }}
-                          className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
-                        >
-                          ✏️
-                        </button>
+                {/* ── Jouw URL ── */}
+                <div className="border-t border-gray-100">
+                  <button
+                    onClick={() => setOpenUrlSection(prev => prev === 'url' ? null : 'url')}
+                    className="flex items-center gap-2 w-full px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
+                  >
+                    <span className={`transition-transform duration-200 flex-shrink-0 ${openUrlSection === 'url' ? 'rotate-90' : ''}`}>
+                      <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </span>
+                    <span className="text-sm font-medium text-gray-800">Jouw URL</span>
+                  </button>
+                  {openUrlSection === 'url' && (
+                    <div className="px-5 pb-4">
+                      {!slugEditOpen ? (
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-[11px] text-gray-500 font-mono truncate">{slugPreview}.sayingyes.nl</p>
+                          {savedEventId && (
+                            <button
+                              onClick={() => { setSlugValue(slugPreview); setSlugError(null); setSlugEditOpen(true) }}
+                              className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+                            >
+                              ✏️
+                            </button>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-1.5">
+                          <input
+                            autoFocus
+                            value={slugValue}
+                            onChange={(e) => { setSlugValue(sanitizeSlugInput(e.target.value)); setSlugError(null) }}
+                            onKeyDown={(e) => { if (e.key === "Enter") handleSlugSave(); if (e.key === "Escape") setSlugEditOpen(false) }}
+                            className="w-full text-xs rounded-lg px-2 py-1.5 outline-none font-mono"
+                            style={{ border: `1px solid ${slugError ? "#dc2626" : "#d1d5db"}`, color: "#111827" }}
+                            placeholder={slugPreview}
+                            maxLength={60}
+                          />
+                          {slugError && <p className="text-[10px] text-red-500">{slugError}</p>}
+                          <div className="flex gap-2">
+                            <button
+                              onClick={handleSlugSave}
+                              disabled={slugSaving}
+                              className="text-[11px] font-semibold px-2.5 py-1 rounded-lg transition-colors"
+                              style={{ backgroundColor: slugSaving ? "#d1d5db" : "#1A1A1A", color: "#fff" }}
+                            >
+                              {slugSaving ? "…" : "Opslaan"}
+                            </button>
+                            <button
+                              onClick={() => setSlugEditOpen(false)}
+                              className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                              Annuleren
+                            </button>
+                          </div>
+                        </div>
                       )}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-1.5">
-                      <input
-                        autoFocus
-                        value={slugValue}
-                        onChange={(e) => { setSlugValue(sanitizeSlugInput(e.target.value)); setSlugError(null) }}
-                        onKeyDown={(e) => { if (e.key === "Enter") handleSlugSave(); if (e.key === "Escape") setSlugEditOpen(false) }}
-                        className="w-full text-xs rounded-lg px-2 py-1.5 outline-none font-mono"
-                        style={{ border: `1px solid ${slugError ? "#dc2626" : "#d1d5db"}`, color: "#111827" }}
-                        placeholder={slugPreview}
-                        maxLength={60}
-                      />
-                      {slugError && <p className="text-[10px] text-red-500">{slugError}</p>}
-                      <div className="flex gap-2">
-                        <button
-                          onClick={handleSlugSave}
-                          disabled={slugSaving}
-                          className="text-[11px] font-semibold px-2.5 py-1 rounded-lg transition-colors"
-                          style={{ backgroundColor: slugSaving ? "#d1d5db" : "#1A1A1A", color: "#fff" }}
-                        >
-                          {slugSaving ? "…" : "Opslaan"}
-                        </button>
-                        <button
-                          onClick={() => setSlugEditOpen(false)}
-                          className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
-                        >
-                          Annuleren
-                        </button>
-                      </div>
                     </div>
                   )}
                 </div>
 
-                {/* Divider */}
-                <div className="border-t border-gray-100" />
-
-                {/* Beveiliging */}
-                <div className="flex flex-col gap-4">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Beveiliging</p>
-
-                  {/* Toggle */}
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-semibold text-gray-700">Website afschermen</p>
-                      <p className="text-[11px] text-gray-400 mt-0.5">Gasten moeten een code of antwoord invoeren</p>
-                    </div>
-                    <button
-                      role="switch"
-                      aria-checked={pwEnabled}
-                      onClick={() => { setPwEnabled(v => !v); setAutoSavePending(true) }}
-                      className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors cursor-pointer focus:outline-none ${pwEnabled ? "bg-emerald-500" : "bg-gray-200"}`}
-                    >
-                      <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm transform transition-transform ${pwEnabled ? "translate-x-5" : "translate-x-0"}`} />
-                    </button>
-                  </div>
-
-                  {pwEnabled && (
-                    <>
-                      {/* Type selector */}
-                      <div className="flex flex-col gap-1.5">
-                        <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-widest">Type beveiliging</p>
-                        <div className="flex rounded-xl overflow-hidden border border-gray-200">
-                          <button
-                            onClick={() => { setPwType('password'); setAutoSavePending(true) }}
-                            className={`flex-1 py-2 text-xs font-semibold transition-colors ${pwType === 'password' ? 'bg-gray-900 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
-                          >
-                            Wachtwoord
-                          </button>
-                          <button
-                            onClick={() => { setPwType('secret_question'); setAutoSavePending(true) }}
-                            className={`flex-1 py-2 text-xs font-semibold transition-colors ${pwType === 'secret_question' ? 'bg-gray-900 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
-                          >
-                            Geheime vraag
-                          </button>
+                {/* ── Beveiliging ── */}
+                <div className="border-t border-gray-100">
+                  <button
+                    onClick={() => setOpenUrlSection(prev => prev === 'beveiliging' ? null : 'beveiliging')}
+                    className="flex items-center gap-2 w-full px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
+                  >
+                    <span className={`transition-transform duration-200 flex-shrink-0 ${openUrlSection === 'beveiliging' ? 'rotate-90' : ''}`}>
+                      <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </span>
+                    <span className="text-sm font-medium text-gray-800">Beveiliging</span>
+                  </button>
+                  {openUrlSection === 'beveiliging' && (
+                    <div className="px-5 pb-4 flex flex-col gap-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-xs font-semibold text-gray-700">Website afschermen</p>
+                          <p className="text-[11px] text-gray-400 mt-0.5">Gasten moeten een code of antwoord invoeren</p>
                         </div>
+                        <button
+                          role="switch"
+                          aria-checked={pwEnabled}
+                          onClick={() => { setPwEnabled(v => !v); setAutoSavePending(true) }}
+                          className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors cursor-pointer focus:outline-none ${pwEnabled ? "bg-emerald-500" : "bg-gray-200"}`}
+                        >
+                          <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm transform transition-transform ${pwEnabled ? "translate-x-5" : "translate-x-0"}`} />
+                        </button>
                       </div>
 
-                      {pwType === 'password' && (
-                        <label className="flex flex-col gap-1.5">
-                          <span className="text-xs font-semibold text-gray-600">Wachtwoord voor gasten</span>
-                          <input
-                            type="text"
-                            value={pwValue}
-                            onChange={(e) => setPwValue(e.target.value)}
-                            onBlur={() => setAutoSavePending(true)}
-                            placeholder="bijv. JansenBakker2025"
-                            className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                          />
-                          <p className="text-[11px] text-gray-400">Gasten moeten dit exact invoeren (hoofdlettergevoelig).</p>
-                        </label>
-                      )}
-
-                      {pwType === 'secret_question' && (
+                      {pwEnabled && (
                         <>
-                          <label className="flex flex-col gap-1.5">
-                            <span className="text-xs font-semibold text-gray-600">Stel je vraag</span>
-                            <input
-                              type="text"
-                              value={pwQuestion}
-                              onChange={(e) => setPwQuestion(e.target.value)}
-                              onBlur={() => setAutoSavePending(true)}
-                              placeholder="bijv. Wat zijn onze achternamen?"
-                              className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                            />
-                          </label>
-                          <label className="flex flex-col gap-1.5">
-                            <span className="text-xs font-semibold text-gray-600">Het juiste antwoord</span>
-                            <input
-                              type="text"
-                              value={pwAnswer}
-                              onChange={(e) => setPwAnswer(e.target.value)}
-                              onBlur={() => setAutoSavePending(true)}
-                              placeholder="bijv. Jansen en Bakker"
-                              className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                            />
-                            <p className="text-[11px] text-gray-400">Variaties zoals &ldquo;Jansen & Bakker&rdquo; worden ook geaccepteerd (~90% gelijkenis).</p>
-                          </label>
+                          <div className="flex flex-col gap-1.5">
+                            <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-widest">Type beveiliging</p>
+                            <div className="flex rounded-xl overflow-hidden border border-gray-200">
+                              <button
+                                onClick={() => { setPwType('password'); setAutoSavePending(true) }}
+                                className={`flex-1 py-2 text-xs font-semibold transition-colors ${pwType === 'password' ? 'bg-gray-900 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+                              >
+                                Wachtwoord
+                              </button>
+                              <button
+                                onClick={() => { setPwType('secret_question'); setAutoSavePending(true) }}
+                                className={`flex-1 py-2 text-xs font-semibold transition-colors ${pwType === 'secret_question' ? 'bg-gray-900 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+                              >
+                                Geheime vraag
+                              </button>
+                            </div>
+                          </div>
+
+                          {pwType === 'password' && (
+                            <label className="flex flex-col gap-1.5">
+                              <span className="text-xs font-semibold text-gray-600">Wachtwoord voor gasten</span>
+                              <input
+                                type="text"
+                                value={pwValue}
+                                onChange={(e) => setPwValue(e.target.value)}
+                                onBlur={() => setAutoSavePending(true)}
+                                placeholder="bijv. JansenBakker2025"
+                                className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                              />
+                              <p className="text-[11px] text-gray-400">Gasten moeten dit exact invoeren (hoofdlettergevoelig).</p>
+                            </label>
+                          )}
+
+                          {pwType === 'secret_question' && (
+                            <>
+                              <label className="flex flex-col gap-1.5">
+                                <span className="text-xs font-semibold text-gray-600">Stel je vraag</span>
+                                <input
+                                  type="text"
+                                  value={pwQuestion}
+                                  onChange={(e) => setPwQuestion(e.target.value)}
+                                  onBlur={() => setAutoSavePending(true)}
+                                  placeholder="bijv. Wat zijn onze achternamen?"
+                                  className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                                />
+                              </label>
+                              <label className="flex flex-col gap-1.5">
+                                <span className="text-xs font-semibold text-gray-600">Het juiste antwoord</span>
+                                <input
+                                  type="text"
+                                  value={pwAnswer}
+                                  onChange={(e) => setPwAnswer(e.target.value)}
+                                  onBlur={() => setAutoSavePending(true)}
+                                  placeholder="bijv. Jansen en Bakker"
+                                  className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                                />
+                                <p className="text-[11px] text-gray-400">Variaties zoals &ldquo;Jansen & Bakker&rdquo; worden ook geaccepteerd (~90% gelijkenis).</p>
+                              </label>
+                            </>
+                          )}
                         </>
                       )}
-                    </>
+                    </div>
                   )}
                 </div>
 
@@ -1417,10 +1446,14 @@ export default function BouwenPage() {
                 <div className="border-t border-gray-100">
                   <button
                     onClick={() => setOpenAlgSection(prev => prev === 'stijl' ? null : 'stijl')}
-                    className="w-full flex items-center justify-between px-5 py-2.5 hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-2 w-full px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                   >
-                    <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Stijl</span>
-                    <Chevron open={openAlgSection === 'stijl'} />
+                    <span className={`transition-transform duration-200 flex-shrink-0 ${openAlgSection === 'stijl' ? 'rotate-90' : ''}`}>
+                      <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </span>
+                    <span className="text-sm font-medium text-gray-800">Stijl</span>
                   </button>
                   {openAlgSection === 'stijl' && (
                     <div className="px-5 pb-4 flex flex-col gap-2">
@@ -1454,10 +1487,14 @@ export default function BouwenPage() {
                 <div className="border-t border-gray-100">
                   <button
                     onClick={() => setOpenAlgSection(prev => prev === 'navigatie' ? null : 'navigatie')}
-                    className="w-full flex items-center justify-between px-5 py-2.5 hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-2 w-full px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                   >
-                    <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Navigatie</span>
-                    <Chevron open={openAlgSection === 'navigatie'} />
+                    <span className={`transition-transform duration-200 flex-shrink-0 ${openAlgSection === 'navigatie' ? 'rotate-90' : ''}`}>
+                      <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </span>
+                    <span className="text-sm font-medium text-gray-800">Navigatie</span>
                   </button>
                   {openAlgSection === 'navigatie' && (
                     <div className="px-5 pb-4 flex flex-col gap-3">
@@ -1497,10 +1534,14 @@ export default function BouwenPage() {
                 <div className="border-t border-gray-100">
                   <button
                     onClick={() => setOpenAlgSection(prev => prev === 'lettertype' ? null : 'lettertype')}
-                    className="w-full flex items-center justify-between px-5 py-2.5 hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-2 w-full px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                   >
-                    <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Basislettertype</span>
-                    <Chevron open={openAlgSection === 'lettertype'} />
+                    <span className={`transition-transform duration-200 flex-shrink-0 ${openAlgSection === 'lettertype' ? 'rotate-90' : ''}`}>
+                      <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </span>
+                    <span className="text-sm font-medium text-gray-800">Basislettertype</span>
                   </button>
                   {openAlgSection === 'lettertype' && (
                     <div className="px-5 pb-4 flex flex-col gap-2">
@@ -1579,10 +1620,14 @@ export default function BouwenPage() {
                             <div className="border-t border-gray-100">
                               <button
                                 onClick={() => setOpenHomeSection(prev => prev === 'layout' ? null : 'layout')}
-                                className="w-full flex items-center justify-between px-5 py-2.5 hover:bg-gray-50 transition-colors"
+                                className="flex items-center gap-2 w-full px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                               >
-                                <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Lay-out</span>
-                                <Chevron open={openHomeSection === 'layout'} />
+                                <span className={`transition-transform duration-200 flex-shrink-0 ${openHomeSection === 'layout' ? 'rotate-90' : ''}`}>
+                                  <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                                  </svg>
+                                </span>
+                                <span className="text-sm font-medium text-gray-800">Lay-out</span>
                               </button>
                               {openHomeSection === 'layout' && (
                                 <div className="px-5 pb-4 flex gap-2">
@@ -1611,10 +1656,14 @@ export default function BouwenPage() {
                             <div className="border-t border-gray-100">
                               <button
                                 onClick={() => setOpenHomeSection(prev => prev === 'headerfoto' ? null : 'headerfoto')}
-                                className="w-full flex items-center justify-between px-5 py-2.5 hover:bg-gray-50 transition-colors"
+                                className="flex items-center gap-2 w-full px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                               >
-                                <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Headerfoto</span>
-                                <Chevron open={openHomeSection === 'headerfoto'} />
+                                <span className={`transition-transform duration-200 flex-shrink-0 ${openHomeSection === 'headerfoto' ? 'rotate-90' : ''}`}>
+                                  <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                                  </svg>
+                                </span>
+                                <span className="text-sm font-medium text-gray-800">Headerfoto</span>
                               </button>
                               {openHomeSection === 'headerfoto' && (
                                 <div id="hp-field-headerfoto" className="px-5 pb-4">
@@ -1664,10 +1713,14 @@ export default function BouwenPage() {
                             <div className="border-t border-gray-100">
                               <button
                                 onClick={() => setOpenHomeSection(prev => prev === 'kaders' ? null : 'kaders')}
-                                className="w-full flex items-center justify-between px-5 py-2.5 hover:bg-gray-50 transition-colors"
+                                className="flex items-center gap-2 w-full px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                               >
-                                <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Kaders</span>
-                                <Chevron open={openHomeSection === 'kaders'} />
+                                <span className={`transition-transform duration-200 flex-shrink-0 ${openHomeSection === 'kaders' ? 'rotate-90' : ''}`}>
+                                  <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                                  </svg>
+                                </span>
+                                <span className="text-sm font-medium text-gray-800">Kaders</span>
                               </button>
                               {openHomeSection === 'kaders' && (
                                 <div className="px-5 pb-4 flex flex-col gap-4">
@@ -1728,10 +1781,14 @@ export default function BouwenPage() {
                             <div className="border-t border-gray-100">
                               <button
                                 onClick={() => setOpenHomeSection(prev => prev === 'tekstvelden' ? null : 'tekstvelden')}
-                                className="w-full flex items-center justify-between px-5 py-2.5 hover:bg-gray-50 transition-colors"
+                                className="flex items-center gap-2 w-full px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                               >
-                                <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Tekstvelden</span>
-                                <Chevron open={openHomeSection === 'tekstvelden'} />
+                                <span className={`transition-transform duration-200 flex-shrink-0 ${openHomeSection === 'tekstvelden' ? 'rotate-90' : ''}`}>
+                                  <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                                  </svg>
+                                </span>
+                                <span className="text-sm font-medium text-gray-800">Tekstvelden</span>
                               </button>
                               {openHomeSection === 'tekstvelden' && (
                                 <div className="px-5 pb-4 flex flex-col gap-4">
@@ -1739,7 +1796,7 @@ export default function BouwenPage() {
                                   {/* Hoofdtitel */}
                                   <div id="hp-field-hoofdtitel" className="flex flex-col gap-1.5">
                                     <div className="flex items-center justify-between">
-                                      <span className="text-xs font-semibold text-gray-600">Hoofdtitel (Namen)</span>
+                                      <span className="text-xs font-semibold text-gray-600">Hoofdtitel</span>
                                       <div className="flex items-center gap-1.5">
                                         <button
                                           onClick={() => updateHpSettings({ hoofdtitelVisible: !hpSettings.hoofdtitelVisible })}
@@ -1792,7 +1849,7 @@ export default function BouwenPage() {
                                   {/* Subtitel */}
                                   <div id="hp-field-subtitle" className="flex flex-col gap-1.5">
                                     <div className="flex items-center justify-between">
-                                      <span className="text-xs font-semibold text-gray-600">Subtitel (Intro)</span>
+                                      <span className="text-xs font-semibold text-gray-600">Subtitel</span>
                                       <div className="flex items-center gap-1.5">
                                         <button
                                           onClick={() => updateHpSettings({ subtitleVisible: !hpSettings.subtitleVisible })}
@@ -1819,6 +1876,74 @@ export default function BouwenPage() {
                                           <span className="text-xs text-gray-400">{hpSettings.subtitleSize}rem</span>
                                         </div>
                                         <input type="range" min={0.7} max={5} step={0.1} value={hpSettings.subtitleSize} onChange={(e) => updateHpSettings({ subtitleSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* Initialen */}
+                                  <div id="hp-field-initialen" className="flex flex-col gap-1.5">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-xs font-semibold text-gray-600">Initialen</span>
+                                      <div className="flex items-center gap-1.5">
+                                        <button
+                                          onClick={() => updateHpSettings({ initialsVisible: !hpSettings.initialsVisible })}
+                                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.initialsVisible ? 'bg-pink-400' : 'bg-gray-200'}`}
+                                        >
+                                          <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.initialsVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                                        </button>
+                                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'initialen' ? 'bg-rose-50 text-rose-400' : 'text-gray-300'}`}>Aa</span>
+                                      </div>
+                                    </div>
+                                    <input
+                                      type="text"
+                                      value={draft?.initials ?? ""}
+                                      onChange={(e) => updateDraft({ initials: e.target.value })}
+                                      onFocus={() => setHpOpenGear('initialen')}
+                                      placeholder="bijv. M | W"
+                                      className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                                    />
+                                    {hpOpenGear === 'initialen' && (
+                                      <div className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-gray-200">
+                                        <FontSelect value={fontInitials} onChange={saveFontInitials} />
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-xs text-gray-500">Grootte</span>
+                                          <span className="text-xs text-gray-400">{draft?.frameInitialsSize ?? 8}</span>
+                                        </div>
+                                        <input type="range" min={4} max={18} step={0.5} value={draft?.frameInitialsSize ?? 8} onChange={(e) => updateDraft({ frameInitialsSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* Namen */}
+                                  <div id="hp-field-namen" className="flex flex-col gap-1.5">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-xs font-semibold text-gray-600">Namen</span>
+                                      <div className="flex items-center gap-1.5">
+                                        <button
+                                          onClick={() => updateHpSettings({ frameNamesVisible: !hpSettings.frameNamesVisible })}
+                                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.frameNamesVisible ? 'bg-pink-400' : 'bg-gray-200'}`}
+                                        >
+                                          <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.frameNamesVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                                        </button>
+                                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'namen' ? 'bg-rose-50 text-rose-400' : 'text-gray-300'}`}>Aa</span>
+                                      </div>
+                                    </div>
+                                    <textarea
+                                      rows={2}
+                                      value={draft?.frame_names ?? ""}
+                                      onChange={(e) => updateDraft({ frame_names: e.target.value })}
+                                      onFocus={() => setHpOpenGear('namen')}
+                                      placeholder={"bijv. Michiel\n& Lindsey"}
+                                      className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all resize-none"
+                                    />
+                                    {hpOpenGear === 'namen' && (
+                                      <div className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-gray-200">
+                                        <FontSelect value={fontFrameNames} onChange={saveFontFrameNames} />
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-xs text-gray-500">Grootte</span>
+                                          <span className="text-xs text-gray-400">{draft?.frameNamesSize ?? 5.5}</span>
+                                        </div>
+                                        <input type="range" min={2} max={13} step={0.5} value={draft?.frameNamesSize ?? 5.5} onChange={(e) => updateDraft({ frameNamesSize: Number(e.target.value) })} className="w-full accent-rose-400" />
                                       </div>
                                     )}
                                   </div>
@@ -1864,6 +1989,26 @@ export default function BouwenPage() {
                                             <input type="range" min={0.7} max={3} step={0.1} value={hpSettings.datumSize} onChange={(e) => updateHpSettings({ datumSize: Number(e.target.value) })} className="w-full accent-rose-400" />
                                           </>
                                         )}
+                                        <div className="flex flex-col gap-1">
+                                          <span className="text-xs text-gray-500">Notatie</span>
+                                          <div className="flex rounded-xl border border-gray-200 overflow-hidden">
+                                            <button
+                                              onClick={() => updateHpSettings({ datumNotatie: 'uitgeschreven' })}
+                                              className={`flex-1 py-1.5 text-xs font-semibold transition-colors ${(hpSettings.datumNotatie ?? 'uitgeschreven') === 'uitgeschreven' ? 'bg-rose-500 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+                                            >
+                                              Optie 1
+                                            </button>
+                                            <button
+                                              onClick={() => updateHpSettings({ datumNotatie: 'numeriek' })}
+                                              className={`flex-1 py-1.5 text-xs font-semibold transition-colors ${(hpSettings.datumNotatie ?? 'uitgeschreven') === 'numeriek' ? 'bg-rose-500 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+                                            >
+                                              Optie 2
+                                            </button>
+                                          </div>
+                                          <p className="text-[10px] text-gray-400 leading-snug">
+                                            {(hpSettings.datumNotatie ?? 'uitgeschreven') === 'uitgeschreven' ? '28 juni 2026' : '28-06-2026'}
+                                          </p>
+                                        </div>
                                       </div>
                                     )}
                                   </div>
@@ -1914,74 +2059,6 @@ export default function BouwenPage() {
                                     )}
                                   </div>
 
-                                  {/* Initialen */}
-                                  <div id="hp-field-initialen" className="flex flex-col gap-1.5">
-                                    <div className="flex items-center justify-between">
-                                      <span className="text-xs font-semibold text-gray-600">Initialen</span>
-                                      <div className="flex items-center gap-1.5">
-                                        <button
-                                          onClick={() => updateHpSettings({ initialsVisible: !hpSettings.initialsVisible })}
-                                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.initialsVisible ? 'bg-pink-400' : 'bg-gray-200'}`}
-                                        >
-                                          <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.initialsVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
-                                        </button>
-                                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'initialen' ? 'bg-rose-50 text-rose-400' : 'text-gray-300'}`}>Aa</span>
-                                      </div>
-                                    </div>
-                                    <input
-                                      type="text"
-                                      value={draft?.initials ?? ""}
-                                      onChange={(e) => updateDraft({ initials: e.target.value })}
-                                      onFocus={() => setHpOpenGear('initialen')}
-                                      placeholder="bijv. M | W"
-                                      className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                                    />
-                                    {hpOpenGear === 'initialen' && (
-                                      <div className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-gray-200">
-                                        <FontSelect value={fontInitials} onChange={saveFontInitials} />
-                                        <div className="flex items-center justify-between">
-                                          <span className="text-xs text-gray-500">Grootte</span>
-                                          <span className="text-xs text-gray-400">{draft?.frameInitialsSize ?? 8}</span>
-                                        </div>
-                                        <input type="range" min={4} max={18} step={0.5} value={draft?.frameInitialsSize ?? 8} onChange={(e) => updateDraft({ frameInitialsSize: Number(e.target.value) })} className="w-full accent-rose-400" />
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  {/* Namen in kader */}
-                                  <div id="hp-field-namen" className="flex flex-col gap-1.5">
-                                    <div className="flex items-center justify-between">
-                                      <span className="text-xs font-semibold text-gray-600">Namen in kader</span>
-                                      <div className="flex items-center gap-1.5">
-                                        <button
-                                          onClick={() => updateHpSettings({ frameNamesVisible: !hpSettings.frameNamesVisible })}
-                                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.frameNamesVisible ? 'bg-pink-400' : 'bg-gray-200'}`}
-                                        >
-                                          <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.frameNamesVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
-                                        </button>
-                                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'namen' ? 'bg-rose-50 text-rose-400' : 'text-gray-300'}`}>Aa</span>
-                                      </div>
-                                    </div>
-                                    <textarea
-                                      rows={2}
-                                      value={draft?.frame_names ?? ""}
-                                      onChange={(e) => updateDraft({ frame_names: e.target.value })}
-                                      onFocus={() => setHpOpenGear('namen')}
-                                      placeholder={"bijv. Michiel\n& Lindsey"}
-                                      className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all resize-none"
-                                    />
-                                    {hpOpenGear === 'namen' && (
-                                      <div className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-gray-200">
-                                        <FontSelect value={fontFrameNames} onChange={saveFontFrameNames} />
-                                        <div className="flex items-center justify-between">
-                                          <span className="text-xs text-gray-500">Grootte</span>
-                                          <span className="text-xs text-gray-400">{draft?.frameNamesSize ?? 5.5}</span>
-                                        </div>
-                                        <input type="range" min={2} max={13} step={0.5} value={draft?.frameNamesSize ?? 5.5} onChange={(e) => updateDraft({ frameNamesSize: Number(e.target.value) })} className="w-full accent-rose-400" />
-                                      </div>
-                                    )}
-                                  </div>
-
                                 </div>
                               )}
                             </div>
@@ -1990,10 +2067,14 @@ export default function BouwenPage() {
                             <div className="border-t border-gray-100">
                               <button
                                 onClick={() => setOpenHomeSection(prev => prev === 'welkomst' ? null : 'welkomst')}
-                                className="w-full flex items-center justify-between px-5 py-2.5 hover:bg-gray-50 transition-colors"
+                                className="flex items-center gap-2 w-full px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                               >
-                                <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Welkomstbericht</span>
-                                <Chevron open={openHomeSection === 'welkomst'} />
+                                <span className={`transition-transform duration-200 flex-shrink-0 ${openHomeSection === 'welkomst' ? 'rotate-90' : ''}`}>
+                                  <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                                  </svg>
+                                </span>
+                                <span className="text-sm font-medium text-gray-800">Welkomstbericht</span>
                               </button>
                               {openHomeSection === 'welkomst' && (
                                 <div className="px-5 pb-4 flex flex-col gap-3">
