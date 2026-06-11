@@ -13,7 +13,6 @@ export const TITLE_FONT_OPTIONS = [
   { id: "pinyonscript", label: "Pinyon Script",      cssVar: "--font-pinyonscript",weight: 400 },
   { id: "playfair",     label: "Playfair Display",   cssVar: "--font-playfair",    weight: 700 },
   { id: "prata",        label: "Prata",              cssVar: "--font-prata",       weight: 400 },
-  { id: "windsong",     label: "WindSong",           cssVar: "--font-windsong",    weight: 400 },
 ] as const
 
 export type TitleFontId = typeof TITLE_FONT_OPTIONS[number]["id"]
