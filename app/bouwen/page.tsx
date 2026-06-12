@@ -1128,6 +1128,10 @@ export default function BouwenPage() {
   const rsvpDeadlinePassed    = rsvpDeadline ? new Date() > new Date(rsvpDeadline) : false
   const RSVP_GUEST_LABELS: Record<string, string> = { daggast: "Daggast", avondgast: "Avondgast", receptiegast: "Receptiegast" }
 
+  const isSinglePagePreview = hpSettings.pageMode === 'single'
+  const activePageIds = new Set(activePagesOrdered.map(p => p.id))
+  const showSection = (id: string) => isSinglePagePreview ? activePageIds.has(id) : previewPage === id
+
   const Chevron = ({ open }: { open: boolean }) => (
     <svg className={`w-4 h-4 text-gray-400 transition-transform duration-200 flex-shrink-0 ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -2760,10 +2764,16 @@ export default function BouwenPage() {
                         pages={activePagesOrdered.map((p) => ({ type: p.id, title: p.label }))}
                         sc={sc}
                         navLayout={navLayout}
-                        activeType={previewPage}
-                        onNavigate={(type) => { setPreviewPage(type as PageId); setActiveSubPage(type as PageId) }}
+                        activeType={isSinglePagePreview ? undefined : previewPage}
+                        onNavigate={(type) => {
+                          if (!isSinglePagePreview) {
+                            setPreviewPage(type as PageId)
+                            setActiveSubPage(type as PageId)
+                          }
+                        }}
+                        singlePage={isSinglePagePreview}
                       />
-                      {previewPage === "Home" && (
+                      {showSection("Home") && (
                         <EventHomePreview
                           title={draft?.naam ?? ""}
                           datum={draft?.datum || null}
@@ -2795,7 +2805,7 @@ export default function BouwenPage() {
                           onFieldClick={handlePreviewFieldClick}
                         />
                       )}
-                      {previewPage === "Ceremoniemeesters" && (
+                      {showSection("Ceremoniemeesters") && (
                         <EventMastersPreview
                           masters={mastersForPreview}
                           sc={sc}
@@ -2803,7 +2813,7 @@ export default function BouwenPage() {
                           onMasterDoubleClick={handleMasterDoubleClick}
                         />
                       )}
-                      {previewPage === "OnsVerhaal" && (
+                      {showSection("OnsVerhaal") && (
                         <StoryPreview
                           title={(content.OnsVerhaal?.title as string) ?? "Ons Verhaal"}
                           text={(content.OnsVerhaal?.text as string) ?? null}
@@ -2817,7 +2827,7 @@ export default function BouwenPage() {
                           sc={sc}
                         />
                       )}
-                      {previewPage === "Programma" && (
+                      {showSection("Programma") && (
                         <EventProgramPreview
                           items={programmaItemsForPreview}
                           sc={sc}
@@ -2833,7 +2843,7 @@ export default function BouwenPage() {
                           onItemDoubleClick={handleProgramItemDoubleClick}
                         />
                       )}
-                      {previewPage === "RSVP" && (
+                      {showSection("RSVP") && (
                         <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
                           <h2 className="text-2xl mb-6" style={{ color: sc.headingColor, fontFamily: sc.fontPageTitles, fontWeight: sc.fontPageTitlesWeight }}>RSVP</h2>
                           <div className="flex flex-col gap-6 max-w-lg">
@@ -2946,13 +2956,13 @@ export default function BouwenPage() {
                           </div>
                         </div>
                       )}
-                      {previewPage === "Informatie" && (
+                      {showSection("Informatie") && (
                         <PraktischPreview tiles={praktischTiles ?? []} sc={sc} onTileDoubleClick={handleInfoTileDoubleClick} />
                       )}
-                      {previewPage === "Cadeautips" && (
+                      {showSection("Cadeautips") && (
                         <WishlistPreview items={wishlistItems?.length ? wishlistItems : DEFAULT_WISHLIST_ITEMS} sc={sc} onItemDoubleClick={handleWishlistItemDoubleClick} />
                       )}
-                      {previewPage === "Fotos" && (
+                      {showSection("Fotos") && (
                         <FotosPreview
                           title={(content.Fotos?.title as string) || "Foto's"}
                           intro={(content.Fotos?.intro as string) || null}
