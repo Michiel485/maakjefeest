@@ -120,6 +120,7 @@ export const STYLE_CONFIG = {
     bodyFontWeight: "500",
     fontImport: null as string | null,
     frameBodyText: "#2A1A10" as string | null,
+    outerBg: "#155A65" as string | null,
   },
 } as const
 
@@ -148,6 +149,7 @@ export interface SC {
   bodyFontWeight: string
   fontImport: string | null
   frameBodyText: string | null
+  outerBg?: string | null
   fontHero: string
   fontHeroWeight: number
   fontInitials: string
