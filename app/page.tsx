@@ -588,7 +588,7 @@ export default function Home() {
               className="text-4xl sm:text-5xl mb-4 leading-tight"
               style={{ fontFamily: "var(--font-cormorant)", color: "#FAF7F2", fontWeight: 700 }}
             >
-              Één eerlijke prijs.<br />Nooit verrassingen.
+              Eén eerlijke prijs.<br />Nooit verrassingen.
             </h2>
             <p className="text-base leading-relaxed" style={{ color: "#8A7E72" }}>
               De goedkoopste én meest complete trouwsite van Nederland.
@@ -611,7 +611,7 @@ export default function Home() {
               className="text-xs font-semibold uppercase tracking-[0.2em] mb-5"
               style={{ color: GOLD }}
             >
-              Eerste jaar
+              Een jaar live voor maar
             </p>
 
             {/* Prijs */}
@@ -642,7 +642,7 @@ export default function Home() {
                 </span>
               </div>
             </div>
-            <p className="text-sm mb-10" style={{ color: "#4A4030" }}>
+            <p className="text-sm mt-4 mb-10" style={{ color: "#4A4030" }}>
               Eenmalig · Geen stilzwijgende verlengingen
             </p>
 
@@ -651,7 +651,7 @@ export default function Home() {
               {[
                 "De goedkoopste & meest complete optie van Nederland",
                 "Inclusief eigen domeinnaam én alle premium features",
-                "Geen abonnementen of verborgen kosten",
+                "Loopt automatisch af — geen verrassing achteraf",
                 "Na het eerste jaar verlengen wanneer jullie willen",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-3">
