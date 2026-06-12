@@ -17,7 +17,7 @@ export default async function EventLayout({
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, title, nav_title, frame_names, style, font_frame_names, font_page_titles, nav_layout, pw_enabled, pw_type, pw_value, pw_question, pw_answer")
+    .select("id, title, nav_title, frame_names, style, font_frame_names, font_page_titles, nav_layout, pw_enabled, pw_type, pw_value, pw_question, pw_answer, homepage_settings")
     .eq("slug", slug)
     .eq("status", "published")
     .single()
@@ -38,6 +38,9 @@ export default async function EventLayout({
   const pageList = pages ?? []
   const basePath = process.env.NODE_ENV === "production" ? "" : `/events/${slug}`
 
+  const hs = event.homepage_settings as { siteLayout?: string } | null
+  const isFullWidth = hs?.siteLayout === 'fullwidth'
+
   const pwEnabled = (event.pw_enabled as boolean) ?? false
   const pwType = (event.pw_type as "password" | "secret_question" | null) ?? null
   const pwValue = (event.pw_value as string | null) ?? null
@@ -45,7 +48,7 @@ export default async function EventLayout({
   const pwAnswer = (event.pw_answer as string | null) ?? null
 
   const siteContent = (
-    <div className={`max-w-5xl mx-auto sm:shadow-2xl sm:rounded-2xl overflow-clip flex flex-col relative${sc.floral ? " bohemian-scale" : ""}`}
+    <div className={`${isFullWidth ? '' : 'max-w-5xl mx-auto sm:shadow-2xl sm:rounded-2xl '}overflow-clip flex flex-col relative${sc.floral ? " bohemian-scale" : ""}`}
       style={{ background: sc.bodyBackground ?? sc.navBg }}>
 
       <EventNav title={(event.nav_title as string | null) || event.title} pages={pageList} sc={sc} navLayout={(event.nav_layout ?? "split") as "stacked" | "split" | "left"} basePath={basePath} />
@@ -85,7 +88,7 @@ export default async function EventLayout({
   )
 
   return (
-    <div className="min-h-screen sm:py-12" style={{ fontFamily: sc.fontFamily, background: sc.bodyBackground ?? sc.bodyBg, letterSpacing: sc.bodyLetterSpacing, fontWeight: sc.bodyFontWeight }}>
+    <div className={`min-h-screen${isFullWidth ? '' : ' sm:py-12'}`} style={{ fontFamily: sc.fontFamily, background: sc.bodyBackground ?? sc.bodyBg, letterSpacing: sc.bodyLetterSpacing, fontWeight: sc.bodyFontWeight }}>
       {sc.fontImport && <style>{sc.fontImport}</style>}
       {sc.floral && (
         <style>{`

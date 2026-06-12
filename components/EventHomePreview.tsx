@@ -23,6 +23,7 @@ export interface HomepageSettings {
   locatieVisible: boolean
   locatieFont: string
   locatieSize: number
+  siteLayout?: 'boxed' | 'fullwidth'
 }
 
 function clamp(v: number, min: number, max: number) {
