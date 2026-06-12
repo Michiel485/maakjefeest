@@ -238,42 +238,18 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Thema 3: Terracotta — binnenkort */}
+            {/* Thema 3: Terracotta & Gold */}
             <div
-              className="group rounded-3xl overflow-hidden transition-all duration-500 hover:-translate-y-2"
+              className="group rounded-3xl overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl"
               style={{ border: `1px solid ${GOLD_LIGHT}`, backgroundColor: IVORY_CARD }}
             >
-              <div
-                className="relative flex items-center justify-center"
-                style={{
-                  aspectRatio: "3/4",
-                  background:
-                    "linear-gradient(155deg, #D4966A 0%, #C07A52 35%, #8B4513 70%, #9E6B42 100%)",
-                }}
-              >
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background:
-                      "radial-gradient(ellipse 60% 50% at 30% 35%, rgba(255,200,100,0.25) 0%, transparent 65%)",
-                  }}
+              <div className="relative overflow-hidden" style={{ aspectRatio: "3/4" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/marketing/preview-terracotta.png"
+                  alt="Terracotta & Gold thema"
+                  className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
                 />
-                <div className="relative flex flex-col items-center gap-4">
-                  <div
-                    className="w-16 h-16 rounded-full flex items-center justify-center"
-                    style={{ border: "1.5px solid rgba(255,220,140,0.45)" }}
-                  >
-                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="rgba(255,220,140,0.75)" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                  </div>
-                  <p
-                    className="text-xs uppercase tracking-[0.2em] font-semibold"
-                    style={{ color: "rgba(255,220,140,0.85)" }}
-                  >
-                    Binnenkort
-                  </p>
-                </div>
               </div>
               <div className="p-6">
                 <div className="flex items-center gap-2.5 mb-2">
