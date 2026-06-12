@@ -6,6 +6,7 @@ import { SignOutButton } from "./SignOutButton"
 import RsvpSection, { type RsvpRow } from "./RsvpSection"
 import { eventSiteUrl, eventSiteLabel } from "@/lib/site-url"
 import SlugEditor from "./SlugEditor"
+import DeleteDraftButton from "./DeleteDraftButton"
 
 const GOLD       = "#C5A059"
 const GOLD_LIGHT = "#E8D5A3"
@@ -72,6 +73,9 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
 
       {/* Actions */}
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3 md:flex-shrink-0">
+        {isDraft && (
+          <DeleteDraftButton eventId={event.id} />
+        )}
         {!isDraft && (
           <a
             href={eventSiteUrl(event.slug)}
