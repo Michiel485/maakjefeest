@@ -68,7 +68,7 @@ export default function Home() {
         {/* Achtergrond foto */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/Home%20page/Homepage%201.png"
+          src="/marketing/hero.png"
           alt="Bruiloft sfeer"
           className="absolute inset-0 w-full h-full object-cover object-center select-none"
           style={{ zIndex: 0 }}
@@ -187,7 +187,7 @@ export default function Home() {
               <div className="relative overflow-hidden" style={{ aspectRatio: "3/4" }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="/Home%20page/Pagina%20Ivory.jpg"
+                  src="/marketing/preview-emerald.jpg"
                   alt="Emerald Luxury thema"
                   className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
                 />
@@ -213,7 +213,7 @@ export default function Home() {
               <div className="relative overflow-hidden" style={{ aspectRatio: "3/4" }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="/Home%20page/Pagina%20Emerald.png"
+                  src="/marketing/preview-ivory.png"
                   alt="Gold & Ivory thema"
                   className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
                 />
