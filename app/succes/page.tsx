@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { Suspense, useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
@@ -163,7 +163,7 @@ export default function SuccesPage() {
           className="tracking-wide transition-opacity hover:opacity-70"
           style={{ fontFamily: "var(--font-cormorant)", fontSize: "1.25rem", fontWeight: 600, color: CHARCOAL }}
         >
-          Saying Yes
+          SayingYes
         </Link>
       </header>
       <Suspense fallback={<Spinner />}>

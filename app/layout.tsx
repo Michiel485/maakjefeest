@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import {
   Geist,
   Geist_Mono,
@@ -121,7 +121,7 @@ const prata = Prata({
 });
 
 export const metadata: Metadata = {
-  title: "Saying Yes — Jullie bruiloftswebsite",
+  title: "SayingYes — Jullie bruiloftswebsite",
   description: "Bouw in minuten een prachtige bruiloftswebsite. Eenmalig €39,99 voor een jaar. Deel het programma, verzamel RSVP's en beheer alles in jullie dashboard.",
 };
 

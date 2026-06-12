@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect, useCallback } from "react"
 import type { SC } from "@/lib/event-styles"
@@ -212,7 +212,7 @@ export default function EventGatekeeper({
           </div>
 
           <p className="text-xs text-center" style={{ color: sc.bodyText, opacity: 0.45 }}>
-            Gemaakt met <span style={{ fontWeight: 600, color: sc.accent }}>Saying Yes</span>
+            Gemaakt met <span style={{ fontWeight: 600, color: sc.accent }}>SayingYes</span>
           </p>
         </div>
       </div>

@@ -1,9 +1,9 @@
-import type { Metadata } from "next"
+﻿import type { Metadata } from "next"
 import Link from "next/link"
 
 export const metadata: Metadata = {
-  title: "Privacy & Cookiebeleid — Saying Yes",
-  description: "Lees hoe Saying Yes omgaat met jouw persoonsgegevens en cookies.",
+  title: "Privacy & Cookiebeleid — SayingYes",
+  description: "Lees hoe SayingYes omgaat met jouw persoonsgegevens en cookies.",
 }
 
 const GOLD = "#C5A059"
@@ -17,7 +17,7 @@ export default function PrivacyPage() {
       {/* Nav */}
       <header className="sticky top-0 z-50 border-b px-6 py-4 flex items-center justify-between" style={{ backgroundColor: "#FAF7F2", borderColor: "#E8DDD0" }}>
         <Link href="/" style={{ fontFamily: "var(--font-cormorant)", fontSize: "1.25rem", fontWeight: 700, color: CHARCOAL, textDecoration: "none" }}>
-          Saying Yes
+          SayingYes
         </Link>
         <Link href="/" className="text-sm font-medium" style={{ color: GOLD, textDecoration: "none" }}>
           ← Terug naar home
@@ -31,12 +31,12 @@ export default function PrivacyPage() {
           Privacy- &amp; Cookieverklaring
         </h1>
         <p className="mb-10 text-sm" style={{ color: "#8A7E72" }}>
-          Saying Yes &nbsp;·&nbsp; Versie 1.0 &nbsp;·&nbsp; Ingangsdatum: 1 juni 2025
+          SayingYes &nbsp;·&nbsp; Versie 1.0 &nbsp;·&nbsp; Ingangsdatum: 1 juni 2025
         </p>
 
         <Section title="1. Wie zijn wij?">
           <p>
-            Saying Yes is een dienst van Michiel van Bendegem (eenmanszaak), gevestigd in Nederland.
+            SayingYes is een dienst van Michiel van Bendegem (eenmanszaak), gevestigd in Nederland.
             Via <strong>sayingyes.nl</strong> kunnen bruidsparen een gepersonaliseerde bruiloftswebsite
             bouwen en beheren.
           </p>
@@ -49,7 +49,7 @@ export default function PrivacyPage() {
             ["Accountgegevens", "E-mailadres van de builder (bruidspaar)", "Inloggen via magic link (Supabase Auth)"],
             ["Eventgegevens", "Naam event, datum, locatie, stijlkeuzes, foto's", "Opgeslagen in Supabase (EU-regio)"],
             ["RSVP-gegevens", "Naam, e-mailadres, dieetwensen, antwoorden op vragen", "Ingevuld door gasten, opgeslagen in Supabase"],
-            ["Betalingsgegevens", "Geen — betalingen verlopen volledig via Stripe", "Saying Yes slaat geen kaartgegevens op"],
+            ["Betalingsgegevens", "Geen — betalingen verlopen volledig via Stripe", "SayingYes slaat geen kaartgegevens op"],
           ]} />
         </Section>
 
@@ -113,7 +113,7 @@ export default function PrivacyPage() {
 
         <Section title="8. Cookies">
           <p className="mb-3">
-            Saying Yes gebruikt <strong>uitsluitend functionele cookies</strong>. Dat zijn cookies die
+            SayingYes gebruikt <strong>uitsluitend functionele cookies</strong>. Dat zijn cookies die
             strikt noodzakelijk zijn voor de werking van de website. Voor functionele cookies is
             geen toestemming vereist.
           </p>
@@ -147,7 +147,7 @@ export default function PrivacyPage() {
 
       {/* Footer */}
       <footer className="py-8 text-center text-xs border-t" style={{ backgroundColor: DARK, borderColor: "#1A1510", color: "#4A4030" }}>
-        <span style={{ fontFamily: "var(--font-cormorant)", fontSize: "1rem", color: "#8A7E72", fontWeight: 600 }}>Saying Yes</span>
+        <span style={{ fontFamily: "var(--font-cormorant)", fontSize: "1rem", color: "#8A7E72", fontWeight: 600 }}>SayingYes</span>
         <span className="mx-3" style={{ color: "#2A2218" }}>·</span>
         © {new Date().getFullYear()}
       </footer>

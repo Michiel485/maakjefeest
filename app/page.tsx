@@ -1,4 +1,4 @@
-import Link from "next/link"
+﻿import Link from "next/link"
 import { NavLoginButton } from "@/components/NavLoginButton"
 import ResetGoogleTranslate from "@/components/ResetGoogleTranslate"
 
@@ -47,7 +47,7 @@ export default function Home() {
           className="text-2xl tracking-wide"
           style={{ fontFamily: "var(--font-cormorant)", color: CHARCOAL, fontWeight: 600 }}
         >
-          Saying Yes
+          SayingYes
         </span>
         <div className="flex items-center gap-5">
           <NavLoginButton />
@@ -315,7 +315,7 @@ export default function Home() {
                   className="ml-auto text-xs font-semibold tracking-wide"
                   style={{ fontFamily: "var(--font-cormorant)", color: BODY }}
                 >
-                  Saying Yes · Builder
+                  SayingYes · Builder
                 </div>
               </div>
 
@@ -750,7 +750,7 @@ export default function Home() {
         <span
           style={{ fontFamily: "var(--font-cormorant)", fontSize: "1rem", color: "#8A7E72", fontWeight: 600 }}
         >
-          Saying Yes
+          SayingYes
         </span>
         <span className="mx-3" style={{ color: "#2A2218" }}>·</span>
         © {new Date().getFullYear()}

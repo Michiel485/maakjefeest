@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
@@ -82,7 +82,7 @@ export default function InloggenPage() {
           className="text-lg font-bold tracking-tight block mb-8"
           style={{ color: CHARCOAL, fontFamily: "var(--font-cormorant)", fontWeight: 600, fontSize: "1.25rem" }}
         >
-          Saying Yes
+          SayingYes
         </Link>
 
         <h1 className="text-2xl font-extrabold mb-2" style={{ color: CHARCOAL }}>Inloggen</h1>

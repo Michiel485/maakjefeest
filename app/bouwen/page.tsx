@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
@@ -1135,8 +1135,8 @@ export default function BouwenPage() {
 
       {/* ── Top bar ── */}
       <header className="flex items-center justify-between px-4 md:px-6 py-3 bg-white border-b border-gray-100 shadow-sm flex-shrink-0 z-10">
-        <span className="text-sm font-bold text-rose-600 tracking-tight sm:hidden">Saying Yes</span>
-        <span className="text-sm font-bold text-rose-600 tracking-tight hidden sm:block">Saying Yes</span>
+        <span className="text-sm font-bold text-rose-600 tracking-tight sm:hidden">SayingYes</span>
+        <span className="text-sm font-bold text-rose-600 tracking-tight hidden sm:block">SayingYes</span>
         <div className="flex flex-col items-end gap-1">
           <div className="flex items-center gap-2">
             {/* Mijn Dashboard */}

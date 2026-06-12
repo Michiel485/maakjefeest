@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation"
+﻿import { redirect } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase-server"
 import { createServiceClient } from "@/lib/supabase"
@@ -148,7 +148,7 @@ export default async function DashboardPage() {
             className="text-2xl tracking-wide transition-opacity hover:opacity-70"
             style={{ fontFamily: "var(--font-cormorant)", color: CHARCOAL, fontWeight: 600 }}
           >
-            Saying Yes
+            SayingYes
           </Link>
           <SignOutButton />
         </div>

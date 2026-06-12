@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
@@ -167,7 +167,7 @@ export default function AanmakenPage() {
           className="text-2xl tracking-wide transition-opacity hover:opacity-70"
           style={{ fontFamily: "var(--font-cormorant)", color: CHARCOAL, fontWeight: 600 }}
         >
-          Saying Yes
+          SayingYes
         </Link>
         <Link
           href="/"
