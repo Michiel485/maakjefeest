@@ -310,7 +310,7 @@ export default function EventHomePreview({
               {(hp.initialsVisible !== false) && initials && (
                 <p
                   {...fieldClick('initialen')}
-                  style={{ fontFamily: sc.fontInitials, fontWeight: sc.fontInitialsWeight, fontSize: `${frameInitialsSize * 0.5}rem`, color: sc.accent, letterSpacing: '0.2em', whiteSpace: 'nowrap' }}
+                  style={{ fontFamily: sc.fontInitials, fontWeight: sc.fontInitialsWeight, fontSize: `${frameInitialsSize * 0.5}rem`, color: sc.accent, letterSpacing: '0.2em', paddingLeft: '0.2em', whiteSpace: 'nowrap', textAlign: 'center', width: '100%' }}
                 >
                   {initials}
                 </p>
@@ -319,7 +319,7 @@ export default function EventHomePreview({
               {(hp.frameNamesVisible !== false) && frameNames && frameNames.trim() && (
                 <p
                   {...fieldClick('namen')}
-                  style={{ fontFamily: sc.fontFrameNames, fontWeight: sc.fontFrameNamesWeight, fontSize: `clamp(1.5rem, ${frameNamesSize * 0.5}rem, ${frameNamesSize * 0.6}rem)`, color: sc.headingColor, whiteSpace: 'pre-wrap', lineHeight: 1.2 }}
+                  style={{ fontFamily: sc.fontFrameNames, fontWeight: sc.fontFrameNamesWeight, fontSize: `clamp(1.5rem, ${frameNamesSize * 0.5}rem, ${frameNamesSize * 0.6}rem)`, color: sc.headingColor, whiteSpace: 'pre-wrap', lineHeight: 1.2, textAlign: 'center', width: '100%' }}
                 >
                   {frameNames}
                 </p>
