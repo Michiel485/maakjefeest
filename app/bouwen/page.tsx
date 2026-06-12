@@ -1129,7 +1129,7 @@ export default function BouwenPage() {
   const RSVP_GUEST_LABELS: Record<string, string> = { daggast: "Daggast", avondgast: "Avondgast", receptiegast: "Receptiegast" }
 
   const isSinglePagePreview = hpSettings.pageMode === 'single'
-  const activePageIds = new Set(activePagesOrdered.map(p => p.id))
+  const activePageIds = new Set<string>(activePagesOrdered.map(p => p.id))
   const showSection = (id: string) => isSinglePagePreview ? activePageIds.has(id) : previewPage === id
 
   const Chevron = ({ open }: { open: boolean }) => (
