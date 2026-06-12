@@ -327,8 +327,8 @@ export default function EventHomePreview({
               {(hp.datumVisible !== false) && datumDisplay && (
                 <p {...fieldClick('datum')} style={datumStyleHp}>{datumDisplay}</p>
               )}
-              {(hp.locatieVisible !== false) && locatie && (
-                <p {...fieldClick('locatie')} style={locatieStyleHp}>{locatie}</p>
+              {(hp.locatieVisible !== false) && frameDisplayLocation && (
+                <p {...fieldClick('locatie')} style={locatieStyleHp}>{frameDisplayLocation}</p>
               )}
               <a
                 href={rsvpHref}
