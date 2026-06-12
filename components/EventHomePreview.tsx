@@ -211,6 +211,7 @@ export default function EventHomePreview({
     fontSize: `${hp?.datumSize ?? 1.6}rem`,
     color: sc.accent,
     letterSpacing: '0.12em',
+    paddingLeft: '0.12em',
     textTransform: 'uppercase',
     textAlign: 'center',
   }
@@ -230,6 +231,7 @@ export default function EventHomePreview({
     fontSize: `${hp?.locatieSize ?? 1.1}rem`,
     color: sc.bodyText,
     letterSpacing: '0.04em',
+    paddingLeft: '0.04em',
     textAlign: 'center',
     width: '100%',
   }
@@ -514,7 +516,7 @@ export default function EventHomePreview({
               )}
             </div>
             {(hp?.initialsVisible !== false) && initials && (
-              <p {...fieldClick('initialen')} className="hp-initialen" style={{ fontFamily: sc.fontInitials, fontWeight: sc.fontInitialsWeight, color: sc.headingColor, letterSpacing: '0.2em', whiteSpace: 'nowrap', textAlign: 'center', width: '100%' }}>
+              <p {...fieldClick('initialen')} className="hp-initialen" style={{ fontFamily: sc.fontInitials, fontWeight: sc.fontInitialsWeight, color: sc.headingColor, letterSpacing: '0.2em', paddingLeft: '0.2em', whiteSpace: 'nowrap', textAlign: 'center', width: '100%' }}>
                 {initials}
               </p>
             )}
