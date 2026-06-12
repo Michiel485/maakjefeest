@@ -16,7 +16,7 @@ export default function FotosPreview({ title, intro, urls, sc, useTranslatedTitl
   const locale = useUILocale()
   const displayTitle = useTranslatedTitle ? getUILabel(locale, "fotos") : title
   return (
-    <div style={{ padding: "36px 32px 64px", backgroundColor: sc.navBg }}>
+    <div style={{ padding: "36px 32px 64px", backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
       {displayTitle && (
         <h1
           className="notranslate"

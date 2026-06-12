@@ -2844,7 +2844,7 @@ export default function BouwenPage() {
                         />
                       )}
                       {showSection("RSVP") && (
-                        <div className="px-8 py-10" style={{ backgroundColor: sc.navBg }}>
+                        <div className="px-8 py-10" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
                           <h2 className="text-2xl mb-6" style={{ color: sc.headingColor, fontFamily: sc.fontPageTitles, fontWeight: sc.fontPageTitlesWeight }}>RSVP</h2>
                           <div className="flex flex-col gap-6 max-w-lg">
                             <p className="text-sm" style={{ color: sc.bodyText }}>{(content.RSVP?.text as string) || "Laat weten of je erbij bent — vul het formulier in."}</p>

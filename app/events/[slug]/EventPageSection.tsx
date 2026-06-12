@@ -90,19 +90,21 @@ export default function EventPageSection({ page, sc, eventId }: { page: PageData
       </>
     )
     return (
-      <div style={{ padding: "36px 32px 64px" }}>
+      <div style={{ padding: "36px 32px 64px", textAlign: "center" }}>
         <h1 style={{ fontSize: "1.75rem", fontWeight: sc.fontPageTitlesWeight, color: sc.headingColor, fontFamily: sc.fontPageTitles, margin: "0 0 28px" }}>
           {page.title}
         </h1>
-        {sc.goldBorder && sc.cardBg ? (
-          <div style={{ backgroundColor: sc.cardBg, border: `2px solid ${sc.accent}`, borderRadius: 16, padding: "28px 32px" }}>
-            {cardInner}
-          </div>
-        ) : (
-          <div style={{ borderRadius: 16, border: `1px solid ${sc.accent}20`, backgroundColor: `${sc.accent}08`, padding: "28px 32px" }}>
-            {cardInner}
-          </div>
-        )}
+        <div style={{ maxWidth: 480, marginLeft: "auto", marginRight: "auto" }}>
+          {sc.goldBorder && sc.cardBg ? (
+            <div style={{ backgroundColor: sc.cardBg, border: `2px solid ${sc.accent}`, borderRadius: 16, padding: "28px 32px", textAlign: "left" }}>
+              {cardInner}
+            </div>
+          ) : (
+            <div style={{ borderRadius: 16, border: `1px solid ${sc.accent}20`, backgroundColor: `${sc.accent}08`, padding: "28px 32px", textAlign: "left" }}>
+              {cardInner}
+            </div>
+          )}
+        </div>
       </div>
     )
   }
