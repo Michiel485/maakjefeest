@@ -335,7 +335,7 @@ export default function EventHomePreview({
               <a
                 href={rsvpHref}
                 onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("RSVP") } : undefined}
-                className="mt-4 inline-block text-sm font-bold px-7 py-3 rounded-xl"
+                className="mt-4 inline-block text-sm font-bold px-7 py-3 rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
                 style={{
                   backgroundColor: sc.buttonBg,
                   color: sc.buttonText,
@@ -537,7 +537,7 @@ export default function EventHomePreview({
             <a
               href={rsvpHref}
               onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("RSVP") } : undefined}
-              className="inline-block text-sm font-bold px-7 py-3 rounded-xl"
+              className="inline-block text-sm font-bold px-7 py-3 rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
               style={{
                 backgroundColor: sc.buttonBg,
                 color: sc.buttonText,
@@ -601,7 +601,7 @@ export default function EventHomePreview({
                   <a
                     href={rsvpHref}
                     onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("RSVP") } : undefined}
-                    className="inline-block text-xs @md:text-sm font-bold px-3.5 py-1.5 @md:px-7 @md:py-3 rounded-lg @md:rounded-xl"
+                    className="inline-block text-xs @md:text-sm font-bold px-3.5 py-1.5 @md:px-7 @md:py-3 rounded-lg @md:rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
                     style={{ backgroundColor: sc.buttonBg, color: sc.buttonText, textDecoration: "none", boxShadow: "0 4px 14px rgba(0,0,0,0.15)", fontFamily: sc.fontFamily }}
                   >
                     Meld je aan
@@ -631,7 +631,7 @@ export default function EventHomePreview({
           <a
             href={rsvpHref}
             onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("RSVP") } : undefined}
-            className="mt-6 inline-block text-sm font-bold px-7 py-3 rounded-xl"
+            className="mt-6 inline-block text-sm font-bold px-7 py-3 rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
             style={{ backgroundColor: sc.buttonBg, color: sc.buttonText, textDecoration: "none", boxShadow: "0 4px 14px rgba(0,0,0,0.15)", fontFamily: sc.fontFamily }}
           >
             Meld je aan

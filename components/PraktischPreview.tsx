@@ -20,15 +20,18 @@ function CardWrapper({ sc, className, children }: { sc: SC; className?: string; 
   if (sc.goldBorder && sc.cardBg) {
     return (
       <div
-        className={`${className ?? ""} flex flex-col items-center text-center px-6 py-8 gap-3`}
-        style={{ backgroundColor: sc.cardBg, border: `2px solid ${sc.accent}`, borderRadius: 18 }}
+        className={`${className ?? ""} flex flex-col items-center text-center px-6 py-8 gap-3 transition-all duration-200 hover:-translate-y-1.5 hover:shadow-xl`}
+        style={{ backgroundColor: sc.cardBg, border: `2px solid ${sc.accent}`, borderRadius: 18, cursor: "default" }}
       >
         {children}
       </div>
     )
   }
   return (
-    <div className={`${className ?? ""} flex flex-col items-center text-center rounded-2xl px-6 py-8 gap-3`} style={{ backgroundColor: `${sc.accent}08`, border: `1px solid ${sc.accent}20` }}>
+    <div
+      className={`${className ?? ""} flex flex-col items-center text-center rounded-2xl px-6 py-8 gap-3 transition-all duration-200 hover:-translate-y-1.5 hover:shadow-xl`}
+      style={{ backgroundColor: `${sc.accent}08`, border: `1px solid ${sc.accent}20`, cursor: "default" }}
+    >
       {children}
     </div>
   )

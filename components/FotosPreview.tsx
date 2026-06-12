@@ -43,13 +43,15 @@ export default function FotosPreview({ title, intro, urls, sc, useTranslatedTitl
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
           {urls.map((url, i) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={i}
-              src={url}
-              alt=""
-              style={{ borderRadius: 12, aspectRatio: "1", objectFit: "cover", width: "100%", display: "block" }}
-            />
+            <div key={i} style={{ borderRadius: 12, overflow: "hidden", aspectRatio: "1" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={url}
+                alt=""
+                className="transition-transform duration-300 hover:scale-110"
+                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+              />
+            </div>
           ))}
         </div>
       )}

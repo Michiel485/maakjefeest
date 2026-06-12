@@ -282,8 +282,16 @@ export default function EventProgramPreview({
   const list = sorted
   const faded = 1
 
+  const progHoverStyle = `
+    .fk-prog-item { transition: transform 0.18s ease, box-shadow 0.18s ease; }
+    .fk-prog-item:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.09); }
+    .fk-prog-timeline-item { transition: transform 0.18s ease; }
+    .fk-prog-timeline-item:hover { transform: translateX(5px); }
+  `
+
   return (
     <div className="@container" style={{ backgroundColor: sc.bodyBackground ? "transparent" : sc.navBg, fontFamily: sc.fontFamily }}>
+      <style>{progHoverStyle}</style>
       <div style={{ padding: "36px 32px 52px" }}>
         <h2 style={{ fontSize: "2.25rem", fontWeight: sc.fontPageTitlesWeight, color: sc.headingColor, fontFamily: sc.fontPageTitles, textAlign: "center", margin: "0 0 28px" }}>
           Programma
@@ -333,12 +341,12 @@ export default function EventProgramPreview({
               )
               if (sc.goldBorder && sc.cardBg) {
                 return (
-                  <div key={item.id ?? i} style={{ backgroundColor: sc.cardBg, border: `2px solid ${sc.accent}`, borderRadius: 16, overflow: "hidden" }}>
+                  <div key={item.id ?? i} className="fk-prog-item" style={{ backgroundColor: sc.cardBg, border: `2px solid ${sc.accent}`, borderRadius: 16, overflow: "hidden" }}>
                     {inner}
                   </div>
                 )
               }
-              return <div key={item.id ?? i}>{inner}</div>
+              return <div key={item.id ?? i} className="fk-prog-item" style={{ borderRadius: 12 }}>{inner}</div>
             })}
           </div>
         )}
@@ -351,7 +359,7 @@ export default function EventProgramPreview({
               return (
                 <div
                   key={item.id ?? i}
-                  className={`relative pl-[68px] @md:pl-0 ${isLast ? "pb-0" : "pb-4 @md:pb-3"}`}
+                  className={`fk-prog-timeline-item relative pl-[68px] @md:pl-0 ${isLast ? "pb-0" : "pb-4 @md:pb-3"}`}
                   style={{ opacity: faded }}
                 >
                   {/* ── Connector line: mobile center = left-[34px] (6px+28px), desktop = @md:left-[-84px] ── */}

@@ -159,7 +159,7 @@ export default function RsvpForm({
                 key={val}
                 type="button"
                 onClick={() => setAttending(val)}
-                className="flex-1 py-3 px-4 rounded-xl font-semibold text-sm transition-all text-left flex items-center gap-3"
+                className="flex-1 py-3 px-4 rounded-xl font-semibold text-sm transition-all text-left flex items-center gap-3 hover:scale-[1.02] hover:shadow-md"
                 style={{
                   backgroundColor: active ? (val === "yes" ? "#ecfdf5" : "#fff7ed") : "#f9fafb",
                   border: `2px solid ${active ? (val === "yes" ? "#10b981" : "#f59e0b") : "#e5e7eb"}`,
@@ -184,7 +184,7 @@ export default function RsvpForm({
                 key={n}
                 type="button"
                 onClick={() => setCount(n)}
-                className="w-10 h-10 rounded-xl font-bold text-sm transition-all"
+                className="w-10 h-10 rounded-xl font-bold text-sm transition-all hover:scale-110 hover:shadow-md"
                 style={{
                   backgroundColor: count === n ? accentColor : "transparent",
                   color: count === n ? "#fff" : "#6b7280",
@@ -227,7 +227,7 @@ export default function RsvpForm({
                     key={t}
                     type="button"
                     onClick={() => updateGuest(i, "guest_type", t)}
-                    className="flex-1 py-2 rounded-xl font-semibold text-sm transition-all"
+                    className="flex-1 py-2 rounded-xl font-semibold text-sm transition-all hover:scale-[1.03] hover:shadow-md"
                     style={{
                       backgroundColor: guest.guest_type === t ? accentColor : "transparent",
                       color: guest.guest_type === t ? "#fff" : "#6b7280",
@@ -330,7 +330,7 @@ export default function RsvpForm({
       <button
         type="submit"
         disabled={status === "sending"}
-        className="w-full flex items-center justify-center gap-2 text-white font-bold py-3.5 rounded-xl shadow-md transition-all hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed"
+        className="w-full flex items-center justify-center gap-2 text-white font-bold py-3.5 rounded-xl shadow-md transition-all hover:-translate-y-1 hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed"
         style={{ backgroundColor: attending === "no" ? "#f59e0b" : accentColor }}
       >
         {status === "sending" ? (
@@ -367,7 +367,7 @@ function YesNoQuestion({
               key={String(val)}
               type="button"
               onClick={() => onChange(val)}
-              className="flex-1 py-3 px-4 rounded-xl font-semibold text-sm transition-all"
+              className="flex-1 py-3 px-4 rounded-xl font-semibold text-sm transition-all hover:scale-[1.02] hover:shadow-md"
               style={{
                 backgroundColor: active ? (val ? "#ecfdf5" : "#fff7ed") : "#f9fafb",
                 border: `2px solid ${active ? (val ? "#10b981" : "#f59e0b") : "#e5e7eb"}`,

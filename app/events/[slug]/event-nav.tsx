@@ -137,17 +137,25 @@ export default function EventNav({
   const pageLinks = pages.map((page) => {
     const key = PAGE_TYPE_TO_KEY[page.type]
     const label = key ? getUILabel(locale, key) : page.title
+    const active = isActive(page.type)
     return (
       <a
         key={page.type}
         href={pageHref(page.type)}
         onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate(page.type) } : undefined}
-        style={pageLinkStyle(isActive(page.type))}
+        className="fk-navlink"
+        data-active={active ? "true" : undefined}
+        style={{ ...pageLinkStyle(active), "--nav-hover-bg": `${sc.accent}22` } as React.CSSProperties}
       >
         {label}
       </a>
     )
   })
+
+  const navHoverStyle = `
+    .fk-navlink { transition: background-color 0.15s ease, transform 0.15s ease, color 0.15s ease; }
+    .fk-navlink:hover:not([data-active="true"]) { background-color: var(--nav-hover-bg) !important; transform: translateY(-1px); }
+  `
 
   const linksJustify = navLayout === "left" ? "justify-start" : "justify-center"
 
@@ -155,6 +163,7 @@ export default function EventNav({
   if (navLayout === "stacked") {
     return (
       <div className="@container">
+        <style>{navHoverStyle}</style>
         <nav className="notranslate sticky top-0 z-50 px-8 border-b backdrop-blur-sm" style={navStyle}>
           {/* Mobile row */}
           <div className="flex items-center justify-end py-4 gap-4 @md:hidden">
@@ -195,6 +204,7 @@ export default function EventNav({
   // linksBelow=true  → two rows:   [title][controls] / [links]
   return (
     <div className="@container">
+      <style>{navHoverStyle}</style>
       <nav ref={navRef} className="notranslate sticky top-0 z-50 px-8 border-b backdrop-blur-sm" style={navStyle}>
 
         {/* Top strip: (links when single-row) + controls */}

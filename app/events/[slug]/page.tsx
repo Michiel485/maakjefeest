@@ -2,6 +2,7 @@ import { createServiceClient } from "@/lib/supabase"
 import { getStyleConfig, formatDate } from "@/lib/event-styles"
 import EventHomePreview, { type HomepageSettings } from "@/components/EventHomePreview"
 import EventPageSection, { type PageData } from "./EventPageSection"
+import BackToTopButton from "@/components/BackToTopButton"
 
 export const dynamic = "force-dynamic"
 
@@ -103,6 +104,7 @@ export default async function EventHomePage({
           <EventPageSection page={page} sc={sc} eventId={event.id} />
         </section>
       ))}
+      <BackToTopButton accentColor={sc.accent} />
     </>
   )
 }
