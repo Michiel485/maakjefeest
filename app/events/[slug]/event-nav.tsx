@@ -29,6 +29,7 @@ export default function EventNav({
   basePath = "",
   onNavigate,
   activeType,
+  singlePage = false,
 }: {
   title: string
   pages: NavPage[]
@@ -37,6 +38,7 @@ export default function EventNav({
   basePath?: string
   onNavigate?: (type: string) => void
   activeType?: string
+  singlePage?: boolean
 }) {
   const pathname = usePathname()
   const locale = useUILocale()
@@ -59,6 +61,7 @@ export default function EventNav({
   }
 
   function pageHref(type: string) {
+    if (singlePage) return type === "Home" ? "#home" : `#${type.toLowerCase()}`
     return type === "Home" ? homeHref : `${basePath}/${type}`
   }
 

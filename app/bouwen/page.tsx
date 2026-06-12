@@ -50,6 +50,7 @@ interface HomepageSettings {
   locatieFont: string
   locatieSize: number
   siteLayout: 'boxed' | 'fullwidth'
+  pageMode: 'multi' | 'single'
 }
 
 const DEFAULT_HOMEPAGE_SETTINGS: HomepageSettings = {
@@ -72,6 +73,7 @@ const DEFAULT_HOMEPAGE_SETTINGS: HomepageSettings = {
   locatieFont: 'montserrat',
   locatieSize: 1.1,
   siteLayout: 'boxed',
+  pageMode: 'multi',
 }
 
 interface MasterPerson {
@@ -1486,14 +1488,35 @@ export default function BouwenPage() {
                       <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-gray-400 mt-2 mb-1">Breedte website</p>
                       <div className="flex rounded-xl border border-gray-200 overflow-hidden">
                         {([
-                          { value: 'boxed', label: 'Kader', sub: 'Gecentreerd met marge' },
-                          { value: 'fullwidth', label: 'Volledig scherm', sub: 'Edge-to-edge' },
+                          { value: 'boxed', label: 'Kader' },
+                          { value: 'fullwidth', label: 'Volledig scherm' },
                         ] as const).map((opt) => (
                           <button
                             key={opt.value}
                             onClick={() => updateHpSettings({ siteLayout: opt.value })}
                             className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
                               hpSettings.siteLayout === opt.value
+                                ? 'bg-gray-900 text-white'
+                                : 'bg-white text-gray-500 hover:bg-gray-50'
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Paginaweergave */}
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-gray-400 mt-3 mb-1">Paginaweergave</p>
+                      <div className="flex rounded-xl border border-gray-200 overflow-hidden">
+                        {([
+                          { value: 'multi', label: 'Aparte pagina\'s' },
+                          { value: 'single', label: 'Alles op één pagina' },
+                        ] as const).map((opt) => (
+                          <button
+                            key={opt.value}
+                            onClick={() => updateHpSettings({ pageMode: opt.value })}
+                            className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
+                              hpSettings.pageMode === opt.value
                                 ? 'bg-gray-900 text-white'
                                 : 'bg-white text-gray-500 hover:bg-gray-50'
                             }`}

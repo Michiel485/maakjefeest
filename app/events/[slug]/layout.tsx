@@ -38,8 +38,9 @@ export default async function EventLayout({
   const pageList = pages ?? []
   const basePath = process.env.NODE_ENV === "production" ? "" : `/events/${slug}`
 
-  const hs = event.homepage_settings as { siteLayout?: string } | null
+  const hs = event.homepage_settings as { siteLayout?: string; pageMode?: string } | null
   const isFullWidth = hs?.siteLayout === 'fullwidth'
+  const isSinglePage = hs?.pageMode === 'single'
 
   const pwEnabled = (event.pw_enabled as boolean) ?? false
   const pwType = (event.pw_type as "password" | "secret_question" | null) ?? null
@@ -51,7 +52,7 @@ export default async function EventLayout({
     <div className={`${isFullWidth ? '' : 'max-w-5xl mx-auto sm:shadow-2xl sm:rounded-2xl '}overflow-clip flex flex-col relative${sc.floral ? " bohemian-scale" : ""}`}
       style={{ background: sc.bodyBackground ?? sc.navBg }}>
 
-      <EventNav title={(event.nav_title as string | null) || event.title} pages={pageList} sc={sc} navLayout={(event.nav_layout ?? "split") as "stacked" | "split" | "left"} basePath={basePath} />
+      <EventNav title={(event.nav_title as string | null) || event.title} pages={pageList} sc={sc} navLayout={(event.nav_layout ?? "split") as "stacked" | "split" | "left"} basePath={basePath} singlePage={isSinglePage} />
 
       <main className="relative" style={{ zIndex: 1 }}>
         {children}
@@ -88,7 +89,7 @@ export default async function EventLayout({
   )
 
   return (
-    <div className={`min-h-screen${isFullWidth ? '' : ' sm:py-12'}`} style={{ fontFamily: sc.fontFamily, background: sc.bodyBackground ?? sc.bodyBg, letterSpacing: sc.bodyLetterSpacing, fontWeight: sc.bodyFontWeight }}>
+    <div className={`min-h-screen${isFullWidth ? '' : ' sm:py-12'}`} style={{ fontFamily: sc.fontFamily, background: sc.bodyBackground ?? sc.bodyBg, letterSpacing: sc.bodyLetterSpacing, fontWeight: sc.bodyFontWeight, scrollBehavior: isSinglePage ? 'smooth' : undefined }}>
       {sc.fontImport && <style>{sc.fontImport}</style>}
       {sc.floral && (
         <style>{`

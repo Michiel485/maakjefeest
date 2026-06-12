@@ -1,6 +1,7 @@
 import { createServiceClient } from "@/lib/supabase"
-import { getStyleConfig, TYPE_LABEL, formatDate } from "@/lib/event-styles"
+import { getStyleConfig, formatDate } from "@/lib/event-styles"
 import EventHomePreview, { type HomepageSettings } from "@/components/EventHomePreview"
+import EventPageSection, { type PageData } from "./EventPageSection"
 
 export const dynamic = "force-dynamic"
 
@@ -29,6 +30,9 @@ export default async function EventHomePage({
     )
   }
 
+  const hs = event.homepage_settings as HomepageSettings | null
+  const isSinglePage = hs?.pageMode === 'single'
+
   const { data: homePage } = await supabase
     .from("pages")
     .select("content")
@@ -45,7 +49,7 @@ export default async function EventHomePage({
   })
   const c = homePage?.content ?? {}
 
-  return (
+  const homePreview = (
     <EventHomePreview
       title={event.title}
       datum={event.datum ?? null}
@@ -69,9 +73,36 @@ export default async function EventHomePage({
       homeAlign={(c.align as "left" | "center" | "right") ?? "center"}
       homeTitleSize={typeof c.titleSize === "number" ? c.titleSize : undefined}
       homeBodySize={typeof c.bodySize === "number" ? c.bodySize : undefined}
-      rsvpHref={`${basePath}/RSVP`}
+      rsvpHref={isSinglePage ? "#rsvp" : `${basePath}/RSVP`}
       sc={sc}
-      homepageSettings={(event.homepage_settings as HomepageSettings | null) ?? null}
+      homepageSettings={hs}
     />
+  )
+
+  if (!isSinglePage) {
+    return homePreview
+  }
+
+  // Single-page mode: stack all enabled sections
+  const { data: allPages } = await supabase
+    .from("pages")
+    .select("id, type, title, content, order")
+    .eq("event_id", event.id)
+    .eq("is_enabled", true)
+    .order("order", { ascending: true })
+
+  const otherPages = (allPages ?? []).filter((p) => p.type !== "Home") as PageData[]
+
+  return (
+    <>
+      <section id="home">
+        {homePreview}
+      </section>
+      {otherPages.map((page) => (
+        <section key={page.type} id={page.type.toLowerCase()} style={{ scrollMarginTop: 64 }}>
+          <EventPageSection page={page} sc={sc} eventId={event.id} />
+        </section>
+      ))}
+    </>
   )
 }

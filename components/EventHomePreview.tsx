@@ -24,6 +24,7 @@ export interface HomepageSettings {
   locatieFont: string
   locatieSize: number
   siteLayout?: 'boxed' | 'fullwidth'
+  pageMode?: 'multi' | 'single'
 }
 
 function clamp(v: number, min: number, max: number) {
