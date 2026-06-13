@@ -2773,7 +2773,9 @@ export default function BouwenPage() {
                         }}
                         singlePage={isSinglePagePreview}
                       />
+                      <div style={isSinglePagePreview ? { display: "flex", flexDirection: "column" } : undefined}>
                       {showSection("Home") && (
+                        <div style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "Home") } : undefined}>
                         <EventHomePreview
                           title={draft?.naam ?? ""}
                           datum={draft?.datum || null}
@@ -2804,16 +2806,20 @@ export default function BouwenPage() {
                           homepageSettings={hpSettings}
                           onFieldClick={handlePreviewFieldClick}
                         />
+                        </div>
                       )}
                       {showSection("Ceremoniemeesters") && (
+                        <div style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "Ceremoniemeesters") } : undefined}>
                         <EventMastersPreview
                           masters={mastersForPreview}
                           sc={sc}
                           text={typeof content.Ceremoniemeesters?.text === "string" ? content.Ceremoniemeesters.text : undefined}
                           onMasterDoubleClick={handleMasterDoubleClick}
                         />
+                        </div>
                       )}
                       {showSection("OnsVerhaal") && (
+                        <div style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "OnsVerhaal") } : undefined}>
                         <StoryPreview
                           title={(content.OnsVerhaal?.title as string) ?? "Ons Verhaal"}
                           text={(content.OnsVerhaal?.text as string) ?? null}
@@ -2826,8 +2832,10 @@ export default function BouwenPage() {
                           onFieldDoubleClick={handleStoryFieldDoubleClick}
                           sc={sc}
                         />
+                        </div>
                       )}
                       {showSection("Programma") && (
+                        <div style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "Programma") } : undefined}>
                         <EventProgramPreview
                           items={programmaItemsForPreview}
                           sc={sc}
@@ -2842,8 +2850,10 @@ export default function BouwenPage() {
                           }}
                           onItemDoubleClick={handleProgramItemDoubleClick}
                         />
+                        </div>
                       )}
                       {showSection("RSVP") && (
+                        <div style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "RSVP") } : undefined}>
                         <div className="px-8 py-10" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
                           <h2 className="text-2xl mb-6" style={{ color: sc.headingColor, fontFamily: sc.fontPageTitles, fontWeight: sc.fontPageTitlesWeight }}>RSVP</h2>
                           <div className="flex flex-col gap-6 max-w-lg">
@@ -2955,21 +2965,29 @@ export default function BouwenPage() {
                             )}
                           </div>
                         </div>
+                        </div>
                       )}
                       {showSection("Informatie") && (
+                        <div style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "Informatie") } : undefined}>
                         <PraktischPreview tiles={praktischTiles ?? []} sc={sc} onTileDoubleClick={handleInfoTileDoubleClick} />
+                        </div>
                       )}
                       {showSection("Cadeautips") && (
+                        <div style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "Cadeautips") } : undefined}>
                         <WishlistPreview items={wishlistItems?.length ? wishlistItems : DEFAULT_WISHLIST_ITEMS} sc={sc} onItemDoubleClick={handleWishlistItemDoubleClick} />
+                        </div>
                       )}
                       {showSection("Fotos") && (
+                        <div style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "Fotos") } : undefined}>
                         <FotosPreview
                           title={(content.Fotos?.title as string) || "Foto's"}
                           intro={(content.Fotos?.intro as string) || null}
                           urls={fotosUrls}
                           sc={sc}
                         />
+                        </div>
                       )}
+                      </div>
                       {sc.floral && (
                         <div className="w-full flex justify-center" style={{ backgroundColor: sc.navBg, marginTop: "-20px" }}>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
