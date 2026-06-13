@@ -532,11 +532,11 @@ export default function BouwenPage() {
 
     if (urlEventId) {
       setSavedEventId(urlEventId)
-      const localEventId = localStorage.getItem("sayingyes_saved_event_id")
+      // sessionStorage is cleared when the tab closes, so this is only true for F5
+      // reloads in the same tab — never for a fresh tab or a different device.
+      const sessionEventId = sessionStorage.getItem("sayingyes_session_event_id")
 
-      // F5 / same-tab reload: localStorage already has data for this event_id.
-      // Load from localStorage to preserve any unsaved edits.
-      if (localEventId === urlEventId) {
+      if (sessionEventId === urlEventId) {
         try {
           const raw = localStorage.getItem("sayingyes_draft")
           if (!raw) throw new Error("no draft")
@@ -660,6 +660,8 @@ export default function BouwenPage() {
           localStorage.setItem("sayingyes_active", JSON.stringify(newActive))
           localStorage.setItem("sayingyes_saved_event_id", urlEventId)
           localStorage.setItem("sayingyes_is_published", published ? "1" : "0")
+          // Mark this tab as having loaded this event — used to detect F5 reloads
+          sessionStorage.setItem("sayingyes_session_event_id", urlEventId)
         })
         .catch(() => router.replace("/aanmaken"))
       return
