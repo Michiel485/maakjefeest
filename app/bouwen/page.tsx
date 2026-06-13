@@ -532,46 +532,11 @@ export default function BouwenPage() {
 
     if (urlEventId) {
       setSavedEventId(urlEventId)
-      // sessionStorage is cleared when the tab closes, so this is only true for F5
-      // reloads in the same tab — never for a fresh tab or a different device.
-      const sessionEventId = sessionStorage.getItem("sayingyes_session_event_id")
 
-      if (sessionEventId === urlEventId) {
-        try {
-          const raw = localStorage.getItem("sayingyes_draft")
-          if (!raw) throw new Error("no draft")
-          const parsed = JSON.parse(raw)
-          setDraft(parsed)
-          if (parsed.style)            setStyle(parsed.style as Style)
-          if (parsed.font_hero)        setFontHero(parsed.font_hero as string)
-          if (parsed.font_initials)    setFontInitials(parsed.font_initials as string)
-          if (parsed.font_frame_names) setFontFrameNames(parsed.font_frame_names as string)
-          if (parsed.font_page_titles) setFontPageTitles(parsed.font_page_titles as string)
-          if (parsed.homepageSettings) setHpSettings({ ...DEFAULT_HOMEPAGE_SETTINGS, ...parsed.homepageSettings })
-        } catch { /* fall through to server fetch below */ }
-        try {
-          const saved = localStorage.getItem("sayingyes_content")
-          if (saved) {
-            const parsed = JSON.parse(saved)
-            if (!parsed.Programma?.items || parsed.Programma.items.length === 0) {
-              parsed.Programma = { ...(parsed.Programma ?? {}), items: DEFAULT_PROGRAM_ITEMS, layout: "timeline" }
-            }
-            setContent(parsed)
-          }
-        } catch {}
-        try {
-          const savedHero = localStorage.getItem("sayingyes_hero_image_url")
-          if (savedHero) setHeroImageUrl(savedHero)
-        } catch {}
-        try {
-          const savedActive = localStorage.getItem("sayingyes_active")
-          if (savedActive) setActive(JSON.parse(savedActive))
-        } catch {}
-        setIsPublished(localStorage.getItem("sayingyes_is_published") === "1")
-        return
-      }
-
-      // First load of a (different) event_id → fetch from server
+      // Always fetch from server when event_id is in URL.
+      // This guarantees every device/tab sees the latest saved state.
+      // localStorage is only written after a successful save, so reading it here
+      // would risk showing stale data from a different device.
       fetch(`/api/drafts/${urlEventId}`)
         .then((r) => r.json())
         .then(({ event, pages }: { event: Record<string, unknown>; pages: Array<{ type: string; content: Record<string, unknown>; is_enabled: boolean }> }) => {
@@ -660,8 +625,6 @@ export default function BouwenPage() {
           localStorage.setItem("sayingyes_active", JSON.stringify(newActive))
           localStorage.setItem("sayingyes_saved_event_id", urlEventId)
           localStorage.setItem("sayingyes_is_published", published ? "1" : "0")
-          // Mark this tab as having loaded this event — used to detect F5 reloads
-          sessionStorage.setItem("sayingyes_session_event_id", urlEventId)
         })
         .catch(() => router.replace("/aanmaken"))
       return
