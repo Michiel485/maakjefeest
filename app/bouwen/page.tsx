@@ -676,7 +676,7 @@ export default function BouwenPage() {
         setSaving(false)
         savingRef.current = false
       }
-    }, 2000)
+    }, 5000)
     return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [changeKey])
