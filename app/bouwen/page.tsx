@@ -428,7 +428,7 @@ export default function BouwenPage() {
   const [hpSettings, setHpSettings] = useState<HomepageSettings>(DEFAULT_HOMEPAGE_SETTINGS)
   const [hpOpenGear, setHpOpenGear] = useState<string | null>(null)
   const [deleteConfirmIdx, setDeleteConfirmIdx] = useState<number | null>(null)
-  const [openAlgSection, setOpenAlgSection] = useState<'stijl' | 'navigatie' | 'lettertype' | null>(null)
+  const [openAlgSection, setOpenAlgSection] = useState<'stijl' | 'layout' | 'navigatie' | 'lettertype' | null>(null)
   const [openUrlSection, setOpenUrlSection] = useState<'url' | 'beveiliging' | null>(null)
   const [openHomeSection, setOpenHomeSection] = useState<'layout' | 'headerfoto' | 'kaders' | 'tekstvelden' | 'welkomst' | null>(null)
   const [pwEnabled, setPwEnabled] = useState(false)
@@ -1434,47 +1434,74 @@ export default function BouwenPage() {
                         </button>
                       ))}
 
-                      {/* Site breedte */}
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-gray-400 mt-2 mb-1">Breedte website</p>
-                      <div className="flex rounded-xl border border-gray-200 overflow-hidden">
-                        {([
-                          { value: 'boxed', label: 'Kader' },
-                          { value: 'fullwidth', label: 'Volledig scherm' },
-                        ] as const).map((opt) => (
-                          <button
-                            key={opt.value}
-                            onClick={() => updateHpSettings({ siteLayout: opt.value })}
-                            className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
-                              hpSettings.siteLayout === opt.value
-                                ? 'bg-gray-900 text-white'
-                                : 'bg-white text-gray-500 hover:bg-gray-50'
-                            }`}
-                          >
-                            {opt.label}
-                          </button>
-                        ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* ── Lay-out ── */}
+                <div className="border-t border-gray-100">
+                  <button
+                    onClick={() => setOpenAlgSection(prev => prev === 'layout' ? null : 'layout')}
+                    className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
+                  >
+                    <span className={`transition-transform duration-200 flex-shrink-0 ${openAlgSection === 'layout' ? 'rotate-90' : ''}`}>
+                      <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </span>
+                    <span className="text-sm font-medium text-gray-800">Lay-out</span>
+                  </button>
+                  {openAlgSection === 'layout' && (
+                    <div className="px-5 pb-5 flex flex-col gap-5">
+
+                      {/* Breedte website */}
+                      <div className="flex flex-col gap-1.5">
+                        <p className="text-xs font-semibold text-gray-700">Breedte website</p>
+                        <p className="text-[11px] text-gray-400 leading-snug">Kies of de inhoud gecentreerd in een kader staat of het volledige scherm vult.</p>
+                        <div className="flex rounded-xl border border-gray-200 overflow-hidden mt-0.5">
+                          {([
+                            { value: 'boxed', label: 'Kader' },
+                            { value: 'fullwidth', label: 'Volledig scherm' },
+                          ] as const).map((opt) => (
+                            <button
+                              key={opt.value}
+                              onClick={() => updateHpSettings({ siteLayout: opt.value })}
+                              className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
+                                hpSettings.siteLayout === opt.value
+                                  ? 'bg-gray-900 text-white'
+                                  : 'bg-white text-gray-500 hover:bg-gray-50'
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
                       </div>
 
                       {/* Paginaweergave */}
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-gray-400 mt-3 mb-1">Paginaweergave</p>
-                      <div className="flex rounded-xl border border-gray-200 overflow-hidden">
-                        {([
-                          { value: 'multi', label: 'Aparte pagina\'s' },
-                          { value: 'single', label: 'Alles op één pagina' },
-                        ] as const).map((opt) => (
-                          <button
-                            key={opt.value}
-                            onClick={() => updateHpSettings({ pageMode: opt.value })}
-                            className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
-                              hpSettings.pageMode === opt.value
-                                ? 'bg-gray-900 text-white'
-                                : 'bg-white text-gray-500 hover:bg-gray-50'
-                            }`}
-                          >
-                            {opt.label}
-                          </button>
-                        ))}
+                      <div className="flex flex-col gap-1.5">
+                        <p className="text-xs font-semibold text-gray-700">Paginaweergave</p>
+                        <p className="text-[11px] text-gray-400 leading-snug">Aparte pagina's zijn bereikbaar via het menu. Bij één pagina scrollt de bezoeker door alle onderdelen.</p>
+                        <div className="flex rounded-xl border border-gray-200 overflow-hidden mt-0.5">
+                          {([
+                            { value: 'multi', label: "Aparte pagina's" },
+                            { value: 'single', label: 'Één pagina' },
+                          ] as const).map((opt) => (
+                            <button
+                              key={opt.value}
+                              onClick={() => updateHpSettings({ pageMode: opt.value })}
+                              className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
+                                hpSettings.pageMode === opt.value
+                                  ? 'bg-gray-900 text-white'
+                                  : 'bg-white text-gray-500 hover:bg-gray-50'
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
                       </div>
+
                     </div>
                   )}
                 </div>
