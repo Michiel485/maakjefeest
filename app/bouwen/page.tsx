@@ -418,7 +418,8 @@ export default function BouwenPage() {
   const [authLoading, setAuthLoading] = useState(false)
   const [showDashboardModal, setShowDashboardModal] = useState(false)
   const [dashboardLoading, setDashboardLoading] = useState(false)
-  const [autoSavePending, setAutoSavePending]   = useState(false)
+  const [changeKey, setChangeKey] = useState(0)
+  const savingRef = useRef(false)
   const [slugEditOpen, setSlugEditOpen]         = useState(false)
   const [slugValue, setSlugValue]               = useState("")
   const [slugError, setSlugError]               = useState<string | null>(null)
@@ -532,55 +533,8 @@ export default function BouwenPage() {
 
     if (urlEventId) {
       setSavedEventId(urlEventId)
-      const localEventId = localStorage.getItem("sayingyes_saved_event_id")
 
-      // performance.getEntriesByType("navigation")[0].type is "reload" for F5/Ctrl+R
-      // and "navigate" for any fresh navigation (link click, dashboard button, other device).
-      // Only use the localStorage cache when it's a true reload of the same tab — this
-      // preserves unsaved edits on desktop F5 while ensuring phone/other-device loads
-      // always get fresh data from the server.
-      const navType = (
-        (performance.getEntriesByType?.("navigation")?.[0]) as PerformanceNavigationTiming | undefined
-      )?.type ?? "navigate"
-      const isReload = navType === "reload"
-
-      if (localEventId === urlEventId && isReload) {
-        // F5 reload in same browser — restore from localStorage to keep unsaved edits
-        try {
-          const raw = localStorage.getItem("sayingyes_draft")
-          if (!raw) throw new Error("no draft")
-          const parsed = JSON.parse(raw)
-          setDraft(parsed)
-          if (parsed.style)            setStyle(parsed.style as Style)
-          if (parsed.font_hero)        setFontHero(parsed.font_hero as string)
-          if (parsed.font_initials)    setFontInitials(parsed.font_initials as string)
-          if (parsed.font_frame_names) setFontFrameNames(parsed.font_frame_names as string)
-          if (parsed.font_page_titles) setFontPageTitles(parsed.font_page_titles as string)
-          if (parsed.homepageSettings) setHpSettings({ ...DEFAULT_HOMEPAGE_SETTINGS, ...parsed.homepageSettings })
-        } catch { /* fall through to server fetch below */ }
-        try {
-          const saved = localStorage.getItem("sayingyes_content")
-          if (saved) {
-            const parsed = JSON.parse(saved)
-            if (!parsed.Programma?.items || parsed.Programma.items.length === 0) {
-              parsed.Programma = { ...(parsed.Programma ?? {}), items: DEFAULT_PROGRAM_ITEMS, layout: "timeline" }
-            }
-            setContent(parsed)
-          }
-        } catch {}
-        try {
-          const savedHero = localStorage.getItem("sayingyes_hero_image_url")
-          if (savedHero) setHeroImageUrl(savedHero)
-        } catch {}
-        try {
-          const savedActive = localStorage.getItem("sayingyes_active")
-          if (savedActive) setActive(JSON.parse(savedActive))
-        } catch {}
-        setIsPublished(localStorage.getItem("sayingyes_is_published") === "1")
-        return
-      }
-
-      // Fresh navigation or different device — always fetch latest from server
+      // Always fetch from server — auto-save keeps the DB current so this is always safe.
       fetch(`/api/drafts/${urlEventId}`)
         .then((r) => r.json())
         .then(({ event, pages }: { event: Record<string, unknown>; pages: Array<{ type: string; content: Record<string, unknown>; is_enabled: boolean }> }) => {
@@ -659,16 +613,7 @@ export default function BouwenPage() {
           setActive(newActive)
           setIsPublished(published)
           const heroUrl = event.hero_image_url as string | null
-          if (heroUrl) {
-            setHeroImageUrl(heroUrl)
-            localStorage.setItem("sayingyes_hero_image_url", heroUrl)
-          }
-
-          localStorage.setItem("sayingyes_draft", JSON.stringify(restoredDraft))
-          localStorage.setItem("sayingyes_content", JSON.stringify(newContent))
-          localStorage.setItem("sayingyes_active", JSON.stringify(newActive))
-          localStorage.setItem("sayingyes_saved_event_id", urlEventId)
-          localStorage.setItem("sayingyes_is_published", published ? "1" : "0")
+          if (heroUrl) setHeroImageUrl(heroUrl)
         })
         .catch(() => router.replace("/aanmaken"))
       return
@@ -710,23 +655,37 @@ export default function BouwenPage() {
     return () => cancelAnimationFrame(id)
   }, [viewport])
 
+  // Auto-save: 2 seconds after the last user change, save to DB.
+  // changeKey is incremented by every user-triggered state mutation.
+  // changeKey === 0 means no user changes yet (only the initial server load happened).
   useEffect(() => {
-    if (!autoSavePending || !draft) return
-    setAutoSavePending(false)
-    ;(async () => {
-      const { data: { user } } = await createClient().auth.getUser()
-      if (!user) return
-      await performSave()
-    })()
+    if (changeKey === 0 || !draft || !savedEventId) return
+    const timer = setTimeout(async () => {
+      if (savingRef.current) return // a manual save is already in progress
+      savingRef.current = true
+      setSaving(true)
+      setSaveError(null)
+      try {
+        await doSave()
+        setJustSaved(true)
+        setTimeout(() => setJustSaved(false), 3000)
+      } catch (err) {
+        console.error("[auto-save] fout:", err)
+        setSaveError(err instanceof Error ? err.message : "Automatisch opslaan mislukt")
+      } finally {
+        setSaving(false)
+        savingRef.current = false
+      }
+    }, 2000)
+    return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoSavePending, draft])
+  }, [changeKey])
 
   function updateDraft(fields: Partial<Draft>) {
+    setChangeKey(k => k + 1)
     setDraft((prev) => {
       if (!prev) return prev
-      const next = { ...prev, ...fields }
-      localStorage.setItem("sayingyes_draft", JSON.stringify(next))
-      return next
+      return { ...prev, ...fields }
     })
   }
 
@@ -739,11 +698,8 @@ export default function BouwenPage() {
   }
 
   function updateContent(pageId: PageId, value: Record<string, unknown>) {
-    setContent((prev) => {
-      const next = { ...prev, [pageId]: value }
-      localStorage.setItem("sayingyes_content", JSON.stringify(next))
-      return next
-    })
+    setChangeKey(k => k + 1)
+    setContent((prev) => ({ ...prev, [pageId]: value }))
   }
 
   function saveStyle(s: Style) {
@@ -778,7 +734,7 @@ export default function BouwenPage() {
       console.log("[hero] geüpload naar Storage:", url)
       URL.revokeObjectURL(blobUrl)
       setHeroImageUrl(url)
-      localStorage.setItem("sayingyes_hero_image_url", url)
+      setChangeKey(k => k + 1)
     } catch (err) {
       console.error("[hero] upload mislukt:", err)
       setHeroImageError("Upload mislukt — controleer je verbinding en probeer opnieuw.")
@@ -851,9 +807,9 @@ export default function BouwenPage() {
   }
 
   function toggle(id: PageId) {
+    setChangeKey(k => k + 1)
     setActive((prev) => {
       const next = { ...prev, [id]: !prev[id] }
-      localStorage.setItem("sayingyes_active", JSON.stringify(next))
       if (!next[previewPage]) {
         const fallback = PAGES.find((p) => next[p.id])
         if (fallback) setPreviewPage(fallback.id)
@@ -870,11 +826,9 @@ export default function BouwenPage() {
 
     const activePages = PAGES.filter((p) => active[p.id]).map((p) => p.id)
 
-    // Hero: gebruik de permanente URL; blob-URL betekent upload nog bezig of mislukt
-    const persistedHero = typeof window !== "undefined" ? localStorage.getItem("sayingyes_hero_image_url") : null
+    // Hero: skip blob-URLs (upload still in progress or failed)
     const heroUrl: string | null =
       (heroImageUrl && !heroImageUrl.startsWith("blob:") ? heroImageUrl : null)
-      ?? (persistedHero && !persistedHero.startsWith("blob:") ? persistedHero : null)
 
     const mergedContent: ContentMap = {
       ...content,
@@ -943,6 +897,7 @@ export default function BouwenPage() {
 
   async function performSave() {
     if (!draft) return
+    savingRef.current = true
     setSaving(true)
     setSaveError(null)
     try {
@@ -954,6 +909,7 @@ export default function BouwenPage() {
       setSaveError(err instanceof Error ? err.message : "Opslaan mislukt")
     } finally {
       setSaving(false)
+      savingRef.current = false
     }
   }
 
@@ -1148,44 +1104,46 @@ export default function BouwenPage() {
               <span className="hidden sm:inline">Mijn Dashboard</span>
             </button>
 
-            {/* Opslaan */}
-            <button
-              onClick={handleSave}
-              disabled={saving || anyUploading}
-              className="inline-flex items-center gap-1.5 bg-white hover:bg-gray-50 disabled:bg-gray-50 text-gray-700 text-sm font-bold px-3 md:px-4 py-2.5 rounded-xl border border-gray-200 shadow-sm hover:shadow hover:-translate-y-0.5 disabled:translate-y-0 transition-all"
-            >
-              {anyUploading ? (
-                <>
-                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                  </svg>
-                  Uploaden...
-                </>
-              ) : saving ? (
-                <>
-                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                  </svg>
-                  Opslaan...
-                </>
-              ) : justSaved ? (
-                <>
-                  <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                  Opgeslagen!
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                  </svg>
-                  <span className="hidden sm:inline">Opslaan</span>
-                </>
-              )}
-            </button>
+            {/* Auto-save status — klikbaar als force-save of bij fout */}
+            {anyUploading ? (
+              <span className="inline-flex items-center gap-1.5 text-gray-400 text-sm px-3 py-2.5">
+                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                </svg>
+                Uploaden...
+              </span>
+            ) : saving ? (
+              <span className="inline-flex items-center gap-1.5 text-gray-400 text-sm px-3 py-2.5">
+                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                </svg>
+                Opslaan...
+              </span>
+            ) : saveError ? (
+              <button
+                onClick={handleSave}
+                className="inline-flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-semibold px-3 py-2.5 rounded-xl border border-red-200 transition-all"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Opnieuw proberen
+              </button>
+            ) : justSaved ? (
+              <span className="inline-flex items-center gap-1.5 text-emerald-600 text-sm px-3 py-2.5">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                Opgeslagen
+              </span>
+            ) : changeKey > 0 ? (
+              <span className="inline-flex items-center gap-1.5 text-gray-400 text-sm px-3 py-2.5">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                Niet opgeslagen
+              </span>
+            ) : null}
 
             {/* Publiceren / Bekijk live site */}
             {isPublished ? (
@@ -1342,7 +1300,7 @@ export default function BouwenPage() {
                         <button
                           role="switch"
                           aria-checked={pwEnabled}
-                          onClick={() => { setPwEnabled(v => !v); setAutoSavePending(true) }}
+                          onClick={() => { setPwEnabled(v => !v); setChangeKey(k => k + 1) }}
                           className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors cursor-pointer focus:outline-none ${pwEnabled ? "bg-emerald-500" : "bg-gray-200"}`}
                         >
                           <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm transform transition-transform ${pwEnabled ? "translate-x-5" : "translate-x-0"}`} />
@@ -1355,13 +1313,13 @@ export default function BouwenPage() {
                             <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-widest">Type beveiliging</p>
                             <div className="flex rounded-xl overflow-hidden border border-gray-200">
                               <button
-                                onClick={() => { setPwType('password'); setAutoSavePending(true) }}
+                                onClick={() => { setPwType('password'); setChangeKey(k => k + 1) }}
                                 className={`flex-1 py-2 text-xs font-semibold transition-colors ${pwType === 'password' ? 'bg-gray-900 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
                               >
                                 Wachtwoord
                               </button>
                               <button
-                                onClick={() => { setPwType('secret_question'); setAutoSavePending(true) }}
+                                onClick={() => { setPwType('secret_question'); setChangeKey(k => k + 1) }}
                                 className={`flex-1 py-2 text-xs font-semibold transition-colors ${pwType === 'secret_question' ? 'bg-gray-900 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
                               >
                                 Geheime vraag
@@ -1376,7 +1334,7 @@ export default function BouwenPage() {
                                 type="text"
                                 value={pwValue}
                                 onChange={(e) => setPwValue(e.target.value)}
-                                onBlur={() => setAutoSavePending(true)}
+                                onBlur={() => setChangeKey(k => k + 1)}
                                 placeholder="bijv. JansenBakker2025"
                                 className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
                               />
@@ -1392,7 +1350,7 @@ export default function BouwenPage() {
                                   type="text"
                                   value={pwQuestion}
                                   onChange={(e) => setPwQuestion(e.target.value)}
-                                  onBlur={() => setAutoSavePending(true)}
+                                  onBlur={() => setChangeKey(k => k + 1)}
                                   placeholder="bijv. Wat zijn onze achternamen?"
                                   className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
                                 />
@@ -1403,7 +1361,7 @@ export default function BouwenPage() {
                                   type="text"
                                   value={pwAnswer}
                                   onChange={(e) => setPwAnswer(e.target.value)}
-                                  onBlur={() => setAutoSavePending(true)}
+                                  onBlur={() => setChangeKey(k => k + 1)}
                                   placeholder="bijv. Jansen en Bakker"
                                   className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
                                 />
@@ -1534,11 +1492,7 @@ export default function BouwenPage() {
                         {(['left', 'split', 'stacked'] as const).map((opt) => (
                           <button
                             key={opt}
-                            onClick={() => {
-                              const next = { ...draft, navLayout: opt } as Draft
-                              setDraft(next)
-                              localStorage.setItem("sayingyes_draft", JSON.stringify(next))
-                            }}
+                            onClick={() => updateDraft({ navLayout: opt })}
                             className={`flex-1 py-2 text-xs font-semibold transition-colors ${
                               navLayout === opt ? 'bg-rose-500 text-white' : 'text-gray-500 hover:bg-gray-50'
                             }`}
