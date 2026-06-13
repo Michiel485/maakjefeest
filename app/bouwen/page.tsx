@@ -671,15 +671,16 @@ export default function BouwenPage() {
       if (!raw) {
         // No local data — check if user is logged in and has a saved event
         createClient().auth.getUser().then(({ data: { user } }) => {
-          if (!user) { router.replace("/aanmaken"); return }
+          if (!user) { window.location.replace("/aanmaken"); return }
           return fetch("/api/drafts").then(r => r.json()).then((events: Array<{ id: string }>) => {
             if (Array.isArray(events) && events.length > 0) {
-              router.replace(`/bouwen?event_id=${events[0].id}`)
+              // Full page reload so the useEffect re-runs with the event_id URL param
+              window.location.replace(`/bouwen?event_id=${events[0].id}`)
             } else {
-              router.replace("/aanmaken")
+              window.location.replace("/aanmaken")
             }
           })
-        }).catch(() => router.replace("/aanmaken"))
+        }).catch(() => window.location.replace("/aanmaken"))
         return
       }
       const parsed = JSON.parse(raw)
