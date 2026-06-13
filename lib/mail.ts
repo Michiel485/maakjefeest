@@ -67,7 +67,7 @@ export async function sendRSVPConfirmation(data: RSVPConfirmationData) {
 
   const html = `<!DOCTYPE html>
 <html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet"></head>
 <body style="margin:0;padding:0;background:#f5f1ec;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f1ec;padding:40px 16px;">
     <tr><td align="center">
@@ -76,7 +76,7 @@ export async function sendRSVPConfirmation(data: RSVPConfirmationData) {
         <!-- Header -->
         <tr>
           <td bgcolor="#c9a96e" style="background-color:#c9a96e;padding:40px 40px 32px;text-align:center;">
-            <p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:0.12em;color:#f5ead6;text-transform:uppercase;">SayingYes</p>
+            <p style="margin:0 0 8px;font-size:22px;font-weight:600;letter-spacing:0.01em;color:#f5ead6;font-family:'Cormorant Garamond','Georgia',serif;">SayingYes</p>
             <h1 style="margin:0;font-size:26px;font-weight:800;color:#111827;line-height:1.2;">${headline}</h1>
           </td>
         </tr>
@@ -153,7 +153,7 @@ export async function sendFirstSaveWelcomeEmail(
 ) {
   const html = `<!DOCTYPE html>
 <html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet"></head>
 <body style="margin:0;padding:0;background:#f5f1ec;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f1ec;padding:40px 16px;">
     <tr><td align="center">
@@ -162,7 +162,7 @@ export async function sendFirstSaveWelcomeEmail(
         <!-- Header -->
         <tr>
           <td bgcolor="#c9a96e" style="background-color:#c9a96e;padding:44px 40px 36px;text-align:center;">
-            <p style="margin:0 0 10px;font-size:12px;font-weight:700;letter-spacing:0.14em;color:#f5ead6;text-transform:uppercase;">SayingYes</p>
+            <p style="margin:0 0 10px;font-size:22px;font-weight:600;letter-spacing:0.01em;color:#f5ead6;font-family:'Cormorant Garamond','Georgia',serif;">SayingYes</p>
             <h1 style="margin:0;font-size:26px;font-weight:800;color:#111827;line-height:1.25;">Ja, de basis staat! 💍</h1>
             <p style="margin:10px 0 0;font-size:14px;color:#2d1f0e;font-weight:500;">Welkom bij SayingYes</p>
           </td>
@@ -216,10 +216,10 @@ export async function sendFirstSaveWelcomeEmail(
                   <!-- Pricing -->
                   <p style="margin:0 0 8px;font-size:14px;font-weight:700;color:#111827;">Transparant &amp; scherp geprijsd 🥂</p>
                   <p style="margin:0 0 10px;font-size:13px;color:#374151;line-height:1.65;">
-                    Bij SayingYes houden we van duidelijke taal. Omdat we ons platform slim en efficiënt hebben ingericht, bieden we een van de scherpste tarieven van Nederland aan: <strong style="color:#111827;">eenmalig &euro;&nbsp;45,99</strong> voor een heel jaar live.
+                    Bij SayingYes houden we van duidelijke taal. Omdat we ons platform slim en efficiënt hebben ingericht, bieden we een van de scherpste tarieven van Nederland aan: <strong style="color:#111827;">eenmalig &euro;&nbsp;49,99</strong> voor een heel jaar live.
                   </p>
                   <p style="margin:0 0 0;font-size:13px;color:#374151;line-height:1.65;">
-                    Geen addertjes onder het gras: de site verloopt na een jaar volledig automatisch, dus jullie zitten nooit vast aan een ongewenst abonnement. Wel flexibel verlengen om de trouwfoto&rsquo;s nog te delen? Dat kan daarna simpel per 6 maanden voor &euro;&nbsp;20,-.
+                    Geen addertjes onder het gras: de site verloopt na een jaar volledig automatisch, dus jullie zitten nooit vast aan een ongewenst abonnement. Wel flexibel verlengen om de trouwfoto&rsquo;s nog te delen? Dat kan daarna simpel per 6 maanden voor &euro;&nbsp;22,-.
                   </p>
 
                   <!-- Divider -->
@@ -353,7 +353,7 @@ export async function sendAdminRSVPNotification(data: AdminRSVPNotificationData)
 
   const html = `<!DOCTYPE html>
 <html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet"></head>
 <body style="margin:0;padding:0;background:#f3f4f6;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:40px 16px;">
     <tr><td align="center">
@@ -362,7 +362,8 @@ export async function sendAdminRSVPNotification(data: AdminRSVPNotificationData)
         <!-- Header -->
         <tr>
           <td bgcolor="#1f2937" style="background-color:#1f2937;padding:32px 40px;text-align:center;">
-            <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:0.14em;color:#9ca3af;text-transform:uppercase;">Beheerdersbericht · SayingYes</p>
+            <p style="margin:0 0 4px;font-size:22px;font-weight:600;letter-spacing:0.01em;color:#d1d5db;font-family:'Cormorant Garamond','Georgia',serif;">SayingYes</p>
+            <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:0.14em;color:#9ca3af;text-transform:uppercase;">Beheerdersbericht</p>
             <h1 style="margin:0;font-size:22px;font-weight:800;color:#f9fafb;line-height:1.3;">Nieuwe RSVP ontvangen 🍾</h1>
             <p style="margin:8px 0 0;font-size:14px;color:#d1d5db;">${eventTitle}</p>
           </td>
@@ -436,7 +437,7 @@ export async function sendWebsiteLiveEmail(
 
   const html = `<!DOCTYPE html>
 <html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet"></head>
 <body style="margin:0;padding:0;background:#f5f1ec;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f1ec;padding:40px 16px;">
     <tr><td align="center">
@@ -445,7 +446,7 @@ export async function sendWebsiteLiveEmail(
         <!-- Header -->
         <tr>
           <td bgcolor="#c9a96e" style="background-color:#c9a96e;padding:44px 40px 36px;text-align:center;">
-            <p style="margin:0 0 10px;font-size:12px;font-weight:700;letter-spacing:0.14em;color:#f5ead6;text-transform:uppercase;">SayingYes</p>
+            <p style="margin:0 0 10px;font-size:22px;font-weight:600;letter-spacing:0.01em;color:#f5ead6;font-family:'Cormorant Garamond','Georgia',serif;">SayingYes</p>
             <h1 style="margin:0;font-size:27px;font-weight:800;color:#111827;line-height:1.25;">Knal de kurk er maar af! 🍾🚀</h1>
             <p style="margin:10px 0 0;font-size:15px;color:#2d1f0e;font-weight:500;">Jullie trouwwebsite staat LIVE!</p>
           </td>
@@ -565,7 +566,7 @@ export async function sendSignupWelcomeMagicLink({
 }) {
   const html = `<!DOCTYPE html>
 <html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet"></head>
 <body style="margin:0;padding:0;background:#f5f1ec;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f1ec;padding:40px 16px;">
     <tr><td align="center">
@@ -574,7 +575,7 @@ export async function sendSignupWelcomeMagicLink({
         <!-- Header -->
         <tr>
           <td bgcolor="#c9a96e" style="background-color:#c9a96e;padding:44px 40px 36px;text-align:center;">
-            <p style="margin:0 0 10px;font-size:12px;font-weight:700;letter-spacing:0.14em;color:#f5ead6;text-transform:uppercase;">SayingYes</p>
+            <p style="margin:0 0 10px;font-size:22px;font-weight:600;letter-spacing:0.01em;color:#f5ead6;font-family:'Cormorant Garamond','Georgia',serif;">SayingYes</p>
             <h1 style="margin:0;font-size:26px;font-weight:800;color:#111827;line-height:1.25;">Ja, de basis staat! 💍</h1>
             <p style="margin:10px 0 0;font-size:14px;color:#2d1f0e;font-weight:500;">Welkom bij SayingYes</p>
           </td>
@@ -692,7 +693,7 @@ export async function sendMagicLink({
 }) {
   const html = `<!DOCTYPE html>
 <html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet"></head>
 <body style="margin:0;padding:0;background:#f5f1ec;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f1ec;padding:40px 16px;">
     <tr><td align="center">
@@ -701,7 +702,7 @@ export async function sendMagicLink({
         <!-- Header -->
         <tr>
           <td bgcolor="#c9a96e" style="background-color:#c9a96e;padding:44px 40px 36px;text-align:center;">
-            <p style="margin:0 0 10px;font-size:12px;font-weight:700;letter-spacing:0.14em;color:#f5ead6;text-transform:uppercase;">SayingYes</p>
+            <p style="margin:0 0 10px;font-size:22px;font-weight:600;letter-spacing:0.01em;color:#f5ead6;font-family:'Cormorant Garamond','Georgia',serif;">SayingYes</p>
             <h1 style="margin:0;font-size:26px;font-weight:800;color:#111827;line-height:1.25;">Welkom terug 👋</h1>
           </td>
         </tr>
