@@ -432,6 +432,7 @@ export default function BouwenPage() {
   const [openHomeSection, setOpenHomeSection] = useState<'layout' | 'headerfoto' | 'kaders' | 'tekstvelden' | 'welkomst' | null>(null)
   const [pwEnabled, setPwEnabled] = useState(false)
 
+  useEffect(() => { if (window.innerWidth < 768) setViewport("mobiel") }, [])
   useEffect(() => { if (activeSection !== 'algemeen') setOpenAlgSection(null) }, [activeSection])
   useEffect(() => { if (activeSection !== 'url') setOpenUrlSection(null) }, [activeSection])
   useEffect(() => { if (activeSection !== 'paginas' || activeSubPage !== 'Home') setOpenHomeSection(null) }, [activeSection, activeSubPage])
@@ -1190,17 +1191,11 @@ export default function BouwenPage() {
       </header>
 
       {/* ── Body ── */}
-      <div className="flex flex-1 md:min-h-0">
+      <div className="flex flex-col md:flex-row flex-1 md:min-h-0">
 
         {/* ── Sidebar ── */}
-        <aside className="w-full md:w-80 md:flex-shrink-0 bg-white border-r border-gray-100 flex flex-col overflow-y-auto">
+        <aside className="w-full md:w-80 md:flex-shrink-0 bg-white border-r border-gray-100 flex flex-col md:overflow-y-auto">
 
-          {/* Mobile tip — only visible on small screens */}
-          <div className="block md:hidden mx-4 mt-4 mb-1 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
-            <p className="text-xs text-amber-800 leading-relaxed">
-              ✨ <strong>Tip:</strong> Willen jullie het complete design live bekijken en de styling aanpassen? Open SayingYes dan op een desktop of laptop!
-            </p>
-          </div>
 
 
           {/* ── 3. URL & BEVEILIGING ── */}
@@ -2616,13 +2611,13 @@ export default function BouwenPage() {
 
         </aside>
 
-        {/* ── Main panel ── hidden on mobile, visible on desktop ── */}
-        <main className="hidden md:flex flex-1 flex-col overflow-hidden bg-gray-100">
+        {/* ── Main panel ── */}
+        <main className="flex flex-1 flex-col overflow-hidden bg-gray-100 border-t md:border-t-0 border-gray-200">
           <div className="flex items-center justify-between px-4 py-2 bg-gray-100 border-b border-gray-200 flex-shrink-0">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Live preview</p>
             <div className="flex items-center gap-2">
-                {/* Zoom controls */}
-                <div className="flex items-center gap-1 bg-gray-200 rounded-lg p-0.5">
+                {/* Zoom controls — desktop only */}
+                <div className="hidden md:flex items-center gap-1 bg-gray-200 rounded-lg p-0.5">
                   <button
                     onClick={() => setZoomMultiplier(z => Math.max(0.5, parseFloat((z - 0.1).toFixed(1))))}
                     title="Zoom uit"
@@ -2650,8 +2645,8 @@ export default function BouwenPage() {
                   </button>
                 </div>
 
-                {/* Viewport toggle */}
-                <div className="flex items-center gap-1 bg-gray-200 rounded-lg p-0.5">
+                {/* Viewport toggle — desktop only */}
+                <div className="hidden md:flex items-center gap-1 bg-gray-200 rounded-lg p-0.5">
                   <button
                     onClick={() => setViewport("desktop")}
                     title="Desktop"
@@ -2677,10 +2672,10 @@ export default function BouwenPage() {
           </div>
 
           {/* ── Canvas ── */}
-          <div className="flex flex-1 min-h-0 overflow-hidden">
+          <div className="flex flex-1 min-h-0 overflow-hidden" style={{ minHeight: "420px" }}>
 
             {/* Canvas */}
-              <div ref={canvasContainerRef} className="flex-1 overflow-y-auto bg-gray-100 p-6">
+              <div ref={canvasContainerRef} className="flex-1 overflow-y-auto bg-gray-100 p-4 md:p-6">
                 <div className="mx-auto" style={{ width: `${Math.round(canvasWidth * canvasScale * zoomMultiplier)}px` }}>
                   <div style={{ width: canvasWidth, transform: `scale(${canvasScale * zoomMultiplier})`, transformOrigin: "top left" }}>
                     <div className="rounded-2xl shadow-xl overflow-clip relative" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily, letterSpacing: sc.bodyLetterSpacing, fontWeight: sc.bodyFontWeight }}>
