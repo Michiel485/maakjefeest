@@ -774,3 +774,138 @@ export async function sendMagicLink({
     return { success: false, error: err }
   }
 }
+
+// ── Draft Reminder ────────────────────────────────────────────────────────────
+
+export async function sendDraftReminderEmail({
+  toEmail,
+  eventTitle,
+  builderUrl,
+  reminderNumber,
+}: {
+  toEmail: string
+  eventTitle: string
+  builderUrl: string
+  reminderNumber: 1 | 2
+}) {
+  const isSecond = reminderNumber === 2
+
+  const subject = isSecond
+    ? `Laatste herinnering: jullie trouwwebsite wacht nog op publicatie 💍`
+    : `Jullie trouwwebsite staat nog niet live — publiceer hem vandaag! 🚀`
+
+  const headline = isSecond
+    ? `Laatste herinnering: jullie website wacht nog`
+    : `Jullie website staat klaar om live te gaan!`
+
+  const bodyText = isSecond
+    ? `Dit is een laatste herinnering. Jullie concept voor <strong>${eventTitle}</strong> staat al een tijdje klaar maar is nog niet gepubliceerd. Als jullie de website niet publiceren, wordt het concept over een week automatisch verwijderd om onze servers schoon te houden.`
+    : `Goed nieuws: jullie concept voor <strong>${eventTitle}</strong> staat al klaar in de builder! Maar jullie gasten kunnen de website nog niet zien — hij is namelijk nog niet gepubliceerd. Een publicatie kost slechts &euro;&nbsp;49,99 voor een volledig jaar live.`
+
+  const urgencyBlock = isSecond
+    ? `<tr>
+        <td style="background-color:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:16px 20px;margin-bottom:24px;">
+          <p style="margin:0;font-size:13px;color:#9a3412;line-height:1.65;">
+            ⚠️ <strong>Let op:</strong> als jullie binnen 7 dagen niet inloggen of het concept publiceren, wordt het automatisch verwijderd.
+          </p>
+        </td>
+      </tr>`
+    : ``
+
+  const html = `<!DOCTYPE html>
+<html lang="nl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet"></head>
+<body style="margin:0;padding:0;background:#f5f1ec;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f1ec;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);">
+
+        <!-- Header -->
+        <tr>
+          <td bgcolor="#c9a96e" style="background-color:#c9a96e;padding:44px 40px 36px;text-align:center;">
+            <p style="margin:0 0 10px;font-size:22px;font-weight:600;letter-spacing:0.01em;color:#f5ead6;font-family:'Cormorant Garamond','Georgia',serif;">SayingYes</p>
+            <h1 style="margin:0;font-size:24px;font-weight:800;color:#111827;line-height:1.25;">${headline}</h1>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding:36px 40px 0;">
+            <p style="margin:0 0 20px;font-size:15px;color:#374151;line-height:1.7;">
+              ${bodyText}
+            </p>
+
+            ${urgencyBlock ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">${urgencyBlock}</table>` : ""}
+
+            <!-- Pricing block (only for first reminder) -->
+            ${!isSecond ? `
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+              <tr>
+                <td style="background-color:#faf7f2;border:1px solid #e8dcc8;border-radius:12px;padding:20px 24px;">
+                  <p style="margin:0 0 8px;font-size:14px;font-weight:700;color:#111827;">Wat kost het?</p>
+                  <p style="margin:0;font-size:13px;color:#374151;line-height:1.65;">
+                    <strong style="color:#111827;">Eenmalig &euro;&nbsp;49,99</strong> voor een volledig jaar live — daarna optioneel verlengen voor &euro;&nbsp;22,- per 6 maanden. Geen verborgen kosten.
+                  </p>
+                </td>
+              </tr>
+            </table>` : ""}
+
+            <!-- CTA button -->
+            <table cellpadding="0" cellspacing="0" style="margin:0 0 32px;">
+              <tr>
+                <td bgcolor="#c9a96e" style="background-color:#c9a96e;border-radius:10px;">
+                  <a
+                    href="${builderUrl}"
+                    style="display:inline-block;background-color:#c9a96e;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:14px 36px;border-radius:10px;letter-spacing:0.02em;mso-padding-alt:14px 36px;"
+                  >
+                    ${isSecond ? "Nu publiceren →" : "Verder bouwen &amp; publiceren →"}
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Sign-off -->
+        <tr>
+          <td style="padding:0 40px 32px;">
+            <p style="margin:0;font-size:15px;color:#374151;line-height:1.7;">
+              Veel succes met de voorbereidingen,<br>
+              <strong style="color:#111827;">Het team van SayingYes.nl</strong>
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="padding:20px 40px 28px;text-align:center;border-top:1px solid #f0ede8;">
+            <p style="margin:0;font-size:12px;color:#bdb0a0;">
+              Verstuurd via <strong style="color:#9b8b6a;">SayingYes</strong> &nbsp;·&nbsp; sayingyes.nl
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+
+  try {
+    const { data: result, error } = await getResend().emails.send({
+      from: FROM,
+      to: [toEmail],
+      subject,
+      html,
+    })
+    if (error) {
+      console.error("[mail] Draft reminder error:", error)
+      return { success: false, error }
+    }
+    console.log(`[mail] Draft reminder #${reminderNumber} sent →`, toEmail, "| id:", result?.id)
+    return { success: true, id: result?.id }
+  } catch (err) {
+    console.error("[mail] Unexpected error sending draft reminder:", err)
+    return { success: false, error: err }
+  }
+}

@@ -37,6 +37,13 @@ export async function GET(
 
   if (!event) return Response.json({ error: "Niet gevonden" }, { status: 404 })
 
+  // Track last activity so the cleanup cron knows when the user was last active
+  await service
+    .from("events")
+    .update({ last_active_at: new Date().toISOString() })
+    .eq("id", event_id)
+    .eq("status", "draft") // only touch drafts; published sites don't need this
+
   const { data: pages } = await service
     .from("pages")
     .select("type, content, is_enabled, order")
