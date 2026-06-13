@@ -596,6 +596,11 @@ export default function BouwenPage() {
             newContent.Programma = { ...(newContent.Programma ?? {}), items: DEFAULT_PROGRAM_ITEMS, layout: "timeline" }
           }
 
+          // Seed informatie defaults if not yet set
+          if (!newContent.Informatie?.items || (newContent.Informatie.items as unknown[]).length === 0) {
+            newContent.Informatie = { ...(newContent.Informatie ?? {}), items: DEFAULT_PRAKTISCH_TILES }
+          }
+
           const published = event.status === "published"
           setDraft(restoredDraft)
           setStyle(((event.style as string) || "zand") as Style)
@@ -2906,7 +2911,7 @@ export default function BouwenPage() {
                       )}
                       {showSection("Informatie") && (
                         <div style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "Informatie") } : undefined}>
-                        <PraktischPreview tiles={praktischTiles ?? []} sc={sc} onTileDoubleClick={handleInfoTileDoubleClick} />
+                        <PraktischPreview tiles={praktischTiles ?? DEFAULT_PRAKTISCH_TILES} sc={sc} onTileDoubleClick={handleInfoTileDoubleClick} />
                         </div>
                       )}
                       {showSection("Cadeautips") && (
