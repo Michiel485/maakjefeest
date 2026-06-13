@@ -668,7 +668,20 @@ export default function BouwenPage() {
     // No URL param — load from localStorage as usual
     try {
       const raw = localStorage.getItem("sayingyes_draft")
-      if (!raw) { router.replace("/aanmaken"); return }
+      if (!raw) {
+        // No local data — check if user is logged in and has a saved event
+        createClient().auth.getUser().then(({ data: { user } }) => {
+          if (!user) { router.replace("/aanmaken"); return }
+          return fetch("/api/drafts").then(r => r.json()).then((events: Array<{ id: string }>) => {
+            if (Array.isArray(events) && events.length > 0) {
+              router.replace(`/bouwen?event_id=${events[0].id}`)
+            } else {
+              router.replace("/aanmaken")
+            }
+          })
+        }).catch(() => router.replace("/aanmaken"))
+        return
+      }
       const parsed = JSON.parse(raw)
       setDraft(parsed)
       if (parsed.style) setStyle(parsed.style as Style)
@@ -956,6 +969,10 @@ export default function BouwenPage() {
     localStorage.setItem("sayingyes_saved_event_id", json.id)
     localStorage.setItem("sayingyes_is_published", isPublished ? "1" : "0")
     setSavedEventId(json.id)
+    // Keep event_id in URL so this tab and bookmarked links always load from server
+    const url = new URL(window.location.href)
+    url.searchParams.set("event_id", json.id)
+    window.history.replaceState({}, "", url.toString())
     return json as { id: string; slug: string }
   }
 
