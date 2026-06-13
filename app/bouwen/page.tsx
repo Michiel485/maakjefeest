@@ -532,11 +532,55 @@ export default function BouwenPage() {
 
     if (urlEventId) {
       setSavedEventId(urlEventId)
+      const localEventId = localStorage.getItem("sayingyes_saved_event_id")
 
-      // Always fetch from server when event_id is in URL.
-      // This guarantees every device/tab sees the latest saved state.
-      // localStorage is only written after a successful save, so reading it here
-      // would risk showing stale data from a different device.
+      // performance.getEntriesByType("navigation")[0].type is "reload" for F5/Ctrl+R
+      // and "navigate" for any fresh navigation (link click, dashboard button, other device).
+      // Only use the localStorage cache when it's a true reload of the same tab — this
+      // preserves unsaved edits on desktop F5 while ensuring phone/other-device loads
+      // always get fresh data from the server.
+      const navType = (
+        (performance.getEntriesByType?.("navigation")?.[0]) as PerformanceNavigationTiming | undefined
+      )?.type ?? "navigate"
+      const isReload = navType === "reload"
+
+      if (localEventId === urlEventId && isReload) {
+        // F5 reload in same browser — restore from localStorage to keep unsaved edits
+        try {
+          const raw = localStorage.getItem("sayingyes_draft")
+          if (!raw) throw new Error("no draft")
+          const parsed = JSON.parse(raw)
+          setDraft(parsed)
+          if (parsed.style)            setStyle(parsed.style as Style)
+          if (parsed.font_hero)        setFontHero(parsed.font_hero as string)
+          if (parsed.font_initials)    setFontInitials(parsed.font_initials as string)
+          if (parsed.font_frame_names) setFontFrameNames(parsed.font_frame_names as string)
+          if (parsed.font_page_titles) setFontPageTitles(parsed.font_page_titles as string)
+          if (parsed.homepageSettings) setHpSettings({ ...DEFAULT_HOMEPAGE_SETTINGS, ...parsed.homepageSettings })
+        } catch { /* fall through to server fetch below */ }
+        try {
+          const saved = localStorage.getItem("sayingyes_content")
+          if (saved) {
+            const parsed = JSON.parse(saved)
+            if (!parsed.Programma?.items || parsed.Programma.items.length === 0) {
+              parsed.Programma = { ...(parsed.Programma ?? {}), items: DEFAULT_PROGRAM_ITEMS, layout: "timeline" }
+            }
+            setContent(parsed)
+          }
+        } catch {}
+        try {
+          const savedHero = localStorage.getItem("sayingyes_hero_image_url")
+          if (savedHero) setHeroImageUrl(savedHero)
+        } catch {}
+        try {
+          const savedActive = localStorage.getItem("sayingyes_active")
+          if (savedActive) setActive(JSON.parse(savedActive))
+        } catch {}
+        setIsPublished(localStorage.getItem("sayingyes_is_published") === "1")
+        return
+      }
+
+      // Fresh navigation or different device — always fetch latest from server
       fetch(`/api/drafts/${urlEventId}`)
         .then((r) => r.json())
         .then(({ event, pages }: { event: Record<string, unknown>; pages: Array<{ type: string; content: Record<string, unknown>; is_enabled: boolean }> }) => {
