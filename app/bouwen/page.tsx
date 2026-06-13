@@ -665,63 +665,18 @@ export default function BouwenPage() {
       return
     }
 
-    // No URL param — load from localStorage as usual
-    try {
-      const raw = localStorage.getItem("sayingyes_draft")
-      if (!raw) {
-        // No local data — check if user is logged in and has a saved event
-        createClient().auth.getUser().then(({ data: { user } }) => {
-          if (!user) { window.location.replace("/aanmaken"); return }
-          return fetch("/api/drafts").then(r => r.json()).then((events: Array<{ id: string }>) => {
-            if (Array.isArray(events) && events.length > 0) {
-              // Full page reload so the useEffect re-runs with the event_id URL param
-              window.location.replace(`/bouwen?event_id=${events[0].id}`)
-            } else {
-              window.location.replace("/aanmaken")
-            }
-          })
-        }).catch(() => window.location.replace("/aanmaken"))
-        return
-      }
-      const parsed = JSON.parse(raw)
-      setDraft(parsed)
-      if (parsed.style) setStyle(parsed.style as Style)
-      if (parsed.font_hero)        setFontHero(parsed.font_hero as string)
-      if (parsed.font_initials)    setFontInitials(parsed.font_initials as string)
-      if (parsed.font_frame_names) setFontFrameNames(parsed.font_frame_names as string)
-      if (parsed.font_page_titles) setFontPageTitles(parsed.font_page_titles as string)
-      if (parsed.homepageSettings) setHpSettings({ ...DEFAULT_HOMEPAGE_SETTINGS, ...parsed.homepageSettings })
-    } catch { router.replace("/aanmaken") }
-
-    try {
-      const saved = localStorage.getItem("sayingyes_content")
-      if (saved) {
-        const parsed = JSON.parse(saved)
-        if (!parsed.Programma?.items || parsed.Programma.items.length === 0) {
-          parsed.Programma = { ...(parsed.Programma ?? {}), items: DEFAULT_PROGRAM_ITEMS, layout: "timeline" }
-          localStorage.setItem("sayingyes_content", JSON.stringify(parsed))
+    // No URL param — always load from server so every device sees the latest saved state.
+    // localStorage is device-local and would show stale data on any other device.
+    createClient().auth.getUser().then(({ data: { user } }) => {
+      if (!user) { window.location.replace("/aanmaken"); return }
+      return fetch("/api/drafts").then(r => r.json()).then((events: Array<{ id: string }>) => {
+        if (Array.isArray(events) && events.length > 0) {
+          window.location.replace(`/bouwen?event_id=${events[0].id}`)
+        } else {
+          window.location.replace("/aanmaken")
         }
-        setContent(parsed)
-      }
-    } catch {}
-
-    try {
-      const savedHero = localStorage.getItem("sayingyes_hero_image_url")
-      if (savedHero) setHeroImageUrl(savedHero)
-    } catch {}
-
-    try {
-      const savedActive = localStorage.getItem("sayingyes_active")
-      if (savedActive) setActive(JSON.parse(savedActive))
-    } catch {}
-
-    const savedId = localStorage.getItem("sayingyes_saved_event_id")
-    if (savedId) setSavedEventId(savedId)
-
-    if (localStorage.getItem("sayingyes_pending_save") === "1") {
-      localStorage.removeItem("sayingyes_pending_save")
-      setAutoSavePending(true)
-    }
+      })
+    }).catch(() => window.location.replace("/aanmaken"))
   }, [router])
 
   useEffect(() => {
