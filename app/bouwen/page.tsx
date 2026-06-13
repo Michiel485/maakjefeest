@@ -419,6 +419,7 @@ export default function BouwenPage() {
   const [showDashboardModal, setShowDashboardModal] = useState(false)
   const [dashboardLoading, setDashboardLoading] = useState(false)
   const [changeKey, setChangeKey] = useState(0)
+  const [hasPendingChanges, setHasPendingChanges] = useState(false)
   const savingRef = useRef(false)
   const [slugEditOpen, setSlugEditOpen]         = useState(false)
   const [slugValue, setSlugValue]               = useState("")
@@ -656,6 +657,9 @@ export default function BouwenPage() {
     return () => cancelAnimationFrame(id)
   }, [viewport])
 
+  // Mark pending whenever the user makes a change; cleared after save.
+  useEffect(() => { if (changeKey > 0) setHasPendingChanges(true) }, [changeKey])
+
   // Auto-save: 2 seconds after the last user change, save to DB.
   // changeKey is incremented by every user-triggered state mutation.
   // changeKey === 0 means no user changes yet (only the initial server load happened).
@@ -668,6 +672,7 @@ export default function BouwenPage() {
       setSaveError(null)
       try {
         await doSave()
+        setHasPendingChanges(false)
         setJustSaved(true)
         setTimeout(() => setJustSaved(false), 3000)
       } catch (err) {
@@ -903,6 +908,7 @@ export default function BouwenPage() {
     setSaveError(null)
     try {
       await doSave()
+      setHasPendingChanges(false)
       setJustSaved(true)
       setTimeout(() => setJustSaved(false), 3000)
     } catch (err) {
@@ -1139,7 +1145,7 @@ export default function BouwenPage() {
                 </svg>
                 Opgeslagen
               </span>
-            ) : changeKey > 0 ? (
+            ) : hasPendingChanges ? (
               <span className="inline-flex items-center gap-1.5 text-gray-400 text-sm px-3 py-2.5">
                 <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
                 Niet opgeslagen
