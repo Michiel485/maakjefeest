@@ -1,8 +1,8 @@
-import Stripe from "stripe"
+import { createMollieClient } from "@mollie/api-client"
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+const mollie = createMollieClient({ apiKey: process.env.MOLLIE_API_KEY! })
 
 export async function POST(request: Request) {
   let body: { event_id: string }
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "event_id is verplicht" }, { status: 400 })
   }
 
-  // Pre-fill Stripe checkout with the logged-in user's email
+  // Pre-fill checkout with the logged-in user's email
   let customerEmail: string | undefined
   try {
     const cookieStore = await cookies()
@@ -43,26 +43,13 @@ export async function POST(request: Request) {
 
   const baseUrl = new URL(request.url).origin
 
-  const session = await stripe.checkout.sessions.create({
-    mode: "payment",
-    payment_method_types: ["card", "ideal"],
-    ...(customerEmail ? { customer_email: customerEmail } : {}),
-    line_items: [
-      {
-        price_data: {
-          currency: "eur",
-          unit_amount: 2400,
-          product_data: {
-            name: "Saying Yes — bruiloftswebsite",
-          },
-        },
-        quantity: 1,
-      },
-    ],
-    success_url: `${baseUrl}/succes?event_id=${event_id}`,
-    cancel_url: `${baseUrl}/betalen?event_id=${event_id}`,
+  const payment = await mollie.payments.create({
+    amount: { currency: "EUR", value: "49.99" },
+    description: "Saying Yes — bruiloftswebsite (1 jaar live)",
+    redirectUrl: `${baseUrl}/succes?event_id=${event_id}`,
+    webhookUrl: `${baseUrl}/api/webhook`,
     metadata: { event_id },
   })
 
-  return Response.json({ url: session.url }, { status: 201 })
+  return Response.json({ url: payment._links.checkout?.href }, { status: 201 })
 }

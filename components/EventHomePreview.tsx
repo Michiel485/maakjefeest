@@ -243,7 +243,7 @@ export default function EventHomePreview({
     return (
       <div className="@container">
         {/* Split: photo left, text right */}
-        <div className="flex flex-col @md:flex-row min-h-[70vh]">
+        <div className="flex flex-col @md:flex-row" style={{ minHeight: 520 }}>
 
           {/* Photo panel (left on desktop, top on mobile) */}
           <div ref={heroRef as React.RefObject<HTMLDivElement>} className="@md:w-1/2 h-64 @md:h-auto relative overflow-hidden"

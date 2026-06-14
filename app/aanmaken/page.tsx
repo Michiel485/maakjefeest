@@ -61,6 +61,7 @@ export default function AanmakenPage() {
   const router = useRouter()
   const [form, setForm] = useState({ naam1: "", naam2: "", datum: "", email: "", slug: "" })
   const [slugStatus, setSlugStatus] = useState<SlugStatus>("idle")
+  const [submitting, setSubmitting] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   function scheduleSlugCheck(slug: string) {
@@ -97,54 +98,79 @@ export default function AanmakenPage() {
     scheduleSlugCheck(sanitizeSlug(formatted))
   }
 
-  function handleStart(e: React.SyntheticEvent) {
+  async function handleStart(e: React.SyntheticEvent) {
     e.preventDefault()
     const cleanSlug = sanitizeSlug(form.slug)
-    if (!cleanSlug || slugStatus !== "available") return
+    if (!cleanSlug || slugStatus !== "available" || submitting) return
+
+    setSubmitting(true)
 
     const frameNames = `${form.naam1.trim()} & ${form.naam2.trim()}`
     const eventTitle = `De bruiloft van ${form.naam1.trim()} & ${form.naam2.trim()}`
 
-    const draft = {
+    const payload = {
       type: "bruiloft",
       naam: eventTitle,
-      naam1: form.naam1.trim(),
-      naam2: form.naam2.trim(),
       slug: cleanSlug,
       style: "zand",
       nav_title: frameNames,
       datum: form.datum,
       locatie: "Stadhuis Amersfoort",
-      email: form.email,
-      aangemaakt: new Date().toISOString(),
       use_frame: true,
       frame_style: "gold-circle",
       frame_names: frameNames,
       frame_location: "Stadhuis Amersfoort",
       initials: buildInitials(form.naam1, form.naam2),
-      homeContent: {
-        title: `Wij gaan trouwen!`,
-        body: `We zijn zo blij dat jullie erbij zijn op onze grote dag. Hieronder vinden jullie alles wat jullie moeten weten.`,
-        align: "center",
+      pages: ["Home", "Programma", "RSVP", "Informatie", "Cadeautips", "OnsVerhaal", "Fotos", "Ceremoniemeesters"],
+      content: {
+        Home: {
+          title: "Wij gaan trouwen!",
+          body: "We zijn zo blij dat jullie erbij zijn op onze grote dag. Hieronder vinden jullie alles wat jullie moeten weten.",
+          align: "center",
+        },
+        Programma: DEFAULT_PROGRAMMA,
+        Informatie: DEFAULT_PRAKTISCH,
       },
     }
 
-    const content = {
-      Programma: DEFAULT_PROGRAMMA,
-      Informatie: DEFAULT_PRAKTISCH,
-    }
+    try {
+      const res = await fetch("/api/drafts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
 
+      if (res.ok) {
+        const json = await res.json()
+        // Gelukt: direct naar builder met het nieuwe event_id
+        router.push(`/bouwen?event_id=${json.id}`)
+        return
+      }
+    } catch {}
+
+    // Terugval voor niet-ingelogde gebruikers: localStorage + /bouwen zonder event_id
+    // De builder toont dan de magic-link flow en maakt het event aan na inloggen
+    const draft = {
+      type: "bruiloft", naam: eventTitle, naam1: form.naam1.trim(), naam2: form.naam2.trim(),
+      slug: cleanSlug, style: "zand", nav_title: frameNames, datum: form.datum,
+      locatie: "Stadhuis Amersfoort", email: form.email, aangemaakt: new Date().toISOString(),
+      use_frame: true, frame_style: "gold-circle", frame_names: frameNames,
+      frame_location: "Stadhuis Amersfoort", initials: buildInitials(form.naam1, form.naam2),
+      homeContent: { title: "Wij gaan trouwen!", body: "We zijn zo blij dat jullie erbij zijn op onze grote dag. Hieronder vinden jullie alles wat jullie moeten weten.", align: "center" },
+    }
     localStorage.setItem("sayingyes_draft", JSON.stringify(draft))
-    localStorage.setItem("sayingyes_content", JSON.stringify(content))
+    localStorage.setItem("sayingyes_content", JSON.stringify({ Programma: DEFAULT_PROGRAMMA, Informatie: DEFAULT_PRAKTISCH }))
     localStorage.removeItem("sayingyes_saved_event_id")
     router.push("/bouwen")
+    setSubmitting(false)
   }
 
   const canSubmit =
     form.naam1.trim().length > 0 &&
     form.naam2.trim().length > 0 &&
     sanitizeSlug(form.slug).length >= 3 &&
-    slugStatus === "available"
+    slugStatus === "available" &&
+    !submitting
 
   const slugBorderColor =
     slugStatus === "available" ? "#10b981"
@@ -375,10 +401,12 @@ export default function AanmakenPage() {
                 boxShadow: canSubmit ? "0 8px 32px rgba(26,26,26,0.18)" : "none",
               }}
             >
-              Start bouwen
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
+              {submitting ? "Bezig..." : "Start bouwen"}
+              {!submitting && (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              )}
             </button>
             {!canSubmit && form.slug && slugStatus !== "checking" && slugStatus !== "idle" && (
               <p className="text-xs text-center mt-2" style={{ color: BODY }}>
@@ -392,7 +420,7 @@ export default function AanmakenPage() {
           {/* Trust signal */}
           <div className="flex items-center justify-center gap-6 pt-2">
             {[
-              { icon: "✦", label: "Eenmalig €39,99" },
+              { icon: "✦", label: "Eenmalig €49,99" },
               { icon: "✦", label: "1 jaar online" },
               { icon: "✦", label: "Geen abonnement" },
             ].map(({ icon, label }) => (

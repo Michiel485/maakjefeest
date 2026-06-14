@@ -15,7 +15,7 @@ function Spinner() {
         </div>
         <div>
           <p className="text-base font-bold text-gray-800">Betaling wordt geladen...</p>
-          <p className="text-sm text-gray-400 mt-1">Even geduld, je wordt zo doorgestuurd naar Stripe.</p>
+          <p className="text-sm text-gray-400 mt-1">Even geduld, je wordt zo doorgestuurd naar Mollie.</p>
         </div>
       </div>
     </div>
