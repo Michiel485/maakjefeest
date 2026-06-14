@@ -371,7 +371,7 @@ export default function EventHomePreview({
           <div className="px-8 py-10 flex flex-col items-center" style={{ backgroundColor: sc.bodyBackground ? "transparent" : sc.navBg }}>
             <div className="max-w-2xl w-full text-center">
               {homeTitle && (
-                <p {...fieldClick('welkomst-titel')} className="font-bold mb-2 whitespace-pre-wrap" style={{ fontSize: `${homeTitleSize ?? 1.0}rem`, color: sc.headingColor, fontFamily: sc.fontFamily, textAlign: 'center' }}>
+                <p {...fieldClick('welkomst-titel')} className="font-bold mb-2 whitespace-pre-wrap" style={{ fontSize: `${homeTitleSize ?? 1.75}rem`, color: sc.headingColor, fontFamily: sc.fontFamily, textAlign: 'center' }}>
                   {homeTitle}
                 </p>
               )}
