@@ -46,7 +46,7 @@ export async function POST(request: Request) {
   const payment = await mollie.payments.create({
     amount: { currency: "EUR", value: "49.99" },
     description: "Saying Yes — bruiloftswebsite (1 jaar live)",
-    redirectUrl: `${baseUrl}/succes?event_id=${event_id}`,
+    redirectUrl: `${baseUrl}/betalen?event_id=${event_id}&from=mollie`,
     webhookUrl: `${baseUrl}/api/webhook`,
     metadata: { event_id },
   })

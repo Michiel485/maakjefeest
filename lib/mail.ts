@@ -775,6 +775,164 @@ export async function sendMagicLink({
   }
 }
 
+// ── Invoice ───────────────────────────────────────────────────────────────────
+
+export async function sendInvoiceEmail({
+  toEmail,
+  invoiceNumber,
+  invoiceDate,
+  customerName,
+  amountExcl,
+  btwAmount,
+  amountIncl,
+  molliePaymentId,
+}: {
+  toEmail: string
+  invoiceNumber: string
+  invoiceDate: string
+  customerName: string
+  amountExcl: string
+  btwAmount: string
+  amountIncl: string
+  molliePaymentId: string
+}) {
+  const html = `<!DOCTYPE html>
+<html lang="nl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet"></head>
+<body style="margin:0;padding:0;background:#f5f1ec;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f1ec;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);">
+
+        <!-- Header -->
+        <tr>
+          <td style="padding:36px 40px 28px;border-bottom:1px solid #f0ede8;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td>
+                  <p style="margin:0 0 2px;font-size:22px;font-weight:600;letter-spacing:0.01em;color:#1a1a1a;font-family:'Cormorant Garamond','Georgia',serif;">SayingYes</p>
+                  <p style="margin:0;font-size:12px;color:#9b8b6a;">MvB Commerce · KVK 42079472 · BTW NL005478870B96</p>
+                  <p style="margin:2px 0 0;font-size:12px;color:#9b8b6a;">Theo Uden Masmanstraat 43, 3813ZE Amersfoort</p>
+                </td>
+                <td align="right" style="vertical-align:top;">
+                  <p style="margin:0;font-size:22px;font-weight:800;color:#c9a96e;letter-spacing:0.04em;">FACTUUR</p>
+                  <p style="margin:4px 0 0;font-size:13px;color:#5c5248;">${invoiceNumber}</p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Meta row -->
+        <tr>
+          <td style="padding:20px 40px;border-bottom:1px solid #f0ede8;background:#faf7f2;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="width:50%;">
+                  <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#9b8b6a;">Factuurdatum</p>
+                  <p style="margin:0;font-size:14px;color:#1a1a1a;">${invoiceDate}</p>
+                </td>
+                <td style="width:50%;">
+                  <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#9b8b6a;">Factuur aan</p>
+                  <p style="margin:0;font-size:14px;color:#1a1a1a;">${customerName}</p>
+                  <p style="margin:2px 0 0;font-size:12px;color:#5c5248;">${toEmail}</p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Line items -->
+        <tr>
+          <td style="padding:24px 40px 0;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <thead>
+                <tr>
+                  <th style="padding:0 0 10px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#9b8b6a;border-bottom:1px solid #e8ddd0;">Omschrijving</th>
+                  <th style="padding:0 0 10px;text-align:right;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#9b8b6a;border-bottom:1px solid #e8ddd0;">Bedrag</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding:16px 0;border-bottom:1px solid #f0ede8;color:#1a1a1a;font-size:14px;line-height:1.5;">
+                    Bruiloftswebsite — 1 jaar live<br>
+                    <span style="font-size:12px;color:#9b8b6a;">sayingyes.nl · publicatie voor 12 maanden</span>
+                  </td>
+                  <td style="padding:16px 0;border-bottom:1px solid #f0ede8;text-align:right;font-size:14px;color:#1a1a1a;">&euro;&nbsp;${amountExcl}</td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Totals -->
+        <tr>
+          <td style="padding:16px 40px 28px;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="padding:6px 0;text-align:right;font-size:13px;color:#5c5248;">Subtotaal excl. BTW</td>
+                <td style="padding:6px 0 6px 24px;text-align:right;font-size:13px;color:#5c5248;white-space:nowrap;">&euro;&nbsp;${amountExcl}</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;text-align:right;font-size:13px;color:#5c5248;">BTW 21%</td>
+                <td style="padding:6px 0 6px 24px;text-align:right;font-size:13px;color:#5c5248;white-space:nowrap;">&euro;&nbsp;${btwAmount}</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 0 0;text-align:right;font-size:15px;font-weight:700;color:#1a1a1a;border-top:2px solid #1a1a1a;">Totaal incl. BTW</td>
+                <td style="padding:10px 0 0 24px;text-align:right;font-size:15px;font-weight:700;color:#1a1a1a;white-space:nowrap;border-top:2px solid #1a1a1a;">&euro;&nbsp;${amountIncl}</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Payment ref + note -->
+        <tr>
+          <td style="padding:20px 40px 32px;background:#faf7f2;border-top:1px solid #f0ede8;">
+            <p style="margin:0 0 6px;font-size:12px;color:#9b8b6a;">
+              Betaling ontvangen via Mollie · Referentie: <span style="font-family:monospace;color:#5c5248;">${molliePaymentId}</span>
+            </p>
+            <p style="margin:0;font-size:12px;color:#9b8b6a;">
+              Bewaar deze factuur voor je eigen administratie. Vragen? <a href="mailto:info@sayingyes.nl" style="color:#c9a96e;text-decoration:none;">info@sayingyes.nl</a>
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="padding:20px 40px 28px;text-align:center;border-top:1px solid #f0ede8;">
+            <p style="margin:0;font-size:12px;color:#bdb0a0;">
+              <strong style="color:#9b8b6a;">SayingYes</strong> &nbsp;·&nbsp; sayingyes.nl &nbsp;·&nbsp; info@sayingyes.nl
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+
+  try {
+    const { data: result, error } = await getResend().emails.send({
+      from:    FROM,
+      to:      [toEmail],
+      subject: `Factuur ${invoiceNumber} — SayingYes`,
+      html,
+    })
+
+    if (error) {
+      console.error("[mail] Invoice email error:", error)
+      return { success: false, error }
+    }
+
+    console.log("[mail] Invoice sent →", toEmail, "| invoice:", invoiceNumber, "| id:", result?.id)
+    return { success: true, id: result?.id }
+  } catch (err) {
+    console.error("[mail] Unexpected error sending invoice:", err)
+    return { success: false, error: err }
+  }
+}
+
 // ── Draft Reminder ────────────────────────────────────────────────────────────
 
 export async function sendDraftReminderEmail({

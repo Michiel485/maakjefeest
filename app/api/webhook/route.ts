@@ -2,14 +2,26 @@ import { NextResponse } from "next/server"
 import { createMollieClient } from "@mollie/api-client"
 import { revalidatePath } from "next/cache"
 import { createServiceClient } from "@/lib/supabase"
-import { sendWebsiteLiveEmail } from "@/lib/mail"
+import { sendWebsiteLiveEmail, sendInvoiceEmail } from "@/lib/mail"
 
 export const dynamic = "force-dynamic"
 
 const mollie = createMollieClient({ apiKey: process.env.MOLLIE_API_KEY! })
 
+const AMOUNT_INCL = 49.99
+const BTW_RATE    = 21
+const AMOUNT_EXCL = Math.round((AMOUNT_INCL / (1 + BTW_RATE / 100)) * 100) / 100
+const BTW_AMOUNT  = Math.round((AMOUNT_INCL - AMOUNT_EXCL) * 100) / 100
+
+function formatEur(n: number) {
+  return n.toFixed(2).replace(".", ",")
+}
+
+function formatDate(d: Date) {
+  return d.toLocaleDateString("nl-NL", { day: "2-digit", month: "long", year: "numeric" })
+}
+
 export async function POST(request: Request) {
-  // Mollie stuurt een form-encoded body met alleen het payment id: id=tr_xxxxxxxx
   let paymentId: string | null = null
   try {
     const text = await request.text()
@@ -23,7 +35,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Geen payment id" }, { status: 400 })
   }
 
-  // Verifieer de betaalstatus via de Mollie API (nooit vertrouwen op de body zelf)
   let payment
   try {
     payment = await mollie.payments.get(paymentId)
@@ -31,7 +42,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Betaling niet gevonden" }, { status: 400 })
   }
 
-  // Alleen verwerken als betaling daadwerkelijk geslaagd is
   if (payment.status !== "paid") {
     return NextResponse.json({ received: true }, { status: 200 })
   }
@@ -44,6 +54,17 @@ export async function POST(request: Request) {
   }
 
   const supabase = createServiceClient()
+
+  // Idempotency: skip if already published
+  const { data: existing } = await supabase
+    .from("events")
+    .select("status")
+    .eq("id", event_id)
+    .single()
+
+  if (existing?.status === "published") {
+    return NextResponse.json({ received: true }, { status: 200 })
+  }
 
   const { data: updatedEvent, error: updateError } = await supabase
     .from("events")
@@ -64,10 +85,58 @@ export async function POST(request: Request) {
     revalidatePath(`/events/${updatedEvent.slug}`, "layout")
   }
 
-  if (updatedEvent?.slug && updatedEvent?.user_email) {
-    const websiteUrl = `https://${updatedEvent.slug}.sayingyes.nl`
-    const names = updatedEvent.frame_names || updatedEvent.title || "jullie"
-    await sendWebsiteLiveEmail(updatedEvent.user_email, names, websiteUrl)
+  // Create invoice record
+  const now = new Date()
+  const year = now.getFullYear()
+
+  const { count } = await supabase
+    .from("invoices")
+    .select("*", { count: "exact", head: true })
+    .gte("created_at", `${year}-01-01`)
+
+  const invoiceNum  = (count ?? 0) + 1
+  const invoiceNumber = `SY-${year}-${String(invoiceNum).padStart(3, "0")}`
+  const customerName  = updatedEvent?.frame_names || updatedEvent?.title || ""
+  const customerEmail = updatedEvent?.user_email || ""
+
+  const { error: invoiceError } = await supabase.from("invoices").insert({
+    event_id,
+    invoice_number:     invoiceNumber,
+    customer_email:     customerEmail,
+    customer_name:      customerName,
+    description:        "Bruiloftswebsite — 1 jaar live",
+    amount_excl:        AMOUNT_EXCL,
+    btw_amount:         BTW_AMOUNT,
+    amount_incl:        AMOUNT_INCL,
+    btw_rate:           BTW_RATE,
+    date:               now.toISOString().split("T")[0],
+    mollie_payment_id:  payment.id,
+  })
+
+  if (invoiceError) {
+    console.error("[webhook] invoice insert error:", invoiceError)
+    // Don't fail the webhook — event is published, invoice can be retried
+  }
+
+  // Send invoice email + website live email
+  if (customerEmail) {
+    await Promise.all([
+      sendInvoiceEmail({
+        toEmail:          customerEmail,
+        invoiceNumber,
+        invoiceDate:      formatDate(now),
+        customerName,
+        amountExcl:       formatEur(AMOUNT_EXCL),
+        btwAmount:        formatEur(BTW_AMOUNT),
+        amountIncl:       formatEur(AMOUNT_INCL),
+        molliePaymentId:  payment.id,
+      }),
+      sendWebsiteLiveEmail(
+        customerEmail,
+        updatedEvent?.frame_names || updatedEvent?.title || "jullie",
+        `https://${updatedEvent?.slug}.sayingyes.nl`
+      ),
+    ])
   }
 
   return NextResponse.json({ received: true }, { status: 200 })

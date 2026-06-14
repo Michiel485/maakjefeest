@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useEffect, useState } from "react"
+import { Suspense, useEffect, useRef, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 
@@ -15,35 +15,145 @@ interface EventData {
   id: string
   slug: string
   title: string
+  status: string
 }
 
-function Spinner() {
+function Spinner({ label }: { label?: string }) {
   return (
-    <div className="flex items-center justify-center min-h-[60vh]">
+    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
       <svg className="w-8 h-8 animate-spin" style={{ color: GOLD }} fill="none" viewBox="0 0 24 24">
         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
       </svg>
+      {label && <p className="text-sm" style={{ color: BODY }}>{label}</p>}
     </div>
+  )
+}
+
+// Shown when user returns from Mollie but payment was not completed
+function PaymentCancelled({ event_id }: { event_id: string }) {
+  return (
+    <main className="relative z-10 flex flex-col items-center text-center px-6 pt-10 pb-20 max-w-xl mx-auto">
+      <div
+        className="w-20 h-20 rounded-full flex items-center justify-center mb-8"
+        style={{ backgroundColor: "#FEF2F2", border: "2px solid #FECACA" }}
+      >
+        <svg className="w-9 h-9 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </div>
+
+      <h1 className="text-2xl font-bold mb-3" style={{ color: CHARCOAL }}>
+        Betaling niet voltooid
+      </h1>
+      <p className="mb-10 leading-relaxed text-sm" style={{ color: BODY }}>
+        Je betaling is geannuleerd of niet afgerond. Je website staat nog klaar in de builder — je kunt
+        het op elk moment opnieuw proberen.
+      </p>
+
+      <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
+        <Link
+          href={`/betalen?event_id=${event_id}`}
+          className="flex-1 inline-flex items-center justify-center gap-2 font-bold px-6 py-3.5 rounded-2xl hover:-translate-y-0.5 transition-all"
+          style={{ backgroundColor: CHARCOAL, color: IVORY, boxShadow: "0 4px 16px rgba(0,0,0,0.15)" }}
+        >
+          Opnieuw proberen
+        </Link>
+        <Link
+          href={`/bouwen?event_id=${event_id}`}
+          className="flex-1 inline-flex items-center justify-center gap-2 font-semibold px-6 py-3.5 rounded-2xl hover:-translate-y-0.5 transition-all"
+          style={{ backgroundColor: "#fff", color: BODY, border: `1px solid ${GOLD_LIGHT}` }}
+        >
+          Terug naar builder
+        </Link>
+      </div>
+
+      <Link
+        href="/"
+        className="mt-8 text-sm transition-colors"
+        style={{ color: `${BODY}60` }}
+        onMouseEnter={e => (e.currentTarget.style.color = BODY)}
+        onMouseLeave={e => (e.currentTarget.style.color = `${BODY}60`)}
+      >
+        Terug naar home
+      </Link>
+    </main>
   )
 }
 
 function CheckoutContent() {
   const searchParams = useSearchParams()
   const event_id = searchParams.get("event_id")
+  const fromMollie = searchParams.get("from") === "mollie"
 
-  const [event, setEvent]       = useState<EventData | null>(null)
+  const [event, setEvent]           = useState<EventData | null>(null)
   const [loadingEvent, setLoadingEvent] = useState(true)
-  const [paying, setPaying]     = useState(false)
-  const [payError, setPayError] = useState(false)
+  // null = still polling (only when fromMollie), true = paid, false = not paid
+  const [paymentOk, setPaymentOk]   = useState<boolean | null>(fromMollie ? null : false)
+  const [paying, setPaying]         = useState(false)
+  const [payError, setPayError]     = useState(false)
+  const pollRef     = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const attemptsRef = useRef(0)
+  const MAX_ATTEMPTS = 5
 
-  useEffect(() => {
+  function pollStatus() {
+    if (!event_id) { setPaymentOk(false); setLoadingEvent(false); return }
+    fetch(`/api/events/${event_id}`)
+      .then(res => res.json())
+      .then((data: EventData) => {
+        setEvent(data)
+        if (data.status === "published") {
+          // Payment confirmed — go to succes page
+          window.location.href = `/succes?event_id=${event_id}`
+        } else if (attemptsRef.current < MAX_ATTEMPTS) {
+          attemptsRef.current++
+          pollRef.current = setTimeout(pollStatus, 2000)
+        } else {
+          setPaymentOk(false)
+          setLoadingEvent(false)
+        }
+      })
+      .catch(() => {
+        if (attemptsRef.current < MAX_ATTEMPTS) {
+          attemptsRef.current++
+          pollRef.current = setTimeout(pollStatus, 2000)
+        } else {
+          setPaymentOk(false)
+          setLoadingEvent(false)
+        }
+      })
+  }
+
+  function fetchEvent() {
     if (!event_id) { setLoadingEvent(false); return }
     fetch(`/api/events/${event_id}`)
       .then(res => res.json())
-      .then(data => { setEvent(data); setLoadingEvent(false) })
+      .then((data: EventData) => { setEvent(data); setLoadingEvent(false) })
       .catch(() => setLoadingEvent(false))
+  }
+
+  useEffect(() => {
+    if (fromMollie) {
+      pollStatus()
+    } else {
+      fetchEvent()
+    }
+    return () => { if (pollRef.current) clearTimeout(pollRef.current) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [event_id])
+
+  // Returning from Mollie: still polling
+  if (fromMollie && paymentOk === null) {
+    return <Spinner label="Betaling wordt geverifieerd..." />
+  }
+
+  // Returning from Mollie: payment not completed
+  if (fromMollie && paymentOk === false && event_id) {
+    return <PaymentCancelled event_id={event_id} />
+  }
+
+  // Normal checkout page
+  if (loadingEvent) return <Spinner />
 
   async function handlePay() {
     if (!event_id || paying) return
@@ -70,8 +180,6 @@ function CheckoutContent() {
       setPaying(false)
     }
   }
-
-  if (loadingEvent) return <Spinner />
 
   return (
     <main className="relative z-10 max-w-md mx-auto px-6 pt-8 pb-24">
