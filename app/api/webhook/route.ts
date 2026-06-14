@@ -46,8 +46,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ received: true }, { status: 200 })
   }
 
-  const metadata = payment.metadata as { event_id?: string } | null
-  const event_id = metadata?.event_id
+  const metadata = payment.metadata as { event_id?: string; discount_code?: string } | null
+  const event_id      = metadata?.event_id
+  const discount_code = metadata?.discount_code
 
   if (!event_id) {
     return NextResponse.json({ received: true }, { status: 200 })
@@ -83,6 +84,21 @@ export async function POST(request: Request) {
 
   if (updatedEvent?.slug) {
     revalidatePath(`/events/${updatedEvent.slug}`, "layout")
+  }
+
+  // Mark discount code as used
+  if (discount_code) {
+    const { data: codeRow } = await supabase
+      .from("discount_codes")
+      .select("id, used_count")
+      .eq("code", discount_code)
+      .single()
+    if (codeRow) {
+      await supabase
+        .from("discount_codes")
+        .update({ used_count: codeRow.used_count + 1 })
+        .eq("id", codeRow.id)
+    }
   }
 
   // Create invoice record

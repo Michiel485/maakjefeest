@@ -83,6 +83,7 @@ export default function AdminPage() {
         <nav className="flex items-center gap-5 text-sm font-medium" style={{ color: BODY }}>
           <Link href="/admin" style={{ color: GOLD, textDecoration: "none" }}>Dashboard</Link>
           <Link href="/admin/kosten" style={{ color: BODY, textDecoration: "none" }}>Kosten</Link>
+          <Link href="/admin/kortingscodes" style={{ color: BODY, textDecoration: "none" }}>Kortingscodes</Link>
           <a
             href={`/api/admin/export?year=${stats?.year ?? new Date().getFullYear()}`}
             className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-opacity hover:opacity-70"
