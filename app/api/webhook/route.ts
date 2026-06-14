@@ -3,6 +3,7 @@ import { createMollieClient } from "@mollie/api-client"
 import { revalidatePath } from "next/cache"
 import { createServiceClient } from "@/lib/supabase"
 import { sendWebsiteLiveEmail, sendInvoiceEmail } from "@/lib/mail"
+import { generateInvoicePDF } from "@/lib/invoice-pdf"
 
 export const dynamic = "force-dynamic"
 
@@ -115,37 +116,71 @@ export async function POST(request: Request) {
   const customerName  = updatedEvent?.frame_names || updatedEvent?.title || ""
   const customerEmail = updatedEvent?.user_email || ""
 
+  // Generate PDF
+  const invoiceDate   = formatDate(now)
+  const description   = "Bruiloftswebsite — 1 jaar live"
+  let pdfBuffer: Buffer | undefined
+  let pdfFilePath: string | undefined
+
+  try {
+    pdfBuffer = await generateInvoicePDF({
+      invoiceNumber,
+      invoiceDate,
+      customerName,
+      customerEmail,
+      amountExcl:      formatEur(AMOUNT_EXCL),
+      btwAmount:       formatEur(BTW_AMOUNT),
+      amountIncl:      formatEur(AMOUNT_INCL),
+      btwRate:         BTW_RATE,
+      molliePaymentId: payment.id,
+      description,
+    })
+
+    // Upload PDF to Supabase Storage
+    const pdfPath = `${year}/${invoiceNumber}.pdf`
+    const { error: uploadError } = await supabase.storage
+      .from("invoices")
+      .upload(pdfPath, pdfBuffer, { contentType: "application/pdf", upsert: true })
+
+    if (!uploadError) pdfFilePath = pdfPath
+    else console.error("[webhook] PDF upload error:", uploadError)
+  } catch (pdfErr) {
+    console.error("[webhook] PDF generation error:", pdfErr)
+  }
+
+  // Store invoice in DB
   const { error: invoiceError } = await supabase.from("invoices").insert({
     event_id,
-    invoice_number:     invoiceNumber,
-    customer_email:     customerEmail,
-    customer_name:      customerName,
-    description:        "Bruiloftswebsite — 1 jaar live",
-    amount_excl:        AMOUNT_EXCL,
-    btw_amount:         BTW_AMOUNT,
-    amount_incl:        AMOUNT_INCL,
-    btw_rate:           BTW_RATE,
-    date:               now.toISOString().split("T")[0],
-    mollie_payment_id:  payment.id,
+    invoice_number:    invoiceNumber,
+    customer_email:    customerEmail,
+    customer_name:     customerName,
+    description,
+    amount_excl:       AMOUNT_EXCL,
+    btw_amount:        BTW_AMOUNT,
+    amount_incl:       AMOUNT_INCL,
+    btw_rate:          BTW_RATE,
+    date:              now.toISOString().split("T")[0],
+    mollie_payment_id: payment.id,
+    file_path:         pdfFilePath ?? null,
   })
 
   if (invoiceError) {
     console.error("[webhook] invoice insert error:", invoiceError)
-    // Don't fail the webhook — event is published, invoice can be retried
   }
 
   // Send invoice email + website live email
   if (customerEmail) {
     await Promise.all([
       sendInvoiceEmail({
-        toEmail:          customerEmail,
+        toEmail:         customerEmail,
         invoiceNumber,
-        invoiceDate:      formatDate(now),
+        invoiceDate,
         customerName,
-        amountExcl:       formatEur(AMOUNT_EXCL),
-        btwAmount:        formatEur(BTW_AMOUNT),
-        amountIncl:       formatEur(AMOUNT_INCL),
-        molliePaymentId:  payment.id,
+        amountExcl:      formatEur(AMOUNT_EXCL),
+        btwAmount:       formatEur(BTW_AMOUNT),
+        amountIncl:      formatEur(AMOUNT_INCL),
+        molliePaymentId: payment.id,
+        pdfBuffer,
       }),
       sendWebsiteLiveEmail(
         customerEmail,

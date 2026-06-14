@@ -167,6 +167,7 @@ export default function KostenPage() {
         <nav className="flex items-center gap-5 text-sm font-medium">
           <Link href="/admin" style={{ color: BODY, textDecoration: "none" }}>Dashboard</Link>
           <Link href="/admin/kosten" style={{ color: GOLD, textDecoration: "none" }}>Kosten</Link>
+          <Link href="/admin/facturen" style={{ color: BODY, textDecoration: "none" }}>Facturen</Link>
           <Link href="/admin/kortingscodes" style={{ color: BODY, textDecoration: "none" }}>Kortingscodes</Link>
         </nav>
       </header>
