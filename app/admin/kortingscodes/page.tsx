@@ -223,7 +223,7 @@ export default function KortingscodesPage() {
                     onChange={e => setForm({ ...form, value: e.target.value })}
                     placeholder={form.type === "fixed" ? "20.00" : "50"}
                   />
-                  {form.type !== "free" && form.value && (
+                  {form.value && (
                     <p className="text-xs mt-1" style={{ color: BODY }}>
                       Klant betaalt:{" "}
                       <strong style={{ color: CHARCOAL }}>
