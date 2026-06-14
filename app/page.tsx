@@ -738,6 +738,14 @@ export default function Home() {
         >
           Privacy &amp; Cookies
         </a>
+        <span className="mx-3" style={{ color: "#2A2218" }}>·</span>
+        <a
+          href="/contact"
+          className="hover:opacity-70 transition-opacity"
+          style={{ color: "#4A4030", textDecoration: "none" }}
+        >
+          Contact
+        </a>
       </footer>
     </div>
   )

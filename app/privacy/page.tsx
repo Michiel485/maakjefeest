@@ -36,9 +36,13 @@ export default function PrivacyPage() {
 
         <Section title="1. Wie zijn wij?">
           <p>
-            SayingYes is een dienst van Michiel van Bendegem (eenmanszaak), gevestigd in Nederland.
+            SayingYes is een handelsnaam van <strong>MvB Commerce</strong>, gevestigd in Nederland.
             Via <strong>sayingyes.nl</strong> kunnen bruidsparen een gepersonaliseerde bruiloftswebsite
             bouwen en beheren.
+          </p>
+          <p className="mt-3">
+            KVK-nummer: 42079472 &nbsp;·&nbsp; BTW-nummer: NL005478870B96<br />
+            Adres: Theo Uden Masmanstraat 43
           </p>
           <p className="mt-3">Contactgegevens voor privacyvragen: <a href="mailto:info@sayingyes.nl" style={{ color: GOLD }}>info@sayingyes.nl</a></p>
         </Section>
@@ -49,7 +53,7 @@ export default function PrivacyPage() {
             ["Accountgegevens", "E-mailadres van de builder (bruidspaar)", "Inloggen via magic link (Supabase Auth)"],
             ["Eventgegevens", "Naam event, datum, locatie, stijlkeuzes, foto's", "Opgeslagen in Supabase (EU-regio)"],
             ["RSVP-gegevens", "Naam, e-mailadres, dieetwensen, antwoorden op vragen", "Ingevuld door gasten, opgeslagen in Supabase"],
-            ["Betalingsgegevens", "Geen — betalingen verlopen volledig via Stripe", "SayingYes slaat geen kaartgegevens op"],
+            ["Betalingsgegevens", "Geen — betalingen verlopen volledig via Mollie", "SayingYes slaat geen kaartgegevens op"],
           ]} />
         </Section>
 
@@ -58,7 +62,7 @@ export default function PrivacyPage() {
             <li>Het aanmaken en beheren van jouw bruiloftswebsite.</li>
             <li>Het versturen van een inloglink per e-mail (magic link via Resend).</li>
             <li>Het verwerken en tonen van RSVP-aanmeldingen aan het bruidspaar.</li>
-            <li>Het verwerken van de eenmalige betaling via Stripe.</li>
+            <li>Het verwerken van de eenmalige betaling via Mollie.</li>
             <li>Het per e-mail informeren over ernstige storingen of wijzigingen in de dienst.</li>
           </ul>
           <p className="mt-3">We sturen <strong>geen marketingmails</strong> zonder expliciete toestemming.</p>
@@ -86,7 +90,7 @@ export default function PrivacyPage() {
             ["Supabase", "Database & authenticatie", "EU (Frankfurt)"],
             ["Vercel", "Hosting & CDN", "EU-regio beschikbaar; SCCs van toepassing"],
             ["Resend", "Transactionele e-mail (magic links)", "VS — SCCs & AVG-compliant"],
-            ["Stripe", "Betalingsverwerking", "VS — adequaatheidsbesluit/SCCs"],
+            ["Mollie", "Betalingsverwerking", "NL (Amsterdam) — volledig EU-gebaseerd"],
           ]} />
           <p className="mt-3">We verkopen of verhuren gegevens <strong>nooit</strong> aan derden.</p>
         </Section>
