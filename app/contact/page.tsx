@@ -118,10 +118,6 @@ export default function ContactPage() {
               <p style={{ color: CHARCOAL, fontWeight: 500 }}>NL005478870B96</p>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: "#9A8E82" }}>Adres</p>
-              <p style={{ color: CHARCOAL, fontWeight: 500 }}>Theo Uden Masmanstraat 43</p>
-            </div>
-            <div>
               <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: "#9A8E82" }}>E-mail</p>
               <a href="mailto:info@sayingyes.nl" className="transition-opacity hover:opacity-70" style={{ color: GOLD, fontWeight: 500 }}>
                 info@sayingyes.nl

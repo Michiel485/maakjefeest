@@ -423,13 +423,6 @@ export default function Home() {
               >
                 Start gratis jullie ontwerp
               </Link>
-              <Link
-                href="/bouwen"
-                className="inline-flex items-center gap-2 text-sm font-semibold px-7 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5"
-                style={{ border: `1.5px solid ${GOLD_LIGHT}`, color: BODY }}
-              >
-                Bekijk een voorbeeld
-              </Link>
             </div>
           </div>
         </div>
@@ -460,38 +453,48 @@ export default function Home() {
             {[
               {
                 path: "M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75",
-                title: "Digitale RSVP Module",
-                body: "Gasten melden zich digitaal aan. Intoleranties en dieetwensen stromen live binnen op jullie dashboard.",
-              },
-              {
-                path: "M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418",
-                title: "Slimme Meertaligheid",
-                body: "Internationale gasten? Met één druk op de knop vertalen bezoekers de héle website direct naar hun eigen taal.",
+                title: "Unieke Digitale RSVP",
+                body: "Vergeet saaie ja/nee-kaarten. Vraag gasten naar dieetwensen, overnachting, hun verzoeknummer voor de DJ of stel zelf unieke vragen toe. Alle antwoorden stromen live binnen op jullie persoonlijke dashboard.",
               },
               {
                 path: "M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z",
                 title: "Privacy & Wachtwoord",
-                body: "Scherm de dagindeling af met een wachtwoord of geheime vraag — met slimme 90% typefout-tolerantie.",
+                body: "Scherm jullie héle trouwwebsite in één klap af met een persoonlijk wachtwoord of geheime vraag. Dankzij slimme 90% typefout-tolerantie komen gasten er altijd gemakkelijk in, maar blijven ongenode pottenkijkers buiten.",
+              },
+              {
+                path: "M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244",
+                title: "Kies je Eigen Subdomein",
+                body: "Geen cryptische, onleesbare links. Jullie kiezen zelf een uniek en herkenbaar webadres — bijvoorbeeld jullienamen.sayingyes.nl. Strak, chic en supermakkelijk te onthouden voor alle gasten.",
+              },
+              {
+                path: "M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418",
+                title: "Slimme Meertaligheid",
+                body: "Internationale gasten op de uitnodigingslijst? Geen stress. Met één druk op de knop vertalen buitenlandse bezoekers de complete website direct naar hun eigen taal.",
               },
               {
                 path: "M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5",
                 title: "Programma & Cadeautips",
-                body: "Presenteer de dagindeling prachtig digitaal en voeg een stijlvol cadeautips-lijstje toe.",
+                body: "Presenteer de dagindeling prachtig visueel en overzichtelijk. Voeg een stijlvol cadeautip-lijstje of digitale envelop toe, zodat gasten vooraf precies weten hoe ze jullie écht blij kunnen maken.",
               },
               {
                 path: "M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z",
                 title: "Gratis Fotogalerij",
-                body: "Deel na de grote dag alle prachtige trouwfoto's in hoge kwaliteit gratis met jullie gasten.",
-              },
-              {
-                path: "M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244",
-                title: "Eigen Domeinnaam",
-                body: "Geen subdomeinen, maar een échte eigen URL — bijv. www.bruiloft-naam.nl.",
+                body: "Deel na de grote dag moeiteloos alle magische momenten. Upload trouwfoto's in hoge kwaliteit en geef gasten gratis toegang om herinneringen te bekijken en direct te downloaden.",
               },
               {
                 path: "M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99",
                 title: "Altijd Flexibel",
-                body: "Zelfs na publicatie passen jullie lay-out, teksten of URL op elk moment direct gratis aan.",
+                body: "Plannen gewijzigd? Geen paniek. Zelfs na publicatie passen jullie de lay-out, teksten of URL op elk moment direct en kosteloos aan. Jullie houden altijd de volledige controle.",
+              },
+              {
+                path: "M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 8.25h3m-3 3.75h3M9 21h.008v.008H9V21zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z",
+                title: "Smartphone-Proof",
+                body: "Op de trouwdag hebben gasten geen laptop bij de hand. Onze websites zijn mobile-first ontworpen — route, dresscode, programma: alles laadt razendsnel en ziet er op elke smartphone spectaculair uit.",
+              },
+              {
+                path: "M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3",
+                title: "Export voor Locatie & Cateraar",
+                body: "Geen gedoe met handmatig overtypen in Excel. Met één muisklik exporteren jullie alle RSVP-antwoorden, dieetwensen en hotelovernachtingen naar een overzichtelijk bestand — direct klaar voor ceremoniemeester, locatie of cateraar.",
               },
             ].map(({ path, title, body }, i) => (
               <div
@@ -745,6 +748,14 @@ export default function Home() {
           style={{ color: "#4A4030", textDecoration: "none" }}
         >
           Contact
+        </a>
+        <span className="mx-3" style={{ color: "#2A2218" }}>·</span>
+        <a
+          href="/voorwaarden"
+          className="hover:opacity-70 transition-opacity"
+          style={{ color: "#4A4030", textDecoration: "none" }}
+        >
+          Algemene Voorwaarden
         </a>
       </footer>
     </div>

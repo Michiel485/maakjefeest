@@ -417,6 +417,19 @@ export default function AanmakenPage() {
             )}
           </div>
 
+          {/* Consent */}
+          <p className="text-xs text-center leading-relaxed" style={{ color: "#8A7E72" }}>
+            Door op &lsquo;Start bouwen&rsquo; te klikken maak je een account aan en ga je akkoord met onze{" "}
+            <Link href="/voorwaarden" className="underline transition-opacity hover:opacity-70" style={{ color: BODY }}>
+              Algemene Voorwaarden
+            </Link>{" "}
+            (incl. Verwerkersovereenkomst) en ons{" "}
+            <Link href="/privacy" className="underline transition-opacity hover:opacity-70" style={{ color: BODY }}>
+              Privacybeleid
+            </Link>
+            .
+          </p>
+
           {/* Trust signal */}
           <div className="flex items-center justify-center gap-6 pt-2">
             {[

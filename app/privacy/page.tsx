@@ -42,7 +42,7 @@ export default function PrivacyPage() {
           </p>
           <p className="mt-3">
             KVK-nummer: 42079472 &nbsp;·&nbsp; BTW-nummer: NL005478870B96<br />
-            Adres: Theo Uden Masmanstraat 43
+            Adres: Theo Uden Masmanstraat 43, 3813ZE Amersfoort
           </p>
           <p className="mt-3">Contactgegevens voor privacyvragen: <a href="mailto:info@sayingyes.nl" style={{ color: GOLD }}>info@sayingyes.nl</a></p>
         </Section>
@@ -53,6 +53,11 @@ export default function PrivacyPage() {
             ["Accountgegevens", "E-mailadres van de builder (bruidspaar)", "Inloggen via magic link (Supabase Auth)"],
             ["Eventgegevens", "Naam event, datum, locatie, stijlkeuzes, foto's", "Opgeslagen in Supabase (EU-regio)"],
             ["RSVP-gegevens", "Naam, e-mailadres, dieetwensen, antwoorden op vragen", "Ingevuld door gasten, opgeslagen in Supabase"],
+          ]} />
+          <p className="mt-4 text-sm leading-relaxed p-4 rounded-xl" style={{ backgroundColor: "#FBF5E8", border: "1px solid #E8D5A3" }}>
+            <strong>Belangrijk:</strong> Het bruidspaar is de <em>Verwerkingsverantwoordelijke</em> voor de gegevens van hun gasten. SayingYes treedt hierbij op als <em>Verwerker</em>. Wij gebruiken deze gastengegevens uitsluitend om ze te tonen op het dashboard van het bruidspaar en zullen deze nooit voor eigen doeleinden gebruiken.
+          </p>
+          <Table rows={[
             ["Betalingsgegevens", "Geen — betalingen verlopen volledig via Mollie", "SayingYes slaat geen kaartgegevens op"],
           ]} />
         </Section>
