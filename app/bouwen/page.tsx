@@ -443,12 +443,26 @@ export default function BouwenPage() {
   const [pwAnswer, setPwAnswer] = useState('')
 
   function handlePreviewFieldClick(field: string) {
-    // Ensure Home controls sidebar is open
+    // Map field name to the accordion section it lives in
+    const sectionForField: Record<string, 'layout' | 'headerfoto' | 'kaders' | 'tekstvelden' | 'welkomst'> = {
+      'welkomst-titel': 'welkomst',
+      'welkomst-tekst': 'welkomst',
+      'headerfoto': 'headerfoto',
+      'hoofdtitel': 'tekstvelden',
+      'subtitle': 'tekstvelden',
+      'namen': 'tekstvelden',
+      'initialen': 'tekstvelden',
+      'datum': 'tekstvelden',
+      'locatie': 'tekstvelden',
+    }
+    const section = sectionForField[field] ?? 'tekstvelden'
+
     setPreviewPage("Home")
     setActiveSection('paginas')
     setActiveSubPage('Home')
+    setOpenHomeSection(section)
     setHpOpenGear(field)
-    // Wait for sidebar to render before scrolling/focusing
+    // Wait for sidebar+accordion to render before scrolling/focusing
     setTimeout(() => {
       const el = document.getElementById(`hp-field-${field}`)
       if (!el) return
@@ -1116,46 +1130,56 @@ export default function BouwenPage() {
               <span className="hidden sm:inline">Mijn Dashboard</span>
             </button>
 
-            {/* Auto-save status — klikbaar als force-save of bij fout */}
-            {anyUploading ? (
-              <span className="inline-flex items-center gap-1.5 text-gray-400 text-sm px-3 py-2.5">
-                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                </svg>
-                Uploaden...
-              </span>
-            ) : saving ? (
-              <span className="inline-flex items-center gap-1.5 text-gray-400 text-sm px-3 py-2.5">
-                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                </svg>
-                Opslaan...
-              </span>
-            ) : saveError ? (
-              <button
-                onClick={handleSave}
-                className="inline-flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-semibold px-3 py-2.5 rounded-xl border border-red-200 transition-all"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Opnieuw proberen
-              </button>
-            ) : justSaved ? (
-              <span className="inline-flex items-center gap-1.5 text-emerald-600 text-sm px-3 py-2.5">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-                Opgeslagen
-              </span>
-            ) : hasPendingChanges ? (
-              <span className="inline-flex items-center gap-1.5 text-gray-400 text-sm px-3 py-2.5">
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                Niet opgeslagen
-              </span>
-            ) : null}
+            {/* Opslaan knop + auto-save melding */}
+            <div className="flex flex-col items-end gap-0.5">
+              {anyUploading ? (
+                <button disabled className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-400 text-sm font-semibold px-4 py-2 rounded-xl cursor-not-allowed">
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                  </svg>
+                  Uploaden...
+                </button>
+              ) : saving ? (
+                <button disabled className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-400 text-sm font-semibold px-4 py-2 rounded-xl cursor-not-allowed">
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                  </svg>
+                  Opslaan...
+                </button>
+              ) : saveError ? (
+                <button
+                  onClick={handleSave}
+                  className="inline-flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-semibold px-4 py-2 rounded-xl border border-red-200 transition-all"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Opnieuw proberen
+                </button>
+              ) : hasPendingChanges ? (
+                <button
+                  onClick={handleSave}
+                  className="inline-flex items-center gap-1.5 bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold px-4 py-2 rounded-xl shadow-sm hover:shadow transition-all"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                  </svg>
+                  Opslaan
+                </button>
+              ) : (
+                <button disabled className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-600 text-sm font-semibold px-4 py-2 rounded-xl border border-emerald-200 cursor-default">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  Opgeslagen
+                </button>
+              )}
+              {hasPendingChanges && !saving && !anyUploading && (
+                <span className="text-[10px] text-gray-400 pr-1">Wordt automatisch opgeslagen</span>
+              )}
+            </div>
 
             {/* Publiceren / Bekijk live site */}
             {isPublished ? (
