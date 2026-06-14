@@ -2847,115 +2847,127 @@ export default function BouwenPage() {
                       )}
                       {showSection("RSVP") && (
                         <div style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "RSVP") } : undefined}>
-                        <div className="px-8 py-10" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
-                          <h2 className="text-2xl mb-6" style={{ color: sc.headingColor, fontFamily: sc.fontPageTitles, fontWeight: sc.fontPageTitlesWeight }}>RSVP</h2>
-                          <div className="flex flex-col gap-6 max-w-lg">
-                            <p className="text-sm" style={{ color: sc.bodyText }}>{(content.RSVP?.text as string) || "Laat weten of je erbij bent — vul het formulier in."}</p>
-                            {rsvpDeadlinePassed ? (
-                              <div className="rounded-2xl p-6 text-center" style={{ backgroundColor: "#f9fafb", border: "1px solid #e5e7eb" }}>
-                                <div className="text-sm font-bold text-gray-700 mb-1">Aanmelden is gesloten</div>
-                                <div className="text-xs text-gray-500">De uiterste RSVP-datum is verstreken.</div>
-                              </div>
-                            ) : (
-                              <>
-                                {/* Ben je erbij? */}
-                                <div>
-                                  <div className="text-sm font-semibold mb-3" style={{ color: sc.bodyText }}>Ben je erbij?</div>
-                                  <div className="flex flex-col gap-2 sm:flex-row">
-                                    <div className="flex-1 py-3 px-4 rounded-xl font-semibold text-sm flex items-center gap-3"
-                                      style={{ backgroundColor: "#ecfdf5", border: "2px solid #10b981", color: "#065f46" }}>
-                                      <span>✓</span> Ja, ik ben erbij!
-                                    </div>
-                                    <div className="flex-1 py-3 px-4 rounded-xl font-semibold text-sm flex items-center gap-3"
-                                      style={{ backgroundColor: "#f9fafb", border: "2px solid #e5e7eb", color: "#6b7280" }}>
-                                      <span>✕</span> Nee, ik kan helaas niet komen.
-                                    </div>
-                                  </div>
+                        <div style={{ padding: "36px 32px 64px", textAlign: "center", backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
+                          <h1 style={{ fontSize: "1.75rem", fontWeight: sc.fontPageTitlesWeight, color: sc.headingColor, fontFamily: sc.fontPageTitles, margin: "0 0 28px" }}>RSVP</h1>
+                          <div style={{ maxWidth: 480, marginLeft: "auto", marginRight: "auto" }}>
+                            {(() => {
+                              const rsvpLabelColor = sc.goldBorder ? (sc.cardText ?? sc.bodyText) : sc.bodyText
+                              const cardInner = rsvpDeadlinePassed ? (
+                                <div className="rounded-2xl p-6 text-center" style={{ backgroundColor: "#f9fafb", border: "1px solid #e5e7eb" }}>
+                                  <div className="text-sm font-bold text-gray-700 mb-1">Aanmelden is gesloten</div>
+                                  <div className="text-xs text-gray-500">De uiterste RSVP-datum is verstreken.</div>
                                 </div>
-                                {/* Aantal personen */}
-                                <div>
-                                  <div className="text-sm font-semibold mb-3" style={{ color: sc.bodyText }}>Met hoeveel personen komen jullie?</div>
-                                  <div className="flex gap-2 flex-wrap">
-                                    {[1,2,3,4,5,6,7,8].map((n) => (
-                                      <div key={n} className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold"
-                                        style={n === 1
-                                          ? { backgroundColor: sc.accent, color: "#fff", border: `2px solid ${sc.accent}` }
-                                          : { backgroundColor: "transparent", color: "#6b7280", border: "2px solid #e5e7eb" }
-                                        }>
-                                        {n}
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                                {/* Hoofdgast card */}
-                                <div className="rounded-2xl p-5 flex flex-col gap-4" style={{ backgroundColor: "#f9fafb", border: "1px solid #f3f4f6" }}>
-                                  <div className="text-xs font-bold uppercase tracking-widest" style={{ color: "#9ca3af" }}>Hoofdgast</div>
+                              ) : (
+                                <div className="flex flex-col gap-6" style={{ textAlign: "left" }}>
+                                  <p style={{ fontSize: "0.9375rem", marginBottom: 0, color: rsvpLabelColor }}>{(content.RSVP?.text as string) || "Laat weten of je erbij bent — vul het formulier in."}</p>
+                                  {/* Ben je erbij? */}
                                   <div>
-                                    <div className="text-sm font-semibold mb-1.5" style={{ color: "#374151" }}>Naam *</div>
-                                    <div className="w-full h-10 rounded-xl border border-gray-200 bg-white px-4 flex items-center shadow-sm">
-                                      <span className="text-sm text-gray-400">Voornaam</span>
+                                    <div className="text-sm font-semibold mb-3" style={{ color: rsvpLabelColor }}>Ben je erbij?</div>
+                                    <div className="flex flex-col gap-2 sm:flex-row">
+                                      <div className="flex-1 py-3 px-4 rounded-xl font-semibold text-sm flex items-center gap-3"
+                                        style={{ backgroundColor: "#ecfdf5", border: "2px solid #10b981", color: "#065f46" }}>
+                                        <span>✓</span> Ja, ik ben erbij!
+                                      </div>
+                                      <div className="flex-1 py-3 px-4 rounded-xl font-semibold text-sm flex items-center gap-3"
+                                        style={{ backgroundColor: "#f9fafb", border: "2px solid #e5e7eb", color: "#6b7280" }}>
+                                        <span>✕</span> Nee, ik kan helaas niet komen.
+                                      </div>
                                     </div>
                                   </div>
-                                  {rsvpGuestTypes.length > 1 && (
+                                  {/* Aantal personen */}
+                                  <div>
+                                    <div className="text-sm font-semibold mb-3" style={{ color: rsvpLabelColor }}>Met hoeveel personen komen jullie?</div>
+                                    <div className="flex gap-2 flex-wrap">
+                                      {[1,2,3,4,5,6,7,8].map((n) => (
+                                        <div key={n} className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold"
+                                          style={n === 1
+                                            ? { backgroundColor: sc.accent, color: "#fff", border: `2px solid ${sc.accent}` }
+                                            : { backgroundColor: "transparent", color: "#6b7280", border: "2px solid #e5e7eb" }
+                                          }>
+                                          {n}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                  {/* Hoofdgast card */}
+                                  <div className="rounded-2xl p-5 flex flex-col gap-4" style={{ backgroundColor: "#f9fafb", border: "1px solid #f3f4f6" }}>
+                                    <div className="text-xs font-bold uppercase tracking-widest" style={{ color: "#9ca3af" }}>Hoofdgast</div>
                                     <div>
-                                      <div className="text-sm font-semibold mb-1.5" style={{ color: "#374151" }}>Type gast</div>
-                                      <div className="flex gap-2 flex-wrap">
-                                        {rsvpGuestTypes.map((t, ti) => (
-                                          <div key={t} className="flex-1 h-9 rounded-xl flex items-center justify-center text-sm font-semibold"
-                                            style={ti === 0
-                                              ? { backgroundColor: sc.accent, color: "#fff", border: `2px solid ${sc.accent}` }
-                                              : { backgroundColor: "transparent", color: "#6b7280", border: "2px solid #e5e7eb" }
-                                            }>
-                                            {RSVP_GUEST_LABELS[t] ?? t}
-                                          </div>
-                                        ))}
+                                      <div className="text-sm font-semibold mb-1.5" style={{ color: "#374151" }}>Naam *</div>
+                                      <div className="w-full h-10 rounded-xl border border-gray-200 bg-white px-4 flex items-center shadow-sm">
+                                        <span className="text-sm text-gray-400">Voornaam</span>
+                                      </div>
+                                    </div>
+                                    {rsvpGuestTypes.length > 1 && (
+                                      <div>
+                                        <div className="text-sm font-semibold mb-1.5" style={{ color: "#374151" }}>Type gast</div>
+                                        <div className="flex gap-2 flex-wrap">
+                                          {rsvpGuestTypes.map((t, ti) => (
+                                            <div key={t} className="flex-1 h-9 rounded-xl flex items-center justify-center text-sm font-semibold"
+                                              style={ti === 0
+                                                ? { backgroundColor: sc.accent, color: "#fff", border: `2px solid ${sc.accent}` }
+                                                : { backgroundColor: "transparent", color: "#6b7280", border: "2px solid #e5e7eb" }
+                                              }>
+                                              {RSVP_GUEST_LABELS[t] ?? t}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                    <div>
+                                      <div className="text-sm font-semibold mb-1.5" style={{ color: "#374151" }}>Dieetwensen / Allergieën</div>
+                                      <div className="w-full h-10 rounded-xl border border-gray-200 bg-white px-4 flex items-center shadow-sm">
+                                        <span className="text-sm text-gray-400">Bijv. vegetarisch, notenallergie</span>
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <div className="text-sm font-semibold mb-1.5" style={{ color: "#374151" }}>E-mailadres *</div>
+                                      <div className="w-full h-10 rounded-xl border border-gray-200 bg-white px-4 flex items-center shadow-sm">
+                                        <span className="text-sm text-gray-400">jouw@email.nl</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  {/* Song request */}
+                                  {rsvpShowSong && (
+                                    <div>
+                                      <div className="text-sm font-semibold mb-1.5" style={{ color: rsvpLabelColor }}>
+                                        Welk nummer brengt jou gegarandeerd naar de dansvloer?{" "}
+                                        <span style={{ color: "#9ca3af", fontWeight: 400 }}>(optioneel)</span>
+                                      </div>
+                                      <div className="w-full h-10 rounded-xl border border-gray-200 bg-white px-4 flex items-center shadow-sm">
+                                        <span className="text-sm text-gray-400">Artiest — Nummertitel</span>
                                       </div>
                                     </div>
                                   )}
-                                  <div>
-                                    <div className="text-sm font-semibold mb-1.5" style={{ color: "#374151" }}>Dieetwensen / Allergieën</div>
-                                    <div className="w-full h-10 rounded-xl border border-gray-200 bg-white px-4 flex items-center shadow-sm">
-                                      <span className="text-sm text-gray-400">Bijv. vegetarisch, notenallergie</span>
-                                    </div>
-                                  </div>
-                                  <div>
-                                    <div className="text-sm font-semibold mb-1.5" style={{ color: "#374151" }}>E-mailadres *</div>
-                                    <div className="w-full h-10 rounded-xl border border-gray-200 bg-white px-4 flex items-center shadow-sm">
-                                      <span className="text-sm text-gray-400">jouw@email.nl</span>
-                                    </div>
+                                  {/* Overnachting */}
+                                  {rsvpShowOvernachting && (
+                                    <PreviewYesNo label="Blijven jullie overnachten?" />
+                                  )}
+                                  {/* Eigen vraag 1 */}
+                                  {rsvpCustomQuestion.trim() && (
+                                    <PreviewYesNo label={rsvpCustomQuestion} />
+                                  )}
+                                  {/* Eigen vraag 2 */}
+                                  {rsvpCustomQuestion2.trim() && (
+                                    <PreviewYesNo label={rsvpCustomQuestion2} />
+                                  )}
+                                  {/* Aanmelden knop */}
+                                  <div className="w-full h-12 rounded-xl flex items-center justify-center text-sm font-bold shadow-md"
+                                    style={{ backgroundColor: sc.accent, color: "#fff" }}>
+                                    Aanmelden
                                   </div>
                                 </div>
-                                {/* Song request */}
-                                {rsvpShowSong && (
-                                  <div>
-                                    <div className="text-sm font-semibold mb-1.5" style={{ color: "#374151" }}>
-                                      Welk nummer brengt jou gegarandeerd naar de dansvloer?{" "}
-                                      <span style={{ color: "#9ca3af", fontWeight: 400 }}>(optioneel)</span>
-                                    </div>
-                                    <div className="w-full h-10 rounded-xl border border-gray-200 bg-white px-4 flex items-center shadow-sm">
-                                      <span className="text-sm text-gray-400">Artiest — Nummertitel</span>
-                                    </div>
-                                  </div>
-                                )}
-                                {/* Overnachting */}
-                                {rsvpShowOvernachting && (
-                                  <PreviewYesNo label="Blijven jullie overnachten?" />
-                                )}
-                                {/* Eigen vraag 1 */}
-                                {rsvpCustomQuestion.trim() && (
-                                  <PreviewYesNo label={rsvpCustomQuestion} />
-                                )}
-                                {/* Eigen vraag 2 */}
-                                {rsvpCustomQuestion2.trim() && (
-                                  <PreviewYesNo label={rsvpCustomQuestion2} />
-                                )}
-                                {/* Aanmelden knop */}
-                                <div className="w-full h-12 rounded-xl flex items-center justify-center text-sm font-bold shadow-md"
-                                  style={{ backgroundColor: sc.accent, color: "#fff" }}>
-                                  Aanmelden
+                              )
+                              return sc.goldBorder && sc.cardBg ? (
+                                <div style={{ backgroundColor: sc.cardBg, border: `2px solid ${sc.accent}`, borderRadius: 16, padding: "28px 32px" }}>
+                                  {cardInner}
                                 </div>
-                              </>
-                            )}
+                              ) : (
+                                <div style={{ borderRadius: 16, border: `1px solid ${sc.accent}20`, backgroundColor: `${sc.accent}08`, padding: "28px 32px" }}>
+                                  {cardInner}
+                                </div>
+                              )
+                            })()}
                           </div>
                         </div>
                         </div>

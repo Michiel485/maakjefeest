@@ -267,6 +267,16 @@ export default function EventHomePreview({
                   className="absolute inset-0 w-full h-full object-cover select-none"
                   style={{ objectPosition: `${heroPos.x}% ${heroPos.y}%` }}
                 />
+                {showOverlay && (
+                  <div
+                    className="absolute inset-0"
+                    style={
+                      sc.floral
+                        ? { background: "linear-gradient(to bottom, rgba(28,25,23,0.12) 0%, rgba(28,25,23,0.44) 100%)" }
+                        : { backgroundColor: sc.accent, opacity: 0.35 }
+                    }
+                  />
+                )}
                 {/* Hoofdtitel overlay op foto wanneer "Over foto" gekozen */}
                 {(hp.hoofdtitelVisible !== false) && title && (hp.titlePosition ?? 'under') === 'over' && (
                   <div className="absolute inset-0 flex items-end justify-center pb-6 @md:pb-10 px-6"
