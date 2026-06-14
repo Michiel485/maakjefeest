@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useRef, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
+import { createClient } from "@/lib/supabase"
 
 const GOLD       = "#C5A059"
 const GOLD_LIGHT = "#E8D5A3"
@@ -88,6 +89,7 @@ function CheckoutContent() {
 
   const [event, setEvent]               = useState<EventData | null>(null)
   const [loadingEvent, setLoadingEvent] = useState(true)
+  const [userEmail, setUserEmail]       = useState<string | null>(null)
   const [paymentOk, setPaymentOk]       = useState<boolean | null>(fromMollie ? null : false)
   const [paying, setPaying]             = useState(false)
   const [activatingFree, setActivatingFree] = useState(false)
@@ -143,6 +145,12 @@ function CheckoutContent() {
     return () => { if (pollRef.current) clearTimeout(pollRef.current) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [event_id])
+
+  useEffect(() => {
+    createClient().auth.getUser().then(({ data }) => {
+      if (data.user?.email) setUserEmail(data.user.email)
+    })
+  }, [])
 
   function handleCodeChange(val: string) {
     setCodeInput(val)
@@ -274,6 +282,27 @@ function CheckoutContent() {
           </div>
         </div>
       </div>
+
+      {/* Email confirmation */}
+      {userEmail && (
+        <div
+          className="flex items-start gap-3 rounded-xl px-4 py-3.5 mb-5"
+          style={{ backgroundColor: GOLD_BG, border: `1px solid ${GOLD_LIGHT}` }}
+        >
+          <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke={GOLD} strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          <p className="text-xs leading-relaxed" style={{ color: BODY }}>
+            Factuur en bevestiging worden verstuurd naar{" "}
+            <strong style={{ color: CHARCOAL }}>{userEmail}</strong>.{" "}
+            Klopt dit niet?{" "}
+            <Link href="/dashboard" className="underline transition-opacity hover:opacity-70" style={{ color: GOLD }}>
+              Pas je account aan
+            </Link>
+            .
+          </p>
+        </div>
+      )}
 
       {/* Discount code */}
       <div className="mb-5">

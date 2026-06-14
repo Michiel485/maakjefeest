@@ -786,6 +786,7 @@ export async function sendInvoiceEmail({
   btwAmount,
   amountIncl,
   molliePaymentId,
+  pdfBuffer,
 }: {
   toEmail: string
   invoiceNumber: string
@@ -795,6 +796,7 @@ export async function sendInvoiceEmail({
   btwAmount: string
   amountIncl: string
   molliePaymentId: string
+  pdfBuffer?: Buffer
 }) {
   const html = `<!DOCTYPE html>
 <html lang="nl">
@@ -918,6 +920,12 @@ export async function sendInvoiceEmail({
       to:      [toEmail],
       subject: `Factuur ${invoiceNumber} — SayingYes`,
       html,
+      ...(pdfBuffer ? {
+        attachments: [{
+          filename: `factuur-${invoiceNumber}.pdf`,
+          content:  pdfBuffer,
+        }],
+      } : {}),
     })
 
     if (error) {
