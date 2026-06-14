@@ -57,15 +57,12 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
           )}
         </div>
         <h3
-          className="text-lg"
-          style={{ fontFamily: "var(--font-cormorant)", fontWeight: 700, color: CHARCOAL }}
+          className="text-lg font-mono"
+          style={{ fontWeight: 700, color: CHARCOAL }}
         >
-          {event.title}
+          {isDraft ? `sayingyes.nl/events/${event.slug}` : `${event.slug}.sayingyes.nl`}
         </h3>
         <p className="text-xs mt-0.5" style={{ color: BODY }}>Opgeslagen op {date}</p>
-        <p className="text-xs mt-1 font-mono" style={{ color: `${BODY}80` }}>
-          {isDraft ? `sayingyes.nl/events/${event.slug}` : `${event.slug}.sayingyes.nl`}
-        </p>
         <div className="mt-2">
           <SlugEditor eventId={event.id} currentSlug={event.slug} isLive={!isDraft} />
         </div>
