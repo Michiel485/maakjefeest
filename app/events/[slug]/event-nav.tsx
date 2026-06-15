@@ -159,28 +159,30 @@ export default function EventNav({
 
   const linksJustify = navLayout === "left" ? "justify-start" : "justify-center"
 
+  const hamburgerBtn = (
+    <button
+      className="flex flex-col justify-center items-center gap-1.5 p-1 rounded-lg transition-colors"
+      style={{ color: sc.navText }}
+      onClick={() => setMenuOpen((o) => !o)}
+      aria-label="Menu"
+    >
+      {menuOpen
+        ? <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        : <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
+      }
+    </button>
+  )
+
   // ── Stacked layout: title centered above links ────────────────────────────
   if (navLayout === "stacked") {
     return (
       <div className="@container">
         <style>{navHoverStyle}</style>
         <nav className="notranslate sticky top-0 z-50 px-8 border-b backdrop-blur-sm" style={navStyle}>
-          {/* Mobile row */}
-          <div className="flex items-center justify-end py-4 gap-4 @md:hidden">
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <LanguageSwitcher accent={sc.accent} textColor={sc.navText} bgColor={sc.navBg} />
-              <button
-                className="flex flex-col justify-center items-center gap-1.5 p-1 rounded-lg"
-                style={{ color: sc.navText }}
-                onClick={() => setMenuOpen((o) => !o)}
-                aria-label="Menu"
-              >
-                {menuOpen
-                  ? <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                  : <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
-                }
-              </button>
-            </div>
+          {/* Mobile row: language left, hamburger right */}
+          <div className="flex items-center justify-between py-4 @md:hidden">
+            <LanguageSwitcher accent={sc.accent} textColor={sc.navText} bgColor={sc.navBg} />
+            {hamburgerBtn}
           </div>
           {/* Desktop: column */}
           <div className="hidden @md:flex flex-col items-center gap-2 py-5 relative">
@@ -207,8 +209,14 @@ export default function EventNav({
       <style>{navHoverStyle}</style>
       <nav ref={navRef} className="notranslate sticky top-0 z-50 px-8 border-b backdrop-blur-sm" style={navStyle}>
 
-        {/* Top strip: (links when single-row) + controls */}
+        {/* Top strip */}
         <div className="flex items-center justify-between gap-4 py-4">
+
+          {/* Language switcher: left on mobile, hidden on desktop (desktop version is in ctrlRef) */}
+          <div className="@md:hidden flex-shrink-0">
+            <LanguageSwitcher accent={sc.accent} textColor={sc.navText} bgColor={sc.navBg} />
+          </div>
+
           {/* Links inline — shown on desktop only when they fit on one row */}
           <div
             ref={linksRef}
@@ -217,20 +225,14 @@ export default function EventNav({
             {pageLinks}
           </div>
 
-          {/* Controls: language switcher + hamburger */}
+          {/* Right controls: language switcher (desktop) + hamburger (mobile) */}
           <div ref={ctrlRef} className="flex items-center gap-2 flex-shrink-0">
-            <LanguageSwitcher accent={sc.accent} textColor={sc.navText} bgColor={sc.navBg} />
-            <button
-              className="@md:hidden flex flex-col justify-center items-center gap-1.5 p-1 rounded-lg transition-colors"
-              style={{ color: sc.navText }}
-              onClick={() => setMenuOpen((o) => !o)}
-              aria-label="Menu"
-            >
-              {menuOpen
-                ? <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                : <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
-              }
-            </button>
+            <div className="hidden @md:flex">
+              <LanguageSwitcher accent={sc.accent} textColor={sc.navText} bgColor={sc.navBg} />
+            </div>
+            <div className="@md:hidden">
+              {hamburgerBtn}
+            </div>
           </div>
         </div>
 

@@ -1,5 +1,13 @@
 import React from "react"
-import { Document, Page, Text, View, StyleSheet, renderToBuffer } from "@react-pdf/renderer"
+import { Document, Page, Text, View, StyleSheet, renderToBuffer, Font } from "@react-pdf/renderer"
+
+Font.register({
+  family: "CormorantGaramond",
+  fonts: [
+    { src: "https://fonts.gstatic.com/l/font?kit=co3umX5slCNuHLi8bLeY9MK7whWMhyjypVO7abI26QOD_v86GnI&skey=a863d1376a24bd7a&v=v21", fontWeight: 400 },
+    { src: "https://fonts.gstatic.com/l/font?kit=co3umX5slCNuHLi8bLeY9MK7whWMhyjypVO7abI26QOD_iE9GnI&skey=a863d1376a24bd7a&v=v21", fontWeight: 600 },
+  ],
+})
 
 const GOLD    = "#C5A059"
 const DARK    = "#1A1A1A"
@@ -7,50 +15,51 @@ const BODY    = "#5C5248"
 const LIGHT   = "#9A8E82"
 const BORDER  = "#E8D5A3"
 const BG      = "#FBF5E8"
+const AMT_W   = 88
 
 const s = StyleSheet.create({
-  page:          { fontFamily: "Helvetica", fontSize: 10, color: DARK, backgroundColor: "#ffffff", paddingHorizontal: 48, paddingVertical: 48 },
-  header:        { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 32, paddingBottom: 20, borderBottomWidth: 1, borderBottomColor: BORDER },
-  brand:         { fontSize: 20, color: GOLD, fontFamily: "Helvetica-Bold", letterSpacing: 1 },
-  brandSub:      { fontSize: 8, color: LIGHT, marginTop: 3, lineHeight: 1.6 },
-  invoiceLabel:  { fontSize: 18, fontFamily: "Helvetica-Bold", color: GOLD, letterSpacing: 1, textAlign: "right" },
-  invoiceNum:    { fontSize: 9, color: BODY, textAlign: "right", marginTop: 3 },
-  metaRow:       { flexDirection: "row", marginBottom: 28, gap: 40 },
-  metaBlock:     { flex: 1 },
-  metaLabel:     { fontSize: 7, color: LIGHT, fontFamily: "Helvetica-Bold", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 },
-  metaValue:     { fontSize: 10, color: DARK, lineHeight: 1.6 },
-  metaValueSub:  { fontSize: 8.5, color: BODY, lineHeight: 1.6 },
-  tableHeader:   { flexDirection: "row", backgroundColor: BG, paddingVertical: 7, paddingHorizontal: 10, borderTopWidth: 1, borderTopColor: BORDER, borderBottomWidth: 1, borderBottomColor: BORDER },
-  tableHeaderTxt:{ fontSize: 7, fontFamily: "Helvetica-Bold", color: LIGHT, textTransform: "uppercase", letterSpacing: 0.8 },
-  tableRow:      { flexDirection: "row", paddingVertical: 12, paddingHorizontal: 10, borderBottomWidth: 1, borderBottomColor: BORDER },
-  tableDesc:     { flex: 1 },
-  tableDescMain: { fontSize: 10, color: DARK },
-  tableDescSub:  { fontSize: 8.5, color: LIGHT, marginTop: 2 },
-  tableAmt:      { width: 72, textAlign: "right", fontSize: 10, color: DARK },
-  totalsBlock:   { marginTop: 4, alignItems: "flex-end" },
-  totalRow:      { flexDirection: "row", gap: 40, paddingVertical: 3 },
-  totalLabel:    { fontSize: 9, color: BODY, textAlign: "right", width: 120 },
-  totalValue:    { fontSize: 9, color: BODY, textAlign: "right", width: 72 },
-  divider:       { width: 192, height: 1, backgroundColor: DARK, marginVertical: 6, alignSelf: "flex-end" },
-  totalFinalLabel:{ fontSize: 11, fontFamily: "Helvetica-Bold", color: DARK, textAlign: "right", width: 120 },
-  totalFinalValue:{ fontSize: 11, fontFamily: "Helvetica-Bold", color: DARK, textAlign: "right", width: 72 },
-  note:          { marginTop: 32, paddingTop: 14, borderTopWidth: 1, borderTopColor: BORDER },
-  noteTxt:       { fontSize: 8.5, color: LIGHT, lineHeight: 1.7 },
-  footer:        { position: "absolute", bottom: 30, left: 48, right: 48, borderTopWidth: 1, borderTopColor: BORDER, paddingTop: 10, flexDirection: "row", justifyContent: "space-between" },
-  footerTxt:     { fontSize: 8, color: LIGHT },
+  page:           { fontFamily: "Helvetica", fontSize: 10, color: DARK, backgroundColor: "#ffffff", paddingHorizontal: 48, paddingVertical: 48 },
+  header:         { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 32, paddingBottom: 20, borderBottomWidth: 1, borderBottomColor: BORDER },
+  brand:          { fontSize: 26, color: GOLD, fontFamily: "CormorantGaramond", fontWeight: 600, letterSpacing: 1.2 },
+  brandSub:       { fontSize: 8, color: LIGHT, marginTop: 5, lineHeight: 1.6 },
+  invoiceLabel:   { fontSize: 22, fontFamily: "CormorantGaramond", fontWeight: 600, color: GOLD, letterSpacing: 2, textAlign: "right" },
+  invoiceNum:     { fontSize: 9, color: BODY, textAlign: "right", marginTop: 4 },
+  metaRow:        { flexDirection: "row", marginBottom: 28, gap: 40 },
+  metaBlock:      { flex: 1 },
+  metaLabel:      { fontSize: 7, color: LIGHT, fontFamily: "Helvetica-Bold", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 },
+  metaValue:      { fontSize: 10, color: DARK, lineHeight: 1.6 },
+  metaValueSub:   { fontSize: 8.5, color: BODY, lineHeight: 1.6 },
+  tableHeader:    { flexDirection: "row", backgroundColor: BG, paddingVertical: 7, paddingHorizontal: 10, borderTopWidth: 1, borderTopColor: BORDER, borderBottomWidth: 1, borderBottomColor: BORDER },
+  tableHeaderTxt: { fontSize: 7, fontFamily: "Helvetica-Bold", color: LIGHT, textTransform: "uppercase", letterSpacing: 0.8 },
+  tableRow:       { flexDirection: "row", paddingVertical: 12, paddingHorizontal: 10, borderBottomWidth: 1, borderBottomColor: BORDER },
+  tableDesc:      { flex: 1 },
+  tableDescMain:  { fontSize: 10, color: DARK },
+  tableDescSub:   { fontSize: 8.5, color: LIGHT, marginTop: 2 },
+  tableAmt:       { width: AMT_W, textAlign: "right", fontSize: 10, color: DARK },
+  totalsBlock:    { marginTop: 4 },
+  totalRow:       { flexDirection: "row", paddingVertical: 3 },
+  totalLabel:     { flex: 1, fontSize: 9, color: BODY, textAlign: "right", paddingRight: 10 },
+  totalValue:     { width: AMT_W, fontSize: 9, color: BODY, textAlign: "right" },
+  divider:        { height: 1, backgroundColor: DARK, marginVertical: 6 },
+  totalFinalLabel:{ flex: 1, fontSize: 11, fontFamily: "Helvetica-Bold", color: DARK, textAlign: "right", paddingRight: 10 },
+  totalFinalValue:{ width: AMT_W, fontSize: 11, fontFamily: "Helvetica-Bold", color: DARK, textAlign: "right" },
+  note:           { marginTop: 32, paddingTop: 14, borderTopWidth: 1, borderTopColor: BORDER },
+  noteTxt:        { fontSize: 8.5, color: LIGHT, lineHeight: 1.7 },
+  footer:         { position: "absolute", bottom: 30, left: 48, right: 48, borderTopWidth: 1, borderTopColor: BORDER, paddingTop: 10, flexDirection: "row", justifyContent: "space-between" },
+  footerTxt:      { fontSize: 8, color: LIGHT },
 })
 
 interface InvoicePDFProps {
-  invoiceNumber:    string
-  invoiceDate:      string
-  customerName:     string
-  customerEmail:    string
-  amountExcl:       string
-  btwAmount:        string
-  amountIncl:       string
-  btwRate:          number
-  molliePaymentId:  string
-  description:      string
+  invoiceNumber:   string
+  invoiceDate:     string
+  customerName:    string
+  customerEmail:   string
+  amountExcl:      string
+  btwAmount:       string
+  amountIncl:      string
+  btwRate:         number
+  molliePaymentId: string
+  description:     string
 }
 
 function InvoiceDocument(props: InvoicePDFProps) {
@@ -97,7 +106,7 @@ function InvoiceDocument(props: InvoicePDFProps) {
         {/* Table */}
         <View style={s.tableHeader}>
           <Text style={[s.tableHeaderTxt, { flex: 1 }]}>Omschrijving</Text>
-          <Text style={[s.tableHeaderTxt, { width: 72, textAlign: "right" }]}>Bedrag</Text>
+          <Text style={[s.tableHeaderTxt, { width: AMT_W, textAlign: "right" }]}>Bedrag</Text>
         </View>
 
         <View style={s.tableRow}>
