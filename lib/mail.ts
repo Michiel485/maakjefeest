@@ -67,8 +67,9 @@ export async function sendRSVPConfirmation(data: RSVPConfirmationData) {
 
   const html = `<!DOCTYPE html>
 <html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet"></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f5f1ec;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <style>@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&display=swap');</style>
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f1ec;padding:40px 16px;">
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);">
@@ -76,7 +77,7 @@ export async function sendRSVPConfirmation(data: RSVPConfirmationData) {
         <!-- Header -->
         <tr>
           <td bgcolor="#c9a96e" style="background-color:#c9a96e;padding:40px 40px 32px;text-align:center;">
-            <p style="margin:0 0 8px;font-size:22px;font-weight:600;letter-spacing:0.01em;color:#f5ead6;font-family:'Cormorant Garamond','Georgia',serif;">SayingYes</p>
+            <p style="margin:0 0 8px;font-size:26px;font-weight:600;letter-spacing:0.06em;color:#f5ead6;font-family:'Cormorant Garamond','Georgia',serif;">SayingYes</p>
             <h1 style="margin:0;font-size:26px;font-weight:800;color:#111827;line-height:1.2;">${headline}</h1>
           </td>
         </tr>
@@ -153,8 +154,9 @@ export async function sendFirstSaveWelcomeEmail(
 ) {
   const html = `<!DOCTYPE html>
 <html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet"></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f5f1ec;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <style>@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&display=swap');</style>
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f1ec;padding:40px 16px;">
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);">
@@ -162,7 +164,7 @@ export async function sendFirstSaveWelcomeEmail(
         <!-- Header -->
         <tr>
           <td bgcolor="#c9a96e" style="background-color:#c9a96e;padding:44px 40px 36px;text-align:center;">
-            <p style="margin:0 0 10px;font-size:22px;font-weight:600;letter-spacing:0.01em;color:#f5ead6;font-family:'Cormorant Garamond','Georgia',serif;">SayingYes</p>
+            <p style="margin:0 0 10px;font-size:26px;font-weight:600;letter-spacing:0.06em;color:#f5ead6;font-family:'Cormorant Garamond','Georgia',serif;">SayingYes</p>
             <h1 style="margin:0;font-size:26px;font-weight:800;color:#111827;line-height:1.25;">Ja, de basis staat! 💍</h1>
             <p style="margin:10px 0 0;font-size:14px;color:#2d1f0e;font-weight:500;">Welkom bij SayingYes</p>
           </td>
@@ -353,8 +355,9 @@ export async function sendAdminRSVPNotification(data: AdminRSVPNotificationData)
 
   const html = `<!DOCTYPE html>
 <html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet"></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f3f4f6;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <style>@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&display=swap');</style>
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:40px 16px;">
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
@@ -362,7 +365,7 @@ export async function sendAdminRSVPNotification(data: AdminRSVPNotificationData)
         <!-- Header -->
         <tr>
           <td bgcolor="#1f2937" style="background-color:#1f2937;padding:32px 40px;text-align:center;">
-            <p style="margin:0 0 4px;font-size:22px;font-weight:600;letter-spacing:0.01em;color:#d1d5db;font-family:'Cormorant Garamond','Georgia',serif;">SayingYes</p>
+            <p style="margin:0 0 4px;font-size:26px;font-weight:600;letter-spacing:0.06em;color:#d1d5db;font-family:'Cormorant Garamond','Georgia',serif;">SayingYes</p>
             <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:0.14em;color:#9ca3af;text-transform:uppercase;">Beheerdersbericht</p>
             <h1 style="margin:0;font-size:22px;font-weight:800;color:#f9fafb;line-height:1.3;">Nieuwe RSVP ontvangen 🍾</h1>
             <p style="margin:8px 0 0;font-size:14px;color:#d1d5db;">${eventTitle}</p>
@@ -437,8 +440,9 @@ export async function sendWebsiteLiveEmail(
 
   const html = `<!DOCTYPE html>
 <html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet"></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f5f1ec;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <style>@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&display=swap');</style>
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f1ec;padding:40px 16px;">
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);">
@@ -446,7 +450,7 @@ export async function sendWebsiteLiveEmail(
         <!-- Header -->
         <tr>
           <td bgcolor="#c9a96e" style="background-color:#c9a96e;padding:44px 40px 36px;text-align:center;">
-            <p style="margin:0 0 10px;font-size:22px;font-weight:600;letter-spacing:0.01em;color:#f5ead6;font-family:'Cormorant Garamond','Georgia',serif;">SayingYes</p>
+            <p style="margin:0 0 10px;font-size:26px;font-weight:600;letter-spacing:0.06em;color:#f5ead6;font-family:'Cormorant Garamond','Georgia',serif;">SayingYes</p>
             <h1 style="margin:0;font-size:27px;font-weight:800;color:#111827;line-height:1.25;">Knal de kurk er maar af! 🍾🚀</h1>
             <p style="margin:10px 0 0;font-size:15px;color:#2d1f0e;font-weight:500;">Jullie trouwwebsite staat LIVE!</p>
           </td>
@@ -566,8 +570,9 @@ export async function sendSignupWelcomeMagicLink({
 }) {
   const html = `<!DOCTYPE html>
 <html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet"></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f5f1ec;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <style>@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&display=swap');</style>
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f1ec;padding:40px 16px;">
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);">
@@ -575,7 +580,7 @@ export async function sendSignupWelcomeMagicLink({
         <!-- Header -->
         <tr>
           <td bgcolor="#c9a96e" style="background-color:#c9a96e;padding:44px 40px 36px;text-align:center;">
-            <p style="margin:0 0 10px;font-size:22px;font-weight:600;letter-spacing:0.01em;color:#f5ead6;font-family:'Cormorant Garamond','Georgia',serif;">SayingYes</p>
+            <p style="margin:0 0 10px;font-size:26px;font-weight:600;letter-spacing:0.06em;color:#f5ead6;font-family:'Cormorant Garamond','Georgia',serif;">SayingYes</p>
             <h1 style="margin:0;font-size:26px;font-weight:800;color:#111827;line-height:1.25;">Ja, de basis staat! 💍</h1>
             <p style="margin:10px 0 0;font-size:14px;color:#2d1f0e;font-weight:500;">Welkom bij SayingYes</p>
           </td>
@@ -693,8 +698,9 @@ export async function sendMagicLink({
 }) {
   const html = `<!DOCTYPE html>
 <html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet"></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f5f1ec;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <style>@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&display=swap');</style>
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f1ec;padding:40px 16px;">
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);">
@@ -702,7 +708,7 @@ export async function sendMagicLink({
         <!-- Header -->
         <tr>
           <td bgcolor="#c9a96e" style="background-color:#c9a96e;padding:44px 40px 36px;text-align:center;">
-            <p style="margin:0 0 10px;font-size:22px;font-weight:600;letter-spacing:0.01em;color:#f5ead6;font-family:'Cormorant Garamond','Georgia',serif;">SayingYes</p>
+            <p style="margin:0 0 10px;font-size:26px;font-weight:600;letter-spacing:0.06em;color:#f5ead6;font-family:'Cormorant Garamond','Georgia',serif;">SayingYes</p>
             <h1 style="margin:0;font-size:26px;font-weight:800;color:#111827;line-height:1.25;">Welkom terug 👋</h1>
           </td>
         </tr>
@@ -800,8 +806,9 @@ export async function sendInvoiceEmail({
 }) {
   const html = `<!DOCTYPE html>
 <html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet"></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f5f1ec;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <style>@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&display=swap');</style>
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f1ec;padding:40px 16px;">
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);">
@@ -812,7 +819,7 @@ export async function sendInvoiceEmail({
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr>
                 <td>
-                  <p style="margin:0 0 2px;font-size:22px;font-weight:600;letter-spacing:0.01em;color:#1a1a1a;font-family:'Cormorant Garamond','Georgia',serif;">SayingYes</p>
+                  <p style="margin:0 0 2px;font-size:26px;font-weight:600;letter-spacing:0.06em;color:#1a1a1a;font-family:'Cormorant Garamond','Georgia',serif;">SayingYes</p>
                   <p style="margin:0;font-size:12px;color:#9b8b6a;">MvB Commerce · KVK 42079472 · BTW NL005478870B96</p>
                   <p style="margin:2px 0 0;font-size:12px;color:#9b8b6a;">Theo Uden Masmanstraat 43, 3813ZE Amersfoort</p>
                 </td>
@@ -980,8 +987,9 @@ export async function sendDraftReminderEmail({
 
   const html = `<!DOCTYPE html>
 <html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet"></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f5f1ec;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <style>@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&display=swap');</style>
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f1ec;padding:40px 16px;">
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);">
@@ -989,7 +997,7 @@ export async function sendDraftReminderEmail({
         <!-- Header -->
         <tr>
           <td bgcolor="#c9a96e" style="background-color:#c9a96e;padding:44px 40px 36px;text-align:center;">
-            <p style="margin:0 0 10px;font-size:22px;font-weight:600;letter-spacing:0.01em;color:#f5ead6;font-family:'Cormorant Garamond','Georgia',serif;">SayingYes</p>
+            <p style="margin:0 0 10px;font-size:26px;font-weight:600;letter-spacing:0.06em;color:#f5ead6;font-family:'Cormorant Garamond','Georgia',serif;">SayingYes</p>
             <h1 style="margin:0;font-size:24px;font-weight:800;color:#111827;line-height:1.25;">${headline}</h1>
           </td>
         </tr>
