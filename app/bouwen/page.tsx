@@ -1107,8 +1107,7 @@ export default function BouwenPage() {
 
       {/* ── Top bar ── */}
       <header className="flex items-center justify-between px-4 md:px-6 py-3 bg-white border-b border-gray-100 shadow-sm flex-shrink-0 z-10">
-        <span className="text-sm font-bold text-rose-600 tracking-tight sm:hidden">SayingYes</span>
-        <span className="text-sm font-bold text-rose-600 tracking-tight hidden sm:block">SayingYes</span>
+        <span className="text-xl tracking-wide" style={{ fontFamily: "var(--font-cormorant)", color: "#C5A059", fontWeight: 600 }}>SayingYes</span>
         <div className="flex flex-col items-end gap-1">
           <div className="flex items-center gap-2">
             {/* Mijn Dashboard */}
