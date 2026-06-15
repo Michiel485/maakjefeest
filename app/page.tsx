@@ -144,6 +144,27 @@ export default function Home() {
             De meest complete trouwsite van Nederland voor slechts{" "}
             <span style={{ color: GOLD_LIGHT, fontWeight: 600 }}>€49,99</span>
           </p>
+
+          {/* Apparaat indicator */}
+          <div className="flex items-center justify-center gap-3 mt-4">
+            <div className="flex items-center gap-1.5" style={{ color: "rgba(232,213,163,0.55)" }}>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <rect x="2" y="3" width="20" height="14" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 21h8M12 17v4" />
+              </svg>
+              <span className="text-xs">Desktop</span>
+            </div>
+            <div style={{ width: 1, height: 12, backgroundColor: "rgba(232,213,163,0.2)" }} />
+            <div className="flex items-center gap-1.5" style={{ color: "rgba(232,213,163,0.55)" }}>
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <rect x="5" y="2" width="14" height="20" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01" strokeWidth={2.5} />
+              </svg>
+              <span className="text-xs">Telefoon</span>
+            </div>
+            <div style={{ width: 1, height: 12, backgroundColor: "rgba(232,213,163,0.2)" }} />
+            <span className="text-xs" style={{ color: "rgba(232,213,163,0.55)" }}>Bouwen op elk apparaat</span>
+          </div>
         </div>
 
         {/* Scroll hint */}
@@ -400,12 +421,13 @@ export default function Home() {
             </h2>
             <div style={{ width: 48, height: 1, backgroundColor: GOLD_LIGHT }} />
             <p className="text-base leading-relaxed" style={{ color: BODY }}>
-              Geen ingewikkelde systemen, maar een unieke, doordachte builder waarin je binnen een paar klikken alles aanpast. Zie live je wijzigingen en beheer moeiteloos je gasten op één centraal dashboard.
+              Geen ingewikkelde systemen, maar een unieke, doordachte builder waarin je binnen een paar klikken alles aanpast — vanaf je desktop én rechtstreeks op je telefoon. Zie live je wijzigingen en beheer moeiteloos je gasten op één centraal dashboard.
             </p>
             <ul className="flex flex-col gap-3 mt-1">
               {[
                 "Live preview terwijl je bouwt",
                 "Stijl, kleuren en lettertypen in één klik",
+                "Volledig te bouwen op desktop én telefoon",
                 "Gasten beheren op jullie eigen dashboard",
                 "RSVP en dieetwensen automatisch bijgehouden",
               ].map((item) => (
@@ -484,12 +506,12 @@ export default function Home() {
               {
                 path: "M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99",
                 title: "Altijd Flexibel",
-                body: "Plannen gewijzigd? Geen paniek. Zelfs na publicatie passen jullie de lay-out, teksten of URL op elk moment direct en kosteloos aan. Jullie houden altijd de volledige controle.",
+                body: "Plannen gewijzigd? Geen paniek. Zelfs na publicatie passen jullie de lay-out, teksten of URL op elk moment aan — ook snel even vanaf de telefoon. Staat iets niet goed? In een paar tikken opgelost.",
               },
               {
                 path: "M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 8.25h3m-3 3.75h3M9 21h.008v.008H9V21zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z",
                 title: "Smartphone-Proof",
-                body: "Op de trouwdag hebben gasten geen laptop bij de hand. Onze websites zijn mobile-first ontworpen — route, dresscode, programma: alles laadt razendsnel en ziet er op elke smartphone spectaculair uit.",
+                body: "Onze websites zijn mobile-first ontworpen — route, dresscode, programma: alles laadt razendsnel en ziet er op elke smartphone spectaculair uit. En de builder zelf? Die gebruik je volledig op je telefoon, zodat je overal en altijd aanpassingen kunt doen.",
               },
               {
                 path: "M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3",
