@@ -127,10 +127,24 @@ export default function EventHomePreview({
   }, [heroPosX, heroPosY]) // eslint-disable-line react-hooks/exhaustive-deps
   const heroRef = useRef<HTMLElement>(null)
   const lastHeroPointer = useRef<{ x: number; y: number } | null>(null)
+  const heroDraggingRef = useRef(false)
+
+  // Native non-passive touchmove listener — React's synthetic handler is passive
+  // and cannot call preventDefault(), so the page would scroll during drag.
+  useEffect(() => {
+    const el = heroRef.current
+    if (!el || !editableHero) return
+    function onTouchMoveNative(e: TouchEvent) {
+      if (heroDraggingRef.current) e.preventDefault()
+    }
+    el.addEventListener("touchmove", onTouchMoveNative, { passive: false })
+    return () => el.removeEventListener("touchmove", onTouchMoveNative)
+  }, [editableHero])
 
   const startHeroDrag = useCallback((clientX: number, clientY: number) => {
     if (!editableHero || !heroImageUrl) return
     setHeroDragging(true)
+    heroDraggingRef.current = true
     lastHeroPointer.current = { x: clientX, y: clientY }
   }, [editableHero, heroImageUrl])
 
@@ -149,6 +163,7 @@ export default function EventHomePreview({
   const endHeroDrag = useCallback(() => {
     if (!heroDragging) return
     setHeroDragging(false)
+    heroDraggingRef.current = false
     lastHeroPointer.current = null
     onHeroPositionChange?.(heroPos.x, heroPos.y)
   }, [heroDragging, heroPos, onHeroPositionChange])
