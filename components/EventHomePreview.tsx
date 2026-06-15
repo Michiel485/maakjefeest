@@ -229,7 +229,6 @@ export default function EventHomePreview({
     color: sc.accent,
     letterSpacing: '0.12em',
     paddingLeft: '0.12em',
-    textTransform: 'uppercase',
     textAlign: 'center',
   }
 
