@@ -210,7 +210,7 @@ export default async function DashboardPage() {
                 </svg>
               </div>
               <p className="text-sm mb-5" style={{ color: BODY }}>
-                Nog geen live bruiloftswebsite. Bouw er een en publiceer hem voor eenmalig €39,99.
+                Nog geen live bruiloftswebsite. Bouw er een en publiceer hem voor eenmalig €49,99.
               </p>
               <Link
                 href="/aanmaken"

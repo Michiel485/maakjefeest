@@ -122,7 +122,7 @@ const prata = Prata({
 
 export const metadata: Metadata = {
   title: "SayingYes — Jullie bruiloftswebsite",
-  description: "Bouw in minuten een prachtige bruiloftswebsite. Eenmalig €39,99 voor een jaar. Deel het programma, verzamel RSVP's en beheer alles in jullie dashboard.",
+  description: "Bouw in minuten een prachtige bruiloftswebsite. Eenmalig €49,99 voor een jaar. Deel het programma, verzamel RSVP's en beheer alles in jullie dashboard.",
 };
 
 export default function RootLayout({
