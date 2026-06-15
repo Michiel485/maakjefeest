@@ -1864,7 +1864,7 @@ export default function BouwenPage() {
                                           <span className="text-xs text-gray-500">Grootte</span>
                                           <span className="text-xs text-gray-400">{hpSettings.hoofdtitelSize}rem</span>
                                         </div>
-                                        <input type="range" min={2} max={10} step={0.25} value={hpSettings.hoofdtitelSize} onChange={(e) => updateHpSettings({ hoofdtitelSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                                        <input type="range" min={1} max={10} step={0.25} value={hpSettings.hoofdtitelSize} onChange={(e) => updateHpSettings({ hoofdtitelSize: Number(e.target.value) })} className="w-full accent-rose-400" />
                                         {heroImageUrl && (
                                           <>
                                             <p className="text-xs text-gray-500 mt-1">Positie</p>

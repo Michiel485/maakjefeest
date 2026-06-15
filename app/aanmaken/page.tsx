@@ -34,7 +34,7 @@ const DEFAULT_PRAKTISCH = {
 function buildInitials(naam1: string, naam2: string): string {
   const a = naam1.trim()[0]?.toUpperCase()
   const b = naam2.trim()[0]?.toUpperCase()
-  return a && b ? `${a}|${b}` : "M|L"
+  return a && b ? `${a} | ${b}` : "M | L"
 }
 
 function formatSlugInput(value: string): string {
@@ -108,25 +108,60 @@ export default function AanmakenPage() {
     const frameNames = `${form.naam1.trim()} & ${form.naam2.trim()}`
     const eventTitle = `De bruiloft van ${form.naam1.trim()} & ${form.naam2.trim()}`
 
+    const welcomeBody = `Welkom op onze eigen trouwwebsite! Na een fantastisch aanzoek (vraag ons gerust naar het hele verhaal onder het genot van een wijntje), is het nu tijd voor het echte werk.\n\nOmdat we deze dag het liefst vieren met onze favoriete mensen, hebben we deze website gemaakt. Hier vind je alle ins & outs over onze grote dag. Van het programma tot de dresscode en de routebeschrijving naar de locatie.\n\nKijk gerust rond en vergeet niet om via het menu jullie RSVP in te vullen. We kunnen niet wachten om de liefde met jullie te vieren!\n\nLiefs,\n${form.naam1.trim()} & ${form.naam2.trim()}`
+
     const payload = {
       type: "bruiloft",
       naam: eventTitle,
       slug: cleanSlug,
-      style: "zand",
+      style: "ivoor",
       nav_title: frameNames,
+      nav_layout: "split",
       datum: form.datum,
-      locatie: "Stadhuis Amersfoort",
+      locatie: "Stadhuis Amsterdam",
       use_frame: true,
-      frame_style: "gold-circle",
+      frame_style: "olive-rectangle",
       frame_names: frameNames,
-      frame_location: "Stadhuis Amersfoort",
+      frame_location: "Stadhuis Amsterdam",
       initials: buildInitials(form.naam1, form.naam2),
-      pages: ["Home", "Programma", "RSVP", "Informatie", "Cadeautips", "OnsVerhaal", "Fotos", "Ceremoniemeesters"],
+      font_hero: "cormorant",
+      font_initials: "cormorant",
+      font_frame_names: "cormorant",
+      font_page_titles: "cormorant",
+      frameInitialsSize: 8,
+      frameNamesSize: 5.5,
+      frameDateSize: 2.8,
+      frameLocationSize: 2.8,
+      homepage_settings: {
+        layout: "editorial",
+        subtitleVisible: false,
+        subtitleText: "",
+        subtitleFont: "cormorant",
+        subtitleSize: 1.1,
+        hoofdtitelVisible: true,
+        hoofdtitelFont: "cormorant",
+        hoofdtitelSize: 2,
+        datumFont: "cormorant",
+        datumSize: 2.8,
+        datumNotatie: "uitgeschreven",
+        locatieFont: "cormorant",
+        locatieSize: 2.8,
+        titlePosition: "under",
+        initialsVisible: true,
+        frameNamesVisible: true,
+        datumVisible: true,
+        locatieVisible: true,
+        siteLayout: "boxed",
+        pageMode: "multi",
+      },
+      pages: ["Home", "Programma", "RSVP", "Informatie", "Cadeautips", "OnsVerhaal", "Ceremoniemeesters"],
       content: {
         Home: {
           title: "Wij gaan trouwen!",
-          body: "We zijn zo blij dat jullie erbij zijn op onze grote dag. Hieronder vinden jullie alles wat jullie moeten weten.",
+          body: welcomeBody,
           align: "center",
+          titleSize: 1.6,
+          bodySize: 1.05,
         },
         Programma: DEFAULT_PROGRAMMA,
         Informatie: DEFAULT_PRAKTISCH,
@@ -152,11 +187,23 @@ export default function AanmakenPage() {
     // De builder toont dan de magic-link flow en maakt het event aan na inloggen
     const draft = {
       type: "bruiloft", naam: eventTitle, naam1: form.naam1.trim(), naam2: form.naam2.trim(),
-      slug: cleanSlug, style: "zand", nav_title: frameNames, datum: form.datum,
-      locatie: "Stadhuis Amersfoort", email: form.email, aangemaakt: new Date().toISOString(),
-      use_frame: true, frame_style: "gold-circle", frame_names: frameNames,
-      frame_location: "Stadhuis Amersfoort", initials: buildInitials(form.naam1, form.naam2),
-      homeContent: { title: "Wij gaan trouwen!", body: "We zijn zo blij dat jullie erbij zijn op onze grote dag. Hieronder vinden jullie alles wat jullie moeten weten.", align: "center" },
+      slug: cleanSlug, style: "ivoor", nav_title: frameNames, nav_layout: "split", datum: form.datum,
+      locatie: "Stadhuis Amsterdam", email: form.email, aangemaakt: new Date().toISOString(),
+      use_frame: true, frame_style: "olive-rectangle", frame_names: frameNames,
+      frame_location: "Stadhuis Amsterdam", initials: buildInitials(form.naam1, form.naam2),
+      font_hero: "cormorant", font_initials: "cormorant", font_frame_names: "cormorant", font_page_titles: "cormorant",
+      frameInitialsSize: 8, frameNamesSize: 5.5, frameDateSize: 2.8, frameLocationSize: 2.8,
+      homepage_settings: {
+        layout: "editorial", subtitleVisible: false, subtitleText: "", subtitleFont: "cormorant", subtitleSize: 1.1,
+        hoofdtitelVisible: true, hoofdtitelFont: "cormorant", hoofdtitelSize: 2,
+        datumFont: "cormorant", datumSize: 2.8, datumNotatie: "uitgeschreven",
+        locatieFont: "cormorant", locatieSize: 2.8, titlePosition: "under",
+        initialsVisible: true, frameNamesVisible: true, datumVisible: true, locatieVisible: true,
+        siteLayout: "boxed", pageMode: "multi",
+      },
+      homeContent: {
+        title: "Wij gaan trouwen!", body: welcomeBody, align: "center", titleSize: 1.6, bodySize: 1.05,
+      },
     }
     localStorage.setItem("sayingyes_draft", JSON.stringify(draft))
     localStorage.setItem("sayingyes_content", JSON.stringify({ Programma: DEFAULT_PROGRAMMA, Informatie: DEFAULT_PRAKTISCH }))
