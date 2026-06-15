@@ -208,7 +208,7 @@ export default function Home() {
               <div className="relative overflow-hidden" style={{ aspectRatio: "3/4" }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="/marketing/preview-emerald.jpg"
+                  src="/Home page/Pagina Emerald.png"
                   alt="Emerald Luxury thema"
                   className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
                 />
