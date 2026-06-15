@@ -2707,8 +2707,8 @@ export default function BouwenPage() {
                   </button>
                 </div>
 
-                {/* Viewport toggle — desktop only */}
-                <div className="hidden md:flex items-center gap-1 bg-gray-200 rounded-lg p-0.5">
+                {/* Viewport toggle */}
+                <div className="flex items-center gap-1 bg-gray-200 rounded-lg p-0.5">
                   <button
                     onClick={() => setViewport("desktop")}
                     title="Desktop"
