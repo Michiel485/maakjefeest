@@ -186,7 +186,7 @@ export default function EventHomePreview({
   }
 
   const FRAME_FILE: Record<string, string> = {
-    "olive-rectangle":  "olive-rectangle.png.PNG",
+    "olive-rectangle":  "olive-square.png.png",
     "bloem-rechthoek":  "Bloem-rechthoek.png",
     "bloem2-breed":     "Bloem2-breed.png",
   }
@@ -525,7 +525,7 @@ export default function EventHomePreview({
 
       {/* Card / Elegant Divider section */}
       <section
-        className={`w-full flex flex-col items-center ${isFullWidth ? "pt-0 pb-0 px-0" : `${showTitleUnderPhoto && title ? "pt-1" : "pt-6"} pb-8 px-6`}`}
+        className={`w-full flex flex-col items-center ${isFullWidth ? "pt-0 pb-0 px-0" : `${showTitleUnderPhoto && title ? (hp?.subtitleVisible !== false && hp?.subtitleText ? "pt-1" : "pt-4 @md:pt-8") : "pt-6"} pb-8 px-6`}`}
         style={{ backgroundColor: sc.bodyBg }}
       >
         {elegantMode ? (
