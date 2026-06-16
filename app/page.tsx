@@ -234,7 +234,7 @@ export default function Home() {
               <div className="relative overflow-hidden" style={{ aspectRatio: "3/4" }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="/marketing/preview-ivory.png"
+                  src="/Home page/Pagina Ivory.png"
                   alt="Gold & Ivory thema"
                   className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
                 />
@@ -267,7 +267,7 @@ export default function Home() {
               <div className="relative overflow-hidden" style={{ aspectRatio: "3/4" }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="/marketing/preview-terracotta.png"
+                  src="/Home page/Pagina Terracotta.png"
                   alt="Terracotta & Gold thema"
                   className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
                 />
