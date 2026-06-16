@@ -1343,13 +1343,13 @@ export default function BouwenPage() {
                             <div className="flex rounded-xl overflow-hidden border border-gray-200">
                               <button
                                 onClick={() => { setPwType('password'); setChangeKey(k => k + 1) }}
-                                className={`flex-1 py-2 text-xs font-semibold transition-colors ${pwType === 'password' ? 'bg-gray-900 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+                                className={`flex-1 py-2 text-xs font-semibold transition-colors ${pwType === 'password' ? 'bg-[#C5A059] text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
                               >
                                 Wachtwoord
                               </button>
                               <button
                                 onClick={() => { setPwType('secret_question'); setChangeKey(k => k + 1) }}
-                                className={`flex-1 py-2 text-xs font-semibold transition-colors ${pwType === 'secret_question' ? 'bg-gray-900 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+                                className={`flex-1 py-2 text-xs font-semibold transition-colors ${pwType === 'secret_question' ? 'bg-[#C5A059] text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
                               >
                                 Geheime vraag
                               </button>
@@ -1491,7 +1491,7 @@ export default function BouwenPage() {
                               onClick={() => updateHpSettings({ siteLayout: opt.value })}
                               className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
                                 hpSettings.siteLayout === opt.value
-                                  ? 'bg-gray-900 text-white'
+                                  ? 'bg-[#C5A059] text-white'
                                   : 'bg-white text-gray-500 hover:bg-gray-50'
                               }`}
                             >
@@ -1515,7 +1515,7 @@ export default function BouwenPage() {
                               onClick={() => updateHpSettings({ pageMode: opt.value })}
                               className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
                                 hpSettings.pageMode === opt.value
-                                  ? 'bg-gray-900 text-white'
+                                  ? 'bg-[#C5A059] text-white'
                                   : 'bg-white text-gray-500 hover:bg-gray-50'
                               }`}
                             >
@@ -1550,7 +1550,7 @@ export default function BouwenPage() {
                             key={opt}
                             onClick={() => updateDraft({ navLayout: opt })}
                             className={`flex-1 py-2 text-xs font-semibold transition-colors ${
-                              navLayout === opt ? 'bg-rose-500 text-white' : 'text-gray-500 hover:bg-gray-50'
+                              navLayout === opt ? 'bg-[#C5A059] text-white' : 'text-gray-500 hover:bg-gray-50'
                             }`}
                           >
                             {opt === 'left' ? 'Links' : opt === 'split' ? 'Verdeeld' : 'Gecentreerd'}
@@ -1641,7 +1641,7 @@ export default function BouwenPage() {
                         {page.toggleable ? (
                           <button
                             onClick={(e) => { e.stopPropagation(); toggle(page.id) }}
-                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors flex-shrink-0 ${isOn ? "bg-pink-500" : "bg-gray-200"}`}
+                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors flex-shrink-0 ${isOn ? "bg-[#C5A059]" : "bg-gray-200"}`}
                           >
                             <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform ${isOn ? "translate-x-4" : "translate-x-0.5"}`} />
                           </button>
@@ -1682,7 +1682,7 @@ export default function BouwenPage() {
                                       onClick={() => updateHpSettings({ layout: opt.id })}
                                       className={`flex-1 flex flex-col items-center py-2.5 px-2 rounded-xl border text-xs font-semibold transition-all ${
                                         hpSettings.layout === opt.id
-                                          ? 'border-rose-400 bg-rose-50 text-rose-600 ring-2 ring-rose-200'
+                                          ? 'border-[#C5A059] bg-[#FBF5E8] text-[#C5A059] ring-2 ring-[#C5A059]/30'
                                           : 'border-gray-200 text-gray-400 hover:border-gray-300'
                                       }`}
                                     >
@@ -1718,7 +1718,7 @@ export default function BouwenPage() {
                                           <span className="text-xs font-semibold text-gray-600">Kleur overlay</span>
                                           <button
                                             onClick={() => updateDraft({ heroOverlay: !heroOverlay })}
-                                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${heroOverlay ? "bg-pink-400" : "bg-gray-200"}`}
+                                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${heroOverlay ? "bg-[#C5A059]" : "bg-gray-200"}`}
                                           >
                                             <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${heroOverlay ? "translate-x-4" : "translate-x-0.5"}`} />
                                           </button>
@@ -1772,7 +1772,7 @@ export default function BouwenPage() {
                                         <span className="text-xs font-semibold text-gray-600">Kader activeren</span>
                                         <button
                                           onClick={() => updateDraft({ use_frame: !(draft?.use_frame ?? false) })}
-                                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${draft?.use_frame ? "bg-pink-500" : "bg-gray-200"}`}
+                                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${draft?.use_frame ? "bg-[#C5A059]" : "bg-gray-200"}`}
                                         >
                                           <span className={`absolute h-4 w-4 rounded-full bg-white transition-transform shadow-sm ${draft?.use_frame ? "translate-x-6" : "translate-x-1"}`} />
                                         </button>
@@ -1801,7 +1801,7 @@ export default function BouwenPage() {
                                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                                 <img src={`/frames/${frame.file}`} alt={frame.label} className="w-full h-full object-cover" />
                                                 {isActive && (
-                                                  <div className="absolute inset-0 bg-rose-500 bg-opacity-10 flex items-center justify-center">
+                                                  <div className="absolute inset-0 bg-[#C5A059] bg-opacity-10 flex items-center justify-center">
                                                     <svg className="w-4 h-4 text-rose-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
                                                   </div>
                                                 )}
@@ -1842,11 +1842,11 @@ export default function BouwenPage() {
                                       <div className="flex items-center gap-1.5">
                                         <button
                                           onClick={() => updateHpSettings({ hoofdtitelVisible: !hpSettings.hoofdtitelVisible })}
-                                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.hoofdtitelVisible ? 'bg-pink-400' : 'bg-gray-200'}`}
+                                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.hoofdtitelVisible ? 'bg-[#C5A059]' : 'bg-gray-200'}`}
                                         >
                                           <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.hoofdtitelVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
                                         </button>
-                                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'hoofdtitel' ? 'bg-rose-50 text-rose-400' : 'text-gray-300'}`}>Aa</span>
+                                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'hoofdtitel' ? 'bg-[#FBF5E8] text-[#C5A059]' : 'text-gray-300'}`}>Aa</span>
                                       </div>
                                     </div>
                                     <textarea
@@ -1864,7 +1864,7 @@ export default function BouwenPage() {
                                           <span className="text-xs text-gray-500">Grootte</span>
                                           <span className="text-xs text-gray-400">{hpSettings.hoofdtitelSize}rem</span>
                                         </div>
-                                        <input type="range" min={1} max={10} step={0.25} value={hpSettings.hoofdtitelSize} onChange={(e) => updateHpSettings({ hoofdtitelSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                                        <input type="range" min={1} max={10} step={0.25} value={hpSettings.hoofdtitelSize} onChange={(e) => updateHpSettings({ hoofdtitelSize: Number(e.target.value) })} className="w-full accent-[#C5A059]" />
                                         {heroImageUrl && (
                                           <>
                                             <p className="text-xs text-gray-500 mt-1">Positie</p>
@@ -1876,7 +1876,7 @@ export default function BouwenPage() {
                                                 <button
                                                   key={opt.id}
                                                   onClick={() => updateHpSettings({ titlePosition: opt.id })}
-                                                  className={`flex-1 py-2 text-xs font-semibold transition-colors ${hpSettings.titlePosition === opt.id ? 'bg-rose-500 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+                                                  className={`flex-1 py-2 text-xs font-semibold transition-colors ${hpSettings.titlePosition === opt.id ? 'bg-[#C5A059] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
                                                 >
                                                   {opt.label}
                                                 </button>
@@ -1895,11 +1895,11 @@ export default function BouwenPage() {
                                       <div className="flex items-center gap-1.5">
                                         <button
                                           onClick={() => updateHpSettings({ subtitleVisible: !hpSettings.subtitleVisible })}
-                                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.subtitleVisible ? 'bg-pink-400' : 'bg-gray-200'}`}
+                                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.subtitleVisible ? 'bg-[#C5A059]' : 'bg-gray-200'}`}
                                         >
                                           <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.subtitleVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
                                         </button>
-                                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'subtitle' ? 'bg-rose-50 text-rose-400' : 'text-gray-300'}`}>Aa</span>
+                                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'subtitle' ? 'bg-[#FBF5E8] text-[#C5A059]' : 'text-gray-300'}`}>Aa</span>
                                       </div>
                                     </div>
                                     <input
@@ -1917,7 +1917,7 @@ export default function BouwenPage() {
                                           <span className="text-xs text-gray-500">Grootte</span>
                                           <span className="text-xs text-gray-400">{hpSettings.subtitleSize}rem</span>
                                         </div>
-                                        <input type="range" min={0.7} max={5} step={0.1} value={hpSettings.subtitleSize} onChange={(e) => updateHpSettings({ subtitleSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                                        <input type="range" min={0.7} max={5} step={0.1} value={hpSettings.subtitleSize} onChange={(e) => updateHpSettings({ subtitleSize: Number(e.target.value) })} className="w-full accent-[#C5A059]" />
                                       </div>
                                     )}
                                   </div>
@@ -1929,11 +1929,11 @@ export default function BouwenPage() {
                                       <div className="flex items-center gap-1.5">
                                         <button
                                           onClick={() => updateHpSettings({ initialsVisible: !hpSettings.initialsVisible })}
-                                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.initialsVisible ? 'bg-pink-400' : 'bg-gray-200'}`}
+                                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.initialsVisible ? 'bg-[#C5A059]' : 'bg-gray-200'}`}
                                         >
                                           <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.initialsVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
                                         </button>
-                                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'initialen' ? 'bg-rose-50 text-rose-400' : 'text-gray-300'}`}>Aa</span>
+                                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'initialen' ? 'bg-[#FBF5E8] text-[#C5A059]' : 'text-gray-300'}`}>Aa</span>
                                       </div>
                                     </div>
                                     <input
@@ -1951,7 +1951,7 @@ export default function BouwenPage() {
                                           <span className="text-xs text-gray-500">Grootte</span>
                                           <span className="text-xs text-gray-400">{draft?.frameInitialsSize ?? 8}</span>
                                         </div>
-                                        <input type="range" min={4} max={18} step={0.5} value={draft?.frameInitialsSize ?? 8} onChange={(e) => updateDraft({ frameInitialsSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                                        <input type="range" min={4} max={18} step={0.5} value={draft?.frameInitialsSize ?? 8} onChange={(e) => updateDraft({ frameInitialsSize: Number(e.target.value) })} className="w-full accent-[#C5A059]" />
                                       </div>
                                     )}
                                   </div>
@@ -1963,11 +1963,11 @@ export default function BouwenPage() {
                                       <div className="flex items-center gap-1.5">
                                         <button
                                           onClick={() => updateHpSettings({ frameNamesVisible: !hpSettings.frameNamesVisible })}
-                                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.frameNamesVisible ? 'bg-pink-400' : 'bg-gray-200'}`}
+                                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.frameNamesVisible ? 'bg-[#C5A059]' : 'bg-gray-200'}`}
                                         >
                                           <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.frameNamesVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
                                         </button>
-                                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'namen' ? 'bg-rose-50 text-rose-400' : 'text-gray-300'}`}>Aa</span>
+                                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'namen' ? 'bg-[#FBF5E8] text-[#C5A059]' : 'text-gray-300'}`}>Aa</span>
                                       </div>
                                     </div>
                                     <textarea
@@ -1985,7 +1985,7 @@ export default function BouwenPage() {
                                           <span className="text-xs text-gray-500">Grootte</span>
                                           <span className="text-xs text-gray-400">{draft?.frameNamesSize ?? 5.5}</span>
                                         </div>
-                                        <input type="range" min={2} max={13} step={0.5} value={draft?.frameNamesSize ?? 5.5} onChange={(e) => updateDraft({ frameNamesSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                                        <input type="range" min={2} max={13} step={0.5} value={draft?.frameNamesSize ?? 5.5} onChange={(e) => updateDraft({ frameNamesSize: Number(e.target.value) })} className="w-full accent-[#C5A059]" />
                                       </div>
                                     )}
                                   </div>
@@ -1997,11 +1997,11 @@ export default function BouwenPage() {
                                       <div className="flex items-center gap-1.5">
                                         <button
                                           onClick={() => updateHpSettings({ datumVisible: !hpSettings.datumVisible })}
-                                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.datumVisible ? 'bg-pink-400' : 'bg-gray-200'}`}
+                                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.datumVisible ? 'bg-[#C5A059]' : 'bg-gray-200'}`}
                                         >
                                           <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.datumVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
                                         </button>
-                                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'datum' ? 'bg-rose-50 text-rose-400' : 'text-gray-300'}`}>Aa</span>
+                                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'datum' ? 'bg-[#FBF5E8] text-[#C5A059]' : 'text-gray-300'}`}>Aa</span>
                                       </div>
                                     </div>
                                     <input
@@ -2020,7 +2020,7 @@ export default function BouwenPage() {
                                               <span className="text-xs text-gray-500">Grootte in kader</span>
                                               <span className="text-xs text-gray-400">{draft?.frameDateSize ?? 1.8}</span>
                                             </div>
-                                            <input type="range" min={0.3} max={6} step={0.1} value={draft?.frameDateSize ?? 1.8} onChange={(e) => updateDraft({ frameDateSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                                            <input type="range" min={0.3} max={6} step={0.1} value={draft?.frameDateSize ?? 1.8} onChange={(e) => updateDraft({ frameDateSize: Number(e.target.value) })} className="w-full accent-[#C5A059]" />
                                           </>
                                         ) : (
                                           <>
@@ -2028,7 +2028,7 @@ export default function BouwenPage() {
                                               <span className="text-xs text-gray-500">Grootte</span>
                                               <span className="text-xs text-gray-400">{hpSettings.datumSize}rem</span>
                                             </div>
-                                            <input type="range" min={0.7} max={3} step={0.1} value={hpSettings.datumSize} onChange={(e) => updateHpSettings({ datumSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                                            <input type="range" min={0.7} max={3} step={0.1} value={hpSettings.datumSize} onChange={(e) => updateHpSettings({ datumSize: Number(e.target.value) })} className="w-full accent-[#C5A059]" />
                                           </>
                                         )}
                                         <div className="flex flex-col gap-1">
@@ -2036,13 +2036,13 @@ export default function BouwenPage() {
                                           <div className="flex rounded-xl border border-gray-200 overflow-hidden">
                                             <button
                                               onClick={() => updateHpSettings({ datumNotatie: 'uitgeschreven' })}
-                                              className={`flex-1 py-1.5 text-xs font-semibold transition-colors ${(hpSettings.datumNotatie ?? 'uitgeschreven') === 'uitgeschreven' ? 'bg-rose-500 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+                                              className={`flex-1 py-1.5 text-xs font-semibold transition-colors ${(hpSettings.datumNotatie ?? 'uitgeschreven') === 'uitgeschreven' ? 'bg-[#C5A059] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
                                             >
                                               Optie 1
                                             </button>
                                             <button
                                               onClick={() => updateHpSettings({ datumNotatie: 'numeriek' })}
-                                              className={`flex-1 py-1.5 text-xs font-semibold transition-colors ${(hpSettings.datumNotatie ?? 'uitgeschreven') === 'numeriek' ? 'bg-rose-500 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+                                              className={`flex-1 py-1.5 text-xs font-semibold transition-colors ${(hpSettings.datumNotatie ?? 'uitgeschreven') === 'numeriek' ? 'bg-[#C5A059] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
                                             >
                                               Optie 2
                                             </button>
@@ -2062,11 +2062,11 @@ export default function BouwenPage() {
                                       <div className="flex items-center gap-1.5">
                                         <button
                                           onClick={() => updateHpSettings({ locatieVisible: !hpSettings.locatieVisible })}
-                                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.locatieVisible ? 'bg-pink-400' : 'bg-gray-200'}`}
+                                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.locatieVisible ? 'bg-[#C5A059]' : 'bg-gray-200'}`}
                                         >
                                           <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.locatieVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
                                         </button>
-                                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'locatie' ? 'bg-rose-50 text-rose-400' : 'text-gray-300'}`}>Aa</span>
+                                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'locatie' ? 'bg-[#FBF5E8] text-[#C5A059]' : 'text-gray-300'}`}>Aa</span>
                                       </div>
                                     </div>
                                     <input
@@ -2086,7 +2086,7 @@ export default function BouwenPage() {
                                               <span className="text-xs text-gray-500">Grootte in kader</span>
                                               <span className="text-xs text-gray-400">{draft?.frameLocationSize ?? 1.8}</span>
                                             </div>
-                                            <input type="range" min={0.3} max={6} step={0.1} value={draft?.frameLocationSize ?? 1.8} onChange={(e) => updateDraft({ frameLocationSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                                            <input type="range" min={0.3} max={6} step={0.1} value={draft?.frameLocationSize ?? 1.8} onChange={(e) => updateDraft({ frameLocationSize: Number(e.target.value) })} className="w-full accent-[#C5A059]" />
                                           </>
                                         ) : (
                                           <>
@@ -2094,7 +2094,7 @@ export default function BouwenPage() {
                                               <span className="text-xs text-gray-500">Grootte</span>
                                               <span className="text-xs text-gray-400">{hpSettings.locatieSize}rem</span>
                                             </div>
-                                            <input type="range" min={0.7} max={3} step={0.1} value={hpSettings.locatieSize} onChange={(e) => updateHpSettings({ locatieSize: Number(e.target.value) })} className="w-full accent-rose-400" />
+                                            <input type="range" min={0.7} max={3} step={0.1} value={hpSettings.locatieSize} onChange={(e) => updateHpSettings({ locatieSize: Number(e.target.value) })} className="w-full accent-[#C5A059]" />
                                           </>
                                         )}
                                       </div>
@@ -2133,7 +2133,7 @@ export default function BouwenPage() {
                                       <span className="text-xs text-gray-500">Grootte</span>
                                       <span className="text-xs text-gray-400">{homeContent.titleSize ?? 1.0}rem</span>
                                     </div>
-                                    <input type="range" min={0.7} max={3} step={0.05} value={homeContent.titleSize ?? 1.0} onChange={(e) => updateDraft({ homeContent: { ...homeContent, titleSize: Number(e.target.value) } })} className="w-full accent-rose-400" />
+                                    <input type="range" min={0.7} max={3} step={0.05} value={homeContent.titleSize ?? 1.0} onChange={(e) => updateDraft({ homeContent: { ...homeContent, titleSize: Number(e.target.value) } })} className="w-full accent-[#C5A059]" />
                                   </div>
                                   <div id="hp-field-welkomst-tekst" className="flex flex-col gap-1.5">
                                     <span className="text-xs font-semibold text-gray-600">Tekst</span>
@@ -2148,7 +2148,7 @@ export default function BouwenPage() {
                                       <span className="text-xs text-gray-500">Grootte</span>
                                       <span className="text-xs text-gray-400">{homeContent.bodySize ?? 0.9375}rem</span>
                                     </div>
-                                    <input type="range" min={0.7} max={2.5} step={0.05} value={homeContent.bodySize ?? 0.9375} onChange={(e) => updateDraft({ homeContent: { ...homeContent, bodySize: Number(e.target.value) } })} className="w-full accent-rose-400" />
+                                    <input type="range" min={0.7} max={2.5} step={0.05} value={homeContent.bodySize ?? 0.9375} onChange={(e) => updateDraft({ homeContent: { ...homeContent, bodySize: Number(e.target.value) } })} className="w-full accent-[#C5A059]" />
                                   </div>
                                   <div className="flex flex-col gap-1.5">
                                     <span className="text-xs font-semibold text-gray-600">Uitlijning</span>
@@ -2157,7 +2157,7 @@ export default function BouwenPage() {
                                         <button
                                           key={a}
                                           onClick={() => updateDraft({ homeContent: { ...homeContent, align: a } })}
-                                          className={`flex-1 flex items-center justify-center py-2 rounded-lg border transition-all ${homeContent.align === a ? "border-rose-300 bg-rose-50 text-rose-600" : "border-gray-200 text-gray-400 hover:border-gray-300"}`}
+                                          className={`flex-1 flex items-center justify-center py-2 rounded-lg border transition-all ${homeContent.align === a ? "border-[#C5A059] bg-[#FBF5E8] text-[#C5A059]" : "border-gray-200 text-gray-400 hover:border-gray-300"}`}
                                         >
                                           {a === "left" && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h10M4 18h12" /></svg>}
                                           {a === "center" && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M7 12h10M6 18h12" /></svg>}
@@ -2204,7 +2204,7 @@ export default function BouwenPage() {
                                     key={opt}
                                     onClick={() => updateContent("Programma", { items: programmaItems, layout: opt })}
                                     className={`flex-1 py-2 text-xs font-semibold transition-colors ${
-                                      programLayout === opt ? "bg-rose-500 text-white" : "text-gray-500 hover:bg-gray-50"
+                                      programLayout === opt ? "bg-[#C5A059] text-white" : "text-gray-500 hover:bg-gray-50"
                                     }`}
                                   >
                                     {opt === "timeline" ? "Tijdlijn" : "Gecentreerd"}
@@ -2251,7 +2251,7 @@ export default function BouwenPage() {
                                         onClick={() => setOpenIconPickerIdx(openIconPickerIdx === i ? null : i)}
                                         className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-xs font-semibold transition-colors ${
                                           openIconPickerIdx === i
-                                            ? "border-rose-400 bg-rose-50 text-rose-600"
+                                            ? "border-[#C5A059] bg-[#FBF5E8] text-[#C5A059]"
                                             : "border-gray-200 bg-white text-gray-500 hover:border-rose-300 hover:text-rose-500"
                                         }`}
                                       >
@@ -2303,7 +2303,7 @@ export default function BouwenPage() {
                                             }}
                                             className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
                                               (item.iconId ?? "heart") === icon.id
-                                                ? "bg-rose-50 text-rose-500"
+                                                ? "bg-[#FBF5E8] text-[#C5A059]"
                                                 : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"
                                             }`}
                                           >
@@ -2513,7 +2513,7 @@ export default function BouwenPage() {
                                           <span className="text-xs font-semibold text-gray-600">Kleur overlay</span>
                                           <button
                                             onClick={() => updateDraft({ storyOverlay: !storyOverlay })}
-                                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${storyOverlay ? "bg-pink-400" : "bg-gray-200"}`}
+                                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${storyOverlay ? "bg-[#C5A059]" : "bg-gray-200"}`}
                                           >
                                             <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${storyOverlay ? "translate-x-4" : "translate-x-0.5"}`} />
                                           </button>
@@ -3586,7 +3586,7 @@ function WishlistEditor({
               onClick={() => setOpenPickerId(openPickerId === item.id ? null : item.id)}
               className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-semibold transition-colors ${
                 openPickerId === item.id
-                  ? "border-rose-400 bg-rose-50 text-rose-600"
+                  ? "border-[#C5A059] bg-[#FBF5E8] text-[#C5A059]"
                   : "border-gray-200 bg-white text-gray-500 hover:border-rose-300 hover:text-rose-500"
               }`}
             >
@@ -3612,7 +3612,7 @@ function WishlistEditor({
                   onClick={() => { update(item.id, { iconId: icon.id }); setOpenPickerId(null) }}
                   className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
                     item.iconId === icon.id
-                      ? "bg-rose-50 text-rose-500"
+                      ? "bg-[#FBF5E8] text-[#C5A059]"
                       : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"
                   }`}
                   title={icon.label}
@@ -3711,7 +3711,7 @@ function PraktischEditor({
               onClick={() => setOpenPickerId(openPickerId === tile.id ? null : tile.id)}
               className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-semibold transition-colors ${
                 openPickerId === tile.id
-                  ? "border-rose-400 bg-rose-50 text-rose-600"
+                  ? "border-[#C5A059] bg-[#FBF5E8] text-[#C5A059]"
                   : "border-gray-200 bg-white text-gray-500 hover:border-rose-300 hover:text-rose-500"
               }`}
             >
@@ -3737,7 +3737,7 @@ function PraktischEditor({
                   onClick={() => { update(tile.id, { iconId: icon.id }); setOpenPickerId(null) }}
                   className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
                     tile.iconId === icon.id
-                      ? "bg-rose-50 text-rose-500"
+                      ? "bg-[#FBF5E8] text-[#C5A059]"
                       : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"
                   }`}
                   title={icon.label}
