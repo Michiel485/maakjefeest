@@ -34,7 +34,7 @@ const DEFAULT_PRAKTISCH = {
 function buildInitials(naam1: string, naam2: string): string {
   const a = naam1.trim()[0]?.toUpperCase()
   const b = naam2.trim()[0]?.toUpperCase()
-  return a && b ? `${a} | ${b}` : "M | L"
+  return a && b ? `${a}|${b}` : "J|C"
 }
 
 function formatSlugInput(value: string): string {

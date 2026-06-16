@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { createPortal } from "react-dom"
 
 const GOLD       = "#C5A059"
 const GOLD_LIGHT = "#E8D5A3"
@@ -120,10 +121,12 @@ function SophieHeader({ label }: { label?: string }) {
 }
 
 export default function SophieTutorial({ onNavigate }: Props) {
-  const [phase, setPhase] = useState<'loading' | 'welcome' | 'tour' | 'done'>('loading')
-  const [step, setStep]   = useState(0)
+  const [phase, setPhase]     = useState<'loading' | 'welcome' | 'tour' | 'done'>('loading')
+  const [step, setStep]       = useState(0)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     const done    = localStorage.getItem(LS_DONE)
     const skipped = localStorage.getItem(LS_SKIPPED)
     setPhase(done || skipped ? 'done' : 'welcome')
@@ -162,38 +165,39 @@ export default function SophieTutorial({ onNavigate }: Props) {
     onNavigate(STEPS[0].nav)
   }
 
-  const cardClass = "fixed bottom-4 right-4 md:bottom-6 md:right-6 z-50 w-72 rounded-2xl shadow-2xl overflow-hidden"
+  const cardClass = "fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[9999] w-72 rounded-2xl shadow-2xl overflow-hidden"
   const cardStyle = { backgroundColor: "#fff", border: `1px solid ${GOLD_LIGHT}` }
 
-  if (phase === 'loading') return null
+  if (!mounted || phase === 'loading') return null
 
   // ── Small restart pill ───────────────────────────────────────────────────────
   if (phase === 'done') {
-    return (
+    return createPortal(
       <button
         onClick={restart}
-        className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-50 flex items-center gap-2 px-3 py-2 rounded-xl shadow-lg text-xs font-semibold transition-all hover:-translate-y-0.5 hover:shadow-xl"
+        className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[9999] flex items-center gap-2 px-3 py-2 rounded-xl shadow-lg text-xs font-semibold transition-all hover:-translate-y-0.5 hover:shadow-xl"
         style={{ backgroundColor: "#fff", border: `1px solid ${GOLD_LIGHT}`, color: BODY }}
         title="Sophie opnieuw starten"
       >
         <span style={{ color: GOLD }}><RingIcon size={14} /></span>
         <span style={{ color: GOLD, fontFamily: "var(--font-cormorant)", fontSize: "0.9rem", fontWeight: 600 }}>Sophie</span>
-      </button>
+      </button>,
+      document.body
     )
   }
 
   // ── Welcome card ─────────────────────────────────────────────────────────────
   if (phase === 'welcome') {
-    return (
+    return createPortal(
       <div className={cardClass} style={cardStyle}>
         <SophieHeader />
         <div className="px-5 pt-4 pb-2">
           <p className="text-sm font-semibold mb-1.5" style={{ color: CHARCOAL }}>Hoi! Welkom in de builder 👋</p>
           <p className="text-xs leading-relaxed" style={{ color: BODY }}>
-            Zullen we gelijk samen jullie droomwebsite neerzetten? Ik neem je in vijf stappen mee langs alle onderdelen — inclusief tips en uitleg.
+            Op basis van jullie gegevens heb ik alvast een voorbeeld klaargezet — kijk gerust rond voor een eerste indruk! Zullen we daarna samen jullie droomwebsite neerzetten? Ik neem je in een paar stappen mee langs alle onderdelen.
           </p>
           <p className="text-[10px] mt-2 leading-relaxed" style={{ color: SUBTLE }}>
-            Of wil je eerst even zelf rustig rondkijken? Je kunt mij later altijd opnieuw opstarten.
+            Bouwen kan prima op je telefoon, maar op een desktop gaat het net iets fijner. Je kunt mij later altijd opnieuw opstarten.
           </p>
         </div>
         <div className="px-5 pb-5 pt-3 flex flex-col gap-2">
@@ -212,13 +216,14 @@ export default function SophieTutorial({ onNavigate }: Props) {
             Ik kijk zelf even rond
           </button>
         </div>
-      </div>
+      </div>,
+      document.body
     )
   }
 
   // ── Tour step card ────────────────────────────────────────────────────────────
   const current = STEPS[step]
-  return (
+  return createPortal(
     <div className={cardClass} style={cardStyle}>
       {/* Header met step-dots */}
       <div
@@ -271,6 +276,7 @@ export default function SophieTutorial({ onNavigate }: Props) {
           {step === STEPS.length - 1 ? "Klaar! 🎉" : "Volgende →"}
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
