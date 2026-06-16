@@ -1133,51 +1133,51 @@ export default function BouwenPage() {
             {/* Opslaan knop + auto-save melding */}
             <div className="flex flex-col items-end gap-0.5">
               {anyUploading ? (
-                <button disabled className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-400 text-sm font-semibold px-4 py-2 rounded-xl cursor-not-allowed">
-                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <button disabled className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-400 text-sm font-semibold px-3 md:px-4 py-2 rounded-xl cursor-not-allowed">
+                  <svg className="w-4 h-4 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                   </svg>
-                  Uploaden...
+                  <span className="hidden sm:inline">Uploaden...</span>
                 </button>
               ) : saving ? (
-                <button disabled className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-400 text-sm font-semibold px-4 py-2 rounded-xl cursor-not-allowed">
-                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <button disabled className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-400 text-sm font-semibold px-3 md:px-4 py-2 rounded-xl cursor-not-allowed">
+                  <svg className="w-4 h-4 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                   </svg>
-                  Opslaan...
+                  <span className="hidden sm:inline">Opslaan...</span>
                 </button>
               ) : saveError ? (
                 <button
                   onClick={handleSave}
-                  className="inline-flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-semibold px-4 py-2 rounded-xl border border-red-200 transition-all"
+                  className="inline-flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-semibold px-3 md:px-4 py-2 rounded-xl border border-red-200 transition-all"
                 >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  Opnieuw proberen
+                  <span className="hidden sm:inline">Opnieuw proberen</span>
                 </button>
               ) : hasPendingChanges ? (
                 <button
                   onClick={handleSave}
-                  className="inline-flex items-center gap-1.5 bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold px-4 py-2 rounded-xl shadow-sm hover:shadow transition-all"
+                  className="inline-flex items-center gap-1.5 bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold px-3 md:px-4 py-2 rounded-xl shadow-sm hover:shadow transition-all"
                 >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                   </svg>
                   Opslaan
                 </button>
               ) : (
-                <button disabled className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-600 text-sm font-semibold px-4 py-2 rounded-xl border border-emerald-200 cursor-default">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <button disabled className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-600 text-sm font-semibold px-3 md:px-4 py-2 rounded-xl border border-emerald-200 cursor-default">
+                  <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
-                  Opgeslagen
+                  <span className="hidden sm:inline">Opgeslagen</span>
                 </button>
               )}
               {hasPendingChanges && !saving && !anyUploading && (
-                <span className="text-[10px] text-gray-400 pr-1">Wordt automatisch opgeslagen</span>
+                <span className="hidden sm:inline text-[10px] text-gray-400 pr-1">Wordt automatisch opgeslagen</span>
               )}
             </div>
 
@@ -1187,33 +1187,33 @@ export default function BouwenPage() {
                 href={eventSiteUrl(slugPreview)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-md shadow-emerald-100 hover:shadow-lg hover:-translate-y-0.5 transition-all"
+                className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold px-3 md:px-5 py-2.5 rounded-xl shadow-md shadow-emerald-100 hover:shadow-lg hover:-translate-y-0.5 transition-all"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
-                Bekijk live site
+                <span className="hidden sm:inline">Bekijk live site</span>
               </a>
             ) : (
               <button
                 onClick={handlePublish}
                 disabled={publishing || anyUploading}
-                className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-300 disabled:cursor-not-allowed text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-md shadow-emerald-100 hover:shadow-lg hover:-translate-y-0.5 disabled:shadow-none disabled:translate-y-0 transition-all"
+                className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-300 disabled:cursor-not-allowed text-white text-sm font-bold px-3 md:px-5 py-2.5 rounded-xl shadow-md shadow-emerald-100 hover:shadow-lg hover:-translate-y-0.5 disabled:shadow-none disabled:translate-y-0 transition-all"
               >
                 {publishing ? (
                   <>
-                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                     </svg>
-                    Bezig...
+                    <span className="hidden sm:inline">Bezig...</span>
                   </>
                 ) : (
                   <>
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
-                    Publiceren voor €49,99
+                    <span className="hidden sm:inline">Publiceren voor </span>€49,99
                   </>
                 )}
               </button>
