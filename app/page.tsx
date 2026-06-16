@@ -144,26 +144,32 @@ export default function Home() {
             De meest complete trouwsite van Nederland voor slechts{" "}
             <span style={{ color: GOLD_LIGHT, fontWeight: 600 }}>€49,99</span>
           </p>
+          <p className="text-xs mt-2" style={{ color: "rgba(232,213,163,0.5)" }}>
+            Gratis starten — pas betalen als je 100% tevreden bent
+          </p>
 
           {/* Apparaat indicator */}
-          <div className="flex items-center justify-center gap-3 mt-4">
-            <div className="flex items-center gap-1.5" style={{ color: "rgba(232,213,163,0.55)" }}>
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                <rect x="2" y="3" width="20" height="14" rx="2" strokeLinecap="round" strokeLinejoin="round" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8 21h8M12 17v4" />
-              </svg>
-              <span className="text-xs">Desktop</span>
+          <div className="flex flex-col items-center gap-2 mt-4">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5" style={{ color: "rgba(232,213,163,0.55)" }}>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                  <rect x="2" y="3" width="20" height="14" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 21h8M12 17v4" />
+                </svg>
+                <span className="text-xs">Desktop</span>
+              </div>
+              <div style={{ width: 1, height: 12, backgroundColor: "rgba(232,213,163,0.2)" }} />
+              <div className="flex items-center gap-1.5" style={{ color: "rgba(232,213,163,0.55)" }}>
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                  <rect x="5" y="2" width="14" height="20" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01" strokeWidth={2.5} />
+                </svg>
+                <span className="text-xs">Telefoon</span>
+              </div>
             </div>
-            <div style={{ width: 1, height: 12, backgroundColor: "rgba(232,213,163,0.2)" }} />
-            <div className="flex items-center gap-1.5" style={{ color: "rgba(232,213,163,0.55)" }}>
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                <rect x="5" y="2" width="14" height="20" rx="2" strokeLinecap="round" strokeLinejoin="round" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01" strokeWidth={2.5} />
-              </svg>
-              <span className="text-xs">Telefoon</span>
-            </div>
-            <div style={{ width: 1, height: 12, backgroundColor: "rgba(232,213,163,0.2)" }} />
-            <span className="text-xs" style={{ color: "rgba(232,213,163,0.55)" }}>Bouwen op elk apparaat</span>
+            <p className="text-xs font-medium" style={{ color: "rgba(232,213,163,0.8)" }}>
+              ✦ Volledig te bouwen vanaf je telefoon
+            </p>
           </div>
         </div>
 
@@ -226,10 +232,10 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Thema 2: Gold & Ivory — featured, elevated */}
+            {/* Thema 2: Gold & Ivory */}
             <div
               className="group rounded-3xl overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl sm:-mt-6"
-              style={{ border: `1.5px solid ${GOLD}`, backgroundColor: IVORY_CARD, boxShadow: `0 8px 40px rgba(197,160,89,0.15)` }}
+              style={{ border: `1px solid ${GOLD_LIGHT}`, backgroundColor: IVORY_CARD }}
             >
               <div className="relative overflow-hidden" style={{ aspectRatio: "3/4" }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -238,13 +244,6 @@ export default function Home() {
                   alt="Gold & Ivory thema"
                   className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
                 />
-                {/* Populair badge */}
-                <div
-                  className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest"
-                  style={{ backgroundColor: GOLD, color: DARK }}
-                >
-                  Meest gekozen
-                </div>
               </div>
               <div className="p-6">
                 <div className="flex items-center gap-2.5 mb-2">
@@ -689,8 +688,9 @@ export default function Home() {
                 Na het eerste jaar — Volledige vrijheid
               </p>
               <p className="text-sm leading-relaxed" style={{ color: "#8A7E72" }}>
-                Verlengen wanneer jullie willen voor slechts{" "}
-                <span style={{ color: "#FAF7F2", fontWeight: 600 }}>€22 per 6 maanden</span>.
+                Na het eerste jaar loopt jullie website automatisch af — geen verrassingen.
+                Willen jullie de site online houden? Verleng eenvoudig per 6 maanden voor slechts{" "}
+                <span style={{ color: "#FAF7F2", fontWeight: 600 }}>€22</span>.
                 Ideaal om na de bruiloft de fotogalerij online te houden.
               </p>
             </div>
@@ -739,6 +739,9 @@ export default function Home() {
           </Link>
           <p className="mt-5 text-xs tracking-wide" style={{ color: GOLD }}>
             Eenmalig €49,99 · Geen maandelijkse kosten · Altijd online
+          </p>
+          <p className="mt-2 text-xs" style={{ color: BODY }}>
+            Gratis starten — pas betalen als je 100% tevreden bent
           </p>
         </div>
       </section>

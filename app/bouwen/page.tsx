@@ -15,6 +15,7 @@ import { formatDate } from "@/lib/event-styles"
 import { TITLE_FONT_OPTIONS, getTitleFont } from "@/lib/title-fonts"
 import { createClient } from "@/lib/supabase"
 import { eventSiteUrl } from "@/lib/site-url"
+import SophieTutorial, { type SophieNav } from "@/components/SophieTutorial"
 
 type EventType = "bruiloft" | "verjaardag" | "evenement"
 type PageId = "Home" | "Programma" | "RSVP" | "Informatie" | "Cadeautips" | "Fotos" | "Ceremoniemeesters" | "OnsVerhaal"
@@ -428,7 +429,7 @@ export default function BouwenPage() {
   const [hpSettings, setHpSettings] = useState<HomepageSettings>(DEFAULT_HOMEPAGE_SETTINGS)
   const [hpOpenGear, setHpOpenGear] = useState<string | null>(null)
   const [deleteConfirmIdx, setDeleteConfirmIdx] = useState<number | null>(null)
-  const [openAlgSection, setOpenAlgSection] = useState<'stijl' | 'layout' | 'navigatie' | 'lettertype' | null>(null)
+  const [openAlgSection, setOpenAlgSection] = useState<'stijl' | 'layout' | 'lettertype' | null>(null)
   const [openUrlSection, setOpenUrlSection] = useState<'url' | 'beveiliging' | null>(null)
   const [openHomeSection, setOpenHomeSection] = useState<'layout' | 'headerfoto' | 'kaders' | 'tekstvelden' | 'welkomst' | null>(null)
   const [pwEnabled, setPwEnabled] = useState(false)
@@ -1525,49 +1526,25 @@ export default function BouwenPage() {
                         </div>
                       </div>
 
-                    </div>
-                  )}
-                </div>
-
-                {/* ── Navigatie ── */}
-                <div className="border-t border-gray-100">
-                  <button
-                    onClick={() => setOpenAlgSection(prev => prev === 'navigatie' ? null : 'navigatie')}
-                    className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
-                  >
-                    <span className={`transition-transform duration-200 flex-shrink-0 ${openAlgSection === 'navigatie' ? 'rotate-90' : ''}`}>
-                      <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                      </svg>
-                    </span>
-                    <span className="text-sm font-medium text-gray-800">Navigatie</span>
-                  </button>
-                  {openAlgSection === 'navigatie' && (
-                    <div className="px-5 pb-4 flex flex-col gap-3">
-                      <div className="flex rounded-xl border border-gray-200 overflow-hidden">
-                        {(['left', 'split', 'stacked'] as const).map((opt) => (
-                          <button
-                            key={opt}
-                            onClick={() => updateDraft({ navLayout: opt })}
-                            className={`flex-1 py-2 text-xs font-semibold transition-colors ${
-                              navLayout === opt ? 'bg-[#C5A059] text-white' : 'text-gray-500 hover:bg-gray-50'
-                            }`}
-                          >
-                            {opt === 'left' ? 'Links' : opt === 'split' ? 'Verdeeld' : 'Gecentreerd'}
-                          </button>
-                        ))}
+                      {/* Navigatiestijl */}
+                      <div className="flex flex-col gap-1.5">
+                        <p className="text-xs font-semibold text-gray-700">Navigatiestijl</p>
+                        <p className="text-[11px] text-gray-400 leading-snug">Hoe de menubalk is opgebouwd op de website.</p>
+                        <div className="flex rounded-xl border border-gray-200 overflow-hidden mt-0.5">
+                          {(['left', 'split', 'stacked'] as const).map((opt) => (
+                            <button
+                              key={opt}
+                              onClick={() => updateDraft({ navLayout: opt })}
+                              className={`flex-1 py-2 text-xs font-medium transition-colors ${
+                                navLayout === opt ? 'bg-[#C5A059] text-white' : 'bg-white text-gray-500 hover:bg-gray-50'
+                              }`}
+                            >
+                              {opt === 'left' ? 'Links' : opt === 'split' ? 'Verdeeld' : 'Gecentreerd'}
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                      <label className="flex flex-col gap-1.5">
-                        <span className="text-xs font-semibold text-gray-600">Navigatietitel</span>
-                        <input
-                          type="text"
-                          value={draft?.nav_title ?? draft?.naam ?? ""}
-                          onChange={(e) => updateDraft({ nav_title: e.target.value })}
-                          placeholder="Bijv. Sanne & Tom"
-                          className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                        />
-                        <p className="text-[10px] text-gray-400 leading-snug">Naam in de menubalk van de website</p>
-                      </label>
+
                     </div>
                   )}
                 </div>
@@ -3128,6 +3105,16 @@ export default function BouwenPage() {
           </div>
         </div>
       )}
+
+      {/* ── Sophie tutorial ── */}
+      <SophieTutorial
+        onNavigate={(nav: SophieNav) => {
+          if ('activeSection' in nav) setActiveSection(nav.activeSection ?? null)
+          if ('openAlgSection' in nav) setOpenAlgSection(nav.openAlgSection ?? null)
+          if ('activeSubPage' in nav) setActiveSubPage((nav.activeSubPage as PageId) ?? null)
+          if ('openHomeSection' in nav) setOpenHomeSection(nav.openHomeSection ?? null)
+        }}
+      />
     </div>
   )
 }
