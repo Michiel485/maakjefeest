@@ -384,7 +384,7 @@ export default function EventHomePreview({
               borderBottom: `1px solid ${sc.accent}50`,
             }}
           >
-            <p className="font-medium uppercase" style={{ fontSize: "1.75rem", color: sc.accent, letterSpacing: "0.18em", fontFamily: sc.fontFamily }}>
+            <p className="font-medium uppercase" style={{ fontSize: "0.9rem", color: sc.accent, letterSpacing: "0.18em", fontFamily: sc.fontFamily }}>
               {countdownText}
             </p>
           </div>
@@ -665,7 +665,7 @@ export default function EventHomePreview({
 
       {/* Countdown strip */}
       <div className="w-full py-3 text-center" style={{ backgroundColor: sc.bodyBg, borderTop: `1px solid ${sc.accent}50`, borderBottom: `1px solid ${sc.accent}50` }}>
-        <p className="text-sm font-medium uppercase" style={{ color: sc.accent, letterSpacing: "0.18em", fontFamily: sc.fontFamily }}>
+        <p className="font-medium uppercase" style={{ fontSize: "0.9rem", color: sc.accent, letterSpacing: "0.18em", fontFamily: sc.fontFamily }}>
           {countdownText}
         </p>
       </div>
