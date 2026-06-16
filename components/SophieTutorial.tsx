@@ -30,13 +30,13 @@ const STEPS: { label: string; title: string; text: string; nav: SophieNav }[] = 
   {
     label: "Stap 2 · Lay-out",
     title: "De opbouw van de website 📐",
-    text: "Wil je de inhoud netjes in een kader of volle breedte? Aparte pagina's via het menu, of alles op één lange pagina? Ook de navigatiestijl stel je hier in — links, verdeeld of gecentreerd. Kies wat past bij jullie smaak, alles is later eenvoudig te wijzigen.",
+    text: "Wil je de inhoud netjes in een kader zoals in de live preview, of liever de volle breedte van het scherm? Wij raden zelf Kader aan. Wil je alle onderdelen op aparte pagina's, of toch één lange pagina? Probeer beide uit — ze zijn allebei erg leuk! Kies tot slot hoe je de navigatielinks uitgelijnd wil hebben.",
     nav: { activeSection: 'algemeen', openAlgSection: 'layout' },
   },
   {
     label: "Stap 3 · Lettertype",
     title: "Het lettertype bepaalt de stijl 🖋️",
-    text: "Een romantisch handschrift, een klassiek schreeflettertype of iets moderns — het lettertype geeft jullie website veel karakter. Dit basislettertype wordt gebruikt voor paginatitels en de navigatie.",
+    text: "Een romantisch handschrift, een klassiek schreeflettertype of iets moderns — het lettertype geeft jullie website veel karakter. Dit basislettertype wordt gebruikt voor de navigatie, paginatitels, jullie welkomstbericht én alle tekst op de overige pagina's.",
     nav: { activeSection: 'algemeen', openAlgSection: 'lettertype' },
   },
   {
@@ -46,9 +46,15 @@ const STEPS: { label: string; title: string; text: string; nav: SophieNav }[] = 
     nav: { activeSection: 'paginas', openAlgSection: null, activeSubPage: 'Home', openHomeSection: 'layout' },
   },
   {
-    label: "Stap 5 · Pagina's",
+    label: "Stap 5 · Homepage bewerken",
+    title: "Dubbelklik om direct te bewerken ✏️",
+    text: "Dubbelklik op een tekst in de live preview en je springt automatisch naar de bijbehorende menu-optie — je kunt het dan direct aanpassen. Op de homepage kun je elk tekstveld bovendien apart instellen met een eigen lettertype en grootte. Zo heb je maximale vrijheid om precies de look te krijgen die jullie voor ogen hebben!",
+    nav: { activeSection: 'paginas', openAlgSection: null, activeSubPage: 'Home', openHomeSection: 'tekstvelden' },
+  },
+  {
+    label: "Stap 6 · Pagina's",
     title: "Welke pagina's wil je tonen? 📄",
-    text: "Zet alleen de pagina's aan die jullie nodig hebben. Geen fotogalerij? Zet 'Foto's' gewoon uit. Het menu past zich automatisch aan. En natuurlijk — je kunt dit later altijd nog wijzigen.",
+    text: "Zet alleen de pagina's aan die jullie nodig hebben. Geen fotogalerij? Zet 'Foto's' gewoon uit. Het menu past zich automatisch aan. En ook na het live zetten kun je dit nog altijd aanpassen!",
     nav: { activeSection: 'paginas', openAlgSection: null, activeSubPage: null, openHomeSection: null },
   },
 ]
@@ -235,7 +241,7 @@ export default function SophieTutorial({ onNavigate }: Props) {
       <div className="px-5 py-4">
         <p className="text-sm font-semibold mb-2" style={{ color: CHARCOAL }}>{current.title}</p>
         <p className="text-xs leading-relaxed" style={{ color: BODY }}>{current.text}</p>
-        <p className="text-[10px] mt-3" style={{ color: GOLD_LIGHT }}>
+        <p className="text-[10px] mt-3" style={{ color: SUBTLE }}>
           ✦ Alles wat je instelt kun je later altijd aanpassen.
         </p>
       </div>

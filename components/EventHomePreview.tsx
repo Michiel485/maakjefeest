@@ -286,8 +286,8 @@ export default function EventHomePreview({
                     className="absolute inset-0"
                     style={
                       sc.floral
-                        ? { background: "linear-gradient(to bottom, rgba(28,25,23,0.12) 0%, rgba(28,25,23,0.44) 100%)" }
-                        : { backgroundColor: sc.accent, opacity: 0.35 }
+                        ? { background: "linear-gradient(to bottom, rgba(28,25,23,0.06) 0%, rgba(28,25,23,0.22) 100%)" }
+                        : { backgroundColor: sc.accent, opacity: 0.18 }
                     }
                   />
                 )}
