@@ -641,11 +641,119 @@ export default function BouwenPage() {
       return
     }
 
-    // No URL param — always load from server so every device sees the latest saved state.
-    // localStorage is device-local and would show stale data on any other device.
-    createClient().auth.getUser().then(({ data: { user } }) => {
-      if (!user) { window.location.replace("/aanmaken"); return }
-      return fetch("/api/drafts").then(r => r.json()).then((events: Array<{ id: string }>) => {
+    // No URL param — check auth, then fall back to localStorage draft for new (guest) users
+    createClient().auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) {
+        // Not logged in — try to load a localStorage draft written by /aanmaken
+        try {
+          const savedDraft = localStorage.getItem("sayingyes_draft")
+          if (savedDraft) {
+            const d = JSON.parse(savedDraft) as Record<string, unknown>
+            const savedContent = localStorage.getItem("sayingyes_content")
+            const extraContent: ContentMap = savedContent ? JSON.parse(savedContent) : {}
+            const hp = d.homepage_settings as Partial<HomepageSettings> | undefined
+            const hc = d.homeContent as HomeContent | undefined
+
+            setDraft({
+              type: (d.type as EventType) ?? "bruiloft",
+              naam: (d.naam as string) ?? "",
+              datum: (d.datum as string) ?? "",
+              locatie: (d.locatie as string) ?? "",
+              email: (d.email as string) ?? "",
+              slug: (d.slug as string) ?? undefined,
+              nav_title: (d.nav_title as string) ?? undefined,
+              style: (d.style as string) ?? "ivoor",
+              navLayout: (d.nav_layout as Draft["navLayout"]) ?? "split",
+              use_frame: (d.use_frame as boolean) ?? true,
+              frame_style: (d.frame_style as string) ?? "olive-square",
+              initials: (d.initials as string) ?? undefined,
+              frame_names: (d.frame_names as string) ?? undefined,
+              frame_location: (d.frame_location as string) ?? undefined,
+              frameInitialsSize: (d.frameInitialsSize as number) ?? undefined,
+              frameNamesSize: (d.frameNamesSize as number) ?? undefined,
+              frameDateSize: (d.frameDateSize as number) ?? undefined,
+              frameLocationSize: (d.frameLocationSize as number) ?? undefined,
+              font_hero: (d.font_hero as string) ?? "cormorant",
+              font_initials: (d.font_initials as string) ?? "cormorant",
+              font_frame_names: (d.font_frame_names as string) ?? "cormorant",
+              font_page_titles: (d.font_page_titles as string) ?? "cormorant",
+              homeContent: hc,
+            })
+            setStyle(((d.style as string) || "ivoor") as Style)
+            setFontHero((d.font_hero as string) || "cormorant")
+            setFontInitials((d.font_initials as string) || "cormorant")
+            setFontFrameNames((d.font_frame_names as string) || "cormorant")
+            setFontPageTitles((d.font_page_titles as string) || "cormorant")
+            if (hp) setHpSettings({ ...DEFAULT_HOMEPAGE_SETTINGS, ...hp })
+            setContent({
+              ...extraContent,
+              ...(hc ? { Home: hc as unknown as Record<string, unknown> } : {}),
+            })
+            setActive({
+              Home: true, Programma: true, RSVP: true, Informatie: true,
+              Cadeautips: true, OnsVerhaal: true, Ceremoniemeesters: true, Fotos: false,
+            })
+            if (d.email) setAuthEmail(d.email as string)
+            return
+          }
+        } catch {}
+        window.location.replace("/aanmaken")
+        return
+      }
+
+      // Logged in — check for a pending save left by the magic-link auth flow
+      try {
+        const pendingSave = localStorage.getItem("sayingyes_pending_save")
+        const savedDraft = localStorage.getItem("sayingyes_draft")
+        if (pendingSave && savedDraft) {
+          localStorage.removeItem("sayingyes_pending_save")
+          const d = JSON.parse(savedDraft) as Record<string, unknown>
+          const savedContent = localStorage.getItem("sayingyes_content")
+          const extraContent: ContentMap = savedContent ? JSON.parse(savedContent) : {}
+          const hc = d.homeContent as HomeContent | undefined
+
+          const res = await fetch("/api/drafts", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: d.type || "bruiloft",
+              naam: d.naam,
+              slug: d.slug,
+              datum: d.datum || "",
+              locatie: d.locatie || "",
+              style: d.style || "ivoor",
+              nav_title: d.nav_title,
+              nav_layout: d.nav_layout || "split",
+              use_frame: d.use_frame ?? true,
+              frame_style: d.frame_style,
+              initials: d.initials,
+              frame_names: d.frame_names,
+              frame_location: d.frame_location,
+              frameInitialsSize: d.frameInitialsSize,
+              frameNamesSize: d.frameNamesSize,
+              frameDateSize: d.frameDateSize,
+              frameLocationSize: d.frameLocationSize,
+              font_hero: d.font_hero || "cormorant",
+              font_initials: d.font_initials || "cormorant",
+              font_frame_names: d.font_frame_names || "cormorant",
+              font_page_titles: d.font_page_titles || "cormorant",
+              homepage_settings: d.homepage_settings,
+              pages: ["Home", "Programma", "RSVP", "Informatie", "Cadeautips", "OnsVerhaal", "Ceremoniemeesters"],
+              content: { ...extraContent, ...(hc ? { Home: hc } : {}) },
+            }),
+          })
+          if (res.ok) {
+            const json = await res.json()
+            localStorage.removeItem("sayingyes_draft")
+            localStorage.removeItem("sayingyes_content")
+            window.location.replace(`/bouwen?event_id=${json.id}`)
+            return
+          }
+        }
+      } catch {}
+
+      // Normal logged-in flow: load most recent event from server
+      fetch("/api/drafts").then(r => r.json()).then((events: Array<{ id: string }>) => {
         if (Array.isArray(events) && events.length > 0) {
           window.location.replace(`/bouwen?event_id=${events[0].id}`)
         } else {
@@ -1000,6 +1108,22 @@ export default function BouwenPage() {
   async function handleAuthSubmit(e: React.FormEvent) {
     e.preventDefault()
     setAuthLoading(true)
+
+    // Persist current builder state to localStorage so it survives the magic-link redirect
+    if (draft && !savedEventId) {
+      try {
+        const currentDraft = {
+          ...draft,
+          nav_layout: navLayout,
+          homepage_settings: hpSettings,
+          homeContent: draft.homeContent,
+        }
+        localStorage.setItem("sayingyes_draft", JSON.stringify(currentDraft))
+        const { Home: _home, ...restContent } = content
+        localStorage.setItem("sayingyes_content", JSON.stringify(restContent))
+      } catch {}
+    }
+
     localStorage.setItem("sayingyes_pending_save", "1")
     const { error } = await createClient().auth.signInWithOtp({
       email: authEmail,
@@ -3056,7 +3180,7 @@ export default function BouwenPage() {
                 <h3 className="text-lg font-extrabold text-gray-900 text-center mb-2">Controleer je inbox</h3>
                 <p className="text-sm text-gray-500 text-center mb-4 leading-relaxed">
                   We hebben een inloglink gestuurd naar <strong className="text-gray-800">{authEmail}</strong>.
-                  Klik op de link, kom dan terug naar deze pagina en klik nogmaals op <strong>Opslaan</strong>.
+                  Klik op de link in de e-mail — je website wordt dan automatisch opgeslagen.
                 </p>
                 <button
                   onClick={() => { setShowAuthModal(false); setAuthSent(false); setAuthEmail("") }}
