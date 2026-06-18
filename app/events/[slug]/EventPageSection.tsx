@@ -75,7 +75,19 @@ export default function EventPageSection({ page, sc, eventId }: { page: PageData
     const rsvpCustomQuestion2 = typeof c.customQuestion2 === "string" && c.customQuestion2.trim() ? c.customQuestion2 : null
     const cardInner = (
       <>
-        <p style={{ fontSize: "0.9375rem", marginBottom: 24, color: sc.goldBorder ? (sc.cardText ?? sc.bodyText) : sc.bodyText }}>{introText}</p>
+        <p style={{ fontSize: "0.9375rem", marginBottom: 16, color: sc.goldBorder ? (sc.cardText ?? sc.bodyText) : sc.bodyText }}>{introText}</p>
+        <p style={{
+          fontSize: "0.8125rem",
+          marginBottom: 24,
+          padding: "10px 14px",
+          borderRadius: 10,
+          backgroundColor: `${sc.accent}12`,
+          border: `1px solid ${sc.accent}30`,
+          color: sc.bodyText,
+          lineHeight: 1.55,
+        }}>
+          📋 Check even je uitnodiging welk type gast je bent. Als daggast verschijnen aan de avondtafel — we zeggen er verder niets over, maar de catering wel. 😉
+        </p>
         <RsvpForm
           eventId={eventId}
           accentColor={sc.accent}
