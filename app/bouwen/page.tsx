@@ -491,7 +491,7 @@ export default function BouwenPage() {
     }, 150)
   }
 
-  function handleStoryFieldDoubleClick(field: 'title' | 'text') {
+  function handleStoryFieldClick(field: 'title' | 'text') {
     setActiveSection('paginas')
     setActiveSubPage('OnsVerhaal')
     setTimeout(() => {
@@ -504,7 +504,7 @@ export default function BouwenPage() {
     }, 150)
   }
 
-  function handleProgramItemDoubleClick(itemId: string) {
+  function handleProgramItemClick(itemId: string) {
     setActiveSection('paginas')
     setActiveSubPage('Programma')
     setTimeout(() => {
@@ -517,7 +517,7 @@ export default function BouwenPage() {
     }, 150)
   }
 
-  function handleInfoTileDoubleClick(tileId: string, field: 'title' | 'text') {
+  function handleInfoTileClick(tileId: string, field: 'title' | 'text') {
     setActiveSection('paginas')
     setActiveSubPage('Informatie')
     setTimeout(() => {
@@ -530,7 +530,7 @@ export default function BouwenPage() {
     }, 150)
   }
 
-  function handleWishlistItemDoubleClick(itemId: string, field: 'title' | 'text') {
+  function handleWishlistItemClick(itemId: string, field: 'title' | 'text') {
     setActiveSection('paginas')
     setActiveSubPage('Cadeautips')
     setTimeout(() => {
@@ -543,7 +543,7 @@ export default function BouwenPage() {
     }, 150)
   }
 
-  function handleMasterDoubleClick(masterId: string) {
+  function handleMasterClick(masterId: string) {
     setActiveSection('paginas')
     setActiveSubPage('Ceremoniemeesters')
     setTimeout(() => {
@@ -2919,7 +2919,7 @@ export default function BouwenPage() {
                           masters={mastersForPreview}
                           sc={sc}
                           text={typeof content.Ceremoniemeesters?.text === "string" ? content.Ceremoniemeesters.text : undefined}
-                          onMasterDoubleClick={handleMasterDoubleClick}
+                          onMasterClick={handleMasterClick}
                         />
                         </div>
                       )}
@@ -2934,7 +2934,7 @@ export default function BouwenPage() {
                           showOverlay={storyOverlay}
                           editable={true}
                           onPositionChange={(x, y) => updateContent("OnsVerhaal", { ...(content.OnsVerhaal ?? {}), image_pos_x: x, image_pos_y: y })}
-                          onFieldDoubleClick={handleStoryFieldDoubleClick}
+                          onFieldClick={handleStoryFieldClick}
                           sc={sc}
                         />
                         </div>
@@ -2953,7 +2953,7 @@ export default function BouwenPage() {
                             })
                             updateContent("Programma", { items: updated, layout: programLayout })
                           }}
-                          onItemDoubleClick={handleProgramItemDoubleClick}
+                          onItemClick={handleProgramItemClick}
                         />
                         </div>
                       )}
@@ -3086,12 +3086,12 @@ export default function BouwenPage() {
                       )}
                       {showSection("Informatie") && (
                         <div style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "Informatie") } : undefined}>
-                        <PraktischPreview tiles={praktischTiles ?? DEFAULT_PRAKTISCH_TILES} sc={sc} onTileDoubleClick={handleInfoTileDoubleClick} />
+                        <PraktischPreview tiles={praktischTiles ?? DEFAULT_PRAKTISCH_TILES} sc={sc} onTileClick={handleInfoTileClick} />
                         </div>
                       )}
                       {showSection("Cadeautips") && (
                         <div style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "Cadeautips") } : undefined}>
-                        <WishlistPreview items={wishlistItems?.length ? wishlistItems : DEFAULT_WISHLIST_ITEMS} sc={sc} onItemDoubleClick={handleWishlistItemDoubleClick} />
+                        <WishlistPreview items={wishlistItems?.length ? wishlistItems : DEFAULT_WISHLIST_ITEMS} sc={sc} onItemClick={handleWishlistItemClick} />
                         </div>
                       )}
                       {showSection("Fotos") && (

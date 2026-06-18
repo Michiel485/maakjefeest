@@ -48,8 +48,8 @@ const STEPS: { label: string; title: string; text: string; nav: SophieNav }[] = 
   },
   {
     label: "Stap 5 · Homepage bewerken",
-    title: "Dubbelklik om direct te bewerken ✏️",
-    text: "Dubbelklik op een tekst in de live preview en je springt automatisch naar de bijbehorende menu-optie — je kunt het dan direct aanpassen. Op de homepage kun je elk tekstveld bovendien apart instellen met een eigen lettertype en grootte. Zo heb je maximale vrijheid om precies de look te krijgen die jullie voor ogen hebben!",
+    title: "Klik om direct te bewerken ✏️",
+    text: "Klik op een tekst in de live preview en je springt automatisch naar de bijbehorende menu-optie — je kunt het dan direct aanpassen. Op de homepage kun je elk tekstveld bovendien apart instellen met een eigen lettertype en grootte. Zo heb je maximale vrijheid om precies de look te krijgen die jullie voor ogen hebben!",
     nav: { activeSection: 'paginas', openAlgSection: null, activeSubPage: 'Home', openHomeSection: 'tekstvelden' },
   },
   {

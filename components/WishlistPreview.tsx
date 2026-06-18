@@ -69,8 +69,8 @@ export default function WishlistPreview({
             <p
               className="font-extrabold text-base leading-tight"
               style={{ color: sc.goldBorder ? (sc.cardText ?? sc.headingColor) : sc.headingColor, cursor: onItemDoubleClick ? "pointer" : undefined }}
-              onDoubleClick={onItemDoubleClick ? () => onItemDoubleClick(item.id, 'title') : undefined}
-              title={onItemDoubleClick ? "Dubbelklik om te bewerken" : undefined}
+              onClick={onItemDoubleClick ? () => onItemDoubleClick(item.id, 'title') : undefined}
+              title={onItemDoubleClick ? "Klik om te bewerken" : undefined}
             >
               {item.title}
             </p>
@@ -78,8 +78,8 @@ export default function WishlistPreview({
               <p
                 className="text-sm leading-relaxed whitespace-pre-wrap"
                 style={{ color: sc.goldBorder ? (sc.cardText ?? sc.bodyText) : sc.bodyText, cursor: onItemDoubleClick ? "pointer" : undefined }}
-                onDoubleClick={onItemDoubleClick ? () => onItemDoubleClick(item.id, 'text') : undefined}
-                title={onItemDoubleClick ? "Dubbelklik om te bewerken" : undefined}
+                onClick={onItemDoubleClick ? () => onItemDoubleClick(item.id, 'text') : undefined}
+                title={onItemDoubleClick ? "Klik om te bewerken" : undefined}
               >
                 {item.text}
               </p>

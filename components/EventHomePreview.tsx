@@ -111,9 +111,9 @@ export default function EventHomePreview({
 
   const fieldClick = onFieldClick
     ? (field: string): React.HTMLAttributes<HTMLElement> => ({
-        onDoubleClick: (e: React.MouseEvent) => { e.stopPropagation(); onFieldClick(field) },
+        onClick: (e: React.MouseEvent) => { e.stopPropagation(); onFieldClick(field) },
         style: { cursor: 'pointer' },
-        title: 'Dubbelklik om te bewerken',
+        title: 'Klik om te bewerken',
       })
     : () => ({})
 
@@ -268,7 +268,7 @@ export default function EventHomePreview({
             onTouchStart={editableHero ? (e) => startHeroDrag(e.touches[0].clientX, e.touches[0].clientY) : undefined}
             onTouchMove={editableHero ? (e) => { e.preventDefault(); moveHeroDrag(e.touches[0].clientX, e.touches[0].clientY) } : undefined}
             onTouchEnd={editableHero ? endHeroDrag : undefined}
-            onDoubleClick={onFieldClick ? (e) => { e.stopPropagation(); onFieldClick('headerfoto') } : undefined}
+            onClick={onFieldClick ? (e) => { e.stopPropagation(); onFieldClick('headerfoto') } : undefined}
             style={{ cursor: editableHero && heroImageUrl ? (heroDragging ? 'grabbing' : 'grab') : 'default' }}
           >
             {heroImageUrl ? (
@@ -433,7 +433,7 @@ export default function EventHomePreview({
       onTouchStart={editableHero ? (e) => startHeroDrag(e.touches[0].clientX, e.touches[0].clientY) : undefined}
       onTouchMove={editableHero ? (e) => { e.preventDefault(); moveHeroDrag(e.touches[0].clientX, e.touches[0].clientY) } : undefined}
       onTouchEnd={editableHero ? endHeroDrag : undefined}
-      onDoubleClick={onFieldClick ? (e) => { e.stopPropagation(); onFieldClick('headerfoto') } : undefined}
+      onClick={onFieldClick ? (e) => { e.stopPropagation(); onFieldClick('headerfoto') } : undefined}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img

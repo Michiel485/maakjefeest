@@ -325,8 +325,8 @@ export default function EventProgramPreview({
                     {item.title && (
                       <p
                         style={{ fontSize: "1.25rem", fontWeight: 800, color: sc.goldBorder ? (sc.cardText ?? sc.headingColor) : sc.headingColor, margin: "0 0 6px", lineHeight: 1.2, cursor: onItemDoubleClick ? "pointer" : undefined }}
-                        onDoubleClick={onItemDoubleClick && item.id ? () => onItemDoubleClick(item.id!) : undefined}
-                        title={onItemDoubleClick ? "Dubbelklik om te bewerken" : undefined}
+                        onClick={onItemDoubleClick && item.id ? () => onItemDoubleClick(item.id!) : undefined}
+                        title={onItemDoubleClick ? "Klik om te bewerken" : undefined}
                       >
                         {item.title}
                       </p>
@@ -381,8 +381,8 @@ export default function EventProgramPreview({
                     <h3
                       className="text-base font-extrabold leading-tight min-w-0 break-words @md:text-2xl mb-1 @md:mb-2"
                       style={{ cursor: onItemDoubleClick ? "pointer" : undefined }}
-                      onDoubleClick={onItemDoubleClick && item.id ? () => onItemDoubleClick(item.id!) : undefined}
-                      title={onItemDoubleClick ? "Dubbelklik om te bewerken" : undefined}
+                      onClick={onItemDoubleClick && item.id ? () => onItemDoubleClick(item.id!) : undefined}
+                      title={onItemDoubleClick ? "Klik om te bewerken" : undefined}
                     >
                       <span style={{ color: sc.labelColor }} className="mr-2">{item.time}</span>
                       {item.title && <span style={{ color: sc.headingColor }}>{item.title}</span>}

@@ -82,8 +82,8 @@ export default function EventMastersPreview({ masters, sc, text, onMasterDoubleC
                 <p
                   className="font-bold uppercase mb-2"
                   style={{ letterSpacing: "0.12em", fontSize: "0.8125rem", color: sc.headingColor, fontFamily: sc.fontFamily, cursor: onMasterDoubleClick ? "pointer" : undefined }}
-                  onDoubleClick={onMasterDoubleClick && (master.id ?? i.toString()) ? () => onMasterDoubleClick(master.id ?? i.toString()) : undefined}
-                  title={onMasterDoubleClick ? "Dubbelklik om te bewerken" : undefined}
+                  onClick={onMasterDoubleClick && (master.id ?? i.toString()) ? () => onMasterDoubleClick(master.id ?? i.toString()) : undefined}
+                  title={onMasterDoubleClick ? "Klik om te bewerken" : undefined}
                 >
                   {master.naam}
                 </p>

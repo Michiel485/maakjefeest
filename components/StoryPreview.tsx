@@ -154,8 +154,8 @@ export default function StoryPreview({
                 fontWeight: sc.fontPageTitlesWeight,
                 cursor: onFieldDoubleClick ? "pointer" : undefined,
               }}
-              onDoubleClick={onFieldDoubleClick ? () => onFieldDoubleClick("title") : undefined}
-              title={onFieldDoubleClick ? "Dubbelklik om te bewerken" : undefined}
+              onClick={onFieldDoubleClick ? () => onFieldDoubleClick("title") : undefined}
+              title={onFieldDoubleClick ? "Klik om te bewerken" : undefined}
             >
               {title}
             </h2>
@@ -170,8 +170,8 @@ export default function StoryPreview({
                 fontSize: "1rem",
                 cursor: onFieldDoubleClick ? "pointer" : undefined,
               }}
-              onDoubleClick={onFieldDoubleClick ? () => onFieldDoubleClick("text") : undefined}
-              title={onFieldDoubleClick ? "Dubbelklik om te bewerken" : undefined}
+              onClick={onFieldDoubleClick ? () => onFieldDoubleClick("text") : undefined}
+              title={onFieldDoubleClick ? "Klik om te bewerken" : undefined}
             >
               {text}
             </p>
@@ -184,8 +184,8 @@ export default function StoryPreview({
                 opacity: 0.45,
                 cursor: onFieldDoubleClick ? "pointer" : undefined,
               }}
-              onDoubleClick={onFieldDoubleClick ? () => onFieldDoubleClick("text") : undefined}
-              title={onFieldDoubleClick ? "Dubbelklik om te bewerken" : undefined}
+              onClick={onFieldDoubleClick ? () => onFieldDoubleClick("text") : undefined}
+              title={onFieldDoubleClick ? "Klik om te bewerken" : undefined}
             >
               Schrijf jullie verhaal in de sidebar...
             </p>

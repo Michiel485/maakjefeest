@@ -63,8 +63,8 @@ export default function PraktischPreview({
             <p
               className="font-extrabold text-base leading-tight"
               style={{ color: sc.goldBorder ? (sc.cardText ?? sc.headingColor) : sc.headingColor, cursor: onTileDoubleClick ? "pointer" : undefined }}
-              onDoubleClick={onTileDoubleClick ? () => onTileDoubleClick(tile.id, 'title') : undefined}
-              title={onTileDoubleClick ? "Dubbelklik om te bewerken" : undefined}
+              onClick={onTileDoubleClick ? () => onTileDoubleClick(tile.id, 'title') : undefined}
+              title={onTileDoubleClick ? "Klik om te bewerken" : undefined}
             >
               {tile.title}
             </p>
@@ -72,8 +72,8 @@ export default function PraktischPreview({
               <p
                 className="text-sm leading-relaxed whitespace-pre-wrap"
                 style={{ color: sc.goldBorder ? (sc.cardText ?? sc.bodyText) : sc.bodyText, cursor: onTileDoubleClick ? "pointer" : undefined }}
-                onDoubleClick={onTileDoubleClick ? () => onTileDoubleClick(tile.id, 'text') : undefined}
-                title={onTileDoubleClick ? "Dubbelklik om te bewerken" : undefined}
+                onClick={onTileDoubleClick ? () => onTileDoubleClick(tile.id, 'text') : undefined}
+                title={onTileDoubleClick ? "Klik om te bewerken" : undefined}
               >
                 {tile.text}
               </p>
