@@ -178,7 +178,14 @@ export default function StoryPreview({
           ) : (
             <p
               className="italic text-sm"
-              style={{ fontFamily: sc.fontFamily, color: sc.bodyText, opacity: 0.45 }}
+              style={{
+                fontFamily: sc.fontFamily,
+                color: sc.bodyText,
+                opacity: 0.45,
+                cursor: onFieldDoubleClick ? "pointer" : undefined,
+              }}
+              onDoubleClick={onFieldDoubleClick ? () => onFieldDoubleClick("text") : undefined}
+              title={onFieldDoubleClick ? "Dubbelklik om te bewerken" : undefined}
             >
               Schrijf jullie verhaal in de sidebar...
             </p>
