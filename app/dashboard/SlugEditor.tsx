@@ -85,7 +85,7 @@ export default function SlugEditor({ eventId, currentSlug, isLive }: Props) {
     <div className="mt-2 flex flex-col gap-1.5">
       <div className="flex items-center gap-1.5">
         <span className="text-xs" style={{ color: `${BODY}70`, whiteSpace: "nowrap" }}>
-          {isLive ? `${preview}.sayingyes.nl` : `sayingyes.nl/events/${preview}`}
+          {`${preview}.sayingyes.nl`}
         </span>
       </div>
       <div className="flex items-center gap-1.5">

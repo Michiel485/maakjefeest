@@ -60,7 +60,7 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
           className="text-lg font-mono"
           style={{ fontWeight: 700, color: CHARCOAL }}
         >
-          {isDraft ? `sayingyes.nl/events/${event.slug}` : `${event.slug}.sayingyes.nl`}
+          {`${event.slug}.sayingyes.nl`}
         </h3>
         <p className="text-xs mt-0.5" style={{ color: BODY }}>Opgeslagen op {date}</p>
         <div className="mt-2">
