@@ -181,7 +181,7 @@ export default function EventNav({
         <nav className="notranslate sticky top-0 z-50 px-8 border-b backdrop-blur-sm" style={navStyle}>
           {/* Mobile row: language left, hamburger right */}
           <div className="flex items-center justify-between py-4 @md:hidden">
-            <LanguageSwitcher accent={sc.accent} textColor={sc.navText} bgColor={sc.navBg} />
+            <LanguageSwitcher accent={sc.accent} textColor={sc.navText} bgColor={sc.navBg} align="left" />
             {hamburgerBtn}
           </div>
           {/* Desktop: column */}
@@ -214,7 +214,7 @@ export default function EventNav({
 
           {/* Language switcher: left on mobile, hidden on desktop (desktop version is in ctrlRef) */}
           <div className="@md:hidden flex-shrink-0">
-            <LanguageSwitcher accent={sc.accent} textColor={sc.navText} bgColor={sc.navBg} />
+            <LanguageSwitcher accent={sc.accent} textColor={sc.navText} bgColor={sc.navBg} align="left" />
           </div>
 
           {/* Links inline — shown on desktop only when they fit on one row */}

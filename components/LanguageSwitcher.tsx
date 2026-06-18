@@ -31,12 +31,14 @@ interface Props {
   accent?: string
   textColor?: string
   bgColor?: string
+  align?: 'left' | 'right'
 }
 
 export default function LanguageSwitcher({
   accent = "#9B8B5A",
   textColor = "#2D2926",
   bgColor = "#FFFFFF",
+  align = "right",
 }: Props) {
   // Lazy initialiser — reads localStorage so the label survives Google Translate's
   // DOM rewrites which can remount this component and reset plain useState.
@@ -182,7 +184,7 @@ export default function LanguageSwitcher({
           style={{
             position: "absolute",
             top: "calc(100% + 6px)",
-            right: 0,
+            ...(align === "left" ? { left: 0 } : { right: 0 }),
             minWidth: "152px",
             backgroundColor: bgColor,
             border: `1px solid ${accent}30`,
