@@ -2,8 +2,13 @@ import { createServiceClient } from "@/lib/supabase"
 import { getStyleConfig } from "@/lib/event-styles"
 import EventNav from "./event-nav"
 import EventGatekeeper from "@/components/EventGatekeeper"
+import type { Viewport } from "next"
 
 export const dynamic = "force-dynamic"
+
+export const viewport: Viewport = {
+  colorScheme: "only light",
+}
 
 export default async function EventLayout({
   children,

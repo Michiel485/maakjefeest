@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+﻿import type { Metadata, Viewport } from "next";
 import {
   Geist,
   Geist_Mono,
@@ -119,6 +119,10 @@ const prata = Prata({
   subsets: ["latin"],
   weight: "400",
 });
+
+export const viewport: Viewport = {
+  colorScheme: "only light",
+}
 
 export const metadata: Metadata = {
   title: "SayingYes — Jullie bruiloftswebsite",
