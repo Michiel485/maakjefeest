@@ -37,7 +37,7 @@ const STEPS: { label: string; title: string; text: string; nav: SophieNav }[] = 
   {
     label: "Stap 3 · Lettertype",
     title: "Het lettertype bepaalt de stijl 🖋️",
-    text: "Een romantisch handschrift, een klassiek schreeflettertype of iets moderns — het lettertype geeft jullie website veel karakter. Dit basislettertype wordt gebruikt voor de navigatie, paginatitels, jullie welkomstbericht én alle tekst op de overige pagina's.",
+    text: "Een romantisch handschrift, een klassiek schreeflettertype of iets moderns — het lettertype geeft jullie website veel karakter. Dit basislettertype bepaalt de look van de navigatie, paginatitels, jullie welkomstbericht én de overige pagina's.\n\nLet op: deze keuze heeft geen invloed op de homepage. De tekstvelden op jullie homepagina kun je apart aanpassen en indelen via de instellingen van de pagina 'Home'.",
     nav: { activeSection: 'algemeen', openAlgSection: 'lettertype' },
   },
   {
@@ -245,7 +245,11 @@ export default function SophieTutorial({ onNavigate }: Props) {
       {/* Inhoud */}
       <div className="px-5 py-4">
         <p className="text-sm font-semibold mb-2" style={{ color: CHARCOAL }}>{current.title}</p>
-        <p className="text-xs leading-relaxed" style={{ color: BODY }}>{current.text}</p>
+        <div className="text-xs leading-relaxed" style={{ color: BODY }}>
+          {current.text.split("\n\n").map((para, i) => (
+            <p key={i} className={i > 0 ? "mt-2" : ""}>{para}</p>
+          ))}
+        </div>
         <p className="text-[10px] mt-3" style={{ color: SUBTLE }}>
           ✦ Alles wat je instelt kun je later altijd aanpassen.
         </p>
