@@ -167,8 +167,9 @@ export default function Home() {
                 <span className="text-xs">Telefoon</span>
               </div>
             </div>
-            <p className="text-xs font-medium" style={{ color: "rgba(232,213,163,0.8)" }}>
-              ✦ Volledig te bouwen vanaf je telefoon
+            <p className="text-xs" style={{ color: "rgba(232,213,163,0.6)" }}>
+              ✦ Op desktop bouwen gaat het fijnst —{" "}
+              <span style={{ color: "rgba(232,213,163,0.85)", fontWeight: 500 }}>ook mogelijk vanaf je telefoon</span>
             </p>
           </div>
         </div>
