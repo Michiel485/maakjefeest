@@ -419,6 +419,7 @@ export default function BouwenPage() {
   const [authLoading, setAuthLoading] = useState(false)
   const [showDashboardModal, setShowDashboardModal] = useState(false)
   const [dashboardLoading, setDashboardLoading] = useState(false)
+  const [showLeaveModal, setShowLeaveModal] = useState(false)
   const [changeKey, setChangeKey] = useState(0)
   const [hasPendingChanges, setHasPendingChanges] = useState(false)
   const savingRef = useRef(false)
@@ -438,6 +439,17 @@ export default function BouwenPage() {
   useEffect(() => { if (activeSection !== 'algemeen') setOpenAlgSection(null) }, [activeSection])
   useEffect(() => { if (activeSection !== 'url') setOpenUrlSection(null) }, [activeSection])
   useEffect(() => { if (activeSection !== 'paginas' || activeSubPage !== 'Home') setOpenHomeSection(null) }, [activeSection, activeSubPage])
+
+  // Intercept browser back button — show a branded leave modal instead of instant navigation
+  useEffect(() => {
+    window.history.pushState({ builder: true }, '')
+    const handlePopState = () => {
+      window.history.pushState({ builder: true }, '')
+      setShowLeaveModal(true)
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
   const [pwType, setPwType] = useState<'password' | 'secret_question'>('password')
   const [pwValue, setPwValue] = useState('')
   const [pwQuestion, setPwQuestion] = useState('')
@@ -3264,6 +3276,77 @@ export default function BouwenPage() {
                 </button>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Leave builder modal ── */}
+      {showLeaveModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: "rgba(26,26,26,0.5)", backdropFilter: "blur(4px)" }}
+        >
+          <div
+            className="rounded-3xl shadow-2xl p-8 max-w-sm w-full"
+            style={{ backgroundColor: "#FDFAF6", border: "1px solid #E8D5A3" }}
+          >
+            <div
+              className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-5"
+              style={{ backgroundColor: "#FBF5E8", border: "1px solid #E8D5A3" }}
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} style={{ color: "#C5A059" }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+              </svg>
+            </div>
+            <h3
+              className="text-center mb-2"
+              style={{ fontFamily: "var(--font-cormorant)", fontSize: "1.5rem", fontWeight: 700, color: "#1A1A1A" }}
+            >
+              De builder verlaten?
+            </h3>
+            <p className="text-sm text-center mb-6 leading-relaxed" style={{ color: "#5C5248" }}>
+              {hasPendingChanges
+                ? "Je hebt niet-opgeslagen wijzigingen. Wil je eerst opslaan voor je weggaat?"
+                : "Wil je terug naar je dashboard of naar de startpagina?"}
+            </p>
+
+            {hasPendingChanges && (
+              <button
+                onClick={async () => {
+                  setShowLeaveModal(false)
+                  await handleSave()
+                  if (savedEventId) router.push(`/dashboard?event_id=${savedEventId}`)
+                  else router.push("/dashboard")
+                }}
+                className="w-full font-semibold py-3.5 rounded-2xl text-sm transition-all mb-2.5 hover:-translate-y-0.5"
+                style={{ backgroundColor: "#1A1A1A", color: "#FAF7F2", boxShadow: "0 4px 16px rgba(26,26,26,0.15)" }}
+              >
+                Opslaan & naar dashboard
+              </button>
+            )}
+
+            <button
+              onClick={() => {
+                setShowLeaveModal(false)
+                if (savedEventId) router.push(`/dashboard?event_id=${savedEventId}`)
+                else router.push("/dashboard")
+              }}
+              className="w-full font-semibold py-3.5 rounded-2xl text-sm transition-all mb-2.5 hover:-translate-y-0.5"
+              style={hasPendingChanges
+                ? { backgroundColor: "#F5EFE4", color: "#5C5248" }
+                : { backgroundColor: "#1A1A1A", color: "#FAF7F2", boxShadow: "0 4px 16px rgba(26,26,26,0.15)" }
+              }
+            >
+              {hasPendingChanges ? "Verlaten zonder opslaan" : "Naar dashboard"}
+            </button>
+
+            <button
+              onClick={() => setShowLeaveModal(false)}
+              className="w-full text-center text-sm py-1 transition-opacity hover:opacity-60"
+              style={{ color: "#9A8E82" }}
+            >
+              Blijven in de builder
+            </button>
           </div>
         </div>
       )}
