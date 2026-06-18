@@ -1702,7 +1702,7 @@ export default function BouwenPage() {
                     <div className="px-5 pb-4 flex flex-col gap-2">
                       <FontSelect value={fontPageTitles} onChange={saveFontPageTitles} />
                       <p className="text-xs text-gray-400 leading-relaxed">
-                        Gebruikt voor paginatitels, sectiekoppen en namen. Lopende tekst volgt het stijlthema.
+                        Dit lettertype geldt voor alle pagina's, behalve voor de homepage. De tekstvelden op de homepage kun je apart aanpassen bij de instellingen van de pagina 'Home'.
                       </p>
                     </div>
                   )}
