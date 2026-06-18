@@ -3122,38 +3122,47 @@ export default function BouwenPage() {
         </main>
       </div>
 
-      {/* ── Auth modal ── */}
+      {/* ── Dashboard unlock modal ── */}
       {showDashboardModal && (
         <div
-          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: "rgba(26,26,26,0.5)", backdropFilter: "blur(4px)" }}
           onClick={() => setShowDashboardModal(false)}
         >
           <div
-            className="bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full"
+            className="rounded-3xl shadow-2xl p-8 max-w-sm w-full"
+            style={{ backgroundColor: "#FDFAF6", border: "1px solid #E8D5A3" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: "#fef3c7" }}>
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} style={{ color: "#b45309" }}>
+            <div
+              className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-5"
+              style={{ backgroundColor: "#FBF5E8", border: "1px solid #E8D5A3" }}
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} style={{ color: "#C5A059" }}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
               </svg>
             </div>
-            <h3 className="text-lg font-extrabold text-gray-900 text-center mb-2">Ontgrendel je Gasten Dashboard!</h3>
-            <p className="text-sm text-gray-500 text-center mb-6 leading-relaxed">
-              Sla je website gratis op om direct toegang te krijgen tot je persoonlijke dashboard. Daar kun je straks je gastenlijst beheren en RSVP&apos;s bijhouden!
+            <h3
+              className="text-center mb-2"
+              style={{ fontFamily: "var(--font-cormorant)", fontSize: "1.5rem", fontWeight: 700, color: "#1A1A1A" }}
+            >
+              Ontgrendel je dashboard
+            </h3>
+            <p className="text-sm text-center mb-6 leading-relaxed" style={{ color: "#5C5248" }}>
+              Sla je website gratis op om direct toegang te krijgen tot je persoonlijke dashboard. Beheer je gastenlijst en houd RSVP&apos;s bij.
             </p>
             <button
               onClick={handleDashboardModalSave}
               disabled={dashboardLoading}
-              className="w-full font-bold py-3 rounded-xl text-sm transition-colors mb-2 disabled:opacity-60"
-              style={{ backgroundColor: "#b45309", color: "#fff" }}
-              onMouseEnter={(e) => { if (!dashboardLoading) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#92400e" }}
-              onMouseLeave={(e) => { if (!dashboardLoading) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#b45309" }}
+              className="w-full font-semibold py-3.5 rounded-2xl text-sm transition-all mb-2.5 disabled:opacity-50 hover:-translate-y-0.5"
+              style={{ backgroundColor: "#1A1A1A", color: "#FAF7F2", boxShadow: "0 4px 16px rgba(26,26,26,0.15)" }}
             >
-              {dashboardLoading ? "Opslaan..." : "Nu Opslaan & Doorgaan"}
+              {dashboardLoading ? "Opslaan..." : "Nu opslaan & doorgaan"}
             </button>
             <button
               onClick={() => setShowDashboardModal(false)}
-              className="w-full text-center text-sm text-gray-400 hover:text-gray-600 py-1"
+              className="w-full text-center text-sm py-1 transition-opacity hover:opacity-60"
+              style={{ color: "#9A8E82" }}
             >
               Annuleren
             </button>
@@ -3161,45 +3170,71 @@ export default function BouwenPage() {
         </div>
       )}
 
+      {/* ── Auth / magic-link modal ── */}
       {showAuthModal && (
         <div
-          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: "rgba(26,26,26,0.5)", backdropFilter: "blur(4px)" }}
           onClick={() => { if (!authSent) { setShowAuthModal(false); setSaveError(null) } }}
         >
           <div
-            className="bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full"
+            className="rounded-3xl shadow-2xl p-8 max-w-sm w-full"
+            style={{ backgroundColor: "#FDFAF6", border: "1px solid #E8D5A3" }}
             onClick={(e) => e.stopPropagation()}
           >
             {authSent ? (
               <>
-                <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-6 h-6 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-5"
+                  style={{ backgroundColor: "#FBF5E8", border: "1px solid #E8D5A3" }}
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} style={{ color: "#C5A059" }}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-extrabold text-gray-900 text-center mb-2">Controleer je inbox</h3>
-                <p className="text-sm text-gray-500 text-center mb-4 leading-relaxed">
-                  We hebben een inloglink gestuurd naar <strong className="text-gray-800">{authEmail}</strong>.
+                <h3
+                  className="text-center mb-2"
+                  style={{ fontFamily: "var(--font-cormorant)", fontSize: "1.5rem", fontWeight: 700, color: "#1A1A1A" }}
+                >
+                  Controleer je inbox
+                </h3>
+                <p className="text-sm text-center mb-5 leading-relaxed" style={{ color: "#5C5248" }}>
+                  We hebben een inloglink gestuurd naar <strong style={{ color: "#1A1A1A" }}>{authEmail}</strong>.
                   Klik op de link in de e-mail — je website wordt dan automatisch opgeslagen.
                 </p>
                 <button
                   onClick={() => { setShowAuthModal(false); setAuthSent(false); setAuthEmail("") }}
-                  className="w-full text-center text-sm text-rose-500 hover:underline font-medium"
+                  className="w-full text-center text-sm font-semibold py-2 transition-opacity hover:opacity-60"
+                  style={{ color: "#C5A059" }}
                 >
                   Sluiten
                 </button>
                 <button
                   onClick={() => { setAuthSent(false); localStorage.removeItem("sayingyes_pending_save") }}
-                  className="mt-2 w-full text-center text-xs text-gray-400 hover:text-gray-600 hover:underline"
+                  className="mt-1 w-full text-center text-xs transition-opacity hover:opacity-60"
+                  style={{ color: "#9A8E82" }}
                 >
                   E-mailadres verkeerd gespeld? Klik hier om aan te passen.
                 </button>
               </>
             ) : (
               <>
-                <h3 className="text-lg font-extrabold text-gray-900 mb-1.5">Opslaan vereist een account</h3>
-                <p className="text-sm text-gray-500 mb-5 leading-relaxed">
-                  Vul je e-mailadres in om een magische inloglink te ontvangen — geen wachtwoord nodig.
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-5"
+                  style={{ backgroundColor: "#FBF5E8", border: "1px solid #E8D5A3" }}
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} style={{ color: "#C5A059" }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
+                  </svg>
+                </div>
+                <h3
+                  className="text-center mb-2"
+                  style={{ fontFamily: "var(--font-cormorant)", fontSize: "1.5rem", fontWeight: 700, color: "#1A1A1A" }}
+                >
+                  Inloggen om op te slaan
+                </h3>
+                <p className="text-sm text-center mb-6 leading-relaxed" style={{ color: "#5C5248" }}>
+                  Vul je e-mailadres in — je ontvangt een magische inloglink. Geen wachtwoord nodig.
                 </p>
                 <form onSubmit={handleAuthSubmit} className="space-y-3">
                   <input
@@ -3208,19 +3243,22 @@ export default function BouwenPage() {
                     value={authEmail}
                     onChange={(e) => setAuthEmail(e.target.value)}
                     placeholder="jouw@email.nl"
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-transparent"
+                    className="w-full rounded-2xl px-4 py-3.5 text-sm focus:outline-none transition-all"
+                    style={{ border: "1px solid #E8D5A3", backgroundColor: "#fff", color: "#1A1A1A" }}
                   />
                   <button
                     type="submit"
                     disabled={authLoading}
-                    className="w-full bg-rose-500 hover:bg-rose-600 disabled:bg-rose-300 text-white font-bold py-3 rounded-xl text-sm transition-colors"
+                    className="w-full font-semibold py-3.5 rounded-2xl text-sm transition-all disabled:opacity-50 hover:-translate-y-0.5"
+                    style={{ backgroundColor: "#1A1A1A", color: "#FAF7F2", boxShadow: "0 4px 16px rgba(26,26,26,0.15)" }}
                   >
                     {authLoading ? "Bezig..." : "Stuur inloglink"}
                   </button>
                 </form>
                 <button
                   onClick={() => { setShowAuthModal(false); setSaveError(null) }}
-                  className="mt-3 w-full text-center text-sm text-gray-400 hover:text-gray-600"
+                  className="mt-3 w-full text-center text-sm transition-opacity hover:opacity-60"
+                  style={{ color: "#9A8E82" }}
                 >
                   Annuleren
                 </button>
