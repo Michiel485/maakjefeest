@@ -133,7 +133,9 @@ export default function RootLayout({
   return (
     <html
       lang="nl"
+      data-color-scheme="light"
       className={`${geistSans.variable} ${geistMono.variable} ${playfairDisplay.variable} ${greatVibes.variable} ${cormorantGaramond.variable} ${pinyonScript.variable} ${cinzel.variable} ${dancingScript.variable} ${montserrat.variable} ${marcellus.variable} ${lora.variable} ${windSong.variable} ${allura.variable} ${bodoniModa.variable} ${italiana.variable} ${gfsDidot.variable} ${prata.variable} h-full antialiased`}
+      style={{ colorScheme: "only light" }}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
