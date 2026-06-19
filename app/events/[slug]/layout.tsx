@@ -94,7 +94,7 @@ export default async function EventLayout({
   )
 
   return (
-    <div className={`min-h-screen${isFullWidth ? '' : ' sm:py-12'}`} style={{ fontFamily: sc.fontFamily, background: (!isFullWidth && sc.outerBg) ? sc.outerBg : (sc.bodyBackground ?? sc.bodyBg), letterSpacing: sc.bodyLetterSpacing, fontWeight: sc.bodyFontWeight, scrollBehavior: isSinglePage ? 'smooth' : undefined }}>
+    <div className={`min-h-screen${isFullWidth ? '' : ' sm:py-12'}`} style={{ fontFamily: sc.fontFamily, background: isFullWidth ? (sc.bodyBackground ?? sc.bodyBg) : sc.bodyBg, letterSpacing: sc.bodyLetterSpacing, fontWeight: sc.bodyFontWeight, scrollBehavior: isSinglePage ? 'smooth' : undefined }}>
       {sc.fontImport && <style>{sc.fontImport}</style>}
       {sc.floral && (
         <style>{`
