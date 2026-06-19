@@ -1,6 +1,6 @@
 import { createServiceClient } from "@/lib/supabase"
 
-const supabase = createServiceClient()
+export const dynamic = "force-dynamic"
 
 function toSlug(naam: string): string {
   return naam
@@ -13,6 +13,7 @@ function toSlug(naam: string): string {
 }
 
 async function uniqueSlug(base: string): Promise<string> {
+  const supabase = createServiceClient()
   const { data } = await supabase
     .from("events")
     .select("slug")
@@ -38,6 +39,7 @@ const PAGE_TITLES: Record<string, string> = {
 }
 
 export async function POST(request: Request) {
+  const supabase = createServiceClient()
   let body: {
     type: string
     naam: string

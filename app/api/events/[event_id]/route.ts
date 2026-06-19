@@ -1,12 +1,13 @@
 import { createServiceClient } from "@/lib/supabase"
 
-const supabase = createServiceClient()
+export const dynamic = "force-dynamic"
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ event_id: string }> }
 ) {
   const { event_id } = await params
+  const supabase = createServiceClient()
 
   const { data, error } = await supabase
     .from("events")

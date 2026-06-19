@@ -7,8 +7,6 @@ import { generateInvoicePDF } from "@/lib/invoice-pdf"
 
 export const dynamic = "force-dynamic"
 
-const mollie = createMollieClient({ apiKey: process.env.MOLLIE_API_KEY! })
-
 const AMOUNT_INCL = 49.99
 const BTW_RATE    = 21
 const AMOUNT_EXCL = Math.round((AMOUNT_INCL / (1 + BTW_RATE / 100)) * 100) / 100
@@ -36,6 +34,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Geen payment id" }, { status: 400 })
   }
 
+  const mollie = createMollieClient({ apiKey: process.env.MOLLIE_API_KEY! })
   let payment
   try {
     payment = await mollie.payments.get(paymentId)
