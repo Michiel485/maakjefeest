@@ -465,8 +465,11 @@ export async function sendWebsiteLiveEmail(
             <p style="margin:0 0 18px;font-size:15px;color:#374151;line-height:1.7;">
               Het is zover: jullie hebben op de grote knop gedrukt en jullie persoonlijke trouwwebsite staat officieel live! Wat een waanzinnige mijlpaal. De pagina ziet er prachtig uit en is vanaf nu helemaal klaar om jullie gasten in stijl te ontvangen.
             </p>
-            <p style="margin:0 0 28px;font-size:15px;color:#374151;line-height:1.7;">
+            <p style="margin:0 0 18px;font-size:15px;color:#374151;line-height:1.7;">
               Vanaf dit moment kunnen jullie gasten ook de RSVP invullen. De meldingen daarvan stromen automatisch jullie dashboard binnen.
+            </p>
+            <p style="margin:0 0 28px;font-size:15px;color:#374151;line-height:1.7;">
+              Jullie kunnen de website altijd blijven aanpassen — ook de inhoud, stijl en zelfs de URL. Log gewoon in via <a href="https://sayingyes.nl/inloggen" style="color:#c9a96e;text-decoration:none;font-weight:600;">sayingyes.nl/inloggen</a> om verder te bouwen.
             </p>
 
             <!-- CTA button -->
@@ -590,7 +593,7 @@ export async function sendSignupWelcomeMagicLink({
         <tr>
           <td style="padding:36px 40px 0;">
             <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.7;">
-              Gefeliciteerd! De allereerste stap is gezet: jullie hebben de basisgegevens van jullie bruiloft succesvol opgeslagen. Klik op de knop hieronder om je account te bevestigen en verder te gaan met bouwen.
+              De basisgegevens zijn opgeslagen — klik op de knop hieronder om door te gaan met bouwen. Je website is nog niet live en je betaalt nog niets. Bouwen is volledig gratis en vrijblijvend.
             </p>
 
             <!-- Steps block -->
@@ -627,7 +630,7 @@ export async function sendSignupWelcomeMagicLink({
                     href="${magicLink}"
                     style="display:inline-block;background-color:#c9a96e;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:14px 36px;border-radius:10px;letter-spacing:0.02em;mso-padding-alt:14px 36px;"
                   >
-                    Account bevestigen &amp; verder bouwen →
+                    Verder bouwen →
                   </a>
                 </td>
               </tr>
@@ -820,7 +823,7 @@ export async function sendInvoiceEmail({
               <tr>
                 <td>
                   <p style="margin:0 0 2px;font-size:26px;font-weight:600;letter-spacing:0.06em;color:#1a1a1a;font-family:'Cormorant Garamond','Georgia',serif;">SayingYes</p>
-                  <p style="margin:0;font-size:12px;color:#9b8b6a;">MvB Commerce · KVK 42079472 · BTW NL005478870B96</p>
+                  <p style="margin:0;font-size:12px;color:#9b8b6a;">SayingYes · KVK 42079472 · BTW NL005478870B96</p>
                   <p style="margin:2px 0 0;font-size:12px;color:#9b8b6a;">Theo Uden Masmanstraat 43, 3813ZE Amersfoort</p>
                 </td>
                 <td align="right" style="vertical-align:top;">

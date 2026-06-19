@@ -65,7 +65,7 @@ function InvoiceDocument(props: InvoicePDFProps) {
           <View>
             <Text style={s.brand}>SayingYes</Text>
             <Text style={s.brandSub}>
-              MvB Commerce{"\n"}
+              SayingYes{"\n"}
               KVK 42079472  ·  BTW NL005478870B96{"\n"}
               Theo Uden Masmanstraat 43, 3813ZE Amersfoort{"\n"}
               info@sayingyes.nl

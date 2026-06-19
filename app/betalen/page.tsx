@@ -256,7 +256,7 @@ function CheckoutContent() {
               <p className="text-sm font-semibold" style={{ color: CHARCOAL }}>Bruiloftswebsite — 1 jaar live</p>
               {event && <p className="text-xs mt-0.5" style={{ color: BODY }}>{event.slug}.sayingyes.nl</p>}
               <ul className="mt-3 space-y-1.5 text-xs" style={{ color: BODY }}>
-                {["Eigen subdomein (1 jaar online)", "Onbeperkte RSVP-aanmeldingen", "Fotogalerij & programma", "Altijd aanpasbaar via de builder"].map(item => (
+                {["Eigen subdomein (1 jaar online)", "Onbeperkte RSVP-aanmeldingen", "Fotogalerij & programma", "Altijd aanpasbaar — ook je URL — via de builder"].map(item => (
                   <li key={item} className="flex items-center gap-2">
                     <span style={{ color: GOLD, fontSize: "0.45rem" }}>✦</span>
                     {item}
@@ -282,6 +282,11 @@ function CheckoutContent() {
           </div>
         </div>
       </div>
+
+      {/* Reassurance note */}
+      <p className="text-xs text-center mb-5 leading-relaxed" style={{ color: `${BODY}99` }}>
+        Na publicatie kun je de inhoud, stijl en URL van je website altijd nog aanpassen via de builder.
+      </p>
 
       {/* Email confirmation */}
       {userEmail && (

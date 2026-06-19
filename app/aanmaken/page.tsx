@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { createClient } from "@/lib/supabase"
 
 const GOLD       = "#C5A059"
 const GOLD_LIGHT = "#E8D5A3"
@@ -62,6 +63,7 @@ export default function AanmakenPage() {
   const [form, setForm] = useState({ naam1: "", naam2: "", datum: "", email: "", slug: "" })
   const [slugStatus, setSlugStatus] = useState<SlugStatus>("idle")
   const [submitting, setSubmitting] = useState(false)
+  const [mailSent, setMailSent] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   function scheduleSlugCheck(slug: string) {
@@ -183,8 +185,7 @@ export default function AanmakenPage() {
       }
     } catch {}
 
-    // Terugval voor niet-ingelogde gebruikers: localStorage + /bouwen zonder event_id
-    // De builder toont dan de magic-link flow en maakt het event aan na inloggen
+    // Niet ingelogd: draft in localStorage bewaren + magic link sturen
     const draft = {
       type: "bruiloft", naam: eventTitle, naam1: form.naam1.trim(), naam2: form.naam2.trim(),
       slug: cleanSlug, style: "ivoor", nav_title: frameNames, nav_layout: "split", datum: form.datum,
@@ -208,7 +209,17 @@ export default function AanmakenPage() {
     localStorage.setItem("sayingyes_draft", JSON.stringify(draft))
     localStorage.setItem("sayingyes_content", JSON.stringify({ Programma: DEFAULT_PROGRAMMA, Informatie: DEFAULT_PRAKTISCH }))
     localStorage.removeItem("sayingyes_saved_event_id")
-    router.push("/bouwen")
+    localStorage.setItem("sayingyes_pending_save", "1")
+
+    await createClient().auth.signInWithOtp({
+      email: form.email,
+      options: {
+        shouldCreateUser: true,
+        emailRedirectTo: `${window.location.origin}/api/auth/callback?next=/bouwen`,
+      },
+    })
+
+    setMailSent(true)
     setSubmitting(false)
   }
 
@@ -255,6 +266,38 @@ export default function AanmakenPage() {
       </header>
 
       <main className="relative z-10 max-w-lg mx-auto px-6 pb-24 pt-4">
+
+        {mailSent ? (
+          <div className="flex flex-col items-center text-center pt-16 pb-24">
+            <div
+              className="w-16 h-16 rounded-full flex items-center justify-center mb-6"
+              style={{ backgroundColor: GOLD_BG, border: `1px solid ${GOLD_LIGHT}` }}
+            >
+              <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} style={{ color: GOLD }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+              </svg>
+            </div>
+            <h2
+              className="mb-3"
+              style={{ fontFamily: "var(--font-cormorant)", fontSize: "2rem", fontWeight: 700, color: CHARCOAL, lineHeight: 1.15 }}
+            >
+              Check je inbox!
+            </h2>
+            <p className="text-sm leading-relaxed mb-6" style={{ color: BODY }}>
+              We hebben een inloglink gestuurd naar{" "}
+              <strong style={{ color: CHARCOAL }}>{form.email}</strong>.
+              <br />
+              Klik op de link om direct door te gaan met bouwen.
+            </p>
+            <div
+              className="w-full rounded-2xl px-5 py-4 text-sm leading-relaxed text-left"
+              style={{ backgroundColor: GOLD_BG, border: `1px solid ${GOLD_LIGHT}`, color: BODY }}
+            >
+              <strong style={{ color: CHARCOAL }}>Zie je de mail niet?</strong> Kijk even in je spam of ongewenste e-mail.
+            </div>
+          </div>
+        ) : (
+        <>
 
         {/* Page header */}
         <div className="mb-10">
@@ -466,7 +509,7 @@ export default function AanmakenPage() {
 
           {/* Consent */}
           <p className="text-xs text-center leading-relaxed" style={{ color: "#8A7E72" }}>
-            Door op &lsquo;Start bouwen&rsquo; te klikken maak je een account aan en ga je akkoord met onze{" "}
+            Door op &lsquo;Start bouwen&rsquo; te klikken ontvang je een inloglink en ga je akkoord met onze{" "}
             <Link href="/voorwaarden" className="underline transition-opacity hover:opacity-70" style={{ color: BODY }}>
               Algemene Voorwaarden
             </Link>{" "}
@@ -492,6 +535,8 @@ export default function AanmakenPage() {
           </div>
 
         </form>
+        </>
+        )}
       </main>
     </div>
   )
