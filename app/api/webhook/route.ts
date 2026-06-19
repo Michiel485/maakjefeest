@@ -21,6 +21,13 @@ function formatDate(d: Date) {
 }
 
 export async function POST(request: Request) {
+  // Verify webhook secret token
+  const url = new URL(request.url)
+  const token = url.searchParams.get("token")
+  if (!token || token !== process.env.MOLLIE_WEBHOOK_SECRET) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
   let paymentId: string | null = null
   try {
     const text = await request.text()

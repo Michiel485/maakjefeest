@@ -102,7 +102,7 @@ export async function POST(request: Request) {
     amount:      { currency: "EUR", value: paymentAmount.toFixed(2) },
     description: `SayingYes — verlenging 6 maanden (${event.title})${discount_code ? ` | korting: ${discount_code}` : ""}`,
     redirectUrl: `${baseUrl}/dashboard?renewed=1`,
-    webhookUrl:  `${baseUrl}/api/webhook`,
+    webhookUrl:  `${baseUrl}/api/webhook?token=${process.env.MOLLIE_WEBHOOK_SECRET}`,
     metadata,
     ...(customerEmail ? { billingEmail: customerEmail } : {}),
   })

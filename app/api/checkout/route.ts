@@ -86,7 +86,7 @@ export async function POST(request: Request) {
     amount: { currency: "EUR", value: paymentAmount.toFixed(2) },
     description: `Saying Yes — bruiloftswebsite (1 jaar live)${discount_code ? ` | korting: ${discount_code}` : ""}`,
     redirectUrl: `${baseUrl}/betalen?event_id=${event_id}&from=mollie`,
-    webhookUrl:  `${baseUrl}/api/webhook`,
+    webhookUrl:  `${baseUrl}/api/webhook?token=${process.env.MOLLIE_WEBHOOK_SECRET}`,
     metadata,
     ...(customerEmail ? { billingEmail: customerEmail } : {}),
   })
