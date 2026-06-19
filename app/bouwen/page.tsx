@@ -783,7 +783,7 @@ export default function BouwenPage() {
       const el = canvasContainerRef.current
       if (!el) return
       const cw = viewport === "mobiel" ? 390 : 1024
-      setCanvasScale(Math.min(1, Math.max(0.4, (el.clientWidth - 48) / cw)))
+      setCanvasScale(Math.min(1, Math.max(0.4, el.clientWidth / cw)))
     }
     measure()
     window.addEventListener("resize", measure)
@@ -795,7 +795,7 @@ export default function BouwenPage() {
       const el = canvasContainerRef.current
       if (!el) return
       const cw = viewport === "mobiel" ? 390 : 1024
-      setCanvasScale(Math.min(1, Math.max(0.4, (el.clientWidth - 48) / cw)))
+      setCanvasScale(Math.min(1, Math.max(0.4, el.clientWidth / cw)))
     })
     return () => cancelAnimationFrame(id)
   }, [viewport])
@@ -2832,10 +2832,10 @@ export default function BouwenPage() {
           <div className="flex flex-1 min-h-0 overflow-hidden" style={{ minHeight: "420px" }}>
 
             {/* Canvas */}
-              <div ref={canvasContainerRef} className="flex-1 overflow-y-auto bg-gray-100 p-4 md:p-6">
+              <div ref={canvasContainerRef} className="flex-1 overflow-y-auto bg-gray-100">
                 <div className="mx-auto" style={{ width: `${Math.round(canvasWidth * canvasScale * zoomMultiplier)}px` }}>
                   <div style={{ width: canvasWidth, transform: `scale(${canvasScale * zoomMultiplier})`, transformOrigin: "top left" }}>
-                    <div className="rounded-2xl shadow-xl overflow-clip relative" style={{ backgroundColor: hpSettings.siteLayout !== 'fullwidth' ? sc.bodyBg : (sc.bodyBackground ?? sc.navBg), fontFamily: sc.fontFamily, letterSpacing: sc.bodyLetterSpacing, fontWeight: sc.bodyFontWeight }}>
+                    <div className="overflow-clip relative" style={{ backgroundColor: hpSettings.siteLayout !== 'fullwidth' ? sc.bodyBg : (sc.bodyBackground ?? sc.navBg), fontFamily: sc.fontFamily, letterSpacing: sc.bodyLetterSpacing, fontWeight: sc.bodyFontWeight }}>
                       {sc.fontImport && <style>{sc.fontImport}</style>}
                       <div className="bg-gray-50 border-b border-gray-200 px-4 py-2 flex items-center gap-2">
                         <div className="flex gap-1.5 flex-shrink-0">
@@ -2847,8 +2847,8 @@ export default function BouwenPage() {
                           {slugPreview}.sayingyes.nl
                         </div>
                       </div>
-                      <div style={hpSettings.siteLayout !== 'fullwidth' ? { padding: '28px 20px', background: sc.bodyBg } : {}}>
-                      <div style={hpSettings.siteLayout !== 'fullwidth' ? { overflow: 'hidden', borderRadius: '12px', boxShadow: '0 8px 40px rgba(0,0,0,0.14)', background: sc.bodyBackground ?? sc.navBg } : {}}>
+                      <div style={hpSettings.siteLayout !== 'fullwidth' ? { padding: '40px 60px', background: sc.bodyBg } : {}}>
+                      <div style={hpSettings.siteLayout !== 'fullwidth' ? { overflow: 'hidden', borderRadius: '16px 16px 0 0', boxShadow: '0 8px 48px rgba(0,0,0,0.18)', background: sc.bodyBackground ?? sc.navBg } : {}}>
                       <EventNav
                         title={safeNavTitle}
                         pages={activePagesOrdered.map((p) => ({ type: p.id, title: p.label }))}
@@ -3112,7 +3112,7 @@ export default function BouwenPage() {
                       </div>
                       </div>
                     </div>
-                    <p className="text-center text-xs text-gray-400 mt-3">Dit is precies hoe jouw site eruitziet</p>
+
                   </div>
                 </div>
               </div>
