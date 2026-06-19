@@ -148,8 +148,8 @@ export async function GET(request: Request) {
   // ── Published events: subscription expiry ─────────────────────────────────
   const { data: published } = await service
     .from("events")
-    .select("id, title, user_email, slug, status, expires_at, published_at, renewal_reminder_sent_at, expiry_warning_sent_at")
-    .in("status", ["published", "paused"])
+    .select("id, title, user_email, slug, expires_at, published_at, renewal_reminder_sent_at, expiry_warning_sent_at")
+    .eq("status", "published")
     .not("expires_at", "is", null)
 
   const dashboardUrl = `${siteUrl}/dashboard`
@@ -168,7 +168,7 @@ export async function GET(request: Request) {
         .from("events")
         .update({ status: "expired" })
         .eq("id", event.id)
-        .in("status", ["published", "paused"])
+        .eq("status", "published")
       revalidatePath(`/events/${event.slug}`, "layout")
       results.expired.push(event.id as string)
       continue

@@ -8,7 +8,6 @@ import { eventSiteUrl, eventSiteLabel } from "@/lib/site-url"
 import SlugEditor from "./SlugEditor"
 import DeleteDraftButton from "./DeleteDraftButton"
 import RenewalButton from "./RenewalButton"
-import PauseButton from "./PauseButton"
 import DeleteEventButton from "./DeleteEventButton"
 
 const GOLD       = "#C5A059"
@@ -46,7 +45,6 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
   const daysUntilExpiry     = expiresAt ? Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : null
   const isSubscriptionExpired = event.status === "expired" || (daysUntilExpiry !== null && daysUntilExpiry <= 0)
   const isExpiringSoon      = !isSubscriptionExpired && daysUntilExpiry !== null && daysUntilExpiry <= 30
-  const isPaused            = event.status === "paused"
 
   return (
     <div
@@ -65,10 +63,6 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
             <span className="text-xs bg-red-100 text-red-700 font-semibold px-2 py-0.5 rounded-full">
               Verlopen
             </span>
-          ) : isPaused ? (
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: "#F3F4F6", color: "#6B7280" }}>
-              Offline
-            </span>
           ) : isExpiringSoon ? (
             <span className="text-xs bg-orange-100 text-orange-700 font-semibold px-2 py-0.5 rounded-full">
               Verloopt binnenkort
@@ -86,9 +80,11 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
           {`${event.slug}.sayingyes.nl`}
         </h3>
         <p className="text-xs mt-0.5" style={{ color: BODY }}>Opgeslagen op {date}</p>
-        {!isDraft && expiresAt && (
+        {!isDraft && (
           <p className="text-xs mt-0.5" style={{ color: isSubscriptionExpired ? "#b45309" : isExpiringSoon ? "#b45309" : BODY }}>
-            {isSubscriptionExpired
+            {!expiresAt
+              ? "Vervaldatum niet ingesteld"
+              : isSubscriptionExpired
               ? `Verlopen op ${expiresAt.toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })}`
               : `Geldig tot ${expiresAt.toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })}${isExpiringSoon ? ` — nog ${daysUntilExpiry} dagen` : ""}`
             }
@@ -105,7 +101,7 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
           {isDraft && (
             <DeleteDraftButton eventId={event.id} />
           )}
-          {!isDraft && !isSubscriptionExpired && !isPaused && (
+          {!isDraft && !isSubscriptionExpired && (
             <a
               href={eventSiteUrl(event.slug)}
               target="_blank"
@@ -130,11 +126,6 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
         </div>
         {!isDraft && (
           <div className="flex flex-wrap items-center gap-4 pt-1" style={{ borderTop: `1px solid #E8D5A3` }}>
-            <PauseButton
-              eventId={event.id}
-              status={event.status}
-              isSubscriptionExpired={isSubscriptionExpired}
-            />
             <DeleteEventButton eventId={event.id} />
           </div>
         )}
@@ -166,7 +157,7 @@ export default async function DashboardPage() {
     .eq("user_email", user.email!)
     .order("created_at", { ascending: false })
 
-  const published = (events ?? []).filter((e: Event) => ["published", "paused", "expired"].includes(e.status))
+  const published = (events ?? []).filter((e: Event) => ["published", "expired"].includes(e.status))
   const drafts    = (events ?? []).filter((e: Event) => e.status === "draft")
   const firstName = user.email?.split("@")[0] ?? "daar"
 
