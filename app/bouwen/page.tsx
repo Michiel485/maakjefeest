@@ -1611,7 +1611,7 @@ export default function BouwenPage() {
                       {/* Breedte website */}
                       <div className="flex flex-col gap-1.5">
                         <p className="text-xs font-semibold text-gray-700">Breedte website</p>
-                        <p className="text-[11px] text-gray-400 leading-snug">Kies of de inhoud gecentreerd in een kader staat of het volledige scherm vult.</p>
+                        <p className="text-[11px] text-gray-400 leading-snug">Kies of de inhoud gecentreerd in een kader staat of het volledige scherm vult. Op mobiel is er geen verschil — dit is alleen zichtbaar op een desktop.</p>
                         <div className="flex rounded-xl border border-gray-200 overflow-hidden mt-0.5">
                           {([
                             { value: 'boxed', label: 'Kader' },
@@ -2835,7 +2835,7 @@ export default function BouwenPage() {
               <div ref={canvasContainerRef} className="flex-1 overflow-y-auto bg-gray-100 p-4 md:p-6">
                 <div className="mx-auto" style={{ width: `${Math.round(canvasWidth * canvasScale * zoomMultiplier)}px` }}>
                   <div style={{ width: canvasWidth, transform: `scale(${canvasScale * zoomMultiplier})`, transformOrigin: "top left" }}>
-                    <div className="rounded-2xl shadow-xl overflow-clip relative" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily, letterSpacing: sc.bodyLetterSpacing, fontWeight: sc.bodyFontWeight }}>
+                    <div className="rounded-2xl shadow-xl overflow-clip relative" style={{ backgroundColor: hpSettings.siteLayout !== 'fullwidth' ? (sc.outerBg ?? sc.bodyBg ?? '#EDE6DA') : (sc.bodyBackground ?? sc.navBg), fontFamily: sc.fontFamily, letterSpacing: sc.bodyLetterSpacing, fontWeight: sc.bodyFontWeight }}>
                       {sc.fontImport && <style>{sc.fontImport}</style>}
                       <div className="bg-gray-50 border-b border-gray-200 px-4 py-2 flex items-center gap-2">
                         <div className="flex gap-1.5 flex-shrink-0">
@@ -2847,6 +2847,8 @@ export default function BouwenPage() {
                           {slugPreview}.sayingyes.nl
                         </div>
                       </div>
+                      <div style={hpSettings.siteLayout !== 'fullwidth' ? { padding: '28px 20px', background: sc.outerBg ?? sc.bodyBg ?? '#EDE6DA' } : {}}>
+                      <div style={hpSettings.siteLayout !== 'fullwidth' ? { overflow: 'hidden', borderRadius: '12px', boxShadow: '0 8px 40px rgba(0,0,0,0.14)', background: sc.bodyBackground ?? sc.navBg } : {}}>
                       <EventNav
                         title={safeNavTitle}
                         pages={activePagesOrdered.map((p) => ({ type: p.id, title: p.label }))}
@@ -3107,6 +3109,8 @@ export default function BouwenPage() {
                           />
                         </div>
                       )}
+                      </div>
+                      </div>
                     </div>
                     <p className="text-center text-xs text-gray-400 mt-3">Dit is precies hoe jouw site eruitziet</p>
                   </div>
