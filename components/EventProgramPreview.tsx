@@ -272,11 +272,11 @@ interface Props {
   programLayout?: ProgramLayout
   builderMode?: boolean
   onImagePositionChange?: (id: string, x: number, y: number) => void
-  onItemDoubleClick?: (itemId: string) => void
+  onItemClick?: (itemId: string) => void
 }
 
 export default function EventProgramPreview({
-  items, sc, programLayout = "centered", builderMode, onImagePositionChange, onItemDoubleClick,
+  items, sc, programLayout = "centered", builderMode, onImagePositionChange, onItemClick,
 }: Props) {
   const sorted = items.slice().sort((a, b) => a.time.localeCompare(b.time))
   const list = sorted
@@ -324,9 +324,9 @@ export default function EventProgramPreview({
                   <div>
                     {item.title && (
                       <p
-                        style={{ fontSize: "1.25rem", fontWeight: 800, color: sc.goldBorder ? (sc.cardText ?? sc.headingColor) : sc.headingColor, margin: "0 0 6px", lineHeight: 1.2, cursor: onItemDoubleClick ? "pointer" : undefined }}
-                        onClick={onItemDoubleClick && item.id ? () => onItemDoubleClick(item.id!) : undefined}
-                        title={onItemDoubleClick ? "Klik om te bewerken" : undefined}
+                        style={{ fontSize: "1.25rem", fontWeight: 800, color: sc.goldBorder ? (sc.cardText ?? sc.headingColor) : sc.headingColor, margin: "0 0 6px", lineHeight: 1.2, cursor: onItemClick ? "pointer" : undefined }}
+                        onClick={onItemClick && item.id ? () => onItemClick(item.id!) : undefined}
+                        title={onItemClick ? "Klik om te bewerken" : undefined}
                       >
                         {item.title}
                       </p>
@@ -380,9 +380,9 @@ export default function EventProgramPreview({
                   <div className="relative z-[1] pt-1 min-w-0 @md:pt-4">
                     <h3
                       className="text-base font-extrabold leading-tight min-w-0 break-words @md:text-2xl mb-1 @md:mb-2"
-                      style={{ cursor: onItemDoubleClick ? "pointer" : undefined }}
-                      onClick={onItemDoubleClick && item.id ? () => onItemDoubleClick(item.id!) : undefined}
-                      title={onItemDoubleClick ? "Klik om te bewerken" : undefined}
+                      style={{ cursor: onItemClick ? "pointer" : undefined }}
+                      onClick={onItemClick && item.id ? () => onItemClick(item.id!) : undefined}
+                      title={onItemClick ? "Klik om te bewerken" : undefined}
                     >
                       <span style={{ color: sc.labelColor }} className="mr-2">{item.time}</span>
                       {item.title && <span style={{ color: sc.headingColor }}>{item.title}</span>}

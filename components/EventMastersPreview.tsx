@@ -12,13 +12,13 @@ export interface EventMastersPreviewProps {
   masters: Master[]
   sc: SC
   text?: string | null
-  onMasterDoubleClick?: (masterId: string) => void
+  onMasterClick?: (masterId: string) => void
 }
 
 export const DEFAULT_MASTERS_TEXT =
   "Heb je vragen over het programma, dieetwensen of wil je gewoon iets leuks overleggen voor de grote dag? Neem dan gerust contact op met een van onze ceremoniemeesters!"
 
-export default function EventMastersPreview({ masters, sc, text, onMasterDoubleClick }: EventMastersPreviewProps) {
+export default function EventMastersPreview({ masters, sc, text, onMasterClick }: EventMastersPreviewProps) {
   const visible = masters.filter((m) => m.naam || m.foto_url)
 
   return (
@@ -81,9 +81,9 @@ export default function EventMastersPreview({ masters, sc, text, onMasterDoubleC
               {master.naam && (
                 <p
                   className="font-bold uppercase mb-2"
-                  style={{ letterSpacing: "0.12em", fontSize: "0.8125rem", color: sc.headingColor, fontFamily: sc.fontFamily, cursor: onMasterDoubleClick ? "pointer" : undefined }}
-                  onClick={onMasterDoubleClick && (master.id ?? i.toString()) ? () => onMasterDoubleClick(master.id ?? i.toString()) : undefined}
-                  title={onMasterDoubleClick ? "Klik om te bewerken" : undefined}
+                  style={{ letterSpacing: "0.12em", fontSize: "0.8125rem", color: sc.headingColor, fontFamily: sc.fontFamily, cursor: onMasterClick ? "pointer" : undefined }}
+                  onClick={onMasterClick && (master.id ?? i.toString()) ? () => onMasterClick(master.id ?? i.toString()) : undefined}
+                  title={onMasterClick ? "Klik om te bewerken" : undefined}
                 >
                   {master.naam}
                 </p>

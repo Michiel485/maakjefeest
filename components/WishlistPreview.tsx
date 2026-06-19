@@ -45,11 +45,11 @@ function CardWrapper({ sc, className, children }: { sc: SC; className?: string; 
 export default function WishlistPreview({
   items,
   sc,
-  onItemDoubleClick,
+  onItemClick,
 }: {
   items: WishlistItem[]
   sc: SC
-  onItemDoubleClick?: (itemId: string, field: 'title' | 'text') => void
+  onItemClick?: (itemId: string, field: 'title' | 'text') => void
 }) {
   const locale = useUILocale()
   return (
@@ -68,18 +68,18 @@ export default function WishlistPreview({
             </span>
             <p
               className="font-extrabold text-base leading-tight"
-              style={{ color: sc.goldBorder ? (sc.cardText ?? sc.headingColor) : sc.headingColor, cursor: onItemDoubleClick ? "pointer" : undefined }}
-              onClick={onItemDoubleClick ? () => onItemDoubleClick(item.id, 'title') : undefined}
-              title={onItemDoubleClick ? "Klik om te bewerken" : undefined}
+              style={{ color: sc.goldBorder ? (sc.cardText ?? sc.headingColor) : sc.headingColor, cursor: onItemClick ? "pointer" : undefined }}
+              onClick={onItemClick ? () => onItemClick(item.id, 'title') : undefined}
+              title={onItemClick ? "Klik om te bewerken" : undefined}
             >
               {item.title}
             </p>
             {item.text && (
               <p
                 className="text-sm leading-relaxed whitespace-pre-wrap"
-                style={{ color: sc.goldBorder ? (sc.cardText ?? sc.bodyText) : sc.bodyText, cursor: onItemDoubleClick ? "pointer" : undefined }}
-                onClick={onItemDoubleClick ? () => onItemDoubleClick(item.id, 'text') : undefined}
-                title={onItemDoubleClick ? "Klik om te bewerken" : undefined}
+                style={{ color: sc.goldBorder ? (sc.cardText ?? sc.bodyText) : sc.bodyText, cursor: onItemClick ? "pointer" : undefined }}
+                onClick={onItemClick ? () => onItemClick(item.id, 'text') : undefined}
+                title={onItemClick ? "Klik om te bewerken" : undefined}
               >
                 {item.text}
               </p>

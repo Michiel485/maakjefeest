@@ -40,11 +40,11 @@ function CardWrapper({ sc, className, children }: { sc: SC; className?: string; 
 export default function PraktischPreview({
   tiles,
   sc,
-  onTileDoubleClick,
+  onTileClick,
 }: {
   tiles: PraktischTile[]
   sc: SC
-  onTileDoubleClick?: (tileId: string, field: 'title' | 'text') => void
+  onTileClick?: (tileId: string, field: 'title' | 'text') => void
 }) {
   return (
     <div className="@container px-6 py-10" style={{ backgroundColor: sc.bodyBackground ? "transparent" : sc.navBg, fontFamily: sc.fontFamily }}>
@@ -62,18 +62,18 @@ export default function PraktischPreview({
             </span>
             <p
               className="font-extrabold text-base leading-tight"
-              style={{ color: sc.goldBorder ? (sc.cardText ?? sc.headingColor) : sc.headingColor, cursor: onTileDoubleClick ? "pointer" : undefined }}
-              onClick={onTileDoubleClick ? () => onTileDoubleClick(tile.id, 'title') : undefined}
-              title={onTileDoubleClick ? "Klik om te bewerken" : undefined}
+              style={{ color: sc.goldBorder ? (sc.cardText ?? sc.headingColor) : sc.headingColor, cursor: onTileClick ? "pointer" : undefined }}
+              onClick={onTileClick ? () => onTileClick(tile.id, 'title') : undefined}
+              title={onTileClick ? "Klik om te bewerken" : undefined}
             >
               {tile.title}
             </p>
             {tile.text && (
               <p
                 className="text-sm leading-relaxed whitespace-pre-wrap"
-                style={{ color: sc.goldBorder ? (sc.cardText ?? sc.bodyText) : sc.bodyText, cursor: onTileDoubleClick ? "pointer" : undefined }}
-                onClick={onTileDoubleClick ? () => onTileDoubleClick(tile.id, 'text') : undefined}
-                title={onTileDoubleClick ? "Klik om te bewerken" : undefined}
+                style={{ color: sc.goldBorder ? (sc.cardText ?? sc.bodyText) : sc.bodyText, cursor: onTileClick ? "pointer" : undefined }}
+                onClick={onTileClick ? () => onTileClick(tile.id, 'text') : undefined}
+                title={onTileClick ? "Klik om te bewerken" : undefined}
               >
                 {tile.text}
               </p>
