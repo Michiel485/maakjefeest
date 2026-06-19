@@ -93,26 +93,77 @@ export async function POST(request: Request) {
         })
         .eq("id", event_id)
 
-      // Record renewal invoice for bookkeeping
-      const renewalYear = now.getFullYear()
+      // Record renewal invoice + PDF + email
+      const renewalYear        = now.getFullYear()
+      const renewalAmountExcl  = 18.18
+      const renewalBtwAmount   = 3.82
+      const renewalAmountIncl  = 22.00
+      const renewalBtwRate     = 21
+      const renewalDescription = "SayingYes — verlenging 6 maanden"
+      const renewalCustomerName  = (eventRow.frame_names || eventRow.title || "") as string
+      const renewalCustomerEmail = (eventRow.user_email ?? "") as string
+      const renewalInvoiceDate   = formatDate(now)
+
       const { count: invCount } = await supabase
         .from("invoices")
         .select("*", { count: "exact", head: true })
         .gte("created_at", `${renewalYear}-01-01`)
       const renewalInvoiceNumber = `SY-${renewalYear}-${String((invCount ?? 0) + 1).padStart(3, "0")}`
+
+      let renewalPdfBuffer: Buffer | undefined
+      let renewalPdfPath: string | undefined
+
+      try {
+        renewalPdfBuffer = await generateInvoicePDF({
+          invoiceNumber:   renewalInvoiceNumber,
+          invoiceDate:     renewalInvoiceDate,
+          customerName:    renewalCustomerName,
+          customerEmail:   renewalCustomerEmail,
+          amountExcl:      formatEur(renewalAmountExcl),
+          btwAmount:       formatEur(renewalBtwAmount),
+          amountIncl:      formatEur(renewalAmountIncl),
+          btwRate:         renewalBtwRate,
+          molliePaymentId: payment.id,
+          description:     renewalDescription,
+        })
+        const pdfPath = `${renewalYear}/${renewalInvoiceNumber}.pdf`
+        const { error: uploadError } = await supabase.storage
+          .from("invoices")
+          .upload(pdfPath, renewalPdfBuffer, { contentType: "application/pdf", upsert: true })
+        if (!uploadError) renewalPdfPath = pdfPath
+        else console.error("[webhook/renewal] PDF upload error:", uploadError)
+      } catch (pdfErr) {
+        console.error("[webhook/renewal] PDF generation error:", pdfErr)
+      }
+
       await supabase.from("invoices").insert({
         event_id,
         invoice_number:    renewalInvoiceNumber,
-        customer_email:    eventRow.user_email ?? "",
-        customer_name:     eventRow.frame_names || eventRow.title || "",
-        description:       "SayingYes — verlenging 6 maanden",
-        amount_excl:       18.18,
-        btw_amount:        3.82,
-        amount_incl:       22.00,
-        btw_rate:          21,
+        customer_email:    renewalCustomerEmail,
+        customer_name:     renewalCustomerName,
+        description:       renewalDescription,
+        amount_excl:       renewalAmountExcl,
+        btw_amount:        renewalBtwAmount,
+        amount_incl:       renewalAmountIncl,
+        btw_rate:          renewalBtwRate,
         date:              now.toISOString().split("T")[0],
         mollie_payment_id: payment.id,
+        file_path:         renewalPdfPath ?? null,
       })
+
+      if (renewalCustomerEmail) {
+        await sendInvoiceEmail({
+          toEmail:         renewalCustomerEmail,
+          invoiceNumber:   renewalInvoiceNumber,
+          invoiceDate:     renewalInvoiceDate,
+          customerName:    renewalCustomerName,
+          amountExcl:      formatEur(renewalAmountExcl),
+          btwAmount:       formatEur(renewalBtwAmount),
+          amountIncl:      formatEur(renewalAmountIncl),
+          molliePaymentId: payment.id,
+          pdfBuffer:       renewalPdfBuffer,
+        })
+      }
 
       if (eventRow.slug) revalidatePath(`/events/${eventRow.slug}`, "layout")
     }
