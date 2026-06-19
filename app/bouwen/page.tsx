@@ -440,10 +440,13 @@ export default function BouwenPage() {
   useEffect(() => { if (activeSection !== 'url') setOpenUrlSection(null) }, [activeSection])
   useEffect(() => { if (activeSection !== 'paginas' || activeSubPage !== 'Home') setOpenHomeSection(null) }, [activeSection, activeSubPage])
 
-  // Intercept browser back button — show a branded leave modal instead of instant navigation
+  // Intercept browser back button — show a branded leave modal instead of instant navigation.
+  // Two buffer entries: rapid double-tap on mobile consumes the first, second prevents escape.
   useEffect(() => {
     window.history.pushState({ builder: true }, '')
+    window.history.pushState({ builder: true }, '')
     const handlePopState = () => {
+      window.history.pushState({ builder: true }, '')
       window.history.pushState({ builder: true }, '')
       setShowLeaveModal(true)
     }
