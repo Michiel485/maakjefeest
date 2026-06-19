@@ -3326,26 +3326,23 @@ export default function BouwenPage() {
             )}
 
             <button
+              onClick={() => setShowLeaveModal(false)}
+              className="w-full font-semibold py-3.5 rounded-2xl text-sm transition-all mb-2.5 hover:-translate-y-0.5"
+              style={{ backgroundColor: "#1A1A1A", color: "#FAF7F2", boxShadow: "0 4px 16px rgba(26,26,26,0.15)" }}
+            >
+              Blijf in de builder
+            </button>
+
+            <button
               onClick={() => {
                 setShowLeaveModal(false)
                 if (savedEventId) router.push(`/dashboard?event_id=${savedEventId}`)
                 else router.push("/dashboard")
               }}
-              className="w-full font-semibold py-3.5 rounded-2xl text-sm transition-all mb-2.5 hover:-translate-y-0.5"
-              style={hasPendingChanges
-                ? { backgroundColor: "#F5EFE4", color: "#5C5248" }
-                : { backgroundColor: "#1A1A1A", color: "#FAF7F2", boxShadow: "0 4px 16px rgba(26,26,26,0.15)" }
-              }
-            >
-              {hasPendingChanges ? "Verlaten zonder opslaan" : "Naar dashboard"}
-            </button>
-
-            <button
-              onClick={() => setShowLeaveModal(false)}
               className="w-full text-center text-sm py-1 transition-opacity hover:opacity-60"
               style={{ color: "#9A8E82" }}
             >
-              Blijven in de builder
+              {hasPendingChanges ? "Verlaten zonder opslaan" : "Naar dashboard"}
             </button>
           </div>
         </div>
