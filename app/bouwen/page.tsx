@@ -507,16 +507,17 @@ export default function BouwenPage() {
     }, 150)
   }
 
-  function handleProgramItemClick(itemId: string) {
+  function handleProgramItemClick(itemId: string, field?: 'title' | 'description') {
     setActiveSection('paginas')
     setActiveSubPage('Programma')
     setTimeout(() => {
-      const el = document.getElementById(`programma-title-${itemId}`)
+      const id = field === 'description' ? `programma-description-${itemId}` : `programma-title-${itemId}`
+      const el = document.getElementById(id)
       if (!el) return
       el.scrollIntoView({ behavior: 'smooth', block: 'center' })
       el.focus()
-      const len = (el as HTMLInputElement).value.length
-      ;(el as HTMLInputElement).setSelectionRange(len, len)
+      const len = (el as HTMLInputElement | HTMLTextAreaElement).value.length
+      ;(el as HTMLInputElement | HTMLTextAreaElement).setSelectionRange(len, len)
     }, 150)
   }
 
@@ -556,6 +557,17 @@ export default function BouwenPage() {
       el.focus()
       const len = (el as HTMLInputElement).value.length
       ;(el as HTMLInputElement).setSelectionRange(len, len)
+    }, 150)
+  }
+
+  function handleMastersTextClick() {
+    setActiveSection('paginas')
+    setActiveSubPage('Ceremoniemeesters')
+    setTimeout(() => {
+      const el = document.getElementById('ceremoniemeesters-vrije-tekst')
+      if (!el) return
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      el.focus()
     }, 150)
   }
 
@@ -2280,6 +2292,7 @@ export default function BouwenPage() {
                               <div className="flex flex-col gap-1.5">
                                 <label className="text-xs font-semibold text-gray-500">Vrije tekst onderaan</label>
                                 <textarea
+                                  id="ceremoniemeesters-vrije-tekst"
                                   rows={4}
                                   value={typeof content.Ceremoniemeesters?.text === "string" ? content.Ceremoniemeesters.text : ""}
                                   onChange={(e) => updateContent("Ceremoniemeesters", { ...(content.Ceremoniemeesters ?? {}), text: e.target.value })}
@@ -2424,6 +2437,7 @@ export default function BouwenPage() {
                                       className="rounded-lg border border-gray-200 px-2 py-1.5 text-sm font-semibold text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400"
                                     />
                                     <textarea
+                                      id={`programma-description-${item.id ?? i}`}
                                       rows={2}
                                       value={item.description}
                                       onChange={(e) => {
@@ -2905,6 +2919,7 @@ export default function BouwenPage() {
                           sc={sc}
                           text={typeof content.Ceremoniemeesters?.text === "string" ? content.Ceremoniemeesters.text : undefined}
                           onMasterClick={handleMasterClick}
+                          onTextClick={handleMastersTextClick}
                         />
                         </div>
                       )}

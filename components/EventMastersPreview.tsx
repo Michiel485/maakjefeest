@@ -13,12 +13,13 @@ export interface EventMastersPreviewProps {
   sc: SC
   text?: string | null
   onMasterClick?: (masterId: string) => void
+  onTextClick?: () => void
 }
 
 export const DEFAULT_MASTERS_TEXT =
   "Heb je vragen over het programma, dieetwensen of wil je gewoon iets leuks overleggen voor de grote dag? Neem dan gerust contact op met een van onze ceremoniemeesters!"
 
-export default function EventMastersPreview({ masters, sc, text, onMasterClick }: EventMastersPreviewProps) {
+export default function EventMastersPreview({ masters, sc, text, onMasterClick, onTextClick }: EventMastersPreviewProps) {
   const visible = masters.filter((m) => m.naam || m.foto_url)
 
   return (
@@ -117,7 +118,9 @@ export default function EventMastersPreview({ masters, sc, text, onMasterClick }
       {text && (
         <p
           className="text-sm leading-relaxed text-center max-w-lg mx-auto mt-10"
-          style={{ color: sc.bodyText }}
+          style={{ color: sc.bodyText, cursor: onTextClick ? "pointer" : undefined }}
+          onClick={onTextClick}
+          title={onTextClick ? "Klik om te bewerken" : undefined}
         >
           {text}
         </p>

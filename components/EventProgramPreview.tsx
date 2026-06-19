@@ -272,7 +272,7 @@ interface Props {
   programLayout?: ProgramLayout
   builderMode?: boolean
   onImagePositionChange?: (id: string, x: number, y: number) => void
-  onItemClick?: (itemId: string) => void
+  onItemClick?: (itemId: string, field?: 'title' | 'description') => void
 }
 
 export default function EventProgramPreview({
@@ -325,14 +325,17 @@ export default function EventProgramPreview({
                     {item.title && (
                       <p
                         style={{ fontSize: "1.25rem", fontWeight: 800, color: sc.goldBorder ? (sc.cardText ?? sc.headingColor) : sc.headingColor, margin: "0 0 6px", lineHeight: 1.2, cursor: onItemClick ? "pointer" : undefined }}
-                        onClick={onItemClick && item.id ? () => onItemClick(item.id!) : undefined}
+                        onClick={onItemClick && item.id ? () => onItemClick(item.id!, 'title') : undefined}
                         title={onItemClick ? "Klik om te bewerken" : undefined}
                       >
                         {item.title}
                       </p>
                     )}
                     {item.description && (
-                      <p className="min-w-0 break-words" style={{ fontSize: "0.9375rem", fontWeight: 400, color: sc.goldBorder ? (sc.cardText ?? sc.bodyText) : sc.bodyText, margin: 0, lineHeight: 1.6 }}>
+                      <p className="min-w-0 break-words" style={{ fontSize: "0.9375rem", fontWeight: 400, color: sc.goldBorder ? (sc.cardText ?? sc.bodyText) : sc.bodyText, margin: 0, lineHeight: 1.6, cursor: onItemClick ? "pointer" : undefined }}
+                        onClick={onItemClick && item.id ? () => onItemClick(item.id!, 'description') : undefined}
+                        title={onItemClick ? "Klik om te bewerken" : undefined}
+                      >
                         {item.description}
                       </p>
                     )}
@@ -381,7 +384,7 @@ export default function EventProgramPreview({
                     <h3
                       className="text-base font-extrabold leading-tight min-w-0 break-words @md:text-2xl mb-1 @md:mb-2"
                       style={{ cursor: onItemClick ? "pointer" : undefined }}
-                      onClick={onItemClick && item.id ? () => onItemClick(item.id!) : undefined}
+                      onClick={onItemClick && item.id ? () => onItemClick(item.id!, 'title') : undefined}
                       title={onItemClick ? "Klik om te bewerken" : undefined}
                     >
                       <span style={{ color: sc.labelColor }} className="mr-2">{item.time}</span>
@@ -389,7 +392,9 @@ export default function EventProgramPreview({
                     </h3>
                     <p
                       className="text-sm font-normal leading-relaxed min-w-0 break-words @md:text-lg @md:min-h-[6rem]"
-                      style={{ color: sc.bodyText }}
+                      style={{ color: sc.bodyText, cursor: onItemClick ? "pointer" : undefined }}
+                      onClick={onItemClick && item.id ? () => onItemClick(item.id!, 'description') : undefined}
+                      title={onItemClick ? "Klik om te bewerken" : undefined}
                     >
                       {item.description ?? ""}
                     </p>
