@@ -3,7 +3,7 @@ import { createServerClient } from "@supabase/ssr"
 import { createServiceClient } from "@/lib/supabase"
 import { cookies } from "next/headers"
 
-const mollie = createMollieClient({ apiKey: process.env.MOLLIE_API_KEY! })
+export const dynamic = "force-dynamic"
 
 const BASE_PRICE = 49.99
 
@@ -79,6 +79,7 @@ export async function POST(request: Request) {
     }
   }
 
+  const mollie = createMollieClient({ apiKey: process.env.MOLLIE_API_KEY! })
   const baseUrl = new URL(request.url).origin
 
   const payment = await mollie.payments.create({

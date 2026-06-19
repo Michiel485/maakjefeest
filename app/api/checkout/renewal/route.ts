@@ -5,8 +5,6 @@ import { cookies } from "next/headers"
 
 export const dynamic = "force-dynamic"
 
-const mollie = createMollieClient({ apiKey: process.env.MOLLIE_API_KEY! })
-
 const RENEWAL_PRICE = 22.00
 
 export async function POST(request: Request) {
@@ -60,6 +58,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Event niet gevonden" }, { status: 404 })
   }
 
+  const mollie = createMollieClient({ apiKey: process.env.MOLLIE_API_KEY! })
   const baseUrl = new URL(request.url).origin
 
   const payment = await mollie.payments.create({
