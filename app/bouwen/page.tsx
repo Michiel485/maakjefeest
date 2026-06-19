@@ -809,7 +809,7 @@ export default function BouwenPage() {
       const el = canvasContainerRef.current
       if (!el) return
       const cw = viewport === "mobiel" ? 390 : 1024
-      setCanvasScale(Math.min(1, Math.max(0.4, el.clientWidth / cw)))
+      setCanvasScale(Math.min(1, Math.max(0.4, (el.clientWidth - 48) / cw)))
     }
     measure()
     window.addEventListener("resize", measure)
@@ -821,7 +821,7 @@ export default function BouwenPage() {
       const el = canvasContainerRef.current
       if (!el) return
       const cw = viewport === "mobiel" ? 390 : 1024
-      setCanvasScale(Math.min(1, Math.max(0.4, el.clientWidth / cw)))
+      setCanvasScale(Math.min(1, Math.max(0.4, (el.clientWidth - 48) / cw)))
     })
     return () => cancelAnimationFrame(id)
   }, [viewport])
@@ -1633,30 +1633,6 @@ export default function BouwenPage() {
                   </button>
                   {openAlgSection === 'layout' && (
                     <div className="px-5 pb-5 flex flex-col gap-5">
-
-                      {/* Breedte website */}
-                      <div className="flex flex-col gap-1.5">
-                        <p className="text-xs font-semibold text-gray-700">Breedte website</p>
-                        <p className="text-[11px] text-gray-400 leading-snug">Kies of de inhoud gecentreerd in een kader staat of het volledige scherm vult. Op mobiel is er geen verschil — dit is alleen zichtbaar op een desktop.</p>
-                        <div className="flex rounded-xl border border-gray-200 overflow-hidden mt-0.5">
-                          {([
-                            { value: 'boxed', label: 'Kader' },
-                            { value: 'fullwidth', label: 'Volledig scherm' },
-                          ] as const).map((opt) => (
-                            <button
-                              key={opt.value}
-                              onClick={() => updateHpSettings({ siteLayout: opt.value })}
-                              className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
-                                hpSettings.siteLayout === opt.value
-                                  ? 'bg-[#C5A059] text-white'
-                                  : 'bg-white text-gray-500 hover:bg-gray-50'
-                              }`}
-                            >
-                              {opt.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
 
                       {/* Paginaweergave */}
                       <div className="flex flex-col gap-1.5">
@@ -2860,10 +2836,10 @@ export default function BouwenPage() {
           <div className="flex flex-1 min-h-0 overflow-hidden" style={{ minHeight: "420px" }}>
 
             {/* Canvas */}
-              <div ref={canvasContainerRef} className="flex-1 overflow-y-auto bg-gray-100">
+              <div ref={canvasContainerRef} className="flex-1 overflow-y-auto bg-gray-100 p-4 md:p-6">
                 <div className="mx-auto" style={{ width: `${Math.round(canvasWidth * canvasScale * zoomMultiplier)}px` }}>
                   <div style={{ width: canvasWidth, transform: `scale(${canvasScale * zoomMultiplier})`, transformOrigin: "top left" }}>
-                    <div className="overflow-clip relative" style={{ backgroundColor: hpSettings.siteLayout !== 'fullwidth' ? sc.bodyBg : (sc.bodyBackground ?? sc.navBg), fontFamily: sc.fontFamily, letterSpacing: sc.bodyLetterSpacing, fontWeight: sc.bodyFontWeight }}>
+                    <div className="rounded-2xl shadow-xl overflow-clip" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily, letterSpacing: sc.bodyLetterSpacing, fontWeight: sc.bodyFontWeight }}>
                       {sc.fontImport && <style>{sc.fontImport}</style>}
                       <div className="bg-gray-50 border-b border-gray-200 px-4 py-2 flex items-center gap-2">
                         <div className="flex gap-1.5 flex-shrink-0">
@@ -2875,8 +2851,6 @@ export default function BouwenPage() {
                           {slugPreview}.sayingyes.nl
                         </div>
                       </div>
-                      <div style={hpSettings.siteLayout !== 'fullwidth' ? { padding: '40px 60px', background: sc.bodyBg } : {}}>
-                      <div style={hpSettings.siteLayout !== 'fullwidth' ? { overflow: 'hidden', borderRadius: '16px 16px 0 0', boxShadow: '0 8px 48px rgba(0,0,0,0.18)', background: sc.bodyBackground ?? sc.navBg } : {}}>
                       <EventNav
                         title={safeNavTitle}
                         pages={activePagesOrdered.map((p) => ({ type: p.id, title: p.label }))}
@@ -3139,8 +3113,6 @@ export default function BouwenPage() {
                           />
                         </div>
                       )}
-                      </div>
-                      </div>
                     </div>
 
                   </div>

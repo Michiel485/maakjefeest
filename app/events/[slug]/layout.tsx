@@ -54,7 +54,7 @@ export default async function EventLayout({
   const pwAnswer = (event.pw_answer as string | null) ?? null
 
   const siteContent = (
-    <div className={`${isFullWidth ? '' : 'max-w-5xl mx-auto sm:shadow-2xl sm:rounded-2xl '}overflow-clip flex flex-col relative${sc.floral ? " bohemian-scale" : ""}`}
+    <div className={`max-w-5xl mx-auto sm:shadow-2xl sm:rounded-2xl overflow-clip flex flex-col relative${sc.floral ? " bohemian-scale" : ""}`}
       style={{ background: sc.bodyBackground ?? sc.navBg }}>
 
       <EventNav title={(event.nav_title as string | null) || event.title} pages={pageList} sc={sc} navLayout={(event.nav_layout ?? "split") as "stacked" | "split" | "left"} basePath={basePath} singlePage={isSinglePage} />
@@ -94,7 +94,7 @@ export default async function EventLayout({
   )
 
   return (
-    <div className={`min-h-screen${isFullWidth ? '' : ' sm:py-12'}`} style={{ fontFamily: sc.fontFamily, background: isFullWidth ? (sc.bodyBackground ?? sc.bodyBg) : sc.bodyBg, letterSpacing: sc.bodyLetterSpacing, fontWeight: sc.bodyFontWeight, scrollBehavior: isSinglePage ? 'smooth' : undefined }}>
+    <div className="min-h-screen sm:py-12" style={{ fontFamily: sc.fontFamily, background: sc.bodyBg, letterSpacing: sc.bodyLetterSpacing, fontWeight: sc.bodyFontWeight, scrollBehavior: isSinglePage ? 'smooth' : undefined }}>
       {sc.fontImport && <style>{sc.fontImport}</style>}
       {sc.floral && (
         <style>{`
