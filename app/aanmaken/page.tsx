@@ -513,7 +513,7 @@ export default function AanmakenPage() {
             <Link href="/voorwaarden" className="underline transition-opacity hover:opacity-70" style={{ color: BODY }}>
               Algemene Voorwaarden
             </Link>{" "}
-            (incl. Verwerkersovereenkomst) en ons{" "}
+            en ons{" "}
             <Link href="/privacy" className="underline transition-opacity hover:opacity-70" style={{ color: BODY }}>
               Privacybeleid
             </Link>
