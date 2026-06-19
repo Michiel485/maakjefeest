@@ -31,7 +31,7 @@ const STEPS: { label: string; title: string; text: string; nav: SophieNav }[] = 
   {
     label: "Stap 2 · Lay-out",
     title: "De opbouw van de website 📐",
-    text: "Wil je de inhoud netjes in een kader zoals in de live preview, of liever de volle breedte van het scherm? Wij raden zelf Kader aan. Wil je alle onderdelen op aparte pagina's, of toch één lange pagina? Probeer beide uit — ze zijn allebei erg leuk! Kies tot slot hoe je de navigatielinks uitgelijnd wil hebben.",
+    text: "Wil je de inhoud netjes in een kader zoals in de live preview, of liever de volle breedte van het scherm? Wij raden zelf Kader aan. Wil je alle onderdelen op aparte pagina's, of toch één lange pagina? Probeer beide uit — ze zijn allebei erg leuk!",
     nav: { activeSection: 'algemeen', openAlgSection: 'layout' },
   },
   {
@@ -43,7 +43,7 @@ const STEPS: { label: string; title: string; text: string; nav: SophieNav }[] = 
   {
     label: "Stap 4 · Homepage",
     title: "De homepage — jullie visitekaartje 🏡",
-    text: "Dit is het meest uitgebreide onderdeel. Een paar dingen hangen samen: kies je lay-out 'Modern', dan vervalt de kaderoptie. Kies je voor 'Kader', dan kun je een trouwkader kiezen met initialen, namen en datum. Voeg ook een headerfoto toe voor extra sfeer!",
+    text: "Dit is het meest uitgebreide onderdeel. Wat je hier kunt instellen, hangt samen met je lay-outkeuze. Kies je voor Vaste indeling, dan staat de opzet al direct vast met links de headerfoto en rechts jullie tekstvelden strak naast elkaar. Kies je voor Flexibel, dan bepaal je alles helemaal zelf: voeg een grote sfeerfoto bovenaan toe, kies een mooi trouwkaart-kader met jullie initialen, namen en datum, of zet ze juist allebei uit voor een rustige, minimalistische look!",
     nav: { activeSection: 'paginas', openAlgSection: null, activeSubPage: 'Home', openHomeSection: 'layout' },
   },
   {

@@ -1,13 +1,5 @@
 import React from "react"
-import { Document, Page, Text, View, StyleSheet, renderToBuffer, Font } from "@react-pdf/renderer"
-
-Font.register({
-  family: "CormorantGaramond",
-  fonts: [
-    { src: "https://fonts.gstatic.com/l/font?kit=co3umX5slCNuHLi8bLeY9MK7whWMhyjypVO7abI26QOD_v86GnI&skey=a863d1376a24bd7a&v=v21", fontWeight: 400 },
-    { src: "https://fonts.gstatic.com/l/font?kit=co3umX5slCNuHLi8bLeY9MK7whWMhyjypVO7abI26QOD_iE9GnI&skey=a863d1376a24bd7a&v=v21", fontWeight: 600 },
-  ],
-})
+import { Document, Page, Text, View, StyleSheet, renderToBuffer } from "@react-pdf/renderer"
 
 const GOLD    = "#C5A059"
 const DARK    = "#1A1A1A"
@@ -20,9 +12,9 @@ const AMT_W   = 88
 const s = StyleSheet.create({
   page:           { fontFamily: "Helvetica", fontSize: 10, color: DARK, backgroundColor: "#ffffff", paddingHorizontal: 48, paddingVertical: 48 },
   header:         { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 32, paddingBottom: 20, borderBottomWidth: 1, borderBottomColor: BORDER },
-  brand:          { fontSize: 26, color: GOLD, fontFamily: "CormorantGaramond", fontWeight: 600, letterSpacing: 1.2 },
+  brand:          { fontSize: 26, color: GOLD, fontFamily: "Times-Bold", letterSpacing: 1.2 },
   brandSub:       { fontSize: 8, color: LIGHT, marginTop: 5, lineHeight: 1.6 },
-  invoiceLabel:   { fontSize: 22, fontFamily: "CormorantGaramond", fontWeight: 600, color: GOLD, letterSpacing: 2, textAlign: "right" },
+  invoiceLabel:   { fontSize: 22, fontFamily: "Times-Bold", color: GOLD, letterSpacing: 2, textAlign: "right" },
   invoiceNum:     { fontSize: 9, color: BODY, textAlign: "right", marginTop: 4 },
   metaRow:        { flexDirection: "row", marginBottom: 28, gap: 40 },
   metaBlock:      { flex: 1 },

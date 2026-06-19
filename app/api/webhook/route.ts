@@ -47,17 +47,48 @@ export async function POST(request: Request) {
     return NextResponse.json({ received: true }, { status: 200 })
   }
 
-  const metadata = payment.metadata as { event_id?: string; discount_code?: string } | null
+  const metadata      = payment.metadata as { event_id?: string; discount_code?: string; payment_type?: string } | null
   const event_id      = metadata?.event_id
   const discount_code = metadata?.discount_code
+  const payment_type  = metadata?.payment_type ?? "initial"
 
   if (!event_id) {
     return NextResponse.json({ received: true }, { status: 200 })
   }
 
   const supabase = createServiceClient()
+  const now      = new Date()
 
-  // Idempotency: skip if already published
+  // ── Renewal payment: extend expires_at by 6 months ───────────────────────
+  if (payment_type === "renewal") {
+    const { data: eventRow } = await supabase
+      .from("events")
+      .select("expires_at, status, slug, user_email, title, frame_names")
+      .eq("id", event_id)
+      .single()
+
+    if (eventRow) {
+      const currentExpiry  = eventRow.expires_at ? new Date(eventRow.expires_at as string) : now
+      const baseDate       = currentExpiry > now ? currentExpiry : now
+      const newExpiry      = new Date(baseDate)
+      newExpiry.setMonth(newExpiry.getMonth() + 6)
+
+      await supabase
+        .from("events")
+        .update({
+          expires_at:               newExpiry.toISOString(),
+          status:                   "published",
+          renewal_reminder_sent_at: null,
+          expiry_warning_sent_at:   null,
+        })
+        .eq("id", event_id)
+
+      if (eventRow.slug) revalidatePath(`/events/${eventRow.slug}`, "layout")
+    }
+    return NextResponse.json({ received: true }, { status: 200 })
+  }
+
+  // ── Initial payment: idempotency check ───────────────────────────────────
   const { data: existing } = await supabase
     .from("events")
     .select("status")
@@ -68,11 +99,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ received: true }, { status: 200 })
   }
 
+  const expiresAt = new Date(now)
+  expiresAt.setFullYear(expiresAt.getFullYear() + 1)
+
   const { data: updatedEvent, error: updateError } = await supabase
     .from("events")
     .update({
-      status: "published",
-      stripe_payment_id: payment.id,
+      status:       "published",
+      published_at: now.toISOString(),
+      expires_at:   expiresAt.toISOString(),
     })
     .eq("id", event_id)
     .select("slug, title, frame_names, user_email")
@@ -103,7 +138,6 @@ export async function POST(request: Request) {
   }
 
   // Create invoice record
-  const now = new Date()
   const year = now.getFullYear()
 
   const { count } = await supabase

@@ -43,9 +43,17 @@ export async function POST(request: Request) {
   }
 
   // Publish event
+  const now = new Date()
+  const expiresAt = new Date(now)
+  expiresAt.setFullYear(expiresAt.getFullYear() + 1)
+
   const { data: updatedEvent, error: updateError } = await supabase
     .from("events")
-    .update({ status: "published", stripe_payment_id: `free:${code}` })
+    .update({
+      status:       "published",
+      published_at: now.toISOString(),
+      expires_at:   expiresAt.toISOString(),
+    })
     .eq("id", event_id)
     .select("slug, title, frame_names, user_email")
     .single()
@@ -61,7 +69,6 @@ export async function POST(request: Request) {
     .eq("id", codeRow.id)
 
   // Create €0 invoice record for bookkeeping
-  const now = new Date()
   const year = now.getFullYear()
   const { count } = await supabase
     .from("invoices")

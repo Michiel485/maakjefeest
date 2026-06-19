@@ -1083,3 +1083,170 @@ export async function sendDraftReminderEmail({
     return { success: false, error: err }
   }
 }
+
+// ── Renewal Reminder (11 months) ──────────────────────────────────────────────
+
+export async function sendRenewalReminderEmail({
+  toEmail,
+  eventTitle,
+  expiresAt,
+  dashboardUrl,
+}: {
+  toEmail: string
+  eventTitle: string
+  expiresAt: Date
+  dashboardUrl: string
+}) {
+  const expireStr = expiresAt.toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })
+
+  const html = `<!DOCTYPE html>
+<html lang="nl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f1ec;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f1ec;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);">
+        <tr>
+          <td bgcolor="#c9a96e" style="background-color:#c9a96e;padding:44px 40px 36px;text-align:center;">
+            <p style="margin:0 0 10px;font-size:26px;font-weight:600;letter-spacing:0.06em;color:#f5ead6;font-family:'Georgia',serif;">SayingYes</p>
+            <h1 style="margin:0;font-size:22px;font-weight:800;color:#111827;line-height:1.25;">Jullie trouwwebsite verloopt bijna 💍</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:36px 40px 0;">
+            <p style="margin:0 0 20px;font-size:15px;color:#374151;line-height:1.7;">
+              Goed nieuws: <strong>${eventTitle}</strong> staat al bijna een jaar online! De site verloopt op <strong>${expireStr}</strong>. Wil je de mooie herinneringen en RSVP-gegevens nog langer bewaren? Verleng dan eenvoudig voor slechts &euro;&nbsp;22,- voor 6 extra maanden.
+            </p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+              <tr>
+                <td style="background-color:#faf7f2;border:1px solid #e8dcc8;border-radius:12px;padding:20px 24px;">
+                  <p style="margin:0 0 4px;font-size:14px;font-weight:700;color:#111827;">Verlengen voor &euro;&nbsp;22,-</p>
+                  <p style="margin:0;font-size:13px;color:#6b7280;line-height:1.65;">6 maanden extra online &middot; betaal eenvoudig via iDEAL of creditcard</p>
+                </td>
+              </tr>
+            </table>
+            <table cellpadding="0" cellspacing="0" style="margin:0 0 32px;">
+              <tr>
+                <td style="border-radius:12px;background-color:#111827;">
+                  <a href="${dashboardUrl}" style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:12px;">Verleng mijn abonnement &rarr;</a>
+                </td>
+              </tr>
+            </table>
+            <p style="margin:0 0 36px;font-size:13px;color:#9ca3af;line-height:1.6;">
+              Als jullie de site niet verlengen, wordt hij op ${expireStr} automatisch offline gehaald. Jullie gegevens worden bewaard zodat je later altijd opnieuw kunt activeren.
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:20px 40px 32px;border-top:1px solid #f3ede4;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">SayingYes &middot; sayingyes.nl &middot; info@sayingyes.nl</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+
+  try {
+    const { data: result, error } = await getResend().emails.send({
+      from:    FROM,
+      to:      [toEmail],
+      subject: `Jullie trouwwebsite verloopt op ${expireStr} — verleng nu voor €22,-`,
+      html,
+    })
+    if (error) {
+      console.error("[mail] Renewal reminder error:", error)
+      return { success: false, error }
+    }
+    console.log("[mail] Renewal reminder sent →", toEmail, "| id:", result?.id)
+    return { success: true, id: result?.id }
+  } catch (err) {
+    console.error("[mail] Unexpected error sending renewal reminder:", err)
+    return { success: false, error: err }
+  }
+}
+
+// ── Expiry Warning (7 days before) ────────────────────────────────────────────
+
+export async function sendExpiryWarningEmail({
+  toEmail,
+  eventTitle,
+  expiresAt,
+  dashboardUrl,
+}: {
+  toEmail: string
+  eventTitle: string
+  expiresAt: Date
+  dashboardUrl: string
+}) {
+  const expireStr = expiresAt.toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })
+
+  const html = `<!DOCTYPE html>
+<html lang="nl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f1ec;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f1ec;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);">
+        <tr>
+          <td bgcolor="#c9a96e" style="background-color:#c9a96e;padding:44px 40px 36px;text-align:center;">
+            <p style="margin:0 0 10px;font-size:26px;font-weight:600;letter-spacing:0.06em;color:#f5ead6;font-family:'Georgia',serif;">SayingYes</p>
+            <h1 style="margin:0;font-size:22px;font-weight:800;color:#111827;line-height:1.25;">Nog 7 dagen: site gaat offline op ${expireStr}</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:36px 40px 0;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+              <tr>
+                <td style="background-color:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:16px 20px;">
+                  <p style="margin:0;font-size:13px;color:#9a3412;line-height:1.65;">
+                    &starf; <strong>Let op:</strong> <strong>${eventTitle}</strong> gaat op <strong>${expireStr}</strong> offline. Verleng vandaag nog voor &euro;&nbsp;22,- om de site online te houden.
+                  </p>
+                </td>
+              </tr>
+            </table>
+            <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.7;">
+              Jullie trouwwebsite staat al bijna een jaar online &mdash; maar het abonnement loopt over 7 dagen af. Verleng nu voor <strong>&euro;&nbsp;22,-</strong> en houd de mooie herinneringen, foto's en RSVP-overzichten nog 6 maanden beschikbaar.
+            </p>
+            <table cellpadding="0" cellspacing="0" style="margin:0 0 32px;">
+              <tr>
+                <td style="border-radius:12px;background-color:#111827;">
+                  <a href="${dashboardUrl}" style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:12px;">Verleng nu &mdash; &euro;&nbsp;22,- voor 6 maanden &rarr;</a>
+                </td>
+              </tr>
+            </table>
+            <p style="margin:0 0 36px;font-size:13px;color:#9ca3af;line-height:1.6;">
+              Verleng je niet voor ${expireStr}? Dan wordt de site automatisch offline gehaald. Je kunt daarna altijd opnieuw verlengen via je dashboard.
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:20px 40px 32px;border-top:1px solid #f3ede4;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">SayingYes &middot; sayingyes.nl &middot; info@sayingyes.nl</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+
+  try {
+    const { data: result, error } = await getResend().emails.send({
+      from:    FROM,
+      to:      [toEmail],
+      subject: `Nog 7 dagen: jullie trouwwebsite gaat offline op ${expireStr}`,
+      html,
+    })
+    if (error) {
+      console.error("[mail] Expiry warning error:", error)
+      return { success: false, error }
+    }
+    console.log("[mail] Expiry warning sent →", toEmail, "| id:", result?.id)
+    return { success: true, id: result?.id }
+  } catch (err) {
+    console.error("[mail] Unexpected error sending expiry warning:", err)
+    return { success: false, error: err }
+  }
+}

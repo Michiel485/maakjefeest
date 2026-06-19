@@ -7,6 +7,7 @@ import RsvpSection, { type RsvpRow } from "./RsvpSection"
 import { eventSiteUrl, eventSiteLabel } from "@/lib/site-url"
 import SlugEditor from "./SlugEditor"
 import DeleteDraftButton from "./DeleteDraftButton"
+import RenewalButton from "./RenewalButton"
 
 const GOLD       = "#C5A059"
 const GOLD_LIGHT = "#E8D5A3"
@@ -23,6 +24,7 @@ type Event = {
   type: string
   status: string
   created_at: string
+  expires_at: string | null
 }
 
 const TYPE_LABEL: Record<string, string> = {
@@ -37,6 +39,12 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
     day: "numeric", month: "long", year: "numeric",
   })
 
+  const expiresAt      = event.expires_at ? new Date(event.expires_at) : null
+  const now            = new Date()
+  const daysUntilExpiry = expiresAt ? Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : null
+  const isExpiringSoon = daysUntilExpiry !== null && daysUntilExpiry <= 30 && daysUntilExpiry > 0
+  const isExpired      = event.status === "expired" || (daysUntilExpiry !== null && daysUntilExpiry <= 0)
+
   return (
     <div
       className="rounded-2xl p-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between md:gap-4 md:p-6"
@@ -49,6 +57,14 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
           {isDraft ? (
             <span className="text-xs bg-amber-100 text-amber-700 font-semibold px-2 py-0.5 rounded-full">
               Concept
+            </span>
+          ) : isExpired ? (
+            <span className="text-xs bg-red-100 text-red-700 font-semibold px-2 py-0.5 rounded-full">
+              Offline
+            </span>
+          ) : isExpiringSoon ? (
+            <span className="text-xs bg-orange-100 text-orange-700 font-semibold px-2 py-0.5 rounded-full">
+              Verloopt binnenkort
             </span>
           ) : (
             <span className="text-xs bg-emerald-100 text-emerald-700 font-semibold px-2 py-0.5 rounded-full">
@@ -63,6 +79,14 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
           {`${event.slug}.sayingyes.nl`}
         </h3>
         <p className="text-xs mt-0.5" style={{ color: BODY }}>Opgeslagen op {date}</p>
+        {!isDraft && expiresAt && (
+          <p className="text-xs mt-0.5" style={{ color: isExpired || isExpiringSoon ? "#b45309" : BODY }}>
+            {isExpired
+              ? `Offline gegaan op ${expiresAt.toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })}`
+              : `Online tot ${expiresAt.toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })}${isExpiringSoon ? ` (nog ${daysUntilExpiry} dagen)` : ""}`
+            }
+          </p>
+        )}
         <div className="mt-2">
           <SlugEditor eventId={event.id} currentSlug={event.slug} isLive={!isDraft} />
         </div>
@@ -73,7 +97,7 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
         {isDraft && (
           <DeleteDraftButton eventId={event.id} />
         )}
-        {!isDraft && (
+        {!isDraft && !isExpired && (
           <a
             href={eventSiteUrl(event.slug)}
             target="_blank"
@@ -84,6 +108,9 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
           >
             Bekijken →
           </a>
+        )}
+        {!isDraft && (
+          <RenewalButton eventId={event.id} />
         )}
         <Link
           href={`/bouwen?event_id=${event.id}`}
@@ -116,11 +143,11 @@ export default async function DashboardPage() {
   const service = createServiceClient()
   const { data: events } = await service
     .from("events")
-    .select("id, slug, title, type, status, created_at")
+    .select("id, slug, title, type, status, created_at, expires_at")
     .eq("user_email", user.email!)
     .order("created_at", { ascending: false })
 
-  const published = (events ?? []).filter((e: Event) => e.status === "published")
+  const published = (events ?? []).filter((e: Event) => e.status === "published" || e.status === "expired")
   const drafts    = (events ?? []).filter((e: Event) => e.status === "draft")
   const firstName = user.email?.split("@")[0] ?? "daar"
 

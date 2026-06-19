@@ -1,13 +1,15 @@
 import { createServiceClient } from "@/lib/supabase"
-import { sendDraftReminderEmail } from "@/lib/mail"
+import { sendDraftReminderEmail, sendRenewalReminderEmail, sendExpiryWarningEmail } from "@/lib/mail"
+import { revalidatePath } from "next/cache"
 
 // Vercel Cron calls this endpoint daily at 09:00 AM Europe/Amsterdam.
 // Security: Vercel sets Authorization: Bearer <CRON_SECRET> automatically.
 export const dynamic = "force-dynamic"
 
-const SEVEN_DAYS_MS  = 7  * 24 * 60 * 60 * 1000
-const SEVEN_WEEKS_MS = 49 * 24 * 60 * 60 * 1000
-const EIGHT_WEEKS_MS = 56 * 24 * 60 * 60 * 1000
+const SEVEN_DAYS_MS    = 7  * 24 * 60 * 60 * 1000
+const SEVEN_WEEKS_MS   = 49 * 24 * 60 * 60 * 1000
+const EIGHT_WEEKS_MS   = 56 * 24 * 60 * 60 * 1000
+const ELEVEN_MONTHS_MS = 335 * 24 * 60 * 60 * 1000 // ~11 months
 
 export async function GET(request: Request) {
   // ── Auth: only Vercel cron (or manual calls with the secret) ──────────────
@@ -22,10 +24,13 @@ export async function GET(request: Request) {
   const now = new Date()
 
   const results = {
-    reminder1Sent: [] as string[],
-    reminder2Sent: [] as string[],
-    deleted:       [] as string[],
-    errors:        [] as string[],
+    reminder1Sent:    [] as string[],
+    reminder2Sent:    [] as string[],
+    deleted:          [] as string[],
+    renewalReminders: [] as string[],
+    expiryWarnings:   [] as string[],
+    expired:          [] as string[],
+    errors:           [] as string[],
   }
 
   // ── Fetch all draft events ─────────────────────────────────────────────────
@@ -130,6 +135,59 @@ export async function GET(request: Request) {
         results.reminder1Sent.push(draft.id)
       } else {
         results.errors.push(`reminder1-fail:${draft.id}`)
+      }
+    }
+  }
+
+  // ── Published events: subscription expiry ─────────────────────────────────
+  const { data: published } = await service
+    .from("events")
+    .select("id, title, user_email, slug, expires_at, published_at, renewal_reminder_sent_at, expiry_warning_sent_at")
+    .eq("status", "published")
+    .not("expires_at", "is", null)
+
+  const dashboardUrl = `${siteUrl}/dashboard`
+
+  for (const event of published ?? []) {
+    const expiresAt   = new Date(event.expires_at as string)
+    const publishedAt = new Date(event.published_at as string)
+    const email       = event.user_email as string
+    const title       = (event.title as string) || "jullie website"
+    const timeToExpiry = expiresAt.getTime() - now.getTime()
+    const timeSincePublished = now.getTime() - publishedAt.getTime()
+
+    // ── Offline zetten na verloopdatum ────────────────────────────────────
+    if (timeToExpiry <= 0) {
+      await service
+        .from("events")
+        .update({ status: "expired" })
+        .eq("id", event.id)
+        .eq("status", "published")
+      revalidatePath(`/events/${event.slug}`, "layout")
+      results.expired.push(event.id as string)
+      continue
+    }
+
+    // ── Verloopwaarschuwing: 7 dagen voor verloopdatum ───────────────────
+    if (timeToExpiry <= SEVEN_DAYS_MS && !event.expiry_warning_sent_at) {
+      const mailResult = await sendExpiryWarningEmail({ toEmail: email, eventTitle: title, expiresAt, dashboardUrl })
+      if (mailResult.success) {
+        await service.from("events").update({ expiry_warning_sent_at: now.toISOString() }).eq("id", event.id)
+        results.expiryWarnings.push(event.id as string)
+      } else {
+        results.errors.push(`expiry-warning-fail:${event.id}`)
+      }
+      continue
+    }
+
+    // ── Verlengherinnering: na 11 maanden live ───────────────────────────
+    if (timeSincePublished >= ELEVEN_MONTHS_MS && !event.renewal_reminder_sent_at) {
+      const mailResult = await sendRenewalReminderEmail({ toEmail: email, eventTitle: title, expiresAt, dashboardUrl })
+      if (mailResult.success) {
+        await service.from("events").update({ renewal_reminder_sent_at: now.toISOString() }).eq("id", event.id)
+        results.renewalReminders.push(event.id as string)
+      } else {
+        results.errors.push(`renewal-reminder-fail:${event.id}`)
       }
     }
   }
