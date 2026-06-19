@@ -285,7 +285,7 @@ function CheckoutContent() {
 
       {/* Reassurance note */}
       <p className="text-xs text-center mb-5 leading-relaxed font-semibold" style={{ color: BODY }}>
-        Na publicatie kun je de inhoud, stijl en URL van je website altijd nog aanpassen via de builder.
+        Na publicatie kunnen jullie de website altijd blijven aanpassen — ook de inhoud, stijl en zelfs de URL. Log gewoon in via sayingyes.nl/inloggen om verder te bouwen.
       </p>
 
       {/* Email confirmation */}
