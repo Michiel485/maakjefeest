@@ -124,9 +124,40 @@ export const viewport: Viewport = {
   colorScheme: "only light",
 }
 
+const SITE_URL = "https://sayingyes.nl"
+
 export const metadata: Metadata = {
-  title: "SayingYes — Jullie bruiloftswebsite",
-  description: "Bouw in minuten een prachtige bruiloftswebsite. Eenmalig €49,99 voor een jaar. Deel het programma, verzamel RSVP's en beheer alles in jullie dashboard.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "SayingYes — Digitale bruiloftswebsite maken",
+    template: "%s | SayingYes",
+  },
+  description: "Maak in minuten een complete digitale bruiloftswebsite met RSVP, fotogalerij en ons verhaal. Geen technische kennis nodig. Eenmalig €49,99.",
+  keywords: ["digitale bruiloftswebsite", "trouwkaart online", "bruiloftswebsite maken", "digitale trouwkaart", "online trouwuitnodiging", "RSVP trouwerij", "trouwwebsite"],
+  authors: [{ name: "SayingYes", url: SITE_URL }],
+  creator: "SayingYes",
+  publisher: "SayingYes",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
+  },
+  alternates: {
+    canonical: SITE_URL,
+  },
+  openGraph: {
+    type: "website",
+    locale: "nl_NL",
+    url: SITE_URL,
+    siteName: "SayingYes",
+    title: "SayingYes — Digitale bruiloftswebsite maken",
+    description: "Maak in minuten een complete digitale bruiloftswebsite met RSVP, fotogalerij en ons verhaal. Eenmalig €49,99.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SayingYes — Digitale bruiloftswebsite maken",
+    description: "Maak in minuten een complete digitale bruiloftswebsite met RSVP, fotogalerij en ons verhaal. Eenmalig €49,99.",
+  },
 };
 
 export default function RootLayout({
@@ -141,7 +172,45 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${playfairDisplay.variable} ${greatVibes.variable} ${cormorantGaramond.variable} ${pinyonScript.variable} ${cinzel.variable} ${dancingScript.variable} ${montserrat.variable} ${marcellus.variable} ${lora.variable} ${windSong.variable} ${allura.variable} ${bodoniModa.variable} ${italiana.variable} ${gfsDidot.variable} ${prata.variable} h-full antialiased`}
       style={{ colorScheme: "only light" }}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "Organization",
+                  "@id": `${SITE_URL}/#organization`,
+                  name: "SayingYes",
+                  url: SITE_URL,
+                  description: "Digitale bruiloftswebsite builder voor bruidsparen in Nederland.",
+                  contactPoint: { "@type": "ContactPoint", email: "info@sayingyes.nl", contactType: "customer support", availableLanguage: "Dutch" },
+                },
+                {
+                  "@type": "WebSite",
+                  "@id": `${SITE_URL}/#website`,
+                  url: SITE_URL,
+                  name: "SayingYes",
+                  publisher: { "@id": `${SITE_URL}/#organization` },
+                  inLanguage: "nl-NL",
+                },
+                {
+                  "@type": "SoftwareApplication",
+                  name: "SayingYes",
+                  applicationCategory: "WebApplication",
+                  operatingSystem: "Web",
+                  url: SITE_URL,
+                  description: "Maak in minuten een complete digitale bruiloftswebsite met RSVP, fotogalerij, ons verhaal en meer.",
+                  offers: { "@type": "Offer", price: "49.99", priceCurrency: "EUR", availability: "https://schema.org/InStock" },
+                  inLanguage: "nl-NL",
+                },
+              ],
+            }),
+          }}
+        />
+        {children}
+      </body>
     </html>
   );
 }

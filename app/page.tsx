@@ -1,6 +1,20 @@
-﻿import Link from "next/link"
+﻿import type { Metadata } from "next"
+import Link from "next/link"
 import { NavLoginButton } from "@/components/NavLoginButton"
 import ResetGoogleTranslate from "@/components/ResetGoogleTranslate"
+
+export const metadata: Metadata = {
+  title: "Digitale bruiloftswebsite maken — SayingYes",
+  description: "Maak in minuten jullie eigen digitale bruiloftswebsite met RSVP, fotogalerij, ons verhaal en meer. Geen technische kennis nodig. Eenmalig €49,99 voor een heel jaar.",
+  alternates: {
+    canonical: "https://sayingyes.nl",
+  },
+  openGraph: {
+    title: "Digitale bruiloftswebsite maken — SayingYes",
+    description: "Maak in minuten jullie eigen digitale bruiloftswebsite met RSVP, fotogalerij, ons verhaal en meer. Eenmalig €49,99.",
+    url: "https://sayingyes.nl",
+  },
+}
 
 const GOLD       = "#C5A059"
 const GOLD_LIGHT = "#E8D5A3"
