@@ -232,9 +232,15 @@ export async function POST(request: Request) {
   const customerName  = updatedEvent?.frame_names || updatedEvent?.title || ""
   const customerEmail = updatedEvent?.user_email || ""
 
-  // Generate PDF
-  const invoiceDate   = formatDate(now)
-  const description   = "Bruiloftswebsite — 1 jaar live"
+  // Generate PDF — gebruik het werkelijk betaalde bedrag (kan lager zijn door kortingscode)
+  const paidAmountIncl = Math.round(parseFloat(payment.amount.value) * 100) / 100
+  const paidAmountExcl = Math.round((paidAmountIncl / (1 + BTW_RATE / 100)) * 100) / 100
+  const paidBtwAmount  = Math.round((paidAmountIncl - paidAmountExcl) * 100) / 100
+
+  const invoiceDate = formatDate(now)
+  const description = discount_code
+    ? `Bruiloftswebsite — 1 jaar live (kortingscode: ${discount_code})`
+    : "Bruiloftswebsite — 1 jaar live"
   let pdfBuffer: Buffer | undefined
   let pdfFilePath: string | undefined
 
@@ -244,9 +250,9 @@ export async function POST(request: Request) {
       invoiceDate,
       customerName,
       customerEmail,
-      amountExcl:      formatEur(AMOUNT_EXCL),
-      btwAmount:       formatEur(BTW_AMOUNT),
-      amountIncl:      formatEur(AMOUNT_INCL),
+      amountExcl:      formatEur(paidAmountExcl),
+      btwAmount:       formatEur(paidBtwAmount),
+      amountIncl:      formatEur(paidAmountIncl),
       btwRate:         BTW_RATE,
       molliePaymentId: payment.id,
       description,
@@ -271,9 +277,9 @@ export async function POST(request: Request) {
     customer_email:    customerEmail,
     customer_name:     customerName,
     description,
-    amount_excl:       AMOUNT_EXCL,
-    btw_amount:        BTW_AMOUNT,
-    amount_incl:       AMOUNT_INCL,
+    amount_excl:       paidAmountExcl,
+    btw_amount:        paidBtwAmount,
+    amount_incl:       paidAmountIncl,
     btw_rate:          BTW_RATE,
     date:              now.toISOString().split("T")[0],
     mollie_payment_id: payment.id,
@@ -292,9 +298,9 @@ export async function POST(request: Request) {
         invoiceNumber,
         invoiceDate,
         customerName,
-        amountExcl:      formatEur(AMOUNT_EXCL),
-        btwAmount:       formatEur(BTW_AMOUNT),
-        amountIncl:      formatEur(AMOUNT_INCL),
+        amountExcl:      formatEur(paidAmountExcl),
+        btwAmount:       formatEur(paidBtwAmount),
+        amountIncl:      formatEur(paidAmountIncl),
         molliePaymentId: payment.id,
         pdfBuffer,
       }),
