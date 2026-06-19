@@ -23,6 +23,12 @@ export async function GET(request: Request) {
   const service = createServiceClient()
   const now = new Date()
 
+  // ── Magic links cleanup: verwijder verlopen tokens ouder dan 7 dagen ──────
+  await service
+    .from("magic_links")
+    .delete()
+    .lt("expires_at", new Date(now.getTime() - SEVEN_DAYS_MS).toISOString())
+
   const results = {
     reminder1Sent:    [] as string[],
     reminder2Sent:    [] as string[],
@@ -142,8 +148,8 @@ export async function GET(request: Request) {
   // ── Published events: subscription expiry ─────────────────────────────────
   const { data: published } = await service
     .from("events")
-    .select("id, title, user_email, slug, expires_at, published_at, renewal_reminder_sent_at, expiry_warning_sent_at")
-    .eq("status", "published")
+    .select("id, title, user_email, slug, status, expires_at, published_at, renewal_reminder_sent_at, expiry_warning_sent_at")
+    .in("status", ["published", "paused"])
     .not("expires_at", "is", null)
 
   const dashboardUrl = `${siteUrl}/dashboard`
@@ -162,7 +168,7 @@ export async function GET(request: Request) {
         .from("events")
         .update({ status: "expired" })
         .eq("id", event.id)
-        .eq("status", "published")
+        .in("status", ["published", "paused"])
       revalidatePath(`/events/${event.slug}`, "layout")
       results.expired.push(event.id as string)
       continue

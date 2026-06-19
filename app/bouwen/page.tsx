@@ -1017,21 +1017,12 @@ export default function BouwenPage() {
       pw_question: pwEnabled && pwType === 'secret_question' ? pwQuestion : null,
       pw_answer: pwEnabled && pwType === 'secret_question' ? pwAnswer : null,
     }
-    console.log(
-      "[save] verstuur naar /api/drafts",
-      "| event_id:", payload.event_id,
-      "| hero_image_url:", payload.hero_image_url,
-      "| heroOverlay:", payload.heroOverlay,
-      "| programma items:", (programmaItems).map((it) => ({ id: it.id, image_url: it.image_url })),
-    )
-
     const res = await fetch("/api/drafts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     })
     const json = await res.json()
-    console.log("[save] /api/drafts response:", json)
     if (!res.ok) throw new Error(json.error || "Opslaan mislukt")
 
     localStorage.setItem("sayingyes_saved_event_id", json.id)

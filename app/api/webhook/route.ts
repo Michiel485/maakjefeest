@@ -61,6 +61,17 @@ export async function POST(request: Request) {
 
   // ── Renewal payment: extend expires_at by 6 months ───────────────────────
   if (payment_type === "renewal") {
+    // Idempotency: skip if this Mollie payment was already processed
+    const { data: existingInvoice } = await supabase
+      .from("invoices")
+      .select("id")
+      .eq("mollie_payment_id", payment.id)
+      .maybeSingle()
+
+    if (existingInvoice) {
+      return NextResponse.json({ received: true }, { status: 200 })
+    }
+
     const { data: eventRow } = await supabase
       .from("events")
       .select("expires_at, status, slug, user_email, title, frame_names")
@@ -82,6 +93,27 @@ export async function POST(request: Request) {
           expiry_warning_sent_at:   null,
         })
         .eq("id", event_id)
+
+      // Record renewal invoice for bookkeeping
+      const renewalYear = now.getFullYear()
+      const { count: invCount } = await supabase
+        .from("invoices")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", `${renewalYear}-01-01`)
+      const renewalInvoiceNumber = `SY-${renewalYear}-${String((invCount ?? 0) + 1).padStart(3, "0")}`
+      await supabase.from("invoices").insert({
+        event_id,
+        invoice_number:    renewalInvoiceNumber,
+        customer_email:    eventRow.user_email ?? "",
+        customer_name:     eventRow.frame_names || eventRow.title || "",
+        description:       "SayingYes — verlenging 6 maanden",
+        amount_excl:       18.18,
+        btw_amount:        3.82,
+        amount_incl:       22.00,
+        btw_rate:          21,
+        date:              now.toISOString().split("T")[0],
+        mollie_payment_id: payment.id,
+      })
 
       if (eventRow.slug) revalidatePath(`/events/${eventRow.slug}`, "layout")
     }

@@ -8,6 +8,8 @@ import { eventSiteUrl, eventSiteLabel } from "@/lib/site-url"
 import SlugEditor from "./SlugEditor"
 import DeleteDraftButton from "./DeleteDraftButton"
 import RenewalButton from "./RenewalButton"
+import PauseButton from "./PauseButton"
+import DeleteEventButton from "./DeleteEventButton"
 
 const GOLD       = "#C5A059"
 const GOLD_LIGHT = "#E8D5A3"
@@ -39,11 +41,12 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
     day: "numeric", month: "long", year: "numeric",
   })
 
-  const expiresAt      = event.expires_at ? new Date(event.expires_at) : null
-  const now            = new Date()
-  const daysUntilExpiry = expiresAt ? Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : null
-  const isExpiringSoon = daysUntilExpiry !== null && daysUntilExpiry <= 30 && daysUntilExpiry > 0
-  const isExpired      = event.status === "expired" || (daysUntilExpiry !== null && daysUntilExpiry <= 0)
+  const expiresAt           = event.expires_at ? new Date(event.expires_at) : null
+  const now                 = new Date()
+  const daysUntilExpiry     = expiresAt ? Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : null
+  const isSubscriptionExpired = event.status === "expired" || (daysUntilExpiry !== null && daysUntilExpiry <= 0)
+  const isExpiringSoon      = !isSubscriptionExpired && daysUntilExpiry !== null && daysUntilExpiry <= 30
+  const isPaused            = event.status === "paused"
 
   return (
     <div
@@ -58,8 +61,12 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
             <span className="text-xs bg-amber-100 text-amber-700 font-semibold px-2 py-0.5 rounded-full">
               Concept
             </span>
-          ) : isExpired ? (
+          ) : isSubscriptionExpired ? (
             <span className="text-xs bg-red-100 text-red-700 font-semibold px-2 py-0.5 rounded-full">
+              Verlopen
+            </span>
+          ) : isPaused ? (
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: "#F3F4F6", color: "#6B7280" }}>
               Offline
             </span>
           ) : isExpiringSoon ? (
@@ -80,10 +87,10 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
         </h3>
         <p className="text-xs mt-0.5" style={{ color: BODY }}>Opgeslagen op {date}</p>
         {!isDraft && expiresAt && (
-          <p className="text-xs mt-0.5" style={{ color: isExpired || isExpiringSoon ? "#b45309" : BODY }}>
-            {isExpired
-              ? `Offline gegaan op ${expiresAt.toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })}`
-              : `Online tot ${expiresAt.toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })}${isExpiringSoon ? ` (nog ${daysUntilExpiry} dagen)` : ""}`
+          <p className="text-xs mt-0.5" style={{ color: isSubscriptionExpired ? "#b45309" : isExpiringSoon ? "#b45309" : BODY }}>
+            {isSubscriptionExpired
+              ? `Verlopen op ${expiresAt.toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })}`
+              : `Geldig tot ${expiresAt.toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })}${isExpiringSoon ? ` — nog ${daysUntilExpiry} dagen` : ""}`
             }
           </p>
         )}
@@ -93,32 +100,44 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
       </div>
 
       {/* Actions */}
-      <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3 md:flex-shrink-0">
-        {isDraft && (
-          <DeleteDraftButton eventId={event.id} />
-        )}
-        {!isDraft && !isExpired && (
-          <a
-            href={eventSiteUrl(event.slug)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm font-medium text-center py-2 md:py-0 transition-colors"
-            style={{ color: BODY }}
-            title={eventSiteLabel(event.slug)}
+      <div className="flex flex-col gap-3 md:flex-shrink-0 md:min-w-[200px]">
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+          {isDraft && (
+            <DeleteDraftButton eventId={event.id} />
+          )}
+          {!isDraft && !isSubscriptionExpired && !isPaused && (
+            <a
+              href={eventSiteUrl(event.slug)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-medium text-center py-2 md:py-0 transition-colors"
+              style={{ color: BODY }}
+              title={eventSiteLabel(event.slug)}
+            >
+              Bekijken →
+            </a>
+          )}
+          {!isDraft && (
+            <RenewalButton eventId={event.id} />
+          )}
+          <Link
+            href={`/bouwen?event_id=${event.id}`}
+            className="text-sm font-semibold px-4 py-3 md:py-2 rounded-xl text-center transition-all hover:-translate-y-0.5 w-full md:w-auto"
+            style={{ backgroundColor: CHARCOAL, color: IVORY }}
           >
-            Bekijken →
-          </a>
-        )}
+            Verder bewerken
+          </Link>
+        </div>
         {!isDraft && (
-          <RenewalButton eventId={event.id} />
+          <div className="flex flex-wrap items-center gap-4 pt-1" style={{ borderTop: `1px solid #E8D5A3` }}>
+            <PauseButton
+              eventId={event.id}
+              status={event.status}
+              isSubscriptionExpired={isSubscriptionExpired}
+            />
+            <DeleteEventButton eventId={event.id} />
+          </div>
         )}
-        <Link
-          href={`/bouwen?event_id=${event.id}`}
-          className="text-sm font-semibold px-4 py-3 md:py-2 rounded-xl text-center transition-all hover:-translate-y-0.5 w-full md:w-auto"
-          style={{ backgroundColor: CHARCOAL, color: IVORY }}
-        >
-          Verder bewerken
-        </Link>
       </div>
     </div>
   )
@@ -147,7 +166,7 @@ export default async function DashboardPage() {
     .eq("user_email", user.email!)
     .order("created_at", { ascending: false })
 
-  const published = (events ?? []).filter((e: Event) => e.status === "published" || e.status === "expired")
+  const published = (events ?? []).filter((e: Event) => ["published", "paused", "expired"].includes(e.status))
   const drafts    = (events ?? []).filter((e: Event) => e.status === "draft")
   const firstName = user.email?.split("@")[0] ?? "daar"
 

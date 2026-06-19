@@ -170,20 +170,13 @@ export async function POST(request: Request) {
 
   // Update existing event if event_id provided and belongs to this user
   if (event_id) {
-    console.log("[drafts] update poging voor event_id:", event_id, "user:", user.email)
     const { data: existing } = await db
       .from("events")
       .select("id, slug, status")
       .eq("id", event_id)
       .single()
 
-    console.log("[drafts] gevonden event:", existing)
-
     if (existing) {
-      console.log("[drafts] URL naar DB:", hero_image_url, "| programma items:", JSON.stringify(
-        (content["programma"] as { items?: Array<{ id?: string; image_url?: string | null }> })?.items
-          ?.map((it) => ({ id: it.id, image_url: it.image_url }))
-      ))
       const { error: updateErr } = await db
         .from("events")
         .update({ type, title: naam, datum, locatie, style, font_hero, font_initials, font_frame_names, font_page_titles, hero_image_url, hero_image_pos_x: Math.round(hero_image_pos_x), hero_image_pos_y: Math.round(hero_image_pos_y), hero_overlay: heroOverlay, nav_layout, nav_title: nav_title ?? naam, use_frame, frame_style, initials, frame_names, frame_location, frame_initials_size: frameInitialsSize, frame_names_size: frameNamesSize, frame_date_size: frameDateSize, frame_location_size: frameLocationSize, homepage_settings, pw_enabled, pw_type, pw_value, pw_question, pw_answer, last_active_at: new Date().toISOString() })
@@ -210,15 +203,11 @@ export async function POST(request: Request) {
         return Response.json({ error: pagesErr.message }, { status: 500 })
       }
 
-      console.log("[drafts] update succesvol, id:", event_id, "slug:", existing.slug)
       return Response.json({ id: event_id, slug: existing.slug })
     }
-
-    console.warn("[drafts] event_id opgegeven maar niet gevonden, maak nieuw event aan")
   }
 
   // Create new draft
-  console.log("[drafts] nieuw event aanmaken voor user:", user.email)
   const baseSlug = providedSlug || toSlug(naam || "mijn-feest")
   const slug = await uniqueSlug(baseSlug)
   const { data: event, error: eventError } = await db

@@ -1,3 +1,5 @@
+export const revalidate = 60
+
 import { notFound } from "next/navigation"
 import { createServiceClient } from "@/lib/supabase"
 import { getStyleConfig } from "@/lib/event-styles"

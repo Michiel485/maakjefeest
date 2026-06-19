@@ -4,7 +4,7 @@ import EventNav from "./event-nav"
 import EventGatekeeper from "@/components/EventGatekeeper"
 import type { Viewport } from "next"
 
-export const dynamic = "force-dynamic"
+export const revalidate = 60
 
 export const viewport: Viewport = {
   colorScheme: "only light",

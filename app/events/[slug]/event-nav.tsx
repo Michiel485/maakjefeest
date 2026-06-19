@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
+import Link from "next/link"
 import LanguageSwitcher from "@/components/LanguageSwitcher"
 import { useUILocale } from "@/hooks/useUILocale"
 import { getUILabel, PAGE_TYPE_TO_KEY } from "@/lib/ui-translations"
@@ -138,18 +139,20 @@ export default function EventNav({
     const key = PAGE_TYPE_TO_KEY[page.type]
     const label = key ? getUILabel(locale, key) : page.title
     const active = isActive(page.type)
-    return (
-      <a
-        key={page.type}
-        href={pageHref(page.type)}
-        onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate(page.type) } : undefined}
-        className="fk-navlink"
-        data-active={active ? "true" : undefined}
-        style={{ ...pageLinkStyle(active), "--nav-hover-bg": `${sc.accent}22` } as React.CSSProperties}
-      >
-        {label}
-      </a>
-    )
+    const href = pageHref(page.type)
+    const linkStyle = { ...pageLinkStyle(active), "--nav-hover-bg": `${sc.accent}22` } as React.CSSProperties
+    const commonProps = {
+      key: page.type,
+      className: "fk-navlink",
+      "data-active": active ? "true" : undefined,
+      style: linkStyle,
+      onClick: onNavigate ? (e: React.MouseEvent) => { e.preventDefault(); onNavigate(page.type) } : undefined,
+    }
+    // Anchor links (#section) for single-page mode — must stay <a>
+    if (href.startsWith("#")) {
+      return <a {...commonProps} href={href}>{label}</a>
+    }
+    return <Link {...commonProps} href={href}>{label}</Link>
   })
 
   const navHoverStyle = `
