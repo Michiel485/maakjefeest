@@ -98,18 +98,17 @@ export async function POST(request: Request) {
   // Log the full user object once so we can see exactly what Supabase sends.
   console.log("[send-email] user payload:", JSON.stringify(user))
 
-  // Supabase always sends email_action_type "magiclink" for signInWithOtp().
-  // Detect new users via created_at: if the account was created within the
-  // last 5 minutes it must be a first-time login.
-  const isNewUser = (() => {
+  // If the redirect goes to /bouwen it's always from the aanmaken form → "basis staat" mail.
+  // Otherwise use created_at age to distinguish new vs returning users.
+  const isFromAanmaken = redirect_to.includes("/bouwen")
+  const isNewUser = isFromAanmaken || (() => {
     if (user.created_at) {
       const ageMs = Date.now() - new Date(user.created_at).getTime()
-      return ageMs < 5 * 60 * 1000 // younger than 5 minutes
+      return ageMs < 5 * 60 * 1000
     }
-    // Fallback: no created_at → check email_confirmed_at
     return !user.email_confirmed_at
   })()
-  console.log("[send-email] isNewUser:", isNewUser, "| created_at:", user.created_at)
+  console.log("[send-email] isFromAanmaken:", isFromAanmaken, "| isNewUser:", isNewUser)
 
   const result = isNewUser
     ? await sendSignupWelcomeMagicLink({ toEmail: user.email, magicLink })
