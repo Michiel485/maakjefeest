@@ -438,6 +438,7 @@ export default function BouwenPage() {
   useEffect(() => { if (window.innerWidth < 768) setViewport("mobiel") }, [])
   useEffect(() => { if (activeSection !== 'algemeen') setOpenAlgSection(null) }, [activeSection])
   useEffect(() => { if (activeSection !== 'url') setOpenUrlSection(null) }, [activeSection])
+  useEffect(() => { if (activeSection !== 'paginas') setActiveSubPage(null) }, [activeSection])
   useEffect(() => { if (activeSection !== 'paginas' || activeSubPage !== 'Home') setOpenHomeSection(null) }, [activeSection, activeSubPage])
 
   // Intercept browser back button — show a branded leave modal instead of instant navigation.
