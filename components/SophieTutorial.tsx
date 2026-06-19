@@ -31,7 +31,7 @@ const STEPS: { label: string; title: string; text: string; nav: SophieNav }[] = 
   {
     label: "Stap 2 · Lay-out",
     title: "De opbouw van de website 📐",
-    text: "Wil je de inhoud netjes in een kader zoals in de live preview, of liever de volle breedte van het scherm? Wij raden zelf Kader aan. Wil je alle onderdelen op aparte pagina's, of toch één lange pagina? Probeer beide uit — ze zijn allebei erg leuk!",
+    text: "Wil je alle onderdelen op aparte pagina's, of toch één lange pagina? Probeer beide uit — ze zijn allebei erg leuk!",
     nav: { activeSection: 'algemeen', openAlgSection: 'layout' },
   },
   {
