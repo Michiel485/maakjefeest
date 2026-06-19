@@ -571,6 +571,19 @@ export default function BouwenPage() {
     }, 150)
   }
 
+  function handleMasterContactClick(masterId: string, field: 'telefoon' | 'email') {
+    setActiveSection('paginas')
+    setActiveSubPage('Ceremoniemeesters')
+    setTimeout(() => {
+      const el = document.getElementById(`master-${field}-${masterId}`)
+      if (!el) return
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      el.focus()
+      const len = (el as HTMLInputElement).value.length
+      ;(el as HTMLInputElement).setSelectionRange(len, len)
+    }, 150)
+  }
+
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
     const urlEventId = urlParams.get("event_id")
@@ -2920,6 +2933,7 @@ export default function BouwenPage() {
                           text={typeof content.Ceremoniemeesters?.text === "string" ? content.Ceremoniemeesters.text : undefined}
                           onMasterClick={handleMasterClick}
                           onTextClick={handleMastersTextClick}
+                          onContactClick={handleMasterContactClick}
                         />
                         </div>
                       )}
@@ -3726,6 +3740,7 @@ function MastersEditor({
           />
           {/* Telefoon */}
           <input
+            id={`master-telefoon-${master.id}`}
             type="tel"
             value={master.telefoon}
             onChange={(e) => update(master.id!, { telefoon: e.target.value })}
@@ -3734,6 +3749,7 @@ function MastersEditor({
           />
           {/* E-mail */}
           <input
+            id={`master-email-${master.id}`}
             type="email"
             value={master.email}
             onChange={(e) => update(master.id!, { email: e.target.value })}

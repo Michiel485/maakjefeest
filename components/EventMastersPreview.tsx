@@ -14,12 +14,13 @@ export interface EventMastersPreviewProps {
   text?: string | null
   onMasterClick?: (masterId: string) => void
   onTextClick?: () => void
+  onContactClick?: (masterId: string, field: 'telefoon' | 'email') => void
 }
 
 export const DEFAULT_MASTERS_TEXT =
   "Heb je vragen over het programma, dieetwensen of wil je gewoon iets leuks overleggen voor de grote dag? Neem dan gerust contact op met een van onze ceremoniemeesters!"
 
-export default function EventMastersPreview({ masters, sc, text, onMasterClick, onTextClick }: EventMastersPreviewProps) {
+export default function EventMastersPreview({ masters, sc, text, onMasterClick, onTextClick, onContactClick }: EventMastersPreviewProps) {
   const visible = masters.filter((m) => m.naam || m.foto_url)
 
   return (
@@ -91,23 +92,45 @@ export default function EventMastersPreview({ masters, sc, text, onMasterClick, 
               )}
 
               {master.telefoon && (
-                <a
-                  href={`tel:${master.telefoon.replace(/[\s\-()]/g, "")}`}
-                  className="text-sm block mb-1"
-                  style={{ color: sc.accent, textDecoration: "none" }}
-                >
-                  {master.telefoon}
-                </a>
+                onContactClick ? (
+                  <span
+                    className="text-sm block mb-1"
+                    style={{ color: sc.accent, cursor: "pointer" }}
+                    onClick={() => onContactClick(master.id ?? i.toString(), 'telefoon')}
+                    title="Klik om te bewerken"
+                  >
+                    {master.telefoon}
+                  </span>
+                ) : (
+                  <a
+                    href={`tel:${master.telefoon.replace(/[\s\-()]/g, "")}`}
+                    className="text-sm block mb-1"
+                    style={{ color: sc.accent, textDecoration: "none" }}
+                  >
+                    {master.telefoon}
+                  </a>
+                )
               )}
 
               {master.email && (
-                <a
-                  href={`mailto:${master.email}`}
-                  className="block"
-                  style={{ fontSize: "0.8125rem", color: sc.bodyText, textDecoration: "none" }}
-                >
-                  {master.email}
-                </a>
+                onContactClick ? (
+                  <span
+                    className="block"
+                    style={{ fontSize: "0.8125rem", color: sc.bodyText, cursor: "pointer" }}
+                    onClick={() => onContactClick(master.id ?? i.toString(), 'email')}
+                    title="Klik om te bewerken"
+                  >
+                    {master.email}
+                  </span>
+                ) : (
+                  <a
+                    href={`mailto:${master.email}`}
+                    className="block"
+                    style={{ fontSize: "0.8125rem", color: sc.bodyText, textDecoration: "none" }}
+                  >
+                    {master.email}
+                  </a>
+                )
               )}
             </div>
           ))}
