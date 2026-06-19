@@ -12,7 +12,7 @@ export interface StoryPreviewProps {
   showOverlay?: boolean
   editable?: boolean
   onPositionChange?: (x: number, y: number) => void
-  onFieldDoubleClick?: (field: 'title' | 'text') => void
+  onFieldClick?: (field: 'title' | 'text') => void
   sc: SC
 }
 
@@ -29,7 +29,7 @@ export default function StoryPreview({
   showOverlay = true,
   editable = false,
   onPositionChange,
-  onFieldDoubleClick,
+  onFieldClick,
   sc,
 }: StoryPreviewProps) {
 
@@ -152,10 +152,10 @@ export default function StoryPreview({
                 color: sc.headingColor,
                 fontSize: "2.25rem",
                 fontWeight: sc.fontPageTitlesWeight,
-                cursor: onFieldDoubleClick ? "pointer" : undefined,
+                cursor: onFieldClick ? "pointer" : undefined,
               }}
-              onClick={onFieldDoubleClick ? () => onFieldDoubleClick("title") : undefined}
-              title={onFieldDoubleClick ? "Klik om te bewerken" : undefined}
+              onClick={onFieldClick ? () => onFieldClick("title") : undefined}
+              title={onFieldClick ? "Klik om te bewerken" : undefined}
             >
               {title}
             </h2>
@@ -168,10 +168,10 @@ export default function StoryPreview({
                 fontFamily: sc.fontFamily,
                 color: sc.bodyText,
                 fontSize: "1rem",
-                cursor: onFieldDoubleClick ? "pointer" : undefined,
+                cursor: onFieldClick ? "pointer" : undefined,
               }}
-              onClick={onFieldDoubleClick ? () => onFieldDoubleClick("text") : undefined}
-              title={onFieldDoubleClick ? "Klik om te bewerken" : undefined}
+              onClick={onFieldClick ? () => onFieldClick("text") : undefined}
+              title={onFieldClick ? "Klik om te bewerken" : undefined}
             >
               {text}
             </p>
@@ -182,10 +182,10 @@ export default function StoryPreview({
                 fontFamily: sc.fontFamily,
                 color: sc.bodyText,
                 opacity: 0.45,
-                cursor: onFieldDoubleClick ? "pointer" : undefined,
+                cursor: onFieldClick ? "pointer" : undefined,
               }}
-              onClick={onFieldDoubleClick ? () => onFieldDoubleClick("text") : undefined}
-              title={onFieldDoubleClick ? "Klik om te bewerken" : undefined}
+              onClick={onFieldClick ? () => onFieldClick("text") : undefined}
+              title={onFieldClick ? "Klik om te bewerken" : undefined}
             >
               Schrijf jullie verhaal in de sidebar...
             </p>

@@ -1182,7 +1182,7 @@ export default function BouwenPage() {
   const heroOverlay = draft?.heroOverlay ?? true
   const storyOverlay = draft?.storyOverlay ?? true
   const homeContent: HomeContent = draft?.homeContent ?? { title: "", body: "", align: "center" }
-  const navLayout = (draft?.navLayout ?? 'split') as 'stacked' | 'split' | 'left'
+  const navLayout = 'stacked' as const
   const navTitle = draft?.nav_title ?? draft?.frame_names ?? draft?.naam ?? ""
   const safeNavTitle = navTitle.replace(/\n/g, " ")
   const slugPreview = draft?.slug || "jouwbruiloft"
@@ -1665,24 +1665,6 @@ export default function BouwenPage() {
                         </div>
                       </div>
 
-                      {/* Navigatiestijl */}
-                      <div className="flex flex-col gap-1.5">
-                        <p className="text-xs font-semibold text-gray-700">Navigatiestijl</p>
-                        <p className="text-[11px] text-gray-400 leading-snug">Hoe de menubalk is opgebouwd op de website.</p>
-                        <div className="flex rounded-xl border border-gray-200 overflow-hidden mt-0.5">
-                          {(['left', 'split', 'stacked'] as const).map((opt) => (
-                            <button
-                              key={opt}
-                              onClick={() => updateDraft({ navLayout: opt })}
-                              className={`flex-1 py-2 text-xs font-medium transition-colors ${
-                                navLayout === opt ? 'bg-[#C5A059] text-white' : 'bg-white text-gray-500 hover:bg-gray-50'
-                              }`}
-                            >
-                              {opt === 'left' ? 'Links' : opt === 'split' ? 'Verdeeld' : 'Gecentreerd'}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
 
                     </div>
                   )}
@@ -1788,24 +1770,31 @@ export default function BouwenPage() {
                                 <span className="text-sm font-medium text-gray-800">Lay-out</span>
                               </button>
                               {openHomeSection === 'layout' && (
-                                <div className="px-5 pb-4 flex gap-2">
-                                  {([
-                                    { id: 'editorial', label: 'Kader',  sub: 'Layout 1' },
-                                    { id: 'modern',    label: 'Modern', sub: 'Layout 2' },
-                                  ] as const).map((opt) => (
-                                    <button
-                                      key={opt.id}
-                                      onClick={() => updateHpSettings({ layout: opt.id })}
-                                      className={`flex-1 flex flex-col items-center py-2.5 px-2 rounded-xl border text-xs font-semibold transition-all ${
-                                        hpSettings.layout === opt.id
-                                          ? 'border-[#C5A059] bg-[#FBF5E8] text-[#C5A059] ring-2 ring-[#C5A059]/30'
-                                          : 'border-gray-200 text-gray-400 hover:border-gray-300'
-                                      }`}
-                                    >
-                                      <span className="font-bold">{opt.label}</span>
-                                      <span className="text-[10px] font-normal opacity-70">{opt.sub}</span>
-                                    </button>
-                                  ))}
+                                <div className="px-5 pb-4 flex flex-col gap-3">
+                                  <div className="flex gap-2">
+                                    {([
+                                      { id: 'editorial', label: 'Flexibel',       sub: 'Layout 1' },
+                                      { id: 'modern',    label: 'Vaste indeling', sub: 'Layout 2' },
+                                    ] as const).map((opt) => (
+                                      <button
+                                        key={opt.id}
+                                        onClick={() => updateHpSettings({ layout: opt.id })}
+                                        className={`flex-1 flex flex-col items-center py-2.5 px-2 rounded-xl border text-xs font-semibold transition-all ${
+                                          hpSettings.layout === opt.id
+                                            ? 'border-[#C5A059] bg-[#FBF5E8] text-[#C5A059] ring-2 ring-[#C5A059]/30'
+                                            : 'border-gray-200 text-gray-400 hover:border-gray-300'
+                                        }`}
+                                      >
+                                        <span className="font-bold">{opt.label}</span>
+                                        <span className="text-[10px] font-normal opacity-70">{opt.sub}</span>
+                                      </button>
+                                    ))}
+                                  </div>
+                                  <div className="text-xs leading-relaxed space-y-1.5" style={{ color: "#9A8E82" }}>
+                                    <p><span className="font-semibold" style={{ color: "#5C5248" }}>Flexibel</span> — Volledig aanpasbaar naar jullie smaak. Kies voor een grote foto bovenaan, voeg een mooi trouwkaart-kader toe, of zet ze allebei uit voor een rustige, minimalistische look met direct tekst.</p>
+                                    <p><span className="font-semibold" style={{ color: "#5C5248" }}>Vaste indeling</span> — Een stijlvolle, vaste indeling met links de headerfoto en rechts jullie tekstvelden strak naast elkaar.</p>
+                                    <p className="pt-0.5" style={{ color: "#C5A059" }}>Speel met beide stijlen en ontdek wat het beste bij jullie past!</p>
+                                  </div>
                                 </div>
                               )}
                             </div>
@@ -1928,7 +1917,7 @@ export default function BouwenPage() {
                                       )}
                                     </div>
                                   ) : (
-                                    <p className="text-xs text-gray-400 leading-relaxed">Kaders zijn beschikbaar bij Lay-out &ldquo;Kader&rdquo;.</p>
+                                    <p className="text-xs text-gray-400 leading-relaxed">Kaders zijn beschikbaar bij Lay-out &ldquo;Flexibel&rdquo;.</p>
                                   )}
 
                                 </div>
