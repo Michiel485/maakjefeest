@@ -93,13 +93,16 @@ export async function POST(request: Request) {
         })
         .eq("id", event_id)
 
-      // Record renewal invoice + PDF + email
+      // Record renewal invoice + PDF + email — gebruik werkelijk betaald bedrag
       const renewalYear        = now.getFullYear()
-      const renewalAmountExcl  = 18.18
-      const renewalBtwAmount   = 3.82
-      const renewalAmountIncl  = 22.00
       const renewalBtwRate     = 21
-      const renewalDescription = "SayingYes — verlenging 6 maanden"
+      const renewalAmountIncl  = Math.round(parseFloat(payment.amount.value) * 100) / 100
+      const renewalAmountExcl  = Math.round((renewalAmountIncl / (1 + renewalBtwRate / 100)) * 100) / 100
+      const renewalBtwAmount   = Math.round((renewalAmountIncl - renewalAmountExcl) * 100) / 100
+      const renewalDiscountCode = (metadata as { discount_code?: string })?.discount_code
+      const renewalDescription  = renewalDiscountCode
+        ? `SayingYes — verlenging 6 maanden (kortingscode: ${renewalDiscountCode})`
+        : "SayingYes — verlenging 6 maanden"
       const renewalCustomerName  = (eventRow.frame_names || eventRow.title || "") as string
       const renewalCustomerEmail = (eventRow.user_email ?? "") as string
       const renewalInvoiceDate   = formatDate(now)
