@@ -121,12 +121,67 @@ export default async function TipPage({ params }: { params: Promise<{ slug: stri
 
       {/* Prose stijlen */}
       <style>{`
-        .prose-tip h2 { font-family: var(--font-cormorant); font-size: 1.6rem; font-weight: 700; color: ${CHARCOAL}; margin: 2rem 0 0.75rem; line-height: 1.25; }
-        .prose-tip p  { margin-bottom: 1.25rem; line-height: 1.8; font-size: 1rem; }
-        .prose-tip ul { list-style: disc; padding-left: 1.4rem; margin-bottom: 1.25rem; }
-        .prose-tip li { margin-bottom: 0.4rem; line-height: 1.7; }
-        .prose-tip a  { color: ${GOLD}; text-decoration: underline; text-underline-offset: 3px; }
-        .prose-tip strong { color: ${CHARCOAL}; font-weight: 600; }
+        .prose-tip h2 {
+          font-family: var(--font-cormorant);
+          font-size: 1.65rem;
+          font-weight: 700;
+          color: ${CHARCOAL};
+          margin: 2.5rem 0 0.85rem;
+          line-height: 1.2;
+          letter-spacing: 0.01em;
+        }
+        .prose-tip p {
+          margin-bottom: 1.35rem;
+          line-height: 1.85;
+          font-size: 1rem;
+        }
+        .prose-tip ul {
+          list-style: none;
+          padding-left: 0;
+          margin-bottom: 1.35rem;
+        }
+        .prose-tip ul li {
+          position: relative;
+          padding-left: 1.4rem;
+          margin-bottom: 0.55rem;
+          line-height: 1.75;
+        }
+        .prose-tip ul li::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 0.6em;
+          width: 6px;
+          height: 6px;
+          background: ${GOLD};
+          transform: rotate(45deg);
+        }
+        .prose-tip strong {
+          color: ${CHARCOAL};
+          font-weight: 600;
+        }
+        .prose-tip a {
+          color: ${GOLD};
+          text-decoration: underline;
+          text-underline-offset: 3px;
+        }
+        .prose-tip hr {
+          border: none;
+          border-top: 1px solid ${GOLD_LIGHT}60;
+          margin: 2.5rem 0;
+          position: relative;
+        }
+        .prose-tip hr::after {
+          content: '◆';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: ${IVORY};
+          padding: 0 0.75rem;
+          color: ${GOLD_LIGHT};
+          font-size: 0.5rem;
+        }
       `}</style>
 
       <footer className="py-8 text-center text-xs border-t mt-8" style={{ borderColor: `${GOLD_LIGHT}30`, color: "#9A8E82" }}>
