@@ -32,7 +32,7 @@ export default function CookieBanner() {
           ✨ Mag ik bijhouden hoe jullie de site vinden? Zo kan ik{" "}
           <span style={{ fontFamily: "var(--font-cormorant)", fontWeight: 600, color: "#C5A059" }}>SayingYes</span>{" "}
           steeds beter maken.{" "}
-          <Link href="/cookies" className="underline underline-offset-2 opacity-60 hover:opacity-100 transition-opacity text-xs">
+          <Link href="/privacy#cookies" className="underline underline-offset-2 opacity-60 hover:opacity-100 transition-opacity text-xs">
             Meer info
           </Link>
         </p>

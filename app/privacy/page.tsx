@@ -120,19 +120,23 @@ export default function PrivacyPage() {
           </p>
         </Section>
 
-        <Section title="8. Cookies">
+        <Section title="8. Cookies" id="cookies">
           <p className="mb-3">
-            SayingYes gebruikt <strong>uitsluitend functionele cookies</strong>. Dat zijn cookies die
-            strikt noodzakelijk zijn voor de werking van de website. Voor functionele cookies is
-            geen toestemming vereist.
+            SayingYes gebruikt twee soorten cookies:
           </p>
+          <p className="mb-2 font-semibold">Functioneel (altijd actief)</p>
           <Table rows={[
             ["sb-access-token", "Supabase", "Inlogsessie bijhouden", "Sessieduur"],
             ["sb-refresh-token", "Supabase", "Sessie vernieuwen", "30 dagen"],
+            ["cookie_consent", "SayingYes", "Jouw cookiekeuze onthouden", "Permanent (localStorage)"],
+          ]} />
+          <p className="mt-4 mb-2 font-semibold">Analytisch (alleen met toestemming)</p>
+          <Table rows={[
+            ["_ga, _ga_*", "Google Analytics 4", "Anoniem bijhouden hoe bezoekers de site gebruiken", "2 jaar"],
           ]} />
           <p className="mt-3">
-            We plaatsen <strong>geen</strong> tracking-, advertentie- of analytische cookies.
-            Er is daarom geen cookiebanner nodig.
+            Google Analytics wordt <strong>alleen geladen als je daarvoor toestemming geeft</strong> via de cookiebanner. Je kunt je keuze altijd herzien door je browsergeschiedenis/localStorage te wissen.
+            SayingYes gebruikt de verzamelde data uitsluitend om de website te verbeteren — er worden geen persoonsgegevens doorverkocht aan derden.
           </p>
         </Section>
 
@@ -164,9 +168,9 @@ export default function PrivacyPage() {
   )
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children, id }: { title: string; children: React.ReactNode; id?: string }) {
   return (
-    <section className="mb-10">
+    <section className="mb-10" id={id}>
       <h2 className="mb-3" style={{ fontFamily: "var(--font-cormorant)", fontSize: "1.5rem", fontWeight: 700, color: CHARCOAL }}>
         {title}
       </h2>
