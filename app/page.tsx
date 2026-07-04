@@ -64,6 +64,9 @@ export default function Home() {
           SayingYes
         </span>
         <div className="flex items-center gap-5">
+          <Link href="/tips" className="hidden sm:inline text-sm transition-opacity hover:opacity-70" style={{ color: BODY }}>
+            Tips
+          </Link>
           <NavLoginButton />
           <Link
             href="/aanmaken"
