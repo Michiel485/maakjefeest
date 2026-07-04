@@ -18,6 +18,8 @@ import {
   GFS_Didot,
   Prata,
 } from "next/font/google";
+import Analytics from "@/components/Analytics";
+import CookieBanner from "@/components/CookieBanner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -210,6 +212,8 @@ export default function RootLayout({
           }}
         />
         {children}
+        <Analytics />
+        <CookieBanner />
       </body>
     </html>
   );
