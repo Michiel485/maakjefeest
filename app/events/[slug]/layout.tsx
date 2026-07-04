@@ -2,12 +2,25 @@ import { createServiceClient } from "@/lib/supabase"
 import { getStyleConfig } from "@/lib/event-styles"
 import EventNav from "./event-nav"
 import EventGatekeeper from "@/components/EventGatekeeper"
-import type { Viewport } from "next"
+import type { Metadata, Viewport } from "next"
 
 export const revalidate = 60
 
 export const viewport: Viewport = {
   colorScheme: "only light",
+}
+
+// Gepubliceerde klant-trouwsites (op [slug].sayingyes.nl) mogen NIET door Google
+// geïndexeerd worden: het is privé-content (namen, gastenlijsten, dieetwensen) en
+// dunne/dubbele content zou het hoofddomein verwateren. Deze metadata geldt voor de
+// hele /events/[slug]-subtree (home + alle subpagina's) en overschrijft de
+// index:true uit de root-layout.
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+    googleBot: { index: false, follow: false },
+  },
 }
 
 export default async function EventLayout({
