@@ -1,6 +1,6 @@
 ---
 title: "Digitale trouwkaart of trouwwebsite: wat is het verschil?"
-date: "2026-06-27"
+date: "2026-05-30"
 description: "Digitale trouwkaart of trouwwebsite — wat kies je? We leggen de verschillen uit zodat jullie de beste keuze kunnen maken voor jullie grote dag."
 slug: "digitale-trouwkaart-vs-trouwwebsite"
 ---

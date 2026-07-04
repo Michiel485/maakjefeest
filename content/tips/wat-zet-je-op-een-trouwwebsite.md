@@ -1,6 +1,6 @@
 ---
 title: "Wat zet je op een trouwwebsite?"
-date: "2026-06-27"
+date: "2026-05-16"
 description: "Een trouwwebsite is hét digitale visitekaartje van jullie grote dag. Maar wat zet je er eigenlijk op? We zetten de belangrijkste onderdelen op een rij."
 slug: "wat-zet-je-op-een-trouwwebsite"
 ---
