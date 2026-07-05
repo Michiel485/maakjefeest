@@ -8,15 +8,34 @@ export async function generateStaticParams() {
   return getAllTips().map(t => ({ slug: t.slug }))
 }
 
+const OG_IMAGE = "/og-image.png"
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const tip = await getTip(slug)
   if (!tip) return {}
+  const url = `https://sayingyes.nl/tips/${slug}`
+  const image = tip.image ?? OG_IMAGE
   return {
     title: `${tip.title} — SayingYes`,
     description: tip.description,
-    alternates: { canonical: `https://sayingyes.nl/tips/${slug}` },
-    openGraph: { title: tip.title, description: tip.description, url: `https://sayingyes.nl/tips/${slug}` },
+    alternates: { canonical: url },
+    openGraph: {
+      title: tip.title,
+      description: tip.description,
+      url,
+      siteName: "SayingYes",
+      locale: "nl_NL",
+      type: "article",
+      publishedTime: tip.date,
+      images: [{ url: image, width: 1200, height: 630, alt: tip.title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: tip.title,
+      description: tip.description,
+      images: [image],
+    },
   }
 }
 

@@ -7,6 +7,21 @@ export const metadata: Metadata = {
   title: "Tips & Gidsen — SayingYes",
   description: "Praktische tips en gidsen voor het maken van jullie trouwwebsite. Van inhoud tot stijl — alles wat je nodig hebt.",
   alternates: { canonical: "https://sayingyes.nl/tips" },
+  openGraph: {
+    title: "Tips & Gidsen — SayingYes",
+    description: "Praktische tips en gidsen voor het maken van jullie trouwwebsite. Van inhoud tot stijl — alles wat je nodig hebt.",
+    url: "https://sayingyes.nl/tips",
+    siteName: "SayingYes",
+    locale: "nl_NL",
+    type: "website",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "SayingYes — Tips & Gidsen" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Tips & Gidsen — SayingYes",
+    description: "Praktische tips en gidsen voor het maken van jullie trouwwebsite. Van inhoud tot stijl — alles wat je nodig hebt.",
+    images: ["/og-image.png"],
+  },
 }
 
 const GOLD       = "#C5A059"
