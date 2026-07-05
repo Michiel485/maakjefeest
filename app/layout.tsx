@@ -154,11 +154,13 @@ export const metadata: Metadata = {
     siteName: "SayingYes",
     title: "SayingYes — Digitale bruiloftswebsite maken",
     description: "Maak in minuten een complete digitale bruiloftswebsite met RSVP, fotogalerij en ons verhaal. Eenmalig €49,99.",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "SayingYes — Digitale bruiloftswebsite maken" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "SayingYes — Digitale bruiloftswebsite maken",
     description: "Maak in minuten een complete digitale bruiloftswebsite met RSVP, fotogalerij en ons verhaal. Eenmalig €49,99.",
+    images: ["/og-image.png"],
   },
 };
 
