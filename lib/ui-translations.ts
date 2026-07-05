@@ -10,6 +10,7 @@ export const uiTranslations = {
     ceremoniemeesters: "Ceremoniemeesters",
     rsvp: "RSVP",
     fotos: "Foto's",
+    fotomuur: "Fotomuur",
   },
   en: {
     home: "Home",
@@ -20,6 +21,7 @@ export const uiTranslations = {
     ceremoniemeesters: "Masters of Ceremonies",
     rsvp: "RSVP",
     fotos: "Photos",
+    fotomuur: "Photo Wall",
   },
   de: {
     home: "Startseite",
@@ -30,6 +32,7 @@ export const uiTranslations = {
     ceremoniemeesters: "Zeremonienmeister",
     rsvp: "RSVP",
     fotos: "Fotos",
+    fotomuur: "Fotowand",
   },
   fr: {
     home: "Accueil",
@@ -40,6 +43,7 @@ export const uiTranslations = {
     ceremoniemeesters: "Maîtres de Cérémonie",
     rsvp: "RSVP",
     fotos: "Photos",
+    fotomuur: "Mur photo",
   },
   es: {
     home: "Inicio",
@@ -50,6 +54,7 @@ export const uiTranslations = {
     ceremoniemeesters: "Maestros de Ceremonia",
     rsvp: "RSVP",
     fotos: "Fotos",
+    fotomuur: "Muro de fotos",
   },
   it: {
     home: "Home",
@@ -60,6 +65,7 @@ export const uiTranslations = {
     ceremoniemeesters: "Maestri di Cerimonia",
     rsvp: "RSVP",
     fotos: "Foto",
+    fotomuur: "Muro fotografico",
   },
 } as const
 
@@ -74,6 +80,7 @@ export const PAGE_TYPE_TO_KEY: Record<string, UIKey> = {
   Fotos: "fotos",
   Ceremoniemeesters: "ceremoniemeesters",
   RSVP: "rsvp",
+  fotomuur: "fotomuur",
 }
 
 export function getUILabel(locale: string, key: UIKey): string {

@@ -10,6 +10,8 @@ export const metadata: Metadata = {
 import { createServiceClient } from "@/lib/supabase"
 import { SignOutButton } from "./SignOutButton"
 import RsvpSection, { type RsvpRow } from "./RsvpSection"
+import GuestPhotosSection, { type GuestPhotoRow, type GuestPhotoSettings } from "./GuestPhotosSection"
+import { maxPhotosPerEvent } from "@/lib/guest-photos"
 import { eventSiteUrl, eventSiteLabel } from "@/lib/site-url"
 import SlugEditor from "./SlugEditor"
 import DeleteDraftButton from "./DeleteDraftButton"
@@ -168,6 +170,10 @@ export default async function DashboardPage() {
   const firstName = user.email?.split("@")[0] ?? "daar"
 
   let rsvps: RsvpRow[] = []
+  // Gastenfotomuur: apart opgevraagd zodat het dashboard blijft werken zolang
+  // de migratie (guest_photos) nog niet is gedraaid.
+  let guestPhotos: GuestPhotoRow[] = []
+  let gpSettings: Record<string, GuestPhotoSettings> = {}
   if (published.length > 0) {
     const eventIds = published.map((e: Event) => e.id)
     const { data: rsvpData } = await service
@@ -176,6 +182,28 @@ export default async function DashboardPage() {
       .in("event_id", eventIds)
       .order("created_at", { ascending: false })
     rsvps = (rsvpData ?? []) as RsvpRow[]
+
+    const { data: gpEvents } = await service
+      .from("events")
+      .select("id, guest_photos_enabled, guest_photos_moderation")
+      .in("id", eventIds)
+    if (gpEvents) {
+      gpSettings = Object.fromEntries(
+        gpEvents.map((e) => [
+          e.id,
+          {
+            enabled: (e.guest_photos_enabled as boolean | null) ?? false,
+            moderation: (e.guest_photos_moderation as "live" | "approve" | null) ?? "live",
+          },
+        ])
+      )
+      const { data: gpData } = await service
+        .from("guest_photos")
+        .select("id, event_id, name, caption, url, status, created_at")
+        .in("event_id", eventIds)
+        .order("created_at", { ascending: false })
+      guestPhotos = (gpData ?? []) as GuestPhotoRow[]
+    }
   }
 
   return (
@@ -295,6 +323,28 @@ export default async function DashboardPage() {
             events={published.map((e: Event) => ({ id: e.id, title: e.title }))}
           />
         </section>
+
+        {/* Gastenfotomuur */}
+        {published.length > 0 && Object.keys(gpSettings).length > 0 && (
+          <section className="mt-10">
+            <div className="mb-5">
+              <SectionLabel>Gastenfotomuur</SectionLabel>
+            </div>
+            <div className="flex flex-col gap-6">
+              {published.map((ev: Event) =>
+                gpSettings[ev.id] ? (
+                  <GuestPhotosSection
+                    key={ev.id}
+                    event={{ id: ev.id, title: ev.title, slug: ev.slug }}
+                    settings={gpSettings[ev.id]}
+                    photos={guestPhotos.filter((p) => p.event_id === ev.id)}
+                    maxPhotos={maxPhotosPerEvent()}
+                  />
+                ) : null
+              )}
+            </div>
+          </section>
+        )}
 
       </main>
     </div>

@@ -53,7 +53,18 @@ export default async function EventLayout({
     fontFrameNames:  event.font_frame_names  as string | null,
     fontPageTitles:  event.font_page_titles  as string | null,
   })
-  const pageList = pages ?? []
+  // Gastenfotomuur: apart opgevraagd zodat de site blijft werken zolang de
+  // migratie (guest_photos_enabled kolom) nog niet is gedraaid.
+  const { data: gpEvent } = await supabase
+    .from("events")
+    .select("guest_photos_enabled")
+    .eq("id", event.id)
+    .single()
+  const guestPhotosEnabled = (gpEvent?.guest_photos_enabled as boolean | undefined) ?? false
+
+  const pageList = guestPhotosEnabled
+    ? [...(pages ?? []), { type: "fotomuur", title: "Fotomuur", order: 999 }]
+    : pages ?? []
   const basePath = process.env.NODE_ENV === "production" ? "" : `/events/${slug}`
 
   const hs = event.homepage_settings as { siteLayout?: string; pageMode?: string } | null

@@ -62,6 +62,8 @@ export default function EventNav({
   }
 
   function pageHref(type: string) {
+    // De fotomuur is altijd een losse pagina, ook op single-page sites
+    if (type === "fotomuur") return `${basePath}/fotomuur`
     if (singlePage) return type === "Home" ? "#home" : `#${type.toLowerCase()}`
     return type === "Home" ? homeHref : `${basePath}/${type}`
   }
@@ -142,7 +144,6 @@ export default function EventNav({
     const href = pageHref(page.type)
     const linkStyle = { ...pageLinkStyle(active), "--nav-hover-bg": `${sc.accent}22` } as React.CSSProperties
     const commonProps = {
-      key: page.type,
       className: "fk-navlink",
       "data-active": active ? "true" : undefined,
       style: linkStyle,
@@ -150,9 +151,9 @@ export default function EventNav({
     }
     // Anchor links (#section) for single-page mode — must stay <a>
     if (href.startsWith("#")) {
-      return <a {...commonProps} href={href}>{label}</a>
+      return <a key={page.type} {...commonProps} href={href}>{label}</a>
     }
-    return <Link {...commonProps} href={href}>{label}</Link>
+    return <Link key={page.type} {...commonProps} href={href}>{label}</Link>
   })
 
   const navHoverStyle = `
