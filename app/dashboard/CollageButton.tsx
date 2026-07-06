@@ -11,8 +11,8 @@ const BODY       = "#5C5248"
 // Canvas-afmetingen: posterformaat, 2400px breed (prima om te printen)
 const CANVAS_W = 2400
 const MARGIN = 110
-const GAP = 14
-const BITMAP_H = 700          // foto's gedecodeerd op max 700px hoog (geheugen)
+const GAP = 16
+const TILE_RADIUS = 20
 const MAX_COLLAGE_PHOTOS = 150
 
 interface CollagePhoto {
@@ -28,6 +28,14 @@ interface LayoutCell {
   h: number
 }
 
+// Eén mozaïektegel in rastereenheden: kolom, rij, breedte, hoogte
+interface MosaicTile {
+  c: number
+  r: number
+  sc: number
+  sr: number
+}
+
 function shuffleArray<T>(list: T[]): T[] {
   const arr = [...list]
   for (let i = arr.length - 1; i > 0; i--) {
@@ -35,6 +43,108 @@ function shuffleArray<T>(list: T[]): T[] {
     ;[arr[i], arr[j]] = [arr[j], arr[i]]
   }
   return arr
+}
+
+function pathRoundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  const rr = Math.min(r, w / 2, h / 2)
+  ctx.beginPath()
+  ctx.moveTo(x + rr, y)
+  ctx.arcTo(x + w, y, x + w, y + h, rr)
+  ctx.arcTo(x + w, y + h, x, y + h, rr)
+  ctx.arcTo(x, y + h, x, y, rr)
+  ctx.arcTo(x, y, x + w, y, rr)
+  ctx.closePath()
+}
+
+// ── Mozaïek-layout ────────────────────────────────────────────────────────────
+// Bouwt banden van 2 rastereenheden hoog en vult die met een willekeurige mix
+// van blokken: grote 2x2-tegels, staande 1x2-tegels, stapels van twee kleintjes
+// en brede tegels met twee kleintjes eronder/erboven. De slotband wordt exact
+// passend gemaakt, zodat het raster altijd een strakke rechthoek is.
+function buildMosaic(count: number, cols: number): MosaicTile[] {
+  const tiles: MosaicTile[] = []
+  let rowU = 0
+  let placed = 0
+
+  while (placed < count) {
+    const remaining = count - placed
+
+    if (remaining <= 2 * cols) {
+      // ── Slotband: exact passend ─────────────────────────────────────────
+      if (remaining >= cols) {
+        // Mix van stapels (2 foto's per kolom) en staande tegels (1 foto)
+        const stacks = remaining - cols
+        const kinds = shuffleArray([
+          ...Array<boolean>(stacks).fill(true),
+          ...Array<boolean>(cols - stacks).fill(false),
+        ])
+        let col = 0
+        for (const isStack of kinds) {
+          if (isStack) {
+            tiles.push({ c: col, r: rowU, sc: 1, sr: 1 })
+            tiles.push({ c: col, r: rowU + 1, sc: 1, sr: 1 })
+            placed += 2
+          } else {
+            tiles.push({ c: col, r: rowU, sc: 1, sr: 2 })
+            placed += 1
+          }
+          col++
+        }
+      } else {
+        // Minder foto's dan kolommen: verdeel de volle breedte
+        const base = Math.floor(cols / remaining)
+        const extra = cols % remaining
+        let col = 0
+        for (let i = 0; i < remaining; i++) {
+          const w = base + (i < extra ? 1 : 0)
+          tiles.push({ c: col, r: rowU, sc: w, sr: 2 })
+          placed++
+          col += w
+        }
+      }
+      rowU += 2
+    } else {
+      // ── Normale band: willekeurige blokkenmix (verbruikt max 2×cols foto's,
+      // en remaining > 2×cols, dus de band raakt nooit zonder foto's) ────────
+      let col = 0
+      while (col < cols) {
+        const remW = cols - col
+        const options = ["stack", "tall"]
+        if (remW >= 2) options.push("big", "big", "topWide", "bottomWide")
+        const pick = options[Math.floor(Math.random() * options.length)]
+
+        if (pick === "big") {
+          tiles.push({ c: col, r: rowU, sc: 2, sr: 2 })
+          placed += 1
+          col += 2
+        } else if (pick === "tall") {
+          tiles.push({ c: col, r: rowU, sc: 1, sr: 2 })
+          placed += 1
+          col += 1
+        } else if (pick === "stack") {
+          tiles.push({ c: col, r: rowU, sc: 1, sr: 1 })
+          tiles.push({ c: col, r: rowU + 1, sc: 1, sr: 1 })
+          placed += 2
+          col += 1
+        } else if (pick === "topWide") {
+          tiles.push({ c: col, r: rowU, sc: 2, sr: 1 })
+          tiles.push({ c: col, r: rowU + 1, sc: 1, sr: 1 })
+          tiles.push({ c: col + 1, r: rowU + 1, sc: 1, sr: 1 })
+          placed += 3
+          col += 2
+        } else {
+          tiles.push({ c: col, r: rowU + 1, sc: 2, sr: 1 })
+          tiles.push({ c: col, r: rowU, sc: 1, sr: 1 })
+          tiles.push({ c: col + 1, r: rowU, sc: 1, sr: 1 })
+          placed += 3
+          col += 2
+        }
+      }
+      rowU += 2
+    }
+  }
+
+  return tiles
 }
 
 // Leesbare fontnaam van de Cormorant next/font-variabele voor canvas-tekst
@@ -85,6 +195,14 @@ export default function CollageButton({
       const sc = getStyleConfig(styleKey)
       const selection = shuffleArray(photos.slice(0, MAX_COLLAGE_PHOTOS))
 
+      // Rasterbreedte in kolommen; grote tegels worden 2 kolommen breed.
+      // Weinig foto's → grover raster, zodat de tegels groot blijven en er
+      // ook bij kleinere aantallen al 2x2-toppers in het mozaïek komen.
+      const n = selection.length
+      const cols = n <= 6 ? 2 : n <= 8 ? 3 : n <= 16 ? 4 : 6
+      // Grofste raster → grootste tegels → scherpere bitmaps nodig
+      const bitmapH = cols <= 3 ? 1400 : cols === 4 ? 1000 : 700
+
       // ── Foto's laden (één keer; hergebruikt bij opnieuw schudden) ──────────
       const bitmaps = bitmapsRef.current
       for (let i = 0; i < selection.length; i++) {
@@ -94,7 +212,7 @@ export default function CollageButton({
           if (!res.ok) throw new Error("download")
           const blob = await res.blob()
           const bitmap = await createImageBitmap(blob, {
-            resizeHeight: BITMAP_H,
+            resizeHeight: bitmapH,
             resizeQuality: "high",
           })
           bitmaps.set(selection[i].id, bitmap)
@@ -103,46 +221,21 @@ export default function CollageButton({
 
       setProgress("Collage samenstellen...")
 
-      // ── Justified rows-layout: rijen van gelijke hoogte, verhoudingen intact ──
+      // ── Mozaïek: tegels van verschillende maten in een strak raster ────────
       const rowWidth = CANVAS_W - 2 * MARGIN
-      const perRow = Math.max(2, Math.ceil(Math.sqrt(selection.length * 0.9)))
-      const targetRowH = rowWidth / (perRow * 1.35)
+      const tiles = buildMosaic(selection.length, cols)
+      const cell = (rowWidth - (cols - 1) * GAP) / cols
+      const totalRows = tiles.reduce((max, t) => Math.max(max, t.r + t.sr), 0)
+      const gridH = totalRows * cell + (totalRows - 1) * GAP
 
-      const cells: LayoutCell[] = []
-      let y = 0
-      let row: { bitmap: ImageBitmap; ratio: number }[] = []
-      let rowRatio = 0
-
-      const flushRow = (last: boolean) => {
-        if (row.length === 0) return
-        const gaps = GAP * (row.length - 1)
-        // Laatste (niet-volle) rij: op doelhoogte houden en centreren
-        const rowH = last && rowRatio * targetRowH < rowWidth - gaps
-          ? targetRowH
-          : (rowWidth - gaps) / rowRatio
-        let x = MARGIN
-        if (last && rowRatio * rowH + gaps < rowWidth) {
-          x += (rowWidth - rowRatio * rowH - gaps) / 2
-        }
-        for (const item of row) {
-          const w = item.ratio * rowH
-          cells.push({ bitmap: item.bitmap, x, y, w, h: rowH })
-          x += w + GAP
-        }
-        y += rowH + GAP
-        row = []
-        rowRatio = 0
-      }
-
-      for (const photo of selection) {
-        const bitmap = bitmaps.get(photo.id)!
-        const ratio = bitmap.width / bitmap.height
-        row.push({ bitmap, ratio })
-        rowRatio += ratio
-        if (rowRatio * targetRowH >= rowWidth - GAP * (row.length - 1)) flushRow(false)
-      }
-      flushRow(true)
-      const gridH = y - GAP
+      // Elke tegel hoort bij precies één foto, in plaatsingsvolgorde
+      const cells: LayoutCell[] = tiles.map((t, i) => ({
+        bitmap: bitmaps.get(selection[i].id)!,
+        x: MARGIN + t.c * (cell + GAP),
+        y: t.r * (cell + GAP),
+        w: t.sc * cell + (t.sc - 1) * GAP,
+        h: t.sr * cell + (t.sr - 1) * GAP,
+      }))
 
       // ── Canvas opbouwen: titel + foto's + credit, in themakleuren ──────────
       const serif = cormorantFamily()
@@ -188,11 +281,31 @@ export default function CollageButton({
       ctx.closePath()
       ctx.fill()
 
-      // Foto's met dun wit randje
-      for (const cell of cells) {
+      // Tegels: wit kader met zachte schaduw, afgeronde hoeken en cover-crop
+      // (de foto vult de tegel volledig; wat niet past wordt bijgesneden)
+      for (const item of cells) {
+        const gx = item.x
+        const gy = headerH + item.y
+
+        ctx.save()
+        ctx.shadowColor = "rgba(0,0,0,0.18)"
+        ctx.shadowBlur = 18
+        ctx.shadowOffsetY = 6
         ctx.fillStyle = "#ffffff"
-        ctx.fillRect(cell.x - 3, headerH + cell.y - 3, cell.w + 6, cell.h + 6)
-        ctx.drawImage(cell.bitmap, cell.x, headerH + cell.y, cell.w, cell.h)
+        pathRoundRect(ctx, gx - 5, gy - 5, item.w + 10, item.h + 10, TILE_RADIUS + 5)
+        ctx.fill()
+        ctx.restore()
+
+        ctx.save()
+        pathRoundRect(ctx, gx, gy, item.w, item.h, TILE_RADIUS)
+        ctx.clip()
+        const scale = Math.max(item.w / item.bitmap.width, item.h / item.bitmap.height)
+        const sw = item.w / scale
+        const sh = item.h / scale
+        const sx = (item.bitmap.width - sw) / 2
+        const sy = (item.bitmap.height - sh) / 2
+        ctx.drawImage(item.bitmap, sx, sy, sw, sh, gx, gy, item.w, item.h)
+        ctx.restore()
       }
 
       // Credit onderin
