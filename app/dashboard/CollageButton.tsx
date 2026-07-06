@@ -15,6 +15,15 @@ const GAP = 16
 const TILE_RADIUS = 20
 const MAX_COLLAGE_PHOTOS = 150
 
+// Uitvoerformaten: aspect = hoogte / breedte
+const FORMATS = {
+  staand:   { label: "Staand",   hint: "print / poster",  aspect: Math.SQRT2 },
+  vierkant: { label: "Vierkant", hint: "Instagram",       aspect: 1 },
+  liggend:  { label: "Liggend",  hint: "TV / scherm",     aspect: 9 / 16 },
+  verhaal:  { label: "Verhaal",  hint: "telefoon / story", aspect: 16 / 9 },
+} as const
+type FormatKey = keyof typeof FORMATS
+
 interface CollagePhoto {
   id: string
   url: string
@@ -169,6 +178,7 @@ export default function CollageButton({
   styleKey: string
 }) {
   const [open, setOpen] = useState(false)
+  const [format, setFormat] = useState<FormatKey>("staand")
   const [progress, setProgress] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -188,20 +198,17 @@ export default function CollageButton({
     blobRef.current = null
   }
 
-  async function generate() {
+  async function generate(fmt: FormatKey = format) {
     setProgress("Voorbereiden...")
     setError(null)
     try {
       const sc = getStyleConfig(styleKey)
       const selection = shuffleArray(photos.slice(0, MAX_COLLAGE_PHOTOS))
-
-      // Rasterbreedte in kolommen; grote tegels worden 2 kolommen breed.
-      // Weinig foto's → grover raster, zodat de tegels groot blijven en er
-      // ook bij kleinere aantallen al 2x2-toppers in het mozaïek komen.
       const n = selection.length
-      const cols = n <= 6 ? 2 : n <= 8 ? 3 : n <= 16 ? 4 : 6
-      // Grofste raster → grootste tegels → scherpere bitmaps nodig
-      const bitmapH = cols <= 3 ? 1400 : cols === 4 ? 1000 : 700
+
+      // Bitmap-resolutie: onafhankelijk van formaat, zodat de cache geldig
+      // blijft als de gebruiker tussen formaten wisselt
+      const bitmapH = n <= 16 ? 1400 : n <= 60 ? 900 : 700
 
       // ── Foto's laden (één keer; hergebruikt bij opnieuw schudden) ──────────
       const bitmaps = bitmapsRef.current
@@ -221,29 +228,48 @@ export default function CollageButton({
 
       setProgress("Collage samenstellen...")
 
-      // ── Mozaïek: tegels van verschillende maten in een strak raster ────────
-      const rowWidth = CANVAS_W - 2 * MARGIN
-      const tiles = buildMosaic(selection.length, cols)
-      const cell = (rowWidth - (cols - 1) * GAP) / cols
-      const totalRows = tiles.reduce((max, t) => Math.max(max, t.r + t.sr), 0)
-      const gridH = totalRows * cell + (totalRows - 1) * GAP
+      // ── Vast uitvoerformaat: het mozaïek vult het gekozen formaat exact ────
+      const aspect = FORMATS[fmt].aspect
+      const canvasH = Math.round(CANVAS_W * aspect)
+      const isLandscape = aspect < 1
+      const headerH = isLandscape ? 230 : 300
+      const footerH = isLandscape ? 80 : 120
+      const bottomMargin = isLandscape ? 60 : MARGIN
+      const gridW = CANVAS_W - 2 * MARGIN
+      const gridH = canvasH - headerH - footerH - bottomMargin
+
+      // Beste kolomaantal zoeken: cellen zo vierkant mogelijk. De celhoogte
+      // volgt uit het aantal rijen dat het mozaïek oplevert, dus we proberen
+      // een reeks kolomaantallen en houden de beste verdeling.
+      let best: { tiles: MosaicTile[]; cols: number; rows: number; score: number } | null = null
+      for (let c = 1; c <= 16; c++) {
+        const candidate = buildMosaic(n, c)
+        const rows = candidate.reduce((max, t) => Math.max(max, t.r + t.sr), 0)
+        const cw = (gridW - (c - 1) * GAP) / c
+        const ch = (gridH - (rows - 1) * GAP) / rows
+        if (ch < 60) continue
+        const score = Math.abs(Math.log(cw / ch))
+        if (!best || score < best.score) best = { tiles: candidate, cols: c, rows, score }
+      }
+      if (!best) throw new Error("layout")
+      const { tiles, cols, rows } = best
+      const cellW = (gridW - (cols - 1) * GAP) / cols
+      const cellH = (gridH - (rows - 1) * GAP) / rows
 
       // Elke tegel hoort bij precies één foto, in plaatsingsvolgorde
       const cells: LayoutCell[] = tiles.map((t, i) => ({
         bitmap: bitmaps.get(selection[i].id)!,
-        x: MARGIN + t.c * (cell + GAP),
-        y: t.r * (cell + GAP),
-        w: t.sc * cell + (t.sc - 1) * GAP,
-        h: t.sr * cell + (t.sr - 1) * GAP,
+        x: MARGIN + t.c * (cellW + GAP),
+        y: t.r * (cellH + GAP),
+        w: t.sc * cellW + (t.sc - 1) * GAP,
+        h: t.sr * cellH + (t.sr - 1) * GAP,
       }))
 
       // ── Canvas opbouwen: titel + foto's + credit, in themakleuren ──────────
       const serif = cormorantFamily()
-      const headerH = 300
-      const footerH = 130
       const canvas = document.createElement("canvas")
       canvas.width = CANVAS_W
-      canvas.height = headerH + gridH + footerH + MARGIN
+      canvas.height = canvasH
       const ctx = canvas.getContext("2d")
       if (!ctx) throw new Error("canvas")
 
@@ -253,17 +279,17 @@ export default function CollageButton({
       // Titel (verkleinen tot hij past)
       ctx.textAlign = "center"
       ctx.textBaseline = "middle"
-      let titleSize = 110
+      let titleSize = isLandscape ? 90 : 110
       ctx.font = `600 ${titleSize}px ${serif}`
-      while (ctx.measureText(eventTitle).width > rowWidth && titleSize > 48) {
+      while (ctx.measureText(eventTitle).width > gridW && titleSize > 48) {
         titleSize -= 6
         ctx.font = `600 ${titleSize}px ${serif}`
       }
       ctx.fillStyle = sc.headingColor
-      ctx.fillText(eventTitle, CANVAS_W / 2, 140)
+      ctx.fillText(eventTitle, CANVAS_W / 2, Math.round(headerH * 0.47))
 
       // Accentlijn met ruitje (zelfde motief als de site)
-      const lineY = 225
+      const lineY = Math.round(headerH * 0.75)
       ctx.strokeStyle = sc.accent
       ctx.lineWidth = 3
       ctx.beginPath()
@@ -308,11 +334,15 @@ export default function CollageButton({
         ctx.restore()
       }
 
-      // Credit onderin
-      ctx.font = `500 34px ${serif}`
+      // Credit onderin, gecentreerd in de voetzone
+      ctx.font = `500 ${isLandscape ? 28 : 34}px ${serif}`
       ctx.fillStyle = sc.bodyText
       ctx.globalAlpha = 0.75
-      ctx.fillText("Gemaakt met SayingYes — sayingyes.nl", CANVAS_W / 2, headerH + gridH + footerH - 20)
+      ctx.fillText(
+        "Gemaakt met SayingYes — sayingyes.nl",
+        CANVAS_W / 2,
+        headerH + gridH + Math.round((footerH + bottomMargin) / 2)
+      )
       ctx.globalAlpha = 1
 
       const blob = await new Promise<Blob | null>((resolve) =>
@@ -337,7 +367,7 @@ export default function CollageButton({
     const url = URL.createObjectURL(blobRef.current)
     const a = document.createElement("a")
     a.href = url
-    a.download = `collage-${slug}.jpg`
+    a.download = `collage-${slug}-${format}.jpg`
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -383,6 +413,31 @@ export default function CollageButton({
               </button>
             </div>
 
+            {/* Formaatkeuze */}
+            <div className="px-7 pt-5 flex flex-wrap justify-center gap-2">
+              {(Object.keys(FORMATS) as FormatKey[]).map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  disabled={!!progress}
+                  onClick={() => { setFormat(key); void generate(key) }}
+                  className="px-3 py-2 rounded-xl text-left transition-all disabled:opacity-60"
+                  style={{
+                    border: `2px solid ${format === key ? "#C5A059" : GOLD_LIGHT}`,
+                    backgroundColor: format === key ? "#FBF5E8" : "white",
+                    cursor: "pointer",
+                  }}
+                >
+                  <span className="block text-sm font-semibold" style={{ color: format === key ? CHARCOAL : BODY }}>
+                    {FORMATS[key].label}
+                  </span>
+                  <span className="block text-xs" style={{ color: BODY, opacity: 0.75 }}>
+                    {FORMATS[key].hint}
+                  </span>
+                </button>
+              ))}
+            </div>
+
             <div className="px-7 py-6 flex flex-col items-center gap-4">
               {progress ? (
                 <div className="flex flex-col items-center gap-3 py-16">
@@ -411,7 +466,7 @@ export default function CollageButton({
 
             <div className="px-7 py-5 flex flex-wrap gap-3" style={{ borderTop: `1px solid ${GOLD_LIGHT}` }}>
               <button
-                onClick={() => void generate()}
+                onClick={() => void generate(format)}
                 disabled={!!progress}
                 className="flex-1 py-3 rounded-xl text-sm font-semibold transition-colors disabled:opacity-60"
                 style={{ border: `1px solid ${GOLD_LIGHT}`, color: BODY, backgroundColor: "white", cursor: "pointer" }}
