@@ -36,6 +36,7 @@ type Event = {
   status: string
   created_at: string
   expires_at: string | null
+  hero_image_url?: string | null
 }
 
 const TYPE_LABEL: Record<string, string> = {
@@ -163,7 +164,7 @@ export default async function DashboardPage() {
   const service = createServiceClient()
   const { data: events } = await service
     .from("events")
-    .select("id, slug, title, type, status, created_at, expires_at")
+    .select("id, slug, title, type, status, created_at, expires_at, hero_image_url")
     .eq("user_email", user.email!)
     .order("created_at", { ascending: false })
 
@@ -352,7 +353,12 @@ export default async function DashboardPage() {
               <SectionLabel>Digitale kaarten</SectionLabel>
             </div>
             <CardsSection
-              events={(events ?? []).map((e: Event) => ({ id: e.id, title: e.title, status: e.status }))}
+              events={(events ?? []).map((e: Event) => ({
+                id: e.id,
+                title: e.title,
+                status: e.status,
+                heroImageUrl: e.hero_image_url ?? null,
+              }))}
               cards={cards}
             />
           </section>

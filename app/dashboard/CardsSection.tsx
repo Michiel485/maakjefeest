@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
+import { compressImage } from "@/lib/client-image"
 import {
   CARD_TEMPLATE_LABEL,
   CARD_TYPE_LABEL,
@@ -33,6 +34,7 @@ export interface CardEventRef {
   id: string
   title: string
   status: string
+  heroImageUrl: string | null
 }
 
 const inputCls = "w-full rounded-xl border bg-white px-3 py-2.5 text-sm placeholder-gray-400 focus:outline-none transition-all"
@@ -60,6 +62,7 @@ export default function CardsSection({
   const [newType, setNewType] = useState<CardType>("save_the_date")
   const [newTemplate, setNewTemplate] = useState<CardTemplate>("klassiek")
   const [newGuestType, setNewGuestType] = useState<CardGuestType | "">("")
+  const [newPhotoUrl, setNewPhotoUrl] = useState("")
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
@@ -79,12 +82,14 @@ export default function CardsSection({
           type: newType,
           template: newTemplate,
           guest_type: newType === "trouwkaart" && newGuestType ? newGuestType : undefined,
+          photo_url: newTemplate === "foto" && newPhotoUrl ? newPhotoUrl : undefined,
         }),
       })
       if (!res.ok) throw new Error()
       const { card } = (await res.json()) as { card: CardRow }
       setCards((prev) => [card, ...prev])
       setCreatingFor(null)
+      setNewPhotoUrl("")
     } catch {
       setError("Kaart aanmaken mislukt — probeer opnieuw.")
     } finally {
@@ -251,6 +256,18 @@ export default function CardsSection({
                     ))}
                   </div>
                 </div>
+                {newTemplate === "foto" && (
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs font-semibold uppercase tracking-[0.12em]" style={{ color: GOLD }}>
+                      Foto op de kaart
+                    </span>
+                    <PhotoPicker
+                      value={newPhotoUrl}
+                      fallbackUrl={event.heroImageUrl}
+                      onChange={setNewPhotoUrl}
+                    />
+                  </div>
+                )}
                 {newType === "trouwkaart" && (
                   <div className="flex flex-col gap-2">
                     <span className="text-xs font-semibold uppercase tracking-[0.12em]" style={{ color: GOLD }}>
@@ -461,8 +478,12 @@ export default function CardsSection({
                 </div>
               </Field>
               {editForm.template === "foto" && (
-                <Field label="Foto-URL (leeg = de foto van jullie site)">
-                  <input type="text" value={editForm.photoUrl} onChange={(e) => setEditForm({ ...editForm, photoUrl: e.target.value })} placeholder="https://..." className={inputCls} style={inputStyle} />
+                <Field label="Foto op de kaart">
+                  <PhotoPicker
+                    value={editForm.photoUrl}
+                    fallbackUrl={events.find((e) => e.id === editingCard.event_id)?.heroImageUrl ?? null}
+                    onChange={(url) => setEditForm({ ...editForm, photoUrl: url })}
+                  />
                 </Field>
               )}
               {editingCard.type === "trouwkaart" && (
@@ -521,5 +542,103 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className="text-xs font-semibold uppercase tracking-[0.12em]" style={{ color: GOLD }}>{label}</span>
       {children}
     </label>
+  )
+}
+
+// Foto kiezen voor op de kaart: uploaden (met compressie), voorbeeld en
+// verwijderen. Zonder eigen foto valt de kaart terug op de sitefoto.
+function PhotoPicker({
+  value,
+  fallbackUrl,
+  onChange,
+}: {
+  value: string
+  fallbackUrl: string | null
+  onChange: (url: string) => void
+}) {
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  async function handleFile(file: File | null) {
+    if (!file) return
+    setUploading(true)
+    setUploadError(null)
+    try {
+      const blob = await compressImage(file)
+      const formData = new FormData()
+      formData.append("file", blob, "kaartfoto.jpg")
+      const res = await fetch("/api/cards/upload", { method: "POST", body: formData })
+      if (!res.ok) {
+        const body = await res.json().catch(() => null)
+        throw new Error(body?.error ?? "Upload mislukt")
+      }
+      const { url } = (await res.json()) as { url: string }
+      onChange(url)
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "Upload mislukt")
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const shownUrl = value || fallbackUrl
+
+  return (
+    <div className="flex flex-col gap-2">
+      {shownUrl ? (
+        <div className="relative rounded-xl overflow-hidden" style={{ border: `1px solid ${GOLD_LIGHT}`, maxWidth: 320 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={shownUrl} alt="Foto op de kaart" style={{ width: "100%", aspectRatio: "5/3", objectFit: "cover", display: "block" }} />
+          {!value && (
+            <span
+              className="absolute bottom-1.5 left-1.5 text-xs font-medium px-2 py-0.5 rounded-full"
+              style={{ backgroundColor: "rgba(0,0,0,0.55)", color: "white" }}
+            >
+              Foto van jullie site
+            </span>
+          )}
+        </div>
+      ) : (
+        <div
+          className="rounded-xl flex items-center justify-center text-sm"
+          style={{ border: `1.5px dashed ${GOLD_LIGHT}`, maxWidth: 320, aspectRatio: "5/3", color: BODY, backgroundColor: "white" }}
+        >
+          Nog geen foto gekozen
+        </div>
+      )}
+
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className="text-xs font-semibold px-3 py-2 rounded-lg transition-colors disabled:opacity-60"
+          style={{ backgroundColor: GOLD_BG, color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
+        >
+          {uploading ? "Bezig met uploaden..." : shownUrl ? "📷 Andere foto uploaden" : "📷 Foto uploaden"}
+        </button>
+        {value && (
+          <button
+            type="button"
+            onClick={() => onChange("")}
+            className="text-xs font-semibold px-3 py-2 rounded-lg text-red-400 hover:text-red-600"
+            style={{ border: "1px solid #fecaca", cursor: "pointer", backgroundColor: "white" }}
+          >
+            Verwijderen
+          </button>
+        )}
+      </div>
+
+      {uploadError && <p className="text-xs text-red-500">{uploadError}</p>}
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => { handleFile(e.target.files?.[0] ?? null); e.target.value = "" }}
+      />
+    </div>
   )
 }

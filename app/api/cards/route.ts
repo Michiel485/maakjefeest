@@ -12,14 +12,20 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user?.email) return Response.json({ error: "Niet ingelogd" }, { status: 401 })
 
-  let body: { event_id?: string; type?: string; template?: string; guest_type?: string }
+  let body: {
+    event_id?: string
+    type?: string
+    template?: string
+    guest_type?: string
+    photo_url?: string
+  }
   try {
     body = await request.json()
   } catch {
     return Response.json({ error: "Ongeldige body" }, { status: 400 })
   }
 
-  const { event_id, type, template, guest_type } = body
+  const { event_id, type, template, guest_type, photo_url } = body
   if (!event_id || !CARD_TYPES.includes(type as CardType)) {
     return Response.json({ error: "event_id en geldig type zijn verplicht" }, { status: 400 })
   }
@@ -30,6 +36,10 @@ export async function POST(request: Request) {
   const guestType =
     type === "trouwkaart" && GUEST_TYPES.includes(guest_type as CardGuestType)
       ? (guest_type as CardGuestType)
+      : undefined
+  const photoUrl =
+    chosenTemplate === "foto" && typeof photo_url === "string" && /^https?:\/\//.test(photo_url)
+      ? photo_url.slice(0, 500)
       : undefined
 
   const service = createServiceClient()
@@ -50,7 +60,10 @@ export async function POST(request: Request) {
       type,
       template: chosenTemplate,
       share_token: generateShareToken(),
-      content: guestType ? { guestType } : {},
+      content: {
+        ...(guestType ? { guestType } : {}),
+        ...(photoUrl ? { photoUrl } : {}),
+      },
     })
     .select("id, event_id, type, template, share_token, content, view_count, created_at")
     .single()
