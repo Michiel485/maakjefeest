@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { updateGuestPhotoSettings } from "./actions"
 import { eventSiteUrl, eventSiteLabel } from "@/lib/site-url"
+import CollageButton from "./CollageButton"
 
 const GOLD       = "#C5A059"
 const GOLD_LIGHT = "#E8D5A3"
@@ -24,6 +25,7 @@ export interface GuestPhotoRow {
 export interface GuestPhotoSettings {
   enabled: boolean
   moderation: "live" | "approve"
+  style: string
 }
 
 export default function GuestPhotosSection({
@@ -253,6 +255,14 @@ export default function GuestPhotosSection({
                     ? `Bezig... ${zipProgress}/${photos.length}`
                     : `⬇ Alles downloaden (.zip, ${photos.length})`}
                 </button>
+              )}
+              {approved.length > 0 && (
+                <CollageButton
+                  photos={approved.map((p) => ({ id: p.id, url: p.url }))}
+                  eventTitle={event.title}
+                  slug={event.slug}
+                  styleKey={settings.style}
+                />
               )}
             </div>
           </div>

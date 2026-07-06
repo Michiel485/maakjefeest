@@ -185,7 +185,7 @@ export default async function DashboardPage() {
 
     const { data: gpEvents } = await service
       .from("events")
-      .select("id, guest_photos_enabled, guest_photos_moderation")
+      .select("id, guest_photos_enabled, guest_photos_moderation, style")
       .in("id", eventIds)
     if (gpEvents) {
       gpSettings = Object.fromEntries(
@@ -194,6 +194,7 @@ export default async function DashboardPage() {
           {
             enabled: (e.guest_photos_enabled as boolean | null) ?? false,
             moderation: (e.guest_photos_moderation as "live" | "approve" | null) ?? "live",
+            style: (e.style as string | null) ?? "roze",
           },
         ])
       )
