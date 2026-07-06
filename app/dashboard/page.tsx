@@ -12,6 +12,8 @@ import { SignOutButton } from "./SignOutButton"
 import RsvpSection, { type RsvpRow } from "./RsvpSection"
 import GuestPhotosSection, { type GuestPhotoRow, type GuestPhotoSettings } from "./GuestPhotosSection"
 import { maxPhotosPerEvent } from "@/lib/guest-photos"
+import CardsSection from "./CardsSection"
+import type { CardRow } from "@/lib/cards"
 import { eventSiteUrl, eventSiteLabel } from "@/lib/site-url"
 import SlugEditor from "./SlugEditor"
 import DeleteDraftButton from "./DeleteDraftButton"
@@ -207,6 +209,24 @@ export default async function DashboardPage() {
     }
   }
 
+  // Digitale kaarten: voor alle events (ook concepten — een Save the Date
+  // verstuur je juist vóór de site live is). Apart opgevraagd zodat het
+  // dashboard blijft werken zolang de cards-migratie nog niet is gedraaid.
+  let cards: CardRow[] = []
+  let cardsAvailable = false
+  const allEventIds = (events ?? []).map((e: Event) => e.id)
+  if (allEventIds.length > 0) {
+    const { data: cardData, error: cardError } = await service
+      .from("cards")
+      .select("id, event_id, type, template, share_token, content, view_count, created_at")
+      .in("event_id", allEventIds)
+      .order("created_at", { ascending: false })
+    if (!cardError) {
+      cardsAvailable = true
+      cards = (cardData ?? []) as CardRow[]
+    }
+  }
+
   return (
     <div translate="no" className="min-h-screen" style={{ backgroundColor: IVORY }}>
 
@@ -324,6 +344,19 @@ export default async function DashboardPage() {
             events={published.map((e: Event) => ({ id: e.id, title: e.title }))}
           />
         </section>
+
+        {/* Digitale kaarten */}
+        {cardsAvailable && (events ?? []).length > 0 && (
+          <section className="mt-10">
+            <div className="mb-5">
+              <SectionLabel>Digitale kaarten</SectionLabel>
+            </div>
+            <CardsSection
+              events={(events ?? []).map((e: Event) => ({ id: e.id, title: e.title, status: e.status }))}
+              cards={cards}
+            />
+          </section>
+        )}
 
         {/* Gastenfotomuur */}
         {published.length > 0 && Object.keys(gpSettings).length > 0 && (
