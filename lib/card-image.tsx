@@ -37,7 +37,7 @@ export async function renderCardImage(
 
   const allText = [
     display.heading, display.names, display.dateText, display.location,
-    display.message, "Gemaakt met SayingYes — sayingyes.nl",
+    display.inviteLine, display.message, "Gemaakt met SayingYes — sayingyes.nl",
   ].join(" ")
 
   const fonts: { name: string; data: ArrayBuffer; weight: 500 | 600; style: "normal" }[] = []
@@ -135,6 +135,20 @@ export async function renderCardImage(
         {display.location && (
           <div style={{ fontFamily: sans, fontSize: 30 * s, color: sc.cardText ?? sc.bodyText, opacity: 0.85 }}>
             {display.location}
+          </div>
+        )}
+
+        {mode === "download" && display.inviteLine && (
+          <div
+            style={{
+              fontFamily: sans,
+              fontSize: 30,
+              lineHeight: 1.5,
+              color: sc.cardText ?? sc.headingColor,
+              maxWidth: 700,
+            }}
+          >
+            {display.inviteLine}
           </div>
         )}
 

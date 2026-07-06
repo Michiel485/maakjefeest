@@ -1,8 +1,9 @@
 import { createServiceClient } from "@/lib/supabase"
 import { createClient } from "@/lib/supabase-server"
-import type { CardContent, CardTemplate } from "@/lib/cards"
+import type { CardContent, CardGuestType, CardTemplate } from "@/lib/cards"
 
 const CARD_TEMPLATES: CardTemplate[] = ["klassiek", "foto"]
+const GUEST_TYPES: CardGuestType[] = ["daggast", "avondgast", "receptiegast"]
 const MAX_FIELD = 120
 const MAX_MESSAGE = 400
 
@@ -24,6 +25,9 @@ function sanitizeContent(raw: unknown): CardContent {
     location: text(input.location, MAX_FIELD),
     message: text(input.message, MAX_MESSAGE),
     photoUrl: text(input.photoUrl, 500),
+    guestType: GUEST_TYPES.includes(input.guestType as CardGuestType)
+      ? (input.guestType as CardGuestType)
+      : undefined,
   }
 }
 

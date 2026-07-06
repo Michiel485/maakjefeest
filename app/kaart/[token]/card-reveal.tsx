@@ -241,6 +241,15 @@ export default function CardReveal({
 
                 <div className="w-10 h-px my-1" style={{ backgroundColor: `${sc.accent}60` }} />
 
+                {display.inviteLine && (
+                  <p
+                    className="text-sm font-semibold leading-relaxed"
+                    style={{ color: sc.cardText ?? sc.headingColor, margin: 0 }}
+                  >
+                    {display.inviteLine}
+                  </p>
+                )}
+
                 <p
                   className="text-sm italic leading-relaxed"
                   style={{ color: sc.cardText ?? sc.bodyText, opacity: 0.9, margin: 0 }}
@@ -249,6 +258,20 @@ export default function CardReveal({
                 </p>
               </div>
             </div>
+
+            {/* Site nog niet live: vooruitblik in plaats van knoppen */}
+            {stage === "open" && !siteUrl && (
+              <p
+                className="mt-6 text-center text-sm"
+                style={{
+                  color: sc.bodyText,
+                  opacity: 0.7,
+                  animation: reduceMotion ? "none" : "knoppen-fadein 0.5s ease 0.5s both",
+                }}
+              >
+                Onze trouwwebsite volgt binnenkort 🤍
+              </p>
+            )}
 
             {/* Knoppen naar de trouwsite */}
             {stage === "open" && (siteUrl || rsvpUrl) && (

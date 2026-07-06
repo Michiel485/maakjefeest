@@ -4,11 +4,20 @@ import { useState } from "react"
 import {
   CARD_TEMPLATE_LABEL,
   CARD_TYPE_LABEL,
+  GUEST_TYPE_LABEL,
   type CardContent,
+  type CardGuestType,
   type CardRow,
   type CardTemplate,
   type CardType,
 } from "@/lib/cards"
+
+const GUEST_TYPE_OPTIONS: { value: CardGuestType | ""; label: string }[] = [
+  { value: "", label: "Geen vermelding" },
+  { value: "daggast", label: "Daggasten" },
+  { value: "avondgast", label: "Avondgasten" },
+  { value: "receptiegast", label: "Receptiegasten" },
+]
 
 const GOLD       = "#C5A059"
 const GOLD_LIGHT = "#E8D5A3"
@@ -36,6 +45,7 @@ interface EditForm {
   message: string
   photoUrl: string
   template: CardTemplate
+  guestType: CardGuestType | ""
 }
 
 export default function CardsSection({
@@ -49,6 +59,7 @@ export default function CardsSection({
   const [creatingFor, setCreatingFor] = useState<string | null>(null)
   const [newType, setNewType] = useState<CardType>("save_the_date")
   const [newTemplate, setNewTemplate] = useState<CardTemplate>("klassiek")
+  const [newGuestType, setNewGuestType] = useState<CardGuestType | "">("")
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
@@ -63,7 +74,12 @@ export default function CardsSection({
       const res = await fetch("/api/cards", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ event_id: eventId, type: newType, template: newTemplate }),
+        body: JSON.stringify({
+          event_id: eventId,
+          type: newType,
+          template: newTemplate,
+          guest_type: newType === "trouwkaart" && newGuestType ? newGuestType : undefined,
+        }),
       })
       if (!res.ok) throw new Error()
       const { card } = (await res.json()) as { card: CardRow }
@@ -85,6 +101,7 @@ export default function CardsSection({
       message: card.content.message ?? "",
       photoUrl: card.content.photoUrl ?? "",
       template: card.template,
+      guestType: card.content.guestType ?? "",
     })
     setError(null)
   }
@@ -100,6 +117,7 @@ export default function CardsSection({
         location: editForm.location || undefined,
         message: editForm.message || undefined,
         photoUrl: editForm.photoUrl || undefined,
+        guestType: editForm.guestType || undefined,
       }
       const res = await fetch(`/api/cards/${editingCard.id}`, {
         method: "PATCH",
@@ -166,6 +184,11 @@ export default function CardsSection({
                   {eventCards.length === 0
                     ? "Nog geen kaarten — maak een Save the Date of trouwkaart"
                     : `${eventCards.length} ${eventCards.length === 1 ? "kaart" : "kaarten"}`}
+                  {event.status === "draft" && (
+                    <span style={{ color: GOLD }}>
+                      {" "}· Ook voor dit concept: verstuur je Save the Date alvast, de site-knoppen verschijnen zodra jullie site live is
+                    </span>
+                  )}
                 </p>
               </div>
               <button
@@ -228,6 +251,34 @@ export default function CardsSection({
                     ))}
                   </div>
                 </div>
+                {newType === "trouwkaart" && (
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs font-semibold uppercase tracking-[0.12em]" style={{ color: GOLD }}>
+                      Voor wie is deze kaart?
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {GUEST_TYPE_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value || "geen"}
+                          onClick={() => setNewGuestType(opt.value)}
+                          className="flex-1 min-w-[45%] sm:min-w-0 py-2.5 px-2 rounded-xl text-sm font-semibold transition-all"
+                          style={{
+                            border: `2px solid ${newGuestType === opt.value ? GOLD : GOLD_LIGHT}`,
+                            backgroundColor: newGuestType === opt.value ? "white" : "transparent",
+                            color: newGuestType === opt.value ? CHARCOAL : BODY,
+                            cursor: "pointer",
+                          }}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-xs" style={{ color: BODY, opacity: 0.8 }}>
+                      Tip: maak per gastengroep een eigen kaart en stuur elke groep de juiste link —
+                      op de kaart staat dan bijvoorbeeld &quot;wij nodigen je uit voor het avondfeest&quot;.
+                    </p>
+                  </div>
+                )}
                 <button
                   onClick={() => createCard(event.id)}
                   disabled={busy}
@@ -254,6 +305,14 @@ export default function CardsSection({
                     >
                       {CARD_TYPE_LABEL[card.type]}
                     </span>
+                    {card.type === "trouwkaart" && card.content.guestType && (
+                      <span
+                        className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                        style={{ backgroundColor: "#eff6ff", color: "#1d4ed8", border: "1px solid #bfdbfe" }}
+                      >
+                        {GUEST_TYPE_LABEL[card.content.guestType]}
+                      </span>
+                    )}
                     <span className="text-xs" style={{ color: BODY }}>
                       {CARD_TEMPLATE_LABEL[card.template]}
                     </span>
@@ -404,6 +463,28 @@ export default function CardsSection({
               {editForm.template === "foto" && (
                 <Field label="Foto-URL (leeg = de foto van jullie site)">
                   <input type="text" value={editForm.photoUrl} onChange={(e) => setEditForm({ ...editForm, photoUrl: e.target.value })} placeholder="https://..." className={inputCls} style={inputStyle} />
+                </Field>
+              )}
+              {editingCard.type === "trouwkaart" && (
+                <Field label="Voor wie is deze kaart?">
+                  <div className="flex flex-wrap gap-2">
+                    {GUEST_TYPE_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value || "geen"}
+                        type="button"
+                        onClick={() => setEditForm({ ...editForm, guestType: opt.value })}
+                        className="flex-1 min-w-[45%] sm:min-w-0 py-2 px-2 rounded-xl text-sm font-semibold transition-all"
+                        style={{
+                          border: `2px solid ${editForm.guestType === opt.value ? GOLD : GOLD_LIGHT}`,
+                          backgroundColor: editForm.guestType === opt.value ? GOLD_BG : "white",
+                          color: editForm.guestType === opt.value ? CHARCOAL : BODY,
+                          cursor: "pointer",
+                        }}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
                 </Field>
               )}
 

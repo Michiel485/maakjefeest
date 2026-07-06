@@ -4,6 +4,7 @@ import { formatDate } from "./event-styles"
 
 export type CardType = "save_the_date" | "trouwkaart"
 export type CardTemplate = "klassiek" | "foto"
+export type CardGuestType = "daggast" | "avondgast" | "receptiegast"
 
 export interface CardContent {
   names?: string
@@ -11,6 +12,8 @@ export interface CardContent {
   location?: string
   message?: string
   photoUrl?: string
+  // Alleen voor trouwkaarten: voor welke gastengroep deze kaart(-link) is
+  guestType?: CardGuestType
 }
 
 export interface CardRow {
@@ -54,6 +57,19 @@ const DEFAULT_MESSAGE: Record<CardType, string> = {
   trouwkaart: "Wij gaan trouwen en vieren dat graag met jou. Kom je ook?",
 }
 
+export const GUEST_TYPE_LABEL: Record<CardGuestType, string> = {
+  daggast: "Daggasten",
+  avondgast: "Avondgasten",
+  receptiegast: "Receptiegasten",
+}
+
+// De uitnodigingsregel die per gastengroep op de trouwkaart komt
+export const GUEST_TYPE_INVITE_LINE: Record<CardGuestType, string> = {
+  daggast: "Wij nodigen je van harte uit voor onze hele trouwdag",
+  avondgast: "Wij nodigen je van harte uit voor het avondfeest",
+  receptiegast: "Wij nodigen je van harte uit voor de receptie",
+}
+
 // De uiteindelijke weergavedata: eigen invoer van het bruidspaar wint,
 // anders wordt het veld voorgevuld vanuit de trouwsite.
 export interface CardDisplay {
@@ -61,6 +77,7 @@ export interface CardDisplay {
   names: string
   dateText: string
   location: string
+  inviteLine: string | null
   message: string
   photoUrl: string | null
 }
@@ -80,6 +97,10 @@ export function buildCardDisplay(
     names: content.names?.trim() || fallbackNames,
     dateText: content.dateText?.trim() || (event.datum ? formatDate(event.datum) : ""),
     location: content.location?.trim() || event.locatie?.trim() || "",
+    inviteLine:
+      type === "trouwkaart" && content.guestType
+        ? GUEST_TYPE_INVITE_LINE[content.guestType]
+        : null,
     message: content.message?.trim() || DEFAULT_MESSAGE[type],
     photoUrl:
       template === "foto"
