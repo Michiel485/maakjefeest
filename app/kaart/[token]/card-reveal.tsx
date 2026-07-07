@@ -241,6 +241,13 @@ export default function CardReveal({
 
                 <div className="w-10 h-px my-1" style={{ backgroundColor: `${sc.accent}60` }} />
 
+                <p
+                  className="text-sm italic leading-relaxed"
+                  style={{ color: sc.cardText ?? sc.bodyText, opacity: 0.9, margin: 0 }}
+                >
+                  {display.message}
+                </p>
+
                 {display.inviteLine && (
                   <p
                     className="text-sm font-semibold leading-relaxed"
@@ -249,13 +256,6 @@ export default function CardReveal({
                     {display.inviteLine}
                   </p>
                 )}
-
-                <p
-                  className="text-sm italic leading-relaxed"
-                  style={{ color: sc.cardText ?? sc.bodyText, opacity: 0.9, margin: 0 }}
-                >
-                  {display.message}
-                </p>
               </div>
             </div>
 
