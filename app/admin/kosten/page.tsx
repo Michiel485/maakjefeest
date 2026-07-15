@@ -49,6 +49,7 @@ export default function KostenPage() {
   const [showForm, setShowForm]   = useState(false)
   const [saving, setSaving]       = useState(false)
   const [deleting, setDeleting]   = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const [form, setForm] = useState({
@@ -82,6 +83,30 @@ export default function KostenPage() {
     return { amount_excl: excl, btw_amount: btw, amount_incl: incl }
   }
 
+  function resetForm() {
+    setForm({ description: "", supplier: "", category: "hosting_software", amount_incl: "", btw_rate: "21", date: new Date().toISOString().split("T")[0], notes: "" })
+    setFile(null)
+    if (fileRef.current) fileRef.current.value = ""
+    setEditingId(null)
+  }
+
+  function startEdit(exp: Expense) {
+    setEditingId(exp.id)
+    setForm({
+      description: exp.description,
+      supplier:    exp.supplier ?? "",
+      category:    exp.category,
+      amount_incl: String(exp.amount_incl),
+      btw_rate:    String(exp.btw_rate ?? "21"),
+      date:        exp.date.split("T")[0],
+      notes:       exp.notes ?? "",
+    })
+    setFile(null)
+    if (fileRef.current) fileRef.current.value = ""
+    setShowForm(true)
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" })
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (saving) return
@@ -100,10 +125,25 @@ export default function KostenPage() {
       }
 
       const amounts = calcAmounts()
-      await fetch("/api/admin/expenses", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+
+      if (editingId) {
+        await fetch(`/api/admin/expenses/${editingId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            description: form.description,
+            supplier:    form.supplier,
+            category:    form.category,
+            btw_rate:    parseFloat(form.btw_rate),
+            date:        form.date,
+            notes:       form.notes,
+            // only overwrite the file when a new one was uploaded
+            ...(file_path ? { file_path } : {}),
+            ...amounts,
+          }),
+        })
+      } else {
+        const payload = {
           description: form.description,
           supplier:    form.supplier || undefined,
           category:    form.category,
@@ -112,12 +152,15 @@ export default function KostenPage() {
           notes:       form.notes || undefined,
           file_path,
           ...amounts,
-        }),
-      })
+        }
+        await fetch("/api/admin/expenses", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        })
+      }
 
-      setForm({ description: "", supplier: "", category: "hosting_software", amount_incl: "", btw_rate: "21", date: new Date().toISOString().split("T")[0], notes: "" })
-      setFile(null)
-      if (fileRef.current) fileRef.current.value = ""
+      resetForm()
       setShowForm(false)
       setLoading(true)
       load()
@@ -179,7 +222,7 @@ export default function KostenPage() {
             Kosten & Uitgaven
           </h1>
           <button
-            onClick={() => setShowForm(f => !f)}
+            onClick={() => { resetForm(); setShowForm(f => !f) }}
             className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl transition-all hover:-translate-y-0.5"
             style={{ backgroundColor: CHARCOAL, color: IVORY, boxShadow: "0 4px 16px rgba(0,0,0,0.15)" }}
           >
@@ -197,7 +240,7 @@ export default function KostenPage() {
             className="rounded-2xl p-6 mb-8"
             style={{ backgroundColor: "#fff", border: `1px solid ${GOLD_LIGHT}` }}
           >
-            <p className="text-sm font-semibold mb-5" style={{ color: CHARCOAL }}>Nieuwe uitgave</p>
+            <p className="text-sm font-semibold mb-5" style={{ color: CHARCOAL }}>{editingId ? "Uitgave bewerken" : "Nieuwe uitgave"}</p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <div>
@@ -242,7 +285,7 @@ export default function KostenPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: GOLD }}>Factuur uploaden (PDF/afbeelding)</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: GOLD }}>Factuur uploaden (PDF/afbeelding){editingId ? " — leeg laten = huidige behouden" : ""}</label>
                 <input ref={fileRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" className="w-full text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:cursor-pointer" style={{ color: BODY }} onChange={e => setFile(e.target.files?.[0] ?? null)} />
               </div>
               <div>
@@ -258,11 +301,11 @@ export default function KostenPage() {
                 className="inline-flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-xl transition-all disabled:opacity-60"
                 style={{ backgroundColor: CHARCOAL, color: IVORY }}
               >
-                {saving ? "Opslaan..." : "Opslaan"}
+                {saving ? "Opslaan..." : editingId ? "Wijzigingen opslaan" : "Opslaan"}
               </button>
               <button
                 type="button"
-                onClick={() => setShowForm(false)}
+                onClick={() => { resetForm(); setShowForm(false) }}
                 className="text-sm px-5 py-2.5 rounded-xl transition-opacity hover:opacity-70"
                 style={{ border: `1px solid ${GOLD_LIGHT}`, color: BODY, backgroundColor: "#fff" }}
               >
@@ -317,6 +360,13 @@ export default function KostenPage() {
                             Factuur
                           </a>
                         )}
+                        <button
+                          onClick={() => startEdit(e)}
+                          className="text-xs transition-opacity hover:opacity-70"
+                          style={{ color: GOLD }}
+                        >
+                          Bewerk
+                        </button>
                         <button
                           onClick={() => handleDelete(e.id)}
                           disabled={deleting === e.id}
