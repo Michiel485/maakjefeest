@@ -114,7 +114,13 @@ export async function GET(request: Request) {
       if (mailResult.success) {
         await service
           .from("events")
-          .update({ draft_reminder_2_sent_at: now.toISOString() })
+          .update({
+            draft_reminder_2_sent_at: now.toISOString(),
+            // De 1e herinnering is nu achterhaald: markeer hem als verstuurd,
+            // anders krijgt de klant die vriendelijke eerste nudge NA de
+            // laatste waarschuwing (verkeerde volgorde + dubbele mail).
+            draft_reminder_1_sent_at: draft.draft_reminder_1_sent_at ?? now.toISOString(),
+          })
           .eq("id", draft.id)
           .eq("status", "draft")
         results.reminder2Sent.push(draft.id)
@@ -124,8 +130,9 @@ export async function GET(request: Request) {
       continue
     }
 
-    // ── 1st reminder: 7 days old, not yet sent ───────────────────────────────
-    if (ageMs >= SEVEN_DAYS_MS && !draft.draft_reminder_1_sent_at) {
+    // ── 1st reminder: 7 dagen oud, nog niet verstuurd en nog niet zo oud dat
+    // de 2e herinnering aan de orde is ───────────────────────────────────────
+    if (ageMs >= SEVEN_DAYS_MS && ageMs < SEVEN_WEEKS_MS && !draft.draft_reminder_1_sent_at) {
       const mailResult = await sendDraftReminderEmail({
         toEmail: email,
         eventTitle: (draft.title as string) || "jullie evenement",
