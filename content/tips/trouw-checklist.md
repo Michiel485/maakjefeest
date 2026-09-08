@@ -15,7 +15,7 @@ Trouwen is een van de mooiste dingen die je meemaakt, maar ook een van de groots
 - Boek de trouwlocatie, populaire locaties zijn snel vol
 - Boek een fotograaf
 - Bepaal het type huwelijk: burgerlijk, religieus of symbolisch
-- Maak een trouwwebsite aan en deel die met jullie gasten
+- [Maak een trouwwebsite aan](/aanmaken) en deel die met jullie gasten
 
 ## 9–12 maanden van tevoren
 
@@ -27,7 +27,7 @@ Trouwen is een van de mooiste dingen die je meemaakt, maar ook een van de groots
 
 ## 6–9 maanden van tevoren
 
-- Verstuur de save-the-dates
+- Verstuur de save-the-dates (lees: [wanneer en hoe stuur je een Save the Date?](/tips/save-the-date-versturen-wanneer-en-hoe))
 - Regel de bloemen en decoratie
 - Kies getuigen en bruidsmeisjes of bruidsjonkers
 - Maak een verlanglijstje of regel een cadeau-optie
@@ -36,7 +36,7 @@ Trouwen is een van de mooiste dingen die je meemaakt, maar ook een van de groots
 
 ## 3–6 maanden van tevoren
 
-- Verstuur de officiële uitnodigingen
+- Verstuur de officiële uitnodigingen, bijvoorbeeld als [digitale trouwkaart via WhatsApp](/tips/digitale-trouwkaart-versturen-whatsapp)
 - Open de RSVP op jullie trouwwebsite
 - Boek overnachtingen voor gasten van ver
 - Regel de ringen
@@ -70,4 +70,4 @@ Trouwen is een van de mooiste dingen die je meemaakt, maar ook een van de groots
 
 ---
 
-Een trouwwebsite regelt de communicatie met jullie gasten automatisch: uitnodigingen, RSVP, dieetwensen, programma. Alles op één plek, zodat jullie zich kunnen focussen op het genieten.
+Een trouwwebsite regelt de communicatie met jullie gasten automatisch: uitnodigingen, RSVP, dieetwensen, programma. Alles op één plek, zodat jullie zich kunnen focussen op het genieten. [Start gratis met jullie trouwwebsite](/aanmaken).

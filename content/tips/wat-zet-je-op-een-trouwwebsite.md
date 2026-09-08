@@ -38,7 +38,7 @@ Veel koppels vinden het lastig om over cadeaus te beginnen, maar gasten waardere
 
 ## 7. Foto's
 
-Deel een paar mooie foto's van jullie samen, of gebruik beelden van de loveshoot als jullie die hebben gedaan. Een website met foto's voelt meteen persoonlijker dan een pagina met alleen tekst, en geeft gasten alvast een goed gevoel voor de grote dag.
+Deel een paar mooie foto's van jullie samen, of gebruik beelden van de loveshoot als jullie die hebben gedaan. Een website met foto's voelt meteen persoonlijker dan een pagina met alleen tekst, en geeft gasten alvast een goed gevoel voor de grote dag. Wil je ook de foto's verzamelen die gasten op de dag zelf maken? Lees hoe een [fotomuur met QR-code](/tips/fotos-verzamelen-bruiloft-qr-code) werkt.
 
 ## 8. Contact
 
@@ -46,4 +46,4 @@ Vermeld wie gasten kunnen bereiken voor vragen. Dat kan een e-mailadres zijn, ma
 
 ---
 
-Met SayingYes heb je al deze onderdelen binnen een kwartier op jullie eigen trouwwebsite staan, inclusief RSVP, dieetwensen, fotogalerij en een eigen webadres. Eenmalig €49,99, geen maandelijkse kosten.
+Met SayingYes heb je al deze onderdelen binnen een kwartier op jullie eigen trouwwebsite staan, inclusief RSVP, dieetwensen, fotogalerij en een eigen webadres. Eenmalig €49,99, geen maandelijkse kosten. [Start gratis](/aanmaken).

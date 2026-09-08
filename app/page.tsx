@@ -4,6 +4,7 @@ import Link from "next/link"
 import { NavLoginButton } from "@/components/NavLoginButton"
 import ResetGoogleTranslate from "@/components/ResetGoogleTranslate"
 import { MARKETING_URL } from "@/lib/site-url"
+import { getAllTips } from "@/lib/tips"
 
 export const metadata: Metadata = {
   // Absolute titel: de root-template zou er anders een tweede "| SayingYes" achter zetten
@@ -95,6 +96,9 @@ function Check() {
 }
 
 export default function Home() {
+  // De drie nieuwste artikelen: interne links vanaf de voorpagina naar de tips
+  const laatsteTips = getAllTips().slice(0, 3)
+
   return (
     <div style={{ backgroundColor: IVORY }} className="min-h-screen antialiased">
       <ResetGoogleTranslate />
@@ -970,6 +974,60 @@ export default function Home() {
                 </p>
               </details>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════
+          5c. LAATSTE TIPS (interne links naar de artikelen)
+      ════════════════════════════════════════ */}
+      <section className="py-24 sm:py-28 px-6" style={{ backgroundColor: IVORY }}>
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] mb-5" style={{ color: GOLD }}>
+              Tips &amp; gidsen
+            </p>
+            <h2
+              className="text-4xl sm:text-5xl leading-tight mb-6"
+              style={{ fontFamily: "var(--font-cormorant)", color: CHARCOAL, fontWeight: 700 }}
+            >
+              Slim voorbereid op jullie grote dag
+            </h2>
+            <Ornament />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {laatsteTips.map((tip) => (
+              <Link
+                key={tip.slug}
+                href={`/tips/${tip.slug}`}
+                className="group flex flex-col rounded-2xl p-7 border transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                style={{ backgroundColor: "#FFFDF9", borderColor: `${GOLD_LIGHT}60`, textDecoration: "none" }}
+              >
+                <h3
+                  className="mb-3"
+                  style={{ fontFamily: "var(--font-cormorant)", fontSize: "1.35rem", fontWeight: 700, color: CHARCOAL, lineHeight: 1.25 }}
+                >
+                  {tip.title}
+                </h3>
+                <p className="text-sm leading-relaxed flex-1" style={{ color: BODY }}>
+                  {tip.description}
+                </p>
+                <span className="inline-flex items-center gap-1 mt-5 text-xs font-semibold transition-opacity group-hover:opacity-70" style={{ color: GOLD }}>
+                  Lees verder →
+                </span>
+              </Link>
+            ))}
+          </div>
+
+          <div className="text-center mt-10">
+            <Link
+              href="/tips"
+              className="text-sm font-semibold transition-opacity hover:opacity-70"
+              style={{ color: GOLD, textDecoration: "none" }}
+            >
+              Alle tips &amp; gidsen →
+            </Link>
           </div>
         </div>
       </section>

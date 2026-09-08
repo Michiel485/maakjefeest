@@ -49,7 +49,7 @@ Een trouwwebsite is een volledige webpagina die speciaal voor jullie bruiloft is
 
 ## Kunnen ze samen?
 
-Jazeker. Veel koppels combineren beide: ze sturen een korte digitale trouwkaart als uitnodiging, met daarin een link naar de trouwwebsite voor alle details. Zo profiteer je van het beste van beide werelden.
+Jazeker. Veel koppels combineren beide: ze sturen een korte digitale trouwkaart als uitnodiging, met daarin een link naar de trouwwebsite voor alle details. Zo profiteer je van het beste van beide werelden. Hoe je zo'n kaart slim verstuurt, lees je in [digitale trouwkaart versturen via WhatsApp](/tips/digitale-trouwkaart-versturen-whatsapp), en [hier zie je een voorbeeld](/kaart-voorbeeld) van hoe een gast hem ontvangt.
 
 ## Onze conclusie
 
@@ -57,4 +57,4 @@ Een digitale trouwkaart is prima voor de uitnodiging zelf, maar een trouwwebsite
 
 ---
 
-Met SayingYes maak je eenvoudig een persoonlijke trouwwebsite met RSVP, dieetwensen en een eigen uitstraling. Eenmalig €49,99, geen abonnement.
+Met SayingYes maak je eenvoudig een persoonlijke trouwwebsite met RSVP, dieetwensen en een eigen uitstraling. Eenmalig €49,99, geen abonnement. [Start gratis](/aanmaken), betalen doe je pas bij publiceren.
