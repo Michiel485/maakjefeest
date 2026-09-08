@@ -4,13 +4,13 @@ import { NavLoginButton } from "@/components/NavLoginButton"
 import ResetGoogleTranslate from "@/components/ResetGoogleTranslate"
 
 export const metadata: Metadata = {
-  title: "Digitale bruiloftswebsite maken — SayingYes",
+  title: "Digitale bruiloftswebsite maken - SayingYes",
   description: "Maak in minuten jullie eigen digitale bruiloftswebsite met RSVP, fotogalerij, ons verhaal en meer. Geen technische kennis nodig. Eenmalig €49,99 voor een heel jaar.",
   alternates: {
     canonical: "https://sayingyes.nl",
   },
   openGraph: {
-    title: "Digitale bruiloftswebsite maken — SayingYes",
+    title: "Digitale bruiloftswebsite maken - SayingYes",
     description: "Maak in minuten jullie eigen digitale bruiloftswebsite met RSVP, fotogalerij, ons verhaal en meer. Eenmalig €49,99.",
     url: "https://sayingyes.nl",
   },
@@ -162,7 +162,7 @@ export default function Home() {
             <span style={{ color: GOLD_LIGHT, fontWeight: 600 }}>€49,99</span>
           </p>
           <p className="text-xs mt-2" style={{ color: "rgba(232,213,163,0.5)" }}>
-            Gratis starten — pas betalen als je 100% tevreden bent
+            Gratis starten, pas betalen als je 100% tevreden bent
           </p>
 
           {/* Apparaat indicator */}
@@ -185,7 +185,7 @@ export default function Home() {
               </div>
             </div>
             <p className="text-xs" style={{ color: "rgba(232,213,163,0.7)" }}>
-              ✦ Volledig te bouwen vanaf je telefoon — of pak je laptop erbij voor de ultieme bouwervaring.
+              ✦ Volledig te bouwen vanaf je telefoon. Of pak je laptop erbij voor de ultieme bouwervaring.
             </p>
           </div>
         </div>
@@ -216,7 +216,7 @@ export default function Home() {
             </h2>
             <Ornament />
             <p className="mt-6 text-sm max-w-lg mx-auto leading-relaxed" style={{ color: BODY }}>
-              Kies uit meerdere tijdloze thema's — volledig aanpasbaar naar jullie eigen smaak.
+              Kies uit meerdere tijdloze thema's, volledig aanpasbaar naar jullie eigen smaak.
             </p>
           </div>
 
@@ -325,7 +325,7 @@ export default function Home() {
             <Ornament color="#D59C76" />
             <p className="mt-6 text-sm max-w-xl mx-auto leading-relaxed" style={{ color: "#B8CBC9" }}>
               Bij SayingYes krijgen jullie meer dan een trouwsite. Twee functies die gasten
-              niet snel vergeten — gewoon inbegrepen.
+              niet snel vergeten. En ze zitten er gewoon bij.
             </p>
           </div>
 
@@ -349,8 +349,8 @@ export default function Home() {
                 Live gastenfotomuur
               </h3>
               <p className="text-sm leading-relaxed" style={{ color: "#E8DDD0" }}>
-                Jullie gasten scannen een QR-code op hun tafel en hun foto&apos;s verschijnen —
-                mét persoonlijke boodschap — live op jullie eigen fotomuur en in een slideshow
+                Jullie gasten scannen een QR-code op hun tafel en hun foto&apos;s verschijnen
+                met een persoonlijke boodschap live op jullie eigen fotomuur en in een slideshow
                 op groot scherm. Foto&apos;s van de dag, oude herinneringen of gekke momenten:
                 alles komt samen op één muur.
               </p>
@@ -386,18 +386,21 @@ export default function Home() {
                 className="text-2xl sm:text-3xl"
                 style={{ fontFamily: "var(--font-cormorant)", color: "#FAF7F2", fontWeight: 700 }}
               >
-                Digitale Save the Dates &amp; trouwkaarten
+                Digitale Save the Date &amp; Uitnodigingen
               </h3>
               <p className="text-sm leading-relaxed" style={{ color: "#E8DDD0" }}>
                 Verstuur jullie kaart als link via WhatsApp: bij je gasten opent een envelop met
-                lakzegel — in de stijl van jullie site — en komt de kaart tevoorschijn. Geen
-                drukwerk, geen postzegels, wel dat &quot;wow&quot;-momentje.
+                lakzegel in de stijl van jullie site, en daar is de kaart. Staat jullie trouwsite
+                al live? Dan zitten de knoppen naar de site en de RSVP er direct bij, zodat gasten
+                meteen kunnen laten weten dat ze erbij zijn. Geen drukwerk, geen postzegels, wel
+                dat &quot;wow&quot;-momentje.
               </p>
               <ul className="flex flex-col gap-2.5 text-sm" style={{ color: "#E8DDD0" }}>
                 {[
                   "Envelop-animatie in jullie eigen themastijl",
-                  "Knoppen naar jullie trouwsite en RSVP",
+                  "Directe knoppen naar jullie trouwsite en RSVP",
                   "Aparte kaarten per gastengroep, met eigen tijden",
+                  "Kaart later aangepast? Via dezelfde link zien je gasten altijd de nieuwste versie",
                   "Zie hoe vaak jullie kaart bekeken is",
                 ].map((punt) => (
                   <li key={punt} className="flex items-start gap-2.5">
@@ -554,7 +557,7 @@ export default function Home() {
             </h2>
             <div style={{ width: 48, height: 1, backgroundColor: GOLD_LIGHT }} />
             <p className="text-base leading-relaxed" style={{ color: BODY }}>
-              Geen ingewikkelde systemen, maar een unieke, doordachte builder waarin je binnen een paar klikken alles aanpast — vanaf je desktop én rechtstreeks op je telefoon. Zie live je wijzigingen en beheer moeiteloos je gasten op één centraal dashboard.
+              Geen ingewikkelde systemen, maar een unieke, doordachte builder waarin je binnen een paar klikken alles aanpast, vanaf je desktop én rechtstreeks op je telefoon. Zie live je wijzigingen en beheer moeiteloos je gasten op één centraal dashboard.
             </p>
             <ul className="flex flex-col gap-3 mt-1">
               {[
@@ -619,7 +622,7 @@ export default function Home() {
               {
                 path: "M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244",
                 title: "Kies je Eigen Subdomein",
-                body: "Geen cryptische, onleesbare links. Jullie kiezen zelf een uniek en herkenbaar webadres — bijvoorbeeld jullienamen.sayingyes.nl. Strak, chic en supermakkelijk te onthouden voor alle gasten.",
+                body: "Geen cryptische, onleesbare links. Jullie kiezen zelf een uniek en herkenbaar webadres, bijvoorbeeld jullienamen.sayingyes.nl. Strak, chic en supermakkelijk te onthouden voor alle gasten.",
               },
               {
                 path: "M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418",
@@ -639,17 +642,17 @@ export default function Home() {
               {
                 path: "M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99",
                 title: "Altijd Flexibel",
-                body: "Plannen gewijzigd? Geen paniek. Zelfs na publicatie passen jullie de lay-out, teksten of URL op elk moment aan — ook snel even vanaf de telefoon. Staat iets niet goed? In een paar tikken opgelost.",
+                body: "Plannen gewijzigd? Geen paniek. Zelfs na publicatie passen jullie de lay-out, teksten of URL op elk moment aan, ook snel even vanaf de telefoon. Staat iets niet goed? In een paar tikken opgelost.",
               },
               {
                 path: "M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 8.25h3m-3 3.75h3M9 21h.008v.008H9V21zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z",
                 title: "Smartphone-Proof",
-                body: "Onze websites zijn mobile-first ontworpen — route, dresscode, programma: alles laadt razendsnel en ziet er op elke smartphone spectaculair uit. En de builder zelf? Die gebruik je volledig op je telefoon, zodat je overal en altijd aanpassingen kunt doen.",
+                body: "Onze websites zijn mobile-first ontworpen. Route, dresscode, programma: alles laadt razendsnel en ziet er op elke smartphone spectaculair uit. En de builder zelf? Die gebruik je volledig op je telefoon, zodat je overal en altijd aanpassingen kunt doen.",
               },
               {
                 path: "M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3",
                 title: "Export voor Locatie & Cateraar",
-                body: "Geen gedoe met handmatig overtypen in Excel. Met één muisklik exporteren jullie alle RSVP-antwoorden, dieetwensen en hotelovernachtingen naar een overzichtelijk bestand — direct klaar voor ceremoniemeester, locatie of cateraar.",
+                body: "Geen gedoe met handmatig overtypen in Excel. Met één muisklik exporteren jullie alle RSVP-antwoorden, dieetwensen en hotelovernachtingen naar een overzichtelijk bestand, direct klaar voor ceremoniemeester, locatie of cateraar.",
               },
             ].map(({ path, title, body }, i) => (
               <div
@@ -785,7 +788,7 @@ export default function Home() {
               {[
                 "De goedkoopste & meest complete optie van Nederland",
                 "Inclusief eigen domeinnaam én alle premium features",
-                "Loopt automatisch af — geen verrassing achteraf",
+                "Loopt automatisch af, geen verrassing achteraf",
                 "Na het eerste jaar verlengen wanneer jullie willen",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-3">
@@ -819,10 +822,10 @@ export default function Home() {
                 className="text-xs font-semibold uppercase tracking-widest mb-2"
                 style={{ color: GOLD }}
               >
-                Na het eerste jaar — Volledige vrijheid
+                Na het eerste jaar: volledige vrijheid
               </p>
               <p className="text-sm leading-relaxed" style={{ color: "#8A7E72" }}>
-                Na het eerste jaar loopt jullie website automatisch af — geen verrassingen.
+                Na het eerste jaar loopt jullie website automatisch af. Geen verrassingen.
                 Willen jullie de site online houden? Verleng eenvoudig per 6 maanden voor slechts{" "}
                 <span style={{ color: "#FAF7F2", fontWeight: 600 }}>€22</span>.
                 Ideaal om na de bruiloft de fotogalerij online te houden.
@@ -859,7 +862,7 @@ export default function Home() {
             <em style={{ fontStyle: "italic", color: GOLD }}>droombruiloft</em> te bouwen?
           </h2>
           <p className="text-base mb-10 leading-relaxed" style={{ color: BODY }}>
-            Start vandaag nog — jullie website is in minuten klaar.
+            Start vandaag nog: jullie website is in minuten klaar.
           </p>
           <Link
             href="/aanmaken"
@@ -875,7 +878,7 @@ export default function Home() {
             Eenmalig €49,99 · Geen maandelijkse kosten · Altijd online
           </p>
           <p className="mt-2 text-xs" style={{ color: BODY }}>
-            Gratis starten — pas betalen als je 100% tevreden bent
+            Gratis starten, pas betalen als je 100% tevreden bent
           </p>
         </div>
       </section>

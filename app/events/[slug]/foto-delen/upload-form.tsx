@@ -207,7 +207,7 @@ export default function UploadForm({
             Deel jullie foto&apos;s
           </h1>
           <p style={{ fontSize: "0.9375rem", color: sc.bodyText, lineHeight: 1.6, marginTop: 10 }}>
-            Was jij erbij? Deel je mooiste foto&apos;s van vandaag — ze verschijnen op de
+            Was jij erbij? Deel je mooiste foto&apos;s van vandaag, dan verschijnen ze op de
             fotomuur van {eventTitle}.
           </p>
         </div>
@@ -376,7 +376,7 @@ export default function UploadForm({
                 disabled={uploading}
               />
               <p className="text-xs" style={{ color: sc.bodyText, opacity: 0.65, lineHeight: 1.5 }}>
-                Je naam en boodschap komen bij je foto te staan — op de fotomuur en in de slideshow.
+                Je naam en boodschap komen bij je foto te staan, op de fotomuur en in de slideshow.
               </p>
             </div>
 

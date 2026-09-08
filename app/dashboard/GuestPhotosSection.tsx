@@ -89,7 +89,7 @@ export default function GuestPhotosSection({
       if (!res.ok) throw new Error()
       setPhotos((prev) => prev.map((p) => (p.id === id ? { ...p, status: "approved" } : p)))
     } catch {
-      setError("Goedkeuren mislukt — probeer opnieuw.")
+      setError("Goedkeuren mislukt, probeer opnieuw.")
     } finally {
       setBusyId(null)
     }
@@ -104,7 +104,7 @@ export default function GuestPhotosSection({
       setPhotos((prev) => prev.filter((p) => p.id !== id))
       setDeleteConfirmId(null)
     } catch {
-      setError("Verwijderen mislukt — probeer opnieuw.")
+      setError("Verwijderen mislukt, probeer opnieuw.")
     } finally {
       setBusyId(null)
     }
@@ -135,7 +135,7 @@ export default function GuestPhotosSection({
       a.click()
       URL.revokeObjectURL(url)
     } catch {
-      setError("Zip maken mislukt — probeer opnieuw.")
+      setError("Zip maken mislukt, probeer opnieuw.")
     } finally {
       setZipProgress(null)
     }
@@ -188,7 +188,7 @@ export default function GuestPhotosSection({
         </span>{" "}
         gasten scannen een QR-code en hun foto&apos;s verschijnen live op jullie eigen fotomuur.
         Zet er een groot scherm of beamer bij met de slideshow, print de QR-kaart en leg hem op de
-        tafels — meer is het niet. En het hoeven niet alleen foto&apos;s van de dag te zijn: oude
+        tafels, meer is het niet. En het hoeven niet alleen foto&apos;s van de dag te zijn: oude
         foto&apos;s van jullie samen of gekke momenten mogen ook, mét een persoonlijke boodschap erbij.
       </div>
 
@@ -290,7 +290,7 @@ export default function GuestPhotosSection({
               </ActionRow>
 
               {photos.length > 0 && (
-                <ActionRow uitleg="Alle geüploade foto's in één keer downloaden als zip-bestand — handig als aandenken of back-up.">
+                <ActionRow uitleg="Alle geüploade foto's in één keer downloaden als zip-bestand, handig als aandenken of back-up.">
                   <button
                     onClick={downloadAllAsZip}
                     disabled={zipProgress !== null}
@@ -305,7 +305,7 @@ export default function GuestPhotosSection({
               )}
 
               {approved.length > 0 && (
-                <ActionRow uitleg="Maak met één druk op de knop een fotocollage van alle foto's op de muur — om te delen of in te lijsten.">
+                <ActionRow uitleg="Maak met één druk op de knop een fotocollage van alle foto's op de muur, om te delen of in te lijsten.">
                   <CollageButton
                     photos={approved.map((p) => ({ id: p.id, url: p.url }))}
                     eventTitle={event.title}
