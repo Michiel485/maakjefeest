@@ -351,7 +351,7 @@ export default function CardReveal({
       {/* Groeimotor */}
       {stage === "open" && (
         <a
-          href="https://sayingyes.nl"
+          href="https://www.sayingyes.nl"
           className="mt-10 text-xs"
           style={{
             color: sc.bodyText,

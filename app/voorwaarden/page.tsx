@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 
 export const metadata: Metadata = {
-  title: "Algemene Voorwaarden — SayingYes",
+  title: "Algemene voorwaarden",
   description: "Lees de algemene voorwaarden van SayingYes, handelsnaam van MvB Commerce.",
 }
 

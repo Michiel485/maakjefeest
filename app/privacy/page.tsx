@@ -2,7 +2,7 @@
 import Link from "next/link"
 
 export const metadata: Metadata = {
-  title: "Privacy & Cookiebeleid — SayingYes",
+  title: "Privacy & cookiebeleid",
   description: "Lees hoe SayingYes omgaat met jouw persoonsgegevens en cookies.",
 }
 

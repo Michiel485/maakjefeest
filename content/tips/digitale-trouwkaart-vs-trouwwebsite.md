@@ -1,7 +1,7 @@
 ---
 title: "Digitale trouwkaart of trouwwebsite: wat is het verschil?"
 date: "2026-05-30"
-description: "Digitale trouwkaart of trouwwebsite — wat kies je? We leggen de verschillen uit zodat jullie de beste keuze kunnen maken voor jullie grote dag."
+description: "Digitale trouwkaart of trouwwebsite: wat kies je? We leggen de verschillen uit zodat jullie de beste keuze kunnen maken voor jullie grote dag."
 slug: "digitale-trouwkaart-vs-trouwwebsite"
 ---
 
@@ -9,7 +9,7 @@ Vroeger was het simpel: je stuurde een papieren uitnodiging en klaar. Tegenwoord
 
 ## Wat is een digitale trouwkaart?
 
-Een digitale trouwkaart is de online versie van een traditionele uitnodiging. Je maakt een mooie kaart aan — vaak via een ontwerptool of app — en stuurt die per e-mail of WhatsApp naar jullie gasten. De kaart bevat de basisinformatie: datum, locatie en tijd.
+Een digitale trouwkaart is de online versie van een traditionele uitnodiging. Je maakt een mooie kaart aan, vaak via een ontwerptool of app, en stuurt die per e-mail of WhatsApp naar jullie gasten. De kaart bevat de basisinformatie: datum, locatie en tijd.
 
 **Voordelen:**
 - Snel en makkelijk te maken
@@ -19,7 +19,7 @@ Een digitale trouwkaart is de online versie van een traditionele uitnodiging. Je
 **Nadelen:**
 - Eenmalig te bekijken, gasten bewaren het zelden
 - Geen plek voor extra informatie zoals programma of RSVP
-- Niet interactief — gasten kunnen niet reageren via de kaart zelf
+- Niet interactief: gasten kunnen niet reageren via de kaart zelf
 
 ## Wat is een trouwwebsite?
 
@@ -53,7 +53,7 @@ Jazeker. Veel koppels combineren beide: ze sturen een korte digitale trouwkaart 
 
 ## Onze conclusie
 
-Een digitale trouwkaart is prima voor de uitnodiging zelf, maar een trouwwebsite biedt veel meer mogelijkheden voor alles eromheen. Voor koppels die de organisatie soepel willen laten verlopen — zonder eindeloze appjes over dieetwensen en routebeschrijvingen — is een trouwwebsite de slimste keuze.
+Een digitale trouwkaart is prima voor de uitnodiging zelf, maar een trouwwebsite biedt veel meer mogelijkheden voor alles eromheen. Voor koppels die de organisatie soepel willen laten verlopen, zonder eindeloze appjes over dieetwensen en routebeschrijvingen, is een trouwwebsite de slimste keuze.
 
 ---
 

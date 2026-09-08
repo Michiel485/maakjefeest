@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getTip, getAllTips } from "@/lib/tips"
+import { MARKETING_URL } from "@/lib/site-url"
 import { NavLoginButton } from "@/components/NavLoginButton"
 
 export async function generateStaticParams() {
@@ -14,10 +15,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const tip = await getTip(slug)
   if (!tip) return {}
-  const url = `https://sayingyes.nl/tips/${slug}`
+  const url = `${MARKETING_URL}/tips/${slug}`
   const image = tip.image ?? OG_IMAGE
   return {
-    title: `${tip.title} — SayingYes`,
+    // De root-layout voegt zelf " | SayingYes" toe
+    title: tip.title,
     description: tip.description,
     alternates: { canonical: url },
     openGraph: {
@@ -28,6 +30,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       locale: "nl_NL",
       type: "article",
       publishedTime: tip.date,
+      modifiedTime: tip.updated ?? tip.date,
       images: [{ url: image, width: 1200, height: 630, alt: tip.title }],
     },
     twitter: {
@@ -54,8 +57,41 @@ export default async function TipPage({ params }: { params: Promise<{ slug: stri
   const tip = await getTip(slug)
   if (!tip) notFound()
 
+  const url = `${MARKETING_URL}/tips/${slug}`
+  const image = `${MARKETING_URL}${tip.image ?? OG_IMAGE}`
+
+  // Structured data: artikel + kruimelpad, zodat Google het stuk begrijpt
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BlogPosting",
+        "@id": `${url}#article`,
+        headline: tip.title,
+        description: tip.description,
+        image,
+        datePublished: tip.date,
+        dateModified: tip.updated ?? tip.date,
+        inLanguage: "nl-NL",
+        mainEntityOfPage: url,
+        author: { "@id": `${MARKETING_URL}/#organization` },
+        publisher: { "@id": `${MARKETING_URL}/#organization` },
+        isPartOf: { "@id": `${MARKETING_URL}/#website` },
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: MARKETING_URL },
+          { "@type": "ListItem", position: 2, name: "Tips & gidsen", item: `${MARKETING_URL}/tips` },
+          { "@type": "ListItem", position: 3, name: tip.title, item: url },
+        ],
+      },
+    ],
+  }
+
   return (
     <div style={{ backgroundColor: IVORY }} className="min-h-screen antialiased">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       {/* Navigatie */}
       <header

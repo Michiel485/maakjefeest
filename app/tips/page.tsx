@@ -1,25 +1,30 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { getAllTips } from "@/lib/tips"
+import { MARKETING_URL } from "@/lib/site-url"
 import { NavLoginButton } from "@/components/NavLoginButton"
 
+const DESCRIPTION =
+  "Praktische tips en gidsen voor jullie bruiloft: trouwwebsite, RSVP, Save the Date, digitale trouwkaarten en foto's delen met gasten."
+
 export const metadata: Metadata = {
-  title: "Tips & Gidsen — SayingYes",
-  description: "Praktische tips en gidsen voor het maken van jullie trouwwebsite. Van inhoud tot stijl — alles wat je nodig hebt.",
-  alternates: { canonical: "https://sayingyes.nl/tips" },
+  // De root-layout voegt zelf " | SayingYes" toe
+  title: "Tips & gidsen voor jullie bruiloft",
+  description: DESCRIPTION,
+  alternates: { canonical: `${MARKETING_URL}/tips` },
   openGraph: {
-    title: "Tips & Gidsen — SayingYes",
-    description: "Praktische tips en gidsen voor het maken van jullie trouwwebsite. Van inhoud tot stijl — alles wat je nodig hebt.",
-    url: "https://sayingyes.nl/tips",
+    title: "Tips & gidsen voor jullie bruiloft",
+    description: DESCRIPTION,
+    url: `${MARKETING_URL}/tips`,
     siteName: "SayingYes",
     locale: "nl_NL",
     type: "website",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "SayingYes — Tips & Gidsen" }],
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "SayingYes tips & gidsen" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Tips & Gidsen — SayingYes",
-    description: "Praktische tips en gidsen voor het maken van jullie trouwwebsite. Van inhoud tot stijl — alles wat je nodig hebt.",
+    title: "Tips & gidsen voor jullie bruiloft",
+    description: DESCRIPTION,
     images: ["/og-image.png"],
   },
 }

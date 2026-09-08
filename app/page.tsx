@@ -1,20 +1,67 @@
 ﻿import type { Metadata } from "next"
+import Image from "next/image"
 import Link from "next/link"
 import { NavLoginButton } from "@/components/NavLoginButton"
 import ResetGoogleTranslate from "@/components/ResetGoogleTranslate"
+import { MARKETING_URL } from "@/lib/site-url"
 
 export const metadata: Metadata = {
-  title: "Digitale bruiloftswebsite maken - SayingYes",
-  description: "Maak in minuten jullie eigen digitale bruiloftswebsite met RSVP, fotogalerij, ons verhaal en meer. Geen technische kennis nodig. Eenmalig €49,99 voor een heel jaar.",
+  // Absolute titel: de root-template zou er anders een tweede "| SayingYes" achter zetten
+  title: { absolute: "Trouwwebsite maken met RSVP en digitale kaarten | SayingYes" },
+  description: "Maak in minuten jullie eigen trouwwebsite met RSVP, fotogalerij en ons verhaal. Inclusief digitale Save the Date, trouwkaarten en een live gastenfotomuur. Eenmalig €49,99, geen abonnement.",
   alternates: {
-    canonical: "https://sayingyes.nl",
+    canonical: MARKETING_URL,
   },
   openGraph: {
-    title: "Digitale bruiloftswebsite maken - SayingYes",
-    description: "Maak in minuten jullie eigen digitale bruiloftswebsite met RSVP, fotogalerij, ons verhaal en meer. Eenmalig €49,99.",
-    url: "https://sayingyes.nl",
+    title: "Trouwwebsite maken met RSVP en digitale kaarten | SayingYes",
+    description: "Maak in minuten jullie eigen trouwwebsite met RSVP, fotogalerij en ons verhaal. Inclusief digitale kaarten en gastenfotomuur. Eenmalig €49,99.",
+    url: MARKETING_URL,
   },
 }
+
+// Veelgestelde vragen: zichtbaar op de pagina én als FAQPage-schema voor Google
+const FAQ_ITEMS: [string, string][] = [
+  [
+    "Wat kost een trouwwebsite bij SayingYes?",
+    "Jullie betalen eenmalig €49,99 en de website staat een jaar online. Wil je daarna verlengen, dan kost dat €22 per zes maanden. Geen abonnement en geen automatische incasso. Bouwen is gratis: je betaalt pas op het moment dat je publiceert.",
+  ],
+  [
+    "Heb ik technische kennis nodig?",
+    "Nee. Je kiest een thema, vult jullie namen, datum en teksten in en de site staat. Alles werkt vanaf je telefoon, dus je kunt ook op de bank verder bouwen. Een complete trouwwebsite staat gemiddeld binnen een kwartier.",
+  ],
+  [
+    "Krijgen we een eigen webadres?",
+    "Ja. Jullie kiezen zelf een adres zoals jullienamen.sayingyes.nl. Makkelijk te onthouden voor gasten en mooi op de uitnodiging.",
+  ],
+  [
+    "Kunnen gasten zich aanmelden via de website?",
+    "Ja, met het RSVP-formulier. Gasten geven aan of ze komen, met hoeveel personen, of ze daggast of avondgast zijn en welke dieetwensen ze hebben. Jullie zien alles in één overzicht en exporteren het met één klik voor de locatie of cateraar.",
+  ],
+  [
+    "Is onze trouwwebsite privé?",
+    "Jullie site verschijnt niet in Google en je kunt hem afschermen met een wachtwoord of een geheime vraag die alleen jullie gasten kennen.",
+  ],
+  [
+    "Wat zijn de digitale Save the Date en trouwkaarten?",
+    "Kaarten die je als link via WhatsApp verstuurt. Bij je gasten opent een envelop met lakzegel in de stijl van jullie site, met knoppen naar de website en het RSVP-formulier. Je maakt per gastengroep een eigen kaart en kunt later nog alles aanpassen. Ze zitten gratis bij je website.",
+  ],
+  [
+    "Hoe werkt de gastenfotomuur?",
+    "Gasten scannen een QR-code op hun tafel en zetten hun foto's direct op jullie fotomuur, met een persoonlijke boodschap. Op een groot scherm of beamer loopt ondertussen een live slideshow. Achteraf download je alles als zip of maak je er een collage van.",
+  ],
+  [
+    "Kunnen we de website na publicatie nog aanpassen?",
+    "Ja, altijd. Teksten, foto's, programma, stijl en zelfs het webadres pas je op elk moment aan, ook vanaf je telefoon. Wijzigingen staan direct live.",
+  ],
+  [
+    "Werkt de site ook voor gasten uit het buitenland?",
+    "Ja. Jullie gasten kunnen de website bekijken in het Nederlands, Engels, Duits, Frans, Spaans of Italiaans.",
+  ],
+  [
+    "Wat gebeurt er na een jaar?",
+    "De website loopt automatisch af en je krijgt daar ruim op tijd een mail over. Wil je hem langer online houden, dan verleng je met zes maanden voor €22. Verlengen is nooit verplicht.",
+  ],
+]
 
 const GOLD       = "#C5A059"
 const GOLD_LIGHT = "#E8D5A3"
@@ -82,12 +129,14 @@ export default function Home() {
           1. HERO — Filmische binnenkomer
       ════════════════════════════════════════ */}
       <section className="relative min-h-[92vh] flex items-center justify-center overflow-hidden">
-        {/* Achtergrond foto */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/marketing/hero.png"
-          alt="Bruiloft sfeer"
-          className="absolute inset-0 w-full h-full object-cover object-center select-none"
+        {/* Achtergrond foto: geoptimaliseerde JPEG via next/image, met priority voor een snelle LCP */}
+        <Image
+          src="/marketing/hero.jpg"
+          alt="Bruidspaar op hun trouwdag"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center select-none"
           style={{ zIndex: 0 }}
         />
         {/* Gradient overlay */}
@@ -216,7 +265,7 @@ export default function Home() {
             </h2>
             <Ornament />
             <p className="mt-6 text-sm max-w-lg mx-auto leading-relaxed" style={{ color: BODY }}>
-              Kies uit meerdere tijdloze thema's, volledig aanpasbaar naar jullie eigen smaak.
+              Kies uit meerdere tijdloze thema&apos;s, volledig aanpasbaar naar jullie eigen smaak.
             </p>
           </div>
 
@@ -229,11 +278,12 @@ export default function Home() {
               style={{ border: `1px solid ${GOLD_LIGHT}`, backgroundColor: IVORY_CARD }}
             >
               <div className="relative overflow-hidden" style={{ aspectRatio: "3/4" }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/Home page/Pagina Emerald.png"
-                  alt="Emerald Luxury thema"
-                  className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                <Image
+                  src="/marketing/theme-emerald.webp"
+                  alt="Emerald Luxury thema voor een trouwwebsite"
+                  fill
+                  sizes="(min-width: 640px) 33vw, 100vw"
+                  className="object-cover object-top transition-transform duration-700 group-hover:scale-105"
                 />
               </div>
               <div className="p-6">
@@ -255,11 +305,12 @@ export default function Home() {
               style={{ border: `1px solid ${GOLD_LIGHT}`, backgroundColor: IVORY_CARD }}
             >
               <div className="relative overflow-hidden" style={{ aspectRatio: "3/4" }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/Home page/Pagina Ivory.png"
-                  alt="Gold & Ivory thema"
-                  className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                <Image
+                  src="/marketing/theme-ivory.webp"
+                  alt="Gold & Ivory thema voor een trouwwebsite"
+                  fill
+                  sizes="(min-width: 640px) 33vw, 100vw"
+                  className="object-cover object-top transition-transform duration-700 group-hover:scale-105"
                 />
               </div>
               <div className="p-6">
@@ -281,11 +332,12 @@ export default function Home() {
               style={{ border: `1px solid ${GOLD_LIGHT}`, backgroundColor: IVORY_CARD }}
             >
               <div className="relative overflow-hidden" style={{ aspectRatio: "3/4" }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/Home page/Pagina Terracotta.png"
-                  alt="Terracotta & Gold thema"
-                  className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                <Image
+                  src="/marketing/theme-terracotta.webp"
+                  alt="Terracotta & Gold thema voor een trouwwebsite"
+                  fill
+                  sizes="(min-width: 640px) 33vw, 100vw"
+                  className="object-cover object-top transition-transform duration-700 group-hover:scale-105"
                 />
               </div>
               <div className="p-6">
@@ -369,6 +421,13 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
+              <Link
+                href="/tips/fotos-verzamelen-bruiloft-qr-code"
+                className="mt-2 text-sm font-semibold transition-opacity hover:opacity-80 self-start"
+                style={{ color: "#D59C76", textDecoration: "none" }}
+              >
+                Lees hoe een fotomuur met QR-code werkt →
+              </Link>
             </div>
 
             {/* Digitale kaarten */}
@@ -417,6 +476,13 @@ export default function Home() {
                 style={{ backgroundColor: "#D59C76", color: "#07353A", textDecoration: "none" }}
               >
                 Bekijk een voorbeeldkaart →
+              </Link>
+              <Link
+                href="/tips/digitale-trouwkaart-versturen-whatsapp"
+                className="text-sm font-semibold transition-opacity hover:opacity-80 self-start"
+                style={{ color: "#D59C76", textDecoration: "none" }}
+              >
+                Lees: digitale trouwkaart versturen via WhatsApp →
               </Link>
             </div>
 
@@ -842,6 +908,68 @@ export default function Home() {
                 per 6 maanden
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════
+          5b. VEELGESTELDE VRAGEN (+ FAQPage-schema)
+      ════════════════════════════════════════ */}
+      <section className="py-28 sm:py-32 px-6" style={{ backgroundColor: SAND }}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              mainEntity: FAQ_ITEMS.map(([vraag, antwoord]) => ({
+                "@type": "Question",
+                name: vraag,
+                acceptedAnswer: { "@type": "Answer", text: antwoord },
+              })),
+            }),
+          }}
+        />
+        <style>{`summary::-webkit-details-marker { display: none; }`}</style>
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-14">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] mb-5" style={{ color: GOLD }}>
+              Veelgestelde vragen
+            </p>
+            <h2
+              className="text-4xl sm:text-5xl leading-tight mb-6"
+              style={{ fontFamily: "var(--font-cormorant)", color: CHARCOAL, fontWeight: 700 }}
+            >
+              Alles wat je wilt weten
+            </h2>
+            <Ornament />
+          </div>
+
+          <div className="flex flex-col gap-3">
+            {FAQ_ITEMS.map(([vraag, antwoord]) => (
+              <details
+                key={vraag}
+                className="group rounded-2xl border"
+                style={{ backgroundColor: "#FFFDF9", borderColor: `${GOLD_LIGHT}80` }}
+              >
+                <summary
+                  className="flex items-center justify-between gap-4 cursor-pointer list-none px-6 py-5 text-base font-semibold"
+                  style={{ color: CHARCOAL }}
+                >
+                  {vraag}
+                  <span
+                    className="flex-shrink-0 text-xl leading-none transition-transform duration-300 group-open:rotate-45"
+                    style={{ color: GOLD }}
+                    aria-hidden="true"
+                  >
+                    +
+                  </span>
+                </summary>
+                <p className="px-6 pb-6 text-sm leading-relaxed" style={{ color: BODY }}>
+                  {antwoord}
+                </p>
+              </details>
+            ))}
           </div>
         </div>
       </section>

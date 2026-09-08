@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 
 export const metadata: Metadata = {
-  title: "Contact — SayingYes",
+  title: "Contact",
   description: "Neem contact op met SayingYes. Vragen, feedback of ideeën? We horen het graag.",
 }
 

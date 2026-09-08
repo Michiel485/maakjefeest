@@ -10,6 +10,8 @@ export interface TipMeta {
   slug: string
   title: string
   date: string
+  // Optioneel: datum van de laatste inhoudelijke wijziging (sitemap + Article-schema)
+  updated?: string
   description: string
   image?: string
 }
@@ -25,7 +27,7 @@ export function getAllTips(): TipMeta[] {
       const slug = filename.replace(/\.md$/, "")
       const raw = fs.readFileSync(path.join(TIPS_DIR, filename), "utf-8")
       const { data } = matter(raw)
-      return { slug, title: data.title, date: data.date, description: data.description, image: data.image }
+      return { slug, title: data.title, date: data.date, updated: data.updated, description: data.description, image: data.image }
     })
     .sort((a, b) => (a.date < b.date ? 1 : -1))
 }
@@ -40,6 +42,7 @@ export async function getTip(slug: string): Promise<Tip | null> {
     slug,
     title: data.title,
     date: data.date,
+    updated: data.updated,
     description: data.description,
     image: data.image,
     html: processed.toString(),

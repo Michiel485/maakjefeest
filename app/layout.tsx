@@ -20,6 +20,7 @@ import {
 } from "next/font/google";
 import Analytics from "@/components/Analytics";
 import CookieBanner from "@/components/CookieBanner";
+import { MARKETING_URL } from "@/lib/site-url";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -34,12 +35,14 @@ const geistMono = Geist_Mono({
 
 const playfairDisplay = Playfair_Display({
   variable: "--font-playfair",
+  preload: false,
   subsets: ["latin"],
   weight: ["400", "700"],
 });
 
 const greatVibes = Great_Vibes({
   variable: "--font-greatvibes",
+  preload: false,
   subsets: ["latin"],
   weight: "400",
 });
@@ -52,72 +55,84 @@ const cormorantGaramond = Cormorant_Garamond({
 
 const pinyonScript = Pinyon_Script({
   variable: "--font-pinyonscript",
+  preload: false,
   subsets: ["latin"],
   weight: "400",
 });
 
 const cinzel = Cinzel({
   variable: "--font-cinzel",
+  preload: false,
   subsets: ["latin"],
   weight: ["400", "700"],
 });
 
 const dancingScript = Dancing_Script({
   variable: "--font-dancing",
+  preload: false,
   subsets: ["latin"],
   weight: ["400"],
 });
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
+  preload: false,
   subsets: ["latin"],
   weight: ["300", "400", "500", "600"],
 });
 
 const marcellus = Marcellus({
   variable: "--font-marcellus",
+  preload: false,
   subsets: ["latin"],
   weight: "400",
 });
 
 const lora = Lora({
   variable: "--font-lora",
+  preload: false,
   subsets: ["latin"],
   weight: ["400", "500", "600"],
 });
 
 const windSong = WindSong({
   variable: "--font-windsong",
+  preload: false,
   subsets: ["latin"],
   weight: "400",
 });
 
 const allura = Allura({
   variable: "--font-allura",
+  preload: false,
   subsets: ["latin"],
   weight: "400",
 });
 
 const bodoniModa = Bodoni_Moda({
   variable: "--font-bodonimoda",
+  preload: false,
   subsets: ["latin"],
   weight: ["400", "700"],
 });
 
 const italiana = Italiana({
   variable: "--font-italiana",
+  preload: false,
   subsets: ["latin"],
   weight: "400",
 });
 
 const gfsDidot = GFS_Didot({
   variable: "--font-gfsdidot",
+  preload: false,
   subsets: ["latin"],
   weight: "400",
 });
 
 const prata = Prata({
   variable: "--font-prata",
+  preload: false,
   subsets: ["latin"],
   weight: "400",
 });
@@ -126,12 +141,12 @@ export const viewport: Viewport = {
   colorScheme: "only light",
 }
 
-const SITE_URL = "https://sayingyes.nl"
+const SITE_URL = MARKETING_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "SayingYes — Digitale bruiloftswebsite maken",
+    default: "SayingYes | Digitale bruiloftswebsite maken",
     template: "%s | SayingYes",
   },
   description: "Maak in minuten een complete digitale bruiloftswebsite met RSVP, fotogalerij en ons verhaal. Geen technische kennis nodig. Eenmalig €49,99.",
@@ -152,13 +167,13 @@ export const metadata: Metadata = {
     locale: "nl_NL",
     url: SITE_URL,
     siteName: "SayingYes",
-    title: "SayingYes — Digitale bruiloftswebsite maken",
+    title: "SayingYes | Digitale bruiloftswebsite maken",
     description: "Maak in minuten een complete digitale bruiloftswebsite met RSVP, fotogalerij en ons verhaal. Eenmalig €49,99.",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "SayingYes — Digitale bruiloftswebsite maken" }],
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "SayingYes, digitale bruiloftswebsite maken" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "SayingYes — Digitale bruiloftswebsite maken",
+    title: "SayingYes | Digitale bruiloftswebsite maken",
     description: "Maak in minuten een complete digitale bruiloftswebsite met RSVP, fotogalerij en ons verhaal. Eenmalig €49,99.",
     images: ["/og-image.png"],
   },
@@ -188,6 +203,7 @@ export default function RootLayout({
                   "@id": `${SITE_URL}/#organization`,
                   name: "SayingYes",
                   url: SITE_URL,
+                  logo: `${SITE_URL}/og-image.png`,
                   description: "Digitale bruiloftswebsite builder voor bruidsparen in Nederland.",
                   contactPoint: { "@type": "ContactPoint", email: "info@sayingyes.nl", contactType: "customer support", availableLanguage: "Dutch" },
                 },

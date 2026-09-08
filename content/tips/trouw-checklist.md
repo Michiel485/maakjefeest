@@ -1,18 +1,18 @@
 ---
 title: "De ultieme trouw-checklist: alles wat je moet regelen"
 date: "2026-06-27"
-description: "Trouwen organiseren is een groot project. Met deze checklist weet je precies wat je wanneer moet regelen — van het aanzoek tot de grote dag zelf."
+description: "Trouwen organiseren is een groot project. Met deze checklist weet je precies wat je wanneer moet regelen, van het aanzoek tot de grote dag zelf."
 slug: "trouw-checklist"
 ---
 
-Trouwen is een van de mooiste dingen die je meemaakt — maar ook een van de grootste organisatieklussen. Waar begin je? Wat mag je niet vergeten? Met deze checklist weet je precies wat je wanneer moet regelen.
+Trouwen is een van de mooiste dingen die je meemaakt, maar ook een van de grootste organisatieklussen. Waar begin je? Wat mag je niet vergeten? Met deze checklist weet je precies wat je wanneer moet regelen.
 
 ## 12+ maanden van tevoren
 
 - Stel een budget vast
 - Bepaal de gewenste trouwdatum
 - Maak een globale gastenlijst
-- Boek de trouwlocatie — populaire locaties zijn snel vol
+- Boek de trouwlocatie, populaire locaties zijn snel vol
 - Boek een fotograaf
 - Bepaal het type huwelijk: burgerlijk, religieus of symbolisch
 - Maak een trouwwebsite aan en deel die met jullie gasten
@@ -63,11 +63,11 @@ Trouwen is een van de mooiste dingen die je meemaakt — maar ook een van de gro
 
 ## De dag zelf
 
-- Begin op tijd — geef jezelf meer tijd dan je denkt nodig te hebben
+- Begin op tijd en geef jezelf meer tijd dan je denkt nodig te hebben
 - Geef iemand anders de verantwoordelijkheid voor de logistiek
 - Zet je telefoon op stil en geniet van de dag
-- Eet iets — ook al heb je zenuwen
+- Eet iets, ook al heb je zenuwen
 
 ---
 
-Een trouwwebsite regelt de communicatie met jullie gasten automatisch — uitnodigingen, RSVP, dieetwensen, programma. Alles op één plek, zodat jullie zich kunnen focussen op het genieten.
+Een trouwwebsite regelt de communicatie met jullie gasten automatisch: uitnodigingen, RSVP, dieetwensen, programma. Alles op één plek, zodat jullie zich kunnen focussen op het genieten.

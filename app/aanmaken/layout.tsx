@@ -1,13 +1,15 @@
 import type { Metadata } from "next"
+import { MARKETING_URL } from "@/lib/site-url"
 
 export const metadata: Metadata = {
+  // De root-layout voegt zelf " | SayingYes" toe
   title: "Gratis bruiloftswebsite starten",
   description: "Maak gratis een account aan en start direct met het bouwen van jullie digitale bruiloftswebsite. In minuten online.",
-  alternates: { canonical: "https://sayingyes.nl/aanmaken" },
+  alternates: { canonical: `${MARKETING_URL}/aanmaken` },
   openGraph: {
-    title: "Gratis bruiloftswebsite starten — SayingYes",
+    title: "Gratis bruiloftswebsite starten | SayingYes",
     description: "Maak gratis een account aan en start direct met het bouwen van jullie digitale bruiloftswebsite.",
-    url: "https://sayingyes.nl/aanmaken",
+    url: `${MARKETING_URL}/aanmaken`,
   },
 }
 

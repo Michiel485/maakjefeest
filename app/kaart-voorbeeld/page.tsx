@@ -1,12 +1,22 @@
 import type { Metadata } from "next"
 import { getStyleConfig } from "@/lib/event-styles"
+import { MARKETING_URL } from "@/lib/site-url"
 import CardReveal from "../kaart/[token]/card-reveal"
 
 export const metadata: Metadata = {
-  title: "Voorbeeld: digitale trouwkaart — SayingYes",
+  title: "Voorbeeld van een digitale trouwkaart",
   description:
     "Zo ontvangt een gast jullie digitale trouwkaart: een envelop met lakzegel die opent in de stijl van jullie trouwsite. Bekijk het voorbeeld.",
-  alternates: { canonical: "https://sayingyes.nl/kaart-voorbeeld" },
+  alternates: { canonical: `${MARKETING_URL}/kaart-voorbeeld` },
+  openGraph: {
+    title: "Voorbeeld van een digitale trouwkaart",
+    description:
+      "Een envelop met lakzegel die opent in de stijl van jullie trouwsite. Zo ziet een digitale trouwkaart van SayingYes eruit.",
+    url: `${MARKETING_URL}/kaart-voorbeeld`,
+    siteName: "SayingYes",
+    locale: "nl_NL",
+    type: "website",
+  },
 }
 
 // Vaste demokaart voor de marketingsite — geen database nodig

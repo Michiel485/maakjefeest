@@ -22,7 +22,7 @@ export async function generateMetadata({
   const parts = [display.dateText, display.location].filter(Boolean).join(" • ")
 
   return {
-    title: `${CARD_TYPE_LABEL[data.card.type]} — ${display.names}`,
+    title: `${CARD_TYPE_LABEL[data.card.type]} van ${display.names}`,
     description: parts || display.message,
     robots: { index: false, follow: false, googleBot: { index: false, follow: false } },
   }

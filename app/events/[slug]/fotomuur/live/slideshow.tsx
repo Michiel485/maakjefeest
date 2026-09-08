@@ -216,7 +216,7 @@ export default function Slideshow({
       {/* Groeimotor: subtiele vermelding onderin */}
       <div className="absolute inset-x-0 bottom-2 flex justify-center pointer-events-none">
         <a
-          href="https://sayingyes.nl"
+          href="https://www.sayingyes.nl"
           className="pointer-events-auto text-xs"
           style={{ color: "#8A857C", textDecoration: "none", letterSpacing: "0.03em" }}
         >

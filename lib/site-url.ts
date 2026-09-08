@@ -1,6 +1,13 @@
 const IS_PROD = process.env.NODE_ENV === "production"
 
 /**
+ * Canonieke URL van de marketingsite. Vercel stuurt sayingyes.nl door naar
+ * www.sayingyes.nl, dus canonicals, sitemap en structured data wijzen daar ook
+ * naartoe: één versie voor Google. Klant-sites blijven op [slug].sayingyes.nl.
+ */
+export const MARKETING_URL = "https://www.sayingyes.nl"
+
+/**
  * Returns the public URL for a published event site.
  * - Production: https://[slug].sayingyes.nl  (subdomain routing via proxy)
  * - Development: /events/[slug]              (path routing, port-agnostic)

@@ -29,7 +29,7 @@ const IVORY      = "#FAF7F2"
 const IVORY_CARD = "#F5EFE4"
 const BODY       = "#5C5248"
 
-const BASE_URL = process.env.NODE_ENV === "production" ? "https://sayingyes.nl" : ""
+const BASE_URL = process.env.NODE_ENV === "production" ? "https://www.sayingyes.nl" : ""
 
 export interface CardEventRef {
   id: string
