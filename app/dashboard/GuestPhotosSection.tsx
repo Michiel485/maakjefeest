@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { updateGuestPhotoSettings } from "./actions"
 import { eventSiteUrl, eventSiteLabel } from "@/lib/site-url"
 import CollageButton from "./CollageButton"
@@ -49,6 +49,24 @@ export default function GuestPhotosSection({
 
   const pending = photos.filter((p) => p.status === "pending")
   const approved = photos.filter((p) => p.status === "approved")
+
+  // Live verversen: nieuwe uploads (zoals de wachtrij bij "eerst goedkeuren")
+  // verschijnen vanzelf, zonder de pagina te hoeven vernieuwen
+  useEffect(() => {
+    if (!settings.enabled) return
+    const timer = setInterval(async () => {
+      if (document.hidden) return
+      try {
+        const res = await fetch(`/api/guest-photos/moderation?event_id=${event.id}`, { cache: "no-store" })
+        if (!res.ok) return
+        const body = (await res.json()) as { photos: GuestPhotoRow[] }
+        if (Array.isArray(body.photos)) setPhotos(body.photos)
+      } catch {
+        // netwerk-hikje: volgende poging over 20s
+      }
+    }, 20000)
+    return () => clearInterval(timer)
+  }, [settings.enabled, event.id])
 
   async function saveSettings(next: GuestPhotoSettings) {
     const previous = settings
@@ -136,12 +154,13 @@ export default function GuestPhotosSection({
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
           <p className="font-semibold" style={{ color: CHARCOAL }}>
-            De gastenfotomuur van {event.title.replace(/^de bruiloft van\s+/i, "")}
+            📸 Live fotomuur
           </p>
           <p className="text-xs mt-0.5" style={{ color: BODY }}>
+            {event.title}
             {settings.enabled
-              ? `${photos.length} van ${maxPhotos} foto's`
-              : "Zet de schakelaar aan om te beginnen"}
+              ? ` · ${photos.length} van ${maxPhotos} foto's`
+              : " · Zet de schakelaar aan om te beginnen"}
           </p>
         </div>
         <button
