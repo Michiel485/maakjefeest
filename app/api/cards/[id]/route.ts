@@ -28,6 +28,8 @@ function sanitizeContent(raw: unknown): CardContent {
     guestType: GUEST_TYPES.includes(input.guestType as CardGuestType)
       ? (input.guestType as CardGuestType)
       : undefined,
+    inviteText: text(input.inviteText, 160),
+    timeText: text(input.timeText, 80),
   }
 }
 

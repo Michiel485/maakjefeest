@@ -135,11 +135,13 @@ export default function GuestPhotosSection({
       {/* Kop: titel + toggle */}
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
-          <p className="font-semibold" style={{ color: CHARCOAL }}>{event.title}</p>
+          <p className="font-semibold" style={{ color: CHARCOAL }}>
+            De gastenfotomuur van {event.title.replace(/^de bruiloft van\s+/i, "")}
+          </p>
           <p className="text-xs mt-0.5" style={{ color: BODY }}>
             {settings.enabled
               ? `${photos.length} van ${maxPhotos} foto's`
-              : "Gasten kunnen foto's uploaden via een QR-code"}
+              : "Zet de schakelaar aan om te beginnen"}
           </p>
         </div>
         <button
@@ -155,6 +157,20 @@ export default function GuestPhotosSection({
             style={{ left: settings.enabled ? 26 : 4 }}
           />
         </button>
+      </div>
+
+      {/* Uitleg & tips — ook zichtbaar als de muur nog uitstaat */}
+      <div
+        className="rounded-xl px-4 py-3.5 text-sm leading-relaxed"
+        style={{ backgroundColor: GOLD_BG, border: `1px solid ${GOLD_LIGHT}`, color: BODY }}
+      >
+        <span className="font-semibold" style={{ color: CHARCOAL }}>
+          Superleuk én uniek op jullie bruiloft:
+        </span>{" "}
+        gasten scannen een QR-code en hun foto&apos;s verschijnen live op jullie eigen fotomuur.
+        Zet er een groot scherm of beamer bij met de slideshow, print de QR-kaart en leg hem op de
+        tafels — meer is het niet. En het hoeven niet alleen foto&apos;s van de dag te zijn: oude
+        foto&apos;s van jullie samen of gekke momenten mogen ook, mét een persoonlijke boodschap erbij.
       </div>
 
       {error && <p className="text-sm text-red-500">{error}</p>}
@@ -212,58 +228,74 @@ export default function GuestPhotosSection({
             </a>
           </div>
 
-          {/* QR-code, slideshow & downloads */}
+          {/* QR-code, slideshow & downloads — met uitleg per knop */}
           <div className="flex flex-col gap-2">
             <span className="text-xs font-semibold uppercase tracking-[0.12em]" style={{ color: GOLD }}>
               QR-code &amp; downloads
             </span>
-            <div className="flex flex-wrap gap-2">
-              <a
-                href={`/api/guest-photos/qr?slug=${event.slug}`}
-                download
-                className="text-sm font-semibold px-4 py-2.5 rounded-xl transition-all hover:-translate-y-0.5"
-                style={{ backgroundColor: CHARCOAL, color: "#FAF7F2", textDecoration: "none" }}
-              >
-                ⬇ QR-code (PNG)
-              </a>
-              <a
-                href={`/print/fotokaart/${event.slug}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm font-semibold px-4 py-2.5 rounded-xl transition-all hover:-translate-y-0.5"
-                style={{ backgroundColor: "white", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, textDecoration: "none" }}
-              >
-                🖨️ Print-kaart (A5/A4)
-              </a>
-              <a
-                href={slideshowUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm font-semibold px-4 py-2.5 rounded-xl transition-all hover:-translate-y-0.5"
-                style={{ backgroundColor: "white", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, textDecoration: "none" }}
-              >
-                ▶ Slideshow voor op het feest
-              </a>
-              {photos.length > 0 && (
-                <button
-                  onClick={downloadAllAsZip}
-                  disabled={zipProgress !== null}
-                  className="text-sm font-semibold px-4 py-2.5 rounded-xl transition-all hover:-translate-y-0.5 disabled:opacity-60"
-                  style={{ backgroundColor: "white", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
+            <div className="flex flex-col rounded-xl overflow-hidden" style={{ border: `1px solid ${GOLD_LIGHT}` }}>
+
+              <ActionRow uitleg="De QR-code als losse afbeelding, om te delen in de groepsapp of te verwerken in jullie eigen menukaarten en bedankjes. Gasten scannen hem en kunnen direct foto's uploaden.">
+                <a
+                  href={`/api/guest-photos/qr?slug=${event.slug}`}
+                  download
+                  className="block w-full text-center text-sm font-semibold px-4 py-2.5 rounded-xl transition-all hover:-translate-y-0.5"
+                  style={{ backgroundColor: CHARCOAL, color: "#FAF7F2", textDecoration: "none" }}
                 >
-                  {zipProgress !== null
-                    ? `Bezig... ${zipProgress}/${photos.length}`
-                    : `⬇ Alles downloaden (.zip, ${photos.length})`}
-                </button>
+                  ⬇ QR-code (PNG)
+                </a>
+              </ActionRow>
+
+              <ActionRow uitleg="Een kant-en-klare kaart in de stijl van jullie site, met de QR-code en korte uitleg erop. Uitprinten, op de tafels zetten, klaar.">
+                <a
+                  href={`/print/fotokaart/${event.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full text-center text-sm font-semibold px-4 py-2.5 rounded-xl transition-all hover:-translate-y-0.5"
+                  style={{ backgroundColor: "white", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, textDecoration: "none" }}
+                >
+                  🖨️ Print-kaart (A5/A4)
+                </a>
+              </ActionRow>
+
+              <ActionRow uitleg="Open deze link op een laptop, tv of beamer tijdens het feest: een fullscreen slideshow waarin nieuwe foto's vanzelf verschijnen.">
+                <a
+                  href={slideshowUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full text-center text-sm font-semibold px-4 py-2.5 rounded-xl transition-all hover:-translate-y-0.5"
+                  style={{ backgroundColor: "white", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, textDecoration: "none" }}
+                >
+                  ▶ Slideshow op het feest
+                </a>
+              </ActionRow>
+
+              {photos.length > 0 && (
+                <ActionRow uitleg="Alle geüploade foto's in één keer downloaden als zip-bestand — handig als aandenken of back-up.">
+                  <button
+                    onClick={downloadAllAsZip}
+                    disabled={zipProgress !== null}
+                    className="w-full text-sm font-semibold px-4 py-2.5 rounded-xl transition-all hover:-translate-y-0.5 disabled:opacity-60"
+                    style={{ backgroundColor: "white", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
+                  >
+                    {zipProgress !== null
+                      ? `Bezig... ${zipProgress}/${photos.length}`
+                      : `⬇ Alles downloaden (.zip, ${photos.length})`}
+                  </button>
+                </ActionRow>
               )}
+
               {approved.length > 0 && (
-                <CollageButton
-                  photos={approved.map((p) => ({ id: p.id, url: p.url }))}
-                  eventTitle={event.title}
-                  slug={event.slug}
-                  styleKey={settings.style}
-                />
+                <ActionRow uitleg="Maak met één druk op de knop een fotocollage van alle foto's op de muur — om te delen of in te lijsten.">
+                  <CollageButton
+                    photos={approved.map((p) => ({ id: p.id, url: p.url }))}
+                    eventTitle={event.title}
+                    slug={event.slug}
+                    styleKey={settings.style}
+                  />
+                </ActionRow>
               )}
+
             </div>
           </div>
 
@@ -318,6 +350,19 @@ export default function GuestPhotosSection({
           </div>
         </>
       )}
+    </div>
+  )
+}
+
+// Eén rij in de knoppenlijst: knop links, uitleg rechts (op mobiel onder elkaar)
+function ActionRow({ uitleg, children }: { uitleg: string; children: React.ReactNode }) {
+  return (
+    <div
+      className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-4 py-3 bg-white"
+      style={{ borderBottom: `1px solid ${GOLD_LIGHT}40` }}
+    >
+      <div className="sm:w-60 flex-shrink-0">{children}</div>
+      <p className="text-xs leading-relaxed" style={{ color: BODY }}>{uitleg}</p>
     </div>
   )
 }

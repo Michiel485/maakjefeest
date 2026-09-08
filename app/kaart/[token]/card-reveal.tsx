@@ -22,12 +22,15 @@ export default function CardReveal({
   sc,
   siteUrl,
   rsvpUrl,
+  demo = false,
 }: {
   display: CardDisplay
   initials: string
   sc: SC
   siteUrl: string | null
   rsvpUrl: string | null
+  // Voorbeeldkaart op de marketingsite: geen site-knoppen, wel een CTA
+  demo?: boolean
 }) {
   const [stage, setStage] = useState<Stage>("closed")
   const reduceMotion = useSyncExternalStore(
@@ -256,11 +259,48 @@ export default function CardReveal({
                     {display.inviteLine}
                   </p>
                 )}
+
+                {display.timeText && (
+                  <p
+                    className="text-sm font-semibold"
+                    style={{ color: sc.accent, margin: 0, letterSpacing: "0.03em" }}
+                  >
+                    {display.timeText}
+                  </p>
+                )}
+
+                {/* Hartje als romantische afsluiter */}
+                <svg
+                  width="18"
+                  height="16"
+                  viewBox="0 0 24 22"
+                  fill={sc.accent}
+                  aria-hidden="true"
+                  style={{ marginTop: 4, opacity: 0.9 }}
+                >
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                </svg>
               </div>
             </div>
 
+            {/* Demo op de marketingsite: CTA in plaats van site-knoppen */}
+            {stage === "open" && demo && (
+              <a
+                href="/aanmaken"
+                className="mt-6 block py-3.5 rounded-xl text-sm font-semibold text-center transition-opacity hover:opacity-85"
+                style={{
+                  backgroundColor: sc.accent,
+                  color: sc.buttonText,
+                  textDecoration: "none",
+                  animation: reduceMotion ? "none" : "knoppen-fadein 0.5s ease 0.5s both",
+                }}
+              >
+                Zelf zo&apos;n kaart maken? Begin gratis →
+              </a>
+            )}
+
             {/* Site nog niet live: vooruitblik in plaats van knoppen */}
-            {stage === "open" && !siteUrl && (
+            {stage === "open" && !siteUrl && !demo && (
               <p
                 className="mt-6 text-center text-sm"
                 style={{

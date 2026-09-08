@@ -14,6 +14,10 @@ export interface CardContent {
   photoUrl?: string
   // Alleen voor trouwkaarten: voor welke gastengroep deze kaart(-link) is
   guestType?: CardGuestType
+  // Eigen uitnodigingstekst; leeg = de standaardregel van de gastengroep
+  inviteText?: string
+  // Tijden op de kaart, bijv. "Van 20:00 tot 23:00 uur"
+  timeText?: string
 }
 
 export interface CardRow {
@@ -78,6 +82,7 @@ export interface CardDisplay {
   dateText: string
   location: string
   inviteLine: string | null
+  timeText: string | null
   message: string
   photoUrl: string | null
 }
@@ -98,9 +103,11 @@ export function buildCardDisplay(
     dateText: content.dateText?.trim() || (event.datum ? formatDate(event.datum) : ""),
     location: content.location?.trim() || event.locatie?.trim() || "",
     inviteLine:
-      type === "trouwkaart" && content.guestType
-        ? GUEST_TYPE_INVITE_LINE[content.guestType]
+      type === "trouwkaart"
+        ? content.inviteText?.trim() ||
+          (content.guestType ? GUEST_TYPE_INVITE_LINE[content.guestType] : null)
         : null,
+    timeText: type === "trouwkaart" ? content.timeText?.trim() || null : null,
     message: content.message?.trim() || DEFAULT_MESSAGE[type],
     photoUrl:
       template === "foto"

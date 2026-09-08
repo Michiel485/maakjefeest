@@ -5,6 +5,7 @@ import { compressImage } from "@/lib/client-image"
 import {
   CARD_TEMPLATE_LABEL,
   CARD_TYPE_LABEL,
+  GUEST_TYPE_INVITE_LINE,
   GUEST_TYPE_LABEL,
   type CardContent,
   type CardGuestType,
@@ -48,6 +49,8 @@ interface EditForm {
   photoUrl: string
   template: CardTemplate
   guestType: CardGuestType | ""
+  inviteText: string
+  timeText: string
 }
 
 export default function CardsSection({
@@ -107,6 +110,8 @@ export default function CardsSection({
       photoUrl: card.content.photoUrl ?? "",
       template: card.template,
       guestType: card.content.guestType ?? "",
+      inviteText: card.content.inviteText ?? "",
+      timeText: card.content.timeText ?? "",
     })
     setError(null)
   }
@@ -123,6 +128,8 @@ export default function CardsSection({
         message: editForm.message || undefined,
         photoUrl: editForm.photoUrl || undefined,
         guestType: editForm.guestType || undefined,
+        inviteText: editForm.inviteText || undefined,
+        timeText: editForm.timeText || undefined,
       }
       const res = await fetch(`/api/cards/${editingCard.id}`, {
         method: "PATCH",
@@ -487,26 +494,54 @@ export default function CardsSection({
                 </Field>
               )}
               {editingCard.type === "trouwkaart" && (
-                <Field label="Voor wie is deze kaart?">
-                  <div className="flex flex-wrap gap-2">
-                    {GUEST_TYPE_OPTIONS.map((opt) => (
-                      <button
-                        key={opt.value || "geen"}
-                        type="button"
-                        onClick={() => setEditForm({ ...editForm, guestType: opt.value })}
-                        className="flex-1 min-w-[45%] sm:min-w-0 py-2 px-2 rounded-xl text-sm font-semibold transition-all"
-                        style={{
-                          border: `2px solid ${editForm.guestType === opt.value ? GOLD : GOLD_LIGHT}`,
-                          backgroundColor: editForm.guestType === opt.value ? GOLD_BG : "white",
-                          color: editForm.guestType === opt.value ? CHARCOAL : BODY,
-                          cursor: "pointer",
-                        }}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                </Field>
+                <>
+                  <Field label="Voor wie is deze kaart?">
+                    <div className="flex flex-wrap gap-2">
+                      {GUEST_TYPE_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value || "geen"}
+                          type="button"
+                          onClick={() => setEditForm({ ...editForm, guestType: opt.value })}
+                          className="flex-1 min-w-[45%] sm:min-w-0 py-2 px-2 rounded-xl text-sm font-semibold transition-all"
+                          style={{
+                            border: `2px solid ${editForm.guestType === opt.value ? GOLD : GOLD_LIGHT}`,
+                            backgroundColor: editForm.guestType === opt.value ? GOLD_BG : "white",
+                            color: editForm.guestType === opt.value ? CHARCOAL : BODY,
+                            cursor: "pointer",
+                          }}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </Field>
+                  <Field label="Uitnodigingstekst (leeg = standaardtekst)">
+                    <input
+                      type="text"
+                      value={editForm.inviteText}
+                      onChange={(e) => setEditForm({ ...editForm, inviteText: e.target.value })}
+                      placeholder={
+                        editForm.guestType
+                          ? GUEST_TYPE_INVITE_LINE[editForm.guestType]
+                          : "Bijv. Wij nodigen je van harte uit voor het avondfeest"
+                      }
+                      maxLength={160}
+                      className={inputCls}
+                      style={inputStyle}
+                    />
+                  </Field>
+                  <Field label="Tijden (optioneel)">
+                    <input
+                      type="text"
+                      value={editForm.timeText}
+                      onChange={(e) => setEditForm({ ...editForm, timeText: e.target.value })}
+                      placeholder="Bijv. Van 20:00 tot 23:00 uur"
+                      maxLength={80}
+                      className={inputCls}
+                      style={inputStyle}
+                    />
+                  </Field>
+                </>
               )}
 
               {error && <p className="text-sm text-red-500">{error}</p>}

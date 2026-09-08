@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import Link from "next/link"
 import type { SC } from "@/lib/event-styles"
@@ -27,22 +27,42 @@ export default function Slideshow({
   const [photos, setPhotos] = useState<GuestPhoto[]>(initialPhotos)
   const [index, setIndex] = useState(0)
   const [visible, setVisible] = useState(true)
+  const transitioningRef = useRef(false)
 
   useEffect(() => setMounted(true), [])
 
-  // ── Automatisch doorbladeren met crossfade ─────────────────────────────────
+  // ── Bladeren met crossfade (automatisch én handmatig) ──────────────────────
   const photoCount = photos.length
-  useEffect(() => {
-    if (photoCount <= 1) return
-    const timer = setInterval(() => {
+  const advance = useCallback(
+    (delta: number) => {
+      if (photoCount <= 1 || transitioningRef.current) return
+      transitioningRef.current = true
       setVisible(false)
       setTimeout(() => {
-        setIndex((i) => (i + 1) % photoCount)
+        setIndex((i) => (i + delta + photoCount) % photoCount)
         setVisible(true)
+        transitioningRef.current = false
       }, FADE_MS)
-    }, SLIDE_MS)
-    return () => clearInterval(timer)
-  }, [photoCount])
+    },
+    [photoCount]
+  )
+
+  // Per getoonde foto één timer; handmatig bladeren reset hem automatisch
+  useEffect(() => {
+    if (photoCount <= 1) return
+    const timer = setTimeout(() => advance(1), SLIDE_MS)
+    return () => clearTimeout(timer)
+  }, [index, photoCount, advance])
+
+  // Pijltjestoetsen (handig op een laptop)
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "ArrowRight") advance(1)
+      if (e.key === "ArrowLeft") advance(-1)
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [advance])
 
   // ── Polling: nieuwe (goedgekeurde) foto's verschijnen vanzelf ──────────────
   const poll = useCallback(async () => {
@@ -142,6 +162,32 @@ export default function Slideshow({
           </div>
         )}
       </div>
+
+      {/* Vorige / volgende */}
+      {photoCount > 1 && (
+        <>
+          <button
+            onClick={() => advance(-1)}
+            aria-label="Vorige foto"
+            className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center transition-opacity hover:opacity-90"
+            style={{ backgroundColor: "rgba(255,255,255,0.12)", color: "#fff", border: "none", cursor: "pointer", opacity: 0.55 }}
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+          </button>
+          <button
+            onClick={() => advance(1)}
+            aria-label="Volgende foto"
+            className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center transition-opacity hover:opacity-90"
+            style={{ backgroundColor: "rgba(255,255,255,0.12)", color: "#fff", border: "none", cursor: "pointer", opacity: 0.55 }}
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+          </button>
+        </>
+      )}
 
       {/* Bediening rechtsboven (subtiel) */}
       <div className="absolute top-4 right-4 flex items-center gap-2" style={{ opacity: 0.55 }}>

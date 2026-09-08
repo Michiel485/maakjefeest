@@ -305,6 +305,123 @@ export default function Home() {
       </section>
 
       {/* ════════════════════════════════════════
+          2b. UNIEKE EXTRA'S — fotomuur & digitale kaarten
+      ════════════════════════════════════════ */}
+      <section
+        className="py-28 sm:py-32 px-6"
+        style={{ background: "linear-gradient(160deg, #07353A 0%, #0A4550 60%, #0D5058 100%)" }}
+      >
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] mb-5" style={{ color: "#D59C76" }}>
+              Nergens anders te vinden
+            </p>
+            <h2
+              className="text-4xl sm:text-5xl leading-tight mb-6"
+              style={{ fontFamily: "var(--font-cormorant)", color: "#FAF7F2", fontWeight: 700 }}
+            >
+              De extra&apos;s die jullie dag<br />onvergetelijk maken
+            </h2>
+            <Ornament color="#D59C76" />
+            <p className="mt-6 text-sm max-w-xl mx-auto leading-relaxed" style={{ color: "#B8CBC9" }}>
+              Bij SayingYes krijgen jullie meer dan een trouwsite. Twee functies die gasten
+              niet snel vergeten — gewoon inbegrepen.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+            {/* Live gastenfotomuur */}
+            <div
+              className="rounded-3xl p-8 sm:p-10 flex flex-col gap-5"
+              style={{ backgroundColor: "#0D4A52", border: "1px solid #D59C7640" }}
+            >
+              <div
+                className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl"
+                style={{ backgroundColor: "#D59C7620", border: "1px solid #D59C7640" }}
+              >
+                📸
+              </div>
+              <h3
+                className="text-2xl sm:text-3xl"
+                style={{ fontFamily: "var(--font-cormorant)", color: "#FAF7F2", fontWeight: 700 }}
+              >
+                Live gastenfotomuur
+              </h3>
+              <p className="text-sm leading-relaxed" style={{ color: "#E8DDD0" }}>
+                Jullie gasten scannen een QR-code op hun tafel en hun foto&apos;s verschijnen —
+                mét persoonlijke boodschap — live op jullie eigen fotomuur en in een slideshow
+                op groot scherm. Foto&apos;s van de dag, oude herinneringen of gekke momenten:
+                alles komt samen op één muur.
+              </p>
+              <ul className="flex flex-col gap-2.5 text-sm" style={{ color: "#E8DDD0" }}>
+                {[
+                  "Print-klare QR-kaart in de stijl van jullie site",
+                  "Live slideshow voor op een beamer of tv",
+                  "Foto's eerst goedkeuren als jullie dat willen",
+                  "Achteraf alles downloaden als zip of fotocollage",
+                ].map((punt) => (
+                  <li key={punt} className="flex items-start gap-2.5">
+                    <svg className="w-4 h-4 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#D59C76" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 13l4 4L19 7" />
+                    </svg>
+                    {punt}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Digitale kaarten */}
+            <div
+              className="rounded-3xl p-8 sm:p-10 flex flex-col gap-5"
+              style={{ backgroundColor: "#0D4A52", border: "1px solid #D59C7640" }}
+            >
+              <div
+                className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl"
+                style={{ backgroundColor: "#D59C7620", border: "1px solid #D59C7640" }}
+              >
+                💌
+              </div>
+              <h3
+                className="text-2xl sm:text-3xl"
+                style={{ fontFamily: "var(--font-cormorant)", color: "#FAF7F2", fontWeight: 700 }}
+              >
+                Digitale Save the Dates &amp; trouwkaarten
+              </h3>
+              <p className="text-sm leading-relaxed" style={{ color: "#E8DDD0" }}>
+                Verstuur jullie kaart als link via WhatsApp: bij je gasten opent een envelop met
+                lakzegel — in de stijl van jullie site — en komt de kaart tevoorschijn. Geen
+                drukwerk, geen postzegels, wel dat &quot;wow&quot;-momentje.
+              </p>
+              <ul className="flex flex-col gap-2.5 text-sm" style={{ color: "#E8DDD0" }}>
+                {[
+                  "Envelop-animatie in jullie eigen themastijl",
+                  "Knoppen naar jullie trouwsite en RSVP",
+                  "Aparte kaarten per gastengroep, met eigen tijden",
+                  "Zie hoe vaak jullie kaart bekeken is",
+                ].map((punt) => (
+                  <li key={punt} className="flex items-start gap-2.5">
+                    <svg className="w-4 h-4 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#D59C76" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 13l4 4L19 7" />
+                    </svg>
+                    {punt}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/kaart-voorbeeld"
+                className="mt-2 inline-flex items-center justify-center gap-2 text-sm font-semibold px-6 py-3.5 rounded-xl transition-all hover:-translate-y-0.5 self-start"
+                style={{ backgroundColor: "#D59C76", color: "#07353A", textDecoration: "none" }}
+              >
+                Bekijk een voorbeeldkaart →
+              </Link>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════
           3. BUILDER & DASHBOARD
       ════════════════════════════════════════ */}
       <section className="py-28 sm:py-32 px-6" style={{ backgroundColor: SAND }}>

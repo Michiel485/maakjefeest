@@ -173,9 +173,11 @@ export default function UploadForm({
   const failed = photos.filter((p) => p.status === "error")
   const progress = photos.length > 0 ? Math.round((doneCount / photos.length) * 100) : 0
 
+  // Vaste donkere tekstkleur: sc.bodyText is op donkere thema's (bijv. emerald)
+  // een lichte tint en dan is je invoer op het witte veld onleesbaar
   const inputStyle: React.CSSProperties = {
     border: `1.5px solid ${sc.accent}40`,
-    color: sc.bodyText,
+    color: "#1a1a1a",
     backgroundColor: "#fff",
     fontFamily: sc.fontFamily,
   }
@@ -357,10 +359,10 @@ export default function UploadForm({
               </div>
             )}
 
-            {/* Bijschrift */}
+            {/* Boodschap */}
             <div className="flex flex-col gap-1.5">
               <label htmlFor="gast-bijschrift" style={labelStyle}>
-                Bijschrift <span style={{ fontWeight: 400, opacity: 0.6 }}>(optioneel)</span>
+                Boodschap <span style={{ fontWeight: 400, opacity: 0.6 }}>(optioneel)</span>
               </label>
               <input
                 id="gast-bijschrift"
@@ -373,6 +375,9 @@ export default function UploadForm({
                 style={inputStyle}
                 disabled={uploading}
               />
+              <p className="text-xs" style={{ color: sc.bodyText, opacity: 0.65, lineHeight: 1.5 }}>
+                Je naam en boodschap komen bij je foto te staan — op de fotomuur en in de slideshow.
+              </p>
             </div>
 
             {/* Voortgang */}

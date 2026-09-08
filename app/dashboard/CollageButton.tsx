@@ -233,10 +233,9 @@ export default function CollageButton({
       const canvasH = Math.round(CANVAS_W * aspect)
       const isLandscape = aspect < 1
       const headerH = isLandscape ? 230 : 300
-      const footerH = isLandscape ? 80 : 120
       const bottomMargin = isLandscape ? 60 : MARGIN
       const gridW = CANVAS_W - 2 * MARGIN
-      const gridH = canvasH - headerH - footerH - bottomMargin
+      const gridH = canvasH - headerH - bottomMargin
 
       // Beste kolomaantal zoeken: cellen zo vierkant mogelijk. De celhoogte
       // volgt uit het aantal rijen dat het mozaïek oplevert, dus we proberen
@@ -265,7 +264,7 @@ export default function CollageButton({
         h: t.sr * cellH + (t.sr - 1) * GAP,
       }))
 
-      // ── Canvas opbouwen: titel + foto's + credit, in themakleuren ──────────
+      // ── Canvas opbouwen: titel + foto's, in themakleuren ───────────────────
       const serif = cormorantFamily()
       const canvas = document.createElement("canvas")
       canvas.width = CANVAS_W
@@ -334,17 +333,6 @@ export default function CollageButton({
         ctx.restore()
       }
 
-      // Credit onderin, gecentreerd in de voetzone
-      ctx.font = `500 ${isLandscape ? 28 : 34}px ${serif}`
-      ctx.fillStyle = sc.bodyText
-      ctx.globalAlpha = 0.75
-      ctx.fillText(
-        "Gemaakt met SayingYes — sayingyes.nl",
-        CANVAS_W / 2,
-        headerH + gridH + Math.round((footerH + bottomMargin) / 2)
-      )
-      ctx.globalAlpha = 1
-
       const blob = await new Promise<Blob | null>((resolve) =>
         canvas.toBlob(resolve, "image/jpeg", 0.92)
       )
@@ -381,7 +369,7 @@ export default function CollageButton({
     <>
       <button
         onClick={openModal}
-        className="text-sm font-semibold px-4 py-2.5 rounded-xl transition-all hover:-translate-y-0.5"
+        className="w-full text-sm font-semibold px-4 py-2.5 rounded-xl transition-all hover:-translate-y-0.5"
         style={{ backgroundColor: "white", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
       >
         🖼️ Collage maken
