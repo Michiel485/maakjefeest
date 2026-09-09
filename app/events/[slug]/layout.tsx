@@ -2,6 +2,7 @@ import { createServiceClient } from "@/lib/supabase"
 import { getStyleConfig } from "@/lib/event-styles"
 import EventNav from "./event-nav"
 import EventGatekeeper from "@/components/EventGatekeeper"
+import { normalizePlan, publicPageTypes } from "@/lib/plans"
 import type { Metadata, Viewport } from "next"
 
 export const revalidate = 60
@@ -35,19 +36,25 @@ export default async function EventLayout({
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, title, nav_title, frame_names, style, font_frame_names, font_page_titles, nav_layout, pw_enabled, pw_type, pw_value, pw_question, pw_answer, homepage_settings")
+    .select("id, title, nav_title, frame_names, style, font_frame_names, font_page_titles, nav_layout, pw_enabled, pw_type, pw_value, pw_question, pw_answer, homepage_settings, plan")
     .eq("slug", slug)
     .eq("status", "published")
     .single()
 
   if (!event) return <>{children}</>
 
-  const { data: pages } = await supabase
+  // Pakket bepaalt wat publiek zichtbaar is: Save the Date alleen de hero,
+  // Uitnodiging & RSVP de hero plus RSVP, Compleet de hele site.
+  const plan = normalizePlan(event.plan)
+  const isCompleet = plan === "compleet"
+
+  const { data: rawPages } = await supabase
     .from("pages")
     .select("type, title, order")
     .eq("event_id", event.id)
     .eq("is_enabled", true)
     .order("order", { ascending: true })
+  const pages = publicPageTypes(plan, rawPages ?? [])
 
   const sc = getStyleConfig(event.style, {
     fontFrameNames:  event.font_frame_names  as string | null,
@@ -60,16 +67,18 @@ export default async function EventLayout({
     .select("guest_photos_enabled")
     .eq("id", event.id)
     .single()
-  const guestPhotosEnabled = (gpEvent?.guest_photos_enabled as boolean | undefined) ?? false
+  const guestPhotosEnabled =
+    isCompleet && ((gpEvent?.guest_photos_enabled as boolean | undefined) ?? false)
 
   const pageList = guestPhotosEnabled
-    ? [...(pages ?? []), { type: "fotomuur", title: "Fotomuur", order: 999 }]
-    : pages ?? []
+    ? [...pages, { type: "fotomuur", title: "Fotomuur", order: 999 }]
+    : pages
   const basePath = process.env.NODE_ENV === "production" ? "" : `/events/${slug}`
 
   const hs = event.homepage_settings as { siteLayout?: string; pageMode?: string } | null
   const isFullWidth = hs?.siteLayout === 'fullwidth'
-  const isSinglePage = hs?.pageMode === 'single'
+  // Kleinere pakketten zijn altijd één pagina (hero + eventueel RSVP)
+  const isSinglePage = !isCompleet || hs?.pageMode === 'single'
 
   const pwEnabled = (event.pw_enabled as boolean) ?? false
   const pwType = (event.pw_type as "password" | "secret_question" | null) ?? null

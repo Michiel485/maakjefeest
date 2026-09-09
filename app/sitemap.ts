@@ -16,6 +16,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return [
     { url: BASE,                      changeFrequency: "weekly",  priority: 1.0 },
+    { url: `${BASE}/digitale-uitnodiging`, changeFrequency: "monthly", priority: 0.9 },
     { url: `${BASE}/aanmaken`,        changeFrequency: "monthly", priority: 0.9 },
     { url: `${BASE}/kaart-voorbeeld`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${BASE}/tips`,            changeFrequency: "weekly",  priority: 0.7 },

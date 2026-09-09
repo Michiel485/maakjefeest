@@ -48,7 +48,8 @@ slug: "zelfde-als-bestandsnaam"
 
 ## Feiten over SayingYes (alleen dit noemen, niets verzinnen)
 
-- Trouwwebsite bouwen is gratis; publiceren kost eenmalig €49,99 voor een jaar; verlengen €22 per zes maanden; geen abonnement.
+- Bouwen is gratis; je betaalt pas bij publiceren. Drie pakketten: Save the Date (digitale kaart, €15), Uitnodiging & RSVP (trouwkaarten per gastengroep plus RSVP-pagina en dashboard, €25) en Trouwwebsite compleet (€49,99). Upgraden kan altijd voor het verschil. Alles is geldig tot minimaal een jaar na aankoop en een maand na de trouwdatum; verlengen €22 per zes maanden; geen abonnement.
+- Landingspagina voor de uitnodiging: `/digitale-uitnodiging` (link daarheen in artikelen over kaarten, uitnodigingen en Save the Dates).
 - Eigen webadres: `jullienamen.sayingyes.nl`.
 - Functies: RSVP met dieetwensen en dag-/avondgast, programma, informatie, cadeautips, fotogalerij, ons verhaal, ceremoniemeesters, wachtwoord of geheime vraag, zes talen (NL, EN, DE, FR, ES, IT), bouwen vanaf de telefoon.
 - Unieke extra's: digitale Save the Date en trouwkaarten als WhatsApp-link met envelop-animatie (per gastengroep, met tijden, kijkteller) en een live gastenfotomuur met QR-code, slideshow, moderatie, zip-download en collage.

@@ -1,6 +1,7 @@
 import { createServiceClient } from "@/lib/supabase"
 import { createClient } from "@/lib/supabase-server"
 import { generateShareToken, type CardGuestType, type CardTemplate, type CardType } from "@/lib/cards"
+import { planAllows } from "@/lib/plans"
 
 const CARD_TYPES: CardType[] = ["save_the_date", "trouwkaart"]
 const CARD_TEMPLATES: CardTemplate[] = ["klassiek", "foto"]
@@ -46,12 +47,20 @@ export async function POST(request: Request) {
 
   const { data: event } = await service
     .from("events")
-    .select("id, user_email")
+    .select("id, user_email, plan")
     .eq("id", event_id)
     .single()
 
   if (!event) return Response.json({ error: "Website niet gevonden" }, { status: 404 })
   if (event.user_email !== user.email) return Response.json({ error: "Geen toegang" }, { status: 403 })
+
+  // Trouwkaarten horen bij het pakket Uitnodiging & RSVP of hoger
+  if (type === "trouwkaart" && !planAllows(event.plan, "trouwkaart_cards")) {
+    return Response.json(
+      { error: "Trouwkaarten zitten in het pakket Uitnodiging & RSVP. Upgrade via je dashboard om ze te maken." },
+      { status: 403 }
+    )
+  }
 
   const { data: card, error } = await service
     .from("cards")

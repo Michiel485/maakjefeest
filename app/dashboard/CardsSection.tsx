@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react"
 import { compressImage } from "@/lib/client-image"
+import { planAllows, type Plan } from "@/lib/plans"
 import {
   CARD_TEMPLATE_LABEL,
   CARD_TYPE_LABEL,
@@ -35,6 +36,7 @@ export interface CardEventRef {
   id: string
   title: string
   status: string
+  plan: Plan
   heroImageUrl: string | null
 }
 
@@ -88,13 +90,16 @@ export default function CardsSection({
           photo_url: newTemplate === "foto" && newPhotoUrl ? newPhotoUrl : undefined,
         }),
       })
-      if (!res.ok) throw new Error()
+      if (!res.ok) {
+        const j = (await res.json().catch(() => null)) as { error?: string } | null
+        throw new Error(j?.error || "")
+      }
       const { card } = (await res.json()) as { card: CardRow }
       setCards((prev) => [card, ...prev])
       setCreatingFor(null)
       setNewPhotoUrl("")
-    } catch {
-      setError("Kaart aanmaken mislukt — probeer opnieuw.")
+    } catch (err) {
+      setError(err instanceof Error && err.message ? err.message : "Kaart aanmaken mislukt, probeer opnieuw.")
     } finally {
       setBusy(false)
     }
@@ -223,22 +228,36 @@ export default function CardsSection({
                 <div className="flex flex-col gap-2">
                   <span className="text-xs font-semibold uppercase tracking-[0.12em]" style={{ color: GOLD }}>Soort kaart</span>
                   <div className="flex gap-2">
-                    {(Object.keys(CARD_TYPE_LABEL) as CardType[]).map((t) => (
-                      <button
-                        key={t}
-                        onClick={() => setNewType(t)}
-                        className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
-                        style={{
-                          border: `2px solid ${newType === t ? GOLD : GOLD_LIGHT}`,
-                          backgroundColor: newType === t ? "white" : "transparent",
-                          color: newType === t ? CHARCOAL : BODY,
-                          cursor: "pointer",
-                        }}
-                      >
-                        {CARD_TYPE_LABEL[t]}
-                      </button>
-                    ))}
+                    {(Object.keys(CARD_TYPE_LABEL) as CardType[]).map((t) => {
+                      // Trouwkaarten horen bij Uitnodiging & RSVP of hoger
+                      const toegestaan = t !== "trouwkaart" || planAllows(event.plan, "trouwkaart_cards")
+                      return (
+                        <button
+                          key={t}
+                          onClick={() => toegestaan && setNewType(t)}
+                          disabled={!toegestaan}
+                          title={toegestaan ? undefined : "Zit in het pakket Uitnodiging & RSVP"}
+                          className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          style={{
+                            border: `2px solid ${newType === t ? GOLD : GOLD_LIGHT}`,
+                            backgroundColor: newType === t ? "white" : "transparent",
+                            color: newType === t ? CHARCOAL : BODY,
+                            cursor: toegestaan ? "pointer" : "not-allowed",
+                          }}
+                        >
+                          {CARD_TYPE_LABEL[t]}
+                          {!toegestaan && (
+                            <span className="block text-xs font-normal" style={{ color: BODY }}>vanaf Uitnodiging &amp; RSVP</span>
+                          )}
+                        </button>
+                      )
+                    })}
                   </div>
+                  {!planAllows(event.plan, "trouwkaart_cards") && (
+                    <p className="text-xs" style={{ color: BODY, opacity: 0.85 }}>
+                      Trouwkaarten per gastengroep met RSVP zitten in het pakket Uitnodiging &amp; RSVP. Upgraden kan bij jullie kaart hierboven, voor het verschil.
+                    </p>
+                  )}
                 </div>
                 <div className="flex flex-col gap-2">
                   <span className="text-xs font-semibold uppercase tracking-[0.12em]" style={{ color: GOLD }}>Ontwerp</span>

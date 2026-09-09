@@ -309,7 +309,7 @@ export default function CardReveal({
                   animation: reduceMotion ? "none" : "knoppen-fadein 0.5s ease 0.5s both",
                 }}
               >
-                Onze trouwwebsite volgt binnenkort 🤍
+                Meer informatie volgt binnenkort 🤍
               </p>
             )}
 

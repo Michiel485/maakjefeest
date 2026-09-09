@@ -1,12 +1,16 @@
 import { createServiceClient } from "@/lib/supabase"
+import { PLANS, normalizePlan } from "@/lib/plans"
 
 export const dynamic = "force-dynamic"
 
-const BASE_PRICE = 49.99
-
+// GET /api/discount?code=...&plan=...  Controleert een kortingscode en rekent
+// het eindbedrag uit voor het gekozen pakket (standaard: compleet).
 export async function GET(request: Request) {
-  const code = new URL(request.url).searchParams.get("code")?.trim().toUpperCase()
+  const url = new URL(request.url)
+  const code = url.searchParams.get("code")?.trim().toUpperCase()
   if (!code) return Response.json({ valid: false, reason: "Geen code opgegeven" })
+
+  const basePrice = PLANS[normalizePlan(url.searchParams.get("plan"))].price
 
   const supabase = createServiceClient()
   const { data } = await supabase
@@ -26,17 +30,17 @@ export async function GET(request: Request) {
     return Response.json({ valid: false, reason: "Deze kortingscode is al volledig gebruikt" })
   }
 
-  let finalAmount = BASE_PRICE
+  let finalAmount = basePrice
   let label = ""
 
   if (data.type === "free") {
     finalAmount = 0
     label = "100% gratis"
   } else if (data.type === "fixed") {
-    finalAmount = Math.max(0, Math.round((BASE_PRICE - Number(data.value)) * 100) / 100)
+    finalAmount = Math.max(0, Math.round((basePrice - Number(data.value)) * 100) / 100)
     label = `€${Number(data.value).toFixed(2).replace(".", ",")} korting`
   } else if (data.type === "percentage") {
-    finalAmount = Math.round(BASE_PRICE * (1 - Number(data.value) / 100) * 100) / 100
+    finalAmount = Math.round(basePrice * (1 - Number(data.value) / 100) * 100) / 100
     label = `${Number(data.value)}% korting`
   }
 

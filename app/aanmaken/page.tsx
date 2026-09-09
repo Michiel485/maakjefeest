@@ -58,7 +58,18 @@ type SlugStatus = "idle" | "checking" | "available" | "taken" | "invalid"
 const inputBase = "w-full rounded-2xl border bg-white px-4 py-3.5 text-sm placeholder-gray-400 focus:outline-none transition-all"
 const inputStyle: React.CSSProperties = { color: CHARCOAL, borderColor: GOLD_LIGHT }
 
+// Pakketkeuze vanaf een landingspagina (?plan=...) onthouden tot de betaalpagina
+function onthoudPakketkeuze() {
+  try {
+    const plan = new URLSearchParams(window.location.search).get("plan")
+    if (plan === "save_the_date" || plan === "uitnodiging" || plan === "compleet") {
+      localStorage.setItem("sayingyes_plan", plan)
+    }
+  } catch {}
+}
+
 export default function AanmakenPage() {
+  useEffect(() => { onthoudPakketkeuze() }, [])
   const router = useRouter()
   const [form, setForm] = useState({ naam1: "", naam2: "", datum: "", email: "", slug: "" })
   const [slugStatus, setSlugStatus] = useState<SlugStatus>("idle")
@@ -523,8 +534,8 @@ export default function AanmakenPage() {
           {/* Trust signal */}
           <div className="flex items-center justify-center gap-6 pt-2">
             {[
-              { icon: "✦", label: "Eenmalig €49,99" },
-              { icon: "✦", label: "1 jaar online" },
+              { icon: "✦", label: "Vanaf €15" },
+              { icon: "✦", label: "Kaart of complete site" },
               { icon: "✦", label: "Geen abonnement" },
             ].map(({ icon, label }) => (
               <div key={label} className="flex items-center gap-1.5 text-xs" style={{ color: BODY }}>

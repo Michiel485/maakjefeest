@@ -57,4 +57,4 @@ Een digitale trouwkaart is prima voor de uitnodiging zelf, maar een trouwwebsite
 
 ---
 
-Met SayingYes maak je eenvoudig een persoonlijke trouwwebsite met RSVP, dieetwensen en een eigen uitstraling. Eenmalig €49,99, geen abonnement. [Start gratis](/aanmaken), betalen doe je pas bij publiceren.
+Bij SayingYes hoef je niet te kiezen: je begint met een [digitale uitnodiging](/digitale-uitnodiging) vanaf €15 en groeit wanneer je wilt door naar de complete trouwwebsite voor €49,99, waarbij je alleen het verschil betaalt. [Start gratis](/aanmaken), betalen doe je pas bij publiceren.

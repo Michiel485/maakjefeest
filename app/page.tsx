@@ -5,17 +5,18 @@ import { NavLoginButton } from "@/components/NavLoginButton"
 import ResetGoogleTranslate from "@/components/ResetGoogleTranslate"
 import { MARKETING_URL } from "@/lib/site-url"
 import { getAllTips } from "@/lib/tips"
+import { PLANS, PLAN_ORDER, formatEur } from "@/lib/plans"
 
 export const metadata: Metadata = {
   // Absolute titel: de root-template zou er anders een tweede "| SayingYes" achter zetten
-  title: { absolute: "Trouwwebsite maken met RSVP en digitale kaarten | SayingYes" },
-  description: "Maak in minuten jullie trouwwebsite met RSVP en fotogalerij. Inclusief digitale Save the Date, trouwkaarten en gastenfotomuur. Eenmalig €49,99.",
+  title: { absolute: "Digitale trouwkaart, Save the Date en trouwwebsite | SayingYes" },
+  description: "Digitale uitnodiging voor jullie bruiloft via WhatsApp, met RSVP en een eigen trouwwebsite. Gratis starten, vanaf €15. Save the Date, trouwkaarten en gastenfotomuur.",
   alternates: {
     canonical: MARKETING_URL,
   },
   openGraph: {
-    title: "Trouwwebsite maken met RSVP en digitale kaarten | SayingYes",
-    description: "Maak in minuten jullie eigen trouwwebsite met RSVP, fotogalerij en ons verhaal. Inclusief digitale kaarten en gastenfotomuur. Eenmalig €49,99.",
+    title: "Digitale trouwkaart, Save the Date en trouwwebsite | SayingYes",
+    description: "Digitale uitnodiging voor jullie bruiloft via WhatsApp, met RSVP en een eigen trouwwebsite. Gratis starten, vanaf €15.",
     url: MARKETING_URL,
   },
 }
@@ -23,8 +24,8 @@ export const metadata: Metadata = {
 // Veelgestelde vragen: zichtbaar op de pagina én als FAQPage-schema voor Google
 const FAQ_ITEMS: [string, string][] = [
   [
-    "Wat kost een trouwwebsite bij SayingYes?",
-    "Jullie betalen eenmalig €49,99 en de website staat een jaar online. Wil je daarna verlengen, dan kost dat €22 per zes maanden. Geen abonnement en geen automatische incasso. Bouwen is gratis: je betaalt pas op het moment dat je publiceert.",
+    "Wat kost SayingYes?",
+    "Je kiest zelf hoe groot je begint. Een digitale Save the Date kost eenmalig €15, uitnodigingen met RSVP-pagina en dashboard €25, en de complete trouwwebsite met alles erop en eraan €49,99 voor een jaar. Upgraden kan altijd, je betaalt dan alleen het verschil. Bouwen is gratis: je betaalt pas als je publiceert. Geen abonnement.",
   ],
   [
     "Heb ik technische kennis nodig?",
@@ -44,7 +45,7 @@ const FAQ_ITEMS: [string, string][] = [
   ],
   [
     "Wat zijn de digitale Save the Date en trouwkaarten?",
-    "Kaarten die je als link via WhatsApp verstuurt. Bij je gasten opent een envelop met lakzegel in de stijl van jullie site, met knoppen naar de website en het RSVP-formulier. Je maakt per gastengroep een eigen kaart en kunt later nog alles aanpassen. Ze zitten gratis bij je website.",
+    "Kaarten die je als link via WhatsApp verstuurt. Bij je gasten opent een envelop met lakzegel in jullie stijl, met een knop om direct te laten weten of ze komen. Je maakt per gastengroep een eigen kaart met eigen tijden en tekst, en kunt later nog alles aanpassen. Je kunt ze los kopen vanaf €15 of als onderdeel van de complete trouwwebsite.",
   ],
   [
     "Hoe werkt de gastenfotomuur?",
@@ -59,8 +60,8 @@ const FAQ_ITEMS: [string, string][] = [
     "Ja. Jullie gasten kunnen de website bekijken in het Nederlands, Engels, Duits, Frans, Spaans of Italiaans.",
   ],
   [
-    "Wat gebeurt er na een jaar?",
-    "De website loopt automatisch af en je krijgt daar ruim op tijd een mail over. Wil je hem langer online houden, dan verleng je met zes maanden voor €22. Verlengen is nooit verplicht.",
+    "Hoe lang blijft alles online?",
+    "Minimaal een jaar, en in elk geval tot een maand na jullie trouwdatum. Je krijgt ruim op tijd een mail als het afloopt. Wil je de site daarna langer online houden, bijvoorbeeld voor de fotogalerij, dan verleng je met zes maanden voor €22. Verlengen is nooit verplicht.",
   ],
 ]
 
@@ -115,6 +116,9 @@ export default function Home() {
           SayingYes
         </span>
         <div className="flex items-center gap-5">
+          <Link href="/digitale-uitnodiging" className="hidden sm:inline text-sm transition-opacity hover:opacity-70" style={{ color: BODY }}>
+            Digitale uitnodiging
+          </Link>
           <Link href="/tips" className="hidden sm:inline text-sm transition-opacity hover:opacity-70" style={{ color: BODY }}>
             Tips
           </Link>
@@ -181,9 +185,9 @@ export default function Home() {
               textShadow: "0 2px 40px rgba(0,0,0,0.35)",
             }}
           >
-            Jullie droom-trouwwebsite.
+            Digitale trouwkaart, Save the Date
             <br />
-            <em style={{ fontStyle: "italic", color: GOLD_LIGHT }}>In een handomdraai.</em>
+            <em style={{ fontStyle: "italic", color: GOLD_LIGHT }}>en jullie eigen trouwwebsite.</em>
           </h1>
 
           {/* Subtekst */}
@@ -191,7 +195,7 @@ export default function Home() {
             className="text-base sm:text-lg max-w-xl leading-relaxed mb-10"
             style={{ color: "rgba(248,240,228,0.88)", textShadow: "0 1px 10px rgba(0,0,0,0.4)" }}
           >
-            Een prachtige, complete trouwsite bouwen was nog nooit zo leuk en eenvoudig. Jij kiest de stijl, wij zorgen voor de rest.
+            Verstuur jullie uitnodiging via WhatsApp, laat gasten met één tik reageren en zet alles voor jullie grote dag op één plek. Begin met een kaart, groei door naar de complete site.
           </p>
 
           {/* CTA */}
@@ -211,7 +215,7 @@ export default function Home() {
           </Link>
 
           <p className="text-sm" style={{ color: "rgba(232,213,163,0.75)" }}>
-            De meest complete trouwsite van Nederland voor slechts{" "}
+            Digitale kaart vanaf <span style={{ color: GOLD_LIGHT, fontWeight: 600 }}>€15</span>, de complete trouwwebsite voor{" "}
             <span style={{ color: GOLD_LIGHT, fontWeight: 600 }}>€49,99</span>
           </p>
           <p className="text-xs mt-2" style={{ color: "rgba(232,213,163,0.5)" }}>
@@ -453,10 +457,10 @@ export default function Home() {
               </h3>
               <p className="text-sm leading-relaxed" style={{ color: "#E8DDD0" }}>
                 Verstuur jullie kaart als link via WhatsApp: bij je gasten opent een envelop met
-                lakzegel in de stijl van jullie site, en daar is de kaart. Staat jullie trouwsite
-                al live? Dan zitten de knoppen naar de site en de RSVP er direct bij, zodat gasten
-                meteen kunnen laten weten dat ze erbij zijn. Geen drukwerk, geen postzegels, wel
-                dat &quot;wow&quot;-momentje.
+                lakzegel in jullie stijl, en daar is de kaart. Met de RSVP-knop laten gasten meteen
+                weten dat ze erbij zijn, en jullie zien alles terug in het dashboard. Los te koop
+                vanaf €15, of als onderdeel van de complete trouwwebsite. Geen drukwerk, geen
+                postzegels, wel dat &quot;wow&quot;-momentje.
               </p>
               <ul className="flex flex-col gap-2.5 text-sm" style={{ color: "#E8DDD0" }}>
                 {[
@@ -475,9 +479,16 @@ export default function Home() {
                 ))}
               </ul>
               <Link
-                href="/kaart-voorbeeld"
+                href="/digitale-uitnodiging"
                 className="mt-2 inline-flex items-center justify-center gap-2 text-sm font-semibold px-6 py-3.5 rounded-xl transition-all hover:-translate-y-0.5 self-start"
                 style={{ backgroundColor: "#D59C76", color: "#07353A", textDecoration: "none" }}
+              >
+                Alles over de digitale uitnodiging →
+              </Link>
+              <Link
+                href="/kaart-voorbeeld"
+                className="text-sm font-semibold transition-opacity hover:opacity-80 self-start"
+                style={{ color: "#D59C76", textDecoration: "none" }}
               >
                 Bekijk een voorbeeldkaart →
               </Link>
@@ -795,92 +806,74 @@ export default function Home() {
               className="text-4xl sm:text-5xl mb-4 leading-tight"
               style={{ fontFamily: "var(--font-cormorant)", color: "#FAF7F2", fontWeight: 700 }}
             >
-              Eén eerlijke prijs.<br />Nooit verrassingen.
+              Begin klein.<br />Groei mee met jullie planning.
             </h2>
             <p className="text-base leading-relaxed" style={{ color: "#8A7E72" }}>
-              De goedkoopste én meest complete trouwsite van Nederland.
+              Drie pakketten, één product. Upgraden kan altijd: je betaalt alleen het verschil en alles blijft staan.
             </p>
           </div>
 
-          {/* Hoofdprijs card */}
-          <div
-            className="rounded-3xl p-10 text-center mb-5 relative overflow-hidden"
-            style={{ backgroundColor: DARK_CARD, border: `1px solid #2A2218` }}
-          >
-            <div
-              className="pointer-events-none absolute inset-0"
-              style={{
-                background: `radial-gradient(ellipse 60% 40% at 50% 0%, ${GOLD}0A 0%, transparent 70%)`,
-              }}
-            />
-
-            <p
-              className="text-xs font-semibold uppercase tracking-[0.2em] mb-5"
-              style={{ color: GOLD }}
-            >
-              Een jaar live voor maar
-            </p>
-
-            {/* Prijs */}
-            <div className="flex items-start justify-center gap-1 mb-2">
-              <span
-                className="text-2xl font-semibold mt-4"
-                style={{ fontFamily: "var(--font-cormorant)", color: GOLD_LIGHT }}
-              >
-                €
-              </span>
-              <span
-                className="leading-none"
-                style={{
-                  fontFamily: "var(--font-cormorant)",
-                  fontSize: "6rem",
-                  fontWeight: 700,
-                  color: "#FAF7F2",
-                }}
-              >
-                49
-              </span>
-              <div className="mt-4">
-                <span
-                  className="text-3xl font-semibold"
-                  style={{ fontFamily: "var(--font-cormorant)", color: "#FAF7F2" }}
+          {/* Drie pakketten */}
+          <div className="grid gap-4 md:grid-cols-3 mb-5">
+            {PLAN_ORDER.map((p) => {
+              const info = PLANS[p]
+              const uitgelicht = p === "compleet"
+              return (
+                <div
+                  key={p}
+                  className="rounded-3xl p-7 flex flex-col relative overflow-hidden"
+                  style={{
+                    backgroundColor: DARK_CARD,
+                    border: `1px solid ${uitgelicht ? GOLD : "#2A2218"}`,
+                    boxShadow: uitgelicht ? `0 0 0 1px ${GOLD}40, 0 20px 60px rgba(0,0,0,0.35)` : "none",
+                  }}
                 >
-                  ,99
-                </span>
-              </div>
-            </div>
-            <p className="text-sm mt-4 mb-10" style={{ color: "#4A4030" }}>
-              Eenmalig · Geen stilzwijgende verlengingen
-            </p>
-
-            {/* Features */}
-            <ul className="flex flex-col gap-3 text-left max-w-sm mx-auto mb-10">
-              {[
-                "De goedkoopste & meest complete optie van Nederland",
-                "Inclusief eigen domeinnaam én alle premium features",
-                "Loopt automatisch af, geen verrassing achteraf",
-                "Na het eerste jaar verlengen wanneer jullie willen",
-              ].map((item) => (
-                <li key={item} className="flex items-start gap-3">
-                  <Check />
-                  <span className="text-sm leading-relaxed" style={{ color: "#8A7E72" }}>
-                    {item}
-                  </span>
-                </li>
-              ))}
-            </ul>
-
-            <Link
-              href="/aanmaken"
-              className="inline-flex items-center gap-2.5 text-sm font-semibold px-10 py-4 rounded-2xl transition-all duration-300 hover:-translate-y-0.5"
-              style={{ backgroundColor: GOLD, color: DARK, boxShadow: `0 8px 32px ${GOLD}40` }}
-            >
-              Start nu gratis
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </Link>
+                  {uitgelicht && (
+                    <span
+                      className="absolute top-4 right-4 text-[10px] font-semibold uppercase tracking-widest px-2.5 py-1 rounded-full"
+                      style={{ backgroundColor: GOLD, color: DARK }}
+                    >
+                      Alles erop en eraan
+                    </span>
+                  )}
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] mb-3" style={{ color: GOLD }}>
+                    {info.label}
+                  </p>
+                  <div className="flex items-end gap-1 mb-1">
+                    <span
+                      className="leading-none"
+                      style={{ fontFamily: "var(--font-cormorant)", fontSize: "3.25rem", fontWeight: 700, color: "#FAF7F2" }}
+                    >
+                      {formatEur(info.price).replace(",00", "")}
+                    </span>
+                  </div>
+                  <p className="text-xs mb-5" style={{ color: "#8A7E72" }}>{info.moment}</p>
+                  <ul className="flex flex-col gap-2.5 mb-7 flex-1">
+                    {info.features.map((item) => (
+                      <li key={item} className="flex items-start gap-2.5">
+                        <Check />
+                        <span className="text-sm leading-relaxed" style={{ color: "#B5A995" }}>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    href={`/aanmaken?plan=${p}`}
+                    className="inline-flex items-center justify-center gap-2 text-sm font-semibold px-6 py-3.5 rounded-2xl transition-all duration-300 hover:-translate-y-0.5"
+                    style={
+                      uitgelicht
+                        ? { backgroundColor: GOLD, color: DARK, boxShadow: `0 8px 32px ${GOLD}40` }
+                        : { backgroundColor: "transparent", color: "#FAF7F2", border: `1px solid ${GOLD}60` }
+                    }
+                  >
+                    Start gratis
+                  </Link>
+                </div>
+              )
+            })}
           </div>
+          <p className="text-xs text-center mb-10" style={{ color: "#4A4030" }}>
+            Eenmalige betaling · Geldig tot minimaal een maand na jullie trouwdatum · Geen abonnement
+          </p>
 
           {/* Verlengingskaart */}
           <div
@@ -892,11 +885,11 @@ export default function Home() {
                 className="text-xs font-semibold uppercase tracking-widest mb-2"
                 style={{ color: GOLD }}
               >
-                Na het eerste jaar: volledige vrijheid
+                Daarna: volledige vrijheid
               </p>
               <p className="text-sm leading-relaxed" style={{ color: "#8A7E72" }}>
-                Na het eerste jaar loopt jullie website automatisch af. Geen verrassingen.
-                Willen jullie de site online houden? Verleng eenvoudig per 6 maanden voor slechts{" "}
+                Alles loopt automatisch af, minimaal een jaar na aankoop en in elk geval tot een maand na de bruiloft. Geen verrassingen.
+                Willen jullie de site langer online houden? Verleng per 6 maanden voor{" "}
                 <span style={{ color: "#FAF7F2", fontWeight: 600 }}>€22</span>.
                 Ideaal om na de bruiloft de fotogalerij online te houden.
               </p>
@@ -1061,7 +1054,7 @@ export default function Home() {
             </svg>
           </Link>
           <p className="mt-5 text-xs tracking-wide" style={{ color: GOLD }}>
-            Eenmalig €49,99 · Geen maandelijkse kosten · Altijd online
+            Vanaf €15 · Eenmalig · Geen abonnement
           </p>
           <p className="mt-2 text-xs" style={{ color: BODY }}>
             Gratis starten, pas betalen als je 100% tevreden bent

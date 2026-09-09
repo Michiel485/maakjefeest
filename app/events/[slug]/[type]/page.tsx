@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import { createServiceClient } from "@/lib/supabase"
 import { getStyleConfig } from "@/lib/event-styles"
 import EventPageSection, { type PageData } from "../EventPageSection"
+import { publicPageTypes } from "@/lib/plans"
 
 export default async function EventSubPage({
   params,
@@ -15,7 +16,7 @@ export default async function EventSubPage({
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, style, font_hero, font_initials, font_frame_names, font_page_titles")
+    .select("id, style, font_hero, font_initials, font_frame_names, font_page_titles, plan")
     .eq("slug", slug)
     .eq("status", "published")
     .single()
@@ -30,7 +31,8 @@ export default async function EventSubPage({
     .eq("is_enabled", true)
     .single<PageData>()
 
-  if (!page) notFound()
+  // Subpagina's die niet bij het pakket horen bestaan publiek niet
+  if (!page || publicPageTypes(event.plan, [page]).length === 0) notFound()
 
   const sc = getStyleConfig(event.style, {
     fontHero:       event.font_hero        as string | null,

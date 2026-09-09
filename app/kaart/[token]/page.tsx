@@ -7,6 +7,7 @@ import { getStyleConfig } from "@/lib/event-styles"
 import { buildCardDisplay, CARD_TYPE_LABEL } from "@/lib/cards"
 import { fetchCardByToken } from "@/lib/cards-server"
 import { eventSiteUrl } from "@/lib/site-url"
+import { planAllows } from "@/lib/plans"
 import CardReveal from "./card-reveal"
 
 export async function generateMetadata({
@@ -53,8 +54,11 @@ export default async function KaartPage({
     () => {}
   )
 
+  // Knoppen onder de kaart volgen het pakket: Save the Date toont geen knoppen,
+  // Uitnodiging & RSVP alleen de RSVP-knop, Compleet ook de site zelf.
   const siteLive = event.status === "published"
-  const siteUrl = siteLive ? eventSiteUrl(event.slug) : null
+  const siteUrl = siteLive && planAllows(event.plan, "site") ? eventSiteUrl(event.slug) : null
+  const rsvpUrl = siteLive && planAllows(event.plan, "rsvp") ? `${eventSiteUrl(event.slug)}/RSVP` : null
   // Scheidingstekens (zoals de | uit "M|L" op de site) horen niet op het zegel
   const initials =
     (event.initials && event.initials.replace(/[|/\\\-·.]/g, "").trim()) ||
@@ -71,7 +75,7 @@ export default async function KaartPage({
       initials={initials}
       sc={sc}
       siteUrl={siteUrl}
-      rsvpUrl={siteUrl ? `${siteUrl}/RSVP` : null}
+      rsvpUrl={rsvpUrl}
     />
   )
 }

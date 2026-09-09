@@ -19,6 +19,7 @@ import SlugEditor from "./SlugEditor"
 import DeleteDraftButton from "./DeleteDraftButton"
 import RenewalButton from "./RenewalButton"
 import DeleteEventButton from "./DeleteEventButton"
+import { PLANS, PLAN_ORDER, normalizePlan, planAllows, planRank, upgradePrice, formatEur } from "@/lib/plans"
 
 const GOLD       = "#C5A059"
 const GOLD_LIGHT = "#E8D5A3"
@@ -34,9 +35,34 @@ type Event = {
   title: string
   type: string
   status: string
+  plan?: string | null
   created_at: string
   expires_at: string | null
   hero_image_url?: string | null
+}
+
+// Upgrade-knoppen naar elk hoger pakket, met het bij te betalen bedrag
+function UpgradeLinks({ event }: { event: Event }) {
+  const huidig = normalizePlan(event.plan)
+  const hoger = PLAN_ORDER.filter((p) => planRank(p) > planRank(huidig))
+  if (hoger.length === 0) return null
+  return (
+    <div className="flex flex-wrap gap-2 mt-2">
+      {hoger.map((p) => {
+        const bedrag = upgradePrice(huidig, p)
+        return (
+          <Link
+            key={p}
+            href={`/betalen?event_id=${event.id}&upgrade=${p}`}
+            className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all hover:-translate-y-0.5"
+            style={{ backgroundColor: GOLD_BG, color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}` }}
+          >
+            Upgrade naar {PLANS[p].label}{bedrag != null ? ` (+${formatEur(bedrag)})` : ""}
+          </Link>
+        )
+      })}
+    </div>
+  )
 }
 
 const TYPE_LABEL: Record<string, string> = {
@@ -64,8 +90,13 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
     >
       {/* Text section */}
       <div className="min-w-0">
-        <div className="flex items-center gap-2 mb-1.5">
+        <div className="flex flex-wrap items-center gap-2 mb-1.5">
           <span className="text-xs font-semibold uppercase tracking-[0.1em]" style={{ color: GOLD }}>{typeLabel}</span>
+          {!isDraft && (
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: GOLD_BG, color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}` }}>
+              {PLANS[normalizePlan(event.plan)].label}
+            </span>
+          )}
           {isDraft ? (
             <span className="text-xs bg-amber-100 text-amber-700 font-semibold px-2 py-0.5 rounded-full">
               Concept
@@ -104,6 +135,7 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
         <div className="mt-2">
           <SlugEditor eventId={event.id} currentSlug={event.slug} isLive={!isDraft} />
         </div>
+        {!isDraft && <UpgradeLinks event={event} />}
       </div>
 
       {/* Actions */}
@@ -121,7 +153,7 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
               style={{ color: BODY }}
               title={eventSiteLabel(event.slug)}
             >
-              Bekijken →
+              {normalizePlan(event.plan) === "uitnodiging" ? "Bekijk RSVP-pagina →" : "Bekijken →"}
             </a>
           )}
           {!isDraft && (
@@ -164,28 +196,32 @@ export default async function DashboardPage() {
   const service = createServiceClient()
   const { data: events } = await service
     .from("events")
-    .select("id, slug, title, type, status, created_at, expires_at, hero_image_url")
+    .select("id, slug, title, type, status, plan, created_at, expires_at, hero_image_url")
     .eq("user_email", user.email!)
     .order("created_at", { ascending: false })
 
   const published = (events ?? []).filter((e: Event) => ["published", "expired"].includes(e.status))
   const drafts    = (events ?? []).filter((e: Event) => e.status === "draft")
   const firstName = user.email?.split("@")[0] ?? "daar"
+  // Pakketrechten: RSVP-overzicht vanaf Uitnodiging & RSVP, fotomuur alleen bij Compleet
+  const rsvpEvents  = published.filter((e: Event) => planAllows(e.plan, "rsvp"))
+  const photoEvents = published.filter((e: Event) => planAllows(e.plan, "photos"))
 
   let rsvps: RsvpRow[] = []
   // Gastenfotomuur: apart opgevraagd zodat het dashboard blijft werken zolang
   // de migratie (guest_photos) nog niet is gedraaid.
   let guestPhotos: GuestPhotoRow[] = []
   let gpSettings: Record<string, GuestPhotoSettings> = {}
-  if (published.length > 0) {
-    const eventIds = published.map((e: Event) => e.id)
+  if (rsvpEvents.length > 0) {
     const { data: rsvpData } = await service
       .from("rsvp")
       .select("id, event_id, submission_id, name, email, guest_type, dietary, is_primary, attending, message, song, overnachting, custom_answer, custom_answer_2, created_at")
-      .in("event_id", eventIds)
+      .in("event_id", rsvpEvents.map((e: Event) => e.id))
       .order("created_at", { ascending: false })
     rsvps = (rsvpData ?? []) as RsvpRow[]
-
+  }
+  if (photoEvents.length > 0) {
+    const eventIds = photoEvents.map((e: Event) => e.id)
     const { data: gpEvents } = await service
       .from("events")
       .select("id, guest_photos_enabled, guest_photos_moderation, style")
@@ -279,7 +315,7 @@ export default async function DashboardPage() {
         {/* Live websites */}
         <section className="mb-10">
           <div className="flex items-center justify-between mb-5">
-            <SectionLabel>Live bruiloftswebsites</SectionLabel>
+            <SectionLabel>Live: kaarten en websites</SectionLabel>
             <Link
               href="/aanmaken"
               className="text-sm font-semibold transition-colors"
@@ -303,7 +339,7 @@ export default async function DashboardPage() {
                 </svg>
               </div>
               <p className="text-sm mb-5" style={{ color: BODY }}>
-                Nog geen live bruiloftswebsite. Bouw er een en publiceer hem voor eenmalig €49,99.
+                Nog niets live. Begin met een digitale Save the Date vanaf €15, of bouw meteen jullie complete trouwwebsite.
               </p>
               <Link
                 href="/aanmaken"
@@ -340,10 +376,19 @@ export default async function DashboardPage() {
           <div className="mb-5">
             <SectionLabel>RSVP-aanmeldingen</SectionLabel>
           </div>
-          <RsvpSection
-            rsvps={rsvps}
-            events={published.map((e: Event) => ({ id: e.id, title: e.title }))}
-          />
+          {rsvpEvents.length === 0 && published.length > 0 ? (
+            <div
+              className="rounded-2xl p-6 text-sm leading-relaxed"
+              style={{ backgroundColor: IVORY_CARD, border: `1px solid ${GOLD_LIGHT}`, color: BODY }}
+            >
+              Het RSVP-overzicht hoort bij het pakket <strong style={{ color: CHARCOAL }}>Uitnodiging &amp; RSVP</strong>: gasten laten met een tik weten of ze komen en jullie zien hier alle aanmeldingen met dieetwensen. Upgrade via de knop bij jullie kaart hierboven; alles wat jullie al maakten blijft staan.
+            </div>
+          ) : (
+            <RsvpSection
+              rsvps={rsvps}
+              events={rsvpEvents.map((e: Event) => ({ id: e.id, title: e.title }))}
+            />
+          )}
         </section>
 
         {/* Digitale kaarten */}
@@ -357,6 +402,7 @@ export default async function DashboardPage() {
                 id: e.id,
                 title: e.title,
                 status: e.status,
+                plan: normalizePlan(e.plan),
                 heroImageUrl: e.hero_image_url ?? null,
               }))}
               cards={cards}
@@ -365,13 +411,13 @@ export default async function DashboardPage() {
         )}
 
         {/* Gastenfotomuur */}
-        {published.length > 0 && Object.keys(gpSettings).length > 0 && (
+        {photoEvents.length > 0 && Object.keys(gpSettings).length > 0 && (
           <section className="mt-10">
             <div className="mb-5">
               <SectionLabel>Gastenfotomuur</SectionLabel>
             </div>
             <div className="flex flex-col gap-6">
-              {published.map((ev: Event) =>
+              {photoEvents.map((ev: Event) =>
                 gpSettings[ev.id] ? (
                   <GuestPhotosSection
                     key={ev.id}

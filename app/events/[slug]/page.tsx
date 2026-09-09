@@ -3,6 +3,7 @@ import { getStyleConfig, formatDate } from "@/lib/event-styles"
 import EventHomePreview, { type HomepageSettings } from "@/components/EventHomePreview"
 import EventPageSection, { type PageData } from "./EventPageSection"
 import BackToTopButton from "@/components/BackToTopButton"
+import { normalizePlan, publicPageTypes } from "@/lib/plans"
 
 export const dynamic = "force-dynamic"
 
@@ -17,7 +18,7 @@ export default async function EventHomePage({
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, type, title, datum, locatie, style, font_hero, font_initials, font_frame_names, font_page_titles, hero_image_url, hero_image_pos_x, hero_image_pos_y, hero_overlay, use_frame, frame_style, initials, frame_names, frame_location, frame_initials_size, frame_names_size, frame_date_size, frame_location_size, homepage_settings")
+    .select("id, type, title, datum, locatie, style, font_hero, font_initials, font_frame_names, font_page_titles, hero_image_url, hero_image_pos_x, hero_image_pos_y, hero_overlay, use_frame, frame_style, initials, frame_names, frame_location, frame_initials_size, frame_names_size, frame_date_size, frame_location_size, homepage_settings, plan")
     .eq("slug", slug)
     .eq("status", "published")
     .single()
@@ -32,7 +33,13 @@ export default async function EventHomePage({
   }
 
   const hs = event.homepage_settings as HomepageSettings | null
-  const isSinglePage = hs?.pageMode === 'single'
+  // Save the Date en Uitnodiging & RSVP zijn altijd één pagina; alleen Compleet
+  // heeft losse subpagina's.
+  const plan = normalizePlan(event.plan)
+  const isCompleet = plan === "compleet"
+  const isSinglePage = !isCompleet || hs?.pageMode === 'single'
+  // Bij Save the Date is er geen RSVP: de knop krijgt een uniek doel en wordt verborgen
+  const rsvpHref = plan === "save_the_date" ? "#save-the-date" : isSinglePage ? "#rsvp" : `${basePath}/RSVP`
 
   const { data: homePage } = await supabase
     .from("pages")
@@ -74,7 +81,7 @@ export default async function EventHomePage({
       homeAlign={(c.align as "left" | "center" | "right") ?? "center"}
       homeTitleSize={typeof c.titleSize === "number" ? c.titleSize : undefined}
       homeBodySize={typeof c.bodySize === "number" ? c.bodySize : undefined}
-      rsvpHref={isSinglePage ? "#rsvp" : `${basePath}/RSVP`}
+      rsvpHref={rsvpHref}
       sc={sc}
       homepageSettings={hs}
     />
@@ -84,7 +91,7 @@ export default async function EventHomePage({
     return homePreview
   }
 
-  // Single-page mode: stack all enabled sections
+  // Single-page mode: stack all enabled sections (per pakket gefilterd)
   const { data: allPages } = await supabase
     .from("pages")
     .select("id, type, title, content, order")
@@ -92,10 +99,11 @@ export default async function EventHomePage({
     .eq("is_enabled", true)
     .order("order", { ascending: true })
 
-  const otherPages = (allPages ?? []).filter((p) => p.type !== "Home") as PageData[]
+  const otherPages = publicPageTypes(plan, (allPages ?? []).filter((p) => p.type !== "Home") as PageData[])
 
   return (
     <>
+      {plan === "save_the_date" && <style>{`a[href="#save-the-date"]{display:none !important}`}</style>}
       <section id="home">
         {homePreview}
       </section>

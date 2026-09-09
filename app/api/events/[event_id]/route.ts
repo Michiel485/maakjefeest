@@ -1,4 +1,5 @@
 import { createServiceClient } from "@/lib/supabase"
+import { normalizePlan } from "@/lib/plans"
 
 export const dynamic = "force-dynamic"
 
@@ -11,7 +12,7 @@ export async function GET(
 
   const { data, error } = await supabase
     .from("events")
-    .select("id, slug, type, title, status, datum, locatie")
+    .select("id, slug, type, title, status, datum, locatie, plan, expires_at")
     .eq("id", event_id)
     .single()
 
@@ -19,5 +20,5 @@ export async function GET(
     return Response.json({ error: "Event niet gevonden" }, { status: 404 })
   }
 
-  return Response.json(data)
+  return Response.json({ ...data, plan: normalizePlan(data.plan) })
 }

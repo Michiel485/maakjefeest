@@ -6,6 +6,7 @@ import type { CardEventSource, CardRow } from "./cards"
 export interface CardEventRow extends CardEventSource {
   slug: string
   status: string
+  plan: string | null
   style: string
   initials: string | null
   font_hero: string | null
@@ -33,7 +34,7 @@ export async function fetchCardByToken(token: string): Promise<CardWithEvent | n
   const { data: event } = await supabase
     .from("events")
     .select(
-      "title, frame_names, datum, locatie, hero_image_url, slug, status, style, initials, font_hero, font_initials, font_frame_names, font_page_titles"
+      "title, frame_names, datum, locatie, hero_image_url, slug, status, plan, style, initials, font_hero, font_initials, font_frame_names, font_page_titles"
     )
     .eq("id", card.event_id)
     .single()

@@ -1021,7 +1021,7 @@ export async function sendDraftReminderEmail({
                 <td style="background-color:#faf7f2;border:1px solid #e8dcc8;border-radius:12px;padding:20px 24px;">
                   <p style="margin:0 0 8px;font-size:14px;font-weight:700;color:#111827;">Wat kost het?</p>
                   <p style="margin:0;font-size:13px;color:#374151;line-height:1.65;">
-                    <strong style="color:#111827;">Eenmalig &euro;&nbsp;49,99</strong> voor een volledig jaar live — daarna optioneel verlengen voor &euro;&nbsp;22,- per 6 maanden. Geen verborgen kosten.
+                    <strong style="color:#111827;">Vanaf &euro;&nbsp;15</strong> voor een digitale Save the Date, &euro;&nbsp;25 voor uitnodigingen met RSVP, of &euro;&nbsp;49,99 voor de complete trouwwebsite, een jaar live. Later upgraden kan altijd, je betaalt dan alleen het verschil. Geen verborgen kosten.
                   </p>
                 </td>
               </tr>
@@ -1335,6 +1335,100 @@ export async function sendVisitorDigestEmail(data: VisitorDigestData) {
     return { success: true, id: result?.id }
   } catch (err) {
     console.error("[mail] Unexpected error sending visitor digest:", err)
+    return { success: false, error: err }
+  }
+}
+
+// ── Pakket geactiveerd (Save the Date / Uitnodiging & RSVP) ─────────────────
+// Voor het pakket Compleet blijft de bestaande "website live"-mail bestaan.
+
+export async function sendPlanActivatedEmail({
+  toEmail,
+  names,
+  plan,
+  slug,
+  isUpgrade,
+}: {
+  toEmail: string
+  names: string
+  plan: "save_the_date" | "uitnodiging"
+  slug: string
+  isUpgrade: boolean
+}) {
+  const dashboardUrl = "https://www.sayingyes.nl/dashboard"
+  const rsvpUrl = `https://${slug}.sayingyes.nl`
+
+  const isStd = plan === "save_the_date"
+  const titel = isStd ? "Jullie Save the Date staat klaar" : "Jullie uitnodiging en RSVP staan klaar"
+  const kop = isUpgrade ? "Upgrade gelukt!" : "Gelukt!"
+  const intro = isStd
+    ? "Jullie kunnen nu een digitale Save the Date maken en versturen: een envelop met lakzegel die opent in jullie stijl. Maak hem in het dashboard, kopieer de link en stuur hem via WhatsApp naar jullie gasten."
+    : "Jullie kunnen nu trouwkaarten maken per gastengroep (dag, avond of receptie) met eigen tekst en tijden. Gasten laten met een tik weten of ze komen, en jullie zien alle aanmeldingen met dieetwensen in het dashboard."
+
+  const stappen = isStd
+    ? [
+        "Open het dashboard en kies bij Digitale kaarten voor Save the Date.",
+        "Kies klassiek of met foto, pas de tekst aan en bekijk de voorvertoning.",
+        "Kopieer de link of download de afbeelding en verstuur via WhatsApp.",
+      ]
+    : [
+        "Open het dashboard en maak per gastengroep een trouwkaart.",
+        "Zet de tijden en jullie eigen uitnodigingstekst op de kaart.",
+        `Gasten reageren via de RSVP-pagina op ${slug}.sayingyes.nl; jullie volgen alles in het dashboard.`,
+      ]
+
+  const html = `
+    <div style="font-family:Georgia,'Times New Roman',serif;max-width:560px;margin:0 auto;padding:32px 24px;background:#FAF7F2;color:#1A1A1A;">
+      <p style="font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:#C5A059;font-weight:600;margin:0 0 8px;">SayingYes</p>
+      <h1 style="font-size:26px;font-weight:700;margin:0 0 4px;">${kop} ${titel}.</h1>
+      <p style="margin:0 0 20px;color:#5C5248;font-size:15px;line-height:1.6;">Lieve ${names},</p>
+      <p style="margin:0 0 20px;color:#374151;font-size:15px;line-height:1.7;">${intro}</p>
+
+      <p style="margin:22px 0 8px;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#C5A059;font-weight:600;">Zo ga je verder</p>
+      <ol style="margin:0 0 24px;padding-left:20px;color:#374151;font-size:14px;line-height:1.8;">
+        ${stappen.map((s) => `<li>${s}</li>`).join("")}
+      </ol>
+
+      <p style="text-align:center;margin:0 0 24px;">
+        <a href="${dashboardUrl}" style="display:inline-block;background:#1A1A1A;color:#FAF7F2;text-decoration:none;font-weight:600;padding:14px 28px;border-radius:14px;font-size:15px;">Naar het dashboard</a>
+      </p>
+      ${
+        isStd
+          ? ""
+          : `<p style="margin:0 0 24px;text-align:center;font-size:13px;color:#5C5248;">RSVP-pagina voor jullie gasten: <a href="${rsvpUrl}" style="color:#C5A059;">${slug}.sayingyes.nl</a></p>`
+      }
+
+      <div style="background:#fff;border:1px solid #E8D5A3;border-radius:12px;padding:16px 18px;">
+        <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#1A1A1A;">Later meer nodig?</p>
+        <p style="margin:0;font-size:13px;color:#5C5248;line-height:1.6;">
+          ${
+            isStd
+              ? "Upgrade naar Uitnodiging & RSVP (bijbetalen: €10) voor trouwkaarten per gastengroep en een RSVP-pagina, of naar de complete trouwwebsite (bijbetalen: €34,99). Alles wat jullie al maakten blijft staan."
+              : "Upgrade naar de complete trouwwebsite (bijbetalen: €24,99) voor programma, informatie, cadeautips, fotogalerij en de live gastenfotomuur. Alles wat jullie al maakten blijft staan."
+          }
+        </p>
+      </div>
+
+      <p style="margin:28px 0 0;font-size:12px;color:#9A8E82;line-height:1.6;">Vragen? Antwoord gewoon op deze mail.</p>
+    </div>`
+
+  try {
+    const { data: result, error } = await getResend().emails.send({
+      from:    FROM,
+      to:      [toEmail],
+      subject: `${isUpgrade ? "Upgrade gelukt: " : ""}${titel} 💌`,
+      html,
+    })
+
+    if (error) {
+      console.error("[mail] Plan activated error:", error)
+      return { success: false, error }
+    }
+
+    console.log("[mail] Plan activated sent →", toEmail, "| plan:", plan, "| id:", result?.id)
+    return { success: true, id: result?.id }
+  } catch (err) {
+    console.error("[mail] Unexpected error sending plan activated mail:", err)
     return { success: false, error: err }
   }
 }

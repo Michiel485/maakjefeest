@@ -53,4 +53,4 @@ Met een digitale RSVP via jullie trouwwebsite heb je altijd een actueel overzich
 
 ---
 
-Met SayingYes hebben jullie een persoonlijke trouwwebsite inclusief RSVP-formulier met dieetwensen. Gasten melden zich aan via de site, jij houdt het overzicht. Eenmalig €49,99, geen maandelijkse kosten. [Start gratis](/aanmaken).
+Met SayingYes regel je RSVP zonder gedoe: een [digitale uitnodiging](/digitale-uitnodiging) via WhatsApp waarmee gasten met één tik reageren, een RSVP-pagina met dieetwensen en een dashboard waarin jij het overzicht houdt. Vanaf €25, of als onderdeel van de complete trouwwebsite. [Start gratis](/aanmaken), betalen doe je pas bij publiceren.

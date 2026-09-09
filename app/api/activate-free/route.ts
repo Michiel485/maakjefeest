@@ -1,11 +1,13 @@
 import { createServiceClient } from "@/lib/supabase"
 import { revalidatePath } from "next/cache"
-import { sendWebsiteLiveEmail } from "@/lib/mail"
+import { sendWebsiteLiveEmail, sendPlanActivatedEmail } from "@/lib/mail"
+import { PLANS, normalizePlan, planExpiry } from "@/lib/plans"
 
 export const dynamic = "force-dynamic"
 
+// POST: pakket gratis activeren met een 100%-kortingscode (vrienden, tests)
 export async function POST(request: Request) {
-  let body: { event_id: string; code: string }
+  let body: { event_id: string; code: string; plan?: string }
   try {
     body = await request.json()
   } catch {
@@ -16,6 +18,7 @@ export async function POST(request: Request) {
   if (!event_id || !code) {
     return Response.json({ error: "event_id en code zijn verplicht" }, { status: 400 })
   }
+  const plan = normalizePlan(body.plan)
 
   const supabase = createServiceClient()
 
@@ -37,20 +40,24 @@ export async function POST(request: Request) {
   }
 
   // Idempotency: skip if already published
-  const { data: existing } = await supabase.from("events").select("status").eq("id", event_id).single()
+  const { data: existing } = await supabase
+    .from("events")
+    .select("status, datum")
+    .eq("id", event_id)
+    .single()
   if (existing?.status === "published") {
     return Response.json({ ok: true })
   }
 
   // Publish event
   const now = new Date()
-  const expiresAt = new Date(now)
-  expiresAt.setFullYear(expiresAt.getFullYear() + 1)
+  const expiresAt = planExpiry(now, existing?.datum as string | null)
 
   const { data: updatedEvent, error: updateError } = await supabase
     .from("events")
     .update({
       status:       "published",
+      plan,
       published_at: now.toISOString(),
       expires_at:   expiresAt.toISOString(),
     })
@@ -81,7 +88,7 @@ export async function POST(request: Request) {
     invoice_number:    invoiceNumber,
     customer_email:    updatedEvent?.user_email ?? "",
     customer_name:     updatedEvent?.frame_names || updatedEvent?.title || "",
-    description:       `Bruiloftswebsite — 1 jaar live (kortingscode: ${code})`,
+    description:       `${PLANS[plan].invoiceDescription} (kortingscode: ${code})`,
     amount_excl:       0,
     btw_amount:        0,
     amount_incl:       0,
@@ -90,13 +97,13 @@ export async function POST(request: Request) {
     mollie_payment_id: `free:${code}`,
   })
 
-  // Send website live email
+  const names = updatedEvent?.frame_names || updatedEvent?.title || "jullie"
   if (updatedEvent?.user_email && updatedEvent?.slug) {
-    await sendWebsiteLiveEmail(
-      updatedEvent.user_email,
-      updatedEvent.frame_names || updatedEvent.title || "jullie",
-      `https://${updatedEvent.slug}.sayingyes.nl`
-    )
+    if (plan === "compleet") {
+      await sendWebsiteLiveEmail(updatedEvent.user_email, names, `https://${updatedEvent.slug}.sayingyes.nl`)
+    } else {
+      await sendPlanActivatedEmail({ toEmail: updatedEvent.user_email, names, plan, slug: updatedEvent.slug, isUpgrade: false })
+    }
   }
 
   return Response.json({ ok: true })
