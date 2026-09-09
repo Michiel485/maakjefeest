@@ -8,7 +8,7 @@ Persoonlijke actielijst van Michiel. Claude houdt deze bij; afgeronde punten gaa
 - [ ] **Bing Webmaster Tools** aanmaken op bing.com/webmasters en "Importeren uit Google Search Console" kiezen. Dekt Bing, DuckDuckGo, Ecosia en Yahoo in een keer.
 - [ ] **Backlinks**: outreach naar trouwlocaties, trouwblogs en weddingplanners (Claude schrijft het mailtje en een kandidatenlijst zodra je dit oppakt).
 - [ ] **sayingyes.be** opzetten: domein koppelen in Vercel (proxy.ts en Analytics ondersteunen `.be` al) of het domein laten vervallen.
-- [ ] **Claude GitHub App installeren** op de repo (https://claude.ai/code/onboarding?magic=github-app-setup), nodig voor de tweewekelijkse artikel-routine.
+- [ ] **Claude GitHub App installeren** op de repo (https://claude.ai/code/onboarding?magic=github-app-setup), nodig voor de tweewekelijkse artikel-routine. Daarna Claude een seintje geven ("app geïnstalleerd"): die maakt dan de routine aan (1e en 15e van de maand, 09:00, artikel als pull request). Akkoord gegeven op 9 sep 2026.
 - [ ] **AVG**: Google Analytics laadt op sayingyes.nl zonder cookie-toestemming; koppelen aan de cookiebanner (consent mode).
 - [ ] **Reviews verzamelen** zodra er echte klanten zijn (testimonials op de homepage + Review-schema).
 
