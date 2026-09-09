@@ -12,6 +12,9 @@ Persoonlijke actielijst van Michiel. Claude houdt deze bij; afgeronde punten gaa
 - [ ] **AVG**: Google Analytics laadt op sayingyes.nl zonder cookie-toestemming; koppelen aan de cookiebanner (consent mode).
 - [ ] **Reviews verzamelen** zodra er echte klanten zijn (testimonials op de homepage + Review-schema).
 
+- [ ] **Bezoekersinzicht**: inzicht of een bericht wanneer iemand anders dan Michiel de site bezoekt (bijv. dagelijkse/wekelijkse mail met echte bezoekers, eigen IP uitgesloten; opties: GA4-rapport, Vercel Analytics of een eigen cron-mail).
+- [ ] **Uitzoeken: zelf extra sites over trouwen bouwen met links naar sayingyes.nl?** Beoordelen of dat helpt of juist risico geeft (Google ziet eigen linknetwerken als linkschema); alternatief afwegen: die energie in content op sayingyes.nl en echte partnerlinks steken.
+
 ## Afgerond
 
 - [x] 9 sep 2026: SEO-ronde (www-canonicals, structured data, FAQ, snellere homepage, 3 artikelen, eigen 404) en frames geoptimaliseerd.
