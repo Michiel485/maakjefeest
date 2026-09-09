@@ -12,7 +12,7 @@ Persoonlijke actielijst van Michiel. Claude houdt deze bij; afgeronde punten gaa
 
 ## Afgerond
 
-- [x] 9 sep 2026: Bing Webmaster Tools staat aan voor https://www.sayingyes.nl. Sitemap ingediend en direct gecrawld: 14 URLs gevonden, 0 fouten, 0 waarschuwingen. Daarmee komen Bing, DuckDuckGo, Yahoo en Ecosia mee. De losse property zonder www mag je negeren.
+- [x] 9 sep 2026: Bing Webmaster Tools staat aan voor https://www.sayingyes.nl. Sitemap ingediend en direct gecrawld: 14 URLs gevonden, 0 fouten, 0 waarschuwingen. Daarmee komen Bing, DuckDuckGo, Yahoo en Ecosia mee. Er is een property in Bing (de www-versie, in de sitekiezer weergegeven als sayingyes.nl).
 
 - [x] 9 sep 2026: Bezoekersinzicht staat aan. Migratie gedraaid, teller op productie getest (paginaweergave landde met pad, land NL, apparaat en anonieme hash), overzichtsquery gecontroleerd en testdata opgeruimd. Vanaf morgen komt er rond 10:00 een mail als er bezoek was.
 
