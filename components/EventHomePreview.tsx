@@ -186,11 +186,11 @@ export default function EventHomePreview({
   }
 
   const FRAME_FILE: Record<string, string> = {
-    "olive-rectangle":  "olive-square.png.png",
-    "bloem-rechthoek":  "Bloem-rechthoek.png",
-    "bloem2-breed":     "Bloem2-breed.png",
+    "olive-rectangle":  "olive-square.webp",
+    "bloem-rechthoek":  "Bloem-rechthoek.webp",
+    "bloem2-breed":     "Bloem2-breed.webp",
   }
-  const frameFile = (id: string) => FRAME_FILE[id] ?? `${id}.png.png`
+  const frameFile = (id: string) => FRAME_FILE[id] ?? `${id}.webp`
   const isFullWidth = frameStyle === "bloem-rechthoek" || frameStyle === "bloem2-breed"
   const isDiamond   = frameStyle?.includes("diamond")
   const isRectangle = frameStyle?.includes("rectangle") || frameStyle?.includes("square")

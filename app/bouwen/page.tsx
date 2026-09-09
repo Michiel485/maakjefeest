@@ -1878,15 +1878,15 @@ export default function BouwenPage() {
                                       {draft?.use_frame && (
                                         <div className="grid grid-cols-3 gap-2">
                                           {([
-                                            { id: "gold-circle",     label: "Gold Cirkel",    file: "gold-circle.png.png"    },
-                                            { id: "gold-diamond",    label: "Gold Ruit",      file: "gold-diamond.png.png"   },
-                                            { id: "terra-circle",    label: "Terra Cirkel",   file: "terra-circle.png.png"   },
-                                            { id: "terra-diamond",   label: "Terra Ruit",     file: "terra-diamond.png.png"  },
-                                            { id: "earthy-circle",   label: "Earthy Cirkel",  file: "earthy-circle.png.png"  },
-                                            { id: "earthy-diamond",  label: "Earthy Ruit",    file: "earthy-diamond.png.png" },
-                                            { id: "bloem2-breed",    label: "Bloem 2 Breed",  file: "Bloem2-breed.png"       },
-                                            { id: "olive-square",    label: "Olijf Vierkant", file: "olive-square.png.png"   },
-                                            { id: "bloem-rechthoek", label: "Bloem Breed",    file: "Bloem-rechthoek.png"    },
+                                            { id: "gold-circle",     label: "Gold Cirkel",    file: "gold-circle.webp"    },
+                                            { id: "gold-diamond",    label: "Gold Ruit",      file: "gold-diamond.webp"   },
+                                            { id: "terra-circle",    label: "Terra Cirkel",   file: "terra-circle.webp"   },
+                                            { id: "terra-diamond",   label: "Terra Ruit",     file: "terra-diamond.webp"  },
+                                            { id: "earthy-circle",   label: "Earthy Cirkel",  file: "earthy-circle.webp"  },
+                                            { id: "earthy-diamond",  label: "Earthy Ruit",    file: "earthy-diamond.webp" },
+                                            { id: "bloem2-breed",    label: "Bloem 2 Breed",  file: "Bloem2-breed.webp"       },
+                                            { id: "olive-square",    label: "Olijf Vierkant", file: "olive-square.webp"   },
+                                            { id: "bloem-rechthoek", label: "Bloem Breed",    file: "Bloem-rechthoek.webp"    },
                                           ]).map((frame) => {
                                             const isActive = (draft?.frame_style ?? "gold-circle") === frame.id
                                             return (

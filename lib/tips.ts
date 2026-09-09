@@ -29,6 +29,8 @@ export function getAllTips(): TipMeta[] {
       const { data } = matter(raw)
       return { slug, title: data.title, date: data.date, updated: data.updated, description: data.description, image: data.image }
     })
+    // Alleen echte artikelen (met frontmatter); losse notities in de map worden overgeslagen
+    .filter(tip => Boolean(tip.title && tip.date))
     .sort((a, b) => (a.date < b.date ? 1 : -1))
 }
 
