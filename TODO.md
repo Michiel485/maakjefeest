@@ -7,12 +7,14 @@ Persoonlijke actielijst van Michiel. Claude houdt deze bij; afgeronde punten gaa
 - [ ] **Bezoekersinzicht aanzetten**: gebouwd op 9 sep 2026 (anonieme telling zonder cookies, plus een dagelijkse mail rond 10:00 naar ADMIN_EMAIL, alleen als er bezoek was). Nog twee stappen: `supabase/migration_page_views.sql` in de Supabase SQL editor draaien, en op elk eigen apparaat een keer sayingyes.nl/admin openen zodat je eigen bezoeken niet meetellen.
 - [ ] **Bing Webmaster Tools** aanmaken op bing.com/webmasters en "Importeren uit Google Search Console" kiezen. Dekt Bing, DuckDuckGo, Ecosia en Yahoo in een keer.
 - [ ] **Claude GitHub App installeren** op de repo (https://claude.ai/code/onboarding?magic=github-app-setup), nodig voor de tweewekelijkse artikel-routine. Daarna Claude een seintje geven ("app geinstalleerd"): die maakt dan de routine aan (1e en 15e van de maand, 09:00, artikel als pull request). Akkoord gegeven op 9 sep 2026.
-- [ ] **Backlinks**: eerst samen bepalen wie we aanschrijven (trouwlocaties, trouwblogs, weddingplanners, leveranciers van onze eigen bruiloft). Claude schrijft daarna de mailteksten en een kandidatenlijst. Bewust nog niet gedaan op 9 sep 2026.
+- [ ] **Beslissen over Supabase MCP-koppeling**: zou Claude zelf migraties kunnen draaien. Advies staat in het gesprek van 9 sep 2026: alleen-lezen koppelen (past bij de eigen bouwregel "read-only default"), of niet koppelen en SQL blijven plakken. Niet met volledige schrijfrechten, want de database bevat gastgegevens van klanten.
+- [ ] **Backlinks**: eerst samen bepalen wie we aanschrijven (trouwlocaties, trouwblogs, weddingplanners, leveranciers van onze eigen bruiloft). Claude schrijft daarna de mailteksten en een kandidatenlijst.
 - [ ] **sayingyes.be** opzetten: domein koppelen in Vercel (proxy.ts en Analytics ondersteunen `.be` al) of het domein laten vervallen.
 - [ ] **Reviews verzamelen** zodra er echte klanten zijn (testimonials op de homepage plus Review-schema).
 
 ## Afgerond
 
+- [x] 9 sep 2026: SEO-controle na de sitemap-indiening: alle 14 pagina's geven 200 en zijn indexeerbaar. Drie bevindingen opgelost: canonical van contact, privacy en voorwaarden wees naar de homepage (duplicaatrisico), vier artikeltitels waren te lang voor Google, en de omschrijvingen van de homepage, privacy en drie artikelen zitten nu binnen 70 tot 160 tekens.
 - [x] 9 sep 2026: Bezoekersinzicht gebouwd: anonieme paginateller zonder cookies (`/api/track`, tabel `page_views`, 90 dagen bewaartermijn) en een dagelijks overzicht per mail vanuit de bestaande cron.
 - [x] 9 sep 2026: AVG afgerond: Google Analytics laadt alleen na toestemming (geverifieerd op productie) en toestemming intrekken kan nu met een knop op de privacypagina. Privacyverklaring aangevuld met de anonieme statistieken.
 - [x] 9 sep 2026: Google Search Console: sitemap opnieuw ingediend en indexering aangevraagd voor de homepage en de nieuwe artikelen.
