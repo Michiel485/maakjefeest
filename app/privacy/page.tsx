@@ -1,5 +1,6 @@
 ﻿import type { Metadata } from "next"
 import Link from "next/link"
+import CookieChoiceButton from "@/components/CookieChoiceButton"
 
 export const metadata: Metadata = {
   title: "Privacy & cookiebeleid",
@@ -105,7 +106,7 @@ export default function PrivacyPage() {
           <ul className="list-disc pl-5 space-y-1.5">
             <li><strong>Inzage:</strong> opvragen welke gegevens we van je hebben.</li>
             <li><strong>Rectificatie:</strong> onjuiste gegevens laten corrigeren.</li>
-            <li><strong>Verwijdering:</strong> verzoeken je gegevens te wissen ("recht om vergeten te worden").</li>
+            <li><strong>Verwijdering:</strong> verzoeken je gegevens te wissen (&quot;recht om vergeten te worden&quot;).</li>
             <li><strong>Beperking:</strong> verwerking tijdelijk laten beperken.</li>
             <li><strong>Bezwaar:</strong> bezwaar maken tegen verwerking op grond van gerechtvaardigd belang.</li>
             <li><strong>Overdraagbaarheid:</strong> je gegevens in een machine-leesbaar formaat ontvangen.</li>
@@ -135,8 +136,13 @@ export default function PrivacyPage() {
             ["_ga, _ga_*", "Google Analytics 4", "Anoniem bijhouden hoe bezoekers de site gebruiken", "2 jaar"],
           ]} />
           <p className="mt-3">
-            Google Analytics wordt <strong>alleen geladen als je daarvoor toestemming geeft</strong> via de cookiebanner. Je kunt je keuze altijd herzien door je browsergeschiedenis/localStorage te wissen.
-            SayingYes gebruikt de verzamelde data uitsluitend om de website te verbeteren — er worden geen persoonsgegevens doorverkocht aan derden.
+            Google Analytics wordt <strong>alleen geladen als je daarvoor toestemming geeft</strong> via de cookiebanner. Je kunt je keuze op elk moment herzien met de knop hieronder; de banner verschijnt dan opnieuw.
+            SayingYes gebruikt de verzamelde data uitsluitend om de website te verbeteren; er worden geen persoonsgegevens doorverkocht aan derden.
+          </p>
+          <CookieChoiceButton />
+          <p className="mt-6 mb-2 font-semibold">Anonieme bezoekersstatistieken (geen cookies)</p>
+          <p>
+            Om te zien hoeveel mensen sayingyes.nl bezoeken, tellen we paginaweergaves zonder cookies en zonder persoonsgegevens. We bewaren alleen de bekeken pagina, de verwijzende website, het land, het apparaattype en een dagelijks wisselende code die niet naar jou is terug te leiden. Je IP-adres wordt niet opgeslagen en de tellingen worden na 90 dagen verwijderd. Trouwsites van klanten worden niet geteld. Staat in je browser &quot;Do Not Track&quot; of Global Privacy Control aan, dan tellen we je bezoek niet mee.
           </p>
         </Section>
 

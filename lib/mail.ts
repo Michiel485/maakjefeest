@@ -1253,3 +1253,88 @@ export async function sendExpiryWarningEmail({
     return { success: false, error: err }
   }
 }
+
+// ── Bezoekersoverzicht (dagelijks, naar de eigenaar) ─────────────────────────
+
+export interface VisitorDigestData {
+  toEmail: string
+  pageviews: number
+  visitors: number
+  topPages: [string, number][]
+  referrers: [string, number][]
+  countries: [string, number][]
+  devices: [string, number][]
+}
+
+function digestTabel(titel: string, rijen: [string, number][]) {
+  if (rijen.length === 0) return ""
+  const body = rijen
+    .map(
+      ([naam, n]) => `
+        <tr>
+          <td style="padding:8px 14px;border-bottom:1px solid #f0ede8;color:#374151;">${naam}</td>
+          <td style="padding:8px 14px;border-bottom:1px solid #f0ede8;color:#111827;font-weight:600;text-align:right;">${n}</td>
+        </tr>`
+    )
+    .join("")
+  return `
+    <p style="margin:22px 0 6px;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#C5A059;font-weight:600;">${titel}</p>
+    <table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid #E8D5A3;border-radius:10px;overflow:hidden;font-size:14px;">
+      ${body}
+    </table>`
+}
+
+export async function sendVisitorDigestEmail(data: VisitorDigestData) {
+  const { toEmail, pageviews, visitors, topPages, referrers, countries, devices } = data
+  const datum = new Date().toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long" })
+
+  const html = `
+    <div style="font-family:Georgia,'Times New Roman',serif;max-width:560px;margin:0 auto;padding:32px 24px;background:#FAF7F2;color:#1A1A1A;">
+      <p style="font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:#C5A059;font-weight:600;margin:0 0 8px;">SayingYes · bezoekers</p>
+      <h1 style="font-size:26px;font-weight:700;margin:0 0 4px;">Er was bezoek op je site</h1>
+      <p style="margin:0 0 24px;color:#5C5248;font-size:14px;">Afgelopen 24 uur, tot ${datum}.</p>
+
+      <table style="width:100%;border-collapse:separate;border-spacing:12px 0;margin:0 -12px;">
+        <tr>
+          <td style="background:#fff;border:1px solid #E8D5A3;border-radius:12px;padding:18px;text-align:center;">
+            <div style="font-size:34px;font-weight:700;color:#C5A059;">${visitors}</div>
+            <div style="font-size:12px;color:#5C5248;">${visitors === 1 ? "bezoeker" : "bezoekers"}</div>
+          </td>
+          <td style="background:#fff;border:1px solid #E8D5A3;border-radius:12px;padding:18px;text-align:center;">
+            <div style="font-size:34px;font-weight:700;color:#1A1A1A;">${pageviews}</div>
+            <div style="font-size:12px;color:#5C5248;">${pageviews === 1 ? "paginaweergave" : "paginaweergaves"}</div>
+          </td>
+        </tr>
+      </table>
+
+      ${digestTabel("Bekeken pagina's", topPages)}
+      ${digestTabel("Kwamen via", referrers)}
+      ${digestTabel("Land", countries)}
+      ${digestTabel("Apparaat", devices)}
+
+      <p style="margin:28px 0 0;font-size:12px;color:#9A8E82;line-height:1.6;">
+        Anonieme telling zonder cookies; je eigen bezoeken tellen niet mee op apparaten waar je het adminpaneel hebt geopend.
+        Geen bezoekers? Dan krijg je geen mail.
+      </p>
+    </div>`
+
+  try {
+    const { data: result, error } = await getResend().emails.send({
+      from:    FROM,
+      to:      [toEmail],
+      subject: `👀 ${visitors} ${visitors === 1 ? "bezoeker" : "bezoekers"} op sayingyes.nl`,
+      html,
+    })
+
+    if (error) {
+      console.error("[mail] Visitor digest error:", error)
+      return { success: false, error }
+    }
+
+    console.log("[mail] Visitor digest sent →", toEmail, "| id:", result?.id)
+    return { success: true, id: result?.id }
+  } catch (err) {
+    console.error("[mail] Unexpected error sending visitor digest:", err)
+    return { success: false, error: err }
+  }
+}

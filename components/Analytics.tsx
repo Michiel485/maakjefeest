@@ -2,16 +2,9 @@
 
 import { GoogleAnalytics } from "@next/third-parties/google"
 import { useState, useEffect } from "react"
+import { isMarketingHost } from "@/lib/marketing-host"
 
 const GA_ID = "G-ST0S1N1KS4"
-
-function isMarketingHost(host: string): boolean {
-  const h = host.split(":")[0]
-  if (h === "localhost" || h.endsWith(".localhost")) return false
-  const base =
-    h === "sayingyes.be" || h.endsWith(".sayingyes.be") ? "sayingyes.be" : "sayingyes.nl"
-  return h === base || h === `www.${base}`
-}
 
 export default function Analytics() {
   const [consent, setConsent] = useState<string | null>(null)

@@ -1,6 +1,7 @@
 import { createServiceClient } from "@/lib/supabase"
 import { sendDraftReminderEmail, sendRenewalReminderEmail, sendExpiryWarningEmail } from "@/lib/mail"
 import { revalidatePath } from "next/cache"
+import { sendVisitorDigest } from "@/lib/visitors"
 
 // Vercel Cron calls this endpoint daily at 09:00 AM Europe/Amsterdam.
 // Security: Vercel sets Authorization: Bearer <CRON_SECRET> automatically.
@@ -37,6 +38,7 @@ export async function GET(request: Request) {
     expiryWarnings:   [] as string[],
     expired:          [] as string[],
     errors:           [] as string[],
+    visitorDigest:    "" as string,
   }
 
   // ── Fetch all draft events ─────────────────────────────────────────────────
@@ -204,6 +206,9 @@ export async function GET(request: Request) {
       }
     }
   }
+
+  // ── Bezoekersoverzicht van de afgelopen 24 uur naar de eigenaar (+ opruimen >90 dagen) ──
+  results.visitorDigest = await sendVisitorDigest(service, now)
 
   console.log("[cron/cleanup] Done:", results)
   return Response.json({ ok: true, ...results })
