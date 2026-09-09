@@ -1,7 +1,7 @@
 ---
 title: "RSVP trouwerij: hoe pak je dat aan?"
 date: "2026-06-13"
-description: "RSVP bijhouden voor je bruiloft hoeft geen gedoe te zijn. We leggen uit wat RSVP betekent, hoe je het aanpakt en hoe je voorkomt dat je eindeloos achter gasten aan zit."
+description: "RSVP bijhouden hoeft geen gedoe te zijn. Wat RSVP betekent, hoe je het aanpakt en hoe je voorkomt dat je eindeloos achter je gasten aan zit."
 slug: "rsvp-trouwerij-hoe-pak-je-dat-aan"
 ---
 

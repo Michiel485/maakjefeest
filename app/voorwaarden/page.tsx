@@ -1,8 +1,10 @@
 import type { Metadata } from "next"
 import Link from "next/link"
+import { MARKETING_URL } from "@/lib/site-url"
 
 export const metadata: Metadata = {
   title: "Algemene voorwaarden",
+  alternates: { canonical: `${MARKETING_URL}/voorwaarden` },
   description: "Lees de algemene voorwaarden van SayingYes, handelsnaam van MvB Commerce.",
 }
 

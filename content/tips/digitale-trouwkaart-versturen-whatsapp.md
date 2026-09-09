@@ -1,7 +1,7 @@
 ---
-title: "Digitale trouwkaart versturen via WhatsApp: zo doe je het goed"
+title: "Digitale trouwkaart versturen via WhatsApp"
 date: "2026-09-08"
-description: "Een digitale trouwkaart via WhatsApp versturen is snel, gratis en persoonlijk. Lees wat je erop zet, welke fouten je vermijdt en hoe gasten meteen kunnen reageren."
+description: "Snel, gratis en persoonlijk: zo verstuur je een digitale trouwkaart via WhatsApp. Wat zet je erop, welke fouten vermijd je en hoe reageren gasten meteen?"
 slug: "digitale-trouwkaart-versturen-whatsapp"
 ---
 

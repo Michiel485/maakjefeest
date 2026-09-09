@@ -1,7 +1,7 @@
 ---
-title: "Foto's van gasten verzamelen op je bruiloft: zo werkt een fotomuur met QR-code"
+title: "Gastenfoto's verzamelen op je bruiloft met een QR-code"
 date: "2026-09-08"
-description: "Wil je alle foto's die gasten maken op jullie bruiloft op één plek? Met een fotomuur en QR-code delen gasten hun foto's direct, live op een scherm. Zo regel je het."
+description: "Alle foto's die gasten op jullie bruiloft maken op één plek. Met een fotomuur en QR-code delen ze hun foto's direct, live op een scherm. Zo regel je het."
 slug: "fotos-verzamelen-bruiloft-qr-code"
 ---
 

@@ -9,7 +9,7 @@ import { getAllTips } from "@/lib/tips"
 export const metadata: Metadata = {
   // Absolute titel: de root-template zou er anders een tweede "| SayingYes" achter zetten
   title: { absolute: "Trouwwebsite maken met RSVP en digitale kaarten | SayingYes" },
-  description: "Maak in minuten jullie eigen trouwwebsite met RSVP, fotogalerij en ons verhaal. Inclusief digitale Save the Date, trouwkaarten en een live gastenfotomuur. Eenmalig €49,99, geen abonnement.",
+  description: "Maak in minuten jullie trouwwebsite met RSVP en fotogalerij. Inclusief digitale Save the Date, trouwkaarten en gastenfotomuur. Eenmalig €49,99.",
   alternates: {
     canonical: MARKETING_URL,
   },

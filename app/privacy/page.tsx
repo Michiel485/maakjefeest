@@ -1,10 +1,13 @@
 ﻿import type { Metadata } from "next"
 import Link from "next/link"
 import CookieChoiceButton from "@/components/CookieChoiceButton"
+import { MARKETING_URL } from "@/lib/site-url"
 
 export const metadata: Metadata = {
   title: "Privacy & cookiebeleid",
-  description: "Lees hoe SayingYes omgaat met jouw persoonsgegevens en cookies.",
+  description:
+    "Lees hoe SayingYes omgaat met jouw gegevens: welke gegevens we verwerken, hoe lang we ze bewaren, welke cookies we gebruiken en hoe je je toestemming intrekt.",
+  alternates: { canonical: `${MARKETING_URL}/privacy` },
 }
 
 const GOLD = "#C5A059"

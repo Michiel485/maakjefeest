@@ -1,7 +1,7 @@
 ---
-title: "Save the Date versturen: wanneer, hoe en wat zet je erop?"
+title: "Save the Date versturen: wanneer en wat erop moet"
 date: "2026-09-08"
-description: "Wanneer stuur je een Save the Date voor je bruiloft, wat moet erop staan en hoe verstuur je hem slim? Een praktische gids met tijdlijn, voorbeeldteksten en tips."
+description: "Wanneer stuur je een Save the Date, wat moet erop staan en hoe verstuur je hem slim? Praktische gids met tijdlijn, voorbeeldteksten en tips."
 slug: "save-the-date-versturen-wanneer-en-hoe"
 ---
 

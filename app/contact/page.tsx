@@ -1,8 +1,10 @@
 import type { Metadata } from "next"
 import Link from "next/link"
+import { MARKETING_URL } from "@/lib/site-url"
 
 export const metadata: Metadata = {
   title: "Contact",
+  alternates: { canonical: `${MARKETING_URL}/contact` },
   description: "Neem contact op met SayingYes. Vragen, feedback of ideeën? We horen het graag.",
 }
 
