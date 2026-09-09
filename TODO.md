@@ -4,7 +4,6 @@ Persoonlijke actielijst van Michiel. Claude houdt deze bij; afgeronde punten gaa
 
 ## Open
 
-- [ ] **Bing Webmaster Tools** aanmaken op bing.com/webmasters en "Importeren uit Google Search Console" kiezen. Dekt Bing, DuckDuckGo, Ecosia en Yahoo in een keer.
 - [ ] **Claude GitHub App installeren** op de repo (https://claude.ai/code/onboarding?magic=github-app-setup), nodig voor de tweewekelijkse artikel-routine. Daarna Claude een seintje geven ("app geinstalleerd"): die maakt dan de routine aan (1e en 15e van de maand, 09:00, artikel als pull request). Akkoord gegeven op 9 sep 2026.
 - [ ] **Beslissen over Supabase MCP-koppeling**: zou Claude zelf migraties kunnen draaien. Advies staat in het gesprek van 9 sep 2026: alleen-lezen koppelen (past bij de eigen bouwregel "read-only default"), of niet koppelen en SQL blijven plakken. Niet met volledige schrijfrechten, want de database bevat gastgegevens van klanten.
 - [ ] **Backlinks**: eerst samen bepalen wie we aanschrijven (trouwlocaties, trouwblogs, weddingplanners, leveranciers van onze eigen bruiloft). Claude schrijft daarna de mailteksten en een kandidatenlijst.
@@ -12,6 +11,8 @@ Persoonlijke actielijst van Michiel. Claude houdt deze bij; afgeronde punten gaa
 - [ ] **Reviews verzamelen** zodra er echte klanten zijn (testimonials op de homepage plus Review-schema).
 
 ## Afgerond
+
+- [x] 9 sep 2026: Bing Webmaster Tools staat aan voor https://www.sayingyes.nl. Sitemap ingediend en direct gecrawld: 14 URLs gevonden, 0 fouten, 0 waarschuwingen. Daarmee komen Bing, DuckDuckGo, Yahoo en Ecosia mee. De losse property zonder www mag je negeren.
 
 - [x] 9 sep 2026: Bezoekersinzicht staat aan. Migratie gedraaid, teller op productie getest (paginaweergave landde met pad, land NL, apparaat en anonieme hash), overzichtsquery gecontroleerd en testdata opgeruimd. Vanaf morgen komt er rond 10:00 een mail als er bezoek was.
 
