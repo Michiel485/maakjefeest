@@ -1,6 +1,6 @@
 # Backlinks en vermeldingen
 
-Werklijst voor sayingyes.nl. Doel: links en vermeldingen op sites die Google al vertrouwt, zodat het domein autoriteit opbouwt. Aangelegd 10 september 2026, alle onderstaande sites zijn op die datum live gecontroleerd.
+Werklijst voor sayingyes.nl. Doel: links en vermeldingen op sites die Google al vertrouwt, zodat het domein autoriteit opbouwt. Aangelegd 10 september 2026, alle onderstaande sites zijn op die datum live gecontroleerd. Diezelfde dag nog een keer nagelopen en op twee punten bijgesteld: het telefoonnummer bij ThePerfectWedding is niet verplicht, en de aanmeldlink van Trouwen.nl was verouderd.
 
 Vink af wat je gedaan hebt en noteer de datum, dan weet je later welke aanvragen zijn blijven liggen.
 
@@ -56,8 +56,8 @@ Dit zijn de waardevolste vermeldingen: relevante branche, bruidsparen die er ech
 - **Categorie:** Trouwkaarten. Die categorie bestaat en telt 389 bedrijven in Nederland, waaronder digitale aanbieders als Kaartje2go en Tadaaz. Je past er dus in.
 - **Categoriepagina:** https://www.theperfectwedding.nl/trouwkaarten/bedrijven
 - **Nodig:** bedrijfsnaam, categorie, volledig adres, telefoonnummer, e-mail, website, contactpersoon.
-- **Let op:** telefoonnummer is verplicht.
-- **Waarom eerst:** grootste Nederlandse trouwplatform, gratis, en de links naar bedrijfssites op de categoriepagina zijn niet op nofollow gezet.
+- **Let op:** telefoonnummer wordt gevraagd, maar is niet verplicht. Ik heb het formulier nagekeken: het veld staat er wel (type telefoon), maar geen enkel veld is als verplicht gemarkeerd. Je kunt het dus leeg laten.
+- **Waarom eerst:** grootste Nederlandse trouwplatform, gratis, en de link naar je eigen site is een gewone volglink. Preciezer dan eerder opgeschreven: de categoriepagina linkt alleen naar interne profielpagina's. De volglinks naar het eigen domein staan op de profielpagina zelf. Gecontroleerd bij Soetzappig (profiel 21574): zes links naar soetzappig.nl, allemaal zonder nofollow. Op zo'n profiel staan ook prijzen, bij hen vanaf 6,75 per stuk.
 
 ### WeddingFinder.nl, doen, gratis
 
@@ -76,9 +76,9 @@ Dit zijn de waardevolste vermeldingen: relevante branche, bruidsparen die er ech
 
 ### Trouwen.nl en Bruiloft.nl, pas later, betaald
 
-- **Aanmelden:** https://trouwen.nl/pakket-basis-Nederland
-- **Status:** geen gratis optie. Basis kost 4,95 per maand exclusief btw, 12 maanden vast, ongeveer 72 euro inclusief btw per jaar. Eén vermelding dekt zowel Trouwen.nl als Bruiloft.nl.
-- **Belangrijk:** het basispakket geeft **geen** follow-link. Die zit pas in Plus en Pro, en die prijzen staan niet op de site. Voor 72 euro krijg je dus vooral zichtbaarheid, geen SEO-waarde.
+- **Aanmelden:** https://trouwen.nl/adverteren. De eerder genoemde link /leveranciers/aanmelden bestaat niet meer en geeft een 404.
+- **Status:** geen gratis optie. Op de advertentiepagina staan de pakketten wel, maar geen bedragen. De eerder genoemde 4,95 per maand kon ik daar niet terugvinden en is dus onbevestigd. Eén vermelding dekt zowel Trouwen.nl als Bruiloft.nl.
+- **Belangrijk:** het basispakket geeft **geen** follow-link. Bevestigd op /adverteren, waar bij Pakket Plus letterlijk "Follow link naar website" staat en bij het basispakket niet. Je betaalt in basis dus voor zichtbaarheid, niet voor SEO-waarde.
 - **Advies:** overslaan tot je klanten hebt. Als je later toch instapt, alleen Plus of hoger, want anders koop je precies niet wat je zoekt.
 
 ### Nog te controleren
@@ -133,7 +133,7 @@ bridecard.co, weddinginvite.nl, trouwkaarten.online, lovitations.nl, joliecarte.
 
 ## 6. Openstaande punten voor Michiel
 
-1. **Telefoonnummer.** ThePerfectWedding en Top Trouwbedrijven vragen er allebei om, en het is verplicht. Wil je je eigen mobiele nummer gebruiken, of een apart nummer? Zonder besluit kun je de twee belangrijkste aanmeldingen niet doen.
+1. **Telefoonnummer.** ThePerfectWedding en Top Trouwbedrijven vragen er allebei om, maar bij ThePerfectWedding is geen enkel veld verplicht, dus je kunt aanmelden zonder nummer. Blijft wel de vraag: als je er een opgeeft, je eigen mobiele nummer of een apart nummer?
 2. **Adres.** Theo Uden Masmanstraat 43 is een woonadres. Het staat al openbaar op de voorwaarden- en privacypagina, dus dit is geen nieuwe blootstelling, maar directories verspreiden het wel actiever. Als je dat niet wilt, is een postadres of KvK-vestigingsadres de oplossing, en dan moet dat overal tegelijk veranderen.
 3. **Volgorde.** ThePerfectWedding en WeddingFinder eerst, die zijn gratis en het meest relevant. Daarna de softwarekant. De algemene gidsen als laatste.
 
