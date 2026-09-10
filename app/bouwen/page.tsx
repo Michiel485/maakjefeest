@@ -16,6 +16,8 @@ import { TITLE_FONT_OPTIONS, getTitleFont } from "@/lib/title-fonts"
 import { createClient } from "@/lib/supabase"
 import { eventSiteUrl } from "@/lib/site-url"
 import { DEFAULT_PLAN, PLANS, editablePages, formatEur, isCardPlan, isPlan, type Plan } from "@/lib/plans"
+import { buildCardDisplay } from "@/lib/cards"
+import CardReveal from "@/app/kaart/[token]/card-reveal"
 import SophieTutorial, { type SophieNav } from "@/components/SophieTutorial"
 
 type EventType = "bruiloft" | "verjaardag" | "evenement"
@@ -393,16 +395,9 @@ export default function BouwenPage() {
   })
   // Gekozen pakket: bepaalt welke onderdelen te bewerken zijn. Bij een
   // kaartpakket gaat het alleen om de voorkant (namen, datum, stijl).
-  const [plan, setPlan] = useState<Plan>(() => {
-    if (typeof window === "undefined") return DEFAULT_PLAN
-    const uitUrl = new URLSearchParams(window.location.search).get("plan")
-    if (isPlan(uitUrl)) return uitUrl
-    try {
-      const bewaard = localStorage.getItem("sayingyes_plan")
-      if (isPlan(bewaard)) return bewaard
-    } catch {}
-    return DEFAULT_PLAN
-  })
+  // Server en client moeten dezelfde eerste render geven, dus het pakket wordt
+  // pas na het monteren uit de URL of localStorage gelezen.
+  const [plan, setPlan] = useState<Plan>(DEFAULT_PLAN)
   const [previewPage, setPreviewPage] = useState<PageId>("Home")
   const [activeSection, setActiveSection] = useState<'algemeen' | 'paginas' | 'url' | null>(null)
   const [activeSubPage, setActiveSubPage] = useState<PageId | null>(null)
@@ -449,6 +444,20 @@ export default function BouwenPage() {
   const [pwEnabled, setPwEnabled] = useState(false)
 
   useEffect(() => { if (window.innerWidth < 768) setViewport("mobiel") }, [])
+  useEffect(() => {
+    const uitUrl = new URLSearchParams(window.location.search).get("plan")
+    if (isPlan(uitUrl)) { setPlan(uitUrl); return }
+    try {
+      const bewaard = localStorage.getItem("sayingyes_plan")
+      if (isPlan(bewaard)) setPlan(bewaard)
+    } catch {}
+  }, [])
+  // Tabtitel volgt het pakket: "Website bouwen" klopt niet als je een kaart maakt
+  useEffect(() => {
+    document.title = isCardPlan(plan)
+      ? `${PLANS[plan].label} ontwerpen | SayingYes`
+      : "Website bouwen | SayingYes"
+  }, [plan])
   useEffect(() => { if (activeSection !== 'algemeen') setOpenAlgSection(null) }, [activeSection])
   useEffect(() => { if (activeSection !== 'url') setOpenUrlSection(null) }, [activeSection])
   useEffect(() => { if (activeSection !== 'paginas') setActiveSubPage(null) }, [activeSection])
@@ -1421,8 +1430,8 @@ export default function BouwenPage() {
 
 
 
-          {/* ── 3. URL & BEVEILIGING ── */}
-          <div>
+          {/* ── 3. URL & BEVEILIGING (alleen bij een pakket met publieke site) ── */}
+          <div hidden={kaartPakket}>
             <button
               onClick={() => setActiveSection(prev => prev === 'url' ? null : 'url')}
               className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-gray-50 transition-colors"
@@ -2893,6 +2902,49 @@ export default function BouwenPage() {
 
             {/* Canvas */}
               <div ref={canvasContainerRef} className="flex-1 overflow-y-auto bg-gray-100 p-4 md:p-6">
+                {kaartPakket ? (
+                  /* Kaartpakket: voorbeeld van de kaart zelf, geen websitevoorbeeld */
+                  <div className="mx-auto max-w-lg">
+                    <p className="text-center text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: "#9ca3af" }}>
+                      Zo ziet jullie kaart eruit
+                    </p>
+                    <div className="rounded-2xl shadow-xl overflow-clip">
+                      <CardReveal
+                        display={buildCardDisplay(
+                          plan === "save_the_date" ? "save_the_date" : "trouwkaart",
+                          "klassiek",
+                          {},
+                          {
+                            title: draft?.naam ?? "",
+                            frame_names: draft?.frame_names ?? null,
+                            datum: draft?.datum ?? null,
+                            locatie: draft?.locatie ?? null,
+                            hero_image_url: heroImageUrl,
+                          }
+                        )}
+                        initials={
+                          (draft?.initials && draft.initials.replace(/[|/\\\-·.]/g, "").trim()) ||
+                          (draft?.frame_names ?? draft?.naam ?? "")
+                            .split(/\s*&\s*|\s+en\s+/i)
+                            .map((n) => n.trim().charAt(0).toUpperCase())
+                            .filter(Boolean)
+                            .slice(0, 2)
+                            .join("")
+                        }
+                        sc={sc}
+                        siteUrl={null}
+                        rsvpUrl={null}
+                        startOpen
+                      />
+                    </div>
+                    <p className="text-center text-xs mt-4 leading-relaxed" style={{ color: "#9ca3af" }}>
+                      De namen, datum, locatie en stijl komen uit de instellingen links.
+                      {plan === "uitnodiging"
+                        ? " Per gastengroep maak je na activeren een eigen kaart met eigen tijden en tekst."
+                        : " De kaart zelf maak je na activeren in je dashboard."}
+                    </p>
+                  </div>
+                ) : (
                 <div className="mx-auto" style={{ width: `${Math.round(canvasWidth * canvasScale * zoomMultiplier)}px` }}>
                   <div style={{ width: canvasWidth, transform: `scale(${canvasScale * zoomMultiplier})`, transformOrigin: "top left" }}>
                     <div className="rounded-2xl shadow-xl overflow-clip" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily, letterSpacing: sc.bodyLetterSpacing, fontWeight: sc.bodyFontWeight }}>
@@ -3173,6 +3225,7 @@ export default function BouwenPage() {
 
                   </div>
                 </div>
+                )}
               </div>
 
           </div>
@@ -3395,6 +3448,7 @@ export default function BouwenPage() {
 
       {/* ── Sophie tutorial ── */}
       <SophieTutorial
+        kaartPakket={kaartPakket}
         onNavigate={(nav: SophieNav) => {
           if ('activeSection' in nav) setActiveSection(nav.activeSection ?? null)
           if ('openAlgSection' in nav) setOpenAlgSection(nav.openAlgSection ?? null)

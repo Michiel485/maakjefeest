@@ -25,6 +25,7 @@ export default function CardReveal({
   demo = false,
   previewNotice = false,
   siteVolgt = false,
+  startOpen = false,
 }: {
   display: CardDisplay
   initials: string
@@ -37,8 +38,10 @@ export default function CardReveal({
   previewNotice?: boolean
   // Er hoort een trouwsite bij dit pakket, maar die staat nog niet live
   siteVolgt?: boolean
+  // Voorbeeld in de bouwer: meteen de kaart tonen, zonder envelop
+  startOpen?: boolean
 }) {
-  const [stage, setStage] = useState<Stage>("closed")
+  const [stage, setStage] = useState<Stage>(startOpen ? "open" : "closed")
   const reduceMotion = useSyncExternalStore(
     subscribeReducedMotion,
     () => window.matchMedia(REDUCED_MOTION_QUERY).matches,
@@ -70,12 +73,31 @@ export default function CardReveal({
     >
       {sc.fontImport && <style>{sc.fontImport}</style>}
       {previewNotice && (
-        <div
-          className="fixed top-0 left-0 right-0 z-50 px-4 py-2.5 text-center text-xs font-semibold"
-          style={{ backgroundColor: "#1A1A1A", color: "#FAF7F2", letterSpacing: "0.02em" }}
-        >
-          Voorbeeld, alleen voor jullie zichtbaar. Activeer je pakket om deze kaart te kunnen versturen.
-        </div>
+        <>
+          <div
+            className="fixed top-0 left-0 right-0 z-50 px-4 py-2.5 text-center text-xs font-semibold"
+            style={{ backgroundColor: "#1A1A1A", color: "#FAF7F2", letterSpacing: "0.02em" }}
+          >
+            Voorbeeld, alleen voor jullie zichtbaar. Activeer je pakket om deze kaart te kunnen versturen.
+          </div>
+          {/* Watermerk over de hele kaart, zodat een schermafbeelding ook niet
+              als echte kaart te gebruiken is */}
+          <div
+            aria-hidden="true"
+            className="fixed inset-0 z-40 flex flex-col justify-around items-center"
+            style={{ pointerEvents: "none", overflow: "hidden" }}
+          >
+            {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+              <span
+                key={i}
+                className="text-xl sm:text-3xl font-semibold whitespace-nowrap"
+                style={{ transform: "rotate(-28deg)", color: "#111", opacity: 0.13, letterSpacing: "0.35em" }}
+              >
+                VOORBEELD · SAYINGYES
+              </span>
+            ))}
+          </div>
+        </>
       )}
       <style>{`
         @keyframes kaart-zweef {

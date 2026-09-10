@@ -21,5 +21,8 @@ export default async function Image({
   const display = buildCardDisplay(data.card.type, data.card.template, data.card.content, data.event)
   const sc = getStyleConfig(data.event.style)
 
-  return renderCardImage(display, sc, "og")
+  // Nog niet geactiveerd: watermerk, ook in de voorvertoning die WhatsApp maakt
+  const betaald = data.event.status === "published" || data.event.status === "expired"
+
+  return renderCardImage(display, sc, "og", !betaald)
 }

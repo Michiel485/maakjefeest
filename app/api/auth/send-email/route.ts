@@ -1,4 +1,5 @@
 import { sendMagicLink, sendSignupWelcomeMagicLink } from "@/lib/mail"
+import { isPlan } from "@/lib/plans"
 
 // Supabase Auth Hooks use the Standard Webhooks spec:
 // https://docs.svix.com/receiving/verifying-payloads/how
@@ -110,8 +111,13 @@ export async function POST(request: Request) {
   })()
   console.log("[send-email] isFromAanmaken:", isFromAanmaken, "| isNewUser:", isNewUser)
 
+  // Het gekozen pakket reist mee in de doorverwijzing van /aanmaken, zodat de
+  // welkomstmail over een kaart praat als iemand een kaart maakt.
+  const planUitLink = /[?&]plan(?:=|%3D)(save_the_date|uitnodiging|compleet)/.exec(redirect_to)?.[1]
+  const plan = isPlan(planUitLink) ? planUitLink : undefined
+
   const result = isNewUser
-    ? await sendSignupWelcomeMagicLink({ toEmail: user.email, magicLink })
+    ? await sendSignupWelcomeMagicLink({ toEmail: user.email, magicLink, plan })
     : await sendMagicLink({ toEmail: user.email, magicLink })
 
   if (!result.success) {

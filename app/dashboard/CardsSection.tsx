@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react"
 import { compressImage } from "@/lib/client-image"
-import { planAllows, type Plan } from "@/lib/plans"
+import { PLANS, formatEur, planAllows, type Plan } from "@/lib/plans"
 import {
   CARD_TEMPLATE_LABEL,
   CARD_TYPE_LABEL,
@@ -366,22 +366,36 @@ export default function CardsSection({
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => copyLink(card)}
-                    className="text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
-                    style={{ backgroundColor: copiedId === card.id ? "#ecfdf5" : GOLD_BG, color: copiedId === card.id ? "#065f46" : CHARCOAL, border: `1px solid ${copiedId === card.id ? "#10b981" : GOLD_LIGHT}`, cursor: "pointer" }}
-                  >
-                    {copiedId === card.id ? "✓ Gekopieerd" : "🔗 Kopieer link"}
-                  </button>
-                  <a
-                    href={whatsappUrl(card)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs font-semibold px-3 py-2 rounded-lg"
-                    style={{ backgroundColor: "#dcf8c6", color: "#075e54", border: "1px solid #b8e0a8", textDecoration: "none" }}
-                  >
-                    WhatsApp
-                  </a>
+                  {/* Zolang het pakket niet geactiveerd is, valt er niets te delen:
+                      de link en de download zijn dan alleen een voorbeeld. */}
+                  {event.status === "draft" ? (
+                    <a
+                      href={`/betalen?event_id=${event.id}&plan=${event.plan}`}
+                      className="text-xs font-bold px-3 py-2 rounded-lg"
+                      style={{ backgroundColor: CHARCOAL, color: IVORY, textDecoration: "none" }}
+                    >
+                      Activeer voor {formatEur(PLANS[event.plan].price).replace(",00", "")} en verstuur
+                    </a>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => copyLink(card)}
+                        className="text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
+                        style={{ backgroundColor: copiedId === card.id ? "#ecfdf5" : GOLD_BG, color: copiedId === card.id ? "#065f46" : CHARCOAL, border: `1px solid ${copiedId === card.id ? "#10b981" : GOLD_LIGHT}`, cursor: "pointer" }}
+                      >
+                        {copiedId === card.id ? "✓ Gekopieerd" : "🔗 Kopieer link"}
+                      </button>
+                      <a
+                        href={whatsappUrl(card)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-semibold px-3 py-2 rounded-lg"
+                        style={{ backgroundColor: "#dcf8c6", color: "#075e54", border: "1px solid #b8e0a8", textDecoration: "none" }}
+                      >
+                        WhatsApp
+                      </a>
+                    </>
+                  )}
                   <a
                     href={`/kaart/${card.share_token}`}
                     target="_blank"
@@ -396,7 +410,7 @@ export default function CardsSection({
                     className="text-xs font-semibold px-3 py-2 rounded-lg"
                     style={{ backgroundColor: "white", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, textDecoration: "none" }}
                   >
-                    ⬇ Afbeelding
+                    {event.status === "draft" ? "⬇ Voorbeeld" : "⬇ Afbeelding"}
                   </a>
                   <button
                     onClick={() => openEdit(card)}

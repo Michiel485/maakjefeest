@@ -57,7 +57,7 @@ export const CARD_HEADING: Record<CardType, string> = {
 }
 
 const DEFAULT_MESSAGE: Record<CardType, string> = {
-  save_the_date: "Zet de datum alvast in je agenda — de officiële uitnodiging volgt!",
+  save_the_date: "Zet de datum alvast in je agenda. De officiële uitnodiging volgt!",
   trouwkaart: "Wij gaan trouwen en vieren dat graag met jou. Kom je ook?",
 }
 

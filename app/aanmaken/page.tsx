@@ -237,7 +237,7 @@ export default function AanmakenPage() {
       email: form.email,
       options: {
         shouldCreateUser: true,
-        emailRedirectTo: `${window.location.origin}/api/auth/callback?next=/bouwen`,
+        emailRedirectTo: `${window.location.origin}/api/auth/callback?next=${encodeURIComponent(`/bouwen?plan=${gekozenPlan}`)}`,
       },
     })
 

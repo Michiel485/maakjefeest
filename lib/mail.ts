@@ -1,4 +1,5 @@
 import { Resend } from "resend"
+import { PLANS, isCardPlan, type Plan } from "./plans"
 
 const FROM = "SayingYes <info@sayingyes.nl>"
 
@@ -567,10 +568,34 @@ export async function sendWebsiteLiveEmail(
 export async function sendSignupWelcomeMagicLink({
   toEmail,
   magicLink,
+  plan = "compleet",
 }: {
   toEmail: string
   magicLink: string
+  plan?: Plan
 }) {
+  // De tekst volgt het gekozen pakket: wie een kaart maakt hoort niets over
+  // een website te lezen.
+  const kaart = isCardPlan(plan)
+  const kop = kaart ? "Ja, jullie ontwerp staat klaar!" : "Ja, de basis staat!"
+  const intro = kaart
+    ? `Jullie gegevens zijn opgeslagen. Klik op de knop hieronder om het ontwerp van jullie ${PLANS[plan].label.toLowerCase()} af te maken. Er is nog niets verstuurd en je betaalt nog niets: ontwerpen is gratis en vrijblijvend.`
+    : "Jullie gegevens zijn opgeslagen. Klik op de knop hieronder om door te gaan met bouwen. Je website is nog niet live en je betaalt nog niets: bouwen is volledig gratis en vrijblijvend."
+  const stappenKop = kaart ? "Wat doe je hierna?" : "Wat staat er klaar na je eerste login?"
+  const stappen: [string, string][] = kaart
+    ? [
+        ["🎨 Kies een stijl", "De stijl die je kiest bepaalt hoe jullie kaart eruitziet."],
+        ["✍️ Namen, datum en locatie", "Wat je hier invult, komt op de kaart te staan."],
+        ["💌 Kaart maken en versturen", "Na activeren maak je in je dashboard de kaart en deel je de link via WhatsApp."],
+      ]
+    : [
+        ["🎨 Kies een stijl", "Selecteer een template dat matcht met jullie grote dag."],
+        ["📍 Locaties en tijden", "Voeg de ceremonie en het feest toe aan de tijdlijn."],
+        ["💌 RSVP klaarzetten", "Bepaal welke vragen jullie gasten moeten beantwoorden."],
+      ]
+  const knop = kaart ? "Verder met je ontwerp →" : "Verder bouwen →"
+  const afsluiting = kaart ? "jullie kaart" : "jullie website"
+
   const html = `<!DOCTYPE html>
 <html lang="nl">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -584,7 +609,7 @@ export async function sendSignupWelcomeMagicLink({
         <tr>
           <td bgcolor="#c9a96e" style="background-color:#c9a96e;padding:44px 40px 36px;text-align:center;">
             <p style="margin:0 0 10px;font-size:26px;font-weight:600;letter-spacing:0.06em;color:#f5ead6;font-family:'Cormorant Garamond','Georgia',serif;">SayingYes</p>
-            <h1 style="margin:0;font-size:26px;font-weight:800;color:#111827;line-height:1.25;">Ja, de basis staat! 💍</h1>
+            <h1 style="margin:0;font-size:26px;font-weight:800;color:#111827;line-height:1.25;">${kop} 💍</h1>
             <p style="margin:10px 0 0;font-size:14px;color:#2d1f0e;font-weight:500;">Welkom bij SayingYes</p>
           </td>
         </tr>
@@ -593,30 +618,21 @@ export async function sendSignupWelcomeMagicLink({
         <tr>
           <td style="padding:36px 40px 0;">
             <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.7;">
-              De basisgegevens zijn opgeslagen — klik op de knop hieronder om door te gaan met bouwen. Je website is nog niet live en je betaalt nog niets. Bouwen is volledig gratis en vrijblijvend.
+              ${intro}
             </p>
 
             <!-- Steps block -->
             <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
               <tr>
                 <td style="background-color:#faf7f2;border:1px solid #e8dcc8;border-radius:12px;padding:20px 24px;">
-                  <p style="margin:0 0 14px;font-size:14px;font-weight:700;color:#111827;">Wat staat er klaar na je eerste login?</p>
+                  <p style="margin:0 0 14px;font-size:14px;font-weight:700;color:#111827;">${stappenKop}</p>
                   <table width="100%" cellpadding="0" cellspacing="0">
+                    ${stappen.map(([titel, uitleg], i) => `
                     <tr>
-                      <td style="padding:7px 0;border-bottom:1px solid #ede9e0;">
-                        <p style="margin:0;font-size:13px;color:#374151;line-height:1.6;"><strong style="color:#111827;">🎨 Kies een stijl</strong> — Selecteer een template dat matcht met jullie grote dag.</p>
+                      <td style="padding:7px 0;${i < stappen.length - 1 ? "border-bottom:1px solid #ede9e0;" : ""}">
+                        <p style="margin:0;font-size:13px;color:#374151;line-height:1.6;"><strong style="color:#111827;">${titel}</strong>: ${uitleg}</p>
                       </td>
-                    </tr>
-                    <tr>
-                      <td style="padding:7px 0;border-bottom:1px solid #ede9e0;">
-                        <p style="margin:0;font-size:13px;color:#374151;line-height:1.6;"><strong style="color:#111827;">📍 Locaties &amp; Tijden</strong> — Voeg de ceremonie en het feest toe aan de tijdlijn.</p>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="padding:7px 0;">
-                        <p style="margin:0;font-size:13px;color:#374151;line-height:1.6;"><strong style="color:#111827;">💌 RSVP klaarzetten</strong> — Bepaal welke vragen jullie gasten moeten beantwoorden.</p>
-                      </td>
-                    </tr>
+                    </tr>`).join("")}
                   </table>
                 </td>
               </tr>
@@ -630,7 +646,7 @@ export async function sendSignupWelcomeMagicLink({
                     href="${magicLink}"
                     style="display:inline-block;background-color:#c9a96e;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:14px 36px;border-radius:10px;letter-spacing:0.02em;mso-padding-alt:14px 36px;"
                   >
-                    Verder bouwen →
+                    ${knop}
                   </a>
                 </td>
               </tr>
@@ -648,7 +664,7 @@ export async function sendSignupWelcomeMagicLink({
         <tr>
           <td style="padding:0 40px 32px;">
             <p style="margin:0;font-size:15px;color:#374151;line-height:1.7;">
-              Heel veel plezier met het ontwerpen van jullie website,<br>
+              Heel veel plezier met het ontwerpen van ${afsluiting},<br>
               <strong style="color:#111827;">Het team van SayingYes.nl</strong>
             </p>
           </td>
@@ -673,7 +689,7 @@ export async function sendSignupWelcomeMagicLink({
     const { data: result, error } = await getResend().emails.send({
       from:    FROM,
       to:      [toEmail],
-      subject: "Ja, de basis staat! 💍 Welkom bij SayingYes",
+      subject: `${kop} 💍 Welkom bij SayingYes`,
       html,
     })
 

@@ -30,15 +30,21 @@ async function loadGoogleFont(family: string, weight: number, text: string): Pro
 export async function renderCardImage(
   display: CardDisplay,
   sc: SC,
-  mode: "og" | "download"
+  mode: "og" | "download",
+  // Nog niet betaald: een watermerk over de hele afbeeldingerheen, zodat een
+  // voorbeeld niet als echte kaart te gebruiken is
+  watermerk = false
 ): Promise<ImageResponse> {
   // Download: 4:5 (mooi voor WhatsApp/Instagram), de kaart vult het beeld
   const width = mode === "og" ? 1200 : 1080
   const height = mode === "og" ? 630 : 1350
 
+  const WATERMERK_TEKST = "VOORBEELD · SAYINGYES"
+
   const allText = [
     display.heading, display.names, display.dateText, display.location,
-    display.inviteLine, display.message, "Gemaakt met SayingYes — sayingyes.nl",
+    display.inviteLine, display.message, "Gemaakt met SayingYes, sayingyes.nl",
+    watermerk ? WATERMERK_TEKST : "",
   ].join(" ")
 
   const fonts: { name: string; data: ArrayBuffer; weight: 500 | 600; style: "normal" }[] = []
@@ -52,6 +58,41 @@ export async function renderCardImage(
 
   const s = mode === "og" ? 0.62 : 1.1
   const showPhoto = mode === "download" && !!display.photoUrl
+
+  // Diagonale banen over de hele afbeelding; satori kan roteren en absoluut plaatsen
+  const watermerkLaag = watermerk ? (
+    <div
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-around",
+        alignItems: "center",
+        overflow: "hidden",
+      }}
+    >
+      {[0, 1, 2, 3, 4, 5].map((i) => (
+        <div
+          key={i}
+          style={{
+            display: "flex",
+            transform: "rotate(-28deg)",
+            fontFamily: sans,
+            fontSize: mode === "og" ? 34 : 56,
+            letterSpacing: mode === "og" ? 5 : 9,
+            color: "#111111",
+            opacity: 0.16,
+          }}
+        >
+          {WATERMERK_TEKST}
+        </div>
+      ))}
+    </div>
+  ) : null
   const textColor = sc.cardText ?? sc.bodyText
   const headingColor = sc.cardText ?? sc.headingColor
 
@@ -180,6 +221,7 @@ export async function renderCardImage(
       (
         <div
           style={{
+            position: "relative",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
@@ -204,6 +246,7 @@ export async function renderCardImage(
           >
             {inner}
           </div>
+          {watermerkLaag}
         </div>
       ),
       { width, height, fonts: fonts.length > 0 ? fonts : undefined }
@@ -215,6 +258,7 @@ export async function renderCardImage(
     (
       <div
         style={{
+          position: "relative",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -261,8 +305,9 @@ export async function renderCardImage(
             opacity: 0.6,
           }}
         >
-          Gemaakt met SayingYes — sayingyes.nl
+          {watermerk ? "Voorbeeld, activeer je pakket op sayingyes.nl" : "Gemaakt met SayingYes · sayingyes.nl"}
         </div>
+        {watermerkLaag}
       </div>
     ),
     { width, height, fonts: fonts.length > 0 ? fonts : undefined }

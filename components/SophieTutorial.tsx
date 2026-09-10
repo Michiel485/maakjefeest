@@ -19,37 +19,39 @@ export interface SophieNav {
 
 interface Props {
   onNavigate: (nav: SophieNav) => void
+  // Bij een kaartpakket gaat het om een kaart, niet om een website
+  kaartPakket?: boolean
 }
 
 const STEPS: { label: string; title: string; text: string; nav: SophieNav }[] = [
   {
     label: "Stap 1 · Stijl",
     title: "Laten we beginnen met de sfeer 🎨",
-    text: "Kies een kleurthema dat past bij jullie dag. Van warm ivoor tot stoer emerald — elk thema heeft zijn eigen kleurpalet en sfeer. Je ziet de verandering direct in de preview. Geen zorgen, dit kun je later altijd nog aanpassen!",
+    text: "Kies een kleurthema dat past bij jullie dag. Van warm ivoor tot stoer emerald: elk thema heeft zijn eigen kleurpalet en sfeer. Je ziet de verandering direct in de preview. Geen zorgen, dit kun je later altijd nog aanpassen!",
     nav: { activeSection: 'algemeen', openAlgSection: 'stijl' },
   },
   {
     label: "Stap 2 · Lay-out",
     title: "De opbouw van de website 📐",
-    text: "Wil je alle onderdelen op aparte pagina's, of toch één lange pagina? Probeer beide uit — ze zijn allebei erg leuk!",
+    text: "Wil je alle onderdelen op aparte pagina's, of toch één lange pagina? Probeer beide uit, ze zijn allebei erg leuk!",
     nav: { activeSection: 'algemeen', openAlgSection: 'layout' },
   },
   {
     label: "Stap 3 · Lettertype",
     title: "Het lettertype bepaalt de stijl 🖋️",
-    text: "Een romantisch handschrift, een klassiek schreeflettertype of iets moderns — het lettertype geeft jullie website veel karakter. Dit basislettertype bepaalt de look van de navigatie, paginatitels, jullie welkomstbericht én de overige pagina's.\n\nLet op: deze keuze heeft geen invloed op de homepage. De tekstvelden op jullie homepagina kun je apart aanpassen en indelen via de instellingen van de pagina 'Home'.",
+    text: "Een romantisch handschrift, een klassiek schreeflettertype of iets moderns: het lettertype geeft jullie website veel karakter. Dit basislettertype bepaalt de look van de navigatie, paginatitels, jullie welkomstbericht én de overige pagina's.\n\nLet op: deze keuze heeft geen invloed op de homepage. De tekstvelden op jullie homepagina kun je apart aanpassen en indelen via de instellingen van de pagina 'Home'.",
     nav: { activeSection: 'algemeen', openAlgSection: 'lettertype' },
   },
   {
     label: "Stap 4 · Homepage",
-    title: "De homepage — jullie visitekaartje 🏡",
+    title: "De homepage, jullie visitekaartje 🏡",
     text: "Dit is het meest uitgebreide onderdeel. Wat je hier kunt instellen, hangt samen met je lay-outkeuze. Kies je voor Vaste indeling, dan staat de opzet al direct vast met links de headerfoto en rechts jullie tekstvelden strak naast elkaar. Kies je voor Flexibel, dan bepaal je alles helemaal zelf: voeg een grote sfeerfoto bovenaan toe, kies een mooi trouwkaart-kader met jullie initialen, namen en datum, of zet ze juist allebei uit voor een rustige, minimalistische look!",
     nav: { activeSection: 'paginas', openAlgSection: null, activeSubPage: 'Home', openHomeSection: 'layout' },
   },
   {
     label: "Stap 5 · Homepage bewerken",
     title: "Klik om direct te bewerken ✏️",
-    text: "Klik op een tekst in de live preview en je springt automatisch naar de bijbehorende menu-optie — je kunt het dan direct aanpassen. Op de homepage kun je elk tekstveld bovendien apart instellen met een eigen lettertype en grootte. Zo heb je maximale vrijheid om precies de look te krijgen die jullie voor ogen hebben!",
+    text: "Klik op een tekst in de live preview en je springt automatisch naar de bijbehorende menu-optie, zodat je het direct kunt aanpassen. Op de homepage kun je elk tekstveld bovendien apart instellen met een eigen lettertype en grootte. Zo heb je maximale vrijheid om precies de look te krijgen die jullie voor ogen hebben!",
     nav: { activeSection: 'paginas', openAlgSection: null, activeSubPage: 'Home', openHomeSection: 'tekstvelden' },
   },
   {
@@ -57,6 +59,28 @@ const STEPS: { label: string; title: string; text: string; nav: SophieNav }[] = 
     title: "Welke pagina's wil je tonen? 📄",
     text: "Zet alleen de pagina's aan die jullie nodig hebben. Geen fotogalerij? Zet 'Foto's' gewoon uit. Het menu past zich automatisch aan. En ook na het live zetten kun je dit nog altijd aanpassen!",
     nav: { activeSection: 'paginas', openAlgSection: null, activeSubPage: null, openHomeSection: null },
+  },
+]
+
+// Bij een kaartpakket gaat het alleen om hoe de kaart eruitziet
+const CARD_STEPS: { label: string; title: string; text: string; nav: SophieNav }[] = [
+  {
+    label: "Stap 1 · Stijl",
+    title: "Laten we beginnen met de sfeer 🎨",
+    text: "Kies een kleurthema dat past bij jullie dag. Van warm ivoor tot stoer emerald: het thema bepaalt de kleuren van jullie kaart en van de envelop die jullie gasten openen. Je ziet de verandering direct in het voorbeeld.",
+    nav: { activeSection: 'algemeen', openAlgSection: 'stijl' },
+  },
+  {
+    label: "Stap 2 · Lettertype",
+    title: "Het lettertype bepaalt de stijl 🖋️",
+    text: "Een romantisch handschrift, een klassiek schreeflettertype of iets moderns: het lettertype geeft jullie kaart karakter. Ook dit zie je meteen terug in het voorbeeld.",
+    nav: { activeSection: 'algemeen', openAlgSection: 'lettertype' },
+  },
+  {
+    label: "Stap 3 · Jullie gegevens",
+    title: "Namen, datum en locatie ✍️",
+    text: "Onder Voorkant vul je in wat er op de kaart komt te staan: jullie namen, de datum en de locatie. Na activeren maak je in je dashboard de kaart zelf, kies je eventueel een foto en deel je de link via WhatsApp.",
+    nav: { activeSection: 'paginas', openAlgSection: null, activeSubPage: 'Home', openHomeSection: null },
   },
 ]
 
@@ -120,7 +144,8 @@ function SophieHeader({ label }: { label?: string }) {
   )
 }
 
-export default function SophieTutorial({ onNavigate }: Props) {
+export default function SophieTutorial({ onNavigate, kaartPakket = false }: Props) {
+  const stappen = kaartPakket ? CARD_STEPS : STEPS
   const [phase, setPhase]     = useState<'loading' | 'welcome' | 'tour' | 'done'>('loading')
   const [step, setStep]       = useState(0)
   const [mounted, setMounted] = useState(false)
@@ -134,13 +159,13 @@ export default function SophieTutorial({ onNavigate }: Props) {
 
   function goTo(i: number) {
     setStep(i)
-    onNavigate(STEPS[i].nav)
+    onNavigate(stappen[i].nav)
   }
 
   function start() {
     setPhase('tour')
     setStep(0)
-    onNavigate(STEPS[0].nav)
+    onNavigate(stappen[0].nav)
   }
 
   function skip() {
@@ -149,7 +174,7 @@ export default function SophieTutorial({ onNavigate }: Props) {
   }
 
   function next() {
-    if (step < STEPS.length - 1) {
+    if (step < stappen.length - 1) {
       goTo(step + 1)
     } else {
       localStorage.setItem(LS_DONE, "1")
@@ -162,7 +187,7 @@ export default function SophieTutorial({ onNavigate }: Props) {
     localStorage.removeItem(LS_SKIPPED)
     setStep(0)
     setPhase('tour')
-    onNavigate(STEPS[0].nav)
+    onNavigate(stappen[0].nav)
   }
 
   const cardClass = "fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[9999] w-72 rounded-2xl shadow-2xl overflow-hidden"
@@ -194,10 +219,12 @@ export default function SophieTutorial({ onNavigate }: Props) {
         <div className="px-5 pt-4 pb-2">
           <p className="text-sm font-semibold mb-1.5" style={{ color: CHARCOAL }}>Hoi! Welkom in de builder 👋</p>
           <p className="text-xs leading-relaxed" style={{ color: BODY }}>
-            Op basis van jullie gegevens heb ik alvast een voorbeeld klaargezet — kijk gerust rond voor een eerste indruk! Zullen we daarna samen jullie droomwebsite neerzetten? Ik neem je in een paar stappen mee langs alle onderdelen.
+            {kaartPakket
+              ? "Op basis van jullie gegevens heb ik alvast een voorbeeld van jullie kaart klaargezet. Kijk gerust rond! Zullen we daarna samen de stijl en de gegevens doorlopen? Dat zijn drie korte stappen."
+              : "Op basis van jullie gegevens heb ik alvast een voorbeeld klaargezet. Kijk gerust rond voor een eerste indruk! Zullen we daarna samen jullie droomwebsite neerzetten? Ik neem je in een paar stappen mee langs alle onderdelen."}
           </p>
           <p className="text-[10px] mt-2 leading-relaxed" style={{ color: SUBTLE }}>
-            Bouwen kan prima op je telefoon, maar op een desktop gaat het net iets fijner. Je kunt mij later altijd opnieuw opstarten.
+            {kaartPakket ? "Ontwerpen" : "Bouwen"} kan prima op je telefoon, maar op een desktop gaat het net iets fijner. Je kunt mij later altijd opnieuw opstarten.
           </p>
         </div>
         <div className="px-5 pb-5 pt-3 flex flex-col gap-2">
@@ -222,7 +249,7 @@ export default function SophieTutorial({ onNavigate }: Props) {
   }
 
   // ── Tour step card ────────────────────────────────────────────────────────────
-  const current = STEPS[step]
+  const current = stappen[step]
   return createPortal(
     <div className={cardClass} style={cardStyle}>
       {/* Header met step-dots */}
@@ -239,7 +266,7 @@ export default function SophieTutorial({ onNavigate }: Props) {
             <p style={{ fontSize: "0.6rem", color: BODY, marginTop: 2 }}>{current.label}</p>
           </div>
         </div>
-        <StepDots total={STEPS.length} current={step} onGo={goTo} />
+        <StepDots total={stappen.length} current={step} onGo={goTo} />
       </div>
 
       {/* Inhoud */}
@@ -277,7 +304,7 @@ export default function SophieTutorial({ onNavigate }: Props) {
           className="px-4 py-1.5 text-xs font-semibold rounded-lg transition-all hover:-translate-y-0.5"
           style={{ backgroundColor: GOLD, color: "#fff" }}
         >
-          {step === STEPS.length - 1 ? "Klaar! 🎉" : "Volgende →"}
+          {step === stappen.length - 1 ? "Klaar! 🎉" : "Volgende →"}
         </button>
       </div>
     </div>,
