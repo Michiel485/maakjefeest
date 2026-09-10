@@ -2,6 +2,7 @@ import { createMollieClient } from "@mollie/api-client"
 import { createServerClient } from "@supabase/ssr"
 import { createServiceClient } from "@/lib/supabase"
 import { cookies } from "next/headers"
+import { renewalAllowed } from "@/lib/plans"
 
 export const dynamic = "force-dynamic"
 
@@ -74,13 +75,22 @@ export async function POST(request: Request) {
   const supabase = createServiceClient()
   const { data: event } = await supabase
     .from("events")
-    .select("id, title, user_email")
+    .select("id, title, user_email, plan")
     .eq("id", event_id)
     .eq("user_email", customerEmail)
     .single()
 
   if (!event) {
     return Response.json({ error: "Event niet gevonden" }, { status: 404 })
+  }
+
+  // Verlengen hoort bij een complete site; bij een kaartpakket is een upgrade
+  // de logische stap in plaats van zes maanden extra.
+  if (!renewalAllowed(event.plan)) {
+    return Response.json(
+      { error: "Verlengen hoort bij het pakket Trouwwebsite compleet. Upgrade via je dashboard." },
+      { status: 400 }
+    )
   }
 
   // Apply discount if provided
@@ -100,7 +110,7 @@ export async function POST(request: Request) {
 
   const payment = await mollie.payments.create({
     amount:      { currency: "EUR", value: paymentAmount.toFixed(2) },
-    description: `SayingYes — verlenging 6 maanden (${event.title})${discount_code ? ` | korting: ${discount_code}` : ""}`,
+    description: `SayingYes, verlenging 6 maanden (${event.title})${discount_code ? ` | korting: ${discount_code}` : ""}`,
     redirectUrl: `${baseUrl}/dashboard?renewed=1`,
     webhookUrl:  `${baseUrl}/api/webhook?token=${process.env.MOLLIE_WEBHOOK_SECRET}`,
     metadata,

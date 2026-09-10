@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import { createServiceClient } from "@/lib/supabase"
 import { getStyleConfig } from "@/lib/event-styles"
 import { maxPhotosPerEvent } from "@/lib/guest-photos"
+import { planAllows } from "@/lib/plans"
 import PhotoWall, { type GuestPhoto } from "./photo-wall"
 
 export default async function FotomuurPage({
@@ -17,13 +18,13 @@ export default async function FotomuurPage({
   const { data: event } = await supabase
     .from("events")
     .select(
-      "id, title, nav_title, style, font_hero, font_initials, font_frame_names, font_page_titles, guest_photos_enabled"
+      "id, title, nav_title, style, font_hero, font_initials, font_frame_names, font_page_titles, guest_photos_enabled, plan"
     )
     .eq("slug", slug)
     .eq("status", "published")
     .single()
 
-  if (!event || !event.guest_photos_enabled) notFound()
+  if (!event || !event.guest_photos_enabled || !planAllows(event.plan, "photos")) notFound()
 
   const { data: photos } = await supabase
     .from("guest_photos")

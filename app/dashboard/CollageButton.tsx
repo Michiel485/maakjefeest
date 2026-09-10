@@ -344,7 +344,7 @@ export default function CollageButton({
         return URL.createObjectURL(blob)
       })
     } catch {
-      setError("Collage maken mislukt — probeer het opnieuw.")
+      setError("Collage maken mislukt, probeer het opnieuw.")
     } finally {
       setProgress(null)
     }

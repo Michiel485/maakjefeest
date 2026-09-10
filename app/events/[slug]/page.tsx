@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation"
 import { createServiceClient } from "@/lib/supabase"
 import { getStyleConfig, formatDate } from "@/lib/event-styles"
 import EventHomePreview, { type HomepageSettings } from "@/components/EventHomePreview"
@@ -37,9 +38,11 @@ export default async function EventHomePage({
   // heeft losse subpagina's.
   const plan = normalizePlan(event.plan)
   const isCompleet = plan === "compleet"
+  // Bij het pakket Save the Date hoort geen publieke pagina: de kaartlink is
+  // het hele product en verwijst nergens naar de site.
+  if (plan === "save_the_date") notFound()
   const isSinglePage = !isCompleet || hs?.pageMode === 'single'
-  // Bij Save the Date is er geen RSVP: de knop krijgt een uniek doel en wordt verborgen
-  const rsvpHref = plan === "save_the_date" ? "#save-the-date" : isSinglePage ? "#rsvp" : `${basePath}/RSVP`
+  const rsvpHref = isSinglePage ? "#rsvp" : `${basePath}/RSVP`
 
   const { data: homePage } = await supabase
     .from("pages")
@@ -103,7 +106,6 @@ export default async function EventHomePage({
 
   return (
     <>
-      {plan === "save_the_date" && <style>{`a[href="#save-the-date"]{display:none !important}`}</style>}
       <section id="home">
         {homePreview}
       </section>

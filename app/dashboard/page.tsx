@@ -19,7 +19,7 @@ import SlugEditor from "./SlugEditor"
 import DeleteDraftButton from "./DeleteDraftButton"
 import RenewalButton from "./RenewalButton"
 import DeleteEventButton from "./DeleteEventButton"
-import { PLANS, PLAN_ORDER, normalizePlan, planAllows, planRank, upgradePrice, formatEur } from "@/lib/plans"
+import { PLANS, PLAN_ORDER, normalizePlan, planAllows, planRank, renewalAllowed, upgradePrice, formatEur } from "@/lib/plans"
 
 const GOLD       = "#C5A059"
 const GOLD_LIGHT = "#E8D5A3"
@@ -116,25 +116,33 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
           )}
         </div>
         <h3
-          className="text-lg font-mono"
+          className={planAllows(event.plan, "rsvp") ? "text-lg font-mono" : "text-lg"}
           style={{ fontWeight: 700, color: CHARCOAL }}
         >
-          {`${event.slug}.sayingyes.nl`}
+          {planAllows(event.plan, "rsvp") ? `${event.slug}.sayingyes.nl` : event.title}
         </h3>
         <p className="text-xs mt-0.5" style={{ color: BODY }}>Opgeslagen op {date}</p>
-        {!isDraft && (
+        {!isDraft && !renewalAllowed(event.plan) && (
+          <p className="text-xs mt-0.5" style={{ color: BODY }}>
+            Geen einddatum, jullie kaartlink blijft werken
+          </p>
+        )}
+        {!isDraft && renewalAllowed(event.plan) && (
           <p className="text-xs mt-0.5" style={{ color: isSubscriptionExpired ? "#b45309" : isExpiringSoon ? "#b45309" : BODY }}>
             {!expiresAt
               ? "Vervaldatum niet ingesteld"
               : isSubscriptionExpired
               ? `Verlopen op ${expiresAt.toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })}`
-              : `Geldig tot ${expiresAt.toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })}${isExpiringSoon ? ` — nog ${daysUntilExpiry} dagen` : ""}`
+              : `Geldig tot ${expiresAt.toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })}${isExpiringSoon ? `, nog ${daysUntilExpiry} dagen` : ""}`
             }
           </p>
         )}
-        <div className="mt-2">
-          <SlugEditor eventId={event.id} currentSlug={event.slug} isLive={!isDraft} />
-        </div>
+        {/* Het webadres is alleen relevant als er een publieke pagina bij hoort */}
+        {planAllows(event.plan, "rsvp") && (
+          <div className="mt-2">
+            <SlugEditor eventId={event.id} currentSlug={event.slug} isLive={!isDraft} />
+          </div>
+        )}
         {!isDraft && <UpgradeLinks event={event} />}
       </div>
 
@@ -144,7 +152,7 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
           {isDraft && (
             <DeleteDraftButton eventId={event.id} />
           )}
-          {!isDraft && !isSubscriptionExpired && (
+          {!isDraft && !isSubscriptionExpired && planAllows(event.plan, "rsvp") && (
             <a
               href={eventSiteUrl(event.slug)}
               target="_blank"
@@ -153,10 +161,10 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
               style={{ color: BODY }}
               title={eventSiteLabel(event.slug)}
             >
-              {normalizePlan(event.plan) === "uitnodiging" ? "Bekijk RSVP-pagina →" : "Bekijken →"}
+              {planAllows(event.plan, "site") ? "Bekijken →" : "Bekijk RSVP-pagina →"}
             </a>
           )}
-          {!isDraft && (
+          {!isDraft && renewalAllowed(event.plan) && (
             <RenewalButton eventId={event.id} />
           )}
           <Link
@@ -164,7 +172,7 @@ function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean
             className="text-sm font-semibold px-4 py-3 md:py-2 rounded-xl text-center transition-all hover:-translate-y-0.5 w-full md:w-auto"
             style={{ backgroundColor: CHARCOAL, color: IVORY }}
           >
-            Verder bewerken
+            {planAllows(event.plan, "site") ? "Verder bewerken" : "Ontwerp aanpassen"}
           </Link>
         </div>
         {!isDraft && (
@@ -371,6 +379,25 @@ export default async function DashboardPage() {
           </section>
         )}
 
+        {/* Digitale kaarten */}
+        {cardsAvailable && (events ?? []).length > 0 && (
+          <section className="mb-10">
+            <div className="mb-5">
+              <SectionLabel>Digitale kaarten</SectionLabel>
+            </div>
+            <CardsSection
+              events={(events ?? []).map((e: Event) => ({
+                id: e.id,
+                title: e.title,
+                status: e.status,
+                plan: normalizePlan(e.plan),
+                heroImageUrl: e.hero_image_url ?? null,
+              }))}
+              cards={cards}
+            />
+          </section>
+        )}
+
         {/* RSVP */}
         <section>
           <div className="mb-5">
@@ -390,25 +417,6 @@ export default async function DashboardPage() {
             />
           )}
         </section>
-
-        {/* Digitale kaarten */}
-        {cardsAvailable && (events ?? []).length > 0 && (
-          <section className="mt-10">
-            <div className="mb-5">
-              <SectionLabel>Digitale kaarten</SectionLabel>
-            </div>
-            <CardsSection
-              events={(events ?? []).map((e: Event) => ({
-                id: e.id,
-                title: e.title,
-                status: e.status,
-                plan: normalizePlan(e.plan),
-                heroImageUrl: e.hero_image_url ?? null,
-              }))}
-              cards={cards}
-            />
-          </section>
-        )}
 
         {/* Gastenfotomuur */}
         {photoEvents.length > 0 && Object.keys(gpSettings).length > 0 && (

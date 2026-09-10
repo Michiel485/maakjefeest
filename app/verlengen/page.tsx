@@ -128,7 +128,7 @@ function RenewalContent() {
         <div className="px-5 py-5" style={{ backgroundColor: "#fff" }}>
           <div className="flex items-start justify-between gap-4 mb-5">
             <div className="flex-1">
-              <p className="text-sm font-semibold" style={{ color: CHARCOAL }}>Verlenging — 6 maanden extra</p>
+              <p className="text-sm font-semibold" style={{ color: CHARCOAL }}>Verlenging, 6 maanden extra</p>
               {eventSlug && (
                 <p className="text-xs mt-0.5" style={{ color: BODY }}>{eventSlug}.sayingyes.nl</p>
               )}
@@ -215,7 +215,7 @@ function RenewalContent() {
           boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
         }}
       >
-        {paying ? "Doorsturen naar betaling..." : `Betalen — €${finalPrice.toFixed(2).replace(".", ",")}`}
+        {paying ? "Doorsturen naar betaling..." : `Betalen €${finalPrice.toFixed(2).replace(".", ",")}`}
       </button>
 
       <p className="text-xs text-center mt-4" style={{ color: `${BODY}80` }}>

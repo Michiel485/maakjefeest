@@ -4,7 +4,7 @@ Persoonlijke actielijst van Michiel. Claude houdt deze bij; afgeronde punten gaa
 
 ## Open
 
-- [ ] **Prijsladder activeren**: `supabase/migration_plans.sql` in de Supabase SQL editor draaien (voegt de kolom `plan` toe, bestaande events worden Compleet). Daarna Claude een seintje geven: die controleert lokaal de kassa en de publieke pagina's en pusht. Zonder deze migratie breken dashboard, kassa en klantsites na de deploy.
+- [ ] **Prijsladder live zetten** (twee stappen, in deze volgorde): 1) `supabase/migration_plans.sql` draaien in de Supabase SQL editor. Dit is veilig om nu te doen: de huidige live site negeert de nieuwe kolom, er gaat niets offline. 2) Claude een seintje geven; die test dan de hele flow tegen de echte database (kassa, dashboard, kaartlink, publieke pagina's) en pusht. Let op: pas de migratie, dan de push. Omgekeerd breken dashboard, kassa en klantsites.
 - [ ] **Claude GitHub App installeren** op de repo (https://claude.ai/code/onboarding?magic=github-app-setup), nodig voor de tweewekelijkse artikel-routine. Daarna Claude een seintje geven ("app geinstalleerd"): die maakt dan de routine aan (1e en 15e van de maand, 09:00, artikel als pull request). Akkoord gegeven op 9 sep 2026.
 - [ ] **Beslissen over Supabase MCP-koppeling**: zou Claude zelf migraties kunnen draaien. Advies staat in het gesprek van 9 sep 2026: alleen-lezen koppelen (past bij de eigen bouwregel "read-only default"), of niet koppelen en SQL blijven plakken. Niet met volledige schrijfrechten, want de database bevat gastgegevens van klanten.
 - [ ] **Backlinks**: eerst samen bepalen wie we aanschrijven (trouwlocaties, trouwblogs, weddingplanners, leveranciers van onze eigen bruiloft). Claude schrijft daarna de mailteksten en een kandidatenlijst.
@@ -12,6 +12,8 @@ Persoonlijke actielijst van Michiel. Claude houdt deze bij; afgeronde punten gaa
 - [ ] **Reviews verzamelen** zodra er echte klanten zijn (testimonials op de homepage plus Review-schema).
 
 ## Afgerond
+
+- [x] 10 sep 2026: Prijsladder afgemaakt na een controleronde: pakketcontrole in het RSVP-endpoint en op alle fotomuur-routes, kaartlink werkt pas na betaling (bruidspaar ziet een voorbeeld met strook), bouwer en aanmaakpagina volgen het pakket, dashboard zet de kaarten bovenaan en verbergt wat niet bij het pakket hoort, verlengen alleen bij Compleet en kaartpakketten zonder einddatum, plus kastlijntjes uit de klantteksten. Pakketlogica lokaal getest, build groen.
 
 - [x] 9 sep 2026: Prijsladder gebouwd (nog niet live): drie pakketten Save the Date (15), Uitnodiging & RSVP (25) en Trouwwebsite compleet (49,99) op een product, upgraden voor het verschil, publieke site en dashboard per pakket, nieuwe landingspagina /digitale-uitnodiging, homepage omgegooid, twee artikelen over trouwkaarttekst. Plan staat in `docs/PLAN-prijsladder.md`.
 - [x] 9 sep 2026: Zoekwoordonderzoek: trouwwebsite-termen worden in Nederland nauwelijks gezocht, kaart- en uitnodigingtermen wel; Engelse term wedding website is de grootste (expats rond Amsterdam). Cijfers in het geheugen van Claude.

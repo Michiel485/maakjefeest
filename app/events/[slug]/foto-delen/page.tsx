@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic"
 import { notFound } from "next/navigation"
 import { createServiceClient } from "@/lib/supabase"
 import { getStyleConfig } from "@/lib/event-styles"
+import { planAllows } from "@/lib/plans"
 import UploadForm from "./upload-form"
 
 export default async function FotoDelenPage({
@@ -16,13 +17,13 @@ export default async function FotoDelenPage({
   const { data: event } = await supabase
     .from("events")
     .select(
-      "id, title, nav_title, style, font_hero, font_initials, font_frame_names, font_page_titles, guest_photos_enabled, guest_photos_moderation"
+      "id, title, nav_title, style, font_hero, font_initials, font_frame_names, font_page_titles, guest_photos_enabled, guest_photos_moderation, plan"
     )
     .eq("slug", slug)
     .eq("status", "published")
     .single()
 
-  if (!event || !event.guest_photos_enabled) notFound()
+  if (!event || !event.guest_photos_enabled || !planAllows(event.plan, "photos")) notFound()
 
   const sc = getStyleConfig(event.style, {
     fontHero:       event.font_hero        as string | null,

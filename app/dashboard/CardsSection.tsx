@@ -150,7 +150,7 @@ export default function CardsSection({
       setEditingCard(null)
       setEditForm(null)
     } catch {
-      setError("Opslaan mislukt — probeer opnieuw.")
+      setError("Opslaan mislukt, probeer opnieuw.")
     } finally {
       setBusy(false)
     }
@@ -164,7 +164,7 @@ export default function CardsSection({
       setCards((prev) => prev.filter((c) => c.id !== id))
       setDeleteConfirmId(null)
     } catch {
-      setError("Verwijderen mislukt — probeer opnieuw.")
+      setError("Verwijderen mislukt, probeer opnieuw.")
     } finally {
       setBusy(false)
     }
@@ -199,11 +199,11 @@ export default function CardsSection({
                 <p className="font-semibold" style={{ color: CHARCOAL }}>{event.title}</p>
                 <p className="text-xs mt-0.5" style={{ color: BODY }}>
                   {eventCards.length === 0
-                    ? "Nog geen kaarten — maak een Save the Date of trouwkaart"
+                    ? "Nog geen kaarten. Maak je eerste kaart"
                     : `${eventCards.length} ${eventCards.length === 1 ? "kaart" : "kaarten"}`}
                   {event.status === "draft" && (
                     <span style={{ color: GOLD }}>
-                      {" "}· Ook voor dit concept: verstuur je Save the Date alvast, de site-knoppen verschijnen zodra jullie site live is
+                      {" "}· Ontwerp je kaart gratis. Alleen jullie zien hem tot je het pakket activeert; daarna werkt de link voor je gasten
                     </span>
                   )}
                 </p>
@@ -317,7 +317,7 @@ export default function CardsSection({
                       ))}
                     </div>
                     <p className="text-xs" style={{ color: BODY, opacity: 0.8 }}>
-                      Tip: maak per gastengroep een eigen kaart en stuur elke groep de juiste link —
+                      Tip: maak per gastengroep een eigen kaart en stuur elke groep de juiste link:
                       op de kaart staat dan bijvoorbeeld &quot;wij nodigen je uit voor het avondfeest&quot;.
                     </p>
                   </div>

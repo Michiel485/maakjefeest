@@ -1,5 +1,6 @@
 import { createServiceClient } from "@/lib/supabase"
 import { sendRSVPConfirmation, sendAdminRSVPNotification } from "@/lib/mail"
+import { planAllows } from "@/lib/plans"
 
 interface GuestInput {
   name: string
@@ -34,13 +35,19 @@ export async function POST(request: Request) {
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, title, user_email")
+    .select("id, title, user_email, plan")
     .eq("id", event_id)
     .eq("status", "published")
     .single()
 
   if (!event) {
     return Response.json({ error: "Event niet gevonden of niet gepubliceerd" }, { status: 404 })
+  }
+
+  // RSVP hoort bij het pakket Uitnodiging & RSVP of hoger. Zonder deze controle
+  // zouden er aanmeldingen binnenkomen die het bruidspaar niet kan zien.
+  if (!planAllows(event.plan, "rsvp")) {
+    return Response.json({ error: "Aanmelden is niet beschikbaar voor dit event" }, { status: 404 })
   }
 
   const submission_id = crypto.randomUUID()

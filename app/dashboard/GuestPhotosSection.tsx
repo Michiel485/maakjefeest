@@ -422,7 +422,7 @@ function PhotoCard({
       <div className="px-2.5 py-2 flex flex-col gap-1.5">
         <p className="text-xs truncate" style={{ color: CHARCOAL }}>
           <span className="font-semibold">{photo.name}</span>
-          {photo.caption && <span style={{ color: BODY }}> — {photo.caption}</span>}
+          {photo.caption && <span style={{ color: BODY }}>: {photo.caption}</span>}
         </p>
         {confirming ? (
           <div className="flex items-center gap-1">

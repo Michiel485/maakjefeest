@@ -30,6 +30,7 @@ export const PLANS: Record<Plan, PlanInfo> = {
       "Versturen als link via WhatsApp of mail",
       "Ook als afbeelding te downloaden",
       "Kijkteller: zie hoeveel gasten hem openden",
+      "Geen einddatum en geen abonnement",
       "Later upgraden, alles blijft staan",
     ],
     invoiceDescription: "Save the Date, digitale kaart",
@@ -46,6 +47,7 @@ export const PLANS: Record<Plan, PlanInfo> = {
       "Eigen uitnodigingstekst en tijden per kaart",
       "RSVP-pagina met dieetwensen en aantal personen",
       "Dashboard met alle aanmeldingen en export",
+      "Geen einddatum en geen abonnement",
     ],
     invoiceDescription: "Uitnodiging & RSVP, digitale kaarten met RSVP-pagina",
   },
@@ -61,6 +63,7 @@ export const PLANS: Record<Plan, PlanInfo> = {
       "Programma, informatie, cadeautips, ons verhaal en fotogalerij",
       "Live gastenfotomuur met QR-code en slideshow",
       "Thema's, wachtwoord en zes talen voor gasten",
+      "Een jaar online, daarna zelf verlengen",
     ],
     invoiceDescription: "Trouwwebsite compleet, 1 jaar live",
   },
@@ -96,6 +99,30 @@ export function publicPageTypes<T extends { type: string }>(plan: unknown, pages
   return []
 }
 
+// Welke pagina's het bruidspaar in de bouwer mag bewerken. Bij een kaartpakket
+// is dat alleen de voorkant (namen, datum, locatie, stijl), want dat is wat er
+// op de kaart komt.
+const EDITABLE: Record<Plan, string[]> = {
+  save_the_date: ["Home"],
+  uitnodiging:   ["Home", "RSVP"],
+  compleet:      ["Home", "OnsVerhaal", "Programma", "Informatie", "Cadeautips", "Ceremoniemeesters", "RSVP", "Fotos"],
+}
+
+export function editablePages(plan: unknown): string[] {
+  return EDITABLE[normalizePlan(plan)]
+}
+
+export function isCardPlan(plan: unknown): boolean {
+  return !planAllows(plan, "site")
+}
+
+// Verlengen is alleen zinvol bij een complete site (bijvoorbeeld om de
+// fotogalerij na de bruiloft online te houden). Bij een kaartpakket bieden we
+// in plaats daarvan een upgrade aan.
+export function renewalAllowed(plan: unknown): boolean {
+  return normalizePlan(plan) === "compleet"
+}
+
 export function planRank(plan: unknown): number {
   return PLAN_ORDER.indexOf(normalizePlan(plan))
 }
@@ -112,7 +139,8 @@ export function formatEur(amount: number): string {
 }
 
 // Geldig tot de laatste van: betaaldatum + 12 maanden, trouwdatum + 1 maand.
-// Zo verloopt een vroeg gekochte Save the Date nooit vóór de bruiloft.
+// Alleen het pakket Compleet wordt hier ook echt op afgesloten (zie
+// renewalAllowed); kaartpakketten hebben geen einddatum.
 export function planExpiry(now: Date, datum: string | null | undefined): Date {
   const eenJaar = new Date(now)
   eenJaar.setFullYear(eenJaar.getFullYear() + 1)

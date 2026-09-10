@@ -2,6 +2,7 @@ import { createServiceClient } from "@/lib/supabase"
 import { sendDraftReminderEmail, sendRenewalReminderEmail, sendExpiryWarningEmail } from "@/lib/mail"
 import { revalidatePath } from "next/cache"
 import { sendVisitorDigest } from "@/lib/visitors"
+import { renewalAllowed } from "@/lib/plans"
 
 // Vercel Cron calls this endpoint daily at 09:00 AM Europe/Amsterdam.
 // Security: Vercel sets Authorization: Bearer <CRON_SECRET> automatically.
@@ -157,13 +158,17 @@ export async function GET(request: Request) {
   // ── Published events: subscription expiry ─────────────────────────────────
   const { data: published } = await service
     .from("events")
-    .select("id, title, user_email, slug, expires_at, published_at, renewal_reminder_sent_at, expiry_warning_sent_at")
+    .select("id, title, user_email, slug, plan, expires_at, published_at, renewal_reminder_sent_at, expiry_warning_sent_at")
     .eq("status", "published")
     .not("expires_at", "is", null)
 
   const dashboardUrl = `${siteUrl}/dashboard`
 
   for (const event of published ?? []) {
+    // Kaartpakketten hebben geen einddatum: de kaartlink blijft werken en er
+    // gaat niets offline, dus geen verloopmails en geen status expired.
+    if (!renewalAllowed(event.plan)) continue
+
     const expiresAt   = new Date(event.expires_at as string)
     const publishedAt = new Date(event.published_at as string)
     const email       = event.user_email as string

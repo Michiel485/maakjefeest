@@ -57,7 +57,7 @@ export default function VoorwaardenPage() {
         </Section>
 
         <Section title="Artikel 3. Aanbod, Prijzen en Betaling">
-          <p>Het aanmaken van een basisaccount is kosteloos. Voor het activeren en publiceren van de volledige premium bruiloftswebsite (inclusief subdomein, onbeperkte RSVP-functies en fotogalerij) betaalt de Builder een eenmalig, vast tarief zoals vermeld op de website (inclusief BTW).</p>
+          <p>Het aanmaken van een account en het ontwerpen zijn kosteloos. SayingYes biedt drie pakketten waarvoor de Builder een eenmalig tarief betaalt zoals vermeld op de website (inclusief BTW): Save the Date (digitale kaart), Uitnodiging &amp; RSVP (digitale kaarten per gastengroep met RSVP-pagina en dashboard) en Trouwwebsite compleet (volledige website met subdomein, RSVP, fotogalerij en gastenfotomuur). Upgraden naar een hoger pakket is mogelijk tegen bijbetaling van het prijsverschil. De kaartpakketten kennen geen einddatum; het pakket Trouwwebsite compleet geldt voor een jaar en tot minimaal een maand na de opgegeven trouwdatum, waarna verlenging per zes maanden mogelijk is tegen het op de website vermelde tarief.</p>
           <p className="mt-3">Er is geen sprake van een doorlopend abonnement; de initiële betaling is strikt eenmalig.</p>
           <p className="mt-3">Betalingen verlopen veilig via de online betaalprovider Mollie.</p>
           <p className="mt-3">Zodra de betaling met succes is afgerond, wordt de premium toegang direct geactiveerd.</p>

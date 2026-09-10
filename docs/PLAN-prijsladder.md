@@ -16,11 +16,12 @@ Upgrades: Save the Date naar Uitnodiging € 10,00; Save the Date naar Compleet 
 
 ## Regels
 
-- **Geldigheid**: elk pakket is geldig tot de laatste van (betaaldatum + 12 maanden) en (trouwdatum + 1 maand). Zo verloopt een Save the Date die vroeg is gekocht nooit vóór de bruiloft. Verlengen blijft € 22 per zes maanden.
+- **Geldigheid**: de kaartpakketten hebben geen einddatum (de kaartlink blijft werken, er gaat niets offline). Het pakket Compleet is geldig tot de laatste van (betaaldatum + 12 maanden) en (trouwdatum + 1 maand); verlengen kost € 22 per zes maanden en wordt alleen bij Compleet aangeboden.
 - **Bestaande events** krijgen automatisch `compleet` (migratie), niemand verliest iets.
 - **Kortingscodes** werken op de pakketprijs bij eerste aankoop; gratis-codes activeren het gekozen pakket. Op upgrades geen kortingscodes.
 - **Facturen** vermelden het pakket; bij upgrade "Upgrade naar ...".
-- **Publieke site per pakket**: Save the Date toont alleen de hero (namen, datum, "uitnodiging volgt"); Uitnodiging toont hero plus RSVP; Compleet toont alles. Kaart-links tonen alleen knoppen die bij het pakket horen.
+- **Publieke site per pakket**: bij Save the Date is er geen publieke pagina (404); Uitnodiging toont hero plus RSVP op één pagina; Compleet toont alles. Kaart-links tonen alleen knoppen die bij het pakket horen, en alleen zolang de site live is.
+- **Kaartlink is het product**: een kaart van een nog niet betaald event is alleen zichtbaar voor het bruidspaar zelf (met een voorbeeldstrook). Gasten zien "nog niet verstuurd" met een link naar de landingspagina.
 - **Dashboard**: kaarten voor alle pakketten (bij Save the Date alleen dat kaarttype), RSVP-overzicht vanaf Uitnodiging, fotomuur alleen bij Compleet. Elk event toont zijn pakket en een upgrade-knop.
 
 ## Bouwvolgorde

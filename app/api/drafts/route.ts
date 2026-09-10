@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr"
 import { createServiceClient } from "@/lib/supabase"
 import { cookies } from "next/headers"
+import { DEFAULT_PLAN, isPlan } from "@/lib/plans"
 
 async function getAuthClient() {
   const cookieStore = await cookies()
@@ -67,7 +68,7 @@ export async function GET() {
 
   const { data, error } = await db
     .from("events")
-    .select("id, slug, title, type, status, created_at")
+    .select("id, slug, title, type, status, plan, created_at")
     .eq("user_email", user.email)
     .order("created_at", { ascending: false })
 
@@ -117,6 +118,7 @@ export async function POST(request: Request) {
     pw_value?: string | null
     pw_question?: string | null
     pw_answer?: string | null
+    plan?: string
   }
 
   try {
@@ -167,6 +169,9 @@ export async function POST(request: Request) {
   }
 
   const pageList = Array.isArray(pages) && pages.length > 0 ? pages : ["Home", "RSVP"]
+  // Het gekozen pakket wordt alleen bij het aanmaken vastgelegd; wat er betaald
+  // is bepaalt de kassa, niet een opslag-actie uit de bouwer.
+  const gekozenPlan = isPlan(body.plan) ? body.plan : DEFAULT_PLAN
 
   // Update existing event if event_id provided and belongs to this user
   if (event_id) {
@@ -221,6 +226,7 @@ export async function POST(request: Request) {
       user_email: user.email,
       slug,
       status: "draft",
+      plan: gekozenPlan,
       style,
       font_hero,
       font_initials,

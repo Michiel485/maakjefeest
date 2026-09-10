@@ -1,6 +1,7 @@
 import QRCode from "qrcode"
 import { createServiceClient } from "@/lib/supabase"
 import { eventSiteUrl } from "@/lib/site-url"
+import { planAllows } from "@/lib/plans"
 
 export const dynamic = "force-dynamic"
 
@@ -16,12 +17,12 @@ export async function GET(request: Request) {
   const supabase = createServiceClient()
   const { data: event } = await supabase
     .from("events")
-    .select("id, guest_photos_enabled")
+    .select("id, guest_photos_enabled, plan")
     .eq("slug", slug)
     .eq("status", "published")
     .single()
 
-  if (!event || !event.guest_photos_enabled) {
+  if (!event || !event.guest_photos_enabled || !planAllows(event.plan, "photos")) {
     return Response.json({ error: "Niet gevonden" }, { status: 404 })
   }
 

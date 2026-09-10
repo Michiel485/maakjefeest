@@ -70,7 +70,7 @@ const FAQ_ITEMS: [string, string][] = [
   ],
   [
     "Wat kost een digitale uitnodiging bij SayingYes?",
-    "Een Save the Date kost eenmalig €15. Uitnodigingen per gastengroep met RSVP-pagina en dashboard kosten €25. De complete trouwwebsite met alles erop en eraan kost €49,99. Upgraden kan altijd, je betaalt dan alleen het verschil. Bouwen is gratis; je betaalt pas als je verstuurt.",
+    "Een Save the Date kost eenmalig €15. Uitnodigingen per gastengroep met RSVP-pagina en dashboard kosten €25. De complete trouwwebsite met alles erop en eraan kost €49,99 voor een jaar. De kaartpakketten hebben geen einddatum. Upgraden kan altijd, je betaalt dan alleen het verschil. Ontwerpen is gratis; je betaalt pas als je de kaart verstuurt.",
   ],
 ]
 
@@ -318,7 +318,7 @@ export default function DigitaleUitnodigingPage() {
             })}
           </div>
           <p className="text-xs text-center mt-8" style={{ color: "#4A4030" }}>
-            Eenmalige betaling · Geldig tot minimaal een maand na jullie trouwdatum · Geen abonnement
+            Eenmalige betaling · Kaartpakketten zonder einddatum · Geen abonnement
           </p>
         </div>
       </section>

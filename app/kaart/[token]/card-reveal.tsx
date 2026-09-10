@@ -23,6 +23,7 @@ export default function CardReveal({
   siteUrl,
   rsvpUrl,
   demo = false,
+  previewNotice = false,
 }: {
   display: CardDisplay
   initials: string
@@ -31,6 +32,8 @@ export default function CardReveal({
   rsvpUrl: string | null
   // Voorbeeldkaart op de marketingsite: geen site-knoppen, wel een CTA
   demo?: boolean
+  // Het bruidspaar bekijkt zijn eigen nog niet geactiveerde kaart
+  previewNotice?: boolean
 }) {
   const [stage, setStage] = useState<Stage>("closed")
   const reduceMotion = useSyncExternalStore(
@@ -63,6 +66,14 @@ export default function CardReveal({
       }}
     >
       {sc.fontImport && <style>{sc.fontImport}</style>}
+      {previewNotice && (
+        <div
+          className="fixed top-0 left-0 right-0 z-50 px-4 py-2.5 text-center text-xs font-semibold"
+          style={{ backgroundColor: "#1A1A1A", color: "#FAF7F2", letterSpacing: "0.02em" }}
+        >
+          Voorbeeld, alleen voor jullie zichtbaar. Activeer je pakket om deze kaart te kunnen versturen.
+        </div>
+      )}
       <style>{`
         @keyframes kaart-zweef {
           0%, 100% { transform: translateY(0); }
@@ -166,7 +177,7 @@ export default function CardReveal({
             className="mt-6 text-sm"
             style={{ color: sc.bodyText, opacity: 0.75 }}
           >
-            Er is post voor je — tik op de envelop 💌
+            Er is post voor je, tik op de envelop 💌
           </p>
         )}
 
@@ -360,7 +371,7 @@ export default function CardReveal({
             animation: reduceMotion ? "none" : "knoppen-fadein 0.5s ease 0.8s both",
           }}
         >
-          Gemaakt met <span style={{ fontWeight: 600, color: sc.accent }}>SayingYes</span> — sayingyes.nl
+          Gemaakt met <span style={{ fontWeight: 600, color: sc.accent }}>SayingYes</span> · sayingyes.nl
         </a>
       )}
     </div>

@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 const FAQ_ITEMS: [string, string][] = [
   [
     "Wat kost SayingYes?",
-    "Je kiest zelf hoe groot je begint. Een digitale Save the Date kost eenmalig €15, uitnodigingen met RSVP-pagina en dashboard €25, en de complete trouwwebsite met alles erop en eraan €49,99 voor een jaar. Upgraden kan altijd, je betaalt dan alleen het verschil. Bouwen is gratis: je betaalt pas als je publiceert. Geen abonnement.",
+    "Je kiest zelf hoe groot je begint. Een digitale Save the Date kost eenmalig €15, uitnodigingen met RSVP-pagina en dashboard €25, en de complete trouwwebsite met alles erop en eraan €49,99 voor een jaar. Upgraden kan altijd, je betaalt dan alleen het verschil. Ontwerpen is gratis: je betaalt pas als je jullie kaart verstuurt of de site publiceert. Geen abonnement.",
   ],
   [
     "Heb ik technische kennis nodig?",
@@ -61,7 +61,7 @@ const FAQ_ITEMS: [string, string][] = [
   ],
   [
     "Hoe lang blijft alles online?",
-    "Minimaal een jaar, en in elk geval tot een maand na jullie trouwdatum. Je krijgt ruim op tijd een mail als het afloopt. Wil je de site daarna langer online houden, bijvoorbeeld voor de fotogalerij, dan verleng je met zes maanden voor €22. Verlengen is nooit verplicht.",
+    "De kaartpakketten hebben geen einddatum: jullie kaartlink blijft werken. De complete trouwwebsite staat een jaar online, en in elk geval tot een maand na jullie trouwdatum. Je krijgt ruim op tijd een mail als dat afloopt. Wil je de site langer online houden, bijvoorbeeld voor de fotogalerij, dan verleng je met zes maanden voor €22. Verlengen is nooit verplicht.",
   ],
 ]
 
@@ -872,7 +872,7 @@ export default function Home() {
             })}
           </div>
           <p className="text-xs text-center mb-10" style={{ color: "#4A4030" }}>
-            Eenmalige betaling · Geldig tot minimaal een maand na jullie trouwdatum · Geen abonnement
+            Eenmalige betaling · Kaartpakketten zonder einddatum · Geen abonnement
           </p>
 
           {/* Verlengingskaart */}
@@ -888,8 +888,8 @@ export default function Home() {
                 Daarna: volledige vrijheid
               </p>
               <p className="text-sm leading-relaxed" style={{ color: "#8A7E72" }}>
-                Alles loopt automatisch af, minimaal een jaar na aankoop en in elk geval tot een maand na de bruiloft. Geen verrassingen.
-                Willen jullie de site langer online houden? Verleng per 6 maanden voor{" "}
+                De complete trouwwebsite staat minimaal een jaar online en in elk geval tot een maand na de bruiloft, daarna loopt hij automatisch af. Geen verrassingen.
+                Willen jullie hem langer online houden? Verleng per 6 maanden voor{" "}
                 <span style={{ color: "#FAF7F2", fontWeight: 600 }}>€22</span>.
                 Ideaal om na de bruiloft de fotogalerij online te houden.
               </p>

@@ -9,6 +9,7 @@ import {
   maxPhotoSizeBytes,
   maxPhotosPerEvent,
 } from "@/lib/guest-photos"
+import { planAllows } from "@/lib/plans"
 
 export const dynamic = "force-dynamic"
 
@@ -54,12 +55,14 @@ export async function POST(request: Request) {
 
     const { data: event } = await supabase
       .from("events")
-      .select("id, guest_photos_enabled, guest_photos_moderation")
+      .select("id, guest_photos_enabled, guest_photos_moderation, plan")
       .eq("id", eventId)
       .eq("status", "published")
       .single()
 
-    if (!event || !event.guest_photos_enabled) {
+    // De fotomuur hoort bij het pakket Compleet; het pakket wordt hier expliciet
+    // gecontroleerd en niet alleen via de schakelaar in het dashboard.
+    if (!event || !event.guest_photos_enabled || !planAllows(event.plan, "photos")) {
       return Response.json({ error: "De fotomuur is niet beschikbaar voor dit event" }, { status: 404 })
     }
 
