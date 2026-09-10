@@ -120,7 +120,7 @@ function PakketKeuze({ gekozen, onKies }: { gekozen: Plan; onKies: (p: Plan) => 
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-bold" style={{ color: CHARCOAL }}>{info.label}</p>
-                <p className="text-xs mt-0.5" style={{ color: BODY }}>{info.moment}</p>
+                <p className="text-xs mt-0.5" style={{ color: BODY }}>{info.subtitel}</p>
               </div>
               <p className="text-base font-bold flex-shrink-0" style={{ color: CHARCOAL }}>{formatEur(info.price)}</p>
             </div>

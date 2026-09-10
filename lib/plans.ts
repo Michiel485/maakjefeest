@@ -12,7 +12,7 @@ export interface PlanInfo {
   id: Plan
   label: string
   price: number
-  moment: string
+  subtitel: string
   tagline: string
   features: string[]
   invoiceDescription: string
@@ -23,7 +23,7 @@ export const PLANS: Record<Plan, PlanInfo> = {
     id: "save_the_date",
     label: "Save the Date",
     price: 15,
-    moment: "6 tot 12 maanden vooraf",
+    subtitel: "Zet de datum alvast bij je gasten in de agenda",
     tagline: "Zet de datum bij je gasten in de agenda, in stijl.",
     features: [
       "Digitale Save the Date als envelop met lakzegel",
@@ -39,7 +39,7 @@ export const PLANS: Record<Plan, PlanInfo> = {
     id: "uitnodiging",
     label: "Uitnodiging & RSVP",
     price: 25,
-    moment: "3 tot 4 maanden vooraf",
+    subtitel: "De uitnodiging waar gasten met één tik op reageren",
     tagline: "De uitnodiging die werkt: gasten reageren met één tik.",
     features: [
       "Alles van Save the Date",
@@ -55,7 +55,7 @@ export const PLANS: Record<Plan, PlanInfo> = {
     id: "compleet",
     label: "Trouwwebsite compleet",
     price: 49.99,
-    moment: "Alles voor jullie gasten op één plek",
+    subtitel: "Alles voor jullie gasten op één plek",
     tagline: "Kaarten, RSVP en een complete trouwwebsite op jullie eigen adres.",
     features: [
       "Alles van Uitnodiging & RSVP",
@@ -134,6 +134,14 @@ export function planStartUrl(plan: unknown): string {
 
 export function planRank(plan: unknown): number {
   return PLAN_ORDER.indexOf(normalizePlan(plan))
+}
+
+// Korte regel onder de prijs: wat betaal je bij als je al een pakket hebt
+export function upgradeHint(plan: unknown): string {
+  const p = normalizePlan(plan)
+  if (p === "save_the_date") return "Instappen kan hier; upgraden kost later alleen het verschil."
+  if (p === "uitnodiging") return `Al een Save the Date? Dan betaal je ${formatEur(upgradePrice("save_the_date", "uitnodiging") ?? 0)} bij.`
+  return `Al een kaartpakket? Dan betaal je alleen het verschil: ${formatEur(upgradePrice("uitnodiging", "compleet") ?? 0)} of ${formatEur(upgradePrice("save_the_date", "compleet") ?? 0)}.`
 }
 
 // Bij te betalen bedrag; null als het geen upgrade is

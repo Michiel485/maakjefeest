@@ -53,4 +53,4 @@ Met een digitale RSVP via jullie trouwwebsite heb je altijd een actueel overzich
 
 ---
 
-Met SayingYes regel je RSVP zonder gedoe: een [digitale uitnodiging](/digitale-uitnodiging) via WhatsApp waarmee gasten met één tik reageren, een RSVP-pagina met dieetwensen en een dashboard waarin jij het overzicht houdt. Vanaf €25, of als onderdeel van de complete trouwwebsite. [Start gratis](/aanmaken), betalen doe je pas bij publiceren.
+Met SayingYes regel je RSVP zonder gedoe: een [digitale uitnodiging](/digitale-uitnodiging) via WhatsApp waarmee gasten met één tik reageren, een RSVP-pagina met dieetwensen en een dashboard waarin jij het overzicht houdt. Vanaf €25, of als onderdeel van de complete trouwwebsite. [Start gratis](/start), betalen doe je pas bij publiceren.

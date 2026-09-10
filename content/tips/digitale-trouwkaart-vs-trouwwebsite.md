@@ -57,4 +57,4 @@ Een digitale trouwkaart is prima voor de uitnodiging zelf, maar een trouwwebsite
 
 ---
 
-Bij SayingYes hoef je niet te kiezen: je begint met een [digitale uitnodiging](/digitale-uitnodiging) vanaf €15 en groeit wanneer je wilt door naar de complete trouwwebsite voor €49,99, waarbij je alleen het verschil betaalt. [Start gratis](/aanmaken), betalen doe je pas bij publiceren.
+Bij SayingYes hoef je niet te kiezen: je begint met een [digitale uitnodiging](/digitale-uitnodiging) vanaf €15 en groeit wanneer je wilt door naar de complete trouwwebsite voor €49,99, waarbij je alleen het verschil betaalt. [Start gratis](/start), betalen doe je pas bij publiceren.

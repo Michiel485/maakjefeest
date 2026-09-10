@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { MARKETING_URL } from "@/lib/site-url"
 import { NavLoginButton } from "@/components/NavLoginButton"
-import { PLANS, PLAN_ORDER, formatEur, planStartUrl } from "@/lib/plans"
+import { PLANS, PLAN_ORDER, formatEur, planStartUrl, upgradeHint } from "@/lib/plans"
 
 const TITLE = "Digitale uitnodiging voor jullie bruiloft via WhatsApp"
 const DESCRIPTION =
@@ -288,16 +288,12 @@ export default function DigitaleUitnodigingPage() {
                     boxShadow: uitgelicht ? `0 0 0 1px ${GOLD}40, 0 20px 60px rgba(0,0,0,0.35)` : "none",
                   }}
                 >
-                  {uitgelicht && (
-                    <span className="absolute top-4 right-4 text-[10px] font-semibold uppercase tracking-widest px-2.5 py-1 rounded-full" style={{ backgroundColor: GOLD, color: DARK }}>
-                      Meest gekozen
-                    </span>
-                  )}
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] mb-3" style={{ color: GOLD }}>{info.label}</p>
                   <p className="leading-none mb-1" style={{ fontFamily: "var(--font-cormorant)", fontSize: "3.25rem", fontWeight: 700, color: "#FAF7F2" }}>
                     {formatEur(info.price).replace(",00", "")}
                   </p>
-                  <p className="text-xs mb-5" style={{ color: "#8A7E72" }}>{info.moment}</p>
+                  <p className="text-xs" style={{ color: "#8A7E72" }}>{info.subtitel}</p>
+                  <p className="text-xs mt-1.5 mb-5 font-semibold" style={{ color: GOLD }}>{upgradeHint(p)}</p>
                   <ul className="flex flex-col gap-2.5 mb-7 flex-1">
                     {info.features.map((item) => (
                       <li key={item} className="flex items-start gap-2.5">

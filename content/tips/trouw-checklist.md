@@ -15,7 +15,7 @@ Trouwen is een van de mooiste dingen die je meemaakt, maar ook een van de groots
 - Boek de trouwlocatie, populaire locaties zijn snel vol
 - Boek een fotograaf
 - Bepaal het type huwelijk: burgerlijk, religieus of symbolisch
-- [Maak een trouwwebsite aan](/aanmaken) en deel die met jullie gasten
+- [Maak een trouwwebsite aan](/start) en deel die met jullie gasten
 
 ## 9–12 maanden van tevoren
 
@@ -70,4 +70,4 @@ Trouwen is een van de mooiste dingen die je meemaakt, maar ook een van de groots
 
 ---
 
-Een trouwwebsite regelt de communicatie met jullie gasten automatisch: uitnodigingen, RSVP, dieetwensen, programma. Alles op één plek, zodat jullie zich kunnen focussen op het genieten. [Start gratis met jullie trouwwebsite](/aanmaken).
+Een trouwwebsite regelt de communicatie met jullie gasten automatisch: uitnodigingen, RSVP, dieetwensen, programma. Alles op één plek, zodat jullie zich kunnen focussen op het genieten. [Start gratis met jullie trouwwebsite](/start).

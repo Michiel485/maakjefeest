@@ -55,4 +55,4 @@ Wil je ook de communicatie vóór de bruiloft slim regelen? Lees dan [wat je op 
 
 ---
 
-Bij SayingYes zit de gastenfotomuur gewoon bij jullie trouwwebsite: QR-code, print-klare kaart in jullie stijl, live slideshow voor op het scherm, goedkeuring vooraf als je dat wilt, en achteraf alles als zip of collage. [Start gratis met jullie trouwwebsite](/aanmaken), je betaalt pas bij publiceren.
+Bij SayingYes zit de gastenfotomuur gewoon bij jullie trouwwebsite: QR-code, print-klare kaart in jullie stijl, live slideshow voor op het scherm, goedkeuring vooraf als je dat wilt, en achteraf alles als zip of collage. [Start gratis met jullie trouwwebsite](/start), je betaalt pas bij publiceren.

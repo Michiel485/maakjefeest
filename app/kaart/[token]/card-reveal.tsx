@@ -326,7 +326,7 @@ export default function CardReveal({
             {/* Demo op de marketingsite: CTA in plaats van site-knoppen */}
             {stage === "open" && demo && (
               <a
-                href="/aanmaken"
+                href="/kaart-maken?type=trouwkaart"
                 className="mt-6 block py-3.5 rounded-xl text-sm font-semibold text-center transition-opacity hover:opacity-85"
                 style={{
                   backgroundColor: sc.accent,

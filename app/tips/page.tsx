@@ -63,7 +63,7 @@ export default function TipsPage() {
           </Link>
           <NavLoginButton />
           <Link
-            href="/aanmaken"
+            href="/start"
             className="hidden sm:inline-flex text-sm font-semibold px-5 py-2.5 rounded-xl transition-all duration-300 hover:opacity-85"
             style={{ backgroundColor: CHARCOAL, color: IVORY }}
           >

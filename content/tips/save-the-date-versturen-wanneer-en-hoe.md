@@ -76,4 +76,4 @@ Meer weten over de hele planning? Lees onze [ultieme trouw-checklist](/tips/trou
 
 ---
 
-Met SayingYes maak je een digitale Save the Date in de stijl van jullie trouwwebsite, ook als de site zelf nog niet af is. Gasten openen een envelop met lakzegel, en zodra jullie site live gaat verschijnen de knoppen naar de website en het RSVP-formulier vanzelf in dezelfde kaart. [Start gratis](/aanmaken), betalen doe je pas bij publiceren.
+Met SayingYes maak je een digitale Save the Date in de stijl van jullie trouwwebsite, ook als de site zelf nog niet af is. Gasten openen een envelop met lakzegel, en zodra jullie site live gaat verschijnen de knoppen naar de website en het RSVP-formulier vanzelf in dezelfde kaart. [Start gratis](/start), betalen doe je pas bij publiceren.

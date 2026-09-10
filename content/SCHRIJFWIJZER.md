@@ -31,11 +31,11 @@ slug: "zelfde-als-bestandsnaam"
 - Begin met een intro van 2 tot 4 zinnen die het probleem of de vraag van de lezer benoemt (geen H1: de titel uit de frontmatter is de H1).
 - Gebruik `##` koppen (H2), 4 tot 8 stuks, bij voorkeur met het zoekwoord of een vraag als kop.
 - Lijstjes met `-`, vetgedrukte kernwoorden aan het begin van een lijstitem waar dat helpt.
-- Sluit af met `---` en een korte alinea over SayingYes met een link naar `/aanmaken` ("Start gratis, betalen doe je pas bij publiceren").
+- Sluit af met `---` en een korte alinea over SayingYes met een link naar `/start` ("Start gratis, betalen doe je pas bij publiceren").
 
 ## Interne links (verplicht, minimaal 3)
 
-- `/aanmaken` (in de afsluiting)
+- `/start` (in de afsluiting; de keuzepagina tussen Save the Date, uitnodiging en website)
 - Minimaal twee andere artikelen uit deze map, bijvoorbeeld:
   - `/tips/wat-zet-je-op-een-trouwwebsite`
   - `/tips/rsvp-trouwerij-hoe-pak-je-dat-aan`

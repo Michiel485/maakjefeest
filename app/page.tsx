@@ -5,7 +5,7 @@ import { NavLoginButton } from "@/components/NavLoginButton"
 import ResetGoogleTranslate from "@/components/ResetGoogleTranslate"
 import { MARKETING_URL } from "@/lib/site-url"
 import { getAllTips } from "@/lib/tips"
-import { PLANS, PLAN_ORDER, formatEur, planStartUrl } from "@/lib/plans"
+import { PLANS, PLAN_ORDER, formatEur, planStartUrl, upgradeHint } from "@/lib/plans"
 
 export const metadata: Metadata = {
   // Absolute titel: de root-template zou er anders een tweede "| SayingYes" achter zetten
@@ -124,7 +124,7 @@ export default function Home() {
           </Link>
           <NavLoginButton />
           <Link
-            href="/aanmaken"
+            href="/start"
             className="hidden sm:inline-flex text-sm font-semibold px-5 py-2.5 rounded-xl transition-all duration-300 hover:opacity-85"
             style={{ backgroundColor: CHARCOAL, color: IVORY }}
           >
@@ -200,7 +200,7 @@ export default function Home() {
 
           {/* CTA */}
           <Link
-            href="/aanmaken"
+            href="/start"
             className="inline-flex items-center gap-3 text-base font-semibold px-10 py-4 rounded-2xl transition-all duration-300 hover:-translate-y-1 mb-5"
             style={{
               backgroundColor: GOLD,
@@ -656,7 +656,7 @@ export default function Home() {
             </ul>
             <div className="flex flex-wrap gap-3 mt-2">
               <Link
-                href="/aanmaken"
+                href="/start"
                 className="inline-flex items-center gap-2 text-sm font-semibold px-7 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:opacity-90"
                 style={{ backgroundColor: CHARCOAL, color: IVORY }}
               >
@@ -828,14 +828,6 @@ export default function Home() {
                     boxShadow: uitgelicht ? `0 0 0 1px ${GOLD}40, 0 20px 60px rgba(0,0,0,0.35)` : "none",
                   }}
                 >
-                  {uitgelicht && (
-                    <span
-                      className="absolute top-4 right-4 text-[10px] font-semibold uppercase tracking-widest px-2.5 py-1 rounded-full"
-                      style={{ backgroundColor: GOLD, color: DARK }}
-                    >
-                      Alles erop en eraan
-                    </span>
-                  )}
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] mb-3" style={{ color: GOLD }}>
                     {info.label}
                   </p>
@@ -847,7 +839,8 @@ export default function Home() {
                       {formatEur(info.price).replace(",00", "")}
                     </span>
                   </div>
-                  <p className="text-xs mb-5" style={{ color: "#8A7E72" }}>{info.moment}</p>
+                  <p className="text-xs" style={{ color: "#8A7E72" }}>{info.subtitel}</p>
+                  <p className="text-xs mt-1.5 mb-5 font-semibold" style={{ color: GOLD }}>{upgradeHint(p)}</p>
                   <ul className="flex flex-col gap-2.5 mb-7 flex-1">
                     {info.features.map((item) => (
                       <li key={item} className="flex items-start gap-2.5">
@@ -1044,7 +1037,7 @@ export default function Home() {
             Start vandaag nog: jullie website is in minuten klaar.
           </p>
           <Link
-            href="/aanmaken"
+            href="/start"
             className="inline-flex items-center gap-2.5 text-base font-semibold px-10 py-4 rounded-2xl transition-all duration-300 hover:-translate-y-0.5"
             style={{ backgroundColor: CHARCOAL, color: IVORY, boxShadow: "0 8px 32px rgba(26,26,26,0.18)" }}
           >

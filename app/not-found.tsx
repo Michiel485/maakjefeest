@@ -49,7 +49,7 @@ export default function NotFound() {
           Tips & gidsen
         </Link>
         <Link
-          href="/aanmaken"
+          href="/start"
           className="inline-flex items-center justify-center text-sm font-semibold px-6 py-3 rounded-xl transition-all hover:-translate-y-0.5"
           style={{ backgroundColor: GOLD, color: CHARCOAL, textDecoration: "none" }}
         >

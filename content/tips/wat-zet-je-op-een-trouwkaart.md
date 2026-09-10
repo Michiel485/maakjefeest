@@ -64,4 +64,4 @@ Een Save the Date stuur je 6 tot 12 maanden vooraf, zeker als gasten van ver kom
 
 ---
 
-Met SayingYes maak je een [digitale uitnodiging](/digitale-uitnodiging) per gastengroep, met eigen tijden en tekst, als envelop-link voor WhatsApp. Gasten reageren met één tik en jij ziet alles in je dashboard. Vanaf €15, of als onderdeel van de complete trouwwebsite. [Start gratis](/aanmaken), betalen doe je pas bij publiceren.
+Met SayingYes maak je een [digitale uitnodiging](/digitale-uitnodiging) per gastengroep, met eigen tijden en tekst, als envelop-link voor WhatsApp. Gasten reageren met één tik en jij ziet alles in je dashboard. Vanaf €15, of als onderdeel van de complete trouwwebsite. [Start gratis](/start), betalen doe je pas bij publiceren.

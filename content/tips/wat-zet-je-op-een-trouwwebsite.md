@@ -46,4 +46,4 @@ Vermeld wie gasten kunnen bereiken voor vragen. Dat kan een e-mailadres zijn, ma
 
 ---
 
-Met SayingYes heb je al deze onderdelen binnen een kwartier op jullie eigen trouwwebsite staan, inclusief RSVP, dieetwensen, fotogalerij en een eigen webadres. De complete site kost eenmalig €49,99; wil je eerst alleen een [digitale uitnodiging](/digitale-uitnodiging) versturen, dan begin je vanaf €15. [Start gratis](/aanmaken), betalen doe je pas bij publiceren.
+Met SayingYes heb je al deze onderdelen binnen een kwartier op jullie eigen trouwwebsite staan, inclusief RSVP, dieetwensen, fotogalerij en een eigen webadres. De complete site kost eenmalig €49,99; wil je eerst alleen een [digitale uitnodiging](/digitale-uitnodiging) versturen, dan begin je vanaf €15. [Start gratis](/start), betalen doe je pas bij publiceren.

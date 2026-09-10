@@ -70,4 +70,4 @@ Een kaart nodigt uit, een website informeert. Samen dekken ze alles: de kaart la
 
 ---
 
-Met SayingYes maak je bij jullie trouwwebsite gratis digitale Save the Dates en trouwkaarten. Gasten openen een envelop met lakzegel in de stijl van jullie site, met knoppen naar de website en het RSVP-formulier. Per gastengroep een eigen kaart, met eigen tijden. [Start gratis met jullie trouwwebsite](/aanmaken), je betaalt pas als je publiceert.
+Met SayingYes maak je bij jullie trouwwebsite gratis digitale Save the Dates en trouwkaarten. Gasten openen een envelop met lakzegel in de stijl van jullie site, met knoppen naar de website en het RSVP-formulier. Per gastengroep een eigen kaart, met eigen tijden. [Start gratis met jullie trouwwebsite](/start), je betaalt pas als je publiceert.
