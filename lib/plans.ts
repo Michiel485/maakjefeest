@@ -123,6 +123,15 @@ export function renewalAllowed(plan: unknown): boolean {
   return normalizePlan(plan) === "compleet"
 }
 
+// Waar begint iemand die dit pakket kiest: kaartpakketten in de kaartbouwer,
+// de complete site via de aanmaakpagina van de websitebouwer.
+export function planStartUrl(plan: unknown): string {
+  const p = normalizePlan(plan)
+  if (p === "save_the_date") return "/kaart-maken?type=save_the_date"
+  if (p === "uitnodiging") return "/kaart-maken?type=trouwkaart"
+  return "/aanmaken?plan=compleet"
+}
+
 export function planRank(plan: unknown): number {
   return PLAN_ORDER.indexOf(normalizePlan(plan))
 }

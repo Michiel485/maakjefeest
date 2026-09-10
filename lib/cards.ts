@@ -45,6 +45,12 @@ export const CARD_TYPE_LABEL: Record<CardType, string> = {
   trouwkaart: "Trouwkaart",
 }
 
+// Welk pakket hoort bij welk kaarttype (voor de kaartbouwer en de kassa)
+export const CARD_TYPE_PLAN: Record<CardType, "save_the_date" | "uitnodiging"> = {
+  save_the_date: "save_the_date",
+  trouwkaart: "uitnodiging",
+}
+
 export const CARD_TEMPLATE_LABEL: Record<CardTemplate, string> = {
   klassiek: "Klassiek",
   foto: "Met foto",

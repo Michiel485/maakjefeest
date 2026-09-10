@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { MARKETING_URL } from "@/lib/site-url"
 import { NavLoginButton } from "@/components/NavLoginButton"
-import { PLANS, PLAN_ORDER, formatEur } from "@/lib/plans"
+import { PLANS, PLAN_ORDER, formatEur, planStartUrl } from "@/lib/plans"
 
 const TITLE = "Digitale uitnodiging voor jullie bruiloft via WhatsApp"
 const DESCRIPTION =
@@ -135,7 +135,7 @@ export default function DigitaleUitnodigingPage() {
           </Link>
           <NavLoginButton />
           <Link
-            href="/aanmaken?plan=uitnodiging"
+            href="/kaart-maken?type=trouwkaart"
             className="hidden sm:inline-flex text-sm font-semibold px-5 py-2.5 rounded-xl transition-all duration-300 hover:opacity-85"
             style={{ backgroundColor: CHARCOAL, color: IVORY }}
           >
@@ -163,7 +163,7 @@ export default function DigitaleUitnodigingPage() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
-              href="/aanmaken?plan=uitnodiging"
+              href="/kaart-maken?type=trouwkaart"
               className="inline-flex items-center gap-2.5 text-base font-semibold px-8 py-4 rounded-2xl transition-all duration-300 hover:-translate-y-0.5"
               style={{ backgroundColor: TERRA, color: EMERALD, boxShadow: "0 8px 32px rgba(213,156,118,0.35)" }}
             >
@@ -307,7 +307,7 @@ export default function DigitaleUitnodigingPage() {
                     ))}
                   </ul>
                   <Link
-                    href={`/aanmaken?plan=${p}`}
+                    href={planStartUrl(p)}
                     className="inline-flex items-center justify-center gap-2 text-sm font-semibold px-6 py-3.5 rounded-2xl transition-all duration-300 hover:-translate-y-0.5"
                     style={uitgelicht ? { backgroundColor: GOLD, color: DARK } : { backgroundColor: "transparent", color: "#FAF7F2", border: `1px solid ${GOLD}60` }}
                   >
@@ -356,7 +356,7 @@ export default function DigitaleUitnodigingPage() {
             Maak de kaart gratis, bekijk de voorvertoning en betaal pas als je hem verstuurt.
           </p>
           <Link
-            href="/aanmaken?plan=uitnodiging"
+            href="/kaart-maken?type=trouwkaart"
             className="inline-flex items-center gap-2.5 text-base font-semibold px-10 py-4 rounded-2xl transition-all duration-300 hover:-translate-y-0.5"
             style={{ backgroundColor: CHARCOAL, color: IVORY, boxShadow: "0 8px 32px rgba(26,26,26,0.18)" }}
           >

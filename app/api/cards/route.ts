@@ -7,6 +7,29 @@ const CARD_TYPES: CardType[] = ["save_the_date", "trouwkaart"]
 const CARD_TEMPLATES: CardTemplate[] = ["klassiek", "foto"]
 const GUEST_TYPES: CardGuestType[] = ["daggast", "avondgast", "receptiegast"]
 
+// GET /api/cards?event_id=...: kaarten van een eigen event (voor de kaartbouwer)
+export async function GET(request: Request) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user?.email) return Response.json({ error: "Niet ingelogd" }, { status: 401 })
+
+  const eventId = new URL(request.url).searchParams.get("event_id")
+  if (!eventId) return Response.json({ error: "event_id is verplicht" }, { status: 400 })
+
+  const service = createServiceClient()
+  const { data: event } = await service.from("events").select("id, user_email").eq("id", eventId).single()
+  if (!event) return Response.json({ error: "Niet gevonden" }, { status: 404 })
+  if (event.user_email !== user.email) return Response.json({ error: "Geen toegang" }, { status: 403 })
+
+  const { data: cards } = await service
+    .from("cards")
+    .select("id, event_id, type, template, share_token, content, view_count, created_at")
+    .eq("event_id", eventId)
+    .order("created_at", { ascending: false })
+
+  return Response.json({ cards: cards ?? [] })
+}
+
 // POST: nieuwe kaart aanmaken voor een eigen event
 export async function POST(request: Request) {
   const supabase = await createClient()

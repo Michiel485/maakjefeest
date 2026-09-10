@@ -101,7 +101,7 @@ export async function POST(request: Request) {
 
   // If the redirect goes to /bouwen it's always from the aanmaken form → "basis staat" mail.
   // Otherwise use created_at age to distinguish new vs returning users.
-  const isFromAanmaken = redirect_to.includes("/bouwen")
+  const isFromAanmaken = redirect_to.includes("/bouwen") || redirect_to.includes("/kaart-maken")
   const isNewUser = isFromAanmaken || (() => {
     if (user.created_at) {
       const ageMs = Date.now() - new Date(user.created_at).getTime()

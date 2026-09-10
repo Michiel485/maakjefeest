@@ -5,7 +5,7 @@ import { NavLoginButton } from "@/components/NavLoginButton"
 import ResetGoogleTranslate from "@/components/ResetGoogleTranslate"
 import { MARKETING_URL } from "@/lib/site-url"
 import { getAllTips } from "@/lib/tips"
-import { PLANS, PLAN_ORDER, formatEur } from "@/lib/plans"
+import { PLANS, PLAN_ORDER, formatEur, planStartUrl } from "@/lib/plans"
 
 export const metadata: Metadata = {
   // Absolute titel: de root-template zou er anders een tweede "| SayingYes" achter zetten
@@ -857,7 +857,7 @@ export default function Home() {
                     ))}
                   </ul>
                   <Link
-                    href={`/aanmaken?plan=${p}`}
+                    href={planStartUrl(p)}
                     className="inline-flex items-center justify-center gap-2 text-sm font-semibold px-6 py-3.5 rounded-2xl transition-all duration-300 hover:-translate-y-0.5"
                     style={
                       uitgelicht

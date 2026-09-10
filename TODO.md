@@ -4,7 +4,7 @@ Persoonlijke actielijst van Michiel. Claude houdt deze bij; afgeronde punten gaa
 
 ## Open
 
-- [ ] **Prijsladder opnieuw testen** na de fixes van 10 sep 2026: maak een Save the Date aan en controleer de welkomstmail, de kaartbouwer, het watermerk op de download en of activeren voor €15 werkt. Meld wat er niet lekker voelt.
+- [ ] **Kaartbouwer testen** (stuk 1 van `docs/PLAN-kaartbouwer.md`, live sinds 10 sep 2026): ga naar sayingyes.nl/kaart-maken?type=save_the_date, ontwerp een kaart zonder in te loggen, open de envelopsimulatie, download het voorbeeld en klik op Activeer. Meld wat er niet lekker voelt. Daarna komen stuk 2 (templates sierlijk en bohemian) en stuk 3 (opruimen websitebouwer).
 - [ ] **Supabase-waarschuwing in de gaten houden**: "exhausting multiple resources". Niet urgent (database is piepklein), maar kijk in Supabase onder Reports en Database welke resource het is. Bij geheugen dat op 100% blijft staan is dat dezelfde toestand die in juli tot de pauze leidde. Advies van 10 sep 2026: nog niet upgraden, wel checken zodra er echt verkeer komt.
 - [ ] **Claude GitHub App installeren** op de repo (https://claude.ai/code/onboarding?magic=github-app-setup), nodig voor de tweewekelijkse artikel-routine. Daarna Claude een seintje geven ("app geinstalleerd"): die maakt dan de routine aan (1e en 15e van de maand, 09:00, artikel als pull request). Akkoord gegeven op 9 sep 2026.
 - [ ] **Beslissen over Supabase MCP-koppeling**: zou Claude zelf migraties kunnen draaien. Advies staat in het gesprek van 9 sep 2026: alleen-lezen koppelen (past bij de eigen bouwregel "read-only default"), of niet koppelen en SQL blijven plakken. Niet met volledige schrijfrechten, want de database bevat gastgegevens van klanten.
@@ -13,6 +13,8 @@ Persoonlijke actielijst van Michiel. Claude houdt deze bij; afgeronde punten gaa
 - [ ] **Reviews verzamelen** zodra er echte klanten zijn (testimonials op de homepage plus Review-schema).
 
 ## Afgerond
+
+- [x] 10 sep 2026: **Kaartbouwer gebouwd** (`/kaart-maken`, twee standen: Save the Date en trouwkaart). Anoniem ontwerpen met live kaartvoorbeeld, tekst bewerken, stijl, foto, envelopsimulatie en downloadvoorbeeld met watermerk, e-mailadres pas bij bewaren of activeren, event ontstaat pas op dat moment. Landingspagina, homepage en dashboard linken ernaar. Welkomstmail kent het pakket. Getest in de browser, build groen.
 
 - [x] 10 sep 2026: **Prijsladder staat live** (commits d5a9cfd, d2a5dd8, b6d3173). Migratie gedraaid, hele flow getest tegen de echte database (pakketpoorten, kaartlink voor en na betalen, publieke pagina's per pakket, envelopknoppen), testdata opgeruimd en op productie geverifieerd: homepage met drie pakketten, landingspagina, twee nieuwe artikelen, sitemap 17 URLs en de bestaande klantsite werkt nog.
 
