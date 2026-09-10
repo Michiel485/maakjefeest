@@ -634,7 +634,7 @@ export default function KaartMakenPage() {
                 siteUrl={null}
                 rsvpUrl={null}
                 startOpen
-                watermerk
+                watermerk="licht"
               />
             </div>
 

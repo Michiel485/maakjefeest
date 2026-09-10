@@ -26,7 +26,7 @@ export default function CardReveal({
   previewNotice = false,
   siteVolgt = false,
   startOpen = false,
-  watermerk = false,
+  watermerk = "geen",
 }: {
   display: CardDisplay
   initials: string
@@ -41,9 +41,11 @@ export default function CardReveal({
   siteVolgt?: boolean
   // Voorbeeld in de bouwer: meteen de kaart tonen, zonder envelop
   startOpen?: boolean
-  // Alleen de watermerkbanen, zonder de zwarte strook bovenaan
-  watermerk?: boolean
+  // Watermerkbanen zonder de strook bovenaan. "licht" is voor het voorbeeld in
+  // de bouwer: genoeg om misbruik te ontmoedigen, zonder het ontwerp te verpesten.
+  watermerk?: "geen" | "licht" | "vol"
 }) {
+  const banen = previewNotice || watermerk === "vol" ? 7 : watermerk === "licht" ? 3 : 0
   const [stage, setStage] = useState<Stage>(startOpen ? "open" : "closed")
   const reduceMotion = useSyncExternalStore(
     subscribeReducedMotion,
@@ -83,7 +85,7 @@ export default function CardReveal({
           Voorbeeld, alleen voor jullie zichtbaar. Activeer je pakket om deze kaart te kunnen versturen.
         </div>
       )}
-      {(previewNotice || watermerk) && (
+      {banen > 0 && (
         /* Watermerk over de hele kaart, zodat een schermafbeelding ook niet als
            echte kaart te gebruiken is. Absoluut binnen deze container, dus het
            werkt ook als de kaart in een paneel of overlay staat. */
@@ -92,11 +94,16 @@ export default function CardReveal({
           className="absolute inset-0 z-40 flex flex-col justify-around items-center"
           style={{ pointerEvents: "none", overflow: "hidden" }}
         >
-          {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+          {Array.from({ length: banen }, (_, i) => (
             <span
               key={i}
-              className="text-xl sm:text-3xl font-semibold whitespace-nowrap"
-              style={{ transform: "rotate(-28deg)", color: "#111", opacity: 0.13, letterSpacing: "0.35em" }}
+              className={banen > 3 ? "text-xl sm:text-3xl font-semibold whitespace-nowrap" : "text-sm sm:text-lg font-semibold whitespace-nowrap"}
+              style={{
+                transform: "rotate(-28deg)",
+                color: "#111",
+                opacity: banen > 3 ? 0.13 : 0.055,
+                letterSpacing: "0.35em",
+              }}
             >
               VOORBEELD · SAYINGYES
             </span>
@@ -286,7 +293,9 @@ export default function CardReveal({
 
                 <p
                   className="text-sm italic leading-relaxed"
-                  style={{ color: sc.cardText ?? sc.bodyText, opacity: 0.9, margin: 0 }}
+                  // pre-line: witregels die het bruidspaar in de boodschap zet
+                  // horen ook op de kaart te staan
+                  style={{ color: sc.cardText ?? sc.bodyText, opacity: 0.9, margin: 0, whiteSpace: "pre-line" }}
                 >
                   {display.message}
                 </p>

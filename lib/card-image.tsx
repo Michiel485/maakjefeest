@@ -166,18 +166,29 @@ export async function renderCardImage(
       )}
 
       {mode === "download" && (
-        <div
-          style={{
-            fontFamily: sans,
-            fontSize: 30,
-            fontStyle: "italic",
-            lineHeight: 1.55,
-            color: textColor,
-            opacity: 0.9,
-            maxWidth: 720,
-          }}
-        >
-          {display.message}
+        // Regel voor regel, zodat witregels uit de boodschap bewaard blijven:
+        // satori voegt losse regeleindes anders samen tot één lap tekst.
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", maxWidth: 720 }}>
+          {display.message.split("\n").map((regel, i) =>
+            regel.trim() ? (
+              <div
+                key={i}
+                style={{
+                  fontFamily: sans,
+                  fontSize: 30,
+                  fontStyle: "italic",
+                  lineHeight: 1.55,
+                  color: textColor,
+                  opacity: 0.9,
+                  textAlign: "center",
+                }}
+              >
+                {regel}
+              </div>
+            ) : (
+              <div key={i} style={{ display: "flex", height: 20 }} />
+            )
+          )}
         </div>
       )}
 

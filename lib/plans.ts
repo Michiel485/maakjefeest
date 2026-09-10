@@ -140,8 +140,8 @@ export function planRank(plan: unknown): number {
 export function upgradeHint(plan: unknown): string {
   const p = normalizePlan(plan)
   if (p === "save_the_date") return "Instappen kan hier; upgraden kost later alleen het verschil."
-  if (p === "uitnodiging") return `Al een Save the Date? Dan betaal je ${formatEur(upgradePrice("save_the_date", "uitnodiging") ?? 0)} bij.`
-  return `Al een kaartpakket? Dan betaal je alleen het verschil: ${formatEur(upgradePrice("uitnodiging", "compleet") ?? 0)} of ${formatEur(upgradePrice("save_the_date", "compleet") ?? 0)}.`
+  if (p === "uitnodiging") return `Al een Save the Date gekocht? Dan betaal je slechts ${formatEur(upgradePrice("save_the_date", "uitnodiging") ?? 0)} bij.`
+  return `Al een kaartpakket gekocht? Dan betaal je slechts het verschil: ${formatEur(upgradePrice("uitnodiging", "compleet") ?? 0)} of ${formatEur(upgradePrice("save_the_date", "compleet") ?? 0)}.`
 }
 
 // Bij te betalen bedrag; null als het geen upgrade is
