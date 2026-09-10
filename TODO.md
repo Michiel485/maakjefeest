@@ -4,7 +4,8 @@ Persoonlijke actielijst van Michiel. Claude houdt deze bij; afgeronde punten gaa
 
 ## Open
 
-- [ ] **Prijsladder live zetten** (twee stappen, in deze volgorde): 1) `supabase/migration_plans.sql` draaien in de Supabase SQL editor. Dit is veilig om nu te doen: de huidige live site negeert de nieuwe kolom, er gaat niets offline. 2) Claude een seintje geven; die test dan de hele flow tegen de echte database (kassa, dashboard, kaartlink, publieke pagina's) en pusht. Let op: pas de migratie, dan de push. Omgekeerd breken dashboard, kassa en klantsites.
+- [ ] **Prijsladder zelf uitproberen** met de gratis kortingscode: maak een Save the Date aan, kijk of het dashboard klopt en of de kaartlink pas na activeren werkt. Daarna eventueel één echte Mollie-betaling van €15 om de kassa end-to-end te zien.
+- [ ] **Supabase-waarschuwing in de gaten houden**: "exhausting multiple resources". Niet urgent (database is piepklein), maar kijk in Supabase onder Reports en Database welke resource het is. Bij geheugen dat op 100% blijft staan is dat dezelfde toestand die in juli tot de pauze leidde. Advies van 10 sep 2026: nog niet upgraden, wel checken zodra er echt verkeer komt.
 - [ ] **Claude GitHub App installeren** op de repo (https://claude.ai/code/onboarding?magic=github-app-setup), nodig voor de tweewekelijkse artikel-routine. Daarna Claude een seintje geven ("app geinstalleerd"): die maakt dan de routine aan (1e en 15e van de maand, 09:00, artikel als pull request). Akkoord gegeven op 9 sep 2026.
 - [ ] **Beslissen over Supabase MCP-koppeling**: zou Claude zelf migraties kunnen draaien. Advies staat in het gesprek van 9 sep 2026: alleen-lezen koppelen (past bij de eigen bouwregel "read-only default"), of niet koppelen en SQL blijven plakken. Niet met volledige schrijfrechten, want de database bevat gastgegevens van klanten.
 - [ ] **Backlinks**: eerst samen bepalen wie we aanschrijven (trouwlocaties, trouwblogs, weddingplanners, leveranciers van onze eigen bruiloft). Claude schrijft daarna de mailteksten en een kandidatenlijst.
@@ -12,6 +13,8 @@ Persoonlijke actielijst van Michiel. Claude houdt deze bij; afgeronde punten gaa
 - [ ] **Reviews verzamelen** zodra er echte klanten zijn (testimonials op de homepage plus Review-schema).
 
 ## Afgerond
+
+- [x] 10 sep 2026: **Prijsladder staat live** (commits d5a9cfd, d2a5dd8, b6d3173). Migratie gedraaid, hele flow getest tegen de echte database (pakketpoorten, kaartlink voor en na betalen, publieke pagina's per pakket, envelopknoppen), testdata opgeruimd en op productie geverifieerd: homepage met drie pakketten, landingspagina, twee nieuwe artikelen, sitemap 17 URLs en de bestaande klantsite werkt nog.
 
 - [x] 10 sep 2026: Prijsladder afgemaakt na een controleronde: pakketcontrole in het RSVP-endpoint en op alle fotomuur-routes, kaartlink werkt pas na betaling (bruidspaar ziet een voorbeeld met strook), bouwer en aanmaakpagina volgen het pakket, dashboard zet de kaarten bovenaan en verbergt wat niet bij het pakket hoort, verlengen alleen bij Compleet en kaartpakketten zonder einddatum, plus kastlijntjes uit de klantteksten. Pakketlogica lokaal getest, build groen.
 
