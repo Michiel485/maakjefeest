@@ -2,7 +2,7 @@
 
 import { useState, useSyncExternalStore } from "react"
 import type { SC } from "@/lib/event-styles"
-import type { CardDisplay } from "@/lib/cards"
+import { CARD_DESIGN_STYLE, type CardDisplay } from "@/lib/cards"
 
 type Stage = "closed" | "flap" | "card" | "open"
 
@@ -45,7 +45,10 @@ export default function CardReveal({
   // de bouwer: genoeg om misbruik te ontmoedigen, zonder het ontwerp te verpesten.
   watermerk?: "geen" | "licht" | "vol"
 }) {
-  const banen = previewNotice || watermerk === "vol" ? 7 : watermerk === "licht" ? 3 : 0
+  // Alleen de download en de social-voorvertoning krijgen het volle watermerk;
+  // wat het bruidspaar zelf op het scherm ziet blijft licht.
+  const banen = watermerk === "vol" ? 7 : previewNotice || watermerk === "licht" ? 3 : 0
+  const ds = CARD_DESIGN_STYLE[display.design]
   const [stage, setStage] = useState<Stage>(startOpen ? "open" : "closed")
   const reduceMotion = useSyncExternalStore(
     subscribeReducedMotion,
@@ -228,10 +231,11 @@ export default function CardReveal({
             }}
           >
             <div
-              className="rounded-2xl overflow-hidden"
+              className="overflow-hidden"
               style={{
                 backgroundColor: sc.cardBg ?? "#FFFEFB",
                 border: sc.goldBorder ? `2px solid ${sc.accent}` : `1px solid ${sc.accent}45`,
+                borderRadius: ds.hoekRadius,
                 boxShadow: "0 24px 70px rgba(0,0,0,0.22)",
               }}
             >
@@ -245,29 +249,47 @@ export default function CardReveal({
                 />
               )}
 
-              <div className="px-8 py-9 flex flex-col items-center text-center gap-4">
+              <div
+                className="px-8 py-9 flex flex-col items-center text-center gap-4"
+                // Sierlijk ontwerp: een dun tweede lijntje binnen de rand
+                style={ds.dubbeleRand ? { margin: 10, border: `1px solid ${sc.accent}40`, borderRadius: Math.max(4, ds.hoekRadius - 12) } : undefined}
+              >
                 {/* Binnenkader */}
                 <p
                   className="text-xs font-semibold uppercase"
-                  style={{ color: sc.labelColor, letterSpacing: "0.35em" }}
+                  style={{ color: sc.labelColor, letterSpacing: ds.kopSpatiering, fontFamily: ds.kopFont }}
                 >
                   {display.heading}
                 </p>
 
-                {/* Ornament */}
-                <div className="flex items-center gap-2.5 w-full max-w-[220px]">
-                  <div style={{ flex: 1, height: 1, backgroundColor: `${sc.accent}70` }} />
-                  <svg width="8" height="8" viewBox="0 0 8 8" fill={sc.accent}><path d="M4 0 L8 4 L4 8 L0 4 Z" /></svg>
-                  <div style={{ flex: 1, height: 1, backgroundColor: `${sc.accent}70` }} />
-                </div>
+                {/* Ornament: verschilt per ontwerp */}
+                {ds.ornament === "krul" ? (
+                  <svg width="160" height="18" viewBox="0 0 160 18" fill="none" stroke={sc.accent} strokeWidth="1.2" strokeLinecap="round" aria-hidden="true">
+                    <path d="M6 9c14-8 26 8 40 0s26-8 40 0 26 8 40 0" opacity="0.8" />
+                    <circle cx="80" cy="9" r="2" fill={sc.accent} stroke="none" />
+                  </svg>
+                ) : ds.ornament === "takje" ? (
+                  <svg width="130" height="18" viewBox="0 0 130 18" fill="none" stroke={sc.accent} strokeWidth="1.1" strokeLinecap="round" aria-hidden="true">
+                    <path d="M12 9h106" opacity="0.4" />
+                    <path d="M65 9c-7-5-14-6-18-4 3 4 10 6 18 4z" fill={`${sc.accent}55`} stroke="none" />
+                    <path d="M65 9c7-5 14-6 18-4-3 4-10 6-18 4z" fill={`${sc.accent}55`} stroke="none" />
+                    <circle cx="65" cy="9" r="2.2" fill={sc.accent} stroke="none" />
+                  </svg>
+                ) : (
+                  <div className="flex items-center gap-2.5 w-full max-w-[220px]">
+                    <div style={{ flex: 1, height: 1, backgroundColor: `${sc.accent}70` }} />
+                    <svg width="8" height="8" viewBox="0 0 8 8" fill={sc.accent} aria-hidden="true"><path d="M4 0 L8 4 L4 8 L0 4 Z" /></svg>
+                    <div style={{ flex: 1, height: 1, backgroundColor: `${sc.accent}70` }} />
+                  </div>
+                )}
 
                 <p
                   className="notranslate leading-tight"
                   style={{
-                    fontFamily: sc.fontFrameNames,
-                    fontWeight: sc.fontFrameNamesWeight,
+                    fontFamily: ds.namenFont,
                     color: sc.cardText ?? sc.headingColor,
-                    fontSize: "2.4rem",
+                    fontSize: `${2.4 * ds.namenSchaal}rem`,
+                    letterSpacing: ds.ornament === "takje" ? "0.03em" : undefined,
                     margin: "6px 0",
                   }}
                 >

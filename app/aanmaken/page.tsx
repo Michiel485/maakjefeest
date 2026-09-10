@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase"
-import { DEFAULT_PLAN, PLANS, editablePages, formatEur, isCardPlan, isPlan, type Plan } from "@/lib/plans"
+import { PLANS, formatEur, type Plan } from "@/lib/plans"
 
 const GOLD       = "#C5A059"
 const GOLD_LIGHT = "#E8D5A3"
@@ -59,24 +59,11 @@ type SlugStatus = "idle" | "checking" | "available" | "taken" | "invalid"
 const inputBase = "w-full rounded-2xl border bg-white px-4 py-3.5 text-sm placeholder-gray-400 focus:outline-none transition-all"
 const inputStyle: React.CSSProperties = { color: CHARCOAL, borderColor: GOLD_LIGHT }
 
-// Pakketkeuze vanaf een landingspagina (?plan=...), anders de eerder gemaakte keuze
-function lesPakketkeuze(): Plan {
-  if (typeof window === "undefined") return DEFAULT_PLAN
-  try {
-    const uitUrl = new URLSearchParams(window.location.search).get("plan")
-    if (isPlan(uitUrl)) {
-      localStorage.setItem("sayingyes_plan", uitUrl)
-      return uitUrl
-    }
-    const bewaard = localStorage.getItem("sayingyes_plan")
-    if (isPlan(bewaard)) return bewaard
-  } catch {}
-  return DEFAULT_PLAN
-}
+// Deze pagina is de start van de trouwwebsite; kaartpakketten beginnen in de
+// kaartbouwer (zie planStartUrl in lib/plans.ts).
+const gekozenPlan: Plan = "compleet"
 
 export default function AanmakenPage() {
-  const [gekozenPlan, setGekozenPlan] = useState<Plan>(DEFAULT_PLAN)
-  useEffect(() => { setGekozenPlan(lesPakketkeuze()) }, [])
   const router = useRouter()
   const [form, setForm] = useState({ naam1: "", naam2: "", datum: "", email: "", slug: "" })
   const [slugStatus, setSlugStatus] = useState<SlugStatus>("idle")
@@ -175,10 +162,7 @@ export default function AanmakenPage() {
         pageMode: "multi",
       },
       plan: gekozenPlan,
-      // Bij een kaartpakket alleen de onderdelen aanmaken die erbij horen
-      pages: gekozenPlan === "compleet"
-        ? ["Home", "Programma", "RSVP", "Informatie", "Cadeautips", "OnsVerhaal", "Ceremoniemeesters"]
-        : editablePages(gekozenPlan),
+      pages: ["Home", "Programma", "RSVP", "Informatie", "Cadeautips", "OnsVerhaal", "Ceremoniemeesters"],
       content: {
         Home: {
           title: "Wij gaan trouwen!",
@@ -545,9 +529,9 @@ export default function AanmakenPage() {
           {/* Trust signal */}
           <div className="flex items-center justify-center gap-6 pt-2">
             {[
-              { icon: "✦", label: PLANS[gekozenPlan].label },
-              { icon: "✦", label: `Eenmalig ${formatEur(PLANS[gekozenPlan].price)}` },
-              { icon: "✦", label: isCardPlan(gekozenPlan) ? "Betalen bij versturen" : "Betalen bij publiceren" },
+              { icon: "✦", label: `Eenmalig ${formatEur(PLANS.compleet.price)}` },
+              { icon: "✦", label: "Alles erop en eraan" },
+              { icon: "✦", label: "Betalen bij publiceren" },
             ].map(({ icon, label }) => (
               <div key={label} className="flex items-center gap-1.5 text-xs" style={{ color: BODY }}>
                 <span style={{ color: GOLD, fontSize: "0.5rem" }}>{icon}</span>

@@ -7,6 +7,10 @@ import { createClient } from "@/lib/supabase"
 import { STYLE_CONFIG, getStyleConfig, formatDate, type Style } from "@/lib/event-styles"
 import {
   buildCardDisplay,
+  cardDesign,
+  CARD_DESIGNS,
+  CARD_TEMPLATE_LABEL,
+  CARD_TEMPLATE_UITLEG,
   CARD_TYPE_PLAN,
   GUEST_TYPE_INVITE_LINE,
   GUEST_TYPE_LABEL,
@@ -74,7 +78,7 @@ const LEEG: KaartOntwerp = {
 // Per stap één zin over waarom digitaal slim is: overtuigen zonder te duwen
 const VOORDEEL: Record<Stap, string> = {
   stijl: "De stijl bepaalt ook de envelop die je gasten openen. Alles in één sfeer, zonder drukwerk.",
-  template: "Later toch een foto erbij? Je past de kaart aan en iedereen ziet via dezelfde link de nieuwe versie.",
+  template: "Drie richtingen: strak en tijdloos, sierlijk met handschrift, of bohemian en warm. Je kunt altijd wisselen.",
   tekst: "Verandert de tijd of de locatie? Geen herdruk en geen rondbelactie, je past de tekst gewoon aan.",
   foto: "Een foto van jullie samen maakt de kaart persoonlijk. Op WhatsApp valt hij dan extra op.",
   bekijken: "Je gasten krijgen een link, tikken op de envelop en zien jullie kaart. Geen app, geen account.",
@@ -388,7 +392,7 @@ export default function KaartMakenPage() {
         r.onerror = () => reject(new Error("Kon de foto niet lezen"))
         r.readAsDataURL(blob)
       })
-      update({ photoDataUrl: dataUrl, photoUrl: null, template: "foto" })
+      update({ photoDataUrl: dataUrl, photoUrl: null })
     } catch (e) {
       setMelding({ tekst: e instanceof Error ? e.message : "Foto laden mislukt", fout: true })
     } finally {
@@ -562,24 +566,24 @@ export default function KaartMakenPage() {
             </div>
           </Sectie>
 
-          <Sectie id="template" open={stap === "template"} onToggle={() => setStap(stap === "template" ? "tekst" : "template")} titel="Opmaak">
-            <div className="flex gap-2">
-              {(["klassiek", "foto"] as CardTemplate[]).map((t) => (
+          <Sectie id="template" open={stap === "template"} onToggle={() => setStap(stap === "template" ? "tekst" : "template")} titel="Ontwerp">
+            <div className="flex flex-col gap-2">
+              {CARD_DESIGNS.map((t) => (
                 <button
                   key={t}
-                  onClick={() => { update({ template: t }); if (t === "foto") setStap("foto") }}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
-                  style={{ border: `2px solid ${ontwerp.template === t ? GOLD : GOLD_LIGHT}`, backgroundColor: ontwerp.template === t ? "#fff" : "transparent", color: CHARCOAL, cursor: "pointer" }}
+                  onClick={() => update({ template: t })}
+                  className="text-left px-3 py-2.5 rounded-xl text-sm font-semibold"
+                  style={{ border: `2px solid ${cardDesign(ontwerp.template) === t ? GOLD : GOLD_LIGHT}`, backgroundColor: cardDesign(ontwerp.template) === t ? "#fff" : "transparent", color: CHARCOAL, cursor: "pointer" }}
                 >
-                  {t === "klassiek" ? "Strak" : "Met foto"}
-                  <span className="block text-[11px] font-normal" style={{ color: BODY }}>{t === "klassiek" ? "alleen tekst, tijdloos" : "jullie foto bovenaan"}</span>
+                  {CARD_TEMPLATE_LABEL[t]}
+                  <span className="block text-[11px] font-normal" style={{ color: BODY }}>{CARD_TEMPLATE_UITLEG[t]}</span>
                 </button>
               ))}
             </div>
           </Sectie>
 
-          {ontwerp.template === "foto" && (
-            <Sectie id="foto" open={stap === "foto"} onToggle={() => setStap(stap === "foto" ? "tekst" : "foto")} titel="Foto">
+          {/* Een foto kan bij elk ontwerp */}
+          <Sectie id="foto" open={stap === "foto"} onToggle={() => setStap(stap === "foto" ? "tekst" : "foto")} titel="Foto (optioneel)">
               <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void kiesFoto(f) }} />
               {(ontwerp.photoDataUrl || ontwerp.photoUrl) && (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -596,7 +600,6 @@ export default function KaartMakenPage() {
                 )}
               </div>
             </Sectie>
-          )}
 
           <Sectie id="bekijken" open={stap === "bekijken"} onToggle={() => setStap(stap === "bekijken" ? "tekst" : "bekijken")} titel="Bekijken">
             <button

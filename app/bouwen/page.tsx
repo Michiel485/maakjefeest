@@ -15,9 +15,7 @@ import { formatDate } from "@/lib/event-styles"
 import { TITLE_FONT_OPTIONS, getTitleFont } from "@/lib/title-fonts"
 import { createClient } from "@/lib/supabase"
 import { eventSiteUrl } from "@/lib/site-url"
-import { DEFAULT_PLAN, PLANS, editablePages, formatEur, isCardPlan, isPlan, type Plan } from "@/lib/plans"
-import { buildCardDisplay } from "@/lib/cards"
-import CardReveal from "@/app/kaart/[token]/card-reveal"
+import { DEFAULT_PLAN, PLANS, formatEur, isCardPlan, isPlan, type Plan } from "@/lib/plans"
 import SophieTutorial, { type SophieNav } from "@/components/SophieTutorial"
 
 type EventType = "bruiloft" | "verjaardag" | "evenement"
@@ -452,11 +450,12 @@ export default function BouwenPage() {
       if (isPlan(bewaard)) setPlan(bewaard)
     } catch {}
   }, [])
-  // Tabtitel volgt het pakket: "Website bouwen" klopt niet als je een kaart maakt
+  // Deze bouwer is er voor de trouwwebsite; een kaartpakket hoort in de kaartbouwer
   useEffect(() => {
-    document.title = isCardPlan(plan)
-      ? `${PLANS[plan].label} ontwerpen | SayingYes`
-      : "Website bouwen | SayingYes"
+    if (!isCardPlan(plan)) return
+    const id = new URLSearchParams(window.location.search).get("event_id")
+    router.replace(id ? `/kaart-maken?event_id=${id}` : "/kaart-maken")
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plan])
   useEffect(() => { if (activeSection !== 'algemeen') setOpenAlgSection(null) }, [activeSection])
   useEffect(() => { if (activeSection !== 'url') setOpenUrlSection(null) }, [activeSection])
@@ -1214,13 +1213,7 @@ export default function BouwenPage() {
   }
   const canvasWidth = viewport === "mobiel" ? 390 : 1024
 
-  // Alleen de onderdelen die bij het pakket horen zijn te bewerken. De inhoud
-  // van andere pagina's blijft bewaard, zodat niets verloren gaat bij upgraden.
-  const toegestanePaginas = editablePages(plan)
-  const zichtbarePaginas = PAGES.filter((p) => toegestanePaginas.includes(p.id))
-  const kaartPakket = isCardPlan(plan)
-
-  const activePagesOrdered = PAGES.filter((p) => active[p.id] && toegestanePaginas.includes(p.id))
+  const activePagesOrdered = PAGES.filter((p) => active[p.id])
   const eventName = draft?.naam || "Jullie bruiloft"
   const safeEventName = eventName.replace(/\n/g, " ")
   const eventDate = draft?.datum ? formatDate(draft.datum) : "Datum nog niet ingesteld"
@@ -1368,17 +1361,7 @@ export default function BouwenPage() {
             </div>
 
             {/* Publiceren / Bekijk live site */}
-            {isPublished && kaartPakket ? (
-              <a
-                href="/dashboard"
-                className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold px-3 md:px-5 py-2.5 rounded-xl shadow-md shadow-emerald-100 hover:shadow-lg hover:-translate-y-0.5 transition-all"
-              >
-                <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                <span className="hidden sm:inline">Naar je kaarten</span>
-              </a>
-            ) : isPublished ? (
+            {isPublished ? (
               <a
                 href={eventSiteUrl(slugPreview)}
                 target="_blank"
@@ -1409,8 +1392,8 @@ export default function BouwenPage() {
                     <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
-                    <span className="hidden sm:inline">{kaartPakket ? "Activeer je kaart voor " : "Publiceren voor "}</span>
-                    {formatEur(PLANS[plan].price)}
+                    <span className="hidden sm:inline">Publiceren voor </span>
+                    {formatEur(PLANS.compleet.price)}
                   </>
                 )}
               </button>
@@ -1431,7 +1414,7 @@ export default function BouwenPage() {
 
 
           {/* ── 3. URL & BEVEILIGING (alleen bij een pakket met publieke site) ── */}
-          <div hidden={kaartPakket}>
+          <div>
             <button
               onClick={() => setActiveSection(prev => prev === 'url' ? null : 'url')}
               className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-gray-50 transition-colors"
@@ -1605,28 +1588,6 @@ export default function BouwenPage() {
               </div>
             )}
           </div>
-          {/* ── Pakketstrook: wat hoort er bij het gekozen pakket ── */}
-          <div className="px-5 py-3.5 border-b border-gray-100" style={{ backgroundColor: "#FBF5E8" }}>
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: "#C5A059" }}>
-                {PLANS[plan].label}
-              </span>
-              <span className="text-[11px] font-semibold" style={{ color: "#1A1A1A" }}>
-                {formatEur(PLANS[plan].price)}
-              </span>
-            </div>
-            <p className="text-[11px] leading-snug mt-1.5" style={{ color: "#5C5248" }}>
-              {kaartPakket
-                ? "Wat je hier instelt (namen, datum, locatie en stijl) komt op jullie kaart. De kaart zelf maak je na activeren in je dashboard."
-                : "Alle onderdelen van jullie trouwwebsite staan hieronder. Zet aan wat je wilt gebruiken."}
-            </p>
-            {kaartPakket && (
-              <Link href="/digitale-uitnodiging" className="text-[11px] font-semibold mt-1.5 inline-block" style={{ color: "#C5A059" }}>
-                Wat zit er in de pakketten?
-              </Link>
-            )}
-          </div>
-
           {/* ── 1. ALGEMEEN ── */}
           <div className="border-b border-gray-100">
             <button
@@ -1759,14 +1720,12 @@ export default function BouwenPage() {
               onClick={() => setActiveSection(prev => prev === 'paginas' ? null : 'paginas')}
               className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-gray-50 transition-colors"
             >
-              <span className="text-xs font-bold uppercase tracking-widest text-gray-500">
-                {kaartPakket ? "Voorkant" : "Pagina's"}
-              </span>
+              <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Pagina&apos;s</span>
               <Chevron open={activeSection === 'paginas'} />
             </button>
             {activeSection === 'paginas' && (
               <div>
-                {zichtbarePaginas.map((page) => {
+                {PAGES.map((page) => {
                   const isOn = active[page.id]
                   const isExpanded = activeSubPage === page.id && isOn
                   return (
@@ -2902,49 +2861,6 @@ export default function BouwenPage() {
 
             {/* Canvas */}
               <div ref={canvasContainerRef} className="flex-1 overflow-y-auto bg-gray-100 p-4 md:p-6">
-                {kaartPakket ? (
-                  /* Kaartpakket: voorbeeld van de kaart zelf, geen websitevoorbeeld */
-                  <div className="mx-auto max-w-lg">
-                    <p className="text-center text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: "#9ca3af" }}>
-                      Zo ziet jullie kaart eruit
-                    </p>
-                    <div className="rounded-2xl shadow-xl overflow-clip">
-                      <CardReveal
-                        display={buildCardDisplay(
-                          plan === "save_the_date" ? "save_the_date" : "trouwkaart",
-                          "klassiek",
-                          {},
-                          {
-                            title: draft?.naam ?? "",
-                            frame_names: draft?.frame_names ?? null,
-                            datum: draft?.datum ?? null,
-                            locatie: draft?.locatie ?? null,
-                            hero_image_url: heroImageUrl,
-                          }
-                        )}
-                        initials={
-                          (draft?.initials && draft.initials.replace(/[|/\\\-·.]/g, "").trim()) ||
-                          (draft?.frame_names ?? draft?.naam ?? "")
-                            .split(/\s*&\s*|\s+en\s+/i)
-                            .map((n) => n.trim().charAt(0).toUpperCase())
-                            .filter(Boolean)
-                            .slice(0, 2)
-                            .join("")
-                        }
-                        sc={sc}
-                        siteUrl={null}
-                        rsvpUrl={null}
-                        startOpen
-                      />
-                    </div>
-                    <p className="text-center text-xs mt-4 leading-relaxed" style={{ color: "#9ca3af" }}>
-                      De namen, datum, locatie en stijl komen uit de instellingen links.
-                      {plan === "uitnodiging"
-                        ? " Per gastengroep maak je na activeren een eigen kaart met eigen tijden en tekst."
-                        : " De kaart zelf maak je na activeren in je dashboard."}
-                    </p>
-                  </div>
-                ) : (
                 <div className="mx-auto" style={{ width: `${Math.round(canvasWidth * canvasScale * zoomMultiplier)}px` }}>
                   <div style={{ width: canvasWidth, transform: `scale(${canvasScale * zoomMultiplier})`, transformOrigin: "top left" }}>
                     <div className="rounded-2xl shadow-xl overflow-clip" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily, letterSpacing: sc.bodyLetterSpacing, fontWeight: sc.bodyFontWeight }}>
@@ -3225,7 +3141,6 @@ export default function BouwenPage() {
 
                   </div>
                 </div>
-                )}
               </div>
 
           </div>
@@ -3448,7 +3363,6 @@ export default function BouwenPage() {
 
       {/* ── Sophie tutorial ── */}
       <SophieTutorial
-        kaartPakket={kaartPakket}
         onNavigate={(nav: SophieNav) => {
           if ('activeSection' in nav) setActiveSection(nav.activeSection ?? null)
           if ('openAlgSection' in nav) setOpenAlgSection(nav.openAlgSection ?? null)

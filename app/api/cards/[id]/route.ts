@@ -2,7 +2,7 @@ import { createServiceClient } from "@/lib/supabase"
 import { createClient } from "@/lib/supabase-server"
 import type { CardContent, CardGuestType, CardTemplate } from "@/lib/cards"
 
-const CARD_TEMPLATES: CardTemplate[] = ["klassiek", "foto"]
+const CARD_TEMPLATES: CardTemplate[] = ["klassiek", "sierlijk", "bohemian", "foto"]
 const GUEST_TYPES: CardGuestType[] = ["daggast", "avondgast", "receptiegast"]
 const MAX_FIELD = 120
 const MAX_MESSAGE = 400

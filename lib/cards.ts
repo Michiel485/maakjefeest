@@ -3,7 +3,11 @@
 import { formatDate } from "./event-styles"
 
 export type CardType = "save_the_date" | "trouwkaart"
-export type CardTemplate = "klassiek" | "foto"
+// De drie ontwerprichtingen. "foto" is de oude waarde uit de tijd dat een foto
+// een apart template was; die telt nu als "klassiek" en de foto hangt alleen
+// nog aan content.photoUrl.
+export type CardTemplate = "klassiek" | "sierlijk" | "bohemian" | "foto"
+export type CardDesign = "klassiek" | "sierlijk" | "bohemian"
 export type CardGuestType = "daggast" | "avondgast" | "receptiegast"
 
 export interface CardContent {
@@ -51,9 +55,80 @@ export const CARD_TYPE_PLAN: Record<CardType, "save_the_date" | "uitnodiging"> =
   trouwkaart: "uitnodiging",
 }
 
-export const CARD_TEMPLATE_LABEL: Record<CardTemplate, string> = {
-  klassiek: "Klassiek",
-  foto: "Met foto",
+export const CARD_DESIGNS: CardDesign[] = ["klassiek", "sierlijk", "bohemian"]
+
+export const CARD_TEMPLATE_LABEL: Record<CardDesign, string> = {
+  klassiek: "Strak",
+  sierlijk: "Sierlijk",
+  bohemian: "Bohemian",
+}
+
+export const CARD_TEMPLATE_UITLEG: Record<CardDesign, string> = {
+  klassiek: "rustig en tijdloos",
+  sierlijk: "handschrift en krullen",
+  bohemian: "warm en natuurlijk",
+}
+
+// Oude waarden en rommel vallen terug op het strakke ontwerp
+export function cardDesign(template: unknown): CardDesign {
+  return template === "sierlijk" || template === "bohemian" ? template : "klassiek"
+}
+
+// Typografie en ornament per ontwerp. De kleuren komen uit het thema, de vorm
+// hieruit, zodat browser en afbeelding hetzelfde tonen.
+export interface CardDesignStyle {
+  // CSS-variabelen voor de browser
+  namenFont: string
+  kopFont: string
+  // Google Fonts voor de afbeelding (satori)
+  namenFontImage: { family: string; weight: 400 | 600 }
+  // Welke van de twee basisfonts de kop in de afbeelding gebruikt
+  kopFontImage: "sans" | "serif"
+  namenSchaal: number
+  kopSpatiering: string
+  ornament: "diamant" | "krul" | "takje"
+  dubbeleRand: boolean
+  hoekRadius: number
+  namenCursief: boolean
+}
+
+export const CARD_DESIGN_STYLE: Record<CardDesign, CardDesignStyle> = {
+  klassiek: {
+    namenFont: "var(--font-cormorant), Georgia, serif",
+    kopFont: "var(--font-montserrat), Helvetica, sans-serif",
+    namenFontImage: { family: "Cormorant Garamond", weight: 600 },
+    kopFontImage: "sans",
+    namenSchaal: 1,
+    kopSpatiering: "0.35em",
+    ornament: "diamant",
+    dubbeleRand: false,
+    hoekRadius: 16,
+    namenCursief: false,
+  },
+  sierlijk: {
+    namenFont: "var(--font-greatvibes), cursive",
+    kopFont: "var(--font-cormorant), Georgia, serif",
+    namenFontImage: { family: "Great Vibes", weight: 400 },
+    kopFontImage: "serif",
+    namenSchaal: 1.25,
+    kopSpatiering: "0.28em",
+    ornament: "krul",
+    dubbeleRand: true,
+    hoekRadius: 22,
+    namenCursief: false,
+  },
+  bohemian: {
+    namenFont: "var(--font-marcellus), Georgia, serif",
+    kopFont: "var(--font-montserrat), Helvetica, sans-serif",
+    namenFontImage: { family: "Marcellus", weight: 400 },
+    kopFontImage: "sans",
+    namenSchaal: 0.92,
+    kopSpatiering: "0.42em",
+    ornament: "takje",
+    dubbeleRand: false,
+    hoekRadius: 34,
+    namenCursief: false,
+  },
 }
 
 // Kop op de kaart zelf
@@ -91,6 +166,7 @@ export interface CardDisplay {
   timeText: string | null
   message: string
   photoUrl: string | null
+  design: CardDesign
 }
 
 export function buildCardDisplay(
@@ -115,10 +191,9 @@ export function buildCardDisplay(
         : null,
     timeText: type === "trouwkaart" ? content.timeText?.trim() || null : null,
     message: content.message?.trim() || DEFAULT_MESSAGE[type],
-    photoUrl:
-      template === "foto"
-        ? content.photoUrl?.trim() || event.hero_image_url?.trim() || null
-        : null,
+    // Een foto hoort bij de kaart zodra er één gekozen is, los van het ontwerp
+    photoUrl: content.photoUrl?.trim() || (template === "foto" ? event.hero_image_url?.trim() || null : null),
+    design: cardDesign(template),
   }
 }
 

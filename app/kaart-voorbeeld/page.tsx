@@ -34,6 +34,7 @@ export default function KaartVoorbeeldPage() {
         timeText: "Van 13:00 tot 23:00 uur",
         message: "Wij gaan trouwen en vieren dat graag met jou. Kom je ook?",
         photoUrl: null,
+        design: "sierlijk",
       }}
       initials="S&D"
       sc={sc}

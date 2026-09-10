@@ -2,7 +2,7 @@
 // og-preview (WhatsApp) en de PNG-download van de kaart.
 
 import { ImageResponse } from "next/og"
-import type { CardDisplay } from "./cards"
+import { CARD_DESIGN_STYLE, type CardDisplay } from "./cards"
 import type { SC } from "./event-styles"
 
 // Google Fonts levert TTF/woff (dat satori kan lezen) alleen aan oude user agents
@@ -47,7 +47,9 @@ export async function renderCardImage(
     watermerk ? WATERMERK_TEKST : "",
   ].join(" ")
 
-  const fonts: { name: string; data: ArrayBuffer; weight: 500 | 600; style: "normal" }[] = []
+  const ds = CARD_DESIGN_STYLE[display.design]
+
+  const fonts: { name: string; data: ArrayBuffer; weight: 400 | 500 | 600; style: "normal" }[] = []
   const serifData = await loadGoogleFont("Cormorant Garamond", 600, allText)
   if (serifData) fonts.push({ name: "CardSerif", data: serifData, weight: 600, style: "normal" })
   const sansData = await loadGoogleFont("Montserrat", 500, allText)
@@ -55,6 +57,18 @@ export async function renderCardImage(
 
   const serif = serifData ? "CardSerif" : "serif"
   const sans = sansData ? "CardSans" : "sans-serif"
+
+  // De namen krijgen het font van het gekozen ontwerp; bij een probleem valt
+  // het terug op de schreefletter, zodat er nooit een lege kaart uitkomt.
+  const namesData =
+    ds.namenFontImage.family === "Cormorant Garamond"
+      ? null
+      : await loadGoogleFont(ds.namenFontImage.family, ds.namenFontImage.weight, display.names)
+  if (namesData) {
+    fonts.push({ name: "CardNames", data: namesData, weight: ds.namenFontImage.weight, style: "normal" })
+  }
+  const namesFont = namesData ? "CardNames" : serif
+  const kopFont = ds.kopFontImage === "serif" ? serif : sans
 
   const s = mode === "og" ? 0.62 : 1.1
   const showPhoto = mode === "download" && !!display.photoUrl
@@ -108,14 +122,23 @@ export async function renderCardImage(
         padding: `${40 * s}px ${56 * s}px`,
         gap: 26 * s,
         textAlign: "center",
-        width: "100%",
+        // Sierlijk ontwerp: dun tweede lijntje binnen de kaartrand. Dan geen
+        // vaste breedte, want breedte plus marge zou buiten de kaart vallen.
+        ...(ds.dubbeleRand
+          ? {
+              alignSelf: "stretch",
+              margin: 22 * s,
+              border: `${Math.max(1, Math.round(2 * s))}px solid ${sc.accent}40`,
+              borderRadius: 12 * s,
+            }
+          : { width: "100%" }),
       }}
     >
       <div
         style={{
-          fontFamily: sans,
+          fontFamily: kopFont,
           fontSize: 27 * s,
-          letterSpacing: "0.35em",
+          letterSpacing: ds.kopSpatiering,
           textTransform: "uppercase",
           color: sc.labelColor,
         }}
@@ -123,26 +146,40 @@ export async function renderCardImage(
         {display.heading}
       </div>
 
-      {/* Ornament */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, width: 320 * s }}>
-        <div style={{ display: "flex", flex: 1, height: 2, backgroundColor: `${sc.accent}70` }} />
-        <div
-          style={{
-            display: "flex",
-            width: 14 * s,
-            height: 14 * s,
-            backgroundColor: sc.accent,
-            transform: "rotate(45deg)",
-          }}
-        />
-        <div style={{ display: "flex", flex: 1, height: 2, backgroundColor: `${sc.accent}70` }} />
-      </div>
+      {/* Ornament per ontwerp */}
+      {ds.ornament === "krul" ? (
+        <svg width={340 * s} height={38 * s} viewBox="0 0 160 18" fill="none" stroke={sc.accent} strokeWidth="1.2" strokeLinecap="round">
+          <path d="M6 9c14-8 26 8 40 0s26-8 40 0 26 8 40 0" opacity="0.8" />
+          <circle cx="80" cy="9" r="2" fill={sc.accent} stroke="none" />
+        </svg>
+      ) : ds.ornament === "takje" ? (
+        <svg width={300 * s} height={40 * s} viewBox="0 0 130 18" fill="none" stroke={sc.accent} strokeWidth="1.1" strokeLinecap="round">
+          <path d="M12 9h106" opacity="0.4" />
+          <path d="M65 9c-7-5-14-6-18-4 3 4 10 6 18 4z" fill={`${sc.accent}55`} stroke="none" />
+          <path d="M65 9c7-5 14-6 18-4-3 4-10 6-18 4z" fill={`${sc.accent}55`} stroke="none" />
+          <circle cx="65" cy="9" r="2.2" fill={sc.accent} stroke="none" />
+        </svg>
+      ) : (
+        <div style={{ display: "flex", alignItems: "center", gap: 12, width: 320 * s }}>
+          <div style={{ display: "flex", flex: 1, height: 2, backgroundColor: `${sc.accent}70` }} />
+          <div
+            style={{
+              display: "flex",
+              width: 14 * s,
+              height: 14 * s,
+              backgroundColor: sc.accent,
+              transform: "rotate(45deg)",
+            }}
+          />
+          <div style={{ display: "flex", flex: 1, height: 2, backgroundColor: `${sc.accent}70` }} />
+        </div>
+      )}
 
       <div
         style={{
-          fontFamily: serif,
-          fontSize: 94 * s,
-          lineHeight: 1.1,
+          fontFamily: namesFont,
+          fontSize: 94 * s * ds.namenSchaal,
+          lineHeight: 1.15,
           color: headingColor,
         }}
       >
@@ -249,7 +286,7 @@ export async function renderCardImage(
               alignItems: "center",
               backgroundColor: sc.cardBg ?? "#FFFEFB",
               border: `${sc.goldBorder ? 3 : 2}px solid ${sc.accent}`,
-              borderRadius: 24,
+              borderRadius: Math.round(ds.hoekRadius * 1.5),
               overflow: "hidden",
               width: 560,
               boxShadow: "0 24px 70px rgba(0,0,0,0.25)",
@@ -286,7 +323,7 @@ export async function renderCardImage(
             alignItems: "center",
             backgroundColor: sc.cardBg ?? "#FFFEFB",
             border: `${sc.goldBorder ? 3 : 2}px solid ${sc.accent}`,
-            borderRadius: 28,
+            borderRadius: Math.round(ds.hoekRadius * 1.8),
             overflow: "hidden",
             width: "100%",
             height: 1216,

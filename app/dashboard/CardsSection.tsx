@@ -4,8 +4,11 @@ import { useRef, useState } from "react"
 import { compressImage } from "@/lib/client-image"
 import { PLANS, formatEur, planAllows, type Plan } from "@/lib/plans"
 import {
+  CARD_DESIGNS,
   CARD_TEMPLATE_LABEL,
+  CARD_TEMPLATE_UITLEG,
   CARD_TYPE_LABEL,
+  cardDesign,
   GUEST_TYPE_INVITE_LINE,
   GUEST_TYPE_LABEL,
   type CardContent,
@@ -87,7 +90,7 @@ export default function CardsSection({
           type: newType,
           template: newTemplate,
           guest_type: newType === "trouwkaart" && newGuestType ? newGuestType : undefined,
-          photo_url: newTemplate === "foto" && newPhotoUrl ? newPhotoUrl : undefined,
+          photo_url: newPhotoUrl || undefined,
         }),
       })
       if (!res.ok) {
@@ -262,30 +265,29 @@ export default function CardsSection({
                 <div className="flex flex-col gap-2">
                   <span className="text-xs font-semibold uppercase tracking-[0.12em]" style={{ color: GOLD }}>Ontwerp</span>
                   <div className="flex gap-2">
-                    {(Object.keys(CARD_TEMPLATE_LABEL) as CardTemplate[]).map((t) => (
+                    {CARD_DESIGNS.map((t) => (
                       <button
                         key={t}
                         onClick={() => setNewTemplate(t)}
                         className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
                         style={{
-                          border: `2px solid ${newTemplate === t ? GOLD : GOLD_LIGHT}`,
-                          backgroundColor: newTemplate === t ? "white" : "transparent",
-                          color: newTemplate === t ? CHARCOAL : BODY,
+                          border: `2px solid ${cardDesign(newTemplate) === t ? GOLD : GOLD_LIGHT}`,
+                          backgroundColor: cardDesign(newTemplate) === t ? "white" : "transparent",
+                          color: cardDesign(newTemplate) === t ? CHARCOAL : BODY,
                           cursor: "pointer",
                         }}
                       >
                         {CARD_TEMPLATE_LABEL[t]}
                         <span className="block text-xs font-normal" style={{ color: BODY }}>
-                          {t === "klassiek" ? "elegant, alleen tekst" : "met jullie foto bovenaan"}
+                          {CARD_TEMPLATE_UITLEG[t]}
                         </span>
                       </button>
                     ))}
                   </div>
                 </div>
-                {newTemplate === "foto" && (
-                  <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2">
                     <span className="text-xs font-semibold uppercase tracking-[0.12em]" style={{ color: GOLD }}>
-                      Foto op de kaart
+                      Foto op de kaart (optioneel)
                     </span>
                     <PhotoPicker
                       value={newPhotoUrl}
@@ -293,7 +295,6 @@ export default function CardsSection({
                       onChange={setNewPhotoUrl}
                     />
                   </div>
-                )}
                 {newType === "trouwkaart" && (
                   <div className="flex flex-col gap-2">
                     <span className="text-xs font-semibold uppercase tracking-[0.12em]" style={{ color: GOLD }}>
@@ -357,7 +358,7 @@ export default function CardsSection({
                       </span>
                     )}
                     <span className="text-xs" style={{ color: BODY }}>
-                      {CARD_TEMPLATE_LABEL[card.template]}
+                      {CARD_TEMPLATE_LABEL[cardDesign(card.template)]}
                     </span>
                   </div>
                   <span className="text-xs" style={{ color: BODY }}>
@@ -499,33 +500,34 @@ export default function CardsSection({
               </Field>
               <Field label="Ontwerp">
                 <div className="flex gap-2">
-                  {(Object.keys(CARD_TEMPLATE_LABEL) as CardTemplate[]).map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => setEditForm({ ...editForm, template: t })}
-                      className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
-                      style={{
-                        border: `2px solid ${editForm.template === t ? GOLD : GOLD_LIGHT}`,
-                        backgroundColor: editForm.template === t ? GOLD_BG : "white",
-                        color: editForm.template === t ? CHARCOAL : BODY,
-                        cursor: "pointer",
-                      }}
-                    >
-                      {CARD_TEMPLATE_LABEL[t]}
-                    </button>
-                  ))}
+                  {CARD_DESIGNS.map((t) => {
+                    const actief = cardDesign(editForm.template) === t
+                    return (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setEditForm({ ...editForm, template: t })}
+                        className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
+                        style={{
+                          border: `2px solid ${actief ? GOLD : GOLD_LIGHT}`,
+                          backgroundColor: actief ? GOLD_BG : "white",
+                          color: actief ? CHARCOAL : BODY,
+                          cursor: "pointer",
+                        }}
+                      >
+                        {CARD_TEMPLATE_LABEL[t]}
+                      </button>
+                    )
+                  })}
                 </div>
               </Field>
-              {editForm.template === "foto" && (
-                <Field label="Foto op de kaart">
+              <Field label="Foto op de kaart (optioneel)">
                   <PhotoPicker
                     value={editForm.photoUrl}
                     fallbackUrl={events.find((e) => e.id === editingCard.event_id)?.heroImageUrl ?? null}
                     onChange={(url) => setEditForm({ ...editForm, photoUrl: url })}
                   />
                 </Field>
-              )}
               {editingCard.type === "trouwkaart" && (
                 <>
                   <Field label="Voor wie is deze kaart?">

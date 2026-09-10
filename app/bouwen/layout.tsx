@@ -1,8 +1,7 @@
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  // Bij een kaartpakket zet de bouwer zelf een passende titel (zie page.tsx)
-  title: "Ontwerpen",
+  title: "Website bouwen",
   robots: { index: false, follow: false },
 }
 

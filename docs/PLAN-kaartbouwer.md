@@ -32,6 +32,11 @@ Links een kort stappenpad, rechts groot de kaart die live meebeweegt.
 
 ## Volgorde
 
-1. **Kaartbouwer met de bestaande templates**, anoniem, met tekstbewerking, simulatie, downloadvoorbeeld, bewaren en activeren, teksten en websiteblok. Links vanaf landingspagina, homepage en dashboard.
-2. **Twee extra templates** (sierlijk, bohemian), elk in de browserweergave én in de afbeelding.
-3. **Opruimen**: kaartvoorbeeld en pakketstrook weer uit de websitebouwer; `/aanmaken` alleen nog voor de website.
+1. **Klaar (10 sep 2026).** Kaartbouwer met tekstbewerking, simulatie, downloadvoorbeeld, bewaren en activeren, teksten en websiteblok. Links vanaf landingspagina, homepage, dashboard en de keuzepagina `/start`.
+2. **Klaar (10 sep 2026).** Drie ontwerpen: strak (diamant, Cormorant), sierlijk (krul, Great Vibes, dubbele rand) en bohemian (takje, Marcellus, ronde hoeken). Recept staat in `CARD_DESIGN_STYLE` in `lib/cards.ts`; browser en afbeelding lezen daaruit. Een foto hoort nu bij elk ontwerp (`content.photoUrl`), het oude template `foto` telt als strak. Vereist `supabase/migration_card_designs.sql`.
+3. **Klaar (10 sep 2026).** Kaartvoorbeeld en pakketstrook zijn uit `/bouwen` gehaald; een kaartpakket op die route stuurt door naar de kaartbouwer. `/aanmaken` maakt altijd een compleet event aan.
+
+## Later
+
+- Meer ontwerpen, en per ontwerp eventueel een eigen envelop.
+- Upgrade-nudges vanuit de cron op basis van de trouwdatum.

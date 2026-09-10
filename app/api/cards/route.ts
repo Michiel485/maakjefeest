@@ -4,7 +4,7 @@ import { generateShareToken, type CardGuestType, type CardTemplate, type CardTyp
 import { planAllows } from "@/lib/plans"
 
 const CARD_TYPES: CardType[] = ["save_the_date", "trouwkaart"]
-const CARD_TEMPLATES: CardTemplate[] = ["klassiek", "foto"]
+const CARD_TEMPLATES: CardTemplate[] = ["klassiek", "sierlijk", "bohemian", "foto"]
 const GUEST_TYPES: CardGuestType[] = ["daggast", "avondgast", "receptiegast"]
 
 // GET /api/cards?event_id=...: kaarten van een eigen event (voor de kaartbouwer)
@@ -61,8 +61,9 @@ export async function POST(request: Request) {
     type === "trouwkaart" && GUEST_TYPES.includes(guest_type as CardGuestType)
       ? (guest_type as CardGuestType)
       : undefined
+  // Een foto hoort bij de kaart zodra er één gekozen is, los van het ontwerp
   const photoUrl =
-    chosenTemplate === "foto" && typeof photo_url === "string" && /^https?:\/\//.test(photo_url)
+    typeof photo_url === "string" && /^https?:\/\//.test(photo_url)
       ? photo_url.slice(0, 500)
       : undefined
 

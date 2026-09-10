@@ -5,7 +5,7 @@ import { renderCardImage } from "@/lib/card-image"
 export const dynamic = "force-dynamic"
 
 const TYPES: CardType[] = ["save_the_date", "trouwkaart"]
-const TEMPLATES: CardTemplate[] = ["klassiek", "foto"]
+const TEMPLATES: CardTemplate[] = ["klassiek", "sierlijk", "bohemian", "foto"]
 const GUEST_TYPES: CardGuestType[] = ["daggast", "avondgast", "receptiegast"]
 
 // Eenvoudige rem per IP: het renderen van een afbeelding is relatief zwaar
