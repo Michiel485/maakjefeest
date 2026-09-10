@@ -21,13 +21,21 @@ export async function generateMetadata({
   const data = await fetchCardByToken(token)
   if (!data) return { title: "Kaart niet gevonden" }
 
+  const geenIndex = { index: false, follow: false, googleBot: { index: false, follow: false } }
+
+  // Nog niet geactiveerd: geen namen, datum of locatie prijsgeven, ook niet in
+  // de voorvertoning die WhatsApp of Facebook van de link maakt.
+  if (data.event.status !== "published" && data.event.status !== "expired") {
+    return { title: "Kaart nog niet verstuurd", description: "Deze kaart is nog niet geactiveerd.", robots: geenIndex }
+  }
+
   const display = buildCardDisplay(data.card.type, data.card.template, data.card.content, data.event)
   const parts = [display.dateText, display.location].filter(Boolean).join(" • ")
 
   return {
     title: `${CARD_TYPE_LABEL[data.card.type]} van ${display.names}`,
     description: parts || display.message,
-    robots: { index: false, follow: false, googleBot: { index: false, follow: false } },
+    robots: geenIndex,
   }
 }
 
@@ -52,7 +60,7 @@ function NogNietActief({ plan }: { plan: string | null }) {
           className="inline-flex text-sm font-semibold px-6 py-3 rounded-xl"
           style={{ backgroundColor: "#1A1A1A", color: "#FAF7F2", textDecoration: "none" }}
         >
-          Zelf zo&apos;n kaart maken vanaf {formatEur(info.price)}
+          Zelf zo&apos;n kaart maken vanaf {formatEur(info.price).replace(",00", "")}
         </Link>
       </div>
     </div>
@@ -130,6 +138,7 @@ export default async function KaartPage({
       siteUrl={siteUrl}
       rsvpUrl={rsvpUrl}
       previewNotice={isEigenaar}
+      siteVolgt={heeftSite && !siteLive}
     />
   )
 }

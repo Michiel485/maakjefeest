@@ -24,6 +24,7 @@ export default function CardReveal({
   rsvpUrl,
   demo = false,
   previewNotice = false,
+  siteVolgt = false,
 }: {
   display: CardDisplay
   initials: string
@@ -34,6 +35,8 @@ export default function CardReveal({
   demo?: boolean
   // Het bruidspaar bekijkt zijn eigen nog niet geactiveerde kaart
   previewNotice?: boolean
+  // Er hoort een trouwsite bij dit pakket, maar die staat nog niet live
+  siteVolgt?: boolean
 }) {
   const [stage, setStage] = useState<Stage>("closed")
   const reduceMotion = useSyncExternalStore(
@@ -310,8 +313,8 @@ export default function CardReveal({
               </a>
             )}
 
-            {/* Site nog niet live: vooruitblik in plaats van knoppen */}
-            {stage === "open" && !siteUrl && !demo && (
+            {/* Site hoort bij het pakket maar staat nog niet live: vooruitblik */}
+            {stage === "open" && siteVolgt && !demo && (
               <p
                 className="mt-6 text-center text-sm"
                 style={{
