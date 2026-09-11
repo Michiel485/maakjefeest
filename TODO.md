@@ -4,17 +4,18 @@ Persoonlijke actielijst van Michiel. Claude houdt deze bij; afgeronde punten gaa
 
 ## Open
 
-- [ ] **Kaartontwerpen live zetten** (twee stappen, in deze volgorde): 1) `supabase/migration_card_designs.sql` draaien in de Supabase SQL editor. Veilig om nu te doen: puur uitbreidend, de oude waarde blijft toegestaan. 2) Claude een seintje geven; die pusht dan de drie ontwerpen. Zonder de migratie kan een kaart met het ontwerp Sierlijk of Bohemian niet worden opgeslagen.
-- [ ] **Kaartbouwer testen** na het live zetten: drie ontwerpen, watermerk, envelopsimulatie, downloadvoorbeeld en activeren voor €15. Meld wat er niet lekker voelt.
+- [ ] **Kaartbouwer testen** nu de drie ontwerpen live staan: Strak, Sierlijk en Bohemian, watermerk, envelopsimulatie, downloadvoorbeeld en activeren voor 15 euro. Meld wat er niet lekker voelt.
 - [ ] **Supabase-waarschuwing in de gaten houden**: "exhausting multiple resources". Niet urgent (database is piepklein), maar kijk in Supabase onder Reports en Database welke resource het is. Bij geheugen dat op 100% blijft staan is dat dezelfde toestand die in juli tot de pauze leidde. Advies van 10 sep 2026: nog niet upgraden, wel checken zodra er echt verkeer komt.
 - [ ] **Claude GitHub App installeren** op de repo (https://claude.ai/code/onboarding?magic=github-app-setup), nodig voor de tweewekelijkse artikel-routine. Daarna Claude een seintje geven ("app geinstalleerd"): die maakt dan de routine aan (1e en 15e van de maand, 09:00, artikel als pull request). Akkoord gegeven op 9 sep 2026.
 - [ ] **Beslissen over Supabase MCP-koppeling**: zou Claude zelf migraties kunnen draaien. Advies staat in het gesprek van 9 sep 2026: alleen-lezen koppelen (past bij de eigen bouwregel "read-only default"), of niet koppelen en SQL blijven plakken. Niet met volledige schrijfrechten, want de database bevat gastgegevens van klanten.
-- [ ] **Vermeldingen in trouwdirectories**: de lijst staat in `docs/BACKLINKS.md` (10 sep 2026 live gecontroleerd). Begin met ThePerfectWedding en WeddingFinder, allebei gratis. Beslis eerst welk telefoonnummer je opgeeft, dat is bij beide verplicht.
+- [ ] **Vermeldingen in trouwdirectories**: de lijst staat in `docs/BACKLINKS.md` (10 en 11 sep 2026 live gecontroleerd). Begin met ThePerfectWedding en WeddingFinder, allebei gratis. Een telefoonnummer is bij ThePerfectWedding niet verplicht, dus je kunt daar meteen aanmelden; bij Top Trouwbedrijven wordt er wel om gevraagd.
 - [ ] **Backlinks van echte sites**: eerst samen bepalen wie we aanschrijven (trouwlocaties, trouwblogs, weddingplanners, leveranciers van onze eigen bruiloft). Claude schrijft daarna de mailteksten en een kandidatenlijst.
 - [ ] **sayingyes.be** opzetten: domein koppelen in Vercel (proxy.ts en Analytics ondersteunen `.be` al) of het domein laten vervallen.
 - [ ] **Reviews verzamelen** zodra er echte klanten zijn (testimonials op de homepage plus Review-schema).
 
 ## Afgerond
+
+- [x] 11 sep 2026: **Drie kaartontwerpen staan live** (commit ed23c9a). Migratie `migration_card_designs.sql` gedraaid en gecontroleerd: klassiek, sierlijk, bohemian en foto mogen in de database, iets anders wordt geweigerd. Watermerk is lichter in de bouwer en in de gastenweergave, witregels blijven in de kaarttekst staan, standaardtekst zegt nu dat het om een bruiloft gaat, en het kaartvoorbeeld is uit de websitebouwer gehaald. Build groen, testrijen opgeruimd.
 
 - [x] 10 sep 2026: **Kaartbouwer gebouwd** (`/kaart-maken`, twee standen: Save the Date en trouwkaart). Anoniem ontwerpen met live kaartvoorbeeld, tekst bewerken, stijl, foto, envelopsimulatie en downloadvoorbeeld met watermerk, e-mailadres pas bij bewaren of activeren, event ontstaat pas op dat moment. Landingspagina, homepage en dashboard linken ernaar. Welkomstmail kent het pakket. Getest in de browser, build groen.
 

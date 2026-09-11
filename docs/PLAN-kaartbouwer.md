@@ -33,8 +33,8 @@ Links een kort stappenpad, rechts groot de kaart die live meebeweegt.
 ## Volgorde
 
 1. **Klaar (10 sep 2026).** Kaartbouwer met tekstbewerking, simulatie, downloadvoorbeeld, bewaren en activeren, teksten en websiteblok. Links vanaf landingspagina, homepage, dashboard en de keuzepagina `/start`.
-2. **Klaar (10 sep 2026).** Drie ontwerpen: strak (diamant, Cormorant), sierlijk (krul, Great Vibes, dubbele rand) en bohemian (takje, Marcellus, ronde hoeken). Recept staat in `CARD_DESIGN_STYLE` in `lib/cards.ts`; browser en afbeelding lezen daaruit. Een foto hoort nu bij elk ontwerp (`content.photoUrl`), het oude template `foto` telt als strak. Vereist `supabase/migration_card_designs.sql`.
-3. **Klaar (10 sep 2026).** Kaartvoorbeeld en pakketstrook zijn uit `/bouwen` gehaald; een kaartpakket op die route stuurt door naar de kaartbouwer. `/aanmaken` maakt altijd een compleet event aan.
+2. **Klaar en live (11 sep 2026).** Drie ontwerpen: strak (diamant, Cormorant), sierlijk (krul, Great Vibes, dubbele rand) en bohemian (takje, Marcellus, ronde hoeken). Recept staat in `CARD_DESIGN_STYLE` in `lib/cards.ts`; browser en afbeelding lezen daaruit. Een foto hoort nu bij elk ontwerp (`content.photoUrl`), het oude template `foto` telt als strak. Migratie `supabase/migration_card_designs.sql` is gedraaid en geverifieerd.
+3. **Klaar en live (11 sep 2026).** Kaartvoorbeeld en pakketstrook zijn uit `/bouwen` gehaald; een kaartpakket op die route stuurt door naar de kaartbouwer. `/aanmaken` maakt altijd een compleet event aan.
 
 ## Later
 
