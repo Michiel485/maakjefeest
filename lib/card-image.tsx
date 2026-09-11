@@ -63,8 +63,8 @@ export async function renderCardImage(
   const namesData =
     ds.namenFontImage.family === "Cormorant Garamond"
       ? null
-      // De ampersand hoort erbij: bij sierlijk is dat de afsluiter onderaan,
-      // en Google Fonts levert alleen de tekens die we hier opvragen.
+      // De ampersand staat er los bij: Google Fonts levert alleen de tekens die
+      // we opvragen, en bijna elk namenpaar heeft er een nodig.
       : await loadGoogleFont(ds.namenFontImage.family, ds.namenFontImage.weight, `${display.names} &`)
   if (namesData) {
     fonts.push({ name: "CardNames", data: namesData, weight: ds.namenFontImage.weight, style: "normal" })
@@ -277,15 +277,25 @@ export async function renderCardImage(
       )}
 
       {/* Afsluiter per ontwerp: hartje, ampersand in handschrift of takje */}
-      {ds.slot === "ampersand" ? (
-        <div style={{ fontFamily: namesFont, fontSize: 72 * s, color: sc.accent, marginTop: 6 * s, opacity: 0.9 }}>
-          &amp;
-        </div>
-      ) : ds.slot === "blaadjes" ? (
-        <svg width={48 * s} height={48 * s} viewBox="0 0 24 24" fill="none" style={{ marginTop: 6 * s, opacity: 0.9 }}>
-          <path d="M12 22V9" stroke={sc.accent} strokeWidth="1.1" strokeLinecap="round" opacity="0.65" />
-          <path d="M12 13c-5-1-8-5-7-9 4 1 7 5 7 9z" fill={`${sc.accent}70`} />
-          <path d="M12 13c5-1 8-5 7-9-4 1-7 5-7 9z" fill={`${sc.accent}70`} />
+      {ds.slot === "sierlijkhart" ? (
+        <svg width={76 * s} height={35 * s} viewBox="0 0 48 22" fill="none" style={{ marginTop: 6 * s, opacity: 0.9 }}>
+          <path
+            d="M24 18.6C19.2 14.7 15.8 11.9 15.8 8.9c0-2.3 1.8-4 4-4 1.6 0 3.2.9 4.2 2.5 1-1.6 2.6-2.5 4.2-2.5 2.2 0 4 1.7 4 4 0 3-3.4 5.8-8.2 9.7Z"
+            stroke={sc.accent}
+            strokeWidth="1.2"
+            strokeLinejoin="round"
+          />
+          <path d="M13.5 10.5C10.5 9 7.5 9.3 4.5 11.1" stroke={sc.accent} strokeWidth="1" strokeLinecap="round" opacity="0.55" />
+          <path d="M34.5 10.5C37.5 9 40.5 9.3 43.5 11.1" stroke={sc.accent} strokeWidth="1" strokeLinecap="round" opacity="0.55" />
+        </svg>
+      ) : ds.slot === "blaadjeshart" ? (
+        <svg width={62 * s} height={47 * s} viewBox="0 0 34 26" fill="none" style={{ marginTop: 6 * s, opacity: 0.9 }}>
+          <path d="M17 21.4c-4.4 1.5-9 .8-12-2.2 3.9-1.6 8.3-.9 12 2.2Z" fill={`${sc.accent}8C`} />
+          <path d="M17 21.4c4.4 1.5 9 .8 12-2.2-3.9-1.6-8.3-.9-12 2.2Z" fill={`${sc.accent}8C`} />
+          <path
+            d="M17 21.2C11.2 16.5 7.5 13.4 7.5 9.9 7.5 7.1 9.7 5 12.4 5c1.8 0 3.5 1 4.6 2.7C18.1 6 19.8 5 21.6 5c2.7 0 4.9 2.1 4.9 4.9 0 3.5-3.7 6.6-9.5 11.3Z"
+            fill={sc.accent}
+          />
         </svg>
       ) : (
         <svg

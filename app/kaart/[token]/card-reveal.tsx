@@ -4,7 +4,24 @@ import { useState, useSyncExternalStore } from "react"
 import type { SC } from "@/lib/event-styles"
 import { CARD_DESIGN_STYLE, type CardDisplay } from "@/lib/cards"
 
-type Stage = "closed" | "flap" | "card" | "open"
+// "zegel" is de stap waarin het lakzegel breekt; die bestaat alleen in de
+// nieuwe animatie. De klassieke animatie slaat hem over.
+type Stage = "closed" | "zegel" | "flap" | "card" | "open"
+
+// Vaste posities voor de gouden stofjes bij de feestelijke animatie. Bewust
+// geen Math.random(): dat zou server en browser verschillende waarden geven.
+const STOFJES = [
+  { links: 12, vertraging: 0.05, dx: -26, duur: 2.6, maat: 5 },
+  { links: 24, vertraging: 0.32, dx: 14, duur: 3.1, maat: 3 },
+  { links: 33, vertraging: 0.0, dx: -8, duur: 2.4, maat: 4 },
+  { links: 41, vertraging: 0.55, dx: 22, duur: 3.4, maat: 3 },
+  { links: 50, vertraging: 0.18, dx: -18, duur: 2.9, maat: 6 },
+  { links: 58, vertraging: 0.72, dx: 10, duur: 2.7, maat: 3 },
+  { links: 66, vertraging: 0.28, dx: 26, duur: 3.2, maat: 4 },
+  { links: 74, vertraging: 0.6, dx: -14, duur: 2.5, maat: 5 },
+  { links: 83, vertraging: 0.1, dx: 18, duur: 3.0, maat: 3 },
+  { links: 91, vertraging: 0.45, dx: -22, duur: 2.8, maat: 4 },
+]
 
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)"
 
@@ -56,19 +73,35 @@ export default function CardReveal({
     () => false
   )
 
+  // Klassiek slaat het brekende zegel over en laat de kaart eroverheen
+  // verschijnen; rustig en feestelijk delen dezelfde beweging.
+  const klassiekeAnimatie = display.animatie === "klassiek"
+
   function open() {
     if (stage !== "closed") return
     if (reduceMotion) {
       setStage("open")
       return
     }
-    setStage("flap")
-    setTimeout(() => setStage("card"), 450)
-    setTimeout(() => setStage("open"), 1350)
+    if (klassiekeAnimatie) {
+      setStage("flap")
+      setTimeout(() => setStage("card"), 450)
+      setTimeout(() => setStage("open"), 1350)
+      return
+    }
+    // Eerst breekt het zegel, dan gaat de klep open, dan schuift de kaart eruit
+    setStage("zegel")
+    setTimeout(() => setStage("flap"), 340)
+    setTimeout(() => setStage("card"), 820)
+    setTimeout(() => setStage("open"), 1680)
   }
 
   const cardVisible = stage === "card" || stage === "open"
   const envelopeGone = stage === "card" || stage === "open"
+  // Het zegel breekt zodra er getikt is; de klep wacht tot dat gebeurd is
+  const zegelHeel = stage === "closed"
+  const klepDicht = stage === "closed" || (!klassiekeAnimatie && stage === "zegel")
+  const stofjesAan = stage === "open" && display.animatie === "feestelijk" && !reduceMotion
 
   return (
     <div
@@ -122,11 +155,48 @@ export default function CardReveal({
           from { opacity: 0; transform: translateY(24px) scale(0.85); }
           to   { opacity: 1; transform: translateY(0) scale(1); }
         }
+        /* De kaart wordt uit de envelop getrokken: eerst komt de bovenrand
+           tevoorschijn, daarna de rest, en aan het eind schiet hij een klein
+           stukje door en zakt terug. Dat laatste is wat het duur laat voelen. */
+        @keyframes kaart-uit-envelop {
+          0%   { opacity: 0; transform: translateY(58px) scale(0.93); clip-path: inset(0 0 88% 0); }
+          14%  { opacity: 1; }
+          62%  { transform: translateY(-9px) scale(1.015); clip-path: inset(0 0 0 0); }
+          82%  { transform: translateY(3px) scale(0.998); }
+          100% { opacity: 1; transform: translateY(0) scale(1); clip-path: inset(0 0 0 0); }
+        }
         @keyframes knoppen-fadein {
           from { opacity: 0; transform: translateY(10px); }
           to   { opacity: 1; transform: translateY(0); }
         }
+        /* Gouden stofjes, eenmalig omhoog */
+        @keyframes stofje {
+          0%   { opacity: 0; transform: translate(0, 20px) scale(0.5); }
+          18%  { opacity: 0.85; }
+          100% { opacity: 0; transform: translate(var(--dx), -190px) scale(1.1); }
+        }
       `}</style>
+
+      {stofjesAan && (
+        <div aria-hidden="true" className="absolute inset-0 z-30" style={{ pointerEvents: "none", overflow: "hidden" }}>
+          {STOFJES.map((s, i) => (
+            <span
+              key={i}
+              className="absolute rounded-full"
+              style={{
+                left: `${s.links}%`,
+                bottom: "22%",
+                width: s.maat,
+                height: s.maat,
+                backgroundColor: sc.accent,
+                // @ts-expect-error eigen CSS-variabele voor de zijwaartse drift
+                "--dx": `${s.dx}px`,
+                animation: `stofje ${s.duur}s ease-out ${s.vertraging}s both`,
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       <div className="relative w-full max-w-md flex flex-col items-center">
 
@@ -145,8 +215,16 @@ export default function CardReveal({
               padding: 0,
               animation: stage === "closed" ? "kaart-zweef 3s ease-in-out infinite" : "none",
               opacity: envelopeGone ? 0 : 1,
-              transform: envelopeGone ? "translateY(70px) scale(0.92)" : "none",
-              transition: "opacity 0.6s ease 0.25s, transform 0.6s ease 0.25s",
+              // De envelop zakt weg terwijl de kaart eruit komt. Bij de nieuwe
+              // animatie langzamer, zodat je de kaart echt uit de envelop ziet
+              // komen in plaats van dat de envelop er ineens niet meer is.
+              transform: envelopeGone ? "translateY(84px) scale(0.9)" : "none",
+              transition: klassiekeAnimatie
+                ? "opacity 0.6s ease 0.25s, transform 0.6s ease 0.25s"
+                : "opacity 0.85s ease 0.3s, transform 0.85s ease 0.3s",
+              // De envelop dekt de onderkant van de kaart af tijdens het
+              // uitschuiven; zonder deze z-index zou de kaart eroverheen liggen.
+              zIndex: 2,
             }}
           >
             {/* Romp */}
@@ -182,32 +260,52 @@ export default function CardReveal({
                 borderRadius: "16px 16px 0 0",
                 boxShadow: `inset 0 -1px 0 ${sc.accent}40`,
                 transformOrigin: "top center",
-                transform: stage === "closed" ? "rotateX(0deg)" : "rotateX(180deg)",
+                transform: klepDicht ? "rotateX(0deg)" : "rotateX(180deg)",
                 transition: "transform 0.55s ease",
                 zIndex: 2,
               }}
             />
-            {/* Zegel met initialen */}
-            <span
-              className="absolute left-1/2 flex items-center justify-center rounded-full"
-              style={{
-                top: "44%",
-                width: 62,
-                height: 62,
-                marginLeft: -31,
-                backgroundColor: sc.accent,
-                color: sc.buttonText,
-                fontFamily: sc.fontInitials ?? sc.fontPageTitles,
-                fontSize: "1.35rem",
-                boxShadow: "0 3px 12px rgba(0,0,0,0.22)",
-                zIndex: 3,
-                opacity: stage === "closed" ? 1 : 0,
-                transform: stage === "closed" ? "scale(1)" : "scale(0.6)",
-                transition: "opacity 0.3s ease, transform 0.3s ease",
-              }}
-            >
-              {initials || "♥"}
-            </span>
+            {/* Zegel met initialen. Bij de nieuwe animatie bestaat het uit twee
+                helften die wegkantelen, zodat het zegel echt breekt in plaats
+                van dat de klep er dwars door heen klapt. Elke helft toont de
+                volledige initialen en knipt de andere helft weg, zodat ze
+                samen naadloos één zegel vormen. */}
+            {(klassiekeAnimatie ? [0] : [0, 1]).map((helft) => (
+              <span
+                key={helft}
+                className="absolute left-1/2 flex items-center justify-center rounded-full"
+                style={{
+                  top: "44%",
+                  width: 62,
+                  height: 62,
+                  marginLeft: -31,
+                  backgroundColor: sc.accent,
+                  color: sc.buttonText,
+                  fontFamily: sc.fontInitials ?? sc.fontPageTitles,
+                  fontSize: "1.35rem",
+                  boxShadow: "0 3px 12px rgba(0,0,0,0.22)",
+                  zIndex: 3,
+                  clipPath: klassiekeAnimatie
+                    ? undefined
+                    : helft === 0
+                      ? "inset(0 50% 0 0)"
+                      : "inset(0 0 0 50%)",
+                  opacity: zegelHeel ? 1 : 0,
+                  transform: zegelHeel
+                    ? "none"
+                    : klassiekeAnimatie
+                      ? "scale(0.6)"
+                      : helft === 0
+                        ? "translate(-13px, 16px) rotate(-26deg)"
+                        : "translate(13px, 16px) rotate(26deg)",
+                  transition: klassiekeAnimatie
+                    ? "opacity 0.3s ease, transform 0.3s ease"
+                    : "opacity 0.42s ease 0.06s, transform 0.42s cubic-bezier(0.3, 0.7, 0.4, 1)",
+                }}
+              >
+                {initials || "♥"}
+              </span>
+            ))}
           </button>
         )}
 
@@ -227,7 +325,14 @@ export default function CardReveal({
             style={{
               width: "100%",
               maxWidth: 420,
-              animation: reduceMotion ? "none" : "kaart-fadein 0.8s ease 0.15s both",
+              // Onder de envelop, zodat die de onderkant afdekt terwijl de
+              // kaart naar boven uit de envelop komt
+              zIndex: 1,
+              animation: reduceMotion
+                ? "none"
+                : klassiekeAnimatie
+                  ? "kaart-fadein 0.8s ease 0.15s both"
+                  : "kaart-uit-envelop 1.05s cubic-bezier(0.22, 0.8, 0.3, 1) both",
             }}
           >
             <div
@@ -374,19 +479,28 @@ export default function CardReveal({
                 {/* Afsluiter onderaan, past bij het ontwerp: hartje bij strak,
                     een ampersand in hetzelfde handschrift bij sierlijk en een
                     klein takje bij bohemian */}
-                {ds.slot === "ampersand" ? (
-                  <span
-                    aria-hidden="true"
-                    className="notranslate leading-none"
-                    style={{ fontFamily: ds.namenFont, color: sc.accent, fontSize: "2.1rem", marginTop: 4, opacity: 0.9 }}
-                  >
-                    &amp;
-                  </span>
-                ) : ds.slot === "blaadjes" ? (
-                  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ marginTop: 4, opacity: 0.9 }}>
-                    <path d="M12 22V9" stroke={sc.accent} strokeWidth="1.1" strokeLinecap="round" opacity="0.65" />
-                    <path d="M12 13c-5-1-8-5-7-9 4 1 7 5 7 9z" fill={`${sc.accent}70`} />
-                    <path d="M12 13c5-1 8-5 7-9-4 1-7 5-7 9z" fill={`${sc.accent}70`} />
+                {ds.slot === "sierlijkhart" ? (
+                  /* Open hartje in dunne lijn, met een zwaaitje aan elke kant */
+                  <svg width="52" height="24" viewBox="0 0 48 22" fill="none" aria-hidden="true" style={{ marginTop: 4, opacity: 0.9 }}>
+                    <path
+                      d="M24 18.6C19.2 14.7 15.8 11.9 15.8 8.9c0-2.3 1.8-4 4-4 1.6 0 3.2.9 4.2 2.5 1-1.6 2.6-2.5 4.2-2.5 2.2 0 4 1.7 4 4 0 3-3.4 5.8-8.2 9.7Z"
+                      stroke={sc.accent}
+                      strokeWidth="1.2"
+                      strokeLinejoin="round"
+                    />
+                    <path d="M13.5 10.5C10.5 9 7.5 9.3 4.5 11.1" stroke={sc.accent} strokeWidth="1" strokeLinecap="round" opacity="0.55" />
+                    <path d="M34.5 10.5C37.5 9 40.5 9.3 43.5 11.1" stroke={sc.accent} strokeWidth="1" strokeLinecap="round" opacity="0.55" />
+                  </svg>
+                ) : ds.slot === "blaadjeshart" ? (
+                  /* Vol hartje met twee blaadjes aan de punt, zelfde motief als
+                     het takje bovenaan */
+                  <svg width="42" height="32" viewBox="0 0 34 26" fill="none" aria-hidden="true" style={{ marginTop: 4, opacity: 0.9 }}>
+                    <path d="M17 21.4c-4.4 1.5-9 .8-12-2.2 3.9-1.6 8.3-.9 12 2.2Z" fill={`${sc.accent}8C`} />
+                    <path d="M17 21.4c4.4 1.5 9 .8 12-2.2-3.9-1.6-8.3-.9-12 2.2Z" fill={`${sc.accent}8C`} />
+                    <path
+                      d="M17 21.2C11.2 16.5 7.5 13.4 7.5 9.9 7.5 7.1 9.7 5 12.4 5c1.8 0 3.5 1 4.6 2.7C18.1 6 19.8 5 21.6 5c2.7 0 4.9 2.1 4.9 4.9 0 3.5-3.7 6.6-9.5 11.3Z"
+                      fill={sc.accent}
+                    />
                   </svg>
                 ) : (
                   <svg

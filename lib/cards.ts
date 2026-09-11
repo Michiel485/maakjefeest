@@ -10,6 +10,30 @@ export type CardTemplate = "klassiek" | "sierlijk" | "bohemian" | "foto"
 export type CardDesign = "klassiek" | "sierlijk" | "bohemian"
 export type CardGuestType = "daggast" | "avondgast" | "receptiegast"
 
+// Hoe de envelop opengaat. "klassiek" is de eerste versie (klep klapt om, kaart
+// verschijnt eroverheen); die bewaren we werkend, maar bieden we niet aan in de
+// bouwer omdat de nieuwe animatie simpelweg beter is. Zie docs/PLAN-kaartbouwer.md.
+export type CardAnimatie = "rustig" | "feestelijk" | "klassiek"
+
+// Alleen deze twee krijgt het bruidspaar te kiezen
+export const CARD_ANIMATIE_KEUZES: CardAnimatie[] = ["rustig", "feestelijk"]
+
+export const CARD_ANIMATIE_LABEL: Record<CardAnimatie, string> = {
+  rustig: "Rustig",
+  feestelijk: "Feestelijk",
+  klassiek: "Klassiek",
+}
+
+export const CARD_ANIMATIE_UITLEG: Record<CardAnimatie, string> = {
+  rustig: "zegel breekt, kaart schuift uit de envelop",
+  feestelijk: "hetzelfde, met gouden stofjes erbij",
+  klassiek: "de eerste versie: klep klapt om",
+}
+
+export function cardAnimatie(value: unknown): CardAnimatie {
+  return value === "feestelijk" || value === "klassiek" ? value : "rustig"
+}
+
 export interface CardContent {
   names?: string
   dateText?: string
@@ -22,6 +46,8 @@ export interface CardContent {
   inviteText?: string
   // Tijden op de kaart, bijv. "Van 20:00 tot 23:00 uur"
   timeText?: string
+  // Hoe de envelop opengaat bij de gast
+  animatie?: CardAnimatie
 }
 
 export interface CardRow {
@@ -88,8 +114,9 @@ export interface CardDesignStyle {
   kopSpatiering: string
   namenSpatiering?: string
   ornament: "diamant" | "krul" | "takje"
-  // Afsluiter onderaan de kaart: hartje, ampersand in handschrift of een takje
-  slot: "hart" | "ampersand" | "blaadjes"
+  // Afsluiter onderaan de kaart: alle drie een hartje, maar in de stijl van
+  // het ontwerp: vol, dun met zwaaitjes, of vol met blaadjes aan de punt
+  slot: "hart" | "sierlijkhart" | "blaadjeshart"
   // Hoe de datum eruitziet: stevig schreefloos, in serif of luchtig gespatieerd
   datumStijl: "vet" | "serif" | "licht"
   dubbeleRand: boolean
@@ -120,7 +147,7 @@ export const CARD_DESIGN_STYLE: Record<CardDesign, CardDesignStyle> = {
     namenSchaal: 1.45,
     kopSpatiering: "0.28em",
     ornament: "krul",
-    slot: "ampersand",
+    slot: "sierlijkhart",
     datumStijl: "serif",
     dubbeleRand: true,
     hoekRadius: 22,
@@ -135,7 +162,7 @@ export const CARD_DESIGN_STYLE: Record<CardDesign, CardDesignStyle> = {
     kopSpatiering: "0.42em",
     namenSpatiering: "0.07em",
     ornament: "takje",
-    slot: "blaadjes",
+    slot: "blaadjeshart",
     datumStijl: "licht",
     dubbeleRand: false,
     hoekRadius: 34,
@@ -179,6 +206,7 @@ export interface CardDisplay {
   message: string
   photoUrl: string | null
   design: CardDesign
+  animatie: CardAnimatie
 }
 
 export function buildCardDisplay(
@@ -206,6 +234,7 @@ export function buildCardDisplay(
     // Een foto hoort bij de kaart zodra er één gekozen is, los van het ontwerp
     photoUrl: content.photoUrl?.trim() || (template === "foto" ? event.hero_image_url?.trim() || null : null),
     design: cardDesign(template),
+    animatie: cardAnimatie(content.animatie),
   }
 }
 

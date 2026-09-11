@@ -4,6 +4,7 @@ Persoonlijke actielijst van Michiel. Claude houdt deze bij; afgeronde punten gaa
 
 ## Open
 
+- [ ] **Teksten op /start nog een ronde doorlopen**: de opbouw en stijl staan goed (11 sep 2026), maar de teksten in de drie kaarten en de regel eronder wil Michiel nog aanscherpen. Kies een moment waarop we er met een frisse blik naar kijken.
 - [ ] **Kaartbouwer testen** nu de drie ontwerpen live staan: Strak, Sierlijk en Bohemian, watermerk, envelopsimulatie, downloadvoorbeeld en activeren voor 15 euro. Meld wat er niet lekker voelt.
 - [ ] **Supabase-waarschuwing in de gaten houden**: "exhausting multiple resources". Niet urgent (database is piepklein), maar kijk in Supabase onder Reports en Database welke resource het is. Bij geheugen dat op 100% blijft staan is dat dezelfde toestand die in juli tot de pauze leidde. Advies van 10 sep 2026: nog niet upgraden, wel checken zodra er echt verkeer komt.
 - [ ] **Claude GitHub App installeren** op de repo (https://claude.ai/code/onboarding?magic=github-app-setup), nodig voor de tweewekelijkse artikel-routine. Daarna Claude een seintje geven ("app geinstalleerd"): die maakt dan de routine aan (1e en 15e van de maand, 09:00, artikel als pull request). Akkoord gegeven op 9 sep 2026.

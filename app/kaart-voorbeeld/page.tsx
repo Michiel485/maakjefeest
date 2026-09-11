@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   },
 }
 
-// Vaste demokaart voor de marketingsite — geen database nodig
+// Vaste demokaart voor de marketingsite, geen database nodig
 export default function KaartVoorbeeldPage() {
   const sc = getStyleConfig("emerald")
 
@@ -35,6 +35,8 @@ export default function KaartVoorbeeldPage() {
         message: "Wij gaan trouwen en vieren dat graag met jou. Kom je ook?",
         photoUrl: null,
         design: "sierlijk",
+        // De demo op de marketingsite mag het mooiste laten zien
+        animatie: "feestelijk",
       }}
       initials="S&D"
       sc={sc}

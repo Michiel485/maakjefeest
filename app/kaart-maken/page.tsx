@@ -7,13 +7,18 @@ import { createClient } from "@/lib/supabase"
 import { STYLE_CONFIG, getStyleConfig, formatDate, type Style } from "@/lib/event-styles"
 import {
   buildCardDisplay,
+  cardAnimatie,
   cardDesign,
+  CARD_ANIMATIE_KEUZES,
+  CARD_ANIMATIE_LABEL,
+  CARD_ANIMATIE_UITLEG,
   CARD_DESIGNS,
   CARD_TEMPLATE_LABEL,
   CARD_TEMPLATE_UITLEG,
   CARD_TYPE_PLAN,
   GUEST_TYPE_INVITE_LINE,
   GUEST_TYPE_LABEL,
+  type CardAnimatie,
   type CardContent,
   type CardGuestType,
   type CardRow,
@@ -42,7 +47,7 @@ const STYLE_LABEL: Record<Style, string> = {
 }
 const STYLE_KEYS = Object.keys(STYLE_CONFIG) as Style[]
 
-type Stap = "stijl" | "template" | "tekst" | "foto" | "bekijken"
+type Stap = "stijl" | "template" | "tekst" | "foto" | "animatie" | "bekijken"
 type Actie = "bewaar" | "activeer"
 
 interface KaartOntwerp {
@@ -58,6 +63,7 @@ interface KaartOntwerp {
   timeText: string
   photoDataUrl: string | null
   photoUrl: string | null
+  animatie: CardAnimatie
 }
 
 const LEEG: KaartOntwerp = {
@@ -73,6 +79,7 @@ const LEEG: KaartOntwerp = {
   timeText: "",
   photoDataUrl: null,
   photoUrl: null,
+  animatie: "rustig",
 }
 
 // Per stap één zin over waarom digitaal slim is: overtuigen zonder te duwen
@@ -81,6 +88,7 @@ const VOORDEEL: Record<Stap, string> = {
   template: "Drie richtingen: strak en tijdloos, sierlijk met handschrift, of bohemian en warm. Je kunt altijd wisselen.",
   tekst: "Verandert de tijd of de locatie? Geen herdruk en geen rondbelactie, je past de tekst gewoon aan.",
   foto: "Een foto van jullie samen maakt de kaart persoonlijk. Op WhatsApp valt hij dan extra op.",
+  animatie: "Je gast tikt op de envelop, het zegel breekt en de kaart schuift eruit. Dat kan papier niet.",
   bekijken: "Je gasten krijgen een link, tikken op de envelop en zien jullie kaart. Geen app, geen account.",
 }
 
@@ -209,6 +217,7 @@ export default function KaartMakenPage() {
               timeText: kaart?.content.timeText ?? "",
               photoDataUrl: null,
               photoUrl: kaart?.content.photoUrl ?? null,
+              animatie: cardAnimatie(kaart?.content.animatie),
             })
           }
         } catch {}
@@ -245,6 +254,7 @@ export default function KaartMakenPage() {
     inviteText: ontwerp.inviteText || undefined,
     timeText: ontwerp.timeText || undefined,
     photoUrl: ontwerp.photoUrl ?? ontwerp.photoDataUrl ?? undefined,
+    animatie: ontwerp.animatie,
   }
   const display = buildCardDisplay(ontwerp.type, ontwerp.template, content, {
     title: ontwerp.names || "Jullie namen",
@@ -601,6 +611,32 @@ export default function KaartMakenPage() {
               </div>
             </Sectie>
 
+          {/* Hoe de envelop opengaat bij de gast. Het uitschuiven, het brekende
+              zegel en het verende landen zitten in beide keuzes; het verschil
+              is alleen of er gouden stofjes bij komen. */}
+          <Sectie id="animatie" open={stap === "animatie"} onToggle={() => setStap(stap === "animatie" ? "tekst" : "animatie")} titel="Openen">
+            <div className="flex flex-col gap-2">
+              {CARD_ANIMATIE_KEUZES.map((a) => (
+                <button
+                  key={a}
+                  onClick={() => update({ animatie: a })}
+                  className="text-left px-3 py-2.5 rounded-xl text-sm font-semibold"
+                  style={{ border: `2px solid ${ontwerp.animatie === a ? GOLD : GOLD_LIGHT}`, backgroundColor: ontwerp.animatie === a ? "#fff" : "transparent", color: CHARCOAL, cursor: "pointer" }}
+                >
+                  {CARD_ANIMATIE_LABEL[a]}
+                  <span className="block text-[11px] font-normal" style={{ color: BODY }}>{CARD_ANIMATIE_UITLEG[a]}</span>
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setSimulatie(true)}
+              className="text-sm font-semibold px-3 py-2.5 rounded-xl"
+              style={{ backgroundColor: "#fff", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
+            >
+              Bekijk hoe het opengaat
+            </button>
+          </Sectie>
+
           <Sectie id="bekijken" open={stap === "bekijken"} onToggle={() => setStap(stap === "bekijken" ? "tekst" : "bekijken")} titel="Bekijken">
             <button
               onClick={() => setSimulatie(true)}
@@ -672,7 +708,9 @@ export default function KaartMakenPage() {
             ✕ Terug naar ontwerpen
           </button>
           <CardReveal
-            key={`${ontwerp.style}-${ontwerp.template}`}
+            /* De animatie in de key, zodat de simulatie opnieuw begint als je
+               een andere manier van openen kiest */
+            key={`${ontwerp.style}-${ontwerp.template}-${ontwerp.animatie}`}
             display={display}
             initials={initialen}
             sc={sc}
