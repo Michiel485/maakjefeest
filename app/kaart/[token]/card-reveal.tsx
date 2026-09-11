@@ -139,29 +139,49 @@ export default function CardReveal({
     const voor = envelopVoorRef.current
     if (!kaart || !achter || !klep || !voor) return
 
+    interface Maten {
+      H: number
+      onder: number
+      kaartStart: number
+      zakt: number
+    }
+
     // Opmeten, niet uitrekenen: de envelop staat gecentreerd over de kaart, dus
     // waar zijn randen liggen hangt van beide hoogtes af.
-    const kr = kaart.getBoundingClientRect()
-    const er = achter.getBoundingClientRect()
-    const H = kr.height
-    // Bovenrand en onderrand van de envelop, gemeten vanaf de kaartbovenkant
-    const boven = er.top - kr.top
-    const onder = er.bottom - kr.top
-    if (H < 40 || onder < 40) return
-    // De kaart zit in de envelop: bovenrand een stukje onder de envelopbovenkant,
-    // zodat hij meteen in de V zichtbaar is als de klep opengaat.
-    const kaartStart = boven + er.height * KAART_IN_ENVELOP
-    // De envelop zakt tot zijn bovenrand onder de onderkant van de kaart ligt.
-    // Pas dan dekt hij niets meer af en is de kaart helemaal vrij.
-    const zakt = Math.max(160, Math.min(1000, H - boven))
+    function meet(): Maten | null {
+      // Eerst onze eigen verschuivingen weghalen. getBoundingClientRect geeft
+      // de positie ná de transform, dus anders rekent een tweede meting de
+      // vorige verschuiving mee. Dit gebeurt binnen één taak, dus er wordt
+      // niets getekend en je ziet er niets van.
+      for (const el of [kaart, achter, klep, voor]) el!.style.transform = ""
+
+      const kr = kaart!.getBoundingClientRect()
+      const er = achter!.getBoundingClientRect()
+      const H = kr.height
+      // Bovenrand en onderrand van de envelop, gemeten vanaf de kaartbovenkant
+      const boven = er.top - kr.top
+      const onder = er.bottom - kr.top
+      if (H < 40 || onder < 40) return null
+      return {
+        H,
+        onder,
+        // De kaart zit in de envelop: bovenrand een stukje onder de
+        // envelopbovenkant, zodat hij meteen in de V zichtbaar is als de klep
+        // opengaat.
+        kaartStart: boven + er.height * KAART_IN_ENVELOP,
+        // De envelop zakt tot zijn bovenrand onder de onderkant van de kaart
+        // ligt. Pas dan dekt hij niets meer af en is de kaart helemaal vrij.
+        zakt: Math.max(160, Math.min(1000, H - boven)),
+      }
+    }
 
     // Eén beeld op een gegeven moment in de beweging. p = 0 is "in de envelop".
-    function beeld(p: number) {
+    function beeld(m: Maten, p: number) {
       const e = versoepel(p)
-      const kaartY = kaartStart * (1 - e)
+      const kaartY = m.kaartStart * (1 - e)
       // De envelop komt langzaam op gang en zakt daarna door
-      const envelopY = zakt * (p < 0.4 ? 0.15 * (p / 0.4) : 0.15 + 0.85 * Math.pow((p - 0.4) / 0.6, 1.25))
-      const verborgen = Math.max(0, H - (onder + envelopY - kaartY))
+      const envelopY = m.zakt * (p < 0.4 ? 0.15 * (p / 0.4) : 0.15 + 0.85 * Math.pow((p - 0.4) / 0.6, 1.25))
+      const verborgen = Math.max(0, m.H - (m.onder + envelopY - kaartY))
 
       kaart!.style.transform = `translateY(${kaartY.toFixed(1)}px)`
       kaart!.style.clipPath = `inset(0px 0px ${verborgen.toFixed(1)}px 0px)`
@@ -179,17 +199,31 @@ export default function CardReveal({
       voor!.style.opacity = envelopO
     }
 
-    // Nog niet getikt of nog aan het openen: de kaart staat stil in de envelop
+    // Nog niet getikt of nog aan het openen: de kaart ligt stil in de envelop.
+    // Opnieuw neerzetten zodra de maten veranderen, want een lettertype dat
+    // inlaadt of een ander schermformaat maakt de kaart hoger of lager. Zonder
+    // dit staat de kaart op een plek die is uitgerekend met oude maten, en
+    // springt hij bij de tik alsnog even op de verkeerde plek.
     if (stage !== "card") {
-      beeld(0)
-      return
+      const plaats = () => {
+        const m = meet()
+        if (m) beeld(m, 0)
+      }
+      plaats()
+      const ro = new ResizeObserver(plaats)
+      ro.observe(kaart)
+      ro.observe(achter)
+      return () => ro.disconnect()
     }
+
+    const maten = meet()
+    if (!maten) return
 
     let frame = 0
     const begin = performance.now()
     const stap = (nu: number) => {
       const p = Math.min(1, (nu - begin) / DUUR_KAART)
-      beeld(p)
+      beeld(maten, p)
       if (p < 1) {
         frame = requestAnimationFrame(stap)
         return
@@ -510,15 +544,20 @@ export default function CardReveal({
                   </span>
                 ))}
               </div>
+
+              {/* Absoluut onder de envelop, niet als tweede item in de
+                  gecentreerde kolom. Anders schuift de envelop 22 pixels naar
+                  beneden op het moment dat deze regel verdwijnt, en dat is
+                  precies het moment waarop de kaart moet gaan bewegen. */}
+              {stage === "closed" && (
+                <p
+                  className="absolute left-0 right-0 text-center text-sm"
+                  style={{ top: "100%", marginTop: 24, color: sc.bodyText, opacity: 0.75 }}
+                >
+                  Er is post voor je, tik op de envelop 💌
+                </p>
+              )}
             </div>
-            {stage === "closed" && (
-              <p
-                className="mt-6 text-sm"
-                style={{ color: sc.bodyText, opacity: 0.75 }}
-              >
-                Er is post voor je, tik op de envelop 💌
-              </p>
-            )}
           </div>
         )}
         {/* ── De kaart ─────────────────────────────────────────────────────── */}
