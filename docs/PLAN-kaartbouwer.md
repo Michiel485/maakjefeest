@@ -36,6 +36,18 @@ Links een kort stappenpad, rechts groot de kaart die live meebeweegt.
 2. **Klaar en live (11 sep 2026).** Drie ontwerpen: strak (diamant, Cormorant), sierlijk (krul, Great Vibes, dubbele rand) en bohemian (takje, Marcellus, ronde hoeken). Recept staat in `CARD_DESIGN_STYLE` in `lib/cards.ts`; browser en afbeelding lezen daaruit. Een foto hoort nu bij elk ontwerp (`content.photoUrl`), het oude template `foto` telt als strak. Migratie `supabase/migration_card_designs.sql` is gedraaid en geverifieerd.
 3. **Klaar en live (11 sep 2026).** Kaartvoorbeeld en pakketstrook zijn uit `/bouwen` gehaald; een kaartpakket op die route stuurt door naar de kaartbouwer. `/aanmaken` maakt altijd een compleet event aan.
 
+4. **Klaar (11 sep 2026).** De drie ontwerpen echt van elkaar los getrokken na de eerste testronde. De krul bij sierlijk was een fout: de tekening liep van x=6 tot x=126 in een vak van 160 breed, met het bolletje op 80, dus hij hing links en het bolletje lag naast het midden. Alle drie de ornamenten zijn nu precies symmetrisch rond x=80. Het takje bij bohemian is een echte tak met zes blaadjes geworden, zonder lijntjes eromheen. De afsluiter onderaan verschilt per ontwerp (`slot`): hartje, ampersand in het namenhandschrift, of een klein takje. Verder per ontwerp een eigen datumstijl (`datumStijl`) en bij sierlijk grotere namen. De keuzepagina `/start` staat nu in de donkere stijl van het prijsblok op de homepage, met de opsomming uit `PLANS`.
+
+## Nog te bouwen: de envelopanimatie
+
+Besloten op 11 september 2026. De huidige animatie (envelop zweeft, klep klapt om, kaart fade-int eroverheen) wordt vervangen door één betere animatie voor iedereen, plus één keuze die echt over smaak gaat.
+
+- **Nieuw standaardgedrag, geen keuze:** het lakzegel breekt in twee helften die wegkantelen, dan opent de klep, dan schuift de kaart echt uit de envelop (kaart achter de envelop, geklipt op de bovenrand) en landt met een kleine veer. Dit is niet beter of slechter naar smaak, het is simpelweg beter, dus hier hoort geen knop bij.
+- **Wel een keuze, want smaak:** Rustig (alleen het bovenstaande) of Feestelijk (plus gouden stofjes die eenmalig opdwarrelen).
+- **Opslag:** `content.animatie` in de JSONB van de kaart, dus geen migratie. Leeg betekent Rustig, zodat bestaande kaarten niks merken.
+- Alles blijft achter `prefers-reduced-motion`: wie animaties uitzet krijgt meteen de open kaart.
+- Overwogen en afgewezen: drie keuzes met de huidige animatie als "Standaard". Dat zou een knop zijn waarmee de klant zijn kaart minder mooi maakt.
+
 ## Later
 
 - Meer ontwerpen, en per ontwerp eventueel een eigen envelop.

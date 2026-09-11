@@ -262,24 +262,43 @@ export default function CardReveal({
                   {display.heading}
                 </p>
 
-                {/* Ornament: verschilt per ontwerp */}
+                {/* Ornament: verschilt per ontwerp. Alle drie zijn precies
+                    symmetrisch rond x=80, zodat het midden ook echt het
+                    midden is. */}
                 {ds.ornament === "krul" ? (
-                  <svg width="160" height="18" viewBox="0 0 160 18" fill="none" stroke={sc.accent} strokeWidth="1.2" strokeLinecap="round" aria-hidden="true">
-                    <path d="M6 9c14-8 26 8 40 0s26-8 40 0 26 8 40 0" opacity="0.8" />
-                    <circle cx="80" cy="9" r="2" fill={sc.accent} stroke="none" />
+                  <svg width="170" height="21" viewBox="0 0 160 20" fill="none" stroke={sc.accent} strokeWidth="1.15" strokeLinecap="round" aria-hidden="true">
+                    {/* Twee gespiegelde zwaaien die naar het midden toe uitlopen */}
+                    <path d="M18 14C30 4 44 4 56 10c8 4 14 4 20 1" opacity="0.85" />
+                    <path d="M142 14C130 4 116 4 104 10c-8 4-14 4-20 1" opacity="0.85" />
+                    <circle cx="18" cy="14" r="1.4" fill={sc.accent} stroke="none" opacity="0.65" />
+                    <circle cx="142" cy="14" r="1.4" fill={sc.accent} stroke="none" opacity="0.65" />
+                    <path d="M80 8l2.6 2.5L80 13l-2.6-2.5z" fill={sc.accent} stroke="none" />
                   </svg>
                 ) : ds.ornament === "takje" ? (
-                  <svg width="130" height="18" viewBox="0 0 130 18" fill="none" stroke={sc.accent} strokeWidth="1.1" strokeLinecap="round" aria-hidden="true">
-                    <path d="M12 9h106" opacity="0.4" />
-                    <path d="M65 9c-7-5-14-6-18-4 3 4 10 6 18 4z" fill={`${sc.accent}55`} stroke="none" />
-                    <path d="M65 9c7-5 14-6 18-4-3 4-10 6-18 4z" fill={`${sc.accent}55`} stroke="none" />
-                    <circle cx="65" cy="9" r="2.2" fill={sc.accent} stroke="none" />
+                  <svg width="190" height="40" viewBox="0 0 160 34" fill="none" aria-hidden="true">
+                    {/* Twee gespiegelde takken met drie blaadjes elk, geen
+                        lijntjes eromheen: dit mag het botanische element zijn */}
+                    <path d="M80 20C66 20 52 22 34 27" stroke={sc.accent} strokeWidth="1.1" strokeLinecap="round" opacity="0.6" />
+                    <path d="M80 20C94 20 108 22 126 27" stroke={sc.accent} strokeWidth="1.1" strokeLinecap="round" opacity="0.6" />
+                    <path d="M72 20.5C68 12.5 60 9.5 56 12.5C60 18.5 68 19.5 72 20.5Z" fill={`${sc.accent}5C`} />
+                    <path d="M58 22C54 14 46 11 42 14C46 20 54 21 58 22Z" fill={`${sc.accent}50`} />
+                    <path d="M44 24.5C40 16.5 32 13.5 28 16.5C32 22.5 40 23.5 44 24.5Z" fill={`${sc.accent}44`} />
+                    <path d="M88 20.5C92 12.5 100 9.5 104 12.5C100 18.5 92 19.5 88 20.5Z" fill={`${sc.accent}5C`} />
+                    <path d="M102 22C106 14 114 11 118 14C114 20 106 21 102 22Z" fill={`${sc.accent}50`} />
+                    <path d="M116 24.5C120 16.5 128 13.5 132 16.5C128 22.5 120 23.5 116 24.5Z" fill={`${sc.accent}44`} />
+                    <circle cx="80" cy="19" r="1.8" fill={sc.accent} />
                   </svg>
                 ) : (
-                  <div className="flex items-center gap-2.5 w-full max-w-[220px]">
-                    <div style={{ flex: 1, height: 1, backgroundColor: `${sc.accent}70` }} />
+                  <div className="flex items-center gap-2.5 w-full max-w-[230px]">
+                    <div className="flex-1 flex flex-col" style={{ gap: 3 }}>
+                      <div style={{ height: 1, backgroundColor: `${sc.accent}70` }} />
+                      <div style={{ height: 1, backgroundColor: `${sc.accent}38` }} />
+                    </div>
                     <svg width="8" height="8" viewBox="0 0 8 8" fill={sc.accent} aria-hidden="true"><path d="M4 0 L8 4 L4 8 L0 4 Z" /></svg>
-                    <div style={{ flex: 1, height: 1, backgroundColor: `${sc.accent}70` }} />
+                    <div className="flex-1 flex flex-col" style={{ gap: 3 }}>
+                      <div style={{ height: 1, backgroundColor: `${sc.accent}70` }} />
+                      <div style={{ height: 1, backgroundColor: `${sc.accent}38` }} />
+                    </div>
                   </div>
                 )}
 
@@ -289,7 +308,7 @@ export default function CardReveal({
                     fontFamily: ds.namenFont,
                     color: sc.cardText ?? sc.headingColor,
                     fontSize: `${2.4 * ds.namenSchaal}rem`,
-                    letterSpacing: ds.ornament === "takje" ? "0.03em" : undefined,
+                    letterSpacing: ds.namenSpatiering,
                     margin: "6px 0",
                   }}
                 >
@@ -297,9 +316,21 @@ export default function CardReveal({
                 </p>
 
                 {display.dateText && (
+                  /* De datum volgt het ontwerp: stevig, in serif of luchtig gespatieerd */
                   <p
-                    className="text-lg font-semibold"
-                    style={{ color: sc.accent, margin: 0, letterSpacing: "0.04em" }}
+                    className={
+                      ds.datumStijl === "serif"
+                        ? "text-xl"
+                        : ds.datumStijl === "licht"
+                          ? "text-base"
+                          : "text-lg font-semibold"
+                    }
+                    style={{
+                      color: sc.accent,
+                      margin: 0,
+                      fontFamily: ds.datumStijl === "serif" ? ds.kopFont : undefined,
+                      letterSpacing: ds.datumStijl === "licht" ? "0.14em" : "0.04em",
+                    }}
                   >
                     {display.dateText}
                   </p>
@@ -340,17 +371,35 @@ export default function CardReveal({
                   </p>
                 )}
 
-                {/* Hartje als romantische afsluiter */}
-                <svg
-                  width="18"
-                  height="16"
-                  viewBox="0 0 24 22"
-                  fill={sc.accent}
-                  aria-hidden="true"
-                  style={{ marginTop: 4, opacity: 0.9 }}
-                >
-                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                </svg>
+                {/* Afsluiter onderaan, past bij het ontwerp: hartje bij strak,
+                    een ampersand in hetzelfde handschrift bij sierlijk en een
+                    klein takje bij bohemian */}
+                {ds.slot === "ampersand" ? (
+                  <span
+                    aria-hidden="true"
+                    className="notranslate leading-none"
+                    style={{ fontFamily: ds.namenFont, color: sc.accent, fontSize: "2.1rem", marginTop: 4, opacity: 0.9 }}
+                  >
+                    &amp;
+                  </span>
+                ) : ds.slot === "blaadjes" ? (
+                  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ marginTop: 4, opacity: 0.9 }}>
+                    <path d="M12 22V9" stroke={sc.accent} strokeWidth="1.1" strokeLinecap="round" opacity="0.65" />
+                    <path d="M12 13c-5-1-8-5-7-9 4 1 7 5 7 9z" fill={`${sc.accent}70`} />
+                    <path d="M12 13c5-1 8-5 7-9-4 1-7 5-7 9z" fill={`${sc.accent}70`} />
+                  </svg>
+                ) : (
+                  <svg
+                    width="18"
+                    height="16"
+                    viewBox="0 0 24 22"
+                    fill={sc.accent}
+                    aria-hidden="true"
+                    style={{ marginTop: 4, opacity: 0.9 }}
+                  >
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                  </svg>
+                )}
               </div>
             </div>
 

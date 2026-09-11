@@ -86,7 +86,12 @@ export interface CardDesignStyle {
   kopFontImage: "sans" | "serif"
   namenSchaal: number
   kopSpatiering: string
+  namenSpatiering?: string
   ornament: "diamant" | "krul" | "takje"
+  // Afsluiter onderaan de kaart: hartje, ampersand in handschrift of een takje
+  slot: "hart" | "ampersand" | "blaadjes"
+  // Hoe de datum eruitziet: stevig schreefloos, in serif of luchtig gespatieerd
+  datumStijl: "vet" | "serif" | "licht"
   dubbeleRand: boolean
   hoekRadius: number
   namenCursief: boolean
@@ -101,6 +106,8 @@ export const CARD_DESIGN_STYLE: Record<CardDesign, CardDesignStyle> = {
     namenSchaal: 1,
     kopSpatiering: "0.35em",
     ornament: "diamant",
+    slot: "hart",
+    datumStijl: "vet",
     dubbeleRand: false,
     hoekRadius: 16,
     namenCursief: false,
@@ -110,9 +117,11 @@ export const CARD_DESIGN_STYLE: Record<CardDesign, CardDesignStyle> = {
     kopFont: "var(--font-cormorant), Georgia, serif",
     namenFontImage: { family: "Great Vibes", weight: 400 },
     kopFontImage: "serif",
-    namenSchaal: 1.25,
+    namenSchaal: 1.45,
     kopSpatiering: "0.28em",
     ornament: "krul",
+    slot: "ampersand",
+    datumStijl: "serif",
     dubbeleRand: true,
     hoekRadius: 22,
     namenCursief: false,
@@ -124,7 +133,10 @@ export const CARD_DESIGN_STYLE: Record<CardDesign, CardDesignStyle> = {
     kopFontImage: "sans",
     namenSchaal: 0.92,
     kopSpatiering: "0.42em",
+    namenSpatiering: "0.07em",
     ornament: "takje",
+    slot: "blaadjes",
+    datumStijl: "licht",
     dubbeleRand: false,
     hoekRadius: 34,
     namenCursief: false,
