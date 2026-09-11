@@ -531,9 +531,13 @@ export default function CardReveal({
           style={{
             width: "100%",
             maxWidth: 420,
-            // Tussen de achterkant (1) en de voorkant (3) van de envelop: de
+            // Tussen de achterkant (1) en de voorkant (5) van de envelop: de
             // kaart zit erin, niet erachter
             zIndex: 2,
+            // Zolang de kaart in de envelop zit moet een tik door de kaart heen
+            // op de envelop landen. Zonder dit vangt de kaart de klik op, want
+            // die ligt qua stapeling boven de envelopknop.
+            pointerEvents: stage === "open" ? undefined : "none",
             transformOrigin: "top center",
             ...(reduceMotion || stage === "open"
               ? {}
