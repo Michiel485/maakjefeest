@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useSyncExternalStore } from "react"
+import { useEffect, useRef, useState, useSyncExternalStore } from "react"
 import type { SC } from "@/lib/event-styles"
 import { CARD_DESIGN_STYLE, type CardDisplay } from "@/lib/cards"
 
@@ -22,6 +22,32 @@ const STOFJES = [
   { links: 83, vertraging: 0.1, dx: 18, duur: 3.0, maat: 3 },
   { links: 91, vertraging: 0.45, dx: -22, duur: 2.8, maat: 4 },
 ]
+
+// Tijdlijn van de nieuwe animatie, in milliseconden na de tik. Bewust ruim:
+// het zegel mag kraken voordat het valt, en de kaart mag er rustig uit komen.
+const T_KLEP = 620
+const T_KAART = 1280
+const DUUR_KAART = 1500
+const T_OPEN = T_KAART + DUUR_KAART
+
+// De kaart is veel hoger dan de envelop, dus hij kan er nooit in passen. Het
+// oog kijkt echter naar de afstand tussen de twee: als die over de hele
+// animatie precies de kaarthoogte wordt, zie je de kaart eruit komen zonder
+// dat er ooit iets zichtbaar wordt dat in de envelop hoort te zitten. Die
+// afstand verdelen we: de kaart komt omhoog en de envelop zakt weg.
+const KAART_EXTRA_WEG = 60
+// Op het laatste stukje laten de klip en de envelop samen los, zodat het een
+// overvloeiing is in plaats van een harde rand die ineens verdwijnt
+const KLIP_LOS_VANAF = 0.82
+
+function versoepel(p: number): number {
+  // Gelijkmatig doorlopen in plaats van meteen wegschieten, met een kleine veer
+  // op het eind: de kaart komt een paar pixels te hoog en zakt terug, zoals
+  // iets dat je net iets te ver uit een envelop trekt.
+  const vloeiend = p * p * (3 - 2 * p)
+  const veer = p > 0.55 ? Math.sin(((p - 0.55) / 0.45) * Math.PI) * 0.09 : 0
+  return vloeiend + veer
+}
 
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)"
 
@@ -67,6 +93,8 @@ export default function CardReveal({
   const banen = watermerk === "vol" ? 7 : previewNotice || watermerk === "licht" ? 3 : 0
   const ds = CARD_DESIGN_STYLE[display.design]
   const [stage, setStage] = useState<Stage>(startOpen ? "open" : "closed")
+  const envelopRef = useRef<HTMLButtonElement>(null)
+  const kaartRef = useRef<HTMLDivElement>(null)
   const reduceMotion = useSyncExternalStore(
     subscribeReducedMotion,
     () => window.matchMedia(REDUCED_MOTION_QUERY).matches,
@@ -89,12 +117,77 @@ export default function CardReveal({
       setTimeout(() => setStage("open"), 1350)
       return
     }
-    // Eerst breekt het zegel, dan gaat de klep open, dan schuift de kaart eruit
+    // Eerst kraakt en valt het zegel, dan gaat de klep open, dan wordt de kaart
+    // eruit getrokken. Die laatste stap loopt niet op CSS maar frame voor frame
+    // hieronder, omdat de klip precies op de envelopmond moet blijven liggen.
     setStage("zegel")
-    setTimeout(() => setStage("flap"), 340)
-    setTimeout(() => setStage("card"), 820)
-    setTimeout(() => setStage("open"), 1680)
+    setTimeout(() => setStage("flap"), T_KLEP)
+    setTimeout(() => setStage("card"), T_KAART)
+    setTimeout(() => setStage("open"), T_OPEN)
   }
+
+  // De kaart uit de envelop trekken. De envelop dekt af tot zijn mond; alles
+  // van de kaart dat daaronder zit is nog "in" de envelop en wordt geklipt.
+  useEffect(() => {
+    if (stage !== "card" || klassiekeAnimatie || reduceMotion) return
+    const kaart = kaartRef.current
+    const envelop = envelopRef.current
+    if (!kaart || !envelop) return
+
+    // Opmeten, niet uitrekenen: de envelop staat gecentreerd over de kaart, dus
+    // waar zijn mond zit hangt van beide hoogtes af.
+    const kr = kaart.getBoundingClientRect()
+    const er = envelop.getBoundingClientRect()
+    const H = kr.height
+    // De lijn waarboven de kaart zichtbaar wordt is de bovenrand van de
+    // envelop, niet de vouwlijn: de romp dekt de hele rechthoek af, dus alles
+    // wat daarbinnen valt zit voor het oog nog in de envelop.
+    const M = er.top - kr.top
+    if (H < 40 || M < 10) return
+    // De kaart start zijn bovenrand een stuk onder de mond, dus diep "in" de
+    // envelop. Hoe dieper, hoe meer de kaart zelf beweegt in plaats van de
+    // envelop, en dat leest als trekken in plaats van laten vallen.
+    const kaartStart = M + KAART_EXTRA_WEG
+    // De envelop zakt precies zo ver dat zijn mond aan het eind onder de
+    // onderrand van de kaart ligt. Dan is er nooit ergens gesmokkeld.
+    const zakt = Math.max(160, Math.min(900, H - M))
+    let frame = 0
+    const begin = performance.now()
+
+    const stap = (nu: number) => {
+      const p = Math.min(1, (nu - begin) / DUUR_KAART)
+      const e = versoepel(p)
+
+      const kaartY = kaartStart * (1 - e)
+      // De envelop komt langzaam op gang en zakt daarna door
+      const envelopY = zakt * (p < 0.4 ? 0.15 * (p / 0.4) : 0.15 + 0.85 * Math.pow((p - 0.4) / 0.6, 1.25))
+      const zichtbaar = M + envelopY - kaartY
+      const strikt = Math.max(0, H - zichtbaar)
+      const los = p <= KLIP_LOS_VANAF ? 1 : Math.pow(1 - (p - KLIP_LOS_VANAF) / (1 - KLIP_LOS_VANAF), 1.4)
+
+      kaart.style.transform = `translateY(${kaartY.toFixed(1)}px)`
+      kaart.style.clipPath = `inset(0px 0px ${(strikt * los).toFixed(1)}px 0px)`
+      kaart.style.opacity = "1"
+
+      envelop.style.transform = `translateY(${envelopY.toFixed(1)}px)`
+      // De envelop blijft lang volledig zichtbaar: hij is het deksel dat de
+      // kaart afdekt. Pas op het eind lost hij op.
+      envelop.style.opacity = p < 0.75 ? "1" : String(Math.max(0, 1 - Math.pow((p - 0.75) / 0.25, 2.5)))
+
+      if (p < 1) {
+        frame = requestAnimationFrame(stap)
+        return
+      }
+      // Klaar: alles wat we hier hebben gezet weer weghalen, anders blijft het
+      // op het element staan als de kaart gewoon in de pagina komt te staan
+      kaart.style.transform = ""
+      kaart.style.clipPath = ""
+      kaart.style.opacity = ""
+    }
+
+    frame = requestAnimationFrame(stap)
+    return () => cancelAnimationFrame(frame)
+  }, [stage, klassiekeAnimatie, reduceMotion])
 
   const cardVisible = stage === "card" || stage === "open"
   const envelopeGone = stage === "card" || stage === "open"
@@ -155,15 +248,20 @@ export default function CardReveal({
           from { opacity: 0; transform: translateY(24px) scale(0.85); }
           to   { opacity: 1; transform: translateY(0) scale(1); }
         }
-        /* De kaart wordt uit de envelop getrokken: eerst komt de bovenrand
-           tevoorschijn, daarna de rest, en aan het eind schiet hij een klein
-           stukje door en zakt terug. Dat laatste is wat het duur laat voelen. */
-        @keyframes kaart-uit-envelop {
-          0%   { opacity: 0; transform: translateY(58px) scale(0.93); clip-path: inset(0 0 88% 0); }
-          14%  { opacity: 1; }
-          62%  { transform: translateY(-9px) scale(1.015); clip-path: inset(0 0 0 0); }
-          82%  { transform: translateY(3px) scale(0.998); }
-          100% { opacity: 1; transform: translateY(0) scale(1); clip-path: inset(0 0 0 0); }
+        /* Het zegel kraakt eerst een paar millimeter open en valt dan pas weg.
+           De eerste twee stappen duren samen bijna de helft van de tijd, want
+           dat kraken is het moment waar je naar kijkt. */
+        @keyframes zegel-links {
+          0%   { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+          22%  { transform: translate(-2px, -1px) rotate(-2deg); opacity: 1; }
+          42%  { transform: translate(-5px, 2px) rotate(-6deg); opacity: 1; }
+          100% { transform: translate(-24px, 44px) rotate(-38deg); opacity: 0; }
+        }
+        @keyframes zegel-rechts {
+          0%   { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+          22%  { transform: translate(2px, -1px) rotate(2deg); opacity: 1; }
+          42%  { transform: translate(5px, 2px) rotate(6deg); opacity: 1; }
+          100% { transform: translate(24px, 44px) rotate(38deg); opacity: 0; }
         }
         @keyframes knoppen-fadein {
           from { opacity: 0; transform: translateY(10px); }
@@ -201,27 +299,41 @@ export default function CardReveal({
       <div className="relative w-full max-w-md flex flex-col items-center">
 
         {/* ── Envelop ──────────────────────────────────────────────────────── */}
+        {/* Absoluut over de kaart heen, zodat de kaart vanaf het begin zijn
+            plek in de pagina inneemt. Anders verspringt alles op het moment
+            dat de envelop weggaat, precies als de kaart moet landen. */}
         {stage !== "open" && (
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center"
+            style={{ zIndex: 2, pointerEvents: "none" }}
+          >
           <button
+            ref={envelopRef}
             onClick={open}
             aria-label="Open de envelop"
             className="relative block outline-none"
             style={{
-              width: "min(340px, 86vw)",
+              // Breder dan de kaart (max 420), anders steekt de kaart aan de
+              // zijkanten uit en lijkt het nooit alsof hij in de envelop zit
+              width: "min(460px, calc(100vw - 12px))",
               aspectRatio: "17/12",
               cursor: stage === "closed" ? "pointer" : "default",
               background: "none",
               border: "none",
               padding: 0,
+              pointerEvents: stage === "closed" ? "auto" : "none",
               animation: stage === "closed" ? "kaart-zweef 3s ease-in-out infinite" : "none",
-              opacity: envelopeGone ? 0 : 1,
-              // De envelop zakt weg terwijl de kaart eruit komt. Bij de nieuwe
-              // animatie langzamer, zodat je de kaart echt uit de envelop ziet
-              // komen in plaats van dat de envelop er ineens niet meer is.
-              transform: envelopeGone ? "translateY(84px) scale(0.9)" : "none",
-              transition: klassiekeAnimatie
-                ? "opacity 0.6s ease 0.25s, transform 0.6s ease 0.25s"
-                : "opacity 0.85s ease 0.3s, transform 0.85s ease 0.3s",
+              // Bij de nieuwe animatie staat de envelop stil tot de kaart eruit
+              // komt; vanaf dat moment zetten transform en opacity per frame
+              // (zie het effect hierboven), dus hier geen transition die
+              // ertegenin werkt.
+              ...(klassiekeAnimatie
+                ? {
+                    opacity: envelopeGone ? 0 : 1,
+                    transform: envelopeGone ? "translateY(70px) scale(0.92)" : "none",
+                    transition: "opacity 0.6s ease 0.25s, transform 0.6s ease 0.25s",
+                  }
+                : {}),
               // De envelop dekt de onderkant van de kaart af tijdens het
               // uitschuiven; zonder deze z-index zou de kaart eroverheen liggen.
               zIndex: 2,
@@ -261,7 +373,7 @@ export default function CardReveal({
                 boxShadow: `inset 0 -1px 0 ${sc.accent}40`,
                 transformOrigin: "top center",
                 transform: klepDicht ? "rotateX(0deg)" : "rotateX(180deg)",
-                transition: "transform 0.55s ease",
+                transition: klassiekeAnimatie ? "transform 0.55s ease" : "transform 0.72s cubic-bezier(0.35, 0, 0.3, 1)",
                 zIndex: 2,
               }}
             />
@@ -290,49 +402,56 @@ export default function CardReveal({
                     : helft === 0
                       ? "inset(0 50% 0 0)"
                       : "inset(0 0 0 50%)",
-                  opacity: zegelHeel ? 1 : 0,
-                  transform: zegelHeel
-                    ? "none"
-                    : klassiekeAnimatie
-                      ? "scale(0.6)"
-                      : helft === 0
-                        ? "translate(-13px, 16px) rotate(-26deg)"
-                        : "translate(13px, 16px) rotate(26deg)",
-                  transition: klassiekeAnimatie
-                    ? "opacity 0.3s ease, transform 0.3s ease"
-                    : "opacity 0.42s ease 0.06s, transform 0.42s cubic-bezier(0.3, 0.7, 0.4, 1)",
+                  ...(klassiekeAnimatie
+                    ? {
+                        opacity: zegelHeel ? 1 : 0,
+                        transform: zegelHeel ? "none" : "scale(0.6)",
+                        transition: "opacity 0.3s ease, transform 0.3s ease",
+                      }
+                    : {
+                        // Het kraken en vallen zit in de keyframes, zodat het
+                        // twee bewegingen zijn in plaats van één sprong
+                        animation: zegelHeel
+                          ? "none"
+                          : `${helft === 0 ? "zegel-links" : "zegel-rechts"} 0.95s ease-in both`,
+                      }),
                 }}
               >
                 {initials || "♥"}
               </span>
             ))}
           </button>
-        )}
-
-        {stage === "closed" && (
-          <p
-            className="mt-6 text-sm"
-            style={{ color: sc.bodyText, opacity: 0.75 }}
-          >
-            Er is post voor je, tik op de envelop 💌
-          </p>
+          {stage === "closed" && (
+            <p
+              className="mt-6 text-sm"
+              style={{ color: sc.bodyText, opacity: 0.75 }}
+            >
+              Er is post voor je, tik op de envelop 💌
+            </p>
+          )}
+          </div>
         )}
 
         {/* ── De kaart ─────────────────────────────────────────────────────── */}
-        {cardVisible && (
+        {/* Staat er altijd, ook onzichtbaar, zodat de pagina niet verspringt */}
+        {(cardVisible || !klassiekeAnimatie) && (
           <div
-            className={stage === "open" ? "" : "absolute top-0"}
+            ref={kaartRef}
+            className={stage === "open" || !klassiekeAnimatie ? "" : "absolute top-0"}
             style={{
               width: "100%",
               maxWidth: 420,
               // Onder de envelop, zodat die de onderkant afdekt terwijl de
               // kaart naar boven uit de envelop komt
               zIndex: 1,
-              animation: reduceMotion
-                ? "none"
+              // De nieuwe animatie loopt frame voor frame in het effect
+              // hierboven; tot die begint houden we de kaart onzichtbaar
+              transformOrigin: "top center",
+              ...(reduceMotion || stage === "open"
+                ? {}
                 : klassiekeAnimatie
-                  ? "kaart-fadein 0.8s ease 0.15s both"
-                  : "kaart-uit-envelop 1.05s cubic-bezier(0.22, 0.8, 0.3, 1) both",
+                  ? { animation: "kaart-fadein 0.8s ease 0.15s both" }
+                  : { opacity: cardVisible ? 1 : 0, visibility: cardVisible ? "visible" : "hidden" }),
             }}
           >
             <div
