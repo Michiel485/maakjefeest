@@ -93,7 +93,9 @@ export default function CardReveal({
   const banen = watermerk === "vol" ? 7 : previewNotice || watermerk === "licht" ? 3 : 0
   const ds = CARD_DESIGN_STYLE[display.design]
   const [stage, setStage] = useState<Stage>(startOpen ? "open" : "closed")
-  const envelopRef = useRef<HTMLButtonElement>(null)
+  // De envelop is twee lagen met de kaart ertussen, dus ook twee refs
+  const envelopAchterRef = useRef<HTMLButtonElement>(null)
+  const envelopVoorRef = useRef<HTMLDivElement>(null)
   const kaartRef = useRef<HTMLDivElement>(null)
   const reduceMotion = useSyncExternalStore(
     subscribeReducedMotion,
@@ -131,18 +133,18 @@ export default function CardReveal({
   useEffect(() => {
     if (stage !== "card" || klassiekeAnimatie || reduceMotion) return
     const kaart = kaartRef.current
-    const envelop = envelopRef.current
-    if (!kaart || !envelop) return
+    const achter = envelopAchterRef.current
+    const voor = envelopVoorRef.current
+    if (!kaart || !achter || !voor) return
 
     // Opmeten, niet uitrekenen: de envelop staat gecentreerd over de kaart, dus
-    // waar zijn mond zit hangt van beide hoogtes af.
+    // waar de mond zit hangt van beide hoogtes af.
     const kr = kaart.getBoundingClientRect()
-    const er = envelop.getBoundingClientRect()
+    const er = achter.getBoundingClientRect()
     const H = kr.height
-    // De lijn waarboven de kaart zichtbaar wordt is de bovenrand van de
-    // envelop, niet de vouwlijn: de romp dekt de hele rechthoek af, dus alles
-    // wat daarbinnen valt zit voor het oog nog in de envelop.
-    const M = er.top - kr.top
+    // De mond is de bovenrand van de vóórkant van de envelop, op 58% van de
+    // envelophoogte. Daarboven zie je de kaart in de envelop zitten.
+    const M = er.top + er.height * 0.58 - kr.top
     if (H < 40 || M < 10) return
     // De kaart start zijn bovenrand een stuk onder de mond, dus diep "in" de
     // envelop. Hoe dieper, hoe meer de kaart zelf beweegt in plaats van de
@@ -169,10 +171,14 @@ export default function CardReveal({
       kaart.style.clipPath = `inset(0px 0px ${(strikt * los).toFixed(1)}px 0px)`
       kaart.style.opacity = "1"
 
-      envelop.style.transform = `translateY(${envelopY.toFixed(1)}px)`
+      const envelopT = `translateY(${envelopY.toFixed(1)}px)`
+      achter.style.transform = envelopT
+      voor.style.transform = envelopT
       // De envelop blijft lang volledig zichtbaar: hij is het deksel dat de
       // kaart afdekt. Pas op het eind lost hij op.
-      envelop.style.opacity = p < 0.75 ? "1" : String(Math.max(0, 1 - Math.pow((p - 0.75) / 0.25, 2.5)))
+      const envelopO = p < 0.75 ? "1" : String(Math.max(0, 1 - Math.pow((p - 0.75) / 0.25, 2.5)))
+      achter.style.opacity = envelopO
+      voor.style.opacity = envelopO
 
       if (p < 1) {
         frame = requestAnimationFrame(stap)
@@ -240,9 +246,12 @@ export default function CardReveal({
         </div>
       )}
       <style>{`
-        @keyframes kaart-zweef {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-7px); }
+        /* Zweven via top en niet via transform: de envelop bestaat uit twee
+           lagen met de kaart ertussen, en een transform op de laag eromheen
+           zou een stapelcontext maken waardoor die sandwich kapot gaat. */
+        @keyframes envelop-zweef {
+          0%, 100% { top: 0; }
+          50% { top: -7px; }
         }
         @keyframes kaart-fadein {
           from { opacity: 0; transform: translateY(24px) scale(0.85); }
@@ -299,161 +308,200 @@ export default function CardReveal({
       <div className="relative w-full max-w-md flex flex-col items-center">
 
         {/* ── Envelop ──────────────────────────────────────────────────────── */}
-        {/* Absoluut over de kaart heen, zodat de kaart vanaf het begin zijn
-            plek in de pagina inneemt. Anders verspringt alles op het moment
-            dat de envelop weggaat, precies als de kaart moet landen. */}
+        {/* De envelop bestaat uit twee lagen met de kaart ertussen, want een
+            kaart zit ín een envelop: vóór de achterkant en achter de voorkant.
+            De achterkant en de klep liggen dus onder de kaart (z-index 1), de
+            voorkant met het zegel erboven (z-index 3). Daarom zit er geen
+            z-index op de laag hieromheen: die zou een eigen stapelcontext
+            maken en dan kan de kaart er niet meer tussen.
+            Absoluut over de kaart heen, zodat de kaart vanaf het begin zijn
+            plek in de pagina inneemt en er niks verspringt als de envelop
+            weggaat, precies op het moment dat de kaart moet landen. */}
         {stage !== "open" && (
           <div
             className="absolute inset-0 flex flex-col items-center justify-center"
-            style={{ zIndex: 2, pointerEvents: "none" }}
+            style={{ pointerEvents: "none" }}
           >
-          <button
-            ref={envelopRef}
-            onClick={open}
-            aria-label="Open de envelop"
-            className="relative block outline-none"
-            style={{
-              // Breder dan de kaart (max 420), anders steekt de kaart aan de
-              // zijkanten uit en lijkt het nooit alsof hij in de envelop zit
-              width: "min(460px, calc(100vw - 12px))",
-              aspectRatio: "17/12",
-              cursor: stage === "closed" ? "pointer" : "default",
-              background: "none",
-              border: "none",
-              padding: 0,
-              pointerEvents: stage === "closed" ? "auto" : "none",
-              animation: stage === "closed" ? "kaart-zweef 3s ease-in-out infinite" : "none",
-              // Bij de nieuwe animatie staat de envelop stil tot de kaart eruit
-              // komt; vanaf dat moment zetten transform en opacity per frame
-              // (zie het effect hierboven), dus hier geen transition die
-              // ertegenin werkt.
-              ...(klassiekeAnimatie
-                ? {
-                    opacity: envelopeGone ? 0 : 1,
-                    transform: envelopeGone ? "translateY(70px) scale(0.92)" : "none",
-                    transition: "opacity 0.6s ease 0.25s, transform 0.6s ease 0.25s",
-                  }
-                : {}),
-              // De envelop dekt de onderkant van de kaart af tijdens het
-              // uitschuiven; zonder deze z-index zou de kaart eroverheen liggen.
-              zIndex: 2,
-            }}
-          >
-            {/* Romp */}
-            <span
-              className="absolute inset-0 rounded-2xl"
+            <div
+              className="relative"
               style={{
-                backgroundColor: sc.cardBg ?? sc.navBg,
-                border: `1.5px solid ${sc.accent}50`,
-                boxShadow: "0 18px 50px rgba(0,0,0,0.18)",
+                // Breder dan de kaart (max 420), anders steekt de kaart aan de
+                // zijkanten uit en lijkt het nooit alsof hij erin zit
+                width: "min(460px, calc(100vw - 12px))",
+                aspectRatio: "17/12",
+                // Het zweven gaat via top en niet via transform: een transform
+                // hier zou een stapelcontext maken, en dan ligt de kaart weer
+                // achter de hele envelop in plaats van ertussen.
+                animation: stage === "closed" ? "envelop-zweef 3s ease-in-out infinite" : "none",
               }}
-            />
-            {/* Vouwlijnen onderin (de "zak" van de envelop) */}
-            <span
-              className="absolute inset-0 rounded-2xl overflow-hidden"
-              style={{ border: "1px solid transparent" }}
             >
-              <span
-                className="absolute"
+              {/* Achterkant plus klep: onder de kaart */}
+              <button
+                ref={envelopAchterRef}
+                onClick={open}
+                aria-label="Open de envelop"
+                className="absolute inset-0 block outline-none"
                 style={{
-                  left: -2, right: -2, bottom: -2, height: "72%",
-                  background: `linear-gradient(135deg, transparent 49.6%, ${sc.accent}18 50%), linear-gradient(-135deg, transparent 49.6%, ${sc.accent}18 50%)`,
-                }}
-              />
-            </span>
-            {/* Klep */}
-            <span
-              className="absolute left-0 right-0 top-0"
-              style={{
-                height: "58%",
-                clipPath: "polygon(0 0, 100% 0, 50% 100%)",
-                backgroundColor: sc.cardBg ?? sc.navBg,
-                filter: "brightness(0.96)",
-                borderRadius: "16px 16px 0 0",
-                boxShadow: `inset 0 -1px 0 ${sc.accent}40`,
-                transformOrigin: "top center",
-                transform: klepDicht ? "rotateX(0deg)" : "rotateX(180deg)",
-                transition: klassiekeAnimatie ? "transform 0.55s ease" : "transform 0.72s cubic-bezier(0.35, 0, 0.3, 1)",
-                zIndex: 2,
-              }}
-            />
-            {/* Zegel met initialen. Bij de nieuwe animatie bestaat het uit twee
-                helften die wegkantelen, zodat het zegel echt breekt in plaats
-                van dat de klep er dwars door heen klapt. Elke helft toont de
-                volledige initialen en knipt de andere helft weg, zodat ze
-                samen naadloos één zegel vormen. */}
-            {(klassiekeAnimatie ? [0] : [0, 1]).map((helft) => (
-              <span
-                key={helft}
-                className="absolute left-1/2 flex items-center justify-center rounded-full"
-                style={{
-                  top: "44%",
-                  width: 62,
-                  height: 62,
-                  marginLeft: -31,
-                  backgroundColor: sc.accent,
-                  color: sc.buttonText,
-                  fontFamily: sc.fontInitials ?? sc.fontPageTitles,
-                  fontSize: "1.35rem",
-                  boxShadow: "0 3px 12px rgba(0,0,0,0.22)",
-                  zIndex: 3,
-                  clipPath: klassiekeAnimatie
-                    ? undefined
-                    : helft === 0
-                      ? "inset(0 50% 0 0)"
-                      : "inset(0 0 0 50%)",
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                  cursor: stage === "closed" ? "pointer" : "default",
+                  pointerEvents: stage === "closed" ? "auto" : "none",
+                  zIndex: 1,
                   ...(klassiekeAnimatie
                     ? {
-                        opacity: zegelHeel ? 1 : 0,
-                        transform: zegelHeel ? "none" : "scale(0.6)",
-                        transition: "opacity 0.3s ease, transform 0.3s ease",
+                        opacity: envelopeGone ? 0 : 1,
+                        transform: envelopeGone ? "translateY(70px) scale(0.92)" : "none",
+                        transition: "opacity 0.6s ease 0.25s, transform 0.6s ease 0.25s",
                       }
-                    : {
-                        // Het kraken en vallen zit in de keyframes, zodat het
-                        // twee bewegingen zijn in plaats van één sprong
-                        animation: zegelHeel
-                          ? "none"
-                          : `${helft === 0 ? "zegel-links" : "zegel-rechts"} 0.95s ease-in both`,
-                      }),
+                    : {}),
                 }}
               >
-                {initials || "♥"}
-              </span>
-            ))}
-          </button>
-          {stage === "closed" && (
-            <p
-              className="mt-6 text-sm"
-              style={{ color: sc.bodyText, opacity: 0.75 }}
-            >
-              Er is post voor je, tik op de envelop 💌
-            </p>
-          )}
+                {/* De achterkant: dit zie je door de open mond heen achter de kaart */}
+                <span
+                  className="absolute inset-0 rounded-2xl"
+                  style={{
+                    backgroundColor: sc.cardBg ?? sc.navBg,
+                    border: `1.5px solid ${sc.accent}50`,
+                    filter: "brightness(0.97)",
+                    boxShadow: "0 18px 50px rgba(0,0,0,0.18)",
+                  }}
+                />
+                {/* Klep: klapt naar achteren open, dus achter de kaart langs */}
+                <span
+                  className="absolute left-0 right-0 top-0"
+                  style={{
+                    height: "58%",
+                    clipPath: "polygon(0 0, 100% 0, 50% 100%)",
+                    backgroundColor: sc.cardBg ?? sc.navBg,
+                    // Dicht zie je de buitenkant, open de binnenkant, en die
+                    // ligt in de schaduw. Dat maakt hem ook zichtbaar tegen de
+                    // achtergrond, want die heeft bijna dezelfde kleur.
+                    filter: klepDicht ? "brightness(0.96)" : "brightness(0.78)",
+                    borderRadius: "16px 16px 0 0",
+                    boxShadow: `inset 0 -1px 0 ${sc.accent}40`,
+                    transition: klassiekeAnimatie
+                      ? "transform 0.55s ease, filter 0.55s ease"
+                      : "transform 0.72s cubic-bezier(0.35, 0, 0.3, 1), filter 0.72s ease",
+                    transformOrigin: "top center",
+                    transform: klepDicht ? "rotateX(0deg)" : "rotateX(180deg)",
+                  }}
+                />
+              </button>
+
+              {/* Voorkant plus zegel: over de kaart heen. De bovenrand hiervan
+                  is de mond van de envelop; daarboven komt de kaart eruit. */}
+              <div
+                ref={envelopVoorRef}
+                aria-hidden="true"
+                className="absolute inset-0"
+                style={{
+                  zIndex: 3,
+                  pointerEvents: "none",
+                  ...(klassiekeAnimatie
+                    ? {
+                        opacity: envelopeGone ? 0 : 1,
+                        transform: envelopeGone ? "translateY(70px) scale(0.92)" : "none",
+                        transition: "opacity 0.6s ease 0.25s, transform 0.6s ease 0.25s",
+                      }
+                    : {}),
+                }}
+              >
+                <span
+                  className="absolute left-0 right-0 bottom-0"
+                  style={{
+                    height: "42%",
+                    backgroundColor: sc.cardBg ?? sc.navBg,
+                    // De twee schuine vouwen van de voorkant, die in het midden
+                    // bovenaan bij elkaar komen
+                    backgroundImage: `linear-gradient(to top right, transparent 49.6%, ${sc.accent}22 50%, transparent 50.4%), linear-gradient(to top left, transparent 49.6%, ${sc.accent}22 50%, transparent 50.4%)`,
+                    borderRadius: "0 0 15px 15px",
+                    borderTop: `1px solid ${sc.accent}45`,
+                    borderLeft: `1.5px solid ${sc.accent}50`,
+                    borderRight: `1.5px solid ${sc.accent}50`,
+                    borderBottom: `1.5px solid ${sc.accent}50`,
+                    // Schaduw omhoog: laat zien dat de kaart erachter langs gaat
+                    boxShadow: "0 -7px 16px rgba(0,0,0,0.10)",
+                  }}
+                />
+                {/* Zegel met initialen. Bij de nieuwe animatie bestaat het uit
+                    twee helften die eerst kraken en dan wegvallen. Elke helft
+                    toont de volledige initialen en knipt de andere helft weg,
+                    zodat ze samen naadloos één zegel vormen. */}
+                {(klassiekeAnimatie ? [0] : [0, 1]).map((helft) => (
+                  <span
+                    key={helft}
+                    className="absolute left-1/2 flex items-center justify-center rounded-full"
+                    style={{
+                      top: "44%",
+                      width: 62,
+                      height: 62,
+                      marginLeft: -31,
+                      backgroundColor: sc.accent,
+                      color: sc.buttonText,
+                      fontFamily: sc.fontInitials ?? sc.fontPageTitles,
+                      fontSize: "1.35rem",
+                      boxShadow: "0 3px 12px rgba(0,0,0,0.22)",
+                      clipPath: klassiekeAnimatie
+                        ? undefined
+                        : helft === 0
+                          ? "inset(0 50% 0 0)"
+                          : "inset(0 0 0 50%)",
+                      ...(klassiekeAnimatie
+                        ? {
+                            opacity: zegelHeel ? 1 : 0,
+                            transform: zegelHeel ? "none" : "scale(0.6)",
+                            transition: "opacity 0.3s ease, transform 0.3s ease",
+                          }
+                        : {
+                            // Het kraken en vallen zit in de keyframes, zodat
+                            // het twee bewegingen zijn in plaats van één sprong
+                            animation: zegelHeel
+                              ? "none"
+                              : `${helft === 0 ? "zegel-links" : "zegel-rechts"} 0.95s ease-in both`,
+                          }),
+                    }}
+                  >
+                    {initials || "♥"}
+                  </span>
+                ))}
+              </div>
+            </div>
+            {stage === "closed" && (
+              <p
+                className="mt-6 text-sm"
+                style={{ color: sc.bodyText, opacity: 0.75 }}
+              >
+                Er is post voor je, tik op de envelop 💌
+              </p>
+            )}
           </div>
         )}
-
         {/* ── De kaart ─────────────────────────────────────────────────────── */}
-        {/* Staat er altijd, ook onzichtbaar, zodat de pagina niet verspringt */}
-        {(cardVisible || !klassiekeAnimatie) && (
-          <div
-            ref={kaartRef}
-            className={stage === "open" || !klassiekeAnimatie ? "" : "absolute top-0"}
-            style={{
-              width: "100%",
-              maxWidth: 420,
-              // Onder de envelop, zodat die de onderkant afdekt terwijl de
-              // kaart naar boven uit de envelop komt
-              zIndex: 1,
-              // De nieuwe animatie loopt frame voor frame in het effect
-              // hierboven; tot die begint houden we de kaart onzichtbaar
-              transformOrigin: "top center",
-              ...(reduceMotion || stage === "open"
-                ? {}
+        {/* De kaart staat er altijd, ook als hij nog onzichtbaar is. Dan neemt
+            hij vanaf het begin zijn plek in en verspringt de pagina niet op het
+            moment dat de envelop weggaat, precies als de kaart moet landen. */}
+        <div
+          ref={kaartRef}
+          style={{
+            width: "100%",
+            maxWidth: 420,
+            // Tussen de achterkant (1) en de voorkant (3) van de envelop: de
+            // kaart zit erin, niet erachter
+            zIndex: 2,
+            transformOrigin: "top center",
+            ...(reduceMotion || stage === "open"
+              ? {}
+              : !cardVisible
+                ? // Nog in de envelop: onzichtbaar, maar wel ruimte innemen
+                  { opacity: 0, visibility: "hidden" }
                 : klassiekeAnimatie
                   ? { animation: "kaart-fadein 0.8s ease 0.15s both" }
-                  : { opacity: cardVisible ? 1 : 0, visibility: cardVisible ? "visible" : "hidden" }),
-            }}
-          >
+                  : // De nieuwe animatie zet opacity, transform en klip per
+                    // frame in het effect hierboven
+                    { opacity: 0 }),
+          }}
+        >
             <div
               className="overflow-hidden"
               style={{
@@ -698,7 +746,6 @@ export default function CardReveal({
               </div>
             )}
           </div>
-        )}
       </div>
 
       {/* Groeimotor */}
