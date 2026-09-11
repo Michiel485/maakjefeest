@@ -42,19 +42,17 @@ const KAART_IN_ENVELOP = 0.14
 // Hoeveel de dichte envelop op en neer zweeft. De klip op de kaart houdt hier
 // rekening mee, anders komt bij de hoogste stand een randje kaart onder de
 // envelop uit.
-const ENVELOP_ZWEEF = 7
+const ENVELOP_ZWEEF = 4
 
 // Hoe lang de klep erover doet om open te klappen. Halverwege staat hij recht
 // overeind en gaat hij achter de kaart langs; daarvoor hoort hij ervoor.
 const DUUR_KLEP = 720
 
 function versoepel(p: number): number {
-  // Gelijkmatig doorlopen in plaats van meteen wegschieten, met een kleine veer
-  // op het eind: de kaart komt een paar pixels te hoog en zakt terug, zoals
-  // iets dat je net iets te ver uit een envelop trekt.
-  const vloeiend = p * p * (3 - 2 * p)
-  const veer = p > 0.55 ? Math.sin(((p - 0.55) / 0.45) * Math.PI) * 0.09 : 0
-  return vloeiend + veer
+  // Gelijkmatig doorlopen in plaats van meteen wegschieten.
+  // Alleen vloeiend, zonder veer. Een veertje aan het eind schoot de kaart nog
+  // een paar pixels omhoog en dat leest als een hapering, niet als een veer.
+  return p * p * (3 - 2 * p)
 }
 
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)"
@@ -257,6 +255,12 @@ export default function CardReveal({
   // Het zegel breekt zodra er getikt is; de klep wacht tot dat gebeurd is
   const zegelHeel = stage === "closed"
   const klepDicht = stage === "closed" || (!klassiekeAnimatie && stage === "zegel")
+  // De dichte envelop zweeft. Loopt door tot de kaart gaat bewegen, want de
+  // envelop staat tot dan toch stil; daarna neemt het rekenwerk de transform
+  // over en zou een lopende animatie ertegenin werken.
+  const zweef = !klassiekeAnimatie && !reduceMotion && stage !== "card"
+    ? `envelop-zweef 3.4s ease-in-out infinite`
+    : "none"
   const stofjesAan = stage === "open" && display.animatie === "feestelijk" && !reduceMotion
 
   return (
@@ -308,12 +312,15 @@ export default function CardReveal({
         </div>
       )}
       <style>{`
-        /* Zweven via top en niet via transform: de envelop bestaat uit twee
-           lagen met de kaart ertussen, en een transform op de laag eromheen
-           zou een stapelcontext maken waardoor die sandwich kapot gaat. */
+        /* Zweven op transform, want top animeren betekent elke frame layout
+           en dat schokt. De animatie staat op de drie lagen zelf en niet op de
+           laag eromheen: een transform daar zou een stapelcontext maken en dan
+           kan de kaart niet meer tussen de envelop liggen. Een lopende CSS-
+           animatie gaat voor op de inline transform, dus tijdens het zweven
+           stuurt deze en daarna neemt het rekenwerk het weer over. */
         @keyframes envelop-zweef {
-          0%, 100% { top: 0; }
-          50% { top: -${ENVELOP_ZWEEF}px; }
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-${ENVELOP_ZWEEF}px); }
         }
         @keyframes kaart-fadein {
           from { opacity: 0; transform: translateY(24px) scale(0.85); }
@@ -391,10 +398,6 @@ export default function CardReveal({
                 // zijkanten uit en lijkt het nooit alsof hij erin zit
                 width: "min(460px, calc(100vw - 12px))",
                 aspectRatio: "17/12",
-                // Het zweven gaat via top en niet via transform: een transform
-                // hier zou een stapelcontext maken, en dan ligt de kaart weer
-                // achter de hele envelop in plaats van ertussen.
-                animation: stage === "closed" ? "envelop-zweef 3s ease-in-out infinite" : "none",
               }}
             >
               {/* Achterkant plus klep: onder de kaart */}
@@ -410,6 +413,7 @@ export default function CardReveal({
                   cursor: stage === "closed" ? "pointer" : "default",
                   pointerEvents: stage === "closed" ? "auto" : "none",
                   zIndex: 1,
+                  animation: zweef,
                   ...(klassiekeAnimatie
                     ? {
                         opacity: envelopeGone ? 0 : 1,
@@ -446,6 +450,7 @@ export default function CardReveal({
                   // de kaart al zien terwijl de klep nog dicht lijkt.
                   zIndex: !klassiekeAnimatie && klepVoorKaart ? 4 : 1,
                   pointerEvents: "none",
+                  animation: zweef,
                   ...(klassiekeAnimatie
                     ? {
                         opacity: envelopeGone ? 0 : 1,
@@ -490,6 +495,7 @@ export default function CardReveal({
                   // dus voor de envelop zelf maakt die volgorde niks uit.
                   zIndex: 5,
                   pointerEvents: "none",
+                  animation: zweef,
                   ...(klassiekeAnimatie
                     ? {
                         opacity: envelopeGone ? 0 : 1,
@@ -619,11 +625,13 @@ export default function CardReveal({
                 backgroundColor: sc.cardBg ?? "#FFFEFB",
                 border: sc.goldBorder ? `2px solid ${sc.accent}` : `1px solid ${sc.accent}45`,
                 borderRadius: ds.hoekRadius,
-                // Twee schaduwen: een korte die vlak tegen de rand ligt en de
-                // afronding laat lezen, en een wijde eronder voor de diepte.
-                // Zonder die korte lijkt de hoek vierkant als de achtergrond
-                // bijna dezelfde kleur heeft als de kaart, zoals in emerald.
-                boxShadow: "0 2px 8px rgba(0,0,0,0.22), 0 24px 70px rgba(0,0,0,0.22)",
+                // De schaduw mag niet om de hoeken heen krullen. Een gewone
+                // wijde schaduw maakt de uitsparing naast de afronding donker,
+                // en omdat de achtergrond bijna dezelfde kleur heeft als de
+                // kaart leest de hoek dan als vierkant. Met een negatieve
+                // spread valt de schaduw alleen onder de kaart, en een heel dun
+                // lichtrandje volgt de afronding wel, zodat de vorm klopt.
+                boxShadow: "0 0 0 1px rgba(255,255,255,0.06), 0 26px 50px -26px rgba(0,0,0,0.5)",
               }}
             >
               {/* Fototemplate: foto bovenin */}
