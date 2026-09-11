@@ -30,15 +30,14 @@ const T_KAART = 1280
 const DUUR_KAART = 1500
 const T_OPEN = T_KAART + DUUR_KAART
 
-// De kaart is veel hoger dan de envelop, dus hij kan er nooit in passen. Het
-// oog kijkt echter naar de afstand tussen de twee: als die over de hele
-// animatie precies de kaarthoogte wordt, zie je de kaart eruit komen zonder
-// dat er ooit iets zichtbaar wordt dat in de envelop hoort te zitten. Die
-// afstand verdelen we: de kaart komt omhoog en de envelop zakt weg.
-const KAART_EXTRA_WEG = 60
-// Op het laatste stukje laten de klip en de envelop samen los, zodat het een
-// overvloeiing is in plaats van een harde rand die ineens verdwijnt
-const KLIP_LOS_VANAF = 0.82
+// Waar de V van de voorkant samenkomt, in procenten van de envelophoogte. De
+// klep is precies die driehoek, dus dicht sluit de envelop naadloos.
+const ENVELOP_V_PUNT = 50
+
+// Hoe diep de kaart in de envelop zit als de klep opengaat: de bovenrand van
+// de kaart staat op dit deel van de envelophoogte, dus je ziet hem meteen in
+// de V zitten.
+const KAART_IN_ENVELOP = 0.14
 
 function versoepel(p: number): number {
   // Gelijkmatig doorlopen in plaats van meteen wegschieten, met een kleine veer
@@ -93,8 +92,9 @@ export default function CardReveal({
   const banen = watermerk === "vol" ? 7 : previewNotice || watermerk === "licht" ? 3 : 0
   const ds = CARD_DESIGN_STYLE[display.design]
   const [stage, setStage] = useState<Stage>(startOpen ? "open" : "closed")
-  // De envelop is twee lagen met de kaart ertussen, dus ook twee refs
+  // De envelop bestaat uit drie lagen rond de kaart, dus drie refs
   const envelopAchterRef = useRef<HTMLButtonElement>(null)
+  const envelopKlepRef = useRef<HTMLDivElement>(null)
   const envelopVoorRef = useRef<HTMLDivElement>(null)
   const kaartRef = useRef<HTMLDivElement>(null)
   const reduceMotion = useSyncExternalStore(
@@ -128,58 +128,68 @@ export default function CardReveal({
     setTimeout(() => setStage("open"), T_OPEN)
   }
 
-  // De kaart uit de envelop trekken. De envelop dekt af tot zijn mond; alles
-  // van de kaart dat daaronder zit is nog "in" de envelop en wordt geklipt.
+  // De kaart zit vanaf het begin in de envelop en wordt er daarna uit
+  // getrokken. De voorkant van de envelop dekt de kaart zelf af tot aan de V,
+  // dus de klip hoeft alleen te verbergen wat ónder de envelop uitkomt.
   useEffect(() => {
-    if (stage !== "card" || klassiekeAnimatie || reduceMotion) return
+    if (klassiekeAnimatie || reduceMotion || stage === "open") return
     const kaart = kaartRef.current
     const achter = envelopAchterRef.current
+    const klep = envelopKlepRef.current
     const voor = envelopVoorRef.current
-    if (!kaart || !achter || !voor) return
+    if (!kaart || !achter || !klep || !voor) return
 
     // Opmeten, niet uitrekenen: de envelop staat gecentreerd over de kaart, dus
-    // waar de mond zit hangt van beide hoogtes af.
+    // waar zijn randen liggen hangt van beide hoogtes af.
     const kr = kaart.getBoundingClientRect()
     const er = achter.getBoundingClientRect()
     const H = kr.height
-    // De mond is de bovenrand van de vóórkant van de envelop, op 58% van de
-    // envelophoogte. Daarboven zie je de kaart in de envelop zitten.
-    const M = er.top + er.height * 0.58 - kr.top
-    if (H < 40 || M < 10) return
-    // De kaart start zijn bovenrand een stuk onder de mond, dus diep "in" de
-    // envelop. Hoe dieper, hoe meer de kaart zelf beweegt in plaats van de
-    // envelop, en dat leest als trekken in plaats van laten vallen.
-    const kaartStart = M + KAART_EXTRA_WEG
-    // De envelop zakt precies zo ver dat zijn mond aan het eind onder de
-    // onderrand van de kaart ligt. Dan is er nooit ergens gesmokkeld.
-    const zakt = Math.max(160, Math.min(900, H - M))
-    let frame = 0
-    const begin = performance.now()
+    // Bovenrand en onderrand van de envelop, gemeten vanaf de kaartbovenkant
+    const boven = er.top - kr.top
+    const onder = er.bottom - kr.top
+    if (H < 40 || onder < 40) return
+    // De kaart zit in de envelop: bovenrand een stukje onder de envelopbovenkant,
+    // zodat hij meteen in de V zichtbaar is als de klep opengaat.
+    const kaartStart = boven + er.height * KAART_IN_ENVELOP
+    // De envelop zakt tot zijn bovenrand onder de onderkant van de kaart ligt.
+    // Pas dan dekt hij niets meer af en is de kaart helemaal vrij.
+    const zakt = Math.max(160, Math.min(1000, H - boven))
 
-    const stap = (nu: number) => {
-      const p = Math.min(1, (nu - begin) / DUUR_KAART)
+    // Eén beeld op een gegeven moment in de beweging. p = 0 is "in de envelop".
+    function beeld(p: number) {
       const e = versoepel(p)
-
       const kaartY = kaartStart * (1 - e)
       // De envelop komt langzaam op gang en zakt daarna door
       const envelopY = zakt * (p < 0.4 ? 0.15 * (p / 0.4) : 0.15 + 0.85 * Math.pow((p - 0.4) / 0.6, 1.25))
-      const zichtbaar = M + envelopY - kaartY
-      const strikt = Math.max(0, H - zichtbaar)
-      const los = p <= KLIP_LOS_VANAF ? 1 : Math.pow(1 - (p - KLIP_LOS_VANAF) / (1 - KLIP_LOS_VANAF), 1.4)
+      const verborgen = Math.max(0, H - (onder + envelopY - kaartY))
 
-      kaart.style.transform = `translateY(${kaartY.toFixed(1)}px)`
-      kaart.style.clipPath = `inset(0px 0px ${(strikt * los).toFixed(1)}px 0px)`
-      kaart.style.opacity = "1"
+      kaart!.style.transform = `translateY(${kaartY.toFixed(1)}px)`
+      kaart!.style.clipPath = `inset(0px 0px ${verborgen.toFixed(1)}px 0px)`
+      kaart!.style.opacity = "1"
 
       const envelopT = `translateY(${envelopY.toFixed(1)}px)`
-      achter.style.transform = envelopT
-      voor.style.transform = envelopT
-      // De envelop blijft lang volledig zichtbaar: hij is het deksel dat de
-      // kaart afdekt. Pas op het eind lost hij op.
+      achter!.style.transform = envelopT
+      klep!.style.transform = envelopT
+      voor!.style.transform = envelopT
+      // De envelop blijft lang volledig zichtbaar: hij dekt de kaart af.
+      // Pas aan het eind lost hij op.
       const envelopO = p < 0.75 ? "1" : String(Math.max(0, 1 - Math.pow((p - 0.75) / 0.25, 2.5)))
-      achter.style.opacity = envelopO
-      voor.style.opacity = envelopO
+      achter!.style.opacity = envelopO
+      klep!.style.opacity = envelopO
+      voor!.style.opacity = envelopO
+    }
 
+    // Nog niet getikt of nog aan het openen: de kaart staat stil in de envelop
+    if (stage !== "card") {
+      beeld(0)
+      return
+    }
+
+    let frame = 0
+    const begin = performance.now()
+    const stap = (nu: number) => {
+      const p = Math.min(1, (nu - begin) / DUUR_KAART)
+      beeld(p)
       if (p < 1) {
         frame = requestAnimationFrame(stap)
         return
@@ -194,7 +204,6 @@ export default function CardReveal({
     frame = requestAnimationFrame(stap)
     return () => cancelAnimationFrame(frame)
   }, [stage, klassiekeAnimatie, reduceMotion])
-
   const cardVisible = stage === "card" || stage === "open"
   const envelopeGone = stage === "card" || stage === "open"
   // Het zegel breekt zodra er getikt is; de klep wacht tot dat gebeurd is
@@ -367,36 +376,18 @@ export default function CardReveal({
                     boxShadow: "0 18px 50px rgba(0,0,0,0.18)",
                   }}
                 />
-                {/* Klep: klapt naar achteren open, dus achter de kaart langs */}
-                <span
-                  className="absolute left-0 right-0 top-0"
-                  style={{
-                    height: "58%",
-                    clipPath: "polygon(0 0, 100% 0, 50% 100%)",
-                    backgroundColor: sc.cardBg ?? sc.navBg,
-                    // Dicht zie je de buitenkant, open de binnenkant, en die
-                    // ligt in de schaduw. Dat maakt hem ook zichtbaar tegen de
-                    // achtergrond, want die heeft bijna dezelfde kleur.
-                    filter: klepDicht ? "brightness(0.96)" : "brightness(0.78)",
-                    borderRadius: "16px 16px 0 0",
-                    boxShadow: `inset 0 -1px 0 ${sc.accent}40`,
-                    transition: klassiekeAnimatie
-                      ? "transform 0.55s ease, filter 0.55s ease"
-                      : "transform 0.72s cubic-bezier(0.35, 0, 0.3, 1), filter 0.72s ease",
-                    transformOrigin: "top center",
-                    transform: klepDicht ? "rotateX(0deg)" : "rotateX(180deg)",
-                  }}
-                />
               </button>
 
-              {/* Voorkant plus zegel: over de kaart heen. De bovenrand hiervan
-                  is de mond van de envelop; daarboven komt de kaart eruit. */}
+              {/* De klep in een eigen laag, want hij moet van plek wisselen:
+                  dicht ligt hij vóór de kaart (hij is dan de buitenkant van de
+                  envelop), open klapt hij naar achteren en gaat de kaart er
+                  juist vóór langs. Dat is precies wat een z-index doet. */}
               <div
-                ref={envelopVoorRef}
+                ref={envelopKlepRef}
                 aria-hidden="true"
                 className="absolute inset-0"
                 style={{
-                  zIndex: 3,
+                  zIndex: klepDicht ? 4 : 1,
                   pointerEvents: "none",
                   ...(klassiekeAnimatie
                     ? {
@@ -407,21 +398,73 @@ export default function CardReveal({
                     : {}),
                 }}
               >
+                {/* Precies de driehoek die de voorkant openlaat, dus dicht
+                    sluit de envelop naadloos */}
                 <span
-                  className="absolute left-0 right-0 bottom-0"
+                  className="absolute left-0 right-0 top-0"
                   style={{
-                    height: "42%",
+                    height: `${ENVELOP_V_PUNT}%`,
+                    clipPath: "polygon(0 0, 100% 0, 50% 100%)",
                     backgroundColor: sc.cardBg ?? sc.navBg,
-                    // De twee schuine vouwen van de voorkant, die in het midden
-                    // bovenaan bij elkaar komen
-                    backgroundImage: `linear-gradient(to top right, transparent 49.6%, ${sc.accent}22 50%, transparent 50.4%), linear-gradient(to top left, transparent 49.6%, ${sc.accent}22 50%, transparent 50.4%)`,
-                    borderRadius: "0 0 15px 15px",
-                    borderTop: `1px solid ${sc.accent}45`,
-                    borderLeft: `1.5px solid ${sc.accent}50`,
-                    borderRight: `1.5px solid ${sc.accent}50`,
-                    borderBottom: `1.5px solid ${sc.accent}50`,
-                    // Schaduw omhoog: laat zien dat de kaart erachter langs gaat
-                    boxShadow: "0 -7px 16px rgba(0,0,0,0.10)",
+                    // Dicht zie je de buitenkant, open de binnenkant, en die
+                    // ligt in de schaduw. Dat maakt hem ook zichtbaar tegen de
+                    // achtergrond, want die heeft bijna dezelfde kleur.
+                    filter: klepDicht ? "brightness(0.99)" : "brightness(0.78)",
+                    borderRadius: "16px 16px 0 0",
+                    transition: klassiekeAnimatie
+                      ? "transform 0.55s ease, filter 0.55s ease"
+                      : "transform 0.72s cubic-bezier(0.35, 0, 0.3, 1), filter 0.72s ease",
+                    transformOrigin: "top center",
+                    transform: klepDicht ? "rotateX(0deg)" : "rotateX(180deg)",
+                  }}
+                />
+              </div>
+
+              {/* Voorkant: de vouwen die de kaart afdekken, plus het zegel.
+                  De V die deze vorm openlaat is het venster waarin je de kaart
+                  in de envelop ziet liggen. */}
+              <div
+                ref={envelopVoorRef}
+                aria-hidden="true"
+                className="absolute inset-0"
+                style={{
+                  // Boven de klep, want het zegel houdt die klep juist dicht.
+                  // De vorm van de voorkant en die van de klep overlappen niet,
+                  // dus voor de envelop zelf maakt die volgorde niks uit.
+                  zIndex: 5,
+                  pointerEvents: "none",
+                  ...(klassiekeAnimatie
+                    ? {
+                        opacity: envelopeGone ? 0 : 1,
+                        transform: envelopeGone ? "translateY(70px) scale(0.92)" : "none",
+                        transition: "opacity 0.6s ease 0.25s, transform 0.6s ease 0.25s",
+                      }
+                    : {}),
+                }}
+              >
+                {/* De voorkant: de zijvouwen en de ondervouw samen. Die dekken
+                    de hele envelop af behalve een V bovenin, en juist in die V
+                    zie je de kaart in de envelop zitten. De vorm sluit precies
+                    aan op de klep, dus dicht is de envelop naadloos. */}
+                <span
+                  className="absolute inset-0 rounded-2xl"
+                  style={{
+                    clipPath: `polygon(0 0, 50% ${ENVELOP_V_PUNT}%, 100% 0, 100% 100%, 0 100%)`,
+                    backgroundColor: sc.cardBg ?? sc.navBg,
+                    // De vouwlijnen van de zijkanten naar het midden onderin
+                    backgroundImage: `linear-gradient(to top right, transparent 49.7%, ${sc.accent}1F 50%, transparent 50.3%), linear-gradient(to top left, transparent 49.7%, ${sc.accent}1F 50%, transparent 50.3%)`,
+                    // Een drop-shadow volgt de geklipte vorm, een box-shadow niet:
+                    // zo krijgt de V-rand een echte kant waar de kaart achter gaat
+                    filter: `drop-shadow(0 -2px 3px rgba(0,0,0,0.16)) brightness(1.03)`,
+                  }}
+                />
+                {/* Randje langs de V, zodat de vouw ook zichtbaar is als de
+                    kleuren van kaart en envelop dicht bij elkaar liggen */}
+                <span
+                  className="absolute inset-0"
+                  style={{
+                    clipPath: `polygon(0 0, 50% ${ENVELOP_V_PUNT}%, 100% 0, 100% 1.5%, 50% ${ENVELOP_V_PUNT + 1.5}%, 0 1.5%)`,
+                    backgroundColor: `${sc.accent}55`,
                   }}
                 />
                 {/* Zegel met initialen. Bij de nieuwe animatie bestaat het uit
@@ -433,7 +476,8 @@ export default function CardReveal({
                     key={helft}
                     className="absolute left-1/2 flex items-center justify-center rounded-full"
                     style={{
-                      top: "44%",
+                      top: `${ENVELOP_V_PUNT}%`,
+                      marginTop: -31,
                       width: 62,
                       height: 62,
                       marginLeft: -31,
@@ -478,9 +522,10 @@ export default function CardReveal({
           </div>
         )}
         {/* ── De kaart ─────────────────────────────────────────────────────── */}
-        {/* De kaart staat er altijd, ook als hij nog onzichtbaar is. Dan neemt
-            hij vanaf het begin zijn plek in en verspringt de pagina niet op het
-            moment dat de envelop weggaat, precies als de kaart moet landen. */}
+        {/* De kaart staat er altijd. Vanaf het begin zit hij in de envelop, dus
+            zodra de klep opengaat zie je hem er al in liggen. Hij neemt ook
+            vanaf het begin zijn plek in de pagina in, zodat er niks verspringt
+            op het moment dat de envelop weggaat. */}
         <div
           ref={kaartRef}
           style={{
@@ -492,14 +537,14 @@ export default function CardReveal({
             transformOrigin: "top center",
             ...(reduceMotion || stage === "open"
               ? {}
-              : !cardVisible
-                ? // Nog in de envelop: onzichtbaar, maar wel ruimte innemen
-                  { opacity: 0, visibility: "hidden" }
-                : klassiekeAnimatie
+              : klassiekeAnimatie
+                ? cardVisible
                   ? { animation: "kaart-fadein 0.8s ease 0.15s both" }
-                  : // De nieuwe animatie zet opacity, transform en klip per
-                    // frame in het effect hierboven
-                    { opacity: 0 }),
+                  : { opacity: 0, visibility: "hidden" as const }
+                : // Het effect hierboven zet transform, klip en opacity, ook al
+                  // voordat er getikt is. Hier alleen opacity 0 tegen een flits
+                  // op het eerste beeld.
+                  { opacity: 0 }),
           }}
         >
             <div
