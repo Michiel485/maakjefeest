@@ -39,6 +39,15 @@ const ENVELOP_V_PUNT = 50
 // de V zitten.
 const KAART_IN_ENVELOP = 0.14
 
+// Hoeveel de dichte envelop op en neer zweeft. De klip op de kaart houdt hier
+// rekening mee, anders komt bij de hoogste stand een randje kaart onder de
+// envelop uit.
+const ENVELOP_ZWEEF = 7
+
+// Hoe lang de klep erover doet om open te klappen. Halverwege staat hij recht
+// overeind en gaat hij achter de kaart langs; daarvoor hoort hij ervoor.
+const DUUR_KLEP = 720
+
 function versoepel(p: number): number {
   // Gelijkmatig doorlopen in plaats van meteen wegschieten, met een kleine veer
   // op het eind: de kaart komt een paar pixels te hoog en zakt terug, zoals
@@ -92,6 +101,8 @@ export default function CardReveal({
   const banen = watermerk === "vol" ? 7 : previewNotice || watermerk === "licht" ? 3 : 0
   const ds = CARD_DESIGN_STYLE[display.design]
   const [stage, setStage] = useState<Stage>(startOpen ? "open" : "closed")
+  // De klep ligt vóór de kaart tot hij halverwege het openklappen is
+  const [klepVoorKaart, setKlepVoorKaart] = useState(true)
   // De envelop bestaat uit drie lagen rond de kaart, dus drie refs
   const envelopAchterRef = useRef<HTMLButtonElement>(null)
   const envelopKlepRef = useRef<HTMLDivElement>(null)
@@ -124,6 +135,7 @@ export default function CardReveal({
     // hieronder, omdat de klip precies op de envelopmond moet blijven liggen.
     setStage("zegel")
     setTimeout(() => setStage("flap"), T_KLEP)
+    setTimeout(() => setKlepVoorKaart(false), T_KLEP + DUUR_KLEP / 2)
     setTimeout(() => setStage("card"), T_KAART)
     setTimeout(() => setStage("open"), T_OPEN)
   }
@@ -164,7 +176,9 @@ export default function CardReveal({
       if (H < 40 || onder < 40) return null
       return {
         H,
-        onder,
+        // De onderrand van de envelop, met de zweefruimte eraf: anders piept er
+        // bij de hoogste stand van het zweven een randje kaart onderuit.
+        onder: onder - ENVELOP_ZWEEF,
         // De kaart zit in de envelop: bovenrand een stukje onder de
         // envelopbovenkant, zodat hij meteen in de V zichtbaar is als de klep
         // opengaat.
@@ -250,6 +264,11 @@ export default function CardReveal({
       className="relative min-h-screen flex flex-col items-center justify-center px-4 py-10"
       style={{
         background: sc.bodyBackground ?? sc.bodyBg,
+        // De envelop zakt tijdens de animatie onder deze doos uit. Zonder dit
+        // groeit de pagina daardoor en verschuift het beeld een paar pixels,
+        // soms met een scrollbalk erbij. Clip in plaats van hidden, zodat dit
+        // geen scrollcontainer wordt.
+        overflow: "clip",
         fontFamily: sc.fontFamily,
         letterSpacing: sc.bodyLetterSpacing,
       }}
@@ -294,7 +313,7 @@ export default function CardReveal({
            zou een stapelcontext maken waardoor die sandwich kapot gaat. */
         @keyframes envelop-zweef {
           0%, 100% { top: 0; }
-          50% { top: -7px; }
+          50% { top: -${ENVELOP_ZWEEF}px; }
         }
         @keyframes kaart-fadein {
           from { opacity: 0; transform: translateY(24px) scale(0.85); }
@@ -421,7 +440,11 @@ export default function CardReveal({
                 aria-hidden="true"
                 className="absolute inset-0"
                 style={{
-                  zIndex: klepDicht ? 4 : 1,
+                  // Dicht ligt de klep vóór de kaart, want hij is dan de
+                  // buitenkant van de envelop. Pas halverwege het openklappen
+                  // staat hij recht overeind en gaat hij erachter; eerder zou je
+                  // de kaart al zien terwijl de klep nog dicht lijkt.
+                  zIndex: !klassiekeAnimatie && klepVoorKaart ? 4 : 1,
                   pointerEvents: "none",
                   ...(klassiekeAnimatie
                     ? {
@@ -447,7 +470,7 @@ export default function CardReveal({
                     borderRadius: "16px 16px 0 0",
                     transition: klassiekeAnimatie
                       ? "transform 0.55s ease, filter 0.55s ease"
-                      : "transform 0.72s cubic-bezier(0.35, 0, 0.3, 1), filter 0.72s ease",
+                      : `transform ${DUUR_KLEP}ms cubic-bezier(0.35, 0, 0.3, 1), filter ${DUUR_KLEP}ms ease`,
                     transformOrigin: "top center",
                     transform: klepDicht ? "rotateX(0deg)" : "rotateX(180deg)",
                   }}
@@ -596,7 +619,11 @@ export default function CardReveal({
                 backgroundColor: sc.cardBg ?? "#FFFEFB",
                 border: sc.goldBorder ? `2px solid ${sc.accent}` : `1px solid ${sc.accent}45`,
                 borderRadius: ds.hoekRadius,
-                boxShadow: "0 24px 70px rgba(0,0,0,0.22)",
+                // Twee schaduwen: een korte die vlak tegen de rand ligt en de
+                // afronding laat lezen, en een wijde eronder voor de diepte.
+                // Zonder die korte lijkt de hoek vierkant als de achtergrond
+                // bijna dezelfde kleur heeft als de kaart, zoals in emerald.
+                boxShadow: "0 2px 8px rgba(0,0,0,0.22), 0 24px 70px rgba(0,0,0,0.22)",
               }}
             >
               {/* Fototemplate: foto bovenin */}
