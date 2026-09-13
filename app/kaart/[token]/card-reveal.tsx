@@ -261,6 +261,12 @@ export default function CardReveal({
   const zweef = !klassiekeAnimatie && !reduceMotion && stage !== "card"
     ? `envelop-zweef 3.4s ease-in-out infinite`
     : "none"
+  // De blokken onder de kaart (knoppen, CTA, afzender) nemen hun plek al in
+  // voordat ze zichtbaar zijn. Anders herschikt de pagina zich precies op het
+  // moment dat de kaart landt, en verspringt hij daar nog een stukje van.
+  const eindBlok = stage === "open"
+    ? { animation: reduceMotion ? "none" : "knoppen-fadein 0.5s ease 0.5s both" }
+    : { visibility: "hidden" as const, pointerEvents: "none" as const }
   const stofjesAan = stage === "open" && display.animatie === "feestelijk" && !reduceMotion
 
   return (
@@ -808,7 +814,7 @@ export default function CardReveal({
             </div>
 
             {/* Demo op de marketingsite: CTA in plaats van site-knoppen */}
-            {stage === "open" && demo && (
+            {demo && (
               <a
                 href="/kaart-maken?type=trouwkaart"
                 className="mt-6 block py-3.5 rounded-xl text-sm font-semibold text-center transition-opacity hover:opacity-85"
@@ -816,7 +822,7 @@ export default function CardReveal({
                   backgroundColor: sc.accent,
                   color: sc.buttonText,
                   textDecoration: "none",
-                  animation: reduceMotion ? "none" : "knoppen-fadein 0.5s ease 0.5s both",
+                  ...eindBlok,
                 }}
               >
                 Zelf zo&apos;n kaart maken? Begin gratis →
@@ -824,13 +830,13 @@ export default function CardReveal({
             )}
 
             {/* Site hoort bij het pakket maar staat nog niet live: vooruitblik */}
-            {stage === "open" && siteVolgt && !demo && (
+            {siteVolgt && !demo && (
               <p
                 className="mt-6 text-center text-sm"
                 style={{
                   color: sc.bodyText,
                   opacity: 0.7,
-                  animation: reduceMotion ? "none" : "knoppen-fadein 0.5s ease 0.5s both",
+                  ...eindBlok,
                 }}
               >
                 Meer informatie volgt binnenkort 🤍
@@ -838,10 +844,10 @@ export default function CardReveal({
             )}
 
             {/* Knoppen naar de trouwsite */}
-            {stage === "open" && (siteUrl || rsvpUrl) && (
+            {(siteUrl || rsvpUrl) && (
               <div
                 className="mt-6 flex flex-col sm:flex-row gap-3"
-                style={{ animation: reduceMotion ? "none" : "knoppen-fadein 0.5s ease 0.5s both" }}
+                style={eindBlok}
               >
                 {rsvpUrl && (
                   <a
@@ -872,20 +878,18 @@ export default function CardReveal({
       </div>
 
       {/* Groeimotor */}
-      {stage === "open" && (
-        <a
-          href="https://www.sayingyes.nl"
-          className="mt-10 text-xs"
-          style={{
-            color: sc.bodyText,
-            opacity: 0.55,
-            textDecoration: "none",
-            animation: reduceMotion ? "none" : "knoppen-fadein 0.5s ease 0.8s both",
-          }}
-        >
-          Gemaakt met <span style={{ fontWeight: 600, color: sc.accent }}>SayingYes</span> · sayingyes.nl
-        </a>
-      )}
+      <a
+        href="https://www.sayingyes.nl"
+        className="mt-10 text-xs"
+        style={{
+          color: sc.bodyText,
+          opacity: 0.55,
+          textDecoration: "none",
+          ...eindBlok,
+        }}
+      >
+        Gemaakt met <span style={{ fontWeight: 600, color: sc.accent }}>SayingYes</span> · sayingyes.nl
+      </a>
     </div>
   )
 }
