@@ -37,6 +37,7 @@ wel, en dat verschil is meteen het beste argument om te upgraden.
 |---|---|---|---|
 | Gastenlijst | ja | ja | ja |
 | Gast vult zelf naam, mail en telefoon in | ja | ja | ja |
+| Met wie kom je, en kinderen met leeftijd | ja | ja | ja |
 | Ja of nee | ja, voorlopig | ja, definitief | ja, definitief |
 | Dieetwensen en allergieën | nee | ja | ja |
 | Liedje, overnachten, eigen vragen | nee | ja | ja |
@@ -83,35 +84,52 @@ product, meteen de logische eerste stap naar de rest.
 
 ## 4. Wat ik daarbij zie aankomen
 
-Michiel vroeg of ik problemen voorzie. Geen blokkades, wel drie dingen die
-goed moeten of het wordt een rommeltje.
+Michiel vroeg of ik problemen voorzie, en had meteen zelf de beste oplossing:
+herken de link waarop iets is ingevuld. Dat scheelt meer dan ik had bedacht.
 
-**Wat binnenkomt mag niet meteen de lijst in.** Eén gedeelde link betekent dat
-dezelfde persoon twee keer kan invullen, dat iemand zich vertypt, en dat een
-doorgestuurde link bij iemand terechtkomt die niet is uitgenodigd. Daarom
-landen inzendingen in een **postvak "nieuw binnengekomen"**, waar het
-bruidspaar ze met één tik toevoegt, samenvoegt met een bestaande regel of
-weggooit. Dubbelen herkennen we op mailadres en op een gelijkende naam en
-zetten we naast elkaar. Automatisch samenvoegen is vragen om problemen; een
-voorstel dat je bevestigt is precies genoeg.
+**Wat de link ons vertelt.** Elke kaart heeft al een eigen token. Komt er een
+antwoord binnen, dan weten we dus meteen op welke kaart, en daarmee welke
+gastengroep en welke taal. Die informatie gaat mee de lijst in, dus een
+daggast belandt automatisch bij de daggasten en niemand hoeft dat achteraf te
+sorteren. Ook nuttig: komt er ineens een antwoord binnen op een link die maar
+naar tien mensen ging en zijn het er twintig, dan is die link doorgestuurd en
+kun je dat zien.
 
-**Een gezin komt binnen als losse mensen.** Als Sanne en Tom elk apart
-invullen, weten wij niet dat ze bij elkaar horen. Oplossing hoort bij punt 5:
-het bruidspaar kan twee regels achteraf aan hetzelfde huishouden koppelen. Op
-het formulier vragen we daarnaast "kom je samen met iemand?", zodat de eerste
-gok meestal al klopt.
+**Wat de link níét oplost.** Eén link gaat naar tachtig mensen, dus de link
+zegt wel welke groep maar niet welke persoon. Twee mensen die zich allebei
+"Sanne" noemen blijven twee regels waar je naar moet kijken.
 
-**Een ja op een Save the Date is geen ja.** Mensen zeggen anderhalf jaar
-vooraf makkelijk ja. Als we dat als hard aantal tonen gaat het bruidspaar erop
-plannen. Dus twee losse kolommen in het overzicht: *voorlopig ja* van de Save
-the Date, en *definitief* van de uitnodiging. Dat verschil zien is zelfs
-waardevol: je weet precies wie je nog moet najagen.
+**Wat dat wel oplost: een merkteken per apparaat.** Wie invult krijgt een
+onzichtbaar kenmerk in zijn browser. Vult dezelfde persoon later nog eens in
+op hetzelfde toestel, dan werken we zijn eigen antwoord bij in plaats van er
+een tweede naast te zetten. Dat vangt verreweg de meest voorkomende dubbel af:
+"heb ik dit al gedaan?" En het geeft de gast meteen iets waar hij wat aan
+heeft, want hij ziet dan zijn eigen antwoord terug en kan het wijzigen.
+
+Met die twee samen blijft het postvak uit de vorige versie bestaan, maar wordt
+het klein: alleen nog mensen die vanaf twee toestellen invulden, en typefouten.
+Automatisch samenvoegen blijft iets wat we niet doen; een voorstel dat het
+bruidspaar bevestigt is precies genoeg.
+
+**Drie standen per gast, en dat is precies de takenlijst.** Michiels besluit:
+het ja of nee van een Save the Date is een zachte reservering, en pas een
+volledig ingevulde RSVP bij de trouwkaart of de website telt als definitief.
+Dat geeft drie standen:
+
+| Stand | Wat het betekent |
+|---|---|
+| Niets gehoord | staat in de lijst, heeft nog nooit gereageerd |
+| Voorlopig ja of nee | reageerde op de Save the Date |
+| Definitief | vulde de hele RSVP in bij de uitnodiging of de site |
+
+De herinneringsknop richt zich op de eerste twee. Dat is letterlijk de lijst
+"wie moet ik nog najagen", en dat is waar dit hele onderdeel om begonnen was.
+De aantallen blijven gescheiden, zodat niemand op een zachte ja gaat plannen.
 
 Kleiner, maar wel regelen: het telefoonnummer is optioneel (gevoeliger dan een
 mailadres en lang niet iedereen geeft het), en op het formulier staat één zin
 dat de gegevens naar het bruidspaar gaan en niet naar ons. Wat we níét doen is
-vanuit SayingYes automatisch WhatsApp sturen; dan wordt een gastenlijst een
-verzendlijst en komen er heel andere regels bij kijken.
+vanuit SayingYes automatisch WhatsApp sturen; zie deel 12.
 
 ---
 
@@ -150,7 +168,39 @@ link erin, zodat het bruidspaar het zelf via WhatsApp stuurt.
 
 ---
 
-## 7. De vragen bij het aanmelden
+## 7. Leeftijd, en wat je wanneer vraagt
+
+Michiel wil bij het ja of nee ook de leeftijd weten, want kinderen onder een
+bepaalde leeftijd zijn bij de catering goedkoper. Terecht, maar niet in die
+vorm: een volwassene naar zijn leeftijd vragen op een trouwkaart is raar.
+
+Dus zo: bij het ja vul je in met wie je komt. Namen, meer niet. Daaronder staat
+één vraag, **"komen er kinderen mee?"**, en pas als je die aanvinkt vraagt hij
+per kind een naam en een leeftijd, met erbij waarom: *de catering rekent voor
+kinderen vaak een ander tarief.* Volwassenen houden hun leeftijd voor zich en
+het bruidspaar heeft precies het getal dat de locatie vraagt.
+
+Dat getal komt daarna vanzelf terecht in het overzicht voor de cateraar dat er
+al ligt: aantal volwassenen, aantal kinderen en hun leeftijden.
+
+**En wat je wanneer vraagt.** Michiel: bij het ja of nee is de rest nog niet
+relevant, bij de RSVP wel. Dus:
+
+| | Bij de Save the Date (ja of nee) | Bij de uitnodiging (volledige RSVP) |
+|---|---|---|
+| Naam, mail, telefoon | ja | ja, al ingevuld |
+| Met wie kom je | ja | ja |
+| Kinderen en hun leeftijd | ja | ja, aan te passen |
+| Dieetwensen en allergieën | nee | ja |
+| Liedje, overnachten, vervoer | nee | ja |
+| Eigen vragen van het bruidspaar | nee | ja |
+
+Het ja-of-nee-formulier blijft daarmee kort genoeg om in tien seconden te doen,
+en dat is precies waarom mensen het invullen.
+
+---
+
+## 8. De vragen bij de volledige RSVP
 
 Michiel vroeg of ik nog leuke toevoegingen zie. Eerst iets dat ik tegenkwam bij
 het nakijken:
@@ -192,7 +242,7 @@ ons een supportvraag.
 
 ---
 
-## 8. Importeren uit Excel
+## 9. Importeren uit Excel
 
 Voor grote lijsten is met de hand invoeren geen optie. Dus: een bestand
 uploaden of een stuk uit Excel plakken, en je ziet eerst wat wij ervan begrepen
@@ -211,7 +261,7 @@ hebben voordat er iets wordt opgeslagen.
 
 ---
 
-## 9. Dit zijn persoonsgegevens
+## 10. Dit zijn persoonsgegevens
 
 Met een gastenlijst zet het bruidspaar gegevens van anderen in ons systeem,
 zonder dat die daar iets van weten. Dat is een zwaardere verantwoordelijkheid
@@ -237,13 +287,15 @@ dan wat we nu hebben.
 
 ---
 
-## 10. In welke volgorde
+## 11. In welke volgorde
 
 1. **Aanmelden onder de kaart.** Ja of nee onder de kaart, en wie ja tikt
    krijgt de rest direct op diezelfde plek, zonder paginawissel. Drie standen
    per kaart: niets vragen, alleen ja of nee, of volledig. Standaard "niets"
-   bij een Save the Date en "volledig" bij een trouwkaart. Werkt ook zonder
-   gastenlijst en is op zichzelf al waardevol.
+   bij een Save the Date en "volledig" bij een trouwkaart. Inclusief het
+   kenmerk per apparaat uit deel 4, zodat iemand zijn eigen antwoord terugziet
+   en kan wijzigen. Werkt ook zonder gastenlijst en is op zichzelf al
+   waardevol.
 2. **De gastenlijst zelf**: gasten als losse regels met een huishouden als
    label, met de hand in te voeren, en het postvak voor wat er binnenkomt.
 3. **Wie heeft nog niet gereageerd**, de herinneringsknop en het
@@ -257,13 +309,18 @@ overzicht is alleen maar werk.
 
 ---
 
-## 11. Nog te beslissen
+## 12. Besloten
 
-- Een gast die via de Save the Date binnenkwam en later een eigen link krijgt:
-  sturen we die link automatisch per mail zodra het bruidspaar de uitnodiging
-  activeert, of blijft versturen altijd iets dat het bruidspaar zelf doet? Mijn
-  voorkeur is het tweede, met een knop die het in één keer doet. Dan blijft de
-  keuze bij het bruidspaar en blijven wij geen verzendpartij.
-- Hoeveel gasten mag een lijst hebben? Net als bij de kaarten zou ik geen
-  aantal in de verkoop noemen, wel een dak tegen misbruik. Vijfhonderd lijkt me
-  ruim genoeg voor de grootste bruiloft.
+**Versturen doet altijd het bruidspaar.** Michiels antwoord op mijn open vraag,
+en het is ook wat ik zelf zou kiezen. Wij sturen nooit uit onszelf een link
+naar een gast. Er komt wel een knop die het in één keer klaarzet, maar het
+bruidspaar drukt erop.
+
+Dat houdt de keuze bij de klant en houdt ons buiten de rol van verzendpartij,
+wat juridisch een heel ander verhaal is. De herinnering en het
+wijzigingsbericht uit deel 6 werken op dezelfde manier: jij stelt samen, jij
+verstuurt.
+
+**Nog wel te beslissen:** hoeveel gasten mag een lijst hebben? Net als bij de
+kaarten zou ik geen aantal in de verkoop noemen, wel een dak tegen misbruik.
+Vijfhonderd lijkt me ruim genoeg voor de grootste bruiloft.
