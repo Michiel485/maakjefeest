@@ -51,8 +51,8 @@ Persoonlijke actielijst van Michiel. Claude houdt deze bij; afgeronde punten gaa
 - Vraag: horen de facturen van een site mee te verdwijnen als het bruidspaar
   die site weggooit? Nu gebeurt dat wel. Voor de boekhouding lijkt bewaren
   logischer. Zie lib/opruimen.ts.
-- supabase/migration_opruimen_dode_kolommen.sql draaien zodra deze versie een
-  tijdje goed loopt (tien dode kolommen en de tabel magic_links).
+- ~~supabase/migration_opruimen_dode_kolommen.sql draaien~~ gedaan op
+  20 september 2026, nagekeken en in orde.
 - Twee oude agent-worktrees staan nog op de schijf onder .claude/worktrees
   (146 MB). Uit de repo gehaald, maar nog niet van de schijf. Een ervan heeft
   één commit die niet in main zit, over homepage-layouts; die functie zit er

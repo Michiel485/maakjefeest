@@ -1,5 +1,11 @@
 -- Dode kolommen en een dode tabel opruimen.
 --
+-- GEDRAAID op 20 september 2026 door Michiel. Daarna gecontroleerd: de tien
+-- kolommen zijn weg (events ging van 54 naar 44 kolommen), magic_links geeft
+-- een 404 bij PostgREST, de cron draait schoon, en alle publieke routes
+-- renderen met echte data: site, subpagina, kaart, voorbeeld, agendabestand,
+-- download, voorvertoning en het versturen van een aanmelding.
+--
 -- Alles hieronder wordt door geen enkele regel code meer gelezen of
 -- geschreven. Nagekeken met een zoekopdracht over app, lib en components, en
 -- gecontroleerd tegen de echte database op 20 september 2026: in alle drie de
