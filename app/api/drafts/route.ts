@@ -69,7 +69,7 @@ export async function GET() {
 
   const { data, error } = await db
     .from("events")
-    .select("id, slug, title, type, status, plan, created_at")
+    .select("id, slug, title, concept_naam, type, status, plan, datum, created_at")
     .eq("user_email", user.email)
     .order("created_at", { ascending: false })
 
@@ -120,6 +120,8 @@ export async function POST(request: Request) {
     pw_question?: string | null
     pw_answer?: string | null
     plan?: string
+    // Eigen naam van dit concept, alleen voor het bruidspaar zelf
+    concept_naam?: string | null
   }
 
   try {
@@ -163,6 +165,7 @@ export async function POST(request: Request) {
     pw_value = null,
     pw_question = null,
     pw_answer = null,
+    concept_naam = null,
   } = body
 
   if (!type) {
@@ -185,7 +188,7 @@ export async function POST(request: Request) {
     if (existing) {
       const { error: updateErr } = await db
         .from("events")
-        .update({ type, title: naam, datum, locatie, style, font_hero, font_initials, font_frame_names, font_page_titles, hero_image_url, hero_image_pos_x: Math.round(hero_image_pos_x), hero_image_pos_y: Math.round(hero_image_pos_y), hero_overlay: heroOverlay, nav_layout, nav_title: nav_title ?? naam, use_frame, frame_style, initials, frame_names, frame_location, frame_initials_size: frameInitialsSize, frame_names_size: frameNamesSize, frame_date_size: frameDateSize, frame_location_size: frameLocationSize, homepage_settings, pw_enabled, pw_type, pw_value, pw_question, pw_answer, last_active_at: new Date().toISOString() })
+        .update({ type, title: naam, datum, locatie, style, font_hero, font_initials, font_frame_names, font_page_titles, hero_image_url, hero_image_pos_x: Math.round(hero_image_pos_x), hero_image_pos_y: Math.round(hero_image_pos_y), hero_overlay: heroOverlay, nav_layout, nav_title: nav_title ?? naam, use_frame, frame_style, initials, frame_names, frame_location, frame_initials_size: frameInitialsSize, frame_names_size: frameNamesSize, frame_date_size: frameDateSize, frame_location_size: frameLocationSize, homepage_settings, pw_enabled, pw_type, pw_value, pw_question, pw_answer, ...(body.concept_naam !== undefined ? { concept_naam } : {}), last_active_at: new Date().toISOString() })
         .eq("id", event_id)
 
       if (updateErr) {
@@ -232,6 +235,7 @@ export async function POST(request: Request) {
       slug,
       status: "draft",
       plan: gekozenPlan,
+      concept_naam,
       style,
       font_hero,
       font_initials,

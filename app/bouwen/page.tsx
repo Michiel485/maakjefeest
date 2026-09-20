@@ -17,6 +17,8 @@ import { createClient } from "@/lib/supabase"
 import { eventSiteUrl } from "@/lib/site-url"
 import { DEFAULT_PLAN, hoogstePlan, PLANS, formatEur, isCardPlan, isPlan, type Plan } from "@/lib/plans"
 import BouwerSchakelaar from "@/components/BouwerSchakelaar"
+import { Knop, Melding } from "@/components/ui"
+import { KLEUR } from "@/lib/ontwerp"
 import SophieTutorial, { type SophieNav } from "@/components/SophieTutorial"
 
 type EventType = "bruiloft" | "verjaardag" | "evenement"
@@ -359,7 +361,7 @@ function FontSelect({ value, onChange }: { value: string; onChange: (v: string) 
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="flex-1 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-[11px] text-gray-600 focus:outline-none focus:ring-1 focus:ring-rose-200"
+        className="flex-1 rounded-lg border border-[var(--goud-licht)] bg-white px-2 py-1.5 text-[11px] text-gray-600 focus:outline-none focus:ring-1 focus:ring-[var(--goud-vlak)]"
       >
         {TITLE_FONT_OPTIONS.map(f => (
           <option key={f.id} value={f.id}>{f.label}</option>
@@ -1301,130 +1303,81 @@ export default function BouwenPage() {
     <div translate="no" className="min-h-screen md:h-screen flex flex-col bg-gray-50 font-sans antialiased md:overflow-hidden">
 
       {/* ── Top bar ── */}
-      <header className="flex items-center justify-between px-4 md:px-6 py-3 bg-white border-b border-gray-100 shadow-sm flex-shrink-0 z-10">
-        <div className="flex items-center gap-3 md:gap-4 min-w-0">
-          <span className="hidden sm:inline text-xl tracking-wide" style={{ fontFamily: "var(--font-cormorant)", color: "#C5A059", fontWeight: 600 }}>SayingYes</span>
-          {/* Dezelfde schakelaar als in de kaartbouwer, zodat het voelt als één
-              bouwer met drie onderdelen. Hiervandaan was er eerder geen weg
-              terug naar de kaarten. */}
+      {/* Dezelfde kop als de kaartbouwer: zelfde hoogte, zelfde randkleur,
+          zelfde knoppen. Het zijn twee pagina's maar het hoort als één bouwer
+          te voelen. */}
+      <header
+        className="sticky top-0 z-30 flex items-center justify-between gap-3 px-4 sm:px-6 py-3 border-b flex-shrink-0"
+        style={{ backgroundColor: "#fff", borderColor: `${KLEUR.goudLicht}80` }}
+      >
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+          <Link
+            href="/"
+            className="hidden sm:inline text-xl tracking-wide"
+            style={{ fontFamily: "var(--font-cormorant)", color: KLEUR.inkt, fontWeight: 600, textDecoration: "none" }}
+          >
+            SayingYes
+          </Link>
           <BouwerSchakelaar actief="website" eventId={savedEventId} />
         </div>
-        <div className="flex flex-col items-end gap-1">
-          <div className="flex items-center gap-2">
-            {/* Mijn Dashboard */}
-            <button
-              onClick={handleDashboardClick}
-              disabled={dashboardLoading || anyUploading}
-              className="inline-flex items-center gap-1.5 bg-white hover:bg-amber-50 disabled:opacity-50 text-amber-700 text-sm font-bold px-3 md:px-4 py-2.5 rounded-xl border border-amber-200 shadow-sm hover:shadow hover:-translate-y-0.5 disabled:translate-y-0 transition-all"
+
+        <div className="flex items-center gap-2">
+          <Knop soort="rand" klein onClick={handleDashboardClick} disabled={dashboardLoading || anyUploading} bezig={dashboardLoading} bezigTekst="Openen">
+            <span className="hidden sm:inline">Mijn dashboard</span>
+            <span className="sm:hidden">Dashboard</span>
+          </Knop>
+
+          {/* Opslaan. De vier standen van hiervoor blijven, maar in dezelfde
+              vorm als de knoppen in de kaartbouwer. */}
+          {anyUploading || saving ? (
+            <Knop soort="rustig" klein bezig bezigTekst={anyUploading ? "Uploaden" : "Opslaan"}>
+              Opslaan
+            </Knop>
+          ) : saveError ? (
+            <Knop soort="gevaar" klein onClick={handleSave}>
+              Opnieuw proberen
+            </Knop>
+          ) : hasPendingChanges ? (
+            <Knop soort="rustig" klein onClick={handleSave}>
+              Opslaan
+            </Knop>
+          ) : (
+            <span
+              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl"
+              style={{ backgroundColor: KLEUR.groenVlak, color: KLEUR.groenTekst, border: `1px solid ${KLEUR.groen}33` }}
             >
-              {dashboardLoading ? (
-                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                </svg>
-              ) : (
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
-                </svg>
-              )}
-              <span className="hidden sm:inline">Mijn Dashboard</span>
-            </button>
+              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              <span className="hidden sm:inline">Opgeslagen</span>
+            </span>
+          )}
 
-            {/* Opslaan knop + auto-save melding */}
-            <div className="flex flex-col items-end gap-0.5">
-              {anyUploading ? (
-                <button disabled className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-400 text-sm font-semibold px-3 md:px-4 py-2 rounded-xl cursor-not-allowed">
-                  <svg className="w-4 h-4 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                  </svg>
-                  <span className="hidden sm:inline">Uploaden...</span>
-                </button>
-              ) : saving ? (
-                <button disabled className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-400 text-sm font-semibold px-3 md:px-4 py-2 rounded-xl cursor-not-allowed">
-                  <svg className="w-4 h-4 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                  </svg>
-                  <span className="hidden sm:inline">Opslaan...</span>
-                </button>
-              ) : saveError ? (
-                <button
-                  onClick={handleSave}
-                  className="inline-flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-semibold px-3 md:px-4 py-2 rounded-xl border border-red-200 transition-all"
-                >
-                  <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span className="hidden sm:inline">Opnieuw proberen</span>
-                </button>
-              ) : hasPendingChanges ? (
-                <button
-                  onClick={handleSave}
-                  className="inline-flex items-center gap-1.5 bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold px-3 md:px-4 py-2 rounded-xl shadow-sm hover:shadow transition-all"
-                >
-                  <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                  </svg>
-                  Opslaan
-                </button>
-              ) : (
-                <button disabled className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-600 text-sm font-semibold px-3 md:px-4 py-2 rounded-xl border border-emerald-200 cursor-default">
-                  <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="hidden sm:inline">Opgeslagen</span>
-                </button>
-              )}
-              {hasPendingChanges && !saving && !anyUploading && (
-                <span className="hidden sm:inline text-[10px] text-gray-400 pr-1">Wordt automatisch opgeslagen</span>
-              )}
-            </div>
-
-            {/* Publiceren / Bekijk live site */}
-            {isPublished ? (
-              <a
-                href={eventSiteUrl(slugPreview)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold px-3 md:px-5 py-2.5 rounded-xl shadow-md shadow-emerald-100 hover:shadow-lg hover:-translate-y-0.5 transition-all"
-              >
-                <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-                <span className="hidden sm:inline">Bekijk live site</span>
-              </a>
-            ) : (
-              <button
-                onClick={handlePublish}
-                disabled={publishing || anyUploading}
-                className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-300 disabled:cursor-not-allowed text-white text-sm font-bold px-3 md:px-5 py-2.5 rounded-xl shadow-md shadow-emerald-100 hover:shadow-lg hover:-translate-y-0.5 disabled:shadow-none disabled:translate-y-0 transition-all"
-              >
-                {publishing ? (
-                  <>
-                    <svg className="w-4 h-4 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                    </svg>
-                    <span className="hidden sm:inline">Bezig...</span>
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span className="hidden sm:inline">Publiceren voor </span>
-                    {formatEur(PLANS.compleet.price)}
-                  </>
-                )}
-              </button>
-            )}
-          </div>
-          {(publishError || saveError) && (
-            <p className="text-xs text-red-500 font-medium">{publishError || saveError}</p>
+          {isPublished ? (
+            <Knop soort="actie" href={eventSiteUrl(slugPreview)} nieuwTabblad>
+              <span className="hidden sm:inline">Bekijk live site</span>
+              <span className="sm:hidden">Bekijken</span>
+            </Knop>
+          ) : (
+            <Knop
+              soort="actie"
+              onClick={handlePublish}
+              disabled={publishing || anyUploading}
+              bezig={publishing}
+              bezigTekst="Naar de kassa"
+            >
+              <span className="hidden sm:inline">Publiceren voor&nbsp;</span>
+              {formatEur(PLANS.compleet.price)}
+            </Knop>
           )}
         </div>
       </header>
+
+      {/* Fouten en de melding over automatisch opslaan onder de kop, zodat de
+          kop zelf niet van hoogte verspringt terwijl je aan het werk bent. */}
+      {(publishError || saveError) && (
+        <Melding soort="fout">{publishError || saveError}</Melding>
+      )}
 
       {/* ── Body ── */}
       <div className="flex flex-col md:flex-row flex-1 md:min-h-0">
@@ -1542,7 +1495,7 @@ export default function BouwenPage() {
                         <>
                           <div className="flex flex-col gap-1.5">
                             <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-widest">Type beveiliging</p>
-                            <div className="flex rounded-xl overflow-hidden border border-gray-200">
+                            <div className="flex rounded-xl overflow-hidden border border-[var(--goud-licht)]">
                               <button
                                 onClick={() => { setPwType('password'); setChangeKey(k => k + 1) }}
                                 className={`flex-1 py-2 text-xs font-semibold transition-colors ${pwType === 'password' ? 'bg-[#C5A059] text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
@@ -1567,7 +1520,7 @@ export default function BouwenPage() {
                                 onChange={(e) => setPwValue(e.target.value)}
                                 onBlur={() => setChangeKey(k => k + 1)}
                                 placeholder="bijv. JansenBakker2025"
-                                className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                                className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] transition-all"
                               />
                               <p className="text-[11px] text-gray-400">Gasten moeten dit exact invoeren (hoofdlettergevoelig).</p>
                             </label>
@@ -1583,7 +1536,7 @@ export default function BouwenPage() {
                                   onChange={(e) => setPwQuestion(e.target.value)}
                                   onBlur={() => setChangeKey(k => k + 1)}
                                   placeholder="bijv. Wat zijn onze achternamen?"
-                                  className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                                  className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] transition-all"
                                 />
                               </label>
                               <label className="flex flex-col gap-1.5">
@@ -1594,7 +1547,7 @@ export default function BouwenPage() {
                                   onChange={(e) => setPwAnswer(e.target.value)}
                                   onBlur={() => setChangeKey(k => k + 1)}
                                   placeholder="bijv. Jansen en Bakker"
-                                  className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                                  className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] transition-all"
                                 />
                                 <p className="text-[11px] text-gray-400">Variaties zoals &ldquo;Jansen & Bakker&rdquo; worden ook geaccepteerd (~90% gelijkenis).</p>
                               </label>
@@ -1643,7 +1596,7 @@ export default function BouwenPage() {
                           className={`flex items-center gap-3 w-full rounded-xl border px-3 py-2.5 text-left transition-all ${
                             style === s.id
                               ? `${s.border} bg-gray-50 ring-2 ${s.active} ring-offset-1`
-                              : `border-gray-100 hover:border-gray-200 hover:bg-gray-50`
+                              : `border-gray-100 hover:border-[var(--goud-licht)] hover:bg-gray-50`
                           }`}
                         >
                           <span className={`w-5 h-5 rounded-full flex-shrink-0 ${s.dot}`} />
@@ -1683,7 +1636,7 @@ export default function BouwenPage() {
                       <div className="flex flex-col gap-1.5">
                         <p className="text-xs font-semibold text-gray-700">Paginaweergave</p>
                         <p className="text-[11px] text-gray-400 leading-snug">Aparte pagina's zijn bereikbaar via het menu. Bij één pagina scrollt de bezoeker door alle onderdelen.</p>
-                        <div className="flex rounded-xl border border-gray-200 overflow-hidden mt-0.5">
+                        <div className="flex rounded-xl border border-[var(--goud-licht)] overflow-hidden mt-0.5">
                           {([
                             { value: 'multi', label: "Aparte pagina's" },
                             { value: 'single', label: 'Één pagina' },
@@ -1820,7 +1773,7 @@ export default function BouwenPage() {
                                         className={`flex-1 flex flex-col items-center py-2.5 px-2 rounded-xl border text-xs font-semibold transition-all ${
                                           hpSettings.layout === opt.id
                                             ? 'border-[#C5A059] bg-[#FBF5E8] text-[#C5A059] ring-2 ring-[#C5A059]/30'
-                                            : 'border-gray-200 text-gray-400 hover:border-gray-300'
+                                            : 'border-[var(--goud-licht)] text-gray-400 hover:border-gray-300'
                                         }`}
                                       >
                                         <span className="font-bold">{opt.label}</span>
@@ -1879,7 +1832,7 @@ export default function BouwenPage() {
                                       {heroImageError && <p className="text-xs text-red-500 mb-2 leading-snug">{heroImageError}</p>}
                                       <button
                                         onClick={() => fileInputRef.current?.click()}
-                                        className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-gray-200 rounded-xl py-5 text-gray-400 hover:border-rose-300 hover:text-rose-500 transition-colors"
+                                        className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-[var(--goud-licht)] rounded-xl py-5 text-gray-400 hover:border-[var(--goud)] hover:text-[var(--goud)] transition-colors"
                                       >
                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                           <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
@@ -1998,10 +1951,10 @@ export default function BouwenPage() {
                                       onChange={(e) => updateDraft({ naam: e.target.value })}
                                       onFocus={() => setHpOpenGear('hoofdtitel')}
                                       placeholder="Bijv. Bruiloft Michiel & Lisa"
-                                      className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
+                                      className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] resize-none transition-all"
                                     />
                                     {hpOpenGear === 'hoofdtitel' && (
-                                      <div className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-gray-200">
+                                      <div className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-[var(--goud-licht)]">
                                         <FontSelect value={hpSettings.hoofdtitelFont} onChange={(v) => updateHpSettings({ hoofdtitelFont: v })} />
                                         <div className="flex items-center justify-between">
                                           <span className="text-xs text-gray-500">Grootte</span>
@@ -2011,7 +1964,7 @@ export default function BouwenPage() {
                                         {heroImageUrl && (
                                           <>
                                             <p className="text-xs text-gray-500 mt-1">Positie</p>
-                                            <div className="flex rounded-xl border border-gray-200 overflow-hidden bg-white">
+                                            <div className="flex rounded-xl border border-[var(--goud-licht)] overflow-hidden bg-white">
                                               {([
                                                 { id: 'over',  label: 'Over foto'  },
                                                 { id: 'under', label: hpSettings.layout === 'modern' ? 'In tekstvlak' : 'Onder foto' },
@@ -2051,10 +2004,10 @@ export default function BouwenPage() {
                                       onChange={(e) => updateHpSettings({ subtitleText: e.target.value })}
                                       onFocus={() => setHpOpenGear('subtitle')}
                                       placeholder="bijv. Samen vieren we de liefde"
-                                      className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                                      className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] transition-all"
                                     />
                                     {hpOpenGear === 'subtitle' && (
-                                      <div className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-gray-200">
+                                      <div className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-[var(--goud-licht)]">
                                         <FontSelect value={hpSettings.subtitleFont} onChange={(v) => updateHpSettings({ subtitleFont: v })} />
                                         <div className="flex items-center justify-between">
                                           <span className="text-xs text-gray-500">Grootte</span>
@@ -2085,10 +2038,10 @@ export default function BouwenPage() {
                                       onChange={(e) => updateDraft({ initials: e.target.value })}
                                       onFocus={() => setHpOpenGear('initialen')}
                                       placeholder="bijv. M | W"
-                                      className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                                      className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] transition-all"
                                     />
                                     {hpOpenGear === 'initialen' && (
-                                      <div className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-gray-200">
+                                      <div className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-[var(--goud-licht)]">
                                         <FontSelect value={fontInitials} onChange={saveFontInitials} />
                                         <div className="flex items-center justify-between">
                                           <span className="text-xs text-gray-500">Grootte</span>
@@ -2119,10 +2072,10 @@ export default function BouwenPage() {
                                       onChange={(e) => updateDraft({ frame_names: e.target.value })}
                                       onFocus={() => setHpOpenGear('namen')}
                                       placeholder={"bijv. Michiel\n& Lindsey"}
-                                      className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all resize-none"
+                                      className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] transition-all resize-none"
                                     />
                                     {hpOpenGear === 'namen' && (
-                                      <div className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-gray-200">
+                                      <div className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-[var(--goud-licht)]">
                                         <FontSelect value={fontFrameNames} onChange={saveFontFrameNames} />
                                         <div className="flex items-center justify-between">
                                           <span className="text-xs text-gray-500">Grootte</span>
@@ -2152,10 +2105,10 @@ export default function BouwenPage() {
                                       value={draft?.datum ?? ""}
                                       onChange={(e) => updateDraft({ datum: e.target.value })}
                                       onFocus={() => setHpOpenGear('datum')}
-                                      className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                                      className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] transition-all"
                                     />
                                     {hpOpenGear === 'datum' && (
-                                      <div className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-gray-200">
+                                      <div className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-[var(--goud-licht)]">
                                         <FontSelect value={hpSettings.datumFont} onChange={(v) => updateHpSettings({ datumFont: v })} />
                                         {draft?.use_frame ? (
                                           <>
@@ -2176,7 +2129,7 @@ export default function BouwenPage() {
                                         )}
                                         <div className="flex flex-col gap-1">
                                           <span className="text-xs text-gray-500">Notatie</span>
-                                          <div className="flex rounded-xl border border-gray-200 overflow-hidden">
+                                          <div className="flex rounded-xl border border-[var(--goud-licht)] overflow-hidden">
                                             <button
                                               onClick={() => updateHpSettings({ datumNotatie: 'uitgeschreven' })}
                                               className={`flex-1 py-1.5 text-xs font-semibold transition-colors ${(hpSettings.datumNotatie ?? 'uitgeschreven') === 'uitgeschreven' ? 'bg-[#C5A059] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
@@ -2218,10 +2171,10 @@ export default function BouwenPage() {
                                       onChange={(e) => updateDraft({ frame_location: e.target.value })}
                                       onFocus={() => setHpOpenGear('locatie')}
                                       placeholder="bijv. Kasteel de Haar"
-                                      className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                                      className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] transition-all"
                                     />
                                     {hpOpenGear === 'locatie' && (
-                                      <div className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-gray-200">
+                                      <div className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-[var(--goud-licht)]">
                                         <FontSelect value={hpSettings.locatieFont} onChange={(v) => updateHpSettings({ locatieFont: v })} />
                                         {draft?.use_frame ? (
                                           <>
@@ -2270,7 +2223,7 @@ export default function BouwenPage() {
                                       value={homeContent.title}
                                       onChange={(e) => updateDraft({ homeContent: { ...homeContent, title: e.target.value } })}
                                       placeholder="Optionele titel"
-                                      className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                                      className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] transition-all"
                                     />
                                     <div className="flex items-center justify-between">
                                       <span className="text-xs text-gray-500">Grootte</span>
@@ -2285,7 +2238,7 @@ export default function BouwenPage() {
                                       value={homeContent.body}
                                       onChange={(e) => updateDraft({ homeContent: { ...homeContent, body: e.target.value } })}
                                       placeholder="Schrijf een welkomstbericht voor je gasten..."
-                                      className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
+                                      className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] resize-none transition-all"
                                     />
                                     <div className="flex items-center justify-between">
                                       <span className="text-xs text-gray-500">Grootte</span>
@@ -2300,7 +2253,7 @@ export default function BouwenPage() {
                                         <button
                                           key={a}
                                           onClick={() => updateDraft({ homeContent: { ...homeContent, align: a } })}
-                                          className={`flex-1 flex items-center justify-center py-2 rounded-lg border transition-all ${homeContent.align === a ? "border-[#C5A059] bg-[#FBF5E8] text-[#C5A059]" : "border-gray-200 text-gray-400 hover:border-gray-300"}`}
+                                          className={`flex-1 flex items-center justify-center py-2 rounded-lg border transition-all ${homeContent.align === a ? "border-[#C5A059] bg-[#FBF5E8] text-[#C5A059]" : "border-[var(--goud-licht)] text-gray-400 hover:border-gray-300"}`}
                                         >
                                           {a === "left" && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h10M4 18h12" /></svg>}
                                           {a === "center" && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M7 12h10M6 18h12" /></svg>}
@@ -2332,7 +2285,7 @@ export default function BouwenPage() {
                                   value={typeof content.Ceremoniemeesters?.text === "string" ? content.Ceremoniemeesters.text : ""}
                                   onChange={(e) => updateContent("Ceremoniemeesters", { ...(content.Ceremoniemeesters ?? {}), text: e.target.value })}
                                   placeholder="Optionele tekst onderaan de pagina..."
-                                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none leading-relaxed"
+                                  className="w-full rounded-lg border border-[var(--goud-licht)] px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] resize-none leading-relaxed"
                                 />
                               </div>
                             </div>
@@ -2342,7 +2295,7 @@ export default function BouwenPage() {
                           {page.id === 'Programma' && (
                             <div>
                               <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Weergave</p>
-                              <div className="flex rounded-xl border border-gray-200 overflow-hidden mb-5">
+                              <div className="flex rounded-xl border border-[var(--goud-licht)] overflow-hidden mb-5">
                                 {(["timeline", "centered"] as const).map((opt) => (
                                   <button
                                     key={opt}
@@ -2369,7 +2322,7 @@ export default function BouwenPage() {
                                             updated[i] = { ...updated[i], time: `${e.target.value}:${min}` }
                                             updateContent("Programma", { items: updated, layout: programLayout })
                                           }}
-                                          className="rounded-lg border border-gray-200 px-1.5 py-1.5 text-xs font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 bg-white cursor-pointer"
+                                          className="rounded-lg border border-[var(--goud-licht)] px-1.5 py-1.5 text-xs font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] bg-white cursor-pointer"
                                         >
                                           {Array.from({ length: 24 }, (_, k) => String(k).padStart(2, "0")).map(h => (
                                             <option key={h} value={h}>{h}</option>
@@ -2384,7 +2337,7 @@ export default function BouwenPage() {
                                             updated[i] = { ...updated[i], time: `${hr}:${e.target.value}` }
                                             updateContent("Programma", { items: updated, layout: programLayout })
                                           }}
-                                          className="rounded-lg border border-gray-200 px-1.5 py-1.5 text-xs font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 bg-white cursor-pointer"
+                                          className="rounded-lg border border-[var(--goud-licht)] px-1.5 py-1.5 text-xs font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] bg-white cursor-pointer"
                                         >
                                           {Array.from({length:12},(_,k)=>String(k*5).padStart(2,"0")).map(m => (
                                             <option key={m} value={m}>{m}</option>
@@ -2396,7 +2349,7 @@ export default function BouwenPage() {
                                         className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-xs font-semibold transition-colors ${
                                           openIconPickerIdx === i
                                             ? "border-[#C5A059] bg-[#FBF5E8] text-[#C5A059]"
-                                            : "border-gray-200 bg-white text-gray-500 hover:border-rose-300 hover:text-rose-500"
+                                            : "border-[var(--goud-licht)] bg-white text-gray-500 hover:border-[var(--goud)] hover:text-[var(--goud)]"
                                         }`}
                                       >
                                         <ProgramIcon iconId={item.iconId ?? "heart"} size={14} strokeWidth={2} />
@@ -2417,7 +2370,7 @@ export default function BouwenPage() {
                                           </button>
                                           <button
                                             onClick={() => setDeleteConfirmIdx(null)}
-                                            className="text-xs font-semibold px-2 py-0.5 bg-white hover:bg-gray-100 text-gray-600 border border-gray-200 rounded transition-colors"
+                                            className="text-xs font-semibold px-2 py-0.5 bg-white hover:bg-gray-100 text-gray-600 border border-[var(--goud-licht)] rounded transition-colors"
                                           >
                                             Nee
                                           </button>
@@ -2469,7 +2422,7 @@ export default function BouwenPage() {
                                         updateContent("Programma", { items: updated, layout: programLayout })
                                       }}
                                       placeholder="Titel..."
-                                      className="rounded-lg border border-gray-200 px-2 py-1.5 text-sm font-semibold text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400"
+                                      className="rounded-lg border border-[var(--goud-licht)] px-2 py-1.5 text-sm font-semibold text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)]"
                                     />
                                     <textarea
                                       id={`programma-description-${item.id ?? i}`}
@@ -2481,7 +2434,7 @@ export default function BouwenPage() {
                                         updateContent("Programma", { items: updated, layout: programLayout })
                                       }}
                                       placeholder="Beschrijving..."
-                                      className="rounded-lg border border-gray-200 px-2 py-1.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none"
+                                      className="rounded-lg border border-[var(--goud-licht)] px-2 py-1.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] resize-none"
                                     />
                                   </div>
                                 ))}
@@ -2513,7 +2466,7 @@ export default function BouwenPage() {
                                     value={(content.RSVP?.text as string) ?? ""}
                                     onChange={(e) => updateContent("RSVP", { ...(content.RSVP ?? {}), text: e.target.value })}
                                     placeholder="Laat weten of je erbij bent — vul het formulier in."
-                                    className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
+                                    className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] resize-none transition-all"
                                   />
                                 </label>
                               </div>
@@ -2552,7 +2505,7 @@ export default function BouwenPage() {
                                     type="date"
                                     value={(content.RSVP?.deadline as string) ?? ""}
                                     onChange={(e) => updateContent("RSVP", { ...(content.RSVP ?? {}), deadline: e.target.value || null })}
-                                    className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                                    className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] transition-all"
                                   />
                                   <span className="text-xs text-gray-400">Laat leeg voor geen sluitingsdatum.</span>
                                 </label>
@@ -2596,7 +2549,7 @@ export default function BouwenPage() {
                                     value={(content.RSVP?.customQuestion as string) ?? ""}
                                     onChange={(e) => updateContent("RSVP", { ...(content.RSVP ?? {}), customQuestion: e.target.value })}
                                     placeholder="Bijv. Komen jullie naar het afterparty?"
-                                    className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                                    className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] transition-all"
                                   />
                                   <span className="text-xs text-gray-400">Laat leeg om uit te schakelen.</span>
                                 </label>
@@ -2607,7 +2560,7 @@ export default function BouwenPage() {
                                     value={(content.RSVP?.customQuestion2 as string) ?? ""}
                                     onChange={(e) => updateContent("RSVP", { ...(content.RSVP ?? {}), customQuestion2: e.target.value })}
                                     placeholder="Bijv. Doen jullie mee met het spel?"
-                                    className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                                    className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] transition-all"
                                   />
                                   <span className="text-xs text-gray-400">Laat leeg om uit te schakelen.</span>
                                 </label>
@@ -2627,7 +2580,7 @@ export default function BouwenPage() {
                                   value={(content.OnsVerhaal?.title as string) ?? "Ons Verhaal"}
                                   onChange={(e) => updateContent("OnsVerhaal", { ...(content.OnsVerhaal ?? {}), title: e.target.value })}
                                   placeholder="Ons Verhaal"
-                                  className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                                  className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] transition-all"
                                 />
                               </label>
                               <label className="flex flex-col gap-1.5">
@@ -2638,7 +2591,7 @@ export default function BouwenPage() {
                                   value={(content.OnsVerhaal?.text as string) ?? ""}
                                   onChange={(e) => updateContent("OnsVerhaal", { ...(content.OnsVerhaal ?? {}), text: e.target.value })}
                                   placeholder="Vertel hier jullie verhaal..."
-                                  className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
+                                  className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] resize-none transition-all"
                                 />
                               </label>
                               <div>
@@ -2680,7 +2633,7 @@ export default function BouwenPage() {
                                   <button
                                     onClick={() => storyFileInputRef.current?.click()}
                                     disabled={storyUploading}
-                                    className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-gray-200 rounded-xl py-5 text-gray-400 hover:border-rose-300 hover:text-rose-500 disabled:opacity-50 transition-colors"
+                                    className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-[var(--goud-licht)] rounded-xl py-5 text-gray-400 hover:border-[var(--goud)] hover:text-[var(--goud)] disabled:opacity-50 transition-colors"
                                   >
                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                       <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
@@ -2727,7 +2680,7 @@ export default function BouwenPage() {
                                   value={(content.Fotos?.title as string) ?? "Foto's"}
                                   onChange={(e) => updateContent("Fotos", { ...(content.Fotos ?? {}), title: e.target.value })}
                                   placeholder="Foto's"
-                                  className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+                                  className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] transition-all"
                                 />
                               </label>
                               <label className="flex flex-col gap-1.5">
@@ -2737,7 +2690,7 @@ export default function BouwenPage() {
                                   value={(content.Fotos?.intro as string) ?? ""}
                                   onChange={(e) => updateContent("Fotos", { ...(content.Fotos ?? {}), intro: e.target.value })}
                                   placeholder="Bijv. Geniet hier na van de foto's van onze mooie dag."
-                                  className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
+                                  className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] resize-none transition-all"
                                 />
                               </label>
                               <div>
@@ -2759,7 +2712,7 @@ export default function BouwenPage() {
                                 type="button"
                                 disabled={fotosUploading || fotosUrls.length >= MAX_FOTOS}
                                 onClick={() => fotosFileInputRef.current?.click()}
-                                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl border-2 border-dashed border-gray-200 text-sm font-semibold text-gray-400 hover:border-rose-300 hover:text-rose-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl border-2 border-dashed border-[var(--goud-licht)] text-sm font-semibold text-gray-400 hover:border-[var(--goud)] hover:text-[var(--goud)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 {fotosUploading ? (
                                   <>
@@ -2818,8 +2771,8 @@ export default function BouwenPage() {
         </aside>
 
         {/* ── Main panel ── */}
-        <main className="flex flex-1 flex-col overflow-hidden bg-gray-100 border-t md:border-t-0 border-gray-200">
-          <div className="flex items-center justify-between px-4 py-2 bg-gray-100 border-b border-gray-200 flex-shrink-0">
+        <main className="flex flex-1 flex-col overflow-hidden bg-gray-100 border-t md:border-t-0 border-[var(--goud-licht)]">
+          <div className="flex items-center justify-between px-4 py-2 bg-gray-100 border-b border-[var(--goud-licht)] flex-shrink-0">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Live preview</p>
             <div className="flex items-center gap-2">
                 {/* Zoom controls — desktop only */}
@@ -2886,13 +2839,13 @@ export default function BouwenPage() {
                   <div style={{ width: canvasWidth, transform: `scale(${canvasScale * zoomMultiplier})`, transformOrigin: "top left" }}>
                     <div className="rounded-2xl shadow-xl overflow-clip" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily, letterSpacing: sc.bodyLetterSpacing, fontWeight: sc.bodyFontWeight }}>
                       {sc.fontImport && <style>{sc.fontImport}</style>}
-                      <div className="bg-gray-50 border-b border-gray-200 px-4 py-2 flex items-center gap-2">
+                      <div className="bg-gray-50 border-b border-[var(--goud-licht)] px-4 py-2 flex items-center gap-2">
                         <div className="flex gap-1.5 flex-shrink-0">
                           <span className="w-2 h-2 rounded-full bg-red-400" />
                           <span className="w-2 h-2 rounded-full bg-amber-400" />
                           <span className="w-2 h-2 rounded-full bg-green-400" />
                         </div>
-                        <div className="flex-1 bg-white rounded-md border border-gray-200 px-3 py-1 text-xs text-gray-400">
+                        <div className="flex-1 bg-white rounded-md border border-[var(--goud-licht)] px-3 py-1 text-xs text-gray-400">
                           {slugPreview}.sayingyes.nl
                         </div>
                       </div>
@@ -3040,7 +2993,7 @@ export default function BouwenPage() {
                                     <div className="text-xs font-bold uppercase tracking-widest" style={{ color: "#9ca3af" }}>Hoofdgast</div>
                                     <div>
                                       <div className="text-sm font-semibold mb-1.5" style={{ color: "#374151" }}>Naam *</div>
-                                      <div className="w-full h-10 rounded-xl border border-gray-200 bg-white px-4 flex items-center shadow-sm">
+                                      <div className="w-full h-10 rounded-xl border border-[var(--goud-licht)] bg-white px-4 flex items-center shadow-sm">
                                         <span className="text-sm text-gray-400">Voornaam</span>
                                       </div>
                                     </div>
@@ -3062,13 +3015,13 @@ export default function BouwenPage() {
                                     )}
                                     <div>
                                       <div className="text-sm font-semibold mb-1.5" style={{ color: "#374151" }}>Dieetwensen / Allergieën</div>
-                                      <div className="w-full h-10 rounded-xl border border-gray-200 bg-white px-4 flex items-center shadow-sm">
+                                      <div className="w-full h-10 rounded-xl border border-[var(--goud-licht)] bg-white px-4 flex items-center shadow-sm">
                                         <span className="text-sm text-gray-400">Bijv. vegetarisch, notenallergie</span>
                                       </div>
                                     </div>
                                     <div>
                                       <div className="text-sm font-semibold mb-1.5" style={{ color: "#374151" }}>E-mailadres *</div>
-                                      <div className="w-full h-10 rounded-xl border border-gray-200 bg-white px-4 flex items-center shadow-sm">
+                                      <div className="w-full h-10 rounded-xl border border-[var(--goud-licht)] bg-white px-4 flex items-center shadow-sm">
                                         <span className="text-sm text-gray-400">jouw@email.nl</span>
                                       </div>
                                     </div>
@@ -3080,7 +3033,7 @@ export default function BouwenPage() {
                                         Welk nummer brengt jou gegarandeerd naar de dansvloer?{" "}
                                         <span style={{ color: "#9ca3af", fontWeight: 400 }}>(optioneel)</span>
                                       </div>
-                                      <div className="w-full h-10 rounded-xl border border-gray-200 bg-white px-4 flex items-center shadow-sm">
+                                      <div className="w-full h-10 rounded-xl border border-[var(--goud-licht)] bg-white px-4 flex items-center shadow-sm">
                                         <span className="text-sm text-gray-400">Artiest — Nummertitel</span>
                                       </div>
                                     </div>
@@ -3571,7 +3524,7 @@ function Editor({
           placeholder="Schrijf een welkomstbericht voor je gasten..."
           value={(content.text as string) ?? ""}
           onChange={(e) => onChange({ ...content, text: e.target.value })}
-          className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
+          className="w-full rounded-xl border border-[var(--goud-licht)] px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] resize-none transition-all"
         />
       </div>
     )
@@ -3590,7 +3543,7 @@ function Editor({
         placeholder="Voeg hier informatie toe..."
         value={(content.text as string) ?? ""}
         onChange={(e) => onChange({ ...content, text: e.target.value })}
-        className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none transition-all"
+        className="w-full rounded-xl border border-[var(--goud-licht)] px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] resize-none transition-all"
       />
     </div>
   )
@@ -3629,8 +3582,8 @@ function ProgrammaEditor({
         </div>
       )}
       <div className="flex gap-2">
-        <input type="text" placeholder="14:00" value={newTime} onChange={(e) => setNewTime(e.target.value)} className="w-20 rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400" />
-        <input type="text" placeholder="Beschrijving" value={newDesc} onChange={(e) => setNewDesc(e.target.value)} onKeyDown={(e) => e.key === "Enter" && add()} className="flex-1 rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400" />
+        <input type="text" placeholder="14:00" value={newTime} onChange={(e) => setNewTime(e.target.value)} className="w-20 rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)]" />
+        <input type="text" placeholder="Beschrijving" value={newDesc} onChange={(e) => setNewDesc(e.target.value)} onKeyDown={(e) => e.key === "Enter" && add()} className="flex-1 rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)]" />
         <button onClick={add} className="flex-shrink-0 bg-rose-500 hover:bg-rose-600 text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-colors">Voeg toe</button>
       </div>
     </div>
@@ -3738,7 +3691,7 @@ function MastersEditor({
             <button
               onClick={() => { pendingIdRef.current = master.id!; fileInputRef.current?.click() }}
               disabled={uploading !== null}
-              className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-gray-200 rounded-xl py-4 text-gray-400 hover:border-rose-300 hover:text-rose-500 disabled:opacity-50 transition-colors"
+              className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-[var(--goud-licht)] rounded-xl py-4 text-gray-400 hover:border-[var(--goud)] hover:text-[var(--goud)] disabled:opacity-50 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
@@ -3754,7 +3707,7 @@ function MastersEditor({
             value={master.naam}
             onChange={(e) => update(master.id!, { naam: e.target.value })}
             placeholder="Volledige naam"
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400"
+            className="w-full rounded-lg border border-[var(--goud-licht)] px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)]"
           />
           {/* Telefoon */}
           <input
@@ -3763,7 +3716,7 @@ function MastersEditor({
             value={master.telefoon}
             onChange={(e) => update(master.id!, { telefoon: e.target.value })}
             placeholder="+31 6 12345678"
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400"
+            className="w-full rounded-lg border border-[var(--goud-licht)] px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)]"
           />
           {/* E-mail */}
           <input
@@ -3772,13 +3725,13 @@ function MastersEditor({
             value={master.email}
             onChange={(e) => update(master.id!, { email: e.target.value })}
             placeholder="naam@voorbeeld.nl"
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400"
+            className="w-full rounded-lg border border-[var(--goud-licht)] px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)]"
           />
         </div>
       ))}
       <button
         onClick={add}
-        className="flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-gray-200 rounded-xl py-3 text-gray-400 hover:border-rose-300 hover:text-rose-500 transition-colors"
+        className="flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-[var(--goud-licht)] rounded-xl py-3 text-gray-400 hover:border-[var(--goud)] hover:text-[var(--goud)] transition-colors"
       >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -3843,7 +3796,7 @@ function WishlistEditor({
             value={item.title}
             onChange={(e) => update(item.id, { title: e.target.value })}
             placeholder="Titel"
-            className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400"
+            className="w-full rounded-lg border border-[var(--goud-licht)] px-3 py-1.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)]"
           />
           {/* Rij 2: Icoon-picker + Verwijder */}
           <div className="flex items-center justify-between">
@@ -3852,7 +3805,7 @@ function WishlistEditor({
               className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-semibold transition-colors ${
                 openPickerId === item.id
                   ? "border-[#C5A059] bg-[#FBF5E8] text-[#C5A059]"
-                  : "border-gray-200 bg-white text-gray-500 hover:border-rose-300 hover:text-rose-500"
+                  : "border-[var(--goud-licht)] bg-white text-gray-500 hover:border-[var(--goud)] hover:text-[var(--goud)]"
               }`}
             >
               <ProgramIcon iconId={item.iconId} size={14} strokeWidth={2} />
@@ -3897,13 +3850,13 @@ function WishlistEditor({
             value={item.text}
             onChange={(e) => update(item.id, { text: e.target.value })}
             placeholder="Beschrijving..."
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none"
+            className="w-full rounded-lg border border-[var(--goud-licht)] px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] resize-none"
           />
         </div>
       ))}
       <button
         onClick={add}
-        className="flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-gray-200 rounded-xl py-3 text-gray-400 hover:border-rose-300 hover:text-rose-500 transition-colors"
+        className="flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-[var(--goud-licht)] rounded-xl py-3 text-gray-400 hover:border-[var(--goud)] hover:text-[var(--goud)] transition-colors"
       >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -3968,7 +3921,7 @@ function PraktischEditor({
             value={tile.title}
             onChange={(e) => update(tile.id, { title: e.target.value })}
             placeholder="Titel"
-            className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400"
+            className="w-full rounded-lg border border-[var(--goud-licht)] px-3 py-1.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)]"
           />
           {/* Rij 2: Icoon-picker + Verwijder */}
           <div className="flex items-center justify-between">
@@ -3977,7 +3930,7 @@ function PraktischEditor({
               className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-semibold transition-colors ${
                 openPickerId === tile.id
                   ? "border-[#C5A059] bg-[#FBF5E8] text-[#C5A059]"
-                  : "border-gray-200 bg-white text-gray-500 hover:border-rose-300 hover:text-rose-500"
+                  : "border-[var(--goud-licht)] bg-white text-gray-500 hover:border-[var(--goud)] hover:text-[var(--goud)]"
               }`}
             >
               <ProgramIcon iconId={tile.iconId} size={14} strokeWidth={2} />
@@ -4022,13 +3975,13 @@ function PraktischEditor({
             value={tile.text}
             onChange={(e) => update(tile.id, { text: e.target.value })}
             placeholder="Beschrijving..."
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 resize-none"
+            className="w-full rounded-lg border border-[var(--goud-licht)] px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] resize-none"
           />
         </div>
       ))}
       <button
         onClick={add}
-        className="flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-gray-200 rounded-xl py-3 text-gray-400 hover:border-rose-300 hover:text-rose-500 transition-colors"
+        className="flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-[var(--goud-licht)] rounded-xl py-3 text-gray-400 hover:border-[var(--goud)] hover:text-[var(--goud)] transition-colors"
       >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />

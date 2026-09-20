@@ -9,10 +9,7 @@ import {
   CARD_TEMPLATE_UITLEG,
   CARD_TYPE_LABEL,
   cardDesign,
-  KAART_TEKST,
-  cardTaal,
   GUEST_TYPE_LABEL,
-  type CardContent,
   type CardGuestType,
   type CardRow,
   type CardTemplate,
@@ -44,21 +41,7 @@ export interface CardEventRef {
   heroImageUrl: string | null
 }
 
-const inputCls = "w-full rounded-xl border bg-white px-3 py-2.5 text-sm placeholder-gray-400 focus:outline-none transition-all"
-const inputStyle: React.CSSProperties = { color: CHARCOAL, borderColor: GOLD_LIGHT }
 
-interface EditForm {
-  // Namen en datum staan hier bewust niet: die horen bij de bruiloft en
-  // worden in de bouwer aangepast. Een kopie per kaart liep uit de pas zodra
-  // iemand de namen elders veranderde.
-  location: string
-  message: string
-  photoUrl: string
-  template: CardTemplate
-  guestType: CardGuestType | ""
-  inviteText: string
-  timeText: string
-}
 
 export default function CardsSection({
   events,
@@ -76,8 +59,6 @@ export default function CardsSection({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
-  const [editingCard, setEditingCard] = useState<CardRow | null>(null)
-  const [editForm, setEditForm] = useState<EditForm | null>(null)
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
 
   async function createCard(eventId: string) {
@@ -110,61 +91,8 @@ export default function CardsSection({
     }
   }
 
-  function openEdit(card: CardRow) {
-    setEditingCard(card)
-    setEditForm({
-      location: card.content.location ?? "",
-      message: card.content.message ?? "",
-      photoUrl: card.content.photoUrl ?? "",
-      template: card.template,
-      guestType: card.content.guestType ?? "",
-      inviteText: card.content.inviteText ?? "",
-      timeText: card.content.timeText ?? "",
-    })
-    setError(null)
-  }
 
-  async function saveEdit() {
-    if (!editingCard || !editForm) return
-    setBusy(true)
-    setError(null)
-    try {
-      const content: CardContent = {
-        // Wat dit venster niet bewerkt hoort te blijven staan. Zonder deze twee
-        // regels zette opslaan hier de animatie terug op rustig en de taal
-        // terug op Nederlands, want de inhoud wordt opnieuw opgebouwd.
-        animatie: editingCard.content.animatie,
-        taal: editingCard.content.taal,
-        // Namen en datum blijven staan zoals ze waren: die worden hier niet
-        // bewerkt, en weglaten zou ze bij oude kaarten wissen.
-        names: editingCard.content.names,
-        dateText: editingCard.content.dateText,
-        location: editForm.location || undefined,
-        message: editForm.message || undefined,
-        photoUrl: editForm.photoUrl || undefined,
-        guestType: editForm.guestType || undefined,
-        inviteText: editForm.inviteText || undefined,
-        timeText: editForm.timeText || undefined,
-      }
-      const res = await fetch(`/api/cards/${editingCard.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content, template: editForm.template }),
-      })
-      if (!res.ok) throw new Error()
-      setCards((prev) =>
-        prev.map((c) =>
-          c.id === editingCard.id ? { ...c, content, template: editForm.template } : c
-        )
-      )
-      setEditingCard(null)
-      setEditForm(null)
-    } catch {
-      setError("Opslaan mislukt, probeer opnieuw.")
-    } finally {
-      setBusy(false)
-    }
-  }
+
 
   async function deleteCard(id: string) {
     setBusy(true)
@@ -423,13 +351,16 @@ export default function CardsSection({
                   >
                     {event.status === "draft" ? "⬇ Voorbeeld" : "⬇ Afbeelding"}
                   </a>
-                  <button
-                    onClick={() => openEdit(card)}
+                  {/* Naar de bouwer, niet naar een tweede bewerkscherm hier.
+                      Er waren twee editors voor hetzelfde en die liepen uit
+                      elkaar; de bouwer is de echte. */}
+                  <a
+                    href={`/kaart-maken?event_id=${card.event_id}&card_id=${card.id}&type=${card.type}`}
                     className="text-xs font-semibold px-3 py-2 rounded-lg"
-                    style={{ backgroundColor: "white", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
+                    style={{ backgroundColor: "white", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, textDecoration: "none" }}
                   >
                     ✏️ Bewerken
-                  </button>
+                  </a>
                   {deleteConfirmId === card.id ? (
                     <span className="flex items-center gap-1">
                       <button
@@ -465,160 +396,10 @@ export default function CardsSection({
       })}
 
       {/* ── Bewerk-modal ── */}
-      {editingCard && editForm && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ backgroundColor: "rgba(14,12,9,0.6)", backdropFilter: "blur(4px)" }}
-          onClick={() => { if (!busy) { setEditingCard(null); setEditForm(null) } }}
-        >
-          <div
-            className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl"
-            style={{ backgroundColor: IVORY, border: `1px solid ${GOLD_LIGHT}` }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="px-7 py-5 flex items-center justify-between" style={{ borderBottom: `1px solid ${GOLD_LIGHT}` }}>
-              <h3 className="text-xl" style={{ fontFamily: "var(--font-cormorant)", fontWeight: 700, color: CHARCOAL }}>
-                {CARD_TYPE_LABEL[editingCard.type]} bewerken
-              </h3>
-              <button
-                onClick={() => { setEditingCard(null); setEditForm(null) }}
-                className="p-1.5 rounded-lg"
-                style={{ color: BODY, background: "none", border: "none", cursor: "pointer" }}
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="px-7 py-6 flex flex-col gap-5">
-              <p className="text-xs" style={{ color: BODY }}>
-                Namen en datum horen bij jullie bruiloft en pas je aan in de bouwer. Wat je hier
-                verandert geldt alleen voor deze kaart.
-              </p>
-
-              <Field label="Andere locatie op deze kaart (leeg = die van jullie bruiloft)">
-                <input type="text" value={editForm.location} onChange={(e) => setEditForm({ ...editForm, location: e.target.value })} placeholder="Bijv. Feestzaal De Oude Fabriek, Arnhem" className={inputCls} style={inputStyle} />
-              </Field>
-              <Field label="Tekst op de kaart">
-                <textarea rows={3} value={editForm.message} onChange={(e) => setEditForm({ ...editForm, message: e.target.value })} className={`${inputCls} resize-none`} style={inputStyle} />
-              </Field>
-              <Field label="Ontwerp">
-                <div className="flex gap-2">
-                  {CARD_DESIGNS.map((t) => {
-                    const actief = cardDesign(editForm.template) === t
-                    return (
-                      <button
-                        key={t}
-                        type="button"
-                        onClick={() => setEditForm({ ...editForm, template: t })}
-                        className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
-                        style={{
-                          border: `2px solid ${actief ? GOLD : GOLD_LIGHT}`,
-                          backgroundColor: actief ? GOLD_BG : "white",
-                          color: actief ? CHARCOAL : BODY,
-                          cursor: "pointer",
-                        }}
-                      >
-                        {CARD_TEMPLATE_LABEL[t]}
-                      </button>
-                    )
-                  })}
-                </div>
-              </Field>
-              <Field label="Foto op de kaart (optioneel)">
-                  <PhotoPicker
-                    value={editForm.photoUrl}
-                    fallbackUrl={events.find((e) => e.id === editingCard.event_id)?.heroImageUrl ?? null}
-                    onChange={(url) => setEditForm({ ...editForm, photoUrl: url })}
-                  />
-                </Field>
-              {editingCard.type === "trouwkaart" && (
-                <>
-                  <Field label="Voor wie is deze kaart?">
-                    <div className="flex flex-wrap gap-2">
-                      {GUEST_TYPE_OPTIONS.map((opt) => (
-                        <button
-                          key={opt.value || "geen"}
-                          type="button"
-                          onClick={() => setEditForm({ ...editForm, guestType: opt.value })}
-                          className="flex-1 min-w-[45%] sm:min-w-0 py-2 px-2 rounded-xl text-sm font-semibold transition-all"
-                          style={{
-                            border: `2px solid ${editForm.guestType === opt.value ? GOLD : GOLD_LIGHT}`,
-                            backgroundColor: editForm.guestType === opt.value ? GOLD_BG : "white",
-                            color: editForm.guestType === opt.value ? CHARCOAL : BODY,
-                            cursor: "pointer",
-                          }}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-                  </Field>
-                  <Field label="Uitnodigingstekst (leeg = standaardtekst)">
-                    <input
-                      type="text"
-                      value={editForm.inviteText}
-                      onChange={(e) => setEditForm({ ...editForm, inviteText: e.target.value })}
-                      placeholder={
-                        editForm.guestType
-                          ? KAART_TEKST[cardTaal(editingCard?.content.taal)].uitnodiging[editForm.guestType]
-                          : "Bijv. Wij nodigen je van harte uit voor het avondfeest"
-                      }
-                      maxLength={160}
-                      className={inputCls}
-                      style={inputStyle}
-                    />
-                  </Field>
-                  <Field label="Tijden (optioneel)">
-                    <input
-                      type="text"
-                      value={editForm.timeText}
-                      onChange={(e) => setEditForm({ ...editForm, timeText: e.target.value })}
-                      placeholder="Bijv. Van 20:00 tot 23:00 uur"
-                      maxLength={80}
-                      className={inputCls}
-                      style={inputStyle}
-                    />
-                  </Field>
-                </>
-              )}
-
-              {error && <p className="text-sm text-red-500">{error}</p>}
-            </div>
-
-            <div className="px-7 py-5 flex gap-3" style={{ borderTop: `1px solid ${GOLD_LIGHT}` }}>
-              <button
-                onClick={() => { setEditingCard(null); setEditForm(null) }}
-                className="flex-1 py-3 rounded-xl text-sm font-semibold"
-                style={{ border: `1px solid ${GOLD_LIGHT}`, color: BODY, backgroundColor: "white", cursor: "pointer" }}
-              >
-                Annuleren
-              </button>
-              <button
-                onClick={saveEdit}
-                disabled={busy}
-                className="flex-1 py-3 rounded-xl text-sm font-semibold transition-all disabled:opacity-60 hover:-translate-y-0.5"
-                style={{ backgroundColor: CHARCOAL, color: IVORY, border: "none", cursor: "pointer" }}
-              >
-                {busy ? "Opslaan..." : "Opslaan"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label className="flex flex-col gap-1.5">
-      <span className="text-xs font-semibold uppercase tracking-[0.12em]" style={{ color: GOLD }}>{label}</span>
-      {children}
-    </label>
-  )
-}
 
 // Foto kiezen voor op de kaart: uploaden (met compressie), voorbeeld en
 // verwijderen. Zonder eigen foto valt de kaart terug op de sitefoto.

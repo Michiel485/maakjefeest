@@ -37,6 +37,13 @@ import CardReveal from "@/app/kaart/[token]/card-reveal"
 import { KLEUR } from "@/lib/ontwerp"
 import { Knop, Melding } from "@/components/ui"
 import BouwerSchakelaar from "@/components/BouwerSchakelaar"
+import {
+  DEFAULT_PRAKTISCH,
+  DEFAULT_PROGRAMMA,
+  LS_WEBSITE_CONCEPT,
+  LS_WEBSITE_INHOUD,
+  nieuwWebsiteConcept,
+} from "@/lib/nieuw-concept"
 
 // Kleuren komen uit lib/ontwerp.ts, de enige bron. De korte namen hieronder
 // staan er alleen zodat de rest van dit bestand leesbaar blijft.
@@ -57,6 +64,14 @@ const STYLE_LABEL: Record<Style, string> = {
 }
 const STYLE_KEYS = Object.keys(STYLE_CONFIG) as Style[]
 
+interface ConceptRij {
+  id: string
+  title: string
+  concept_naam: string | null
+  datum: string | null
+  status: string
+}
+
 type Stap = "stijl" | "template" | "tekst" | "taal" | "foto" | "animatie" | "bekijken"
 type Actie = "bewaar" | "activeer"
 
@@ -68,10 +83,6 @@ interface KaartOntwerp {
   datum: string
   // De locatie van de bruiloft. Hoort bij het event, niet bij de kaart.
   location: string
-  // Staat de schakelaar aan dat deze kaart een eigen locatie heeft?
-  locatieWijktAf: boolean
-  // De eigen locatie van deze kaart, alleen van belang als hierboven aan staat
-  kaartLocatie: string
   message: string
   guestType: CardGuestType | ""
   inviteText: string
@@ -89,8 +100,6 @@ const LEEG: KaartOntwerp = {
   names: "",
   datum: "",
   location: "",
-  locatieWijktAf: false,
-  kaartLocatie: "",
   message: "",
   guestType: "",
   inviteText: "",
@@ -101,16 +110,6 @@ const LEEG: KaartOntwerp = {
   taal: "nl",
 }
 
-// Per stap één zin over waarom digitaal slim is: overtuigen zonder te duwen
-const VOORDEEL: Record<Stap, string> = {
-  stijl: "De stijl bepaalt ook de envelop die je gasten openen. Alles in één sfeer, zonder drukwerk.",
-  template: "Drie richtingen: strak en tijdloos, sierlijk met handschrift, of bohemian en warm. Je kunt altijd wisselen.",
-  tekst: "Verandert de tijd of de locatie? Geen herdruk en geen rondbelactie, je past de tekst gewoon aan.",
-  foto: "Een foto van jullie samen maakt de kaart persoonlijk. Op WhatsApp valt hij dan extra op.",
-  taal: "De vaste teksten op de kaart volgen deze taal, ook de datum. Heb je familie in twee talen? Kopieer de kaart en zet alleen de taal om.",
-  animatie: "Je gast tikt op de envelop, het zegel breekt en de kaart schuift eruit. Dat kan papier niet.",
-  bekijken: "Je gasten krijgen een link, tikken op de envelop en zien jullie kaart. Geen app, geen account.",
-}
 
 function isCardType(v: unknown): v is CardType {
   return v === "save_the_date" || v === "trouwkaart"
@@ -121,7 +120,8 @@ function isStyle(v: unknown): v is Style {
 
 function initialenVan(names: string): string {
   return names
-    .split(/\s*&\s*|\s+en\s+/i)
+    // Ook splitsen op een enter: die mag in het namenveld staan
+    .split(/\s*&\s*|\s+en\s+|\r?\n/i)
     .map((n) => n.trim().charAt(0).toUpperCase())
     .filter(Boolean)
     .slice(0, 2)
@@ -142,7 +142,7 @@ const inputStyle: React.CSSProperties = { color: CHARCOAL, borderColor: GOLD_LIG
 // Inklapbare stap in de zijbalk. Bewust buiten de pagina-component gedefinieerd:
 // anders wordt het bij elke render een nieuw componenttype en verliezen de
 // invoervelden erin hun focus bij elke toetsaanslag.
-function Sectie({ id, titel, open, onToggle, children }: { id: Stap; titel: string; open: boolean; onToggle: () => void; children: React.ReactNode }) {
+function Sectie({ titel, open, onToggle, children }: { titel: string; open: boolean; onToggle: () => void; children: React.ReactNode }) {
   return (
     <div className="border-b border-gray-100">
       <button
@@ -155,7 +155,6 @@ function Sectie({ id, titel, open, onToggle, children }: { id: Stap; titel: stri
       {open && (
         <div className="px-5 pb-5 flex flex-col gap-4">
           {children}
-          <p className="text-[11px] leading-snug" style={{ color: SUBTLE }}>{VOORDEEL[id]}</p>
         </div>
       )}
     </div>
@@ -183,6 +182,14 @@ export default function KaartMakenPage() {
   // al naar de gasten mag, of dat er nog iets bij komt.
   const [eventPlan, setEventPlan] = useState<Plan | null>(null)
   const [eventStatus, setEventStatus] = useState<string | null>(null)
+  // De locatie van de bruiloft zelf, die op de website komt. Los van de
+  // locatie op deze kaart, want die kan per gastengroep anders zijn.
+  const [eventLocatie, setEventLocatie] = useState("")
+  // Een eigen naam voor dit concept, zodat je varianten uit elkaar houdt.
+  // Leeg is prima: dan toont de lijst de namen en de datum.
+  const [conceptNaam, setConceptNaam] = useState("")
+  // Alle concepten van deze klant, voor de keuzelijst bovenin
+  const [concepten, setConcepten] = useState<ConceptRij[]>([])
   const [simulatie, setSimulatie] = useState(false)
   const [mailActie, setMailActie] = useState<Actie | null>(null)
   const [mailAdres, setMailAdres] = useState("")
@@ -235,6 +242,14 @@ export default function KaartMakenPage() {
       const email = data.user?.email ?? null
       setUserEmail(email)
 
+      // De lijst met concepten voor de keuzelijst bovenin de zijbalk
+      if (email) {
+        try {
+          const cr = await fetch("/api/drafts")
+          if (cr.ok) setConcepten(((await cr.json()) as ConceptRij[]) ?? [])
+        } catch {}
+      }
+
       // Bestaand event bewerken (vanuit het dashboard)
       if (eventUitUrl && email) {
         try {
@@ -243,6 +258,7 @@ export default function KaartMakenPage() {
             const { event } = (await r.json()) as { event: Record<string, unknown> }
             if (isPlan(event.plan)) setEventPlan(event.plan)
             setEventStatus(typeof event.status === "string" ? event.status : null)
+            setConceptNaam(typeof event.concept_naam === "string" ? event.concept_naam : "")
             const kr = await fetch(`/api/cards?event_id=${eventUitUrl}`)
             const { cards } = kr.ok ? ((await kr.json()) as { cards: CardRow[] }) : { cards: [] }
             setKaarten(cards)
@@ -261,9 +277,9 @@ export default function KaartMakenPage() {
               template: kaart?.template ?? "klassiek",
               names: kaart?.content.names ?? (event.frame_names as string) ?? (event.title as string) ?? "",
               datum: (event.datum as string) ?? "",
-              location: (event.locatie as string) ?? "",
-              locatieWijktAf: Boolean(kaart?.content.location),
-              kaartLocatie: kaart?.content.location ?? "",
+              // Deze kaart heeft zijn eigen locatie; is die er nog niet, dan
+              // begint hij bij die van de bruiloft.
+              location: kaart?.content.location ?? (event.locatie as string) ?? "",
               message: kaart?.content.message ?? "",
               guestType: kaart?.content.guestType ?? "",
               inviteText: kaart?.content.inviteText ?? "",
@@ -289,12 +305,23 @@ export default function KaartMakenPage() {
             const { event } = (await er.json()) as { event: Record<string, unknown> }
             if (isPlan(event.plan)) setEventPlan(event.plan)
             setEventStatus(typeof event.status === "string" ? event.status : null)
+            setConceptNaam(typeof event.concept_naam === "string" ? event.concept_naam : "")
+            setEventLocatie(typeof event.locatie === "string" ? event.locatie : "")
           }
         } catch {}
       }
       setGeladen(true)
     })
   }, [])
+
+  // Een gelukte melding hoort niet te blijven staan: je hebt hem gelezen en
+  // daarna is het een groene balk die in de weg zit. Fouten blijven wel staan,
+  // want daar moet je nog iets mee.
+  useEffect(() => {
+    if (!melding || melding.fout) return
+    const t = setTimeout(() => setMelding(null), 6000)
+    return () => clearTimeout(t)
+  }, [melding])
 
   // Escape sluit de simulatie en het mailvenster
   useEffect(() => {
@@ -318,7 +345,7 @@ export default function KaartMakenPage() {
   // Namen en datum staan bewust niet in de inhoud van de kaart: die horen bij
   // de bruiloft. buildCardDisplay haalt ze uit het event hieronder.
   const content: CardContent = {
-    location: (ontwerp.locatieWijktAf && ontwerp.kaartLocatie.trim()) || undefined,
+    location: ontwerp.location.trim() || undefined,
     message: ontwerp.message || undefined,
     guestType: ontwerp.guestType || undefined,
     inviteText: ontwerp.inviteText || undefined,
@@ -354,13 +381,17 @@ export default function KaartMakenPage() {
       type: "bruiloft",
       naam: ontwerp.names || "Onze bruiloft",
       datum: ontwerp.datum,
-      locatie: ontwerp.location,
+      // De bruiloft houdt zijn eigen locatie. Die wordt alleen gevuld vanuit
+      // de eerste kaart, want daarna is hij van de website en kan elke kaart
+      // een andere hebben.
+      locatie: eventLocatie || ontwerp.location,
       style: ontwerp.style,
       frame_names: ontwerp.names,
       initials: initialenVan(ontwerp.names),
       pages: ["Home"],
       content: {},
       plan,
+      concept_naam: conceptNaam.trim() || null,
       ...(eventId ? { event_id: eventId } : {}),
     }
     const er = await fetch("/api/drafts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(eventBody) })
@@ -403,15 +434,20 @@ export default function KaartMakenPage() {
     setCardId(nieuwCardId)
     try { localStorage.setItem(LS_IDS, JSON.stringify({ eventId: nieuwEventId, cardId: nieuwCardId })) } catch {}
 
-    // De keuzelijst moet de net bewaarde kaart bevatten, met de nieuwe naam
+    // De keuzelijsten bijwerken: de net bewaarde kaart, en het concept zelf
+    // als dit de eerste keer opslaan was.
     try {
-      const kr = await fetch(`/api/cards?event_id=${nieuwEventId}`)
+      const [kr, cr] = await Promise.all([
+        fetch(`/api/cards?event_id=${nieuwEventId}`),
+        fetch("/api/drafts"),
+      ])
       if (kr.ok) setKaarten(((await kr.json()) as { cards: CardRow[] }).cards)
+      if (cr.ok) setConcepten(((await cr.json()) as ConceptRij[]) ?? [])
     } catch {}
 
     return { eventId: nieuwEventId, cardId: nieuwCardId }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ontwerp, eventId, cardId, plan, isTrouwkaart])
+  }, [ontwerp, eventId, cardId, plan, isTrouwkaart, conceptNaam, eventLocatie])
 
   // Overstappen naar de websitebouwer zonder dat er al iets bewaard is. Wat
   // hier al ingevuld staat gaat mee, inclusief de stijl, zodat de website
@@ -419,27 +455,52 @@ export default function KaartMakenPage() {
   // websiteconcept laten we met rust.
   function neemMeeNaarWebsite() {
     try {
-      if (localStorage.getItem("sayingyes_draft")) return
-      const namen = ontwerp.names.trim() || "Onze bruiloft"
+      if (localStorage.getItem(LS_WEBSITE_CONCEPT)) return
       localStorage.setItem(
-        "sayingyes_draft",
-        JSON.stringify({
-          type: "bruiloft",
-          naam: namen,
-          nav_title: namen,
-          frame_names: namen,
-          initials: initialenVan(ontwerp.names),
-          datum: ontwerp.datum,
-          locatie: ontwerp.location,
-          frame_location: ontwerp.location,
-          style: ontwerp.style,
-          use_frame: true,
-          aangemaakt: new Date().toISOString(),
-        })
+        LS_WEBSITE_CONCEPT,
+        JSON.stringify(
+          nieuwWebsiteConcept({
+            namen: ontwerp.names,
+            datum: ontwerp.datum,
+            locatie: ontwerp.location,
+            style: ontwerp.style,
+          })
+        )
+      )
+      localStorage.setItem(
+        LS_WEBSITE_INHOUD,
+        JSON.stringify({ Programma: DEFAULT_PROGRAMMA, Informatie: DEFAULT_PRAKTISCH })
       )
     } catch {
       // Zonder browseropslag begint de websitebouwer gewoon leeg
     }
+  }
+
+  /** Een korte naam voor een concept in de keuzelijst. */
+  function conceptLabel(c: ConceptRij): string {
+    if (c.concept_naam?.trim()) return c.concept_naam.trim()
+    const datum = c.datum ? ` (${formatDate(c.datum)})` : ""
+    return `${c.title || "Naamloos"}${datum}`
+  }
+
+  function kiesConcept(id: string) {
+    if (id === eventId) return
+    router.push(`/kaart-maken?event_id=${id}`)
+  }
+
+  // Een tweede variant naast de bestaande. Het ontwerp blijft staan, alleen de
+  // koppeling met het bewaarde concept gaat los, zodat opslaan een nieuw
+  // concept maakt in plaats van het oude te overschrijven.
+  function nieuwConcept() {
+    setEventId(null)
+    setEventLocatie("")
+    setCardId(null)
+    setKaarten([])
+    setEventPlan(null)
+    setEventStatus(null)
+    setConceptNaam("")
+    try { localStorage.removeItem(LS_IDS) } catch {}
+    setMelding({ tekst: "Nieuw concept. Je ontwerp blijft staan; bewaren maakt er een tweede van, je eerste blijft gewoon bestaan." })
   }
 
   // ── Wisselen tussen de kaarten van deze bruiloft ──────────────────────────
@@ -454,8 +515,7 @@ export default function KaartMakenPage() {
       ...o,
       type: k.type,
       template: k.template,
-      locatieWijktAf: Boolean(k.content.location),
-      kaartLocatie: k.content.location ?? "",
+      location: k.content.location ?? o.location,
       message: k.content.message ?? "",
       guestType: k.content.guestType ?? "",
       inviteText: k.content.inviteText ?? "",
@@ -472,8 +532,6 @@ export default function KaartMakenPage() {
     setCardId(null)
     setOntwerp((o) => ({
       ...o,
-      locatieWijktAf: false,
-      kaartLocatie: "",
       message: "",
       guestType: "",
       inviteText: "",
@@ -613,7 +671,7 @@ export default function KaartMakenPage() {
         body: JSON.stringify({
           type: ontwerp.type, template: ontwerp.template, style: ontwerp.style,
           names: ontwerp.names, dateText: ontwerp.datum ? formatDate(ontwerp.datum) : "",
-          location: (ontwerp.locatieWijktAf && ontwerp.kaartLocatie.trim()) || ontwerp.location, message: ontwerp.message,
+          location: ontwerp.location, message: ontwerp.message,
           guestType: ontwerp.guestType, inviteText: ontwerp.inviteText, timeText: ontwerp.timeText,
           photoUrl: ontwerp.photoUrl, taal: ontwerp.taal,
         }),
@@ -749,27 +807,51 @@ export default function KaartMakenPage() {
       <div className="flex flex-col md:flex-row flex-1 min-h-0">
         {/* ── Stappen ── */}
         <aside className="w-full md:w-80 md:flex-shrink-0 bg-white border-r border-gray-100 md:overflow-y-auto">
-          <div className="px-5 py-4 border-b border-gray-100 flex flex-col gap-3" style={{ backgroundColor: GOLD_BG }}>
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: GOLD }}>{PLANS[plan].label}</span>
-              <span className="text-[11px] font-semibold" style={{ color: CHARCOAL }}>
-                {alAfgenomen ? "zit in je pakket" : `${prijs} eenmalig`}
-              </span>
+          {/* Je concepten. Alleen zinvol als er iets bewaard is, en dat kan
+              pas als je bent ingelogd. */}
+          {userEmail && (concepten.length > 0 || eventId) && (
+            <div className="px-5 py-4 border-b border-gray-100 flex flex-col gap-2" style={{ backgroundColor: GOLD_BG }}>
+              <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: GOLD }}>Concept</span>
+              <select
+                value={eventId ?? "nieuw"}
+                onChange={(e) => (e.target.value === "nieuw" ? nieuwConcept() : kiesConcept(e.target.value))}
+                className={inputCls}
+                style={{ ...inputStyle, fontWeight: 600, cursor: "pointer" }}
+              >
+                {concepten.map((c) => (
+                  <option key={c.id} value={c.id}>{conceptLabel(c)}</option>
+                ))}
+                {!eventId && <option value="nieuw">Nieuw concept, nog niet bewaard</option>}
+                {eventId && <option value="nieuw">+ Nieuw concept beginnen</option>}
+              </select>
+              <input
+                className={inputCls}
+                style={inputStyle}
+                placeholder="Geef dit concept een naam"
+                value={conceptNaam}
+                onChange={(e) => setConceptNaam(e.target.value)}
+                maxLength={60}
+              />
+              <p className="text-[11px] leading-snug" style={{ color: SUBTLE }}>
+                Alleen voor jezelf, om varianten uit elkaar te houden. Je gasten zien dit niet.
+              </p>
             </div>
-            <p className="text-[11px] leading-snug" style={{ color: BODY }}>
-              {alAfgenomen
-                ? "Deze kaart zit in wat je al hebt. Bewaren is genoeg, daarna staat de link klaar voor je gasten."
-                : isTrouwkaart
-                  ? "Ontwerp gratis, betaal pas als je verstuurt. Per gastengroep maak je een eigen kaart met eigen tijden."
-                  : "Ontwerp gratis, betaal pas als je verstuurt. Later upgraden kan altijd, alles blijft staan."}
-            </p>
+          )}
 
-          </div>
-
-          <Sectie id="tekst" open={stap === "tekst"} onToggle={() => setStap(stap === "tekst" ? null : "tekst")} titel="Tekst op de kaart">
+          <Sectie open={stap === "tekst"} onToggle={() => setStap(stap === "tekst" ? null : "tekst")} titel="Tekst op de kaart">
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Jullie namen</span>
-              <input className={inputCls} style={inputStyle} placeholder="Sophie & Daan" value={ontwerp.names} onChange={(e) => update({ names: e.target.value })} maxLength={80} />
+              {/* Een tekstvak en geen invoerregel, zodat een enter werkt: veel
+                  paren zetten de tweede naam graag op een eigen regel. */}
+              <textarea
+                className={`${inputCls} resize-none`}
+                style={{ ...inputStyle, minHeight: 48 }}
+                rows={2}
+                placeholder="Sophie & Daan"
+                value={ontwerp.names}
+                onChange={(e) => update({ names: e.target.value })}
+                maxLength={80}
+              />
             </label>
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Trouwdatum</span>
@@ -777,82 +859,27 @@ export default function KaartMakenPage() {
             </label>
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Locatie</span>
-              <input className={inputCls} style={inputStyle} placeholder="Landgoed Duno, Doorwerth" value={ontwerp.location} onChange={(e) => update({ location: e.target.value })} maxLength={120} />
+              <textarea
+                className={`${inputCls} resize-none`}
+                style={{ ...inputStyle, minHeight: 48 }}
+                rows={2}
+                placeholder={"Landgoed Duno\nDoorwerth"}
+                value={ontwerp.location}
+                onChange={(e) => update({ location: e.target.value })}
+                maxLength={120}
+              />
+              <span className="text-[11px] leading-snug" style={{ color: SUBTLE }}>
+                Deze locatie staat op deze kaart. Maak je een aparte kaart voor de avondgasten, dan kan die een andere locatie hebben.
+              </span>
             </label>
 
-            {/* De locatie hoort bij de bruiloft, maar kan per kaart afwijken:
-                het avondfeest is soms ergens anders dan de ceremonie. Laat je
-                dit uit, dan volgt de kaart de bruiloft, ook als je de locatie
-                later nog verandert. */}
-            <div className="flex flex-col gap-1.5">
-              <label className="flex items-start gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={ontwerp.locatieWijktAf}
-                  onChange={(e) =>
-                    update({
-                      locatieWijktAf: e.target.checked,
-                      // Beginnen bij de locatie van de bruiloft scheelt typen
-                      kaartLocatie: e.target.checked ? ontwerp.kaartLocatie || ontwerp.location : "",
-                    })
-                  }
-                  style={{ accentColor: GOLD, marginTop: 2 }}
-                />
-                <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>
-                  Deze kaart heeft een andere locatie
-                </span>
-              </label>
-              {ontwerp.locatieWijktAf && (
-                <input
-                  className={inputCls}
-                  style={inputStyle}
-                  placeholder="Bijv. Feestzaal De Oude Fabriek, Arnhem"
-                  value={ontwerp.kaartLocatie}
-                  onChange={(e) => update({ kaartLocatie: e.target.value })}
-                  maxLength={120}
-                  autoFocus
-                />
-              )}
-              <p className="text-[11px] leading-snug" style={{ color: SUBTLE }}>
-                {ontwerp.locatieWijktAf
-                  ? "Alleen op deze kaart. Je andere kaarten en je website houden de locatie hierboven."
-                  : "Handig als het avondfeest ergens anders is dan de ceremonie."}
-              </p>
-            </div>
-            {isTrouwkaart && (
-              <>
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Voor wie is deze kaart?</span>
-                  <div className="flex flex-wrap gap-2">
-                    {([["", "Geen vermelding"], ...Object.entries(GUEST_TYPE_LABEL)] as [CardGuestType | "", string][]).map(([w, label]) => (
-                      <button
-                        key={w || "geen"}
-                        onClick={() => update({ guestType: w })}
-                        className="text-xs font-semibold px-3 py-2 rounded-xl"
-                        style={{ border: `2px solid ${ontwerp.guestType === w ? GOLD : GOLD_LIGHT}`, backgroundColor: ontwerp.guestType === w ? "#fff" : "transparent", color: CHARCOAL, cursor: "pointer" }}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <label className="flex flex-col gap-1.5">
-                  <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Uitnodigingszin</span>
-                  <input className={inputCls} style={inputStyle} placeholder={ontwerp.guestType ? KAART_TEKST[ontwerp.taal].uitnodiging[ontwerp.guestType] : "Wij nodigen je van harte uit"} value={ontwerp.inviteText} onChange={(e) => update({ inviteText: e.target.value })} maxLength={160} />
-                </label>
-                <label className="flex flex-col gap-1.5">
-                  <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Tijden</span>
-                  <input className={inputCls} style={inputStyle} placeholder="Van 13:30 tot 23:00 uur" value={ontwerp.timeText} onChange={(e) => update({ timeText: e.target.value })} maxLength={80} />
-                </label>
-              </>
-            )}
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Boodschap</span>
               <textarea className={inputCls} style={{ ...inputStyle, minHeight: 84 }} placeholder={display.message} value={ontwerp.message} onChange={(e) => update({ message: e.target.value })} maxLength={400} />
             </label>
           </Sectie>
 
-          <Sectie id="stijl" open={stap === "stijl"} onToggle={() => setStap(stap === "stijl" ? null : "stijl")} titel="Stijl">
+          <Sectie open={stap === "stijl"} onToggle={() => setStap(stap === "stijl" ? null : "stijl")} titel="Stijl">
             <div className="grid grid-cols-5 gap-2">
               {STYLE_KEYS.map((s) => {
                 const cfg = STYLE_CONFIG[s]
@@ -879,7 +906,7 @@ export default function KaartMakenPage() {
             </div>
           </Sectie>
 
-          <Sectie id="template" open={stap === "template"} onToggle={() => setStap(stap === "template" ? null : "template")} titel="Ontwerp">
+          <Sectie open={stap === "template"} onToggle={() => setStap(stap === "template" ? null : "template")} titel="Ontwerp">
             <div className="flex flex-col gap-2">
               {CARD_DESIGNS.map((t) => (
                 <button
@@ -896,7 +923,7 @@ export default function KaartMakenPage() {
           </Sectie>
 
           {/* Een foto kan bij elk ontwerp */}
-          <Sectie id="foto" open={stap === "foto"} onToggle={() => setStap(stap === "foto" ? null : "foto")} titel="Foto (optioneel)">
+          <Sectie open={stap === "foto"} onToggle={() => setStap(stap === "foto" ? null : "foto")} titel="Foto (optioneel)">
               <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void kiesFoto(f) }} />
               {(ontwerp.photoDataUrl || ontwerp.photoUrl) && (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -917,7 +944,7 @@ export default function KaartMakenPage() {
           {/* Hoe de envelop opengaat bij de gast. Het uitschuiven, het brekende
               zegel en het verende landen zitten in beide keuzes; het verschil
               is alleen of er gouden stofjes bij komen. */}
-          <Sectie id="taal" open={stap === "taal"} onToggle={() => setStap(stap === "taal" ? null : "taal")} titel="Taal van de kaart">
+          <Sectie open={stap === "taal"} onToggle={() => setStap(stap === "taal" ? null : "taal")} titel="Taal van de kaart">
             <div className="grid grid-cols-2 gap-2">
               {CARD_TALEN.map((tl) => (
                 <button
@@ -937,7 +964,7 @@ export default function KaartMakenPage() {
             </div>
           </Sectie>
 
-          <Sectie id="animatie" open={stap === "animatie"} onToggle={() => setStap(stap === "animatie" ? null : "animatie")} titel="Openen">
+          <Sectie open={stap === "animatie"} onToggle={() => setStap(stap === "animatie" ? null : "animatie")} titel="Openen">
             <div className="flex flex-col gap-2">
               {CARD_ANIMATIE_KEUZES.map((a) => (
                 <button
@@ -960,7 +987,7 @@ export default function KaartMakenPage() {
             </button>
           </Sectie>
 
-          <Sectie id="bekijken" open={stap === "bekijken"} onToggle={() => setStap(stap === "bekijken" ? null : "bekijken")} titel="Bekijken">
+          <Sectie open={stap === "bekijken"} onToggle={() => setStap(stap === "bekijken" ? null : "bekijken")} titel="Bekijken">
             <button
               onClick={() => setSimulatie(true)}
               className="w-full text-sm font-semibold px-3 py-3 rounded-xl transition-all hover:-translate-y-0.5"

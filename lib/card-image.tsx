@@ -79,6 +79,19 @@ export async function renderCardImage(
   const namesFont = namesData ? "CardNames" : serif
   const kopFont = ds.kopFontImage === "serif" ? serif : sans
 
+  // Satori heeft geen bruikbare white-space: pre-line, dus een tekst met een
+  // enter erin moet als losse regels worden neergezet. Anders plakt "Sophie
+  // & Daan" met een regelafbreking op de kaart aan elkaar in de afbeelding.
+  function regels(tekst: string) {
+    const delen = tekst.split(/\r?\n/)
+    if (delen.length === 1) return tekst
+    return delen.map((regel, i) => (
+      <div key={i} style={{ display: "flex" }}>
+        {regel}
+      </div>
+    ))
+  }
+
   const s = mode === "og" ? 0.62 : 1.1
   const showPhoto = mode === "download" && !!display.photoUrl
 
@@ -208,9 +221,12 @@ export async function renderCardImage(
           // Alleen meegeven als het ontwerp er een heeft: satori struikelt over
           // letterSpacing met de waarde undefined.
           ...(ds.namenSpatiering ? { letterSpacing: ds.namenSpatiering } : {}),
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
         }}
       >
-        {display.names}
+        {regels(display.names)}
       </div>
 
       {display.dateText && (
@@ -227,8 +243,8 @@ export async function renderCardImage(
       )}
 
       {display.location && (
-        <div style={{ fontFamily: sans, fontSize: 31 * s, color: textColor, opacity: 0.85 }}>
-          {display.location}
+        <div style={{ fontFamily: sans, fontSize: 31 * s, color: textColor, opacity: 0.85, display: "flex", flexDirection: "column", alignItems: "center" }}>
+          {regels(display.location)}
         </div>
       )}
 

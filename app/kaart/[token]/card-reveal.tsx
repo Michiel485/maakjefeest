@@ -714,6 +714,9 @@ export default function CardReveal({
                     fontSize: `${2.4 * ds.namenSchaal}rem`,
                     letterSpacing: ds.namenSpatiering,
                     margin: "6px 0",
+                    // Een bruidspaar mag de tweede naam op een eigen regel
+                    // zetten; dan hoort die enter ook op de kaart te staan.
+                    whiteSpace: "pre-line",
                   }}
                 >
                   {display.names}
@@ -741,7 +744,7 @@ export default function CardReveal({
                 )}
 
                 {display.location && (
-                  <p className="text-sm" style={{ color: sc.cardText ?? sc.bodyText, opacity: 0.85, margin: 0 }}>
+                  <p className="text-sm" style={{ color: sc.cardText ?? sc.bodyText, opacity: 0.85, margin: 0, whiteSpace: "pre-line" }}>
                     {display.location}
                   </p>
                 )}

@@ -78,7 +78,7 @@ export function KaartWeergave({
   const initials =
     (event.initials && event.initials.replace(/[|/\\\-·.]/g, "").trim()) ||
     display.names
-      .split(/\s*&\s*|\s+en\s+/i)
+      .split(/\s*&\s*|\s+en\s+|\r?\n/i)
       .map((n) => n.trim().charAt(0).toUpperCase())
       .filter(Boolean)
       .slice(0, 2)
