@@ -18,7 +18,6 @@ import {
   cardTaal,
   CARD_TEMPLATE_LABEL,
   CARD_TEMPLATE_UITLEG,
-  CARD_TYPE_LABEL,
   CARD_TYPE_PLAN,
   KAART_TEKST,
   GUEST_TYPE_LABEL,
@@ -37,6 +36,7 @@ import { compressImage } from "@/lib/client-image"
 import CardReveal from "@/app/kaart/[token]/card-reveal"
 import { KLEUR } from "@/lib/ontwerp"
 import { Knop, Melding } from "@/components/ui"
+import BouwerSchakelaar from "@/components/BouwerSchakelaar"
 
 // Kleuren komen uit lib/ontwerp.ts, de enige bron. De korte namen hieronder
 // staan er alleen zodat de rest van dit bestand leesbaar blijft.
@@ -66,7 +66,12 @@ interface KaartOntwerp {
   template: CardTemplate
   names: string
   datum: string
+  // De locatie van de bruiloft. Hoort bij het event, niet bij de kaart.
   location: string
+  // Staat de schakelaar aan dat deze kaart een eigen locatie heeft?
+  locatieWijktAf: boolean
+  // De eigen locatie van deze kaart, alleen van belang als hierboven aan staat
+  kaartLocatie: string
   message: string
   guestType: CardGuestType | ""
   inviteText: string
@@ -84,6 +89,8 @@ const LEEG: KaartOntwerp = {
   names: "",
   datum: "",
   location: "",
+  locatieWijktAf: false,
+  kaartLocatie: "",
   message: "",
   guestType: "",
   inviteText: "",
@@ -196,7 +203,6 @@ export default function KaartMakenPage() {
     eventStatus === "published" ? (upgradePrice(eventPlan, plan) ?? 0) : PLANS[plan].price
   const prijs = formatEur(bijTeBetalen).replace(",00", "")
   const isTrouwkaart = ontwerp.type === "trouwkaart"
-  const naarCompleet = upgradePrice(plan, "compleet")
   const huidigeKaart = kaarten.find((k) => k.id === cardId) ?? null
 
   function update(patch: Partial<KaartOntwerp>) {
@@ -255,7 +261,9 @@ export default function KaartMakenPage() {
               template: kaart?.template ?? "klassiek",
               names: kaart?.content.names ?? (event.frame_names as string) ?? (event.title as string) ?? "",
               datum: (event.datum as string) ?? "",
-              location: kaart?.content.location ?? (event.locatie as string) ?? "",
+              location: (event.locatie as string) ?? "",
+              locatieWijktAf: Boolean(kaart?.content.location),
+              kaartLocatie: kaart?.content.location ?? "",
               message: kaart?.content.message ?? "",
               guestType: kaart?.content.guestType ?? "",
               inviteText: kaart?.content.inviteText ?? "",
@@ -307,10 +315,10 @@ export default function KaartMakenPage() {
 
   // ── Weergave ──────────────────────────────────────────────────────────────
   const sc = getStyleConfig(ontwerp.style)
+  // Namen en datum staan bewust niet in de inhoud van de kaart: die horen bij
+  // de bruiloft. buildCardDisplay haalt ze uit het event hieronder.
   const content: CardContent = {
-    names: ontwerp.names || undefined,
-    dateText: ontwerp.datum ? formatDate(ontwerp.datum) : undefined,
-    location: ontwerp.location || undefined,
+    location: (ontwerp.locatieWijktAf && ontwerp.kaartLocatie.trim()) || undefined,
     message: ontwerp.message || undefined,
     guestType: ontwerp.guestType || undefined,
     inviteText: ontwerp.inviteText || undefined,
@@ -359,6 +367,9 @@ export default function KaartMakenPage() {
     if (!er.ok) throw new Error("Opslaan van het event mislukt")
     const { id: nieuwEventId } = (await er.json()) as { id: string }
 
+    // Alleen wat echt van deze kaart is. Namen en datum komen van de bruiloft
+    // en de locatie alleen als hij afwijkt; anders zou een wijziging aan de
+    // bruiloft de kaarten niet meer bereiken.
     const kaartContent: CardContent = { ...content, photoUrl: fotoUrl ?? undefined }
     let nieuwCardId = cardId
     if (!nieuwCardId) {
@@ -402,6 +413,35 @@ export default function KaartMakenPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ontwerp, eventId, cardId, plan, isTrouwkaart])
 
+  // Overstappen naar de websitebouwer zonder dat er al iets bewaard is. Wat
+  // hier al ingevuld staat gaat mee, inclusief de stijl, zodat de website
+  // meteen in de sfeer van de kaart staat en niet leeg begint. Een bestaand
+  // websiteconcept laten we met rust.
+  function neemMeeNaarWebsite() {
+    try {
+      if (localStorage.getItem("sayingyes_draft")) return
+      const namen = ontwerp.names.trim() || "Onze bruiloft"
+      localStorage.setItem(
+        "sayingyes_draft",
+        JSON.stringify({
+          type: "bruiloft",
+          naam: namen,
+          nav_title: namen,
+          frame_names: namen,
+          initials: initialenVan(ontwerp.names),
+          datum: ontwerp.datum,
+          locatie: ontwerp.location,
+          frame_location: ontwerp.location,
+          style: ontwerp.style,
+          use_frame: true,
+          aangemaakt: new Date().toISOString(),
+        })
+      )
+    } catch {
+      // Zonder browseropslag begint de websitebouwer gewoon leeg
+    }
+  }
+
   // ── Wisselen tussen de kaarten van deze bruiloft ──────────────────────────
   // Namen, datum, locatie en stijl horen bij de bruiloft en blijven staan. Wat
   // per kaart verschilt is het soort kaart, de gastengroep en de teksten.
@@ -414,6 +454,8 @@ export default function KaartMakenPage() {
       ...o,
       type: k.type,
       template: k.template,
+      locatieWijktAf: Boolean(k.content.location),
+      kaartLocatie: k.content.location ?? "",
       message: k.content.message ?? "",
       guestType: k.content.guestType ?? "",
       inviteText: k.content.inviteText ?? "",
@@ -430,6 +472,8 @@ export default function KaartMakenPage() {
     setCardId(null)
     setOntwerp((o) => ({
       ...o,
+      locatieWijktAf: false,
+      kaartLocatie: "",
       message: "",
       guestType: "",
       inviteText: "",
@@ -569,7 +613,7 @@ export default function KaartMakenPage() {
         body: JSON.stringify({
           type: ontwerp.type, template: ontwerp.template, style: ontwerp.style,
           names: ontwerp.names, dateText: ontwerp.datum ? formatDate(ontwerp.datum) : "",
-          location: ontwerp.location, message: ontwerp.message,
+          location: (ontwerp.locatieWijktAf && ontwerp.kaartLocatie.trim()) || ontwerp.location, message: ontwerp.message,
           guestType: ontwerp.guestType, inviteText: ontwerp.inviteText, timeText: ontwerp.timeText,
           photoUrl: ontwerp.photoUrl, taal: ontwerp.taal,
         }),
@@ -589,17 +633,23 @@ export default function KaartMakenPage() {
     }
   }
 
-  const titel = isTrouwkaart ? "Trouwkaart ontwerpen" : "Save the Date ontwerpen"
-
   return (
     <div className="min-h-screen flex flex-col antialiased" style={{ backgroundColor: IVORY }}>
       {/* ── Kop ── */}
       <header className="sticky top-0 z-30 flex items-center justify-between gap-3 px-4 sm:px-6 py-3 border-b" style={{ backgroundColor: "#fff", borderColor: `${GOLD_LIGHT}80` }}>
-        <div className="flex items-center gap-4 min-w-0">
-          <Link href="/" className="text-xl tracking-wide" style={{ fontFamily: "var(--font-cormorant)", color: CHARCOAL, fontWeight: 600, textDecoration: "none" }}>
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+          <Link href="/" className="hidden sm:inline text-xl tracking-wide" style={{ fontFamily: "var(--font-cormorant)", color: CHARCOAL, fontWeight: 600, textDecoration: "none" }}>
             SayingYes
           </Link>
-          <span className="hidden sm:inline text-sm truncate" style={{ color: BODY }}>{titel}</span>
+          {/* Wat maak je? Stond eerst in de zijbalk, maar hoort hier: zo is het
+              het eerste dat je ziet en voelt de website als onderdeel van
+              dezelfde bouwer in plaats van een aparte plek. */}
+          <BouwerSchakelaar
+            actief={ontwerp.type}
+            eventId={eventId}
+            opKaartType={(type) => update({ type })}
+            opWebsite={neemMeeNaarWebsite}
+          />
         </div>
         <div className="flex items-center gap-2">
           {userEmail && (
@@ -700,30 +750,6 @@ export default function KaartMakenPage() {
         {/* ── Stappen ── */}
         <aside className="w-full md:w-80 md:flex-shrink-0 bg-white border-r border-gray-100 md:overflow-y-auto">
           <div className="px-5 py-4 border-b border-gray-100 flex flex-col gap-3" style={{ backgroundColor: GOLD_BG }}>
-            {/* Wat maak je? Wisselen mag op elk moment, ook bij een kaart die
-                al bewaard is: ontwerpen is gratis en het pakket volgt pas uit
-                wat je verstuurt. */}
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: GOLD }}>Wat maak je?</span>
-              <div className="flex gap-2">
-                {(["save_the_date", "trouwkaart"] as CardType[]).map((ct) => (
-                  <button
-                    key={ct}
-                    onClick={() => update({ type: ct })}
-                    className="flex-1 text-xs font-semibold px-3 py-2 rounded-xl"
-                    style={{
-                      border: `2px solid ${ontwerp.type === ct ? GOLD : GOLD_LIGHT}`,
-                      backgroundColor: ontwerp.type === ct ? "#fff" : "transparent",
-                      color: CHARCOAL,
-                      cursor: "pointer",
-                    }}
-                  >
-                    {CARD_TYPE_LABEL[ct]}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             <div className="flex items-center justify-between gap-3">
               <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: GOLD }}>{PLANS[plan].label}</span>
               <span className="text-[11px] font-semibold" style={{ color: CHARCOAL }}>
@@ -738,15 +764,6 @@ export default function KaartMakenPage() {
                   : "Ontwerp gratis, betaal pas als je verstuurt. Later upgraden kan altijd, alles blijft staan."}
             </p>
 
-            {/* Doorstap naar de websitebouwer. Ontwerpen kost niets, dus dit
-                mag ook bij een kaartpakket: pas publiceren vraagt Compleet. */}
-            <Link
-              href={eventId ? `/bouwen?event_id=${eventId}` : "/bouwen?plan=compleet"}
-              className="text-[11px] font-semibold underline"
-              style={{ color: CHARCOAL }}
-            >
-              Ook een trouwwebsite ontwerpen
-            </Link>
           </div>
 
           <Sectie id="tekst" open={stap === "tekst"} onToggle={() => setStap(stap === "tekst" ? null : "tekst")} titel="Tekst op de kaart">
@@ -762,6 +779,46 @@ export default function KaartMakenPage() {
               <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Locatie</span>
               <input className={inputCls} style={inputStyle} placeholder="Landgoed Duno, Doorwerth" value={ontwerp.location} onChange={(e) => update({ location: e.target.value })} maxLength={120} />
             </label>
+
+            {/* De locatie hoort bij de bruiloft, maar kan per kaart afwijken:
+                het avondfeest is soms ergens anders dan de ceremonie. Laat je
+                dit uit, dan volgt de kaart de bruiloft, ook als je de locatie
+                later nog verandert. */}
+            <div className="flex flex-col gap-1.5">
+              <label className="flex items-start gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={ontwerp.locatieWijktAf}
+                  onChange={(e) =>
+                    update({
+                      locatieWijktAf: e.target.checked,
+                      // Beginnen bij de locatie van de bruiloft scheelt typen
+                      kaartLocatie: e.target.checked ? ontwerp.kaartLocatie || ontwerp.location : "",
+                    })
+                  }
+                  style={{ accentColor: GOLD, marginTop: 2 }}
+                />
+                <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>
+                  Deze kaart heeft een andere locatie
+                </span>
+              </label>
+              {ontwerp.locatieWijktAf && (
+                <input
+                  className={inputCls}
+                  style={inputStyle}
+                  placeholder="Bijv. Feestzaal De Oude Fabriek, Arnhem"
+                  value={ontwerp.kaartLocatie}
+                  onChange={(e) => update({ kaartLocatie: e.target.value })}
+                  maxLength={120}
+                  autoFocus
+                />
+              )}
+              <p className="text-[11px] leading-snug" style={{ color: SUBTLE }}>
+                {ontwerp.locatieWijktAf
+                  ? "Alleen op deze kaart. Je andere kaarten en je website houden de locatie hierboven."
+                  : "Handig als het avondfeest ergens anders is dan de ceremonie."}
+              </p>
+            </div>
             {isTrouwkaart && (
               <>
                 <div className="flex flex-col gap-1.5">
@@ -941,22 +998,6 @@ export default function KaartMakenPage() {
               />
             </div>
 
-            {/* Websiteblok: één keer, rustig, met het verschilbedrag */}
-            <div className="mt-8 rounded-2xl p-6" style={{ backgroundColor: "#fff", border: `1px solid ${GOLD_LIGHT}` }}>
-              <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: GOLD }}>Ook een trouwwebsite erbij?</p>
-              <p className="text-sm leading-relaxed mb-3" style={{ color: BODY }}>
-                De knop onder jullie kaart kan naar een complete trouwwebsite leiden: programma, locatie, cadeautips, fotogalerij en een live fotomuur voor op de dag zelf. Alles wat je gasten anders per appje vragen, op één plek.
-              </p>
-              <ul className="text-sm space-y-1.5 mb-4" style={{ color: BODY }}>
-                {["Gasten reageren met één tik, jullie zien alles in het dashboard", "Eigen adres: jullienamen.sayingyes.nl", "Gastenfotomuur met QR-code voor op de tafels"].map((p) => (
-                  <li key={p} className="flex items-start gap-2"><span style={{ color: GOLD, fontSize: "0.45rem", marginTop: 6 }}>✦</span>{p}</li>
-                ))}
-              </ul>
-              <p className="text-xs" style={{ color: SUBTLE }}>
-                {naarCompleet != null ? `Later upgraden kost ${formatEur(naarCompleet)} extra. Dit ontwerp blijft dan gewoon staan.` : ""}{" "}
-                <Link href="/digitale-uitnodiging" className="underline" style={{ color: GOLD }}>Bekijk de pakketten</Link>
-              </p>
-            </div>
           </div>
         </main>
       </div>

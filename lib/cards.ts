@@ -35,8 +35,18 @@ export function cardAnimatie(value: unknown): CardAnimatie {
 }
 
 export interface CardContent {
+  // ── Namen en datum: van de bruiloft, niet van de kaart ────────────────────
+  // Deze twee worden alleen nog gelezen, nooit meer geschreven. Ze stonden
+  // eerder als kopie op elke kaart en die kopie won van wat er op de bruiloft
+  // stond. Veranderde je de namen in de websitebouwer, dan hielden de kaarten
+  // stilletjes de oude. Eén bruiloft heeft één stel namen en één datum, dus
+  // die horen op het event. Blijven staan voor kaarten van voor deze wijziging.
   names?: string
   dateText?: string
+  // ── Locatie: wel per kaart, maar alleen als hij afwijkt ───────────────────
+  // Leeg betekent: volg de locatie van de bruiloft. Gevuld betekent: op deze
+  // kaart staat iets anders. Dat komt echt voor, bijvoorbeeld een avondfeest
+  // op een andere plek dan de ceremonie.
   location?: string
   message?: string
   photoUrl?: string

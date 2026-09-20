@@ -48,8 +48,9 @@ const inputCls = "w-full rounded-xl border bg-white px-3 py-2.5 text-sm placehol
 const inputStyle: React.CSSProperties = { color: CHARCOAL, borderColor: GOLD_LIGHT }
 
 interface EditForm {
-  names: string
-  dateText: string
+  // Namen en datum staan hier bewust niet: die horen bij de bruiloft en
+  // worden in de bouwer aangepast. Een kopie per kaart liep uit de pas zodra
+  // iemand de namen elders veranderde.
   location: string
   message: string
   photoUrl: string
@@ -112,8 +113,6 @@ export default function CardsSection({
   function openEdit(card: CardRow) {
     setEditingCard(card)
     setEditForm({
-      names: card.content.names ?? "",
-      dateText: card.content.dateText ?? "",
       location: card.content.location ?? "",
       message: card.content.message ?? "",
       photoUrl: card.content.photoUrl ?? "",
@@ -136,8 +135,10 @@ export default function CardsSection({
         // terug op Nederlands, want de inhoud wordt opnieuw opgebouwd.
         animatie: editingCard.content.animatie,
         taal: editingCard.content.taal,
-        names: editForm.names || undefined,
-        dateText: editForm.dateText || undefined,
+        // Namen en datum blijven staan zoals ze waren: die worden hier niet
+        // bewerkt, en weglaten zou ze bij oude kaarten wissen.
+        names: editingCard.content.names,
+        dateText: editingCard.content.dateText,
         location: editForm.location || undefined,
         message: editForm.message || undefined,
         photoUrl: editForm.photoUrl || undefined,
@@ -492,17 +493,12 @@ export default function CardsSection({
 
             <div className="px-7 py-6 flex flex-col gap-5">
               <p className="text-xs" style={{ color: BODY }}>
-                Lege velden worden automatisch ingevuld vanuit jullie website (namen, datum, locatie).
+                Namen en datum horen bij jullie bruiloft en pas je aan in de bouwer. Wat je hier
+                verandert geldt alleen voor deze kaart.
               </p>
 
-              <Field label="Namen">
-                <input type="text" value={editForm.names} onChange={(e) => setEditForm({ ...editForm, names: e.target.value })} placeholder="Bijv. Anna & Tom" className={inputCls} style={inputStyle} />
-              </Field>
-              <Field label="Datumtekst">
-                <input type="text" value={editForm.dateText} onChange={(e) => setEditForm({ ...editForm, dateText: e.target.value })} placeholder="Bijv. 12 september 2026" className={inputCls} style={inputStyle} />
-              </Field>
-              <Field label="Locatie">
-                <input type="text" value={editForm.location} onChange={(e) => setEditForm({ ...editForm, location: e.target.value })} placeholder="Bijv. Kasteel Duivenvoorde" className={inputCls} style={inputStyle} />
+              <Field label="Andere locatie op deze kaart (leeg = die van jullie bruiloft)">
+                <input type="text" value={editForm.location} onChange={(e) => setEditForm({ ...editForm, location: e.target.value })} placeholder="Bijv. Feestzaal De Oude Fabriek, Arnhem" className={inputCls} style={inputStyle} />
               </Field>
               <Field label="Tekst op de kaart">
                 <textarea rows={3} value={editForm.message} onChange={(e) => setEditForm({ ...editForm, message: e.target.value })} className={`${inputCls} resize-none`} style={inputStyle} />

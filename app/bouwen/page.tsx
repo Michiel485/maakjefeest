@@ -16,6 +16,7 @@ import { TITLE_FONT_OPTIONS, getTitleFont } from "@/lib/title-fonts"
 import { createClient } from "@/lib/supabase"
 import { eventSiteUrl } from "@/lib/site-url"
 import { DEFAULT_PLAN, hoogstePlan, PLANS, formatEur, isCardPlan, isPlan, type Plan } from "@/lib/plans"
+import BouwerSchakelaar from "@/components/BouwerSchakelaar"
 import SophieTutorial, { type SophieNav } from "@/components/SophieTutorial"
 
 type EventType = "bruiloft" | "verjaardag" | "evenement"
@@ -1301,7 +1302,13 @@ export default function BouwenPage() {
 
       {/* ── Top bar ── */}
       <header className="flex items-center justify-between px-4 md:px-6 py-3 bg-white border-b border-gray-100 shadow-sm flex-shrink-0 z-10">
-        <span className="text-xl tracking-wide" style={{ fontFamily: "var(--font-cormorant)", color: "#C5A059", fontWeight: 600 }}>SayingYes</span>
+        <div className="flex items-center gap-3 md:gap-4 min-w-0">
+          <span className="hidden sm:inline text-xl tracking-wide" style={{ fontFamily: "var(--font-cormorant)", color: "#C5A059", fontWeight: 600 }}>SayingYes</span>
+          {/* Dezelfde schakelaar als in de kaartbouwer, zodat het voelt als één
+              bouwer met drie onderdelen. Hiervandaan was er eerder geen weg
+              terug naar de kaarten. */}
+          <BouwerSchakelaar actief="website" eventId={savedEventId} />
+        </div>
         <div className="flex flex-col items-end gap-1">
           <div className="flex items-center gap-2">
             {/* Mijn Dashboard */}
