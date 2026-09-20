@@ -16,6 +16,8 @@ Persoonlijke actielijst van Michiel. Claude houdt deze bij; afgeronde punten gaa
 
 ## Afgerond
 
+- [x] 20 sep 2026: **Conceptherinneringen per pakket.** Wie een Save the Date opsloeg kreeg een mail over een trouwwebsite van €49,99 met een knop naar de verkeerde bouwer. Nu één mail per moment met de woorden per pakket uit `lib/plans.ts`, geen aparte mails per product. Bewaartermijnen: kaarten 182 dagen (herinneringen op dag 42, 91, 175), website 70 dagen (dag 42, 63), waarbij de laatste de aankondiging is dat het ontwerp verdwijnt. Het verwijderen haalt nu ook de geüploade foto's uit de opslag; die bleven eerder voor altijd staan. Migratie gedraaid en getest tegen de echte database met vijf testconcepten, echte data onaangeroerd, testdata opgeruimd.
+
 - [x] 11 sep 2026: **Drie kaartontwerpen staan live** (commit ed23c9a). Migratie `migration_card_designs.sql` gedraaid en gecontroleerd: klassiek, sierlijk, bohemian en foto mogen in de database, iets anders wordt geweigerd. Watermerk is lichter in de bouwer en in de gastenweergave, witregels blijven in de kaarttekst staan, standaardtekst zegt nu dat het om een bruiloft gaat, en het kaartvoorbeeld is uit de websitebouwer gehaald. Build groen, testrijen opgeruimd.
 
 - [x] 10 sep 2026: **Kaartbouwer gebouwd** (`/kaart-maken`, twee standen: Save the Date en trouwkaart). Anoniem ontwerpen met live kaartvoorbeeld, tekst bewerken, stijl, foto, envelopsimulatie en downloadvoorbeeld met watermerk, e-mailadres pas bij bewaren of activeren, event ontstaat pas op dat moment. Landingspagina, homepage en dashboard linken ernaar. Welkomstmail kent het pakket. Getest in de browser, build groen.

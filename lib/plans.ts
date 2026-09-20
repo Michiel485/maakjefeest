@@ -168,3 +168,112 @@ export function planExpiry(now: Date, datum: string | null | undefined): Date {
   naBruiloft.setMonth(naBruiloft.getMonth() + 1)
   return naBruiloft > eenJaar ? naBruiloft : eenJaar
 }
+
+// ── Teksten en termijnen voor de mails ──────────────────────────────────────
+// Eén mail per moment, met de woorden per pakket hiervandaan. Aparte mails per
+// product zouden drie keer onderhoud zijn en drie keer de kans dat er één
+// achterloopt; dat is precies hoe de conceptherinnering over een trouwwebsite
+// bleef praten nadat de prijsladder er was.
+export interface PlanMailWoorden {
+  // Waar het over gaat, in een zin: "jullie Save the Date staat nog klaar"
+  ding: string
+  // Wat de klant ermee gaat doen zodra hij betaald heeft
+  werkwoord: string
+  // Hetzelfde werkwoord als voltooid deelwoord, want dat is onregelmatig
+  voltooid: string
+  // Wat er verdwijnt als hij niets doet
+  kwijt: string
+  // Waar de knop in de mail naartoe gaat
+  bouwerPad: string
+}
+
+export const PLAN_MAIL: Record<Plan, PlanMailWoorden> = {
+  save_the_date: {
+    ding: "jullie Save the Date",
+    werkwoord: "versturen",
+    voltooid: "verstuurd",
+    kwijt: "jullie ontwerp",
+    bouwerPad: "/kaart-maken",
+  },
+  uitnodiging: {
+    ding: "jullie digitale uitnodiging",
+    werkwoord: "versturen",
+    voltooid: "verstuurd",
+    kwijt: "jullie ontwerp en de RSVP-instellingen",
+    bouwerPad: "/kaart-maken",
+  },
+  compleet: {
+    ding: "jullie trouwwebsite",
+    werkwoord: "publiceren",
+    voltooid: "gepubliceerd",
+    kwijt: "jullie concept",
+    bouwerPad: "/bouwen",
+  },
+}
+
+// Hoe lang een onbetaald ontwerp blijft staan en wanneer we herinneren, in
+// dagen na de laatste activiteit. De laatste herinnering is de aankondiging
+// dat het ontwerp wordt verwijderd.
+export interface Bewaarschema {
+  herinneringen: number[]
+  verwijderNa: number
+}
+
+const BEWAARSCHEMA: Record<Plan, Bewaarschema> = {
+  // Kaarten worden vaak maanden vooruit ontworpen, dus een half jaar bewaren.
+  // Herinneringen na 6 weken, 3 maanden en een week voor het verwijderen.
+  save_the_date: { herinneringen: [42, 91, 175], verwijderNa: 182 },
+  uitnodiging:   { herinneringen: [42, 91, 175], verwijderNa: 182 },
+  // Een concept van een site is minder lang houdbaar: tien weken, met een
+  // herinnering na 6 weken en de aankondiging na 9 weken.
+  compleet:      { herinneringen: [42, 63], verwijderNa: 70 },
+}
+
+export function bewaarschema(plan: unknown): Bewaarschema {
+  return BEWAARSCHEMA[normalizePlan(plan)]
+}
+
+// De teksten van de conceptherinnering, los van het versturen zodat ze te
+// controleren zijn zonder mail. Eén mail, de woorden per pakket uit
+// lib/plans.ts: zo kan de tekst nooit meer over een trouwwebsite gaan terwijl
+// iemand een Save the Date heeft gemaakt.
+// Welke van de herinneringen dit is. Drie varianten, want dezelfde tekst twee
+// keer sturen (na zes weken en na drie maanden) leest als een robot.
+export type DraftHerinnering = "eerste" | "tussen" | "laatste"
+
+export function draftReminderTekst({
+  eventTitle,
+  plan,
+  variant,
+  dagenTotVerwijderen,
+}: {
+  eventTitle: string
+  plan: Plan
+  variant: DraftHerinnering
+  dagenTotVerwijderen: number
+}) {
+  const w = PLAN_MAIL[plan]
+  const prijs = formatEur(PLANS[plan].price).replace(",00", "")
+  const dagen = dagenTotVerwijderen === 1 ? "morgen" : `over ${dagenTotVerwijderen} dagen`
+  const Ding = `${w.ding.charAt(0).toUpperCase()}${w.ding.slice(1)}`
+
+  const subject = {
+    eerste: `${Ding} staat nog klaar`,
+    tussen: `Staat ${w.ding} nog in de planning?`,
+    laatste: `Laatste herinnering: ${w.ding} wordt ${dagen} verwijderd`,
+  }[variant]
+
+  const headline = {
+    eerste: `${Ding} staat nog klaar`,
+    tussen: "Nog steeds voor jullie bewaard",
+    laatste: "Laatste herinnering",
+  }[variant]
+
+  const bodyText = {
+    eerste: `Het ontwerp voor <strong>${eventTitle}</strong> staat klaar, maar jullie gasten kunnen er nog niets van zien: ${w.ding} is nog niet ${w.voltooid}. Dat kost eenmalig ${prijs}, en daarna kun je hem ${w.werkwoord}.`,
+    tussen: `Een tijd terug hebben jullie een ontwerp gemaakt voor <strong>${eventTitle}</strong>. Het staat er nog precies zoals jullie het achterlieten, maar ${w.ding} is nog niet ${w.voltooid}. Is de bruiloft nog in voorbereiding? Dan pak je het weer op waar je was; het kost eenmalig ${prijs}.`,
+    laatste: `Dit is de laatste herinnering. Het ontwerp voor <strong>${eventTitle}</strong> staat er al een tijd en is nog niet ${w.voltooid}. Doen jullie niets, dan verwijderen we ${w.kwijt} ${dagen}. Wil je het houden, open het dan nog één keer; daarna staat het er weer een hele tijd.`,
+  }[variant]
+
+  return { w, prijs, dagen, laatste: variant === "laatste", subject, headline, bodyText }
+}

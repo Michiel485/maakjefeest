@@ -1,5 +1,5 @@
 import { Resend } from "resend"
-import { PLANS, isCardPlan, type Plan } from "./plans"
+import { PLANS, draftReminderTekst, isCardPlan, type DraftHerinnering, type Plan } from "./plans"
 
 const FROM = "SayingYes <info@sayingyes.nl>"
 
@@ -142,168 +142,6 @@ export async function sendRSVPConfirmation(data: RSVPConfirmationData) {
     return { success: true, id: result?.id }
   } catch (err) {
     console.error("[mail] Unexpected error sending RSVP confirmation:", err)
-    return { success: false, error: err }
-  }
-}
-
-// ── First Save Welcome ────────────────────────────────────────────────────────
-
-export async function sendFirstSaveWelcomeEmail(
-  toEmail: string,
-  name: string,
-  continueUrl: string
-) {
-  const html = `<!DOCTYPE html>
-<html lang="nl">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f5f1ec;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
-  <style>@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&display=swap');</style>
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f1ec;padding:40px 16px;">
-    <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);">
-
-        <!-- Header -->
-        <tr>
-          <td bgcolor="#c9a96e" style="background-color:#c9a96e;padding:44px 40px 36px;text-align:center;">
-            <p style="margin:0 0 10px;font-size:26px;font-weight:600;letter-spacing:0.06em;color:#f5ead6;font-family:'Cormorant Garamond','Georgia',serif;">SayingYes</p>
-            <h1 style="margin:0;font-size:26px;font-weight:800;color:#111827;line-height:1.25;">Ja, de basis staat! 💍</h1>
-            <p style="margin:10px 0 0;font-size:14px;color:#2d1f0e;font-weight:500;">Welkom bij SayingYes</p>
-          </td>
-        </tr>
-
-        <!-- Body -->
-        <tr>
-          <td style="padding:36px 40px 0;">
-            <p style="margin:0 0 18px;font-size:15px;color:#111827;font-weight:600;line-height:1.7;">
-              Hoi ${name},
-            </p>
-            <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.7;">
-              Gefeliciteerd! De allereerste (en misschien wel belangrijkste) stap is gezet: jullie hebben de basisgegevens van jullie bruiloft succesvol opgeslagen. Vanaf nu is het officieel: jullie trouwwebsite begint te leven!
-            </p>
-            <p style="margin:0 0 28px;font-size:15px;color:#374151;line-height:1.7;">
-              Wat ontzettend te gek dat jullie SayingYes gebruiken om jullie gasten straks in stijl te informeren. We gaan er samen iets prachtigs van maken.
-            </p>
-
-            <!-- Card -->
-            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
-              <tr>
-                <td style="background-color:#faf7f2;border:1px solid #e8dcc8;border-radius:12px;padding:24px 24px 20px;">
-
-                  <!-- Steps -->
-                  <p style="margin:0 0 14px;font-size:14px;font-weight:700;color:#111827;">Wat staat er klaar na je eerste login?</p>
-                  <table width="100%" cellpadding="0" cellspacing="0">
-                    <tr>
-                      <td style="padding:7px 0;border-bottom:1px solid #ede9e0;">
-                        <p style="margin:0;font-size:13px;color:#374151;line-height:1.6;"><strong style="color:#111827;">🎨 Kies een stijl</strong> — Selecteer een template dat matcht met jullie grote dag.</p>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="padding:7px 0;border-bottom:1px solid #ede9e0;">
-                        <p style="margin:0;font-size:13px;color:#374151;line-height:1.6;"><strong style="color:#111827;">📍 Locaties &amp; Tijden</strong> — Voeg ceremonies en feesten toe aan de handige tijdlijn.</p>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="padding:7px 0;">
-                        <p style="margin:0;font-size:13px;color:#374151;line-height:1.6;"><strong style="color:#111827;">💌 RSVP klaarzetten</strong> — Bepaal welke vragen gasten moeten beantwoorden.</p>
-                      </td>
-                    </tr>
-                  </table>
-
-                  <!-- Divider -->
-                  <table width="100%" cellpadding="0" cellspacing="0" style="margin:18px 0;">
-                    <tr>
-                      <td style="border-top:1px solid #ddd3be;font-size:0;line-height:0;">&nbsp;</td>
-                    </tr>
-                  </table>
-
-                  <!-- Pricing -->
-                  <p style="margin:0 0 8px;font-size:14px;font-weight:700;color:#111827;">Transparant &amp; scherp geprijsd 🥂</p>
-                  <p style="margin:0 0 10px;font-size:13px;color:#374151;line-height:1.65;">
-                    Bij SayingYes houden we van duidelijke taal. Omdat we ons platform slim en efficiënt hebben ingericht, bieden we een van de scherpste tarieven van Nederland aan: <strong style="color:#111827;">eenmalig &euro;&nbsp;49,99</strong> voor een heel jaar live.
-                  </p>
-                  <p style="margin:0 0 0;font-size:13px;color:#374151;line-height:1.65;">
-                    Geen addertjes onder het gras: de site verloopt na een jaar volledig automatisch, dus jullie zitten nooit vast aan een ongewenst abonnement. Wel flexibel verlengen om de trouwfoto&rsquo;s nog te delen? Dat kan daarna simpel per 6 maanden voor &euro;&nbsp;22,-.
-                  </p>
-
-                  <!-- Divider -->
-                  <table width="100%" cellpadding="0" cellspacing="0" style="margin:18px 0;">
-                    <tr>
-                      <td style="border-top:1px solid #ddd3be;font-size:0;line-height:0;">&nbsp;</td>
-                    </tr>
-                  </table>
-
-                  <!-- Feedback -->
-                  <p style="margin:0 0 8px;font-size:14px;font-weight:700;color:#111827;">Idee&euml;n of suggesties? 🛠️</p>
-                  <p style="margin:0;font-size:13px;color:#374151;line-height:1.65;">
-                    Ons platform staat als een huis en we verwelkomen dagelijks volop nieuwe bruidsparen. Achter de schermen zit ons sterke ontwikkelingsteam echter nooit stil. Mis je een specifieke functie of heb je idee&euml;n om SayingYes n&oacute;g beter te maken? Stuur een mailtje naar <a href="mailto:ideen@sayingyes.nl" style="color:#c9a96e;text-decoration:none;font-weight:600;">ideen@sayingyes.nl</a>. We horen het heel graag!
-                  </p>
-
-                </td>
-              </tr>
-            </table>
-
-            <p style="margin:0 0 20px;font-size:15px;color:#374151;line-height:1.7;">
-              Alles wordt tussentijds automatisch opgeslagen. Klik op de knop hieronder om direct verder te bouwen:
-            </p>
-
-            <!-- CTA button -->
-            <table cellpadding="0" cellspacing="0" style="margin:0 0 32px;">
-              <tr>
-                <td bgcolor="#c9a96e" style="background-color:#c9a96e;border-radius:10px;">
-                  <a
-                    href="${continueUrl}"
-                    style="display:inline-block;background-color:#c9a96e;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:14px 36px;border-radius:10px;letter-spacing:0.02em;mso-padding-alt:14px 36px;"
-                  >
-                    Verder bouwen →
-                  </a>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-
-        <!-- Sign-off -->
-        <tr>
-          <td style="padding:0 40px 32px;">
-            <p style="margin:0;font-size:15px;color:#374151;line-height:1.7;">
-              Heel veel plezier met het ontwerpen van jullie website,<br>
-              <strong style="color:#111827;">Het team van SayingYes.nl</strong>
-            </p>
-          </td>
-        </tr>
-
-        <!-- Footer -->
-        <tr>
-          <td style="padding:20px 40px 28px;text-align:center;border-top:1px solid #f0ede8;">
-            <p style="margin:0;font-size:12px;color:#bdb0a0;">
-              Verstuurd via <strong style="color:#9b8b6a;">SayingYes</strong> &nbsp;·&nbsp; sayingyes.nl
-            </p>
-          </td>
-        </tr>
-
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`
-
-  try {
-    const { data: result, error } = await getResend().emails.send({
-      from:    FROM,
-      to:      [toEmail],
-      subject: "Ja, de basis staat! 💍 Welkom bij SayingYes",
-      html,
-    })
-
-    if (error) {
-      console.error("[mail] First save welcome email error:", error)
-      return { success: false, error }
-    }
-
-    console.log("[mail] First save welcome email sent →", toEmail, "| id:", result?.id)
-    return { success: true, id: result?.id }
-  } catch (err) {
-    console.error("[mail] Unexpected error sending first save welcome email:", err)
     return { success: false, error: err }
   }
 }
@@ -974,31 +812,32 @@ export async function sendDraftReminderEmail({
   eventTitle,
   builderUrl,
   reminderNumber,
+  plan,
+  variant,
+  dagenTotVerwijderen,
 }: {
   toEmail: string
   eventTitle: string
   builderUrl: string
-  reminderNumber: 1 | 2
+  // Welke herinnering dit is, alleen voor de logregel
+  reminderNumber: number
+  plan: Plan
+  // Eerste nudge, tussenherinnering of de aankondiging dat het verdwijnt
+  variant: DraftHerinnering
+  dagenTotVerwijderen: number
 }) {
-  const isSecond = reminderNumber === 2
+  const { w, prijs, subject, headline, bodyText, dagen, laatste } = draftReminderTekst({
+    eventTitle,
+    plan,
+    variant,
+    dagenTotVerwijderen,
+  })
 
-  const subject = isSecond
-    ? `Laatste herinnering: jullie trouwwebsite wacht nog op publicatie 💍`
-    : `Jullie trouwwebsite staat nog niet live — publiceer hem vandaag! 🚀`
-
-  const headline = isSecond
-    ? `Laatste herinnering: jullie website wacht nog`
-    : `Jullie website staat klaar om live te gaan!`
-
-  const bodyText = isSecond
-    ? `Dit is een laatste herinnering. Jullie concept voor <strong>${eventTitle}</strong> staat al een tijdje klaar maar is nog niet gepubliceerd. Als jullie de website niet publiceren, wordt het concept over een week automatisch verwijderd om onze servers schoon te houden.`
-    : `Goed nieuws: jullie concept voor <strong>${eventTitle}</strong> staat al klaar in de builder! Maar jullie gasten kunnen de website nog niet zien — hij is namelijk nog niet gepubliceerd. Een publicatie kost slechts &euro;&nbsp;49,99 voor een volledig jaar live.`
-
-  const urgencyBlock = isSecond
+  const urgencyBlock = laatste
     ? `<tr>
         <td style="background-color:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:16px 20px;margin-bottom:24px;">
           <p style="margin:0;font-size:13px;color:#9a3412;line-height:1.65;">
-            ⚠️ <strong>Let op:</strong> als jullie binnen 7 dagen niet inloggen of het concept publiceren, wordt het automatisch verwijderd.
+            ⚠️ <strong>Let op:</strong> als jullie niets doen, wordt ${w.kwijt} ${dagen} verwijderd. Openen is genoeg om dat te voorkomen.
           </p>
         </td>
       </tr>`
@@ -1030,14 +869,14 @@ export async function sendDraftReminderEmail({
 
             ${urgencyBlock ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">${urgencyBlock}</table>` : ""}
 
-            <!-- Pricing block (only for first reminder) -->
-            ${!isSecond ? `
+            <!-- Prijsblok: alleen bij de eerste herinneringen -->
+            ${!laatste ? `
             <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
               <tr>
                 <td style="background-color:#faf7f2;border:1px solid #e8dcc8;border-radius:12px;padding:20px 24px;">
                   <p style="margin:0 0 8px;font-size:14px;font-weight:700;color:#111827;">Wat kost het?</p>
                   <p style="margin:0;font-size:13px;color:#374151;line-height:1.65;">
-                    <strong style="color:#111827;">Vanaf &euro;&nbsp;15</strong> voor een digitale Save the Date, &euro;&nbsp;25 voor uitnodigingen met RSVP, of &euro;&nbsp;49,99 voor de complete trouwwebsite, een jaar live. Later upgraden kan altijd, je betaalt dan alleen het verschil. Geen verborgen kosten.
+                    <strong style="color:#111827;">${prijs} eenmalig</strong> voor ${PLANS[plan].label}. Geen abonnement en geen verborgen kosten. Later upgraden kan altijd, je betaalt dan alleen het verschil.
                   </p>
                 </td>
               </tr>
@@ -1051,7 +890,7 @@ export async function sendDraftReminderEmail({
                     href="${builderUrl}"
                     style="display:inline-block;background-color:#c9a96e;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:14px 36px;border-radius:10px;letter-spacing:0.02em;mso-padding-alt:14px 36px;"
                   >
-                    ${isSecond ? "Nu publiceren →" : "Verder bouwen &amp; publiceren →"}
+                    ${laatste ? "Ontwerp openen →" : `Verder met ${w.ding} →`}
                   </a>
                 </td>
               </tr>
