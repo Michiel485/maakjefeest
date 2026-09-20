@@ -73,3 +73,7 @@ Persoonlijke actielijst van Michiel. Claude houdt deze bij; afgeronde punten gaa
   wachtwoord zelf niet meer. Zie docs/AUDIT-en-ideeen.md deel 3, punt 3.
 - Samen uitdenken: de gastenlijst met een link per gast (idee D) en de
   deelbare video of GIF van de envelop (idee E).
+- Eigen RSVP-vragen kunnen nu alleen ja of nee (custom_answer en
+  custom_answer_2 zijn booleans) en het zijn er precies twee. Vragen met een
+  tekstantwoord of een keuzelijst, en zoveel als je wilt, zou meer waard zijn
+  dan welke vaste vraag ook. Zie docs/PLAN-gastenlijst.md deel 7.
