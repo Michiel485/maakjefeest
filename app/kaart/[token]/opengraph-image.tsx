@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation"
 import { buildCardDisplay } from "@/lib/cards"
-import { fetchCardByToken } from "@/lib/cards-server"
+import { fetchCardByToken, isOpenbaar } from "@/lib/cards-server"
 import { getStyleConfig } from "@/lib/event-styles"
 import { renderCardImage } from "@/lib/card-image"
 
@@ -22,7 +22,8 @@ export default async function Image({
   const sc = getStyleConfig(data.event.style)
 
   // Nog niet geactiveerd: watermerk, ook in de voorvertoning die WhatsApp maakt
-  const betaald = data.event.status === "published" || data.event.status === "expired"
+  // Dezelfde regel als de kaartpagina: geactiveerd en in het pakket
+  const betaald = isOpenbaar(data)
 
   return renderCardImage(display, sc, "og", !betaald)
 }

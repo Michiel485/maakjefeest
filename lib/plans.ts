@@ -91,6 +91,23 @@ export function planAllows(plan: unknown, feature: PlanFeature): boolean {
   return RIGHTS[normalizePlan(plan)][feature]
 }
 
+// ── Ontwerpen is gratis, versturen is het product ────────────────────────────
+// Een bruidspaar mag een Save the Date, een trouwkaart en een website naast
+// elkaar klaarzetten zonder iets af te nemen. Het pakket bepaalt pas wat er
+// naar de gasten mag. Zo volgt het pakket uit wat iemand activeert en niet uit
+// welke bouwer hij als eerste opende, en is het klaarstaande werk meteen het
+// beste verkoopargument: het staat er al, activeren is een knop.
+
+/** Mag dit pakket dit soort kaart naar de gasten sturen? */
+export function planMagVersturen(plan: unknown, cardType: string): boolean {
+  return planAllows(plan, cardType === "trouwkaart" ? "trouwkaart_cards" : "save_the_date_cards")
+}
+
+/** Het hoogste van twee pakketten, voor "wat moet ik hiervoor afnemen". */
+export function hoogstePlan(a: unknown, b: unknown): Plan {
+  return planRank(a) >= planRank(b) ? normalizePlan(a) : normalizePlan(b)
+}
+
 // Welke paginatypes van een event publiek zichtbaar zijn
 export function publicPageTypes<T extends { type: string }>(plan: unknown, pages: T[]): T[] {
   const p = normalizePlan(plan)

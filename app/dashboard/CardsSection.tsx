@@ -397,8 +397,11 @@ export default function CardsSection({
                       </a>
                     </>
                   )}
+                  {/* De voorbeeldroute, niet de publieke link: die is gecached
+                      en zou een nog niet verstuurde kaart dichthouden, ook voor
+                      het bruidspaar zelf. Delen gaat via Kopieer link. */}
                   <a
-                    href={`/kaart/${card.share_token}`}
+                    href={`/kaart/${card.share_token}/voorbeeld`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs font-semibold px-3 py-2 rounded-lg"

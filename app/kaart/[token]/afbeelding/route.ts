@@ -1,5 +1,5 @@
 import { buildCardDisplay } from "@/lib/cards"
-import { fetchCardByToken } from "@/lib/cards-server"
+import { fetchCardByToken, isOpenbaar } from "@/lib/cards-server"
 import { getStyleConfig } from "@/lib/event-styles"
 import { renderCardImage } from "@/lib/card-image"
 
@@ -16,7 +16,8 @@ export async function GET(
   const data = await fetchCardByToken(token)
   if (!data) return Response.json({ error: "Niet gevonden" }, { status: 404 })
 
-  const betaald = data.event.status === "published" || data.event.status === "expired"
+  // Dezelfde regel als de kaartpagina: geactiveerd en in het pakket
+  const betaald = isOpenbaar(data)
 
   const display = buildCardDisplay(data.card.type, data.card.template, data.card.content, data.event)
   const sc = getStyleConfig(data.event.style)

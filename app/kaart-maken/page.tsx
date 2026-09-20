@@ -28,7 +28,7 @@ import {
   type CardTemplate,
   type CardType,
 } from "@/lib/cards"
-import { PLANS, formatEur, upgradePrice } from "@/lib/plans"
+import { hoogstePlan, planMagVersturen, PLANS, formatEur, isPlan, upgradePrice, type Plan } from "@/lib/plans"
 import { compressImage } from "@/lib/client-image"
 import CardReveal from "@/app/kaart/[token]/card-reveal"
 
@@ -160,6 +160,10 @@ export default function KaartMakenPage() {
   // taal. Zonder deze lijst onthield de bouwer één kaart en overschreef hij
   // stilletjes de vorige.
   const [kaarten, setKaarten] = useState<CardRow[]>([])
+  // Wat er voor deze bruiloft al is afgenomen. Nodig om te weten of deze kaart
+  // al naar de gasten mag, of dat er nog iets bij komt.
+  const [eventPlan, setEventPlan] = useState<Plan | null>(null)
+  const [eventStatus, setEventStatus] = useState<string | null>(null)
   const [simulatie, setSimulatie] = useState(false)
   const [mailActie, setMailActie] = useState<Actie | null>(null)
   const [mailAdres, setMailAdres] = useState("")
@@ -167,10 +171,21 @@ export default function KaartMakenPage() {
   const [busy, setBusy] = useState<Actie | "download" | "foto" | null>(null)
   const [melding, setMelding] = useState<{ tekst: string; fout?: boolean } | null>(null)
 
-  const plan = CARD_TYPE_PLAN[ontwerp.type]
-  const prijs = formatEur(PLANS[plan].price).replace(",00", "")
+  // Welk pakket deze kaart nodig heeft om verstuurd te mogen worden. Ontwerpen
+  // mag altijd; dit is puur wat de kassa straks vraagt.
+  const kaartPlan = CARD_TYPE_PLAN[ontwerp.type]
+  // Wat de klant afneemt is het hoogste van wat hij al koos en wat deze kaart
+  // vraagt: wie Compleet heeft, hoeft voor een tweede kaart niets meer.
+  const plan = hoogstePlan(eventPlan ?? kaartPlan, kaartPlan)
+  // Al betaald en het pakket dekt deze kaart? Dan is de kaart meteen live.
+  const alAfgenomen = eventStatus === "published" && planMagVersturen(eventPlan, ontwerp.type)
+  // Wat er nog bij komt: bij een betaalde bruiloft alleen het verschil.
+  const bijTeBetalen =
+    eventStatus === "published" ? (upgradePrice(eventPlan, plan) ?? 0) : PLANS[plan].price
+  const prijs = formatEur(bijTeBetalen).replace(",00", "")
   const isTrouwkaart = ontwerp.type === "trouwkaart"
   const naarCompleet = upgradePrice(plan, "compleet")
+  const huidigeKaart = kaarten.find((k) => k.id === cardId) ?? null
 
   function update(patch: Partial<KaartOntwerp>) {
     setOntwerp((o) => ({ ...o, ...patch }))
@@ -208,6 +223,8 @@ export default function KaartMakenPage() {
           const r = await fetch(`/api/drafts/${eventUitUrl}`)
           if (r.ok) {
             const { event } = (await r.json()) as { event: Record<string, unknown> }
+            if (isPlan(event.plan)) setEventPlan(event.plan)
+            setEventStatus(typeof event.status === "string" ? event.status : null)
             const kr = await fetch(`/api/cards?event_id=${eventUitUrl}`)
             const { cards } = kr.ok ? ((await kr.json()) as { cards: CardRow[] }) : { cards: [] }
             setKaarten(cards)
@@ -239,10 +256,19 @@ export default function KaartMakenPage() {
         } catch {}
       } else if (eventUitOpslag && email) {
         // Verder werken aan een eerder bewaarde bruiloft: de lijst met kaarten
-        // hoort er dan ook te zijn, anders lijkt het alsof er maar een is.
+        // hoort er dan ook te zijn, anders lijkt het alsof er maar een is. En
+        // het pakket, want dat bepaalt of er nog iets te betalen valt.
         try {
-          const kr = await fetch(`/api/cards?event_id=${eventUitOpslag}`)
+          const [kr, er] = await Promise.all([
+            fetch(`/api/cards?event_id=${eventUitOpslag}`),
+            fetch(`/api/drafts/${eventUitOpslag}`),
+          ])
           if (kr.ok) setKaarten(((await kr.json()) as { cards: CardRow[] }).cards)
+          if (er.ok) {
+            const { event } = (await er.json()) as { event: Record<string, unknown> }
+            if (isPlan(event.plan)) setEventPlan(event.plan)
+            setEventStatus(typeof event.status === "string" ? event.status : null)
+          }
         } catch {}
       }
       setGeladen(true)
@@ -344,7 +370,7 @@ export default function KaartMakenPage() {
     const pr = await fetch(`/api/cards/${nieuwCardId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content: kaartContent, template: ontwerp.template }),
+      body: JSON.stringify({ content: kaartContent, template: ontwerp.template, type: ontwerp.type }),
     })
     if (!pr.ok) throw new Error("Opslaan van de kaarttekst mislukt")
 
@@ -546,14 +572,28 @@ export default function KaartMakenPage() {
           >
             {busy === "bewaar" ? "Bezig..." : "Bewaar ontwerp"}
           </button>
-          <button
-            onClick={() => voerUit("activeer")}
-            disabled={busy !== null}
-            className="text-sm font-bold px-4 py-2 rounded-xl disabled:opacity-60 transition-all hover:-translate-y-0.5"
-            style={{ backgroundColor: "#059669", color: "#fff", border: "none", cursor: "pointer", boxShadow: "0 4px 14px rgba(5,150,105,0.3)" }}
-          >
-            {busy === "activeer" ? "Bezig..." : `Activeer voor ${prijs}`}
-          </button>
+          {/* Zit deze kaart al in het afgenomen pakket, dan is er niets te
+              activeren: bewaren is genoeg en de link werkt al. */}
+          {alAfgenomen && huidigeKaart ? (
+            <a
+              href={`/kaart/${huidigeKaart.share_token}/voorbeeld`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-sm font-bold px-4 py-2 rounded-xl transition-all hover:-translate-y-0.5"
+              style={{ backgroundColor: "#059669", color: "#fff", textDecoration: "none", boxShadow: "0 4px 14px rgba(5,150,105,0.3)" }}
+            >
+              Bekijk de kaart
+            </a>
+          ) : (
+            <button
+              onClick={() => voerUit("activeer")}
+              disabled={busy !== null}
+              className="text-sm font-bold px-4 py-2 rounded-xl disabled:opacity-60 transition-all hover:-translate-y-0.5"
+              style={{ backgroundColor: "#059669", color: "#fff", border: "none", cursor: "pointer", boxShadow: "0 4px 14px rgba(5,150,105,0.3)" }}
+            >
+              {busy === "activeer" ? "Bezig..." : `Activeer voor ${prijs}`}
+            </button>
+          )}
         </div>
       </header>
 
@@ -615,16 +655,54 @@ export default function KaartMakenPage() {
       <div className="flex flex-col md:flex-row flex-1 min-h-0">
         {/* ── Stappen ── */}
         <aside className="w-full md:w-80 md:flex-shrink-0 bg-white border-r border-gray-100 md:overflow-y-auto">
-          <div className="px-5 py-4 border-b border-gray-100" style={{ backgroundColor: GOLD_BG }}>
+          <div className="px-5 py-4 border-b border-gray-100 flex flex-col gap-3" style={{ backgroundColor: GOLD_BG }}>
+            {/* Wat maak je? Wisselen mag op elk moment, ook bij een kaart die
+                al bewaard is: ontwerpen is gratis en het pakket volgt pas uit
+                wat je verstuurt. */}
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: GOLD }}>Wat maak je?</span>
+              <div className="flex gap-2">
+                {(["save_the_date", "trouwkaart"] as CardType[]).map((ct) => (
+                  <button
+                    key={ct}
+                    onClick={() => update({ type: ct })}
+                    className="flex-1 text-xs font-semibold px-3 py-2 rounded-xl"
+                    style={{
+                      border: `2px solid ${ontwerp.type === ct ? GOLD : GOLD_LIGHT}`,
+                      backgroundColor: ontwerp.type === ct ? "#fff" : "transparent",
+                      color: CHARCOAL,
+                      cursor: "pointer",
+                    }}
+                  >
+                    {CARD_TYPE_LABEL[ct]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="flex items-center justify-between gap-3">
               <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: GOLD }}>{PLANS[plan].label}</span>
-              <span className="text-[11px] font-semibold" style={{ color: CHARCOAL }}>{prijs} eenmalig</span>
+              <span className="text-[11px] font-semibold" style={{ color: CHARCOAL }}>
+                {alAfgenomen ? "zit in je pakket" : `${prijs} eenmalig`}
+              </span>
             </div>
-            <p className="text-[11px] leading-snug mt-1.5" style={{ color: BODY }}>
-              {isTrouwkaart
-                ? "Ontwerp gratis, betaal pas als je verstuurt. Per gastengroep maak je straks een eigen kaart met eigen tijden."
-                : "Ontwerp gratis, betaal pas als je verstuurt. Later upgraden kan altijd, alles blijft staan."}
+            <p className="text-[11px] leading-snug" style={{ color: BODY }}>
+              {alAfgenomen
+                ? "Deze kaart zit in wat je al hebt. Bewaren is genoeg, daarna staat de link klaar voor je gasten."
+                : isTrouwkaart
+                  ? "Ontwerp gratis, betaal pas als je verstuurt. Per gastengroep maak je een eigen kaart met eigen tijden."
+                  : "Ontwerp gratis, betaal pas als je verstuurt. Later upgraden kan altijd, alles blijft staan."}
             </p>
+
+            {/* Doorstap naar de websitebouwer. Ontwerpen kost niets, dus dit
+                mag ook bij een kaartpakket: pas publiceren vraagt Compleet. */}
+            <Link
+              href={eventId ? `/bouwen?event_id=${eventId}` : "/bouwen?plan=compleet"}
+              className="text-[11px] font-semibold underline"
+              style={{ color: CHARCOAL }}
+            >
+              Ook een trouwwebsite ontwerpen
+            </Link>
           </div>
 
           <Sectie id="tekst" open={stap === "tekst"} onToggle={() => setStap(stap === "tekst" ? "tekst" : "tekst")} titel="Tekst op de kaart">

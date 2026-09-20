@@ -1,7 +1,6 @@
 import { createServiceClient } from "@/lib/supabase"
 import { createClient } from "@/lib/supabase-server"
 import { generateShareToken, MAX_KAARTEN_PER_EVENT, type CardGuestType, type CardTemplate, type CardType } from "@/lib/cards"
-import { planAllows } from "@/lib/plans"
 
 const CARD_TYPES: CardType[] = ["save_the_date", "trouwkaart"]
 const CARD_TEMPLATES: CardTemplate[] = ["klassiek", "sierlijk", "bohemian", "foto"]
@@ -78,13 +77,10 @@ export async function POST(request: Request) {
   if (!event) return Response.json({ error: "Website niet gevonden" }, { status: 404 })
   if (event.user_email !== user.email) return Response.json({ error: "Geen toegang" }, { status: 403 })
 
-  // Trouwkaarten horen bij het pakket Uitnodiging & RSVP of hoger
-  if (type === "trouwkaart" && !planAllows(event.plan, "trouwkaart_cards")) {
-    return Response.json(
-      { error: "Trouwkaarten zitten in het pakket Uitnodiging & RSVP. Upgrade via je dashboard om ze te maken." },
-      { status: 403 }
-    )
-  }
+  // Bewust geen controle op het pakket: ontwerpen is gratis en onbeperkt. Een
+  // bruidspaar met een Save the Date mag een trouwkaart klaarzetten; die gaat
+  // pas naar de gasten na een upgrade (zie planMagVersturen op de kaartpagina).
+  // Zo hoeft niemand eerst het juiste pakket te kiezen om iets te mogen maken.
 
   // Een dak tegen misbruik, geen verkoopargument: zie MAX_KAARTEN_PER_EVENT
   const { count } = await service

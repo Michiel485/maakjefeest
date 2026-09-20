@@ -2,6 +2,7 @@
 
 import { createServiceClient } from "./supabase"
 import { rijOfNiets } from "./db"
+import { planMagVersturen } from "./plans"
 import type { CardEventSource, CardRow } from "./cards"
 
 export interface CardEventRow extends CardEventSource {
@@ -44,4 +45,19 @@ export async function fetchCardByToken(token: string): Promise<CardWithEvent | n
   if (!event) return null
 
   return { card: card as CardRow, event: event as CardEventRow }
+}
+
+/**
+ * Mag deze kaart naar de gasten? Twee voorwaarden: de bruiloft is geactiveerd,
+ * en het afgenomen pakket dekt dit soort kaart. Dat tweede maakt het mogelijk
+ * om een trouwkaart klaar te zetten naast een betaalde Save the Date: die
+ * staat er, maar gaat pas mee na een upgrade.
+ *
+ * Gebruikt door de kaartpagina, de voorbeeldweergave, de download en de
+ * voorvertoning voor WhatsApp. Alle vier moeten hetzelfde antwoord geven,
+ * anders lekt er een kaart via de zijdeur naar buiten.
+ */
+export function isOpenbaar(data: CardWithEvent): boolean {
+  const geactiveerd = data.event.status === "published" || data.event.status === "expired"
+  return geactiveerd && planMagVersturen(data.event.plan, data.card.type)
 }

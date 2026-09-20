@@ -15,7 +15,7 @@ import { formatDate } from "@/lib/event-styles"
 import { TITLE_FONT_OPTIONS, getTitleFont } from "@/lib/title-fonts"
 import { createClient } from "@/lib/supabase"
 import { eventSiteUrl } from "@/lib/site-url"
-import { DEFAULT_PLAN, PLANS, formatEur, isCardPlan, isPlan, type Plan } from "@/lib/plans"
+import { DEFAULT_PLAN, hoogstePlan, PLANS, formatEur, isCardPlan, isPlan, type Plan } from "@/lib/plans"
 import SophieTutorial, { type SophieNav } from "@/components/SophieTutorial"
 
 type EventType = "bruiloft" | "verjaardag" | "evenement"
@@ -450,11 +450,14 @@ export default function BouwenPage() {
       if (isPlan(bewaard)) setPlan(bewaard)
     } catch {}
   }, [])
-  // Deze bouwer is er voor de trouwwebsite; een kaartpakket hoort in de kaartbouwer
+  // Wie met een kaartpakket op deze bouwer belandt zonder bruiloft hoort in de
+  // kaartbouwer: daar begint zijn product. Maar hoort er al een bruiloft bij,
+  // dan mag hij hier gewoon een site ontwerpen. Ontwerpen is gratis; pas bij
+  // publiceren komt het pakket Compleet erbij (zie handlePublish).
   useEffect(() => {
     if (!isCardPlan(plan)) return
-    const id = new URLSearchParams(window.location.search).get("event_id")
-    router.replace(id ? `/kaart-maken?event_id=${id}` : "/kaart-maken")
+    if (new URLSearchParams(window.location.search).get("event_id")) return
+    router.replace("/kaart-maken")
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plan])
   useEffect(() => { if (activeSection !== 'algemeen') setOpenAlgSection(null) }, [activeSection])
@@ -1112,8 +1115,13 @@ export default function BouwenPage() {
     try {
       // Sla altijd eerst de laatste wijzigingen op via dezelfde flow als "Opslaan"
       const { id: eventId } = await doSave()
-      console.log("[publish] opgeslagen, navigeer naar betalen met event_id:", eventId, "pakket:", plan)
-      router.push(`/betalen?event_id=${eventId}&plan=${plan}`)
+      // De trouwwebsite is het pakket Compleet. Publiceren vraagt dus altijd dat
+      // pakket, ook als iemand bij een Save the Date begon: wat je afneemt
+      // volgt uit wat je activeert, niet uit waar je begon. De kassa rekent
+      // zelf het verschil als er al iets betaald is.
+      const publicatiePlan = hoogstePlan(plan, "compleet")
+      console.log("[publish] opgeslagen, navigeer naar betalen met event_id:", eventId, "pakket:", publicatiePlan)
+      router.push(`/betalen?event_id=${eventId}&plan=${publicatiePlan}`)
     } catch (err) {
       console.error("[publish] fout:", err)
       setPublishError(err instanceof Error ? err.message : "Er ging iets mis")

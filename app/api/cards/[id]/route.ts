@@ -1,9 +1,10 @@
 import { createServiceClient } from "@/lib/supabase"
 import { createClient } from "@/lib/supabase-server"
-import { cardAnimatie, type CardContent, type CardGuestType, type CardTemplate } from "@/lib/cards"
+import { cardAnimatie, type CardContent, type CardGuestType, type CardTemplate, type CardType } from "@/lib/cards"
 import { verversKaart } from "@/lib/db"
 
 const CARD_TEMPLATES: CardTemplate[] = ["klassiek", "sierlijk", "bohemian", "foto"]
+const CARD_TYPES: CardType[] = ["save_the_date", "trouwkaart"]
 const GUEST_TYPES: CardGuestType[] = ["daggast", "avondgast", "receptiegast"]
 const MAX_FIELD = 120
 const MAX_MESSAGE = 400
@@ -35,7 +36,7 @@ function sanitizeContent(raw: unknown): CardContent {
   }
 }
 
-// PATCH: kaartinhoud of template bijwerken
+// PATCH: kaartinhoud, ontwerp of soort kaart bijwerken
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -49,7 +50,7 @@ export async function PATCH(
     return Response.json({ error: "Geen toegang" }, { status: 403 })
   }
 
-  let body: { content?: unknown; template?: string }
+  let body: { content?: unknown; template?: string; type?: string }
   try {
     body = await request.json()
   } catch {
@@ -63,6 +64,15 @@ export async function PATCH(
       return Response.json({ error: "Ongeldig template" }, { status: 400 })
     }
     update.template = body.template
+  }
+  // Van Save the Date naar trouwkaart en terug mag: ontwerpen is gratis, het
+  // pakket wordt pas bij het versturen gecontroleerd. Wie zich bedenkt hoeft
+  // dus niet opnieuw te beginnen.
+  if (body.type !== undefined) {
+    if (!CARD_TYPES.includes(body.type as CardType)) {
+      return Response.json({ error: "Ongeldig soort kaart" }, { status: 400 })
+    }
+    update.type = body.type
   }
   if (Object.keys(update).length === 0) {
     return Response.json({ error: "Niets om bij te werken" }, { status: 400 })
