@@ -223,7 +223,7 @@ export default async function DashboardPage() {
   if (rsvpEvents.length > 0) {
     const { data: rsvpData } = await service
       .from("rsvp")
-      .select("id, event_id, submission_id, name, email, guest_type, dietary, is_primary, attending, message, song, overnachting, custom_answer, custom_answer_2, created_at")
+      .select("id, event_id, submission_id, name, email, telefoon, guest_type, dietary, allergie, is_primary, attending, message, song, overnachting, custom_answer, custom_answer_2, is_kind, leeftijd, status, bron_token, huishouden_naam, created_at")
       .in("event_id", rsvpEvents.map((e: Event) => e.id))
       .order("created_at", { ascending: false })
     rsvps = (rsvpData ?? []) as RsvpRow[]

@@ -1364,3 +1364,91 @@ export async function sendProefkaartEmail({
     return { success: false as const, error: err }
   }
 }
+
+// ── Bericht aan gasten: een herinnering of een wijziging ────────────────────
+// Twee gevallen, één mail. Bij een herinnering vraag je iemand alsnog te
+// reageren; bij een wijziging laat je iets weten en hoeft er juist niets te
+// gebeuren. Dat verschil moet er duidelijk in staan, anders denkt de helft dat
+// hij opnieuw moet aanmelden en de andere helft dat het al geregeld is.
+//
+// Het bruidspaar stuurt dit zelf; wij versturen nooit uit onszelf iets naar
+// een gast. De knop zet het klaar, zij drukken erop.
+export async function sendGastBerichtEmail({
+  toEmail,
+  gastNaam,
+  eventTitle,
+  soort,
+  bericht,
+  link,
+}: {
+  toEmail: string
+  gastNaam: string
+  eventTitle: string
+  soort: "herinnering" | "wijziging"
+  /** Wat het bruidspaar zelf schreef. */
+  bericht: string
+  /** De kaart of de trouwsite, precies de link die deze gast eerder kreeg. */
+  link: string
+}) {
+  const isHerinnering = soort === "herinnering"
+  const kop = isHerinnering ? "Laat je nog even weten of je erbij bent?" : "Er is iets veranderd"
+  const knop = isHerinnering ? "Laat het weten" : "Bekijk wat er veranderd is"
+  const slot = isHerinnering
+    ? "Het duurt een halve minuut en het scheelt het bruidspaar een hoop uitzoekwerk."
+    : "Je aanmelding blijft gewoon staan, je hoeft niets opnieuw in te vullen."
+
+  const html = `<!DOCTYPE html>
+<html lang="nl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f1ec;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f1ec;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);">
+        <tr>
+          <td bgcolor="#c9a96e" style="background-color:#c9a96e;padding:44px 40px 36px;text-align:center;">
+            <p style="margin:0 0 10px;font-size:26px;font-weight:600;letter-spacing:0.06em;color:#f5ead6;font-family:'Georgia',serif;">${eventTitle}</p>
+            <h1 style="margin:0;font-size:22px;font-weight:800;color:#111827;line-height:1.25;">${kop}</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:36px 40px 0;">
+            <p style="margin:0 0 20px;font-size:15px;color:#374151;line-height:1.7;">Hoi ${gastNaam},</p>
+            <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.7;white-space:pre-line;">${bericht}</p>
+            <table cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
+              <tr>
+                <td style="border-radius:12px;background-color:#111827;">
+                  <a href="${link}" style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:12px;">${knop} &rarr;</a>
+                </td>
+              </tr>
+            </table>
+            <p style="margin:0 0 36px;font-size:13px;color:#6b7280;line-height:1.7;">${slot}</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:20px 40px 32px;border-top:1px solid #f3ede4;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">Dit bericht komt van het bruidspaar, verstuurd via SayingYes.</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+
+  try {
+    const { data: result, error } = await getResend().emails.send({
+      from: FROM,
+      to: [toEmail],
+      subject: isHerinnering ? `${eventTitle}: laat je nog even weten of je erbij bent?` : `${eventTitle}: er is iets veranderd`,
+      html,
+    })
+    if (error) {
+      console.error("[mail] Gastbericht error:", error)
+      return { success: false as const, error }
+    }
+    return { success: true as const, id: result?.id }
+  } catch (err) {
+    console.error("[mail] Unexpected error sending gastbericht:", err)
+    return { success: false as const, error: err }
+  }
+}

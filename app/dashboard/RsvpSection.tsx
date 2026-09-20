@@ -18,6 +18,15 @@ export interface RsvpRow {
   email: string | null
   guest_type: string
   dietary: string | null
+  allergie: string | null
+  telefoon: string | null
+  is_kind: boolean | null
+  leeftijd: number | null
+  /** uitgenodigd, voorlopig of definitief. Zie lib/gasten.ts. */
+  status: string | null
+  /** Op welke kaartlink dit binnenkwam. */
+  bron_token: string | null
+  huishouden_naam: string | null
   is_primary: boolean
   attending: string | null
   message: string | null
@@ -75,6 +84,13 @@ export default function RsvpSection({
   const [saveError, setSaveError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  // Aangevinkte regels. Nodig om in één keer een herinnering te sturen, en om
+  // meerdere regels tegelijk op te ruimen.
+  const [gekozen, setGekozen] = useState<Set<string>>(new Set())
+  const [berichtSoort, setBerichtSoort] = useState<"herinnering" | "wijziging" | null>(null)
+  const [berichtTekst, setBerichtTekst] = useState("")
+  const [berichtBezig, setBerichtBezig] = useState(false)
+  const [berichtUitslag, setBerichtUitslag] = useState<string | null>(null)
 
   const eventMap = Object.fromEntries(events.map((e) => [e.id, e.title]))
 
@@ -106,6 +122,9 @@ export default function RsvpSection({
     const bTime = Math.min(...b.map((r) => new Date(r.created_at).getTime()))
     return bTime - aTime
   })
+
+  // Alle zichtbare regels, voor het vinkje in de kop
+  const alleIds = sortedGroups.flat().map((r) => r.id)
 
   function openEdit(row: RsvpRow) {
     setEditingRow(row)
@@ -151,6 +170,65 @@ export default function RsvpSection({
       // silently leave row
     } finally {
       setDeletingId(null)
+    }
+  }
+
+  function wissel(id: string) {
+    setGekozen((v) => {
+      const n = new Set(v)
+      if (n.has(id)) n.delete(id)
+      else n.add(id)
+      return n
+    })
+  }
+
+  function kiesAlle(ids: string[], aan: boolean) {
+    setGekozen((v) => {
+      const n = new Set(v)
+      for (const id of ids) {
+        if (aan) n.add(id)
+        else n.delete(id)
+      }
+      return n
+    })
+  }
+
+  async function verwijderGekozen() {
+    const ids = [...gekozen]
+    for (const id of ids) {
+      try {
+        const res = await fetch(`/api/rsvp/${id}`, { method: "DELETE" })
+        if (res.ok) setRsvps((prev) => prev.filter((r) => r.id !== id))
+      } catch {}
+    }
+    setGekozen(new Set())
+  }
+
+  // Het bruidspaar schrijft zelf, wij versturen alleen wat het aanvinkt.
+  async function stuurBericht() {
+    if (!berichtSoort) return
+    setBerichtBezig(true)
+    setBerichtUitslag(null)
+    try {
+      const res = await fetch("/api/gasten/bericht", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: [...gekozen], soort: berichtSoort, bericht: berichtTekst }),
+      })
+      const j = (await res.json().catch(() => ({}))) as { error?: string; verstuurd?: number; zonderMail?: string[] }
+      if (!res.ok) throw new Error(j.error || "Versturen mislukte")
+      const zonder = j.zonderMail ?? []
+      setBerichtUitslag(
+        `${j.verstuurd ?? 0} bericht${(j.verstuurd ?? 0) === 1 ? "" : "en"} verstuurd.` +
+          (zonder.length > 0
+            ? ` Geen mailadres van: ${zonder.join(", ")}. Die kun je zelf een appje sturen.`
+            : "")
+      )
+      setBerichtTekst("")
+    } catch (e) {
+      setBerichtUitslag(e instanceof Error ? e.message : "Versturen mislukte")
+    } finally {
+      setBerichtBezig(false)
     }
   }
 
@@ -290,6 +368,90 @@ export default function RsvpSection({
           </div>
         </div>
 
+        {/* ── Wat je met de aangevinkte regels kunt ──
+            Verschijnt alleen als er iets gekozen is, zodat de lijst rustig
+            blijft zolang je alleen kijkt. */}
+        {gekozen.size > 0 && (
+          <div
+            className="rounded-2xl p-4 flex flex-col gap-3"
+            style={{ backgroundColor: GOLD_BG, border: `1px solid ${GOLD_LIGHT}` }}
+          >
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-sm font-semibold" style={{ color: CHARCOAL }}>
+                {gekozen.size} {gekozen.size === 1 ? "gast" : "gasten"} geselecteerd
+              </span>
+              <button
+                onClick={() => { setBerichtSoort("herinnering"); setBerichtTekst("We zijn benieuwd of je erbij bent. Laat je het ons even weten?"); setBerichtUitslag(null) }}
+                className="text-sm font-semibold px-3 py-2 rounded-xl"
+                style={{ backgroundColor: "#fff", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
+              >
+                Stuur een herinnering
+              </button>
+              <button
+                onClick={() => { setBerichtSoort("wijziging"); setBerichtTekst("Er is iets veranderd aan onze trouwdag. Kijk je even?"); setBerichtUitslag(null) }}
+                className="text-sm font-semibold px-3 py-2 rounded-xl"
+                style={{ backgroundColor: "#fff", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
+              >
+                Laat weten dat er iets is veranderd
+              </button>
+              <button
+                onClick={verwijderGekozen}
+                className="text-sm font-semibold px-3 py-2 rounded-xl"
+                style={{ backgroundColor: "#fff", color: "#DC2626", border: "1px solid #fca5a5", cursor: "pointer" }}
+              >
+                Verwijderen
+              </button>
+              <button
+                onClick={() => { setGekozen(new Set()); setBerichtSoort(null); setBerichtUitslag(null) }}
+                className="text-sm font-semibold underline ml-auto"
+                style={{ color: BODY, cursor: "pointer" }}
+              >
+                Selectie wissen
+              </button>
+            </div>
+
+            {berichtSoort && (
+              <div className="flex flex-col gap-2">
+                <textarea
+                  rows={3}
+                  value={berichtTekst}
+                  onChange={(e) => setBerichtTekst(e.target.value)}
+                  maxLength={1000}
+                  className="w-full rounded-xl border bg-white px-3 py-2.5 text-sm resize-none focus:outline-none"
+                  style={{ borderColor: GOLD_LIGHT, color: CHARCOAL }}
+                  placeholder="Wat wil je ze laten weten?"
+                />
+                <p className="text-xs" style={{ color: BODY }}>
+                  {berichtSoort === "herinnering"
+                    ? "In de mail staat de link die ze eerder kregen, zodat ze alsnog kunnen reageren."
+                    : "In de mail staat erbij dat hun aanmelding gewoon blijft staan en dat ze niets opnieuw hoeven in te vullen."}
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={stuurBericht}
+                    disabled={berichtBezig || !berichtTekst.trim()}
+                    className="text-sm font-semibold px-4 py-2 rounded-xl disabled:opacity-60"
+                    style={{ backgroundColor: CHARCOAL, color: IVORY_CARD, border: "none", cursor: "pointer" }}
+                  >
+                    {berichtBezig ? "Versturen..." : `Versturen naar ${gekozen.size}`}
+                  </button>
+                  <button
+                    onClick={() => setBerichtSoort(null)}
+                    className="text-sm font-semibold underline"
+                    style={{ color: BODY, cursor: "pointer" }}
+                  >
+                    Annuleren
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {berichtUitslag && (
+              <p className="text-sm font-semibold" style={{ color: CHARCOAL }}>{berichtUitslag}</p>
+            )}
+          </div>
+        )}
+
         {/* Table */}
         <div
           className="rounded-2xl overflow-x-auto"
@@ -298,8 +460,18 @@ export default function RsvpSection({
           <table className="w-full text-sm">
             <thead>
               <tr style={{ borderBottom: `1px solid ${GOLD_LIGHT}` }}>
+                <Th className="w-10">
+                  <input
+                    type="checkbox"
+                    aria-label="Alles selecteren"
+                    checked={alleIds.length > 0 && alleIds.every((id) => gekozen.has(id))}
+                    onChange={(e) => kiesAlle(alleIds, e.target.checked)}
+                    style={{ accentColor: GOLD, cursor: "pointer" }}
+                  />
+                </Th>
                 <Th>Naam</Th>
-                <Th>Status</Th>
+                <Th>Aanwezig</Th>
+                <Th>Aanmelding</Th>
                 <Th className="hidden sm:table-cell">Type</Th>
                 <Th className="hidden md:table-cell">E-mail</Th>
                 <Th className="hidden lg:table-cell">Dieetwensen</Th>
@@ -327,8 +499,22 @@ export default function RsvpSection({
                         backgroundColor: gi % 2 === 0 ? IVORY_CARD : "#F0E8D8",
                       }}
                     >
+                      <td className="px-5 py-3">
+                        <input
+                          type="checkbox"
+                          aria-label={`${row.name} selecteren`}
+                          checked={gekozen.has(row.id)}
+                          onChange={() => wissel(row.id)}
+                          style={{ accentColor: GOLD, cursor: "pointer" }}
+                        />
+                      </td>
                       <td className="px-5 py-3 font-medium" style={{ color: CHARCOAL }}>
                         {row.name}
+                        {row.is_kind && (
+                          <span className="ml-2 text-xs" style={{ color: BODY }}>
+                            ({row.leeftijd != null ? `${row.leeftijd} jaar` : "kind"})
+                          </span>
+                        )}
                         {row.is_primary && (
                           <span
                             className="ml-2 text-xs font-semibold px-1.5 py-0.5 rounded-full"
@@ -342,6 +528,9 @@ export default function RsvpSection({
                         <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${isDeclined ? "bg-red-100 text-red-600" : "bg-emerald-100 text-emerald-700"}`}>
                           {isDeclined ? "Afwezig" : "Aanwezig"}
                         </span>
+                      </td>
+                      <td className="px-5 py-3">
+                        <StandBadge status={row.status} />
                       </td>
                       <td className="px-5 py-3 hidden sm:table-cell">
                         {isDeclined ? <span style={{ color: GOLD_LIGHT }}>—</span> : <GuestTypeBadge type={row.guest_type} />}
@@ -601,6 +790,28 @@ function TriStateButtons({ value, onChange }: { value: boolean | null; onChange:
         </button>
       ))}
     </div>
+  )
+}
+
+/**
+ * De stand van een aanmelding. Een voorlopig ja van een Save the Date is een
+ * zachte reservering en geen definitieve aanmelding; die twee mogen niet op
+ * één hoop, anders plant een bruidspaar op een getal dat niet vaststaat.
+ */
+function StandBadge({ status }: { status: string | null }) {
+  const s = status === "voorlopig" ? "voorlopig" : status === "uitgenodigd" ? "uitgenodigd" : "definitief"
+  const stijl = {
+    uitgenodigd: { bg: "#F3F4F6", tekst: "#6B7280", label: "Nog niets" },
+    voorlopig:   { bg: "#FEF3C7", tekst: "#92400E", label: "Voorlopig" },
+    definitief:  { bg: "#D1FAE5", tekst: "#065F46", label: "Definitief" },
+  }[s]
+  return (
+    <span
+      className="text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap"
+      style={{ backgroundColor: stijl.bg, color: stijl.tekst }}
+    >
+      {stijl.label}
+    </span>
   )
 }
 
