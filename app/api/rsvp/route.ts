@@ -1,6 +1,7 @@
 import { createServiceClient } from "@/lib/supabase"
 import { sendRSVPConfirmation, sendAdminRSVPNotification } from "@/lib/mail"
 import { planAllows } from "@/lib/plans"
+import { bezoekerIp, teVeelPogingen } from "@/lib/rem"
 
 interface GuestInput {
   name: string
@@ -16,6 +17,22 @@ interface GuestInput {
   custom_answer_2?: boolean
 }
 
+// Grenzen op wat een gast mag insturen. Dit is de enige plek waar het publiek
+// in onze database mag schrijven, dus hier hoort een hek. Er stond niets: een
+// lege naam kwam er gewoon in, en een naam van tien megabyte ook.
+const MAX_NAAM     = 120
+const MAX_EMAIL    = 160
+const MAX_KORT     = 120
+const MAX_BERICHT  = 1000
+const MAX_GASTEN   = 20   // een formulier stuurt er hoogstens een handvol
+
+/** Tekst afkappen en leegte als null teruggeven. */
+function tekst(waarde: unknown, max: number): string | null {
+  if (typeof waarde !== "string") return null
+  const v = waarde.trim()
+  return v ? v.slice(0, max) : null
+}
+
 export async function POST(request: Request) {
   let body: { event_id: string; guests: GuestInput[] }
 
@@ -29,6 +46,31 @@ export async function POST(request: Request) {
 
   if (!event_id || !Array.isArray(guests) || guests.length === 0) {
     return Response.json({ error: "event_id en guests zijn verplicht" }, { status: 400 })
+  }
+
+  if (guests.length > MAX_GASTEN) {
+    return Response.json(
+      { error: `Je kunt maximaal ${MAX_GASTEN} personen per keer aanmelden.` },
+      { status: 400 }
+    )
+  }
+
+  // Een rem tegen iemand die de gastenlijst van een bruidspaar volspamt. Voor
+  // de controles hieronder, zodat een script geen gratis hulp krijgt.
+  if (teVeelPogingen("rsvp", bezoekerIp(request), 10)) {
+    return Response.json(
+      { error: "Te veel aanmeldingen achter elkaar. Wacht even en probeer het opnieuw." },
+      { status: 429 }
+    )
+  }
+
+  // Een naam is het enige dat het bruidspaar echt nodig heeft. Zonder deze
+  // controle belandde er een naamloze regel in hun gastenlijst.
+  const schoon: (GuestInput & { name: string })[] = []
+  for (const g of guests) {
+    const naam = tekst(g.name, MAX_NAAM)
+    if (!naam) return Response.json({ error: "Vul van iedereen de naam in." }, { status: 400 })
+    schoon.push({ ...g, name: naam })
   }
 
   const supabase = createServiceClient()
@@ -52,19 +94,19 @@ export async function POST(request: Request) {
 
   const submission_id = crypto.randomUUID()
 
-  const rows = guests.map((g) => ({
+  const rows = schoon.map((g) => ({
     event_id,
     submission_id,
     name: g.name,
-    email: g.email || null,
-    attending: g.attending ?? "yes",
+    email: tekst(g.email, MAX_EMAIL),
+    attending: tekst(g.attending, 20) ?? "yes",
     is_primary: g.is_primary,
-    guest_type: g.guest_type ?? "daggast",
-    dietary: g.dietary || null,
-    message: g.message || null,
+    guest_type: tekst(g.guest_type, 40) ?? "daggast",
+    dietary: tekst(g.dietary, MAX_KORT),
+    message: tekst(g.message, MAX_BERICHT),
     // Only include optional extended columns when they have an actual value,
     // so missing DB columns don't cause an insert error.
-    ...(g.song != null        ? { song: g.song }                     : {}),
+    ...(g.song != null        ? { song: tekst(g.song, MAX_KORT) }    : {}),
     ...(g.overnachting != null ? { overnachting: g.overnachting }    : {}),
     ...(g.custom_answer != null ? { custom_answer: g.custom_answer } : {}),
     ...(g.custom_answer_2 != null ? { custom_answer_2: g.custom_answer_2 } : {}),
@@ -113,7 +155,7 @@ export async function POST(request: Request) {
     message:      r.message,
   }))
 
-  const primaryGuest = guests.find((g) => g.is_primary) ?? guests[0]
+  const primaryGuest = schoon.find((g) => g.is_primary) ?? schoon[0]
 
   // Confirmation mail to the guest
   if (primaryGuest.email) {
@@ -135,5 +177,5 @@ export async function POST(request: Request) {
     })
   }
 
-  return Response.json({ success: true, count: guests.length }, { status: 201 })
+  return Response.json({ success: true, count: schoon.length }, { status: 201 })
 }

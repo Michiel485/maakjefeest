@@ -1,5 +1,6 @@
 import { createServiceClient } from "@/lib/supabase"
 import { PLANS, normalizePlan } from "@/lib/plans"
+import { bezoekerIp, teVeelPogingen } from "@/lib/rem"
 
 export const dynamic = "force-dynamic"
 
@@ -9,6 +10,16 @@ export async function GET(request: Request) {
   const url = new URL(request.url)
   const code = url.searchParams.get("code")?.trim().toUpperCase()
   if (!code) return Response.json({ valid: false, reason: "Geen code opgegeven" })
+
+  // Zonder rem is dit een orakel: een script kan hier zo snel als het wil
+  // codes aflopen tot het er een vindt. Twintig pogingen per minuut is ruim
+  // voor iemand die zijn code intikt en nutteloos voor een script.
+  if (teVeelPogingen("discount", bezoekerIp(request), 20)) {
+    return Response.json(
+      { valid: false, reason: "Te veel pogingen. Wacht even en probeer het opnieuw." },
+      { status: 429 }
+    )
+  }
 
   const basePrice = PLANS[normalizePlan(url.searchParams.get("plan"))].price
 
