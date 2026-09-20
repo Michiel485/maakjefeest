@@ -1,5 +1,5 @@
 import { Resend } from "resend"
-import { PLANS, draftReminderTekst, isCardPlan, type DraftHerinnering, type Plan } from "./plans"
+import { PLANS, draftReminderTekst, isCardPlan, type DraftVariant, type Plan } from "./plans"
 
 const FROM = "SayingYes <info@sayingyes.nl>"
 
@@ -822,11 +822,11 @@ export async function sendDraftReminderEmail({
   // Welke herinnering dit is, alleen voor de logregel
   reminderNumber: number
   plan: Plan
-  // Eerste nudge, tussenherinnering of de aankondiging dat het verdwijnt
-  variant: DraftHerinnering
+  // Welke herinnering dit is; bepaalt de toon van de tekst
+  variant: DraftVariant
   dagenTotVerwijderen: number
 }) {
-  const { w, prijs, subject, headline, bodyText, dagen, laatste } = draftReminderTekst({
+  const { w, subject, headline, bodyText, dagen, laatste } = draftReminderTekst({
     eventTitle,
     plan,
     variant,
@@ -868,19 +868,6 @@ export async function sendDraftReminderEmail({
             </p>
 
             ${urgencyBlock ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">${urgencyBlock}</table>` : ""}
-
-            <!-- Prijsblok: alleen bij de eerste herinneringen -->
-            ${!laatste ? `
-            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
-              <tr>
-                <td style="background-color:#faf7f2;border:1px solid #e8dcc8;border-radius:12px;padding:20px 24px;">
-                  <p style="margin:0 0 8px;font-size:14px;font-weight:700;color:#111827;">Wat kost het?</p>
-                  <p style="margin:0;font-size:13px;color:#374151;line-height:1.65;">
-                    <strong style="color:#111827;">${prijs} eenmalig</strong> voor ${PLANS[plan].label}. Geen abonnement en geen verborgen kosten. Later upgraden kan altijd, je betaalt dan alleen het verschil.
-                  </p>
-                </td>
-              </tr>
-            </table>` : ""}
 
             <!-- CTA button -->
             <table cellpadding="0" cellspacing="0" style="margin:0 0 32px;">

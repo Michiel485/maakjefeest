@@ -77,7 +77,7 @@ export async function GET(request: Request) {
   // Published events are NEVER touched by this cron.
   const { data: drafts, error: fetchErr } = await service
     .from("events")
-    .select("id, title, user_email, slug, status, plan, created_at, last_active_at, hero_image_url, draft_reminder_1_sent_at, draft_reminder_2_sent_at, draft_reminder_3_sent_at")
+    .select("id, title, user_email, slug, status, plan, created_at, last_active_at, hero_image_url, draft_reminder_stap")
     .eq("status", "draft")
 
   if (fetchErr) {
@@ -86,13 +86,6 @@ export async function GET(request: Request) {
   }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://sayingyes.nl"
-
-  // Kolomnamen van de drie herinneringsdatums, in volgorde
-  const REMINDER_KOLOM = [
-    "draft_reminder_1_sent_at",
-    "draft_reminder_2_sent_at",
-    "draft_reminder_3_sent_at",
-  ] as const
 
   for (const draft of drafts ?? []) {
     // PARANOIA CHECK: skip anything that is not strictly 'draft'
@@ -151,25 +144,21 @@ export async function GET(request: Request) {
     }
 
     // ── Herinneringen ───────────────────────────────────────────────────────
-    // Pak de laatste herinnering waar de termijn voor verstreken is en die nog
-    // niet verstuurd is. De eerdere markeren we dan ook als verstuurd: iemand
-    // die pas na drie maanden terugkomt hoeft niet eerst de vriendelijke
-    // eerste nudge te krijgen en dan de aankondiging.
+    // draft_reminder_stap is het aantal herinneringen dat al verstuurd is. We
+    // pakken de laatste waar de termijn voor verstreken is en slaan de eerdere
+    // over: iemand die pas na drie maanden terugkomt hoeft niet eerst de
+    // vriendelijke eerste nudge te krijgen en daarna de aankondiging.
+    const alGehad = (draft.draft_reminder_stap as number | null) ?? 0
     let teVersturen = -1
-    for (let i = schema.herinneringen.length - 1; i >= 0; i--) {
-      if (inactiveDagen >= schema.herinneringen[i] && !draft[REMINDER_KOLOM[i]]) {
+    for (let i = schema.herinneringen.length - 1; i >= alGehad; i--) {
+      if (inactiveDagen >= schema.herinneringen[i].naDagen) {
         teVersturen = i
         break
       }
     }
     if (teVersturen < 0) continue
 
-    // Eerste nudge, tussenherinnering of de aankondiging dat het verdwijnt
-    const variant = teVersturen === schema.herinneringen.length - 1
-      ? "laatste"
-      : teVersturen === 0
-        ? "eerste"
-        : "tussen"
+    const variant = schema.herinneringen[teVersturen].variant
     const mailResult = await sendDraftReminderEmail({
       toEmail: email,
       eventTitle: (draft.title as string) || "jullie bruiloft",
@@ -185,12 +174,13 @@ export async function GET(request: Request) {
       continue
     }
 
-    const update: Record<string, string> = {}
-    for (let i = 0; i <= teVersturen; i++) {
-      update[REMINDER_KOLOM[i]] = (draft[REMINDER_KOLOM[i]] as string | null) ?? now.toISOString()
-    }
-    await service.from("events").update(update).eq("id", draft.id).eq("status", "draft")
-    results.reminders.push(`${draft.id}:${teVersturen + 1}`)
+    // De overgeslagen herinneringen tellen als gehad
+    await service
+      .from("events")
+      .update({ draft_reminder_stap: teVersturen + 1 })
+      .eq("id", draft.id)
+      .eq("status", "draft")
+    results.reminders.push(`${draft.id}:${teVersturen + 1}:${variant}`)
   }
 
   // ── Published events: subscription expiry ─────────────────────────────────
