@@ -1,6 +1,6 @@
 import { createServiceClient } from "@/lib/supabase"
 import { createClient } from "@/lib/supabase-server"
-import { generateShareToken, type CardGuestType, type CardTemplate, type CardType } from "@/lib/cards"
+import { generateShareToken, MAX_KAARTEN_PER_EVENT, type CardGuestType, type CardTemplate, type CardType } from "@/lib/cards"
 import { planAllows } from "@/lib/plans"
 
 const CARD_TYPES: CardType[] = ["save_the_date", "trouwkaart"]
@@ -83,6 +83,19 @@ export async function POST(request: Request) {
     return Response.json(
       { error: "Trouwkaarten zitten in het pakket Uitnodiging & RSVP. Upgrade via je dashboard om ze te maken." },
       { status: 403 }
+    )
+  }
+
+  // Een dak tegen misbruik, geen verkoopargument: zie MAX_KAARTEN_PER_EVENT
+  const { count } = await service
+    .from("cards")
+    .select("id", { count: "exact", head: true })
+    .eq("event_id", event_id)
+
+  if ((count ?? 0) >= MAX_KAARTEN_PER_EVENT) {
+    return Response.json(
+      { error: `Je kunt maximaal ${MAX_KAARTEN_PER_EVENT} kaarten per bruiloft maken. Verwijder er eerst een in je dashboard.` },
+      { status: 400 }
     )
   }
 

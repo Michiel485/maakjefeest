@@ -70,6 +70,18 @@ export interface CardEventSource {
   hero_image_url?: string | null
 }
 
+// Hoeveel kaarten één bruiloft mag hebben. Geen verkoopargument maar een dak
+// tegen misbruik: een bruidspaar heeft er in de praktijk hoogstens zes nodig
+// (dag, avond en receptie, elk in twee talen). Kaarten maken is en blijft
+// gratis, het pakket bepaalt welk soort kaart je mag versturen.
+export const MAX_KAARTEN_PER_EVENT = 10
+
+/** Korte naam van een kaart, voor de keuzelijst in de bouwer en het dashboard. */
+export function kaartLabel(card: { type: CardType; content: CardContent }): string {
+  const groep = card.content.guestType ? GUEST_TYPE_LABEL[card.content.guestType] : null
+  return groep ? `${CARD_TYPE_LABEL[card.type]}, ${groep.toLowerCase()}` : CARD_TYPE_LABEL[card.type]
+}
+
 export const CARD_TYPE_LABEL: Record<CardType, string> = {
   save_the_date: "Save the Date",
   trouwkaart: "Trouwkaart",

@@ -15,9 +15,12 @@ import {
   CARD_DESIGNS,
   CARD_TEMPLATE_LABEL,
   CARD_TEMPLATE_UITLEG,
+  CARD_TYPE_LABEL,
   CARD_TYPE_PLAN,
   GUEST_TYPE_INVITE_LINE,
   GUEST_TYPE_LABEL,
+  kaartLabel,
+  MAX_KAARTEN_PER_EVENT,
   type CardAnimatie,
   type CardContent,
   type CardGuestType,
@@ -152,6 +155,11 @@ export default function KaartMakenPage() {
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [eventId, setEventId] = useState<string | null>(null)
   const [cardId, setCardId] = useState<string | null>(null)
+  // Alle kaarten van deze bruiloft. Een bruidspaar maakt er meerdere: een voor
+  // daggasten, een voor avondgasten, en straks dezelfde kaart in een andere
+  // taal. Zonder deze lijst onthield de bouwer één kaart en overschreef hij
+  // stilletjes de vorige.
+  const [kaarten, setKaarten] = useState<CardRow[]>([])
   const [simulatie, setSimulatie] = useState(false)
   const [mailActie, setMailActie] = useState<Actie | null>(null)
   const [mailAdres, setMailAdres] = useState("")
@@ -173,15 +181,17 @@ export default function KaartMakenPage() {
     const params = new URLSearchParams(window.location.search)
     const typeUitUrl = params.get("type")
     const eventUitUrl = params.get("event_id")
+    const kaartUitUrl = params.get("card_id")
 
     let basis: KaartOntwerp = LEEG
+    let eventUitOpslag: string | null = null
     try {
       const bewaard = localStorage.getItem(LS_ONTWERP)
       if (bewaard) basis = { ...LEEG, ...(JSON.parse(bewaard) as Partial<KaartOntwerp>) }
       const ids = localStorage.getItem(LS_IDS)
       if (ids) {
         const { eventId: e, cardId: c } = JSON.parse(ids) as { eventId?: string; cardId?: string }
-        if (e) setEventId(e)
+        if (e) { setEventId(e); eventUitOpslag = e }
         if (c) setCardId(c)
       }
     } catch {}
@@ -200,8 +210,14 @@ export default function KaartMakenPage() {
             const { event } = (await r.json()) as { event: Record<string, unknown> }
             const kr = await fetch(`/api/cards?event_id=${eventUitUrl}`)
             const { cards } = kr.ok ? ((await kr.json()) as { cards: CardRow[] }) : { cards: [] }
+            setKaarten(cards)
+            // Een link mag een kaart aanwijzen; anders valt hij terug op het
+            // gevraagde type en als laatste op de nieuwste kaart.
             const gewenstType: CardType = isCardType(typeUitUrl) ? typeUitUrl : (event.plan === "uitnodiging" ? "trouwkaart" : "save_the_date")
-            const kaart = cards.find((c) => c.type === gewenstType) ?? cards[0]
+            const kaart =
+              (kaartUitUrl ? cards.find((c) => c.id === kaartUitUrl) : undefined) ??
+              cards.find((c) => c.type === gewenstType) ??
+              cards[0]
             setEventId(eventUitUrl)
             setCardId(kaart?.id ?? null)
             setOntwerp({
@@ -220,6 +236,13 @@ export default function KaartMakenPage() {
               animatie: cardAnimatie(kaart?.content.animatie),
             })
           }
+        } catch {}
+      } else if (eventUitOpslag && email) {
+        // Verder werken aan een eerder bewaarde bruiloft: de lijst met kaarten
+        // hoort er dan ook te zijn, anders lijkt het alsof er maar een is.
+        try {
+          const kr = await fetch(`/api/cards?event_id=${eventUitOpslag}`)
+          if (kr.ok) setKaarten(((await kr.json()) as { cards: CardRow[] }).cards)
         } catch {}
       }
       setGeladen(true)
@@ -310,7 +333,12 @@ export default function KaartMakenPage() {
           photo_url: fotoUrl ?? undefined,
         }),
       })
-      if (!cr.ok) throw new Error("Aanmaken van de kaart mislukt")
+      if (!cr.ok) {
+        // De server weet beter wat er mis is dan wij, bijvoorbeeld dat het
+        // maximum aantal kaarten bereikt is. Die tekst hoort de klant te zien.
+        const { error } = (await cr.json().catch(() => ({}))) as { error?: string }
+        throw new Error(error || "Aanmaken van de kaart mislukt")
+      }
       nieuwCardId = ((await cr.json()) as { card: CardRow }).card.id
     }
     const pr = await fetch(`/api/cards/${nieuwCardId}`, {
@@ -323,9 +351,61 @@ export default function KaartMakenPage() {
     setEventId(nieuwEventId)
     setCardId(nieuwCardId)
     try { localStorage.setItem(LS_IDS, JSON.stringify({ eventId: nieuwEventId, cardId: nieuwCardId })) } catch {}
+
+    // De keuzelijst moet de net bewaarde kaart bevatten, met de nieuwe naam
+    try {
+      const kr = await fetch(`/api/cards?event_id=${nieuwEventId}`)
+      if (kr.ok) setKaarten(((await kr.json()) as { cards: CardRow[] }).cards)
+    } catch {}
+
     return { eventId: nieuwEventId, cardId: nieuwCardId }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ontwerp, eventId, cardId, plan, isTrouwkaart])
+
+  // ── Wisselen tussen de kaarten van deze bruiloft ──────────────────────────
+  // Namen, datum, locatie en stijl horen bij de bruiloft en blijven staan. Wat
+  // per kaart verschilt is het soort kaart, de gastengroep en de teksten.
+  function kiesKaart(id: string) {
+    const k = kaarten.find((c) => c.id === id)
+    if (!k) return
+    setCardId(k.id)
+    setMelding(null)
+    setOntwerp((o) => ({
+      ...o,
+      type: k.type,
+      template: k.template,
+      message: k.content.message ?? "",
+      guestType: k.content.guestType ?? "",
+      inviteText: k.content.inviteText ?? "",
+      timeText: k.content.timeText ?? "",
+      photoDataUrl: null,
+      photoUrl: k.content.photoUrl ?? null,
+      animatie: cardAnimatie(k.content.animatie),
+    }))
+  }
+
+  // Een lege kaart naast de bestaande: hetzelfde ontwerp, nog geen groepstekst
+  function nieuweKaart() {
+    setCardId(null)
+    setOntwerp((o) => ({
+      ...o,
+      message: "",
+      guestType: "",
+      inviteText: "",
+      timeText: "",
+      photoDataUrl: null,
+      photoUrl: null,
+    }))
+    setMelding({ tekst: "Nieuwe kaart. Namen, datum en stijl blijven staan, vul de rest aan en bewaar." })
+  }
+
+  // Alles behouden en de volgende opslag een nieuwe kaart laten worden. Dit is
+  // de snelste weg naar dezelfde kaart in een andere taal of voor een andere
+  // gastengroep: aanpassen wat anders moet, de rest staat er al.
+  function dupliceerKaart() {
+    setCardId(null)
+    setMelding({ tekst: "Kopie gemaakt. Pas aan wat anders moet en bewaar; je vorige kaart blijft bestaan." })
+  }
 
   function controleer(): string | null {
     if (!ontwerp.names.trim()) return "Vul eerst jullie namen in."
@@ -485,6 +565,50 @@ export default function KaartMakenPage() {
               {" "}<Link href="/dashboard" className="underline font-semibold">Naar het dashboard</Link>
             </>
           )}
+        </div>
+      )}
+
+      {/* ── Welke kaart bewerk je? ──
+          Verschijnt zodra er iets bewaard is. Zonder deze balk is niet te zien
+          dat een bruiloft meerdere kaarten kan hebben, en overschreef opslaan
+          stilletjes de vorige. */}
+      {eventId && kaarten.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 px-4 sm:px-6 py-2.5 border-b" style={{ backgroundColor: "#fff", borderColor: `${GOLD_LIGHT}80` }}>
+          <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: GOLD }}>
+            Je kaarten
+          </span>
+          <select
+            value={cardId ?? "nieuw"}
+            onChange={(e) => (e.target.value === "nieuw" ? nieuweKaart() : kiesKaart(e.target.value))}
+            className="rounded-xl border bg-white px-3 py-2 text-sm font-semibold"
+            style={{ color: CHARCOAL, borderColor: GOLD_LIGHT, cursor: "pointer" }}
+          >
+            {kaarten.map((k) => (
+              <option key={k.id} value={k.id}>{kaartLabel(k)}</option>
+            ))}
+            {!cardId && <option value="nieuw">Nieuwe kaart, nog niet bewaard</option>}
+          </select>
+
+          <button
+            onClick={dupliceerKaart}
+            disabled={busy !== null || !cardId}
+            className="text-sm font-semibold px-3 py-2 rounded-xl disabled:opacity-40"
+            style={{ backgroundColor: GOLD_BG, color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
+          >
+            Deze kopiëren
+          </button>
+          <button
+            onClick={nieuweKaart}
+            disabled={busy !== null || kaarten.length >= MAX_KAARTEN_PER_EVENT}
+            className="text-sm font-semibold px-3 py-2 rounded-xl disabled:opacity-40"
+            style={{ color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
+          >
+            Nieuwe kaart
+          </button>
+
+          <span className="text-[11px] leading-snug ml-auto max-w-sm" style={{ color: SUBTLE }}>
+            Elke kaart heeft zijn eigen link. Handig voor daggasten en avondgasten, of dezelfde kaart in een andere taal.
+          </span>
         </div>
       )}
 
