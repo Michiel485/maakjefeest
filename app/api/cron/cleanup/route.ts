@@ -1,4 +1,5 @@
 import { createServiceClient } from "@/lib/supabase"
+import { verwijderEventInhoud } from "@/lib/opruimen"
 import { sendDraftReminderEmail, sendRenewalReminderEmail, sendExpiryWarningEmail } from "@/lib/mail"
 import { verversEvent } from "@/lib/db"
 import { sendVisitorDigest } from "@/lib/visitors"
@@ -12,36 +13,6 @@ const DAG_MS           = 24 * 60 * 60 * 1000
 const SEVEN_DAYS_MS    = 7  * 24 * 60 * 60 * 1000
 const ELEVEN_MONTHS_MS = 335 * 24 * 60 * 60 * 1000 // ~11 months
 
-// Alle geüploade foto's van één concept uit de opslag halen. Zonder dit blijven
-// ze voor altijd staan terwijl de kaart er niet meer is: bij het opschonen van
-// de testdata bleven er twee weesfoto's van samen 660 kB achter.
-async function verwijderFotos(
-  service: ReturnType<typeof createServiceClient>,
-  eventId: string,
-  heroImageUrl: string | null
-): Promise<number> {
-  const { data: cards } = await service.from("cards").select("content").eq("event_id", eventId)
-  const urls = [
-    heroImageUrl,
-    ...(cards ?? []).map((c) => (c.content as { photoUrl?: string } | null)?.photoUrl ?? null),
-  ]
-
-  // Alleen bestanden uit onze eigen bucket, en alleen het pad erna
-  const paden = urls
-    .filter((u): u is string => typeof u === "string" && u.includes("/hero-images/"))
-    .map((u) => u.split("/hero-images/")[1]?.split("?")[0])
-    .filter((p): p is string => !!p)
-
-  if (paden.length === 0) return 0
-  const { error } = await service.storage.from("hero-images").remove(paden)
-  if (error) {
-    console.error("[cron/cleanup] Foto's verwijderen mislukt:", eventId, error.message)
-    return 0
-  }
-  console.log("[cron/cleanup] Foto's verwijderd:", eventId, paden.length)
-  return paden.length
-}
-
 export async function GET(request: Request) {
   // ── Auth: only Vercel cron (or manual calls with the secret) ──────────────
   const authHeader = request.headers.get("authorization")
@@ -53,12 +24,6 @@ export async function GET(request: Request) {
 
   const service = createServiceClient()
   const now = new Date()
-
-  // ── Magic links cleanup: verwijder verlopen tokens ouder dan 7 dagen ──────
-  await service
-    .from("magic_links")
-    .delete()
-    .lt("expires_at", new Date(now.getTime() - SEVEN_DAYS_MS).toISOString())
 
   const results = {
     // Per concept welke herinnering eruit ging, bijvoorbeeld "abc123:2"
@@ -120,12 +85,12 @@ export async function GET(request: Request) {
 
       // Geüploade foto's van dit concept horen ook weg. Zonder dit blijven ze
       // voor altijd in de opslag staan, terwijl de kaart er niet meer is.
-      const verwijderdeFotos = await verwijderFotos(service, draft.id, draft.hero_image_url as string | null)
+      const verwijderdeFotos = await verwijderEventInhoud(
+        service,
+        draft.id,
+        draft.hero_image_url as string | null
+      )
       if (verwijderdeFotos > 0) results.fotosVerwijderd += verwijderdeFotos
-
-      // Delete pages and cards first (FK safety, even if cascade is set)
-      await service.from("pages").delete().eq("event_id", draft.id)
-      await service.from("cards").delete().eq("event_id", draft.id)
 
       const { error: delErr } = await service
         .from("events")

@@ -41,3 +41,6 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+# Werkmappen van hulpagenten: kopieen van de repo, horen niet in de repo zelf
+.claude/worktrees/

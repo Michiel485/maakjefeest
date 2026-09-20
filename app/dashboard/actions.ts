@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase-server"
 import { createServiceClient } from "@/lib/supabase"
-import { GUEST_PHOTOS_BUCKET } from "@/lib/guest-photos"
+import { verwijderEventInhoud } from "@/lib/opruimen"
 
 export async function deleteEvent(eventId: string): Promise<{ error?: string }> {
   const supabase = await createClient()
@@ -14,7 +14,7 @@ export async function deleteEvent(eventId: string): Promise<{ error?: string }> 
 
   const { data: event } = await service
     .from("events")
-    .select("id, slug, status, user_email")
+    .select("id, slug, status, user_email, hero_image_url")
     .eq("id", eventId)
     .single()
 
@@ -22,20 +22,14 @@ export async function deleteEvent(eventId: string): Promise<{ error?: string }> 
   if (event.user_email !== user.email) return { error: "Geen toegang" }
   if (event.status === "draft") return { error: "Gebruik de concepten-verwijderfunctie voor concepten" }
 
-  // Gastenfoto's: eerst de storage-objecten opruimen, dan de rijen
-  const { data: guestPhotos } = await service
-    .from("guest_photos")
-    .select("storage_path")
-    .eq("event_id", eventId)
-  if (guestPhotos && guestPhotos.length > 0) {
-    await service.storage
-      .from(GUEST_PHOTOS_BUCKET)
-      .remove(guestPhotos.map((p) => p.storage_path))
-    await service.from("guest_photos").delete().eq("event_id", eventId)
-  }
+  // Foto's, kaarten, pagina's en aanmeldingen: dezelfde opruiming als de cron
+  // gebruikt. Hier stonden eerder alleen de gastenfoto's, waardoor de
+  // headerfoto en de kaartfoto's bleven staan en de kaartrijen als wezen
+  // achterbleven.
+  await verwijderEventInhoud(service, eventId, event.hero_image_url as string | null)
 
-  await service.from("rsvp").delete().eq("event_id", eventId)
-  await service.from("pages").delete().eq("event_id", eventId)
+  // Facturen apart: vraag voor Michiel of die bij het weggooien van een site
+  // echt mee moeten. Voor nu hetzelfde gedrag als voorheen.
   await service.from("invoices").delete().eq("event_id", eventId)
 
   const { error } = await service.from("events").delete().eq("id", eventId).eq("user_email", user.email)

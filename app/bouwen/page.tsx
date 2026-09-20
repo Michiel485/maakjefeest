@@ -374,6 +374,17 @@ function FontSelect({ value, onChange }: { value: string; onChange: (v: string) 
 
 // ── Main component ────────────────────────────────────────────────────────────
 
+// Buiten de paginacomponent: binnenin wordt het bij elke render een nieuw
+// componenttype, en dan hangt React de hele boom eronder opnieuw op. Bij een
+// pijltje valt dat nauwelijks op, bij een sectie met invoervelden verliest het
+// veld zijn focus bij elke toetsaanslag. Zelfde reden als Sectie in de
+// kaartbouwer.
+const Chevron = ({ open }: { open: boolean }) => (
+  <svg className={`w-4 h-4 text-gray-400 transition-transform duration-200 flex-shrink-0 ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+  </svg>
+)
+
 export default function BouwenPage() {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -1284,11 +1295,6 @@ export default function BouwenPage() {
   const activePageIds = new Set<string>(activePagesOrdered.map(p => p.id))
   const showSection = (id: string) => isSinglePagePreview ? activePageIds.has(id) : previewPage === id
 
-  const Chevron = ({ open }: { open: boolean }) => (
-    <svg className={`w-4 h-4 text-gray-400 transition-transform duration-200 flex-shrink-0 ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-    </svg>
-  )
 
   return (
     <div translate="no" className="min-h-screen md:h-screen flex flex-col bg-gray-50 font-sans antialiased md:overflow-hidden">

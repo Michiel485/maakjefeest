@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "o2c-monitor",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8899", "--directory", "C:\\Users\\M8851~1.VAN\\AppData\\Local\\Temp\\claude\\C--Users-m-vanbendegem-smartp-Desktop-SpeedDate-maakjefeest\\7f51b4aa-9166-4f47-942c-38bb19de5b83\\scratchpad"],
+      "port": 8899
+    },
+    {
+      "name": "big-brother",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "C:\\Users\\m.vanbendegem_smartp\\Desktop\\SpeedDate\\big-brother", "start"],
+      "port": 8900
+    }
+  ]
+}
