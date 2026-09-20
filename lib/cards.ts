@@ -48,6 +48,8 @@ export interface CardContent {
   timeText?: string
   // Hoe de envelop opengaat bij de gast
   animatie?: CardAnimatie
+  // In welke taal de vaste teksten op de kaart staan
+  taal?: CardTaal
 }
 
 export interface CardRow {
@@ -76,10 +78,18 @@ export interface CardEventSource {
 // gratis, het pakket bepaalt welk soort kaart je mag versturen.
 export const MAX_KAARTEN_PER_EVENT = 10
 
-/** Korte naam van een kaart, voor de keuzelijst in de bouwer en het dashboard. */
+/**
+ * Korte naam van een kaart, voor de keuzelijst in de bouwer en het dashboard.
+ * De taal staat erbij zodra hij niet Nederlands is, want juist dan heeft een
+ * bruidspaar twee kaarten die anders identiek heten.
+ */
 export function kaartLabel(card: { type: CardType; content: CardContent }): string {
   const groep = card.content.guestType ? GUEST_TYPE_LABEL[card.content.guestType] : null
-  return groep ? `${CARD_TYPE_LABEL[card.type]}, ${groep.toLowerCase()}` : CARD_TYPE_LABEL[card.type]
+  const taal = cardTaal(card.content.taal)
+  const basis = groep
+    ? `${CARD_TYPE_LABEL[card.type]}, ${groep.toLowerCase()}`
+    : CARD_TYPE_LABEL[card.type]
+  return taal === "nl" ? basis : `${basis} (${CARD_TAAL_KORT[taal]})`
 }
 
 export const CARD_TYPE_LABEL: Record<CardType, string> = {
@@ -182,15 +192,131 @@ export const CARD_DESIGN_STYLE: Record<CardDesign, CardDesignStyle> = {
   },
 }
 
-// Kop op de kaart zelf
-export const CARD_HEADING: Record<CardType, string> = {
-  save_the_date: "Save the Date",
-  trouwkaart: "Wij gaan trouwen",
+// ── De taal van de kaart ────────────────────────────────────────────────────
+// Los van de taal van de bouwer: een Nederlands paar kan een Engelse kaart
+// willen, en wie half Franse familie heeft maakt er twee (kopieer de kaart in
+// de bouwer en zet alleen de taal om).
+//
+// Dit gaat alleen over onze vaste teksten: de kop, de standaardboodschap, de
+// uitnodigingsregel per gastengroep, de knoppen en de opmaak van de datum. Wat
+// het bruidspaar zelf typt vertalen wij niet.
+export type CardTaal = "nl" | "en" | "fr" | "de"
+
+export const CARD_TALEN: CardTaal[] = ["nl", "en", "fr", "de"]
+
+export const CARD_TAAL_LABEL: Record<CardTaal, string> = {
+  nl: "Nederlands",
+  en: "English",
+  fr: "Français",
+  de: "Deutsch",
 }
 
-const DEFAULT_MESSAGE: Record<CardType, string> = {
-  save_the_date: "Wij gaan trouwen! Zet de datum alvast in je agenda, de officiële uitnodiging volgt.",
-  trouwkaart: "Wij gaan trouwen en vieren dat graag met jou. Kom je ook?",
+/** Korte aanduiding voor in een keuzelijst met kaarten. */
+export const CARD_TAAL_KORT: Record<CardTaal, string> = {
+  nl: "NL",
+  en: "EN",
+  fr: "FR",
+  de: "DE",
+}
+
+export function cardTaal(value: unknown): CardTaal {
+  return value === "en" || value === "fr" || value === "de" ? value : "nl"
+}
+
+interface KaartTeksten {
+  /** De regel boven de namen. */
+  kop: Record<CardType, string>
+  /** De boodschap als het bruidspaar zelf niets invult. */
+  bericht: Record<CardType, string>
+  /** De uitnodigingsregel per gastengroep, op een trouwkaart. */
+  uitnodiging: Record<CardGuestType, string>
+  rsvpKnop: string
+  siteKnop: string
+  siteVolgt: string
+  openEnvelop: string
+  gemaaktMet: string
+  /** Waarmee de datum wordt opgemaakt. */
+  locale: string
+}
+
+// "Save the Date" blijft in alle talen staan: dat is de naam van het product
+// en een ingeburgerde term op trouwkaarten in alle vier de taalgebieden. De
+// rest is echt vertaald.
+export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
+  nl: {
+    kop: { save_the_date: "Save the Date", trouwkaart: "Wij gaan trouwen" },
+    bericht: {
+      save_the_date: "Wij gaan trouwen! Zet de datum alvast in je agenda, de officiële uitnodiging volgt.",
+      trouwkaart: "Wij gaan trouwen en vieren dat graag met jou. Kom je ook?",
+    },
+    uitnodiging: {
+      daggast: "Wij nodigen je van harte uit voor onze hele trouwdag",
+      avondgast: "Wij nodigen je van harte uit voor het avondfeest",
+      receptiegast: "Wij nodigen je van harte uit voor de receptie",
+    },
+    rsvpKnop: "Laat weten of je erbij bent",
+    siteKnop: "Bekijk onze trouwsite",
+    siteVolgt: "Meer informatie volgt binnenkort 🤍",
+    openEnvelop: "Open de envelop",
+    gemaaktMet: "Gemaakt met",
+    locale: "nl-NL",
+  },
+  en: {
+    kop: { save_the_date: "Save the Date", trouwkaart: "We are getting married" },
+    bericht: {
+      save_the_date: "We are getting married! Save the date, the official invitation will follow.",
+      trouwkaart: "We are getting married and we would love to celebrate with you. Will you be there?",
+    },
+    uitnodiging: {
+      daggast: "We warmly invite you to join us for the whole wedding day",
+      avondgast: "We warmly invite you to join us for the evening party",
+      receptiegast: "We warmly invite you to join us for the reception",
+    },
+    rsvpKnop: "Let us know if you can make it",
+    siteKnop: "Visit our wedding website",
+    siteVolgt: "More details coming soon 🤍",
+    openEnvelop: "Open the envelope",
+    gemaaktMet: "Made with",
+    // en-GB geeft "14 August 2027"; en-US zou "August 14, 2027" geven en dat
+    // leest voor Europese gasten vreemd op een kaart.
+    locale: "en-GB",
+  },
+  fr: {
+    kop: { save_the_date: "Save the Date", trouwkaart: "Nous nous marions" },
+    bericht: {
+      save_the_date: "Nous nous marions ! Réservez déjà la date, l'invitation officielle suivra.",
+      trouwkaart: "Nous nous marions et nous serions ravis de le célébrer avec vous. Serez-vous là ?",
+    },
+    uitnodiging: {
+      daggast: "Nous vous invitons chaleureusement à partager toute la journée avec nous",
+      avondgast: "Nous vous invitons chaleureusement à la soirée",
+      receptiegast: "Nous vous invitons chaleureusement à la réception",
+    },
+    rsvpKnop: "Dites-nous si vous serez là",
+    siteKnop: "Voir notre site de mariage",
+    siteVolgt: "Plus d'informations bientôt 🤍",
+    openEnvelop: "Ouvrir l'enveloppe",
+    gemaaktMet: "Créé avec",
+    locale: "fr-FR",
+  },
+  de: {
+    kop: { save_the_date: "Save the Date", trouwkaart: "Wir heiraten" },
+    bericht: {
+      save_the_date: "Wir heiraten! Halte dir den Tag schon frei, die offizielle Einladung folgt.",
+      trouwkaart: "Wir heiraten und feiern das gerne mit dir. Kommst du auch?",
+    },
+    uitnodiging: {
+      daggast: "Wir laden dich herzlich ein, den ganzen Hochzeitstag mit uns zu feiern",
+      avondgast: "Wir laden dich herzlich zur Abendfeier ein",
+      receptiegast: "Wir laden dich herzlich zum Empfang ein",
+    },
+    rsvpKnop: "Sag uns, ob du dabei bist",
+    siteKnop: "Unsere Hochzeitswebsite ansehen",
+    siteVolgt: "Weitere Infos folgen bald 🤍",
+    openEnvelop: "Umschlag öffnen",
+    gemaaktMet: "Erstellt mit",
+    locale: "de-DE",
+  },
 }
 
 export const GUEST_TYPE_LABEL: Record<CardGuestType, string> = {
@@ -199,16 +325,38 @@ export const GUEST_TYPE_LABEL: Record<CardGuestType, string> = {
   receptiegast: "Receptiegasten",
 }
 
-// De uitnodigingsregel die per gastengroep op de trouwkaart komt
-export const GUEST_TYPE_INVITE_LINE: Record<CardGuestType, string> = {
-  daggast: "Wij nodigen je van harte uit voor onze hele trouwdag",
-  avondgast: "Wij nodigen je van harte uit voor het avondfeest",
-  receptiegast: "Wij nodigen je van harte uit voor de receptie",
-}
-
 // De uiteindelijke weergavedata: eigen invoer van het bruidspaar wint,
 // anders wordt het veld voorgevuld vanuit de trouwsite.
-export interface CardDisplay {
+/**
+ * De vaste regels van een kaart in één taal, klaar om in een CardDisplay te
+ * zetten. Ook voor wie met de hand een display bouwt, zoals de demokaart op
+ * de marketingsite: die hoeft de lijst dan niet zelf bij te houden.
+ */
+export interface CardVasteTeksten {
+  taal: CardTaal
+  rsvpKnop: string
+  siteKnop: string
+  siteVolgtTekst: string
+  openEnvelopLabel: string
+  gemaaktMet: string
+}
+
+export function displayTeksten(taal: CardTaal = "nl"): CardVasteTeksten {
+  const tk = KAART_TEKST[taal]
+  return {
+    taal,
+    rsvpKnop: tk.rsvpKnop,
+    siteKnop: tk.siteKnop,
+    siteVolgtTekst: tk.siteVolgt,
+    openEnvelopLabel: tk.openEnvelop,
+    gemaaktMet: tk.gemaaktMet,
+  }
+}
+
+// De vaste teksten zitten in het display, opgelost tot losse regels, zodat de
+// weergave ze niet zelf hoeft op te zoeken. Zonder dat zou er in card-reveal
+// opnieuw een tabel met talen moeten staan.
+export interface CardDisplay extends CardVasteTeksten {
   heading: string
   names: string
   dateText: string
@@ -231,22 +379,26 @@ export function buildCardDisplay(
     (event.frame_names && event.frame_names.trim()) ||
     event.title.replace(/^de bruiloft van\s+/i, "").trim()
 
+  const taal = cardTaal(content.taal)
+  const tk = KAART_TEKST[taal]
+
   return {
-    heading: CARD_HEADING[type],
+    heading: tk.kop[type],
     names: content.names?.trim() || fallbackNames,
-    dateText: content.dateText?.trim() || (event.datum ? formatDate(event.datum) : ""),
+    dateText: content.dateText?.trim() || (event.datum ? formatDate(event.datum, tk.locale) : ""),
     location: content.location?.trim() || event.locatie?.trim() || "",
     inviteLine:
       type === "trouwkaart"
         ? content.inviteText?.trim() ||
-          (content.guestType ? GUEST_TYPE_INVITE_LINE[content.guestType] : null)
+          (content.guestType ? tk.uitnodiging[content.guestType] : null)
         : null,
     timeText: type === "trouwkaart" ? content.timeText?.trim() || null : null,
-    message: content.message?.trim() || DEFAULT_MESSAGE[type],
+    message: content.message?.trim() || tk.bericht[type],
     // Een foto hoort bij de kaart zodra er één gekozen is, los van het ontwerp
     photoUrl: content.photoUrl?.trim() || (template === "foto" ? event.hero_image_url?.trim() || null : null),
     design: cardDesign(template),
     animatie: cardAnimatie(content.animatie),
+    ...displayTeksten(taal),
   }
 }
 

@@ -1,4 +1,4 @@
-import { buildCardDisplay, type CardContent, type CardGuestType, type CardTemplate, type CardType } from "@/lib/cards"
+import { buildCardDisplay, cardTaal, type CardContent, type CardGuestType, type CardTemplate, type CardType } from "@/lib/cards"
 import { getStyleConfig } from "@/lib/event-styles"
 import { renderCardImage } from "@/lib/card-image"
 
@@ -51,6 +51,7 @@ export async function POST(request: Request) {
     timeText: tekst(body.timeText, 80),
     // Alleen echte URL's; een lokale data-URL uit de browser kan satori niet altijd aan
     photoUrl: typeof body.photoUrl === "string" && /^https?:\/\//.test(body.photoUrl) ? body.photoUrl.slice(0, 500) : undefined,
+    taal: cardTaal(body.taal),
   }
 
   const display = buildCardDisplay(type, template, content, {

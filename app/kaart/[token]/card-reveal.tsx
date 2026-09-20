@@ -410,7 +410,7 @@ export default function CardReveal({
               <button
                 ref={envelopAchterRef}
                 onClick={open}
-                aria-label="Open de envelop"
+                aria-label={display.openEnvelopLabel}
                 className="absolute inset-0 block outline-none"
                 style={{
                   background: "none",
@@ -839,7 +839,7 @@ export default function CardReveal({
                   ...eindBlok,
                 }}
               >
-                Meer informatie volgt binnenkort 🤍
+                {display.siteVolgtTekst}
               </p>
             )}
 
@@ -855,7 +855,7 @@ export default function CardReveal({
                     className="flex-1 py-3.5 rounded-xl text-sm font-semibold text-center transition-opacity hover:opacity-85"
                     style={{ backgroundColor: sc.accent, color: sc.buttonText, textDecoration: "none" }}
                   >
-                    Laat weten of je erbij bent
+                    {display.rsvpKnop}
                   </a>
                 )}
                 {siteUrl && (
@@ -869,7 +869,7 @@ export default function CardReveal({
                       textDecoration: "none",
                     }}
                   >
-                    Bekijk onze trouwsite
+                    {display.siteKnop}
                   </a>
                 )}
               </div>
@@ -888,7 +888,7 @@ export default function CardReveal({
           ...eindBlok,
         }}
       >
-        Gemaakt met <span style={{ fontWeight: 600, color: sc.accent }}>SayingYes</span> · sayingyes.nl
+        {display.gemaaktMet} <span style={{ fontWeight: 600, color: sc.accent }}>SayingYes</span> · sayingyes.nl
       </a>
     </div>
   )

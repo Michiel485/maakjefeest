@@ -41,9 +41,16 @@ export async function renderCardImage(
 
   const WATERMERK_TEKST = "VOORBEELD · SAYINGYES"
 
+  const voettekst = watermerk
+    ? "Voorbeeld, activeer je pakket op sayingyes.nl"
+    : `${display.gemaaktMet} SayingYes · sayingyes.nl`
+
+  // Google Fonts levert alleen de tekens die we opvragen, dus alles wat op de
+  // kaart komt moet hier langs. Bij een Franse of Duitse kaart zitten daar
+  // letters met accenten bij; die vallen weg als ze hier niet in staan.
   const allText = [
     display.heading, display.names, display.dateText, display.location,
-    display.inviteLine, display.message, "Gemaakt met SayingYes, sayingyes.nl",
+    display.inviteLine, display.message, display.timeText, voettekst,
     watermerk ? WATERMERK_TEKST : "",
   ].join(" ")
 
@@ -402,7 +409,7 @@ export async function renderCardImage(
             opacity: 0.6,
           }}
         >
-          {watermerk ? "Voorbeeld, activeer je pakket op sayingyes.nl" : "Gemaakt met SayingYes · sayingyes.nl"}
+          {voettekst}
         </div>
         {watermerkLaag}
       </div>

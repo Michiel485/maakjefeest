@@ -1,6 +1,6 @@
 import { createServiceClient } from "@/lib/supabase"
 import { createClient } from "@/lib/supabase-server"
-import { cardAnimatie, type CardContent, type CardGuestType, type CardTemplate, type CardType } from "@/lib/cards"
+import { cardAnimatie, cardTaal, type CardContent, type CardGuestType, type CardTemplate, type CardType } from "@/lib/cards"
 import { verversKaart } from "@/lib/db"
 
 const CARD_TEMPLATES: CardTemplate[] = ["klassiek", "sierlijk", "bohemian", "foto"]
@@ -33,6 +33,7 @@ function sanitizeContent(raw: unknown): CardContent {
     inviteText: text(input.inviteText, 160),
     timeText: text(input.timeText, 80),
     animatie: cardAnimatie(input.animatie),
+    taal: cardTaal(input.taal),
   }
 }
 

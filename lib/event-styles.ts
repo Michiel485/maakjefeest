@@ -191,9 +191,14 @@ export function getStyleConfig(
   }
 }
 
-export function formatDate(iso: string) {
+/**
+ * De datum uitgeschreven. De taal hoort erbij omdat een kaart in het Engels,
+ * Frans of Duits ook een datum in die taal nodig heeft; zonder dat staat er
+ * "14 augustus" op een Engelse kaart.
+ */
+export function formatDate(iso: string, locale = "nl-NL") {
   if (!iso) return ""
-  return new Date(iso).toLocaleDateString("nl-NL", {
+  return new Date(iso).toLocaleDateString(locale, {
     day: "numeric",
     month: "long",
     year: "numeric",

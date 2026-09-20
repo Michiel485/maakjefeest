@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { getStyleConfig } from "@/lib/event-styles"
 import { MARKETING_URL } from "@/lib/site-url"
 import CardReveal from "../kaart/[token]/card-reveal"
+import { displayTeksten } from "@/lib/cards"
 
 export const metadata: Metadata = {
   title: "Voorbeeld van een digitale trouwkaart",
@@ -37,6 +38,7 @@ export default function KaartVoorbeeldPage() {
         design: "sierlijk",
         // De demo op de marketingsite mag het mooiste laten zien
         animatie: "feestelijk",
+        ...displayTeksten("nl"),
       }}
       initials="S&D"
       sc={sc}

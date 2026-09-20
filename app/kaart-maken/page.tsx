@@ -13,11 +13,14 @@ import {
   CARD_ANIMATIE_LABEL,
   CARD_ANIMATIE_UITLEG,
   CARD_DESIGNS,
+  CARD_TAAL_LABEL,
+  CARD_TALEN,
+  cardTaal,
   CARD_TEMPLATE_LABEL,
   CARD_TEMPLATE_UITLEG,
   CARD_TYPE_LABEL,
   CARD_TYPE_PLAN,
-  GUEST_TYPE_INVITE_LINE,
+  KAART_TEKST,
   GUEST_TYPE_LABEL,
   kaartLabel,
   MAX_KAARTEN_PER_EVENT,
@@ -25,6 +28,7 @@ import {
   type CardContent,
   type CardGuestType,
   type CardRow,
+  type CardTaal,
   type CardTemplate,
   type CardType,
 } from "@/lib/cards"
@@ -53,7 +57,7 @@ const STYLE_LABEL: Record<Style, string> = {
 }
 const STYLE_KEYS = Object.keys(STYLE_CONFIG) as Style[]
 
-type Stap = "stijl" | "template" | "tekst" | "foto" | "animatie" | "bekijken"
+type Stap = "stijl" | "template" | "tekst" | "taal" | "foto" | "animatie" | "bekijken"
 type Actie = "bewaar" | "activeer"
 
 interface KaartOntwerp {
@@ -70,6 +74,7 @@ interface KaartOntwerp {
   photoDataUrl: string | null
   photoUrl: string | null
   animatie: CardAnimatie
+  taal: CardTaal
 }
 
 const LEEG: KaartOntwerp = {
@@ -86,6 +91,7 @@ const LEEG: KaartOntwerp = {
   photoDataUrl: null,
   photoUrl: null,
   animatie: "rustig",
+  taal: "nl",
 }
 
 // Per stap één zin over waarom digitaal slim is: overtuigen zonder te duwen
@@ -94,6 +100,7 @@ const VOORDEEL: Record<Stap, string> = {
   template: "Drie richtingen: strak en tijdloos, sierlijk met handschrift, of bohemian en warm. Je kunt altijd wisselen.",
   tekst: "Verandert de tijd of de locatie? Geen herdruk en geen rondbelactie, je past de tekst gewoon aan.",
   foto: "Een foto van jullie samen maakt de kaart persoonlijk. Op WhatsApp valt hij dan extra op.",
+  taal: "De vaste teksten op de kaart volgen deze taal, ook de datum. Heb je familie in twee talen? Kopieer de kaart en zet alleen de taal om.",
   animatie: "Je gast tikt op de envelop, het zegel breekt en de kaart schuift eruit. Dat kan papier niet.",
   bekijken: "Je gasten krijgen een link, tikken op de envelop en zien jullie kaart. Geen app, geen account.",
 }
@@ -254,6 +261,7 @@ export default function KaartMakenPage() {
               photoDataUrl: null,
               photoUrl: kaart?.content.photoUrl ?? null,
               animatie: cardAnimatie(kaart?.content.animatie),
+              taal: cardTaal(kaart?.content.taal),
             })
           }
         } catch {}
@@ -307,6 +315,7 @@ export default function KaartMakenPage() {
     timeText: ontwerp.timeText || undefined,
     photoUrl: ontwerp.photoUrl ?? ontwerp.photoDataUrl ?? undefined,
     animatie: ontwerp.animatie,
+    taal: ontwerp.taal,
   }
   const display = buildCardDisplay(ontwerp.type, ontwerp.template, content, {
     title: ontwerp.names || "Jullie namen",
@@ -410,6 +419,7 @@ export default function KaartMakenPage() {
       photoDataUrl: null,
       photoUrl: k.content.photoUrl ?? null,
       animatie: cardAnimatie(k.content.animatie),
+      taal: cardTaal(k.content.taal),
     }))
   }
 
@@ -531,7 +541,7 @@ export default function KaartMakenPage() {
           names: ontwerp.names, dateText: ontwerp.datum ? formatDate(ontwerp.datum) : "",
           location: ontwerp.location, message: ontwerp.message,
           guestType: ontwerp.guestType, inviteText: ontwerp.inviteText, timeText: ontwerp.timeText,
-          photoUrl: ontwerp.photoUrl,
+          photoUrl: ontwerp.photoUrl, taal: ontwerp.taal,
         }),
       })
       if (!r.ok) throw new Error("Voorbeeld maken mislukte, probeer het zo opnieuw.")
@@ -741,7 +751,7 @@ export default function KaartMakenPage() {
                 </div>
                 <label className="flex flex-col gap-1.5">
                   <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Uitnodigingszin</span>
-                  <input className={inputCls} style={inputStyle} placeholder={ontwerp.guestType ? GUEST_TYPE_INVITE_LINE[ontwerp.guestType] : "Wij nodigen je van harte uit"} value={ontwerp.inviteText} onChange={(e) => update({ inviteText: e.target.value })} maxLength={160} />
+                  <input className={inputCls} style={inputStyle} placeholder={ontwerp.guestType ? KAART_TEKST[ontwerp.taal].uitnodiging[ontwerp.guestType] : "Wij nodigen je van harte uit"} value={ontwerp.inviteText} onChange={(e) => update({ inviteText: e.target.value })} maxLength={160} />
                 </label>
                 <label className="flex flex-col gap-1.5">
                   <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Tijden</span>
@@ -820,6 +830,26 @@ export default function KaartMakenPage() {
           {/* Hoe de envelop opengaat bij de gast. Het uitschuiven, het brekende
               zegel en het verende landen zitten in beide keuzes; het verschil
               is alleen of er gouden stofjes bij komen. */}
+          <Sectie id="taal" open={stap === "taal"} onToggle={() => setStap(stap === "taal" ? "tekst" : "taal")} titel="Taal van de kaart">
+            <div className="grid grid-cols-2 gap-2">
+              {CARD_TALEN.map((tl) => (
+                <button
+                  key={tl}
+                  onClick={() => update({ taal: tl })}
+                  className="text-xs font-semibold px-3 py-2 rounded-xl"
+                  style={{
+                    border: `2px solid ${ontwerp.taal === tl ? GOLD : GOLD_LIGHT}`,
+                    backgroundColor: ontwerp.taal === tl ? "#fff" : "transparent",
+                    color: CHARCOAL,
+                    cursor: "pointer",
+                  }}
+                >
+                  {CARD_TAAL_LABEL[tl]}
+                </button>
+              ))}
+            </div>
+          </Sectie>
+
           <Sectie id="animatie" open={stap === "animatie"} onToggle={() => setStap(stap === "animatie" ? "tekst" : "animatie")} titel="Openen">
             <div className="flex flex-col gap-2">
               {CARD_ANIMATIE_KEUZES.map((a) => (

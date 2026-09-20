@@ -61,3 +61,6 @@ Persoonlijke actielijst van Michiel. Claude houdt deze bij; afgeronde punten gaa
   kaartbouwer en /start zijn om als voorbeeld; recept staat in
   docs/AUDIT-en-ideeen.md deel 5. Volgorde: /betalen, /dashboard, /bouwen,
   homepage, daarna admin.
+- Taal van de bouwer en de marketingsite (Engels voor expats), met de taal in
+  het pad: sayingyes.nl/en/... Los van de kaarttaal, die is af. Advies en
+  uitleg in docs/PLAN-afmaken.md.

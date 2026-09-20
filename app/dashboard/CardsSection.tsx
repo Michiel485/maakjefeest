@@ -9,7 +9,8 @@ import {
   CARD_TEMPLATE_UITLEG,
   CARD_TYPE_LABEL,
   cardDesign,
-  GUEST_TYPE_INVITE_LINE,
+  KAART_TEKST,
+  cardTaal,
   GUEST_TYPE_LABEL,
   type CardContent,
   type CardGuestType,
@@ -130,6 +131,11 @@ export default function CardsSection({
     setError(null)
     try {
       const content: CardContent = {
+        // Wat dit venster niet bewerkt hoort te blijven staan. Zonder deze twee
+        // regels zette opslaan hier de animatie terug op rustig en de taal
+        // terug op Nederlands, want de inhoud wordt opnieuw opgebouwd.
+        animatie: editingCard.content.animatie,
+        taal: editingCard.content.taal,
         names: editForm.names || undefined,
         dateText: editForm.dateText || undefined,
         location: editForm.location || undefined,
@@ -560,7 +566,7 @@ export default function CardsSection({
                       onChange={(e) => setEditForm({ ...editForm, inviteText: e.target.value })}
                       placeholder={
                         editForm.guestType
-                          ? GUEST_TYPE_INVITE_LINE[editForm.guestType]
+                          ? KAART_TEKST[cardTaal(editingCard?.content.taal)].uitnodiging[editForm.guestType]
                           : "Bijv. Wij nodigen je van harte uit voor het avondfeest"
                       }
                       maxLength={160}
