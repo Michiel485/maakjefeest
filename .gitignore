@@ -44,3 +44,6 @@ next-env.d.ts
 
 # Werkmappen van hulpagenten: kopieen van de repo, horen niet in de repo zelf
 .claude/worktrees/
+
+# Wegwerpscripts waarmee ik tegen de echte database test
+zzz-*.mjs
