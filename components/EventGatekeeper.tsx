@@ -3,53 +3,18 @@
 import { useState, useEffect, useCallback } from "react"
 import type { SC } from "@/lib/event-styles"
 
+// Let op wat hier NIET in staat: het wachtwoord en het antwoord op de geheime
+// vraag. Die werden eerder als prop meegegeven en stonden daarmee in de
+// broncode van de pagina, zichtbaar voor iedereen die op "bron weergeven"
+// drukte. De controle gebeurt nu op de server, zie app/api/event-toegang.
 interface EventGatekeeperProps {
   slug: string
   pwEnabled: boolean
   pwType: "password" | "secret_question" | null
-  pwValue: string | null
   pwQuestion: string | null
-  pwAnswer: string | null
   sc: SC
   eventTitle: string
   children: React.ReactNode
-}
-
-// Normalize a string for fuzzy comparison: lowercase, strip spaces, remove punctuation
-function normalize(s: string): string {
-  return s
-    .toLowerCase()
-    .replace(/[&\-_,;:.!?'"()/\\]/g, " ")
-    .replace(/\s+/g, "")
-}
-
-// Levenshtein distance between two strings
-function levenshtein(a: string, b: string): number {
-  const m = a.length
-  const n = b.length
-  const dp: number[][] = Array.from({ length: m + 1 }, (_, i) =>
-    Array.from({ length: n + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0))
-  )
-  for (let i = 1; i <= m; i++) {
-    for (let j = 1; j <= n; j++) {
-      dp[i][j] =
-        a[i - 1] === b[j - 1]
-          ? dp[i - 1][j - 1]
-          : 1 + Math.min(dp[i - 1][j - 1], dp[i - 1][j], dp[i][j - 1])
-    }
-  }
-  return dp[m][n]
-}
-
-// Returns true when input matches answer with ≥90% similarity
-function fuzzyMatch(input: string, answer: string): boolean {
-  const a = normalize(input)
-  const b = normalize(answer)
-  if (a === b) return true
-  const maxLen = Math.max(a.length, b.length)
-  if (maxLen === 0) return true
-  const dist = levenshtein(a, b)
-  return (maxLen - dist) / maxLen >= 0.9
 }
 
 const SESSION_KEY = (slug: string) => `sy_unlocked_${slug}`
@@ -58,9 +23,7 @@ export default function EventGatekeeper({
   slug,
   pwEnabled,
   pwType,
-  pwValue,
   pwQuestion,
-  pwAnswer,
   sc,
   eventTitle,
   children,
@@ -70,6 +33,7 @@ export default function EventGatekeeper({
   const [inputValue, setInputValue] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [shaking, setShaking] = useState(false)
+  const [bezig, setBezig] = useState(false)
 
   useEffect(() => {
     if (!pwEnabled) { setUnlocked(true); setChecked(true); return }
@@ -81,29 +45,45 @@ export default function EventGatekeeper({
     setChecked(true)
   }, [slug, pwEnabled])
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
     setError(null)
     const val = inputValue.trim()
-    if (!val) return
+    if (!val || bezig) return
 
+    setBezig(true)
     let correct = false
-    if (pwType === "password") {
-      correct = val === (pwValue ?? "")
-    } else {
-      correct = fuzzyMatch(val, pwAnswer ?? "")
+    let teVeel = false
+    try {
+      const r = await fetch("/api/event-toegang", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug, antwoord: val }),
+      })
+      teVeel = r.status === 429
+      correct = r.ok && ((await r.json()) as { ok?: boolean }).ok === true
+    } catch {
+      setError("Even geen verbinding. Probeer het zo nog eens.")
+      setBezig(false)
+      return
     }
+    setBezig(false)
 
     if (correct) {
       try { sessionStorage.setItem(SESSION_KEY(slug), "1") } catch {}
       setUnlocked(true)
-    } else {
-      setShaking(true)
-      setTimeout(() => setShaking(false), 500)
-      setError(pwType === "password"
-        ? "Dat wachtwoord klopt niet. Probeer het opnieuw."
-        : "Dat antwoord klopt niet helemaal. Probeer het opnieuw.")
+      return
     }
-  }, [inputValue, pwType, pwValue, pwAnswer, slug])
+
+    setShaking(true)
+    setTimeout(() => setShaking(false), 500)
+    setError(
+      teVeel
+        ? "Te veel pogingen achter elkaar. Wacht even en probeer het opnieuw."
+        : pwType === "password"
+          ? "Dat wachtwoord klopt niet. Probeer het opnieuw."
+          : "Dat antwoord klopt niet helemaal. Probeer het opnieuw."
+    )
+  }, [inputValue, pwType, slug, bezig])
 
   // Not yet checked → render nothing to avoid flash
   if (!checked) return null

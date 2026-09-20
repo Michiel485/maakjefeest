@@ -64,3 +64,12 @@ Persoonlijke actielijst van Michiel. Claude houdt deze bij; afgeronde punten gaa
 - Taal van de bouwer en de marketingsite (Engels voor expats), met de taal in
   het pad: sayingyes.nl/en/... Los van de kaarttaal, die is af. Advies en
   uitleg in docs/PLAN-afmaken.md.
+
+## Uit de ronde van 20 september, nog open
+- HERINNERING VOOR CLAUDE: Michiel wil dat ik hem aan de klantreistest herinner
+  zodra we wat verder zijn (punt 3.8 uit docs/AUDIT-en-ideeen.md). Eén script
+  dat de hele reis naloopt, geen testframework.
+- De inhoud van een klantsite met wachtwoord staat nog wel in de broncode. Het
+  wachtwoord zelf niet meer. Zie docs/AUDIT-en-ideeen.md deel 3, punt 3.
+- Samen uitdenken: de gastenlijst met een link per gast (idee D) en de
+  deelbare video of GIF van de envelop (idee E).

@@ -161,7 +161,9 @@ export default function KaartMakenPage() {
 
   const [ontwerp, setOntwerp] = useState<KaartOntwerp>(LEEG)
   const [geladen, setGeladen] = useState(false)
-  const [stap, setStap] = useState<Stap>("tekst")
+  // null betekent: alles dichtgeklapt. Zonder die stand kon een blok alleen
+  // wisselen naar een ander blok, en was Tekst dus nooit dicht te krijgen.
+  const [stap, setStap] = useState<Stap | null>("tekst")
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [eventId, setEventId] = useState<string | null>(null)
   const [cardId, setCardId] = useState<string | null>(null)
@@ -178,7 +180,7 @@ export default function KaartMakenPage() {
   const [mailActie, setMailActie] = useState<Actie | null>(null)
   const [mailAdres, setMailAdres] = useState("")
   const [mailVerstuurd, setMailVerstuurd] = useState(false)
-  const [busy, setBusy] = useState<Actie | "download" | "foto" | null>(null)
+  const [busy, setBusy] = useState<Actie | "download" | "foto" | "proef" | null>(null)
   const [melding, setMelding] = useState<{ tekst: string; fout?: boolean } | null>(null)
 
   // Welk pakket deze kaart nodig heeft om verstuurd te mogen worden. Ontwerpen
@@ -529,6 +531,34 @@ export default function KaartMakenPage() {
     }
   }
 
+  // Een proefkaart naar het eigen mailadres. De grootste twijfel bij een
+  // digitale kaart is hoe hij aankomt bij de gasten; dit haalt die twijfel weg
+  // voordat er betaald wordt. Bewaren hoort erbij, want zonder bewaarde kaart
+  // is er geen link om te versturen.
+  async function stuurProefkaart() {
+    const fout = controleer()
+    if (fout) { setMelding({ tekst: fout, fout: true }); setStap("tekst"); return }
+    if (!userEmail) { setMailActie("bewaar"); setMailVerstuurd(false); return }
+
+    setBusy("proef")
+    setMelding(null)
+    try {
+      const ids = await slaOp()
+      const r = await fetch("/api/cards/proef", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ card_id: ids.cardId }),
+      })
+      const j = (await r.json().catch(() => ({}))) as { error?: string; naar?: string }
+      if (!r.ok) throw new Error(j.error || "Versturen mislukte, probeer het zo opnieuw.")
+      setMelding({ tekst: `Proefkaart onderweg naar ${j.naar ?? "je mailadres"}. Open hem op je telefoon.` })
+    } catch (e) {
+      setMelding({ tekst: e instanceof Error ? e.message : "Versturen mislukte", fout: true })
+    } finally {
+      setBusy(null)
+    }
+  }
+
   async function downloadVoorbeeld() {
     setBusy("download")
     setMelding(null)
@@ -719,7 +749,7 @@ export default function KaartMakenPage() {
             </Link>
           </div>
 
-          <Sectie id="tekst" open={stap === "tekst"} onToggle={() => setStap(stap === "tekst" ? "tekst" : "tekst")} titel="Tekst op de kaart">
+          <Sectie id="tekst" open={stap === "tekst"} onToggle={() => setStap(stap === "tekst" ? null : "tekst")} titel="Tekst op de kaart">
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Jullie namen</span>
               <input className={inputCls} style={inputStyle} placeholder="Sophie & Daan" value={ontwerp.names} onChange={(e) => update({ names: e.target.value })} maxLength={80} />
@@ -765,7 +795,7 @@ export default function KaartMakenPage() {
             </label>
           </Sectie>
 
-          <Sectie id="stijl" open={stap === "stijl"} onToggle={() => setStap(stap === "stijl" ? "tekst" : "stijl")} titel="Stijl">
+          <Sectie id="stijl" open={stap === "stijl"} onToggle={() => setStap(stap === "stijl" ? null : "stijl")} titel="Stijl">
             <div className="grid grid-cols-5 gap-2">
               {STYLE_KEYS.map((s) => {
                 const cfg = STYLE_CONFIG[s]
@@ -792,7 +822,7 @@ export default function KaartMakenPage() {
             </div>
           </Sectie>
 
-          <Sectie id="template" open={stap === "template"} onToggle={() => setStap(stap === "template" ? "tekst" : "template")} titel="Ontwerp">
+          <Sectie id="template" open={stap === "template"} onToggle={() => setStap(stap === "template" ? null : "template")} titel="Ontwerp">
             <div className="flex flex-col gap-2">
               {CARD_DESIGNS.map((t) => (
                 <button
@@ -809,7 +839,7 @@ export default function KaartMakenPage() {
           </Sectie>
 
           {/* Een foto kan bij elk ontwerp */}
-          <Sectie id="foto" open={stap === "foto"} onToggle={() => setStap(stap === "foto" ? "tekst" : "foto")} titel="Foto (optioneel)">
+          <Sectie id="foto" open={stap === "foto"} onToggle={() => setStap(stap === "foto" ? null : "foto")} titel="Foto (optioneel)">
               <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void kiesFoto(f) }} />
               {(ontwerp.photoDataUrl || ontwerp.photoUrl) && (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -830,7 +860,7 @@ export default function KaartMakenPage() {
           {/* Hoe de envelop opengaat bij de gast. Het uitschuiven, het brekende
               zegel en het verende landen zitten in beide keuzes; het verschil
               is alleen of er gouden stofjes bij komen. */}
-          <Sectie id="taal" open={stap === "taal"} onToggle={() => setStap(stap === "taal" ? "tekst" : "taal")} titel="Taal van de kaart">
+          <Sectie id="taal" open={stap === "taal"} onToggle={() => setStap(stap === "taal" ? null : "taal")} titel="Taal van de kaart">
             <div className="grid grid-cols-2 gap-2">
               {CARD_TALEN.map((tl) => (
                 <button
@@ -850,7 +880,7 @@ export default function KaartMakenPage() {
             </div>
           </Sectie>
 
-          <Sectie id="animatie" open={stap === "animatie"} onToggle={() => setStap(stap === "animatie" ? "tekst" : "animatie")} titel="Openen">
+          <Sectie id="animatie" open={stap === "animatie"} onToggle={() => setStap(stap === "animatie" ? null : "animatie")} titel="Openen">
             <div className="flex flex-col gap-2">
               {CARD_ANIMATIE_KEUZES.map((a) => (
                 <button
@@ -873,7 +903,7 @@ export default function KaartMakenPage() {
             </button>
           </Sectie>
 
-          <Sectie id="bekijken" open={stap === "bekijken"} onToggle={() => setStap(stap === "bekijken" ? "tekst" : "bekijken")} titel="Bekijken">
+          <Sectie id="bekijken" open={stap === "bekijken"} onToggle={() => setStap(stap === "bekijken" ? null : "bekijken")} titel="Bekijken">
             <button
               onClick={() => setSimulatie(true)}
               className="w-full text-sm font-semibold px-3 py-3 rounded-xl transition-all hover:-translate-y-0.5"
@@ -881,16 +911,14 @@ export default function KaartMakenPage() {
             >
               💌 Zo ontvangen je gasten hem
             </button>
-            <button
-              onClick={downloadVoorbeeld}
-              disabled={busy === "download"}
-              className="w-full text-sm font-semibold px-3 py-3 rounded-xl disabled:opacity-60"
-              style={{ backgroundColor: "#fff", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
-            >
-              {busy === "download" ? "Bezig..." : "⬇ Download voorbeeld"}
-            </button>
+            <Knop soort="rand" breed onClick={stuurProefkaart} disabled={busy !== null} bezig={busy === "proef"} bezigTekst="Versturen">
+              ✉️ Stuur een proefkaart naar mezelf
+            </Knop>
+            <Knop soort="rand" breed onClick={downloadVoorbeeld} disabled={busy !== null} bezig={busy === "download"} bezigTekst="Maken">
+              ⬇ Download voorbeeld
+            </Knop>
             <p className="text-[11px] leading-snug" style={{ color: SUBTLE }}>
-              Het voorbeeld draagt een watermerk. Na activeren krijg je de kaart zonder, plus de link om te delen.
+              De proefkaart gaat naar je eigen mailadres, zodat je hem op je telefoon kunt openen zoals je gasten dat doen. Het voorbeeld draagt een watermerk; na activeren krijg je de kaart zonder, plus de link om te delen.
             </p>
           </Sectie>
         </aside>
@@ -952,6 +980,9 @@ export default function KaartMakenPage() {
             sc={sc}
             siteUrl={null}
             rsvpUrl={null}
+            /* Pas zichtbaar zodra de kaart bewaard is; eerder is er geen link
+               om de datum vandaan te halen. */
+            agendaUrl={huidigeKaart && ontwerp.datum ? `/kaart/${huidigeKaart.share_token}/agenda` : null}
             previewNotice
           />
         </div>

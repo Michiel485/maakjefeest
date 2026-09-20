@@ -232,6 +232,8 @@ interface KaartTeksten {
   uitnodiging: Record<CardGuestType, string>
   rsvpKnop: string
   siteKnop: string
+  /** De knop die de datum in de agenda van de gast zet. */
+  agendaKnop: string
   siteVolgt: string
   openEnvelop: string
   gemaaktMet: string
@@ -256,6 +258,7 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
     },
     rsvpKnop: "Laat weten of je erbij bent",
     siteKnop: "Bekijk onze trouwsite",
+    agendaKnop: "Zet de datum in je agenda",
     siteVolgt: "Meer informatie volgt binnenkort 🤍",
     openEnvelop: "Open de envelop",
     gemaaktMet: "Gemaakt met",
@@ -274,6 +277,7 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
     },
     rsvpKnop: "Let us know if you can make it",
     siteKnop: "Visit our wedding website",
+    agendaKnop: "Add the date to your calendar",
     siteVolgt: "More details coming soon 🤍",
     openEnvelop: "Open the envelope",
     gemaaktMet: "Made with",
@@ -294,6 +298,7 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
     },
     rsvpKnop: "Dites-nous si vous serez là",
     siteKnop: "Voir notre site de mariage",
+    agendaKnop: "Ajouter la date à votre agenda",
     siteVolgt: "Plus d'informations bientôt 🤍",
     openEnvelop: "Ouvrir l'enveloppe",
     gemaaktMet: "Créé avec",
@@ -312,6 +317,7 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
     },
     rsvpKnop: "Sag uns, ob du dabei bist",
     siteKnop: "Unsere Hochzeitswebsite ansehen",
+    agendaKnop: "Termin in deinen Kalender",
     siteVolgt: "Weitere Infos folgen bald 🤍",
     openEnvelop: "Umschlag öffnen",
     gemaaktMet: "Erstellt mit",
@@ -336,6 +342,7 @@ export interface CardVasteTeksten {
   taal: CardTaal
   rsvpKnop: string
   siteKnop: string
+  agendaKnop: string
   siteVolgtTekst: string
   openEnvelopLabel: string
   gemaaktMet: string
@@ -347,6 +354,7 @@ export function displayTeksten(taal: CardTaal = "nl"): CardVasteTeksten {
     taal,
     rsvpKnop: tk.rsvpKnop,
     siteKnop: tk.siteKnop,
+    agendaKnop: tk.agendaKnop,
     siteVolgtTekst: tk.siteVolgt,
     openEnvelopLabel: tk.openEnvelop,
     gemaaktMet: tk.gemaaktMet,

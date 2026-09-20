@@ -28,9 +28,12 @@ export async function deleteEvent(eventId: string): Promise<{ error?: string }> 
   // achterbleven.
   await verwijderEventInhoud(service, eventId, event.hero_image_url as string | null)
 
-  // Facturen apart: vraag voor Michiel of die bij het weggooien van een site
-  // echt mee moeten. Voor nu hetzelfde gedrag als voorheen.
-  await service.from("invoices").delete().eq("event_id", eventId)
+  // Facturen blijven expres staan. Die horen bij de boekhouding en moeten
+  // jaren bewaard blijven, niet bij het bruidspaar dat zijn site weggooit. De
+  // database is daar al op ingericht: de koppeling van invoices naar events
+  // staat op ON DELETE SET NULL, dus de factuur blijft compleet achter met
+  // event_id op null. Deze regel gooide ze weg voordat de database zijn werk
+  // kon doen.
 
   const { error } = await service.from("events").delete().eq("id", eventId).eq("user_email", user.email)
   if (error) return { error: error.message }

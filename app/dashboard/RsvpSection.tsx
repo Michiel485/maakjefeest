@@ -78,6 +78,10 @@ export default function RsvpSection({
 
   const eventMap = Object.fromEntries(events.map((e) => [e.id, e.title]))
 
+  // Bruiloften waar al aanmeldingen voor zijn: alleen daarvoor is een
+  // cateraarsoverzicht zinvol. Bijna altijd precies een.
+  const eventsMetGasten = events.filter((e) => rsvps.some((r) => r.event_id === e.id))
+
   const attending      = rsvps.filter((r) => r.attending !== "no")
   const declined       = rsvps.filter((r) => r.attending === "no")
   const daggasten      = attending.filter((r) => r.guest_type === "daggast").length
@@ -245,7 +249,24 @@ export default function RsvpSection({
           <span className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: GOLD }}>
             Gastenlijst
           </span>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
+            {/* Het lijstje dat elke locatie vraagt: aantallen, dieetwensen en
+                wie er blijft slapen, op een pagina die je kunt printen. */}
+            {eventsMetGasten.map((e) => (
+              <a
+                key={e.id}
+                href={`/print/gasten/${e.id}`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-1.5 text-sm font-semibold transition-colors"
+                style={{ color: CHARCOAL, textDecoration: "none" }}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                Voor de cateraar{eventsMetGasten.length > 1 ? `: ${e.title}` : ""}
+              </a>
+            ))}
             <button
               onClick={exportCsv}
               className="flex items-center gap-1.5 text-sm font-medium transition-colors"

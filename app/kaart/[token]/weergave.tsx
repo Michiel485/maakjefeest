@@ -93,6 +93,7 @@ export function KaartWeergave({
         sc={sc}
         siteUrl={siteUrl}
         rsvpUrl={rsvpUrl}
+        agendaUrl={event.datum ? `/kaart/${card.share_token}/agenda` : null}
         previewNotice={isEigenaar}
         siteVolgt={heeftSite && !siteLive}
       />

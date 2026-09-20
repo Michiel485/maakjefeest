@@ -1,0 +1,226 @@
+export const dynamic = "force-dynamic"
+
+import { notFound } from "next/navigation"
+import { createClient } from "@/lib/supabase-server"
+import { createServiceClient } from "@/lib/supabase"
+import { formatDate } from "@/lib/event-styles"
+import { KLEUR } from "@/lib/ontwerp"
+import PrintKnop from "./print-knop"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Gastenoverzicht",
+  robots: { index: false, follow: false },
+}
+
+// Het lijstje dat elke locatie aan het bruidspaar vraagt: hoeveel personen,
+// hoeveel vegetarisch, welke allergieën, wie blijft slapen. Die gegevens staan
+// er al, maar verspreid over een tabel met losse regels. Eén pagina die het
+// optelt en te printen is, zonder nav en zonder knoppen erop.
+
+interface Gast {
+  name: string
+  guest_type: string | null
+  dietary: string | null
+  attending: string | null
+  overnachting: boolean | null
+}
+
+const GROEP_LABEL: Record<string, string> = {
+  daggast: "Daggasten",
+  avondgast: "Avondgasten",
+  receptiegast: "Receptiegasten",
+}
+
+/** Aanwezig of niet. Het formulier stuurt "yes" of "no", soms niets. */
+function komt(g: Gast): boolean {
+  return (g.attending ?? "yes") === "yes"
+}
+
+/** "Vegetarisch" en "vegetarisch " horen op één hoop. */
+function dieetSleutel(waarde: string): string {
+  return waarde.trim().toLowerCase().replace(/\s+/g, " ")
+}
+
+export default async function GastenPrintPagina({
+  params,
+}: {
+  params: Promise<{ event_id: string }>
+}) {
+  const { event_id } = await params
+
+  const auth = await createClient()
+  const {
+    data: { user },
+  } = await auth.auth.getUser()
+  if (!user?.email) notFound()
+
+  const service = createServiceClient()
+  const { data: event } = await service
+    .from("events")
+    .select("id, title, datum, locatie, user_email")
+    .eq("id", event_id)
+    .single()
+
+  // Niet van jou is niet gevonden: geen hint dat dit event bestaat
+  if (!event || event.user_email !== user.email) notFound()
+
+  const { data: rijen } = await service
+    .from("rsvp")
+    .select("name, guest_type, dietary, attending, overnachting")
+    .eq("event_id", event_id)
+    .order("name")
+
+  const gasten = (rijen ?? []) as Gast[]
+  const aanwezig = gasten.filter(komt)
+  const afgemeld = gasten.length - aanwezig.length
+
+  const perGroep = new Map<string, number>()
+  for (const g of aanwezig) {
+    const k = g.guest_type ?? "daggast"
+    perGroep.set(k, (perGroep.get(k) ?? 0) + 1)
+  }
+
+  // Dieetwensen met de namen erbij: een cateraar wil weten wie, niet alleen
+  // hoeveel, want dat bord moet bij de juiste stoel staan.
+  const perDieet = new Map<string, { label: string; namen: string[] }>()
+  for (const g of aanwezig) {
+    if (!g.dietary?.trim()) continue
+    const k = dieetSleutel(g.dietary)
+    const bestaand = perDieet.get(k)
+    if (bestaand) bestaand.namen.push(g.name)
+    else perDieet.set(k, { label: g.dietary.trim(), namen: [g.name] })
+  }
+  const dieetLijst = [...perDieet.values()].sort((a, b) => b.namen.length - a.namen.length)
+
+  const blijftSlapen = aanwezig.filter((g) => g.overnachting)
+
+  const printRegels = `
+    @media print {
+      .niet-printen { display: none !important; }
+      @page { margin: 16mm; }
+    }
+    .blok { break-inside: avoid; }
+  `
+
+  return (
+    <div style={{ backgroundColor: "#fff", color: KLEUR.inkt, minHeight: "100vh", padding: "32px 24px" }}>
+      <style>{printRegels}</style>
+
+      <div style={{ maxWidth: 760, margin: "0 auto" }}>
+        <div className="niet-printen" style={{ marginBottom: 24 }}>
+          <PrintKnop />
+        </div>
+
+        <header style={{ borderBottom: `2px solid ${KLEUR.goud}`, paddingBottom: 16, marginBottom: 28 }}>
+          <p style={{ margin: 0, fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: KLEUR.goud }}>
+            Gastenoverzicht
+          </p>
+          <h1 style={{ margin: "6px 0 0", fontSize: 26, fontWeight: 700 }}>{event.title as string}</h1>
+          <p style={{ margin: "4px 0 0", fontSize: 14, color: KLEUR.tekst }}>
+            {[event.datum ? formatDate(event.datum as string) : null, event.locatie as string | null]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
+        </header>
+
+        {gasten.length === 0 ? (
+          <p style={{ fontSize: 14, color: KLEUR.tekst }}>
+            Er zijn nog geen aanmeldingen. Zodra je gasten reageren staat hier het overzicht dat je
+            aan je locatie of cateraar kunt geven.
+          </p>
+        ) : (
+          <>
+            <section className="blok" style={{ marginBottom: 28 }}>
+              <h2 style={{ fontSize: 15, fontWeight: 700, margin: "0 0 12px" }}>Aantallen</h2>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+                <tbody>
+                  <tr style={{ borderBottom: `1px solid ${KLEUR.zand}` }}>
+                    <td style={{ padding: "8px 0", fontWeight: 700 }}>Komt</td>
+                    <td style={{ padding: "8px 0", textAlign: "right", fontWeight: 700 }}>{aanwezig.length}</td>
+                  </tr>
+                  {[...perGroep.entries()].map(([groep, aantal]) => (
+                    <tr key={groep} style={{ borderBottom: `1px solid ${KLEUR.zand}` }}>
+                      <td style={{ padding: "8px 0 8px 16px", color: KLEUR.tekst }}>
+                        {GROEP_LABEL[groep] ?? groep}
+                      </td>
+                      <td style={{ padding: "8px 0", textAlign: "right" }}>{aantal}</td>
+                    </tr>
+                  ))}
+                  {afgemeld > 0 && (
+                    <tr>
+                      <td style={{ padding: "8px 0", color: KLEUR.tekst }}>Afgemeld</td>
+                      <td style={{ padding: "8px 0", textAlign: "right" }}>{afgemeld}</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </section>
+
+            <section className="blok" style={{ marginBottom: 28 }}>
+              <h2 style={{ fontSize: 15, fontWeight: 700, margin: "0 0 12px" }}>Dieetwensen en allergieën</h2>
+              {dieetLijst.length === 0 ? (
+                <p style={{ fontSize: 14, color: KLEUR.tekst, margin: 0 }}>Niemand heeft iets doorgegeven.</p>
+              ) : (
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+                  <tbody>
+                    {dieetLijst.map((d) => (
+                      <tr key={d.label} style={{ borderBottom: `1px solid ${KLEUR.zand}` }}>
+                        <td style={{ padding: "8px 0", width: 56, fontWeight: 700 }}>{d.namen.length}&times;</td>
+                        <td style={{ padding: "8px 0", fontWeight: 600 }}>{d.label}</td>
+                        <td style={{ padding: "8px 0", color: KLEUR.tekst, textAlign: "right" }}>
+                          {d.namen.join(", ")}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </section>
+
+            {blijftSlapen.length > 0 && (
+              <section className="blok" style={{ marginBottom: 28 }}>
+                <h2 style={{ fontSize: 15, fontWeight: 700, margin: "0 0 12px" }}>
+                  Blijft slapen ({blijftSlapen.length})
+                </h2>
+                <p style={{ fontSize: 14, color: KLEUR.tekst, margin: 0, lineHeight: 1.7 }}>
+                  {blijftSlapen.map((g) => g.name).join(", ")}
+                </p>
+              </section>
+            )}
+
+            <section className="blok">
+              <h2 style={{ fontSize: 15, fontWeight: 700, margin: "0 0 12px" }}>
+                Iedereen die komt ({aanwezig.length})
+              </h2>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                <thead>
+                  <tr style={{ borderBottom: `1px solid ${KLEUR.goudLicht}` }}>
+                    <th style={{ padding: "6px 0", textAlign: "left", fontWeight: 700 }}>Naam</th>
+                    <th style={{ padding: "6px 0", textAlign: "left", fontWeight: 700 }}>Groep</th>
+                    <th style={{ padding: "6px 0", textAlign: "left", fontWeight: 700 }}>Dieet</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {aanwezig.map((g, i) => (
+                    <tr key={`${g.name}-${i}`} style={{ borderBottom: `1px solid ${KLEUR.zand}` }}>
+                      <td style={{ padding: "6px 0" }}>{g.name}</td>
+                      <td style={{ padding: "6px 0", color: KLEUR.tekst }}>
+                        {GROEP_LABEL[g.guest_type ?? "daggast"] ?? g.guest_type}
+                      </td>
+                      <td style={{ padding: "6px 0", color: KLEUR.tekst }}>{g.dietary?.trim() || "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+          </>
+        )}
+
+        <footer style={{ marginTop: 36, paddingTop: 14, borderTop: `1px solid ${KLEUR.zand}`, fontSize: 11, color: KLEUR.zacht }}>
+          Overzicht van {formatDate(new Date().toISOString().slice(0, 10))} · gemaakt met SayingYes
+        </footer>
+      </div>
+    </div>
+  )
+}

@@ -37,7 +37,7 @@ export default async function EventLayout({
 
   const event = rijOfNiets(await supabase
     .from("events")
-    .select("id, title, nav_title, frame_names, style, font_frame_names, font_page_titles, nav_layout, pw_enabled, pw_type, pw_value, pw_question, pw_answer, homepage_settings, plan")
+    .select("id, title, nav_title, frame_names, style, font_frame_names, font_page_titles, nav_layout, pw_enabled, pw_type, pw_question, homepage_settings, plan")
     .eq("slug", slug)
     .eq("status", "published")
     .single(), "Website")
@@ -81,11 +81,13 @@ export default async function EventLayout({
   // Kleinere pakketten zijn altijd één pagina (hero + eventueel RSVP)
   const isSinglePage = !isCompleet || hs?.pageMode === 'single'
 
+  // Alleen wat de bezoeker mag zien. Het wachtwoord en het antwoord op de
+  // geheime vraag blijven op de server: die werden hier eerder uitgelezen en
+  // als prop meegegeven, en stonden daarmee gewoon in de broncode van de
+  // pagina. De controle loopt nu via app/api/event-toegang.
   const pwEnabled = (event.pw_enabled as boolean) ?? false
   const pwType = (event.pw_type as "password" | "secret_question" | null) ?? null
-  const pwValue = (event.pw_value as string | null) ?? null
   const pwQuestion = (event.pw_question as string | null) ?? null
-  const pwAnswer = (event.pw_answer as string | null) ?? null
 
   const siteContent = (
     <div className={`max-w-5xl mx-auto sm:shadow-2xl sm:rounded-2xl overflow-clip flex flex-col relative${sc.floral ? " bohemian-scale" : ""}`}
@@ -150,9 +152,7 @@ export default async function EventLayout({
           slug={slug}
           pwEnabled={pwEnabled}
           pwType={pwType}
-          pwValue={pwValue}
           pwQuestion={pwQuestion}
-          pwAnswer={pwAnswer}
           sc={sc}
           eventTitle={(event.nav_title as string | null) || (event.title as string) || ""}
         >

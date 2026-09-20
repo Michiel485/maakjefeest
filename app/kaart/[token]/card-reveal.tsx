@@ -71,6 +71,7 @@ export default function CardReveal({
   sc,
   siteUrl,
   rsvpUrl,
+  agendaUrl = null,
   demo = false,
   previewNotice = false,
   siteVolgt = false,
@@ -82,6 +83,8 @@ export default function CardReveal({
   sc: SC
   siteUrl: string | null
   rsvpUrl: string | null
+  // Het agendabestand met de trouwdatum, voor in de agenda van de gast
+  agendaUrl?: string | null
   // Voorbeeldkaart op de marketingsite: geen site-knoppen, wel een CTA
   demo?: boolean
   // Het bruidspaar bekijkt zijn eigen nog niet geactiveerde kaart
@@ -841,6 +844,28 @@ export default function CardReveal({
               >
                 {display.siteVolgtTekst}
               </p>
+            )}
+
+            {/* De datum in de agenda. Staat bewust boven de rest: bij een Save
+                the Date is dit de enige zinnige stap, en de kaart vraagt er
+                letterlijk om in de standaardtekst. */}
+            {agendaUrl && (
+              <div className="mt-6" style={eindBlok}>
+                <a
+                  href={agendaUrl}
+                  className="block w-full py-3.5 rounded-xl text-sm font-semibold text-center transition-opacity hover:opacity-85"
+                  // Bij een trouwkaart is aanmelden de belangrijkste stap, dus
+                  // dan staat deze knop in de tweede vorm. Op een Save the
+                  // Date is hij de enige en dus de opvallende.
+                  style={
+                    rsvpUrl
+                      ? { backgroundColor: "transparent", color: sc.headingColor, border: `1.5px solid ${sc.accent}`, textDecoration: "none" }
+                      : { backgroundColor: sc.accent, color: sc.buttonText, textDecoration: "none" }
+                  }
+                >
+                  {display.agendaKnop}
+                </a>
+              </div>
             )}
 
             {/* Knoppen naar de trouwsite */}

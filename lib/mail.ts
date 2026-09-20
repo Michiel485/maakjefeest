@@ -1274,3 +1274,93 @@ export async function sendPlanActivatedEmail({
     return { success: false, error: err }
   }
 }
+
+// ── Proefkaart naar het bruidspaar zelf ─────────────────────────────────────
+// De grootste twijfel bij een digitale kaart is "hoe komt dit aan bij mijn
+// gasten". Het bruidspaar ontwerpt op een laptop en heeft geen idee hoe het op
+// een telefoon oogt. Deze mail zet de kaart in hun eigen inbox, met de link
+// erbij, zodat ze het op hun telefoon kunnen openen voordat ze betalen.
+export async function sendProefkaartEmail({
+  toEmail,
+  namen,
+  kaartUrl,
+  afbeeldingUrl,
+  isTrouwkaart,
+}: {
+  toEmail: string
+  namen: string
+  /** De voorbeeldweergave van de kaart, niet de publieke link. */
+  kaartUrl: string
+  /** Plaatje van de kaart, voor in de mail zelf. */
+  afbeeldingUrl: string
+  isTrouwkaart: boolean
+}) {
+  const soort = isTrouwkaart ? "trouwkaart" : "Save the Date"
+
+  const html = `<!DOCTYPE html>
+<html lang="nl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f1ec;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f1ec;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);">
+        <tr>
+          <td bgcolor="#c9a96e" style="background-color:#c9a96e;padding:44px 40px 36px;text-align:center;">
+            <p style="margin:0 0 10px;font-size:26px;font-weight:600;letter-spacing:0.06em;color:#f5ead6;font-family:'Georgia',serif;">SayingYes</p>
+            <h1 style="margin:0;font-size:22px;font-weight:800;color:#111827;line-height:1.25;">Jullie proefkaart 💌</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:36px 40px 0;">
+            <p style="margin:0 0 20px;font-size:15px;color:#374151;line-height:1.7;">
+              Hier is de ${soort} van <strong>${namen}</strong> zoals hij er nu uitziet. Open de link hieronder op je telefoon: dat is hoe je gasten hem straks ook openen, met de envelop en het zegel.
+            </p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+              <tr>
+                <td align="center" style="background-color:#faf7f2;border:1px solid #e8dcc8;border-radius:12px;padding:20px;">
+                  <img src="${afbeeldingUrl}" alt="Jullie kaart" width="360" style="display:block;width:100%;max-width:360px;height:auto;border-radius:8px;" />
+                </td>
+              </tr>
+            </table>
+            <table cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
+              <tr>
+                <td style="border-radius:12px;background-color:#111827;">
+                  <a href="${kaartUrl}" style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:12px;">Open de envelop &rarr;</a>
+                </td>
+              </tr>
+            </table>
+            <p style="margin:0 0 12px;font-size:14px;font-weight:700;color:#111827;">Waar je op kunt letten</p>
+            <p style="margin:0 0 36px;font-size:13px;color:#6b7280;line-height:1.7;">
+              Kloppen de namen, de datum en de locatie? Leest de tekst prettig op een klein scherm? En doet de envelop wat je ervan verwacht? Pas het gerust nog aan, je ontwerp blijft gewoon staan.
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:20px 40px 32px;border-top:1px solid #f3ede4;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">Dit is een proefkaart voor jullie zelf. Je gasten krijgen hem pas als je hem verstuurt.<br />SayingYes &middot; sayingyes.nl &middot; info@sayingyes.nl</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+
+  try {
+    const { data: result, error } = await getResend().emails.send({
+      from:    FROM,
+      to:      [toEmail],
+      subject: `Jullie proefkaart: zo ontvangen je gasten hem`,
+      html,
+    })
+    if (error) {
+      console.error("[mail] Proefkaart error:", error)
+      return { success: false as const, error }
+    }
+    console.log("[mail] Proefkaart sent →", toEmail, "| id:", result?.id)
+    return { success: true as const, id: result?.id }
+  } catch (err) {
+    console.error("[mail] Unexpected error sending proefkaart:", err)
+    return { success: false as const, error: err }
+  }
+}
