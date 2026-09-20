@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { gastSleutel, leesGeplakteLijst } from "@/lib/gasten"
 
 const GOLD       = "#C5A059"
 const GOLD_LIGHT = "#E8D5A3"
@@ -15,6 +16,8 @@ export interface RsvpRow {
   event_id: string
   submission_id: string | null
   name: string
+  voornaam: string | null
+  achternaam: string | null
   email: string | null
   guest_type: string
   dietary: string | null
@@ -91,6 +94,14 @@ export default function RsvpSection({
   const [berichtTekst, setBerichtTekst] = useState("")
   const [berichtBezig, setBerichtBezig] = useState(false)
   const [berichtUitslag, setBerichtUitslag] = useState<string | null>(null)
+  // Gasten met de hand toevoegen: los invullen of een lijst plakken.
+  const [toevoegenOpen, setToevoegenOpen] = useState(false)
+  const [toevoegEvent, setToevoegEvent] = useState(events[0]?.id ?? "")
+  const [plaklijst, setPlaklijst] = useState("")
+  const [toevoegBezig, setToevoegBezig] = useState(false)
+  const [toevoegUitslag, setToevoegUitslag] = useState<string | null>(null)
+
+  const geplakt = leesGeplakteLijst(plaklijst)
 
   const eventMap = Object.fromEntries(events.map((e) => [e.id, e.title]))
 
@@ -125,6 +136,25 @@ export default function RsvpSection({
 
   // Alle zichtbare regels, voor het vinkje in de kop
   const alleIds = sortedGroups.flat().map((r) => r.id)
+
+  // Namen die twee keer voorkomen binnen dezelfde bruiloft. Eén gedeelde
+  // kaartlink gaat naar tachtig mensen, dus dubbele invoer komt voor. Wij
+  // voegen niet automatisch samen; we wijzen het alleen aan, want alleen het
+  // bruidspaar weet of het dezelfde persoon is.
+  const dubbel = new Set<string>()
+  {
+    const gezien = new Map<string, string>()
+    for (const r of rsvps) {
+      const sleutel = `${r.event_id}:${gastSleutel(r.voornaam ?? r.name, r.achternaam)}`
+      const eerder = gezien.get(sleutel)
+      if (eerder) {
+        dubbel.add(eerder)
+        dubbel.add(r.id)
+      } else {
+        gezien.set(sleutel, r.id)
+      }
+    }
+  }
 
   function openEdit(row: RsvpRow) {
     setEditingRow(row)
@@ -232,6 +262,29 @@ export default function RsvpSection({
     }
   }
 
+  async function voegGastenToe() {
+    if (geplakt.length === 0) return
+    setToevoegBezig(true)
+    setToevoegUitslag(null)
+    try {
+      const res = await fetch("/api/gasten", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ event_id: toevoegEvent, gasten: geplakt }),
+      })
+      const j = (await res.json().catch(() => ({}))) as { error?: string; toegevoegd?: number }
+      if (!res.ok) throw new Error(j.error || "Toevoegen mislukte")
+      setToevoegUitslag(
+        `${j.toegevoegd ?? 0} ${j.toegevoegd === 1 ? "gast" : "gasten"} toegevoegd. Ververs de pagina om ze in de lijst te zien.`
+      )
+      setPlaklijst("")
+    } catch (e) {
+      setToevoegUitslag(e instanceof Error ? e.message : "Toevoegen mislukte")
+    } finally {
+      setToevoegBezig(false)
+    }
+  }
+
   function buildExportRows() {
     const headers = [
       "Naam", "E-mail", "Status", "Type", "Dieetwensen",
@@ -288,9 +341,97 @@ export default function RsvpSection({
     XLSX.writeFile(wb, "gasten.xlsx")
   }
 
+  // Staat in beide toestanden, ook als de lijst nog leeg is: een gastenlijst
+  // begint bij wie je uitnodigt, niet bij wie zich meldt.
+  // Plakken is hier het snelst, want de meeste bruidsparen hebben hun lijst al
+  // ergens staan.
+  const toevoegPaneel = (
+      <div className="rounded-2xl" style={{ backgroundColor: IVORY_CARD, border: `1px solid ${GOLD_LIGHT}` }}>
+        <button
+          onClick={() => setToevoegenOpen((v) => !v)}
+          className="w-full flex items-center justify-between px-5 py-3.5"
+          style={{ cursor: "pointer" }}
+        >
+          <span className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: GOLD }}>
+            Gasten toevoegen
+          </span>
+          <span className="text-sm font-semibold" style={{ color: BODY }}>{toevoegenOpen ? "Sluiten" : "Openen"}</span>
+        </button>
+
+        {toevoegenOpen && (
+          <div className="px-5 pb-5 flex flex-col gap-3">
+            {events.length > 1 && (
+              <select
+                value={toevoegEvent}
+                onChange={(e) => setToevoegEvent(e.target.value)}
+                className="rounded-xl border bg-white px-3 py-2.5 text-sm font-semibold"
+                style={{ borderColor: GOLD_LIGHT, color: CHARCOAL, cursor: "pointer" }}
+              >
+                {events.map((e) => (
+                  <option key={e.id} value={e.id}>{e.title}</option>
+                ))}
+              </select>
+            )}
+
+            <textarea
+              rows={6}
+              value={plaklijst}
+              onChange={(e) => setPlaklijst(e.target.value)}
+              className="w-full rounded-xl border bg-white px-3 py-2.5 text-sm resize-y focus:outline-none"
+              style={{ borderColor: GOLD_LIGHT, color: CHARCOAL }}
+              placeholder={"Eén per regel. Bijvoorbeeld:\n\nSanne de Vries\nTom de Vries, tom@example.com\nKarin Bos; karin@example.com; 0612345678"}
+            />
+            <p className="text-xs" style={{ color: BODY }}>
+              Plakken uit Excel werkt ook: de kolommen komen met tabs binnen en die herkennen we.
+              Een mailadres en een telefoonnummer pikken we er vanzelf uit, in welke volgorde ze ook staan.
+            </p>
+
+            {geplakt.length > 0 && (
+              <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${GOLD_LIGHT}` }}>
+                <p className="px-3 py-2 text-xs font-semibold" style={{ backgroundColor: GOLD_BG, color: CHARCOAL }}>
+                  Zo hebben wij het gelezen ({geplakt.length})
+                </p>
+                <div className="max-h-48 overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <tbody>
+                      {geplakt.map((g, i) => (
+                        <tr key={i} style={{ borderTop: `1px solid ${GOLD_LIGHT}40` }}>
+                          <td className="px-3 py-1.5" style={{ color: CHARCOAL }}>
+                            {g.voornaam} {g.achternaam}
+                          </td>
+                          <td className="px-3 py-1.5" style={{ color: BODY }}>{g.email || "—"}</td>
+                          <td className="px-3 py-1.5" style={{ color: BODY }}>{g.telefoon || "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={voegGastenToe}
+                disabled={toevoegBezig || geplakt.length === 0}
+                className="text-sm font-semibold px-4 py-2 rounded-xl disabled:opacity-60"
+                style={{ backgroundColor: CHARCOAL, color: IVORY_CARD, border: "none", cursor: "pointer" }}
+              >
+                {toevoegBezig ? "Toevoegen..." : geplakt.length > 0 ? `Voeg ${geplakt.length} toe` : "Voeg toe"}
+              </button>
+              {toevoegUitslag && (
+                <span className="text-sm font-semibold" style={{ color: CHARCOAL }}>{toevoegUitslag}</span>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+  )
+
   if (rsvps.length === 0) {
     return (
-      <div
+      <div className="flex flex-col gap-6">
+        {toevoegPaneel}
+        <div
         className="rounded-2xl p-10 text-center"
         style={{ backgroundColor: IVORY_CARD, border: `1px solid ${GOLD_LIGHT}` }}
       >
@@ -303,8 +444,10 @@ export default function RsvpSection({
           </svg>
         </div>
         <p className="text-sm" style={{ color: BODY }}>
-          Aanmeldingen van jullie gasten verschijnen hier zodra de bruiloftswebsite live is.
+          Nog geen gasten. Zet ze hierboven zelf in de lijst, of laat ze zichzelf invullen: wie
+          jullie kaart opent kan daar meteen laten weten of hij erbij is.
         </p>
+      </div>
       </div>
     )
   }
@@ -367,6 +510,8 @@ export default function RsvpSection({
             </button>
           </div>
         </div>
+
+        {toevoegPaneel}
 
         {/* ── Wat je met de aangevinkte regels kunt ──
             Verschijnt alleen als er iets gekozen is, zodat de lijst rustig
@@ -513,6 +658,15 @@ export default function RsvpSection({
                         {row.is_kind && (
                           <span className="ml-2 text-xs" style={{ color: BODY }}>
                             ({row.leeftijd != null ? `${row.leeftijd} jaar` : "kind"})
+                          </span>
+                        )}
+                        {dubbel.has(row.id) && (
+                          <span
+                            className="ml-2 text-xs font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap"
+                            style={{ backgroundColor: "#FEF3C7", color: "#92400E" }}
+                            title="Deze naam staat er twee keer in. Kijk even of het dezelfde persoon is."
+                          >
+                            dubbel?
                           </span>
                         )}
                         {row.is_primary && (

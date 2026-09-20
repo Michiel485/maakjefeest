@@ -116,3 +116,72 @@ export const MAX_BERICHT = 1000
 export const MAX_PERSONEN_PER_INZENDING = 20
 /** Een kind is hoogstens dit oud; daarboven reken je gewoon een volwassene. */
 export const MAX_KIND_LEEFTIJD = 17
+
+// ── Een geplakte lijst lezen ────────────────────────────────────────────────
+// Veel bruidsparen hebben hun gastenlijst al ergens staan, in een sheet of in
+// een notitie. Plakken is dan sneller dan overtypen, en het is ook het halve
+// werk van importeren uit Excel: wat je uit een sheet kopieert komt met tabs
+// tussen de kolommen binnen.
+//
+// Bewust vergevingsgezind. We raden wat elk stukje is in plaats van een vast
+// formaat te eisen, en laten het bruidspaar daarna zien wat we ervan begrepen
+// hebben. Een verkeerde gok is dan een klik om te herstellen; een strenge
+// regel is een doodlopende weg.
+
+export interface GeplakteGast {
+  voornaam: string
+  achternaam: string
+  email: string
+  telefoon: string
+}
+
+/** Lijkt dit op een telefoonnummer? Cijfers, plussen en streepjes, minstens 8. */
+function lijktOpTelefoon(s: string): boolean {
+  const cijfers = s.replace(/[^0-9]/g, "")
+  return cijfers.length >= 8 && /^[0-9+\-\s()./]+$/.test(s)
+}
+
+export function leesGeplakteLijst(tekst: string): GeplakteGast[] {
+  const uit: GeplakteGast[] = []
+
+  for (const regel of tekst.split(/\r?\n/)) {
+    const delen = regel
+      .split(/\t|;|,/)
+      .map((d) => d.trim())
+      .filter(Boolean)
+    if (delen.length === 0) continue
+
+    let email = ""
+    let telefoon = ""
+    const rest: string[] = []
+
+    for (const d of delen) {
+      if (!email && d.includes("@") && !d.includes(" ")) email = d
+      else if (!telefoon && lijktOpTelefoon(d)) telefoon = d
+      else rest.push(d)
+    }
+
+    // Wat overblijft is de naam. Twee losse stukken betekent meestal dat de
+    // sheet voornaam en achternaam in aparte kolommen had.
+    let voornaam = ""
+    let achternaam = ""
+    if (rest.length >= 2) {
+      voornaam = rest[0]
+      achternaam = rest.slice(1).join(" ")
+    } else if (rest.length === 1) {
+      const woorden = rest[0].split(/\s+/)
+      voornaam = woorden[0]
+      achternaam = woorden.slice(1).join(" ")
+    }
+
+    if (!voornaam) continue
+    uit.push({
+      voornaam: voornaam.slice(0, MAX_NAAM),
+      achternaam: achternaam.slice(0, MAX_NAAM),
+      email: email.slice(0, MAX_EMAIL),
+      telefoon: telefoon.slice(0, MAX_TELEFOON),
+    })
+  }
+
+  return uit
+}
