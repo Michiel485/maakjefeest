@@ -22,8 +22,12 @@ interface Gast {
   name: string
   guest_type: string | null
   dietary: string | null
+  allergie: string | null
   attending: string | null
   overnachting: boolean | null
+  is_kind: boolean | null
+  leeftijd: number | null
+  status: string | null
 }
 
 const GROEP_LABEL: Record<string, string> = {
@@ -67,13 +71,23 @@ export default async function GastenPrintPagina({
 
   const { data: rijen } = await service
     .from("rsvp")
-    .select("name, guest_type, dietary, attending, overnachting")
+    .select("name, guest_type, dietary, allergie, attending, overnachting, is_kind, leeftijd, status")
     .eq("event_id", event_id)
     .order("name")
 
   const gasten = (rijen ?? []) as Gast[]
   const aanwezig = gasten.filter(komt)
   const afgemeld = gasten.length - aanwezig.length
+
+  // Kinderen tellen apart: de catering rekent voor hen vaak een ander tarief,
+  // en de locatie vraagt er standaard naar.
+  const kinderen = aanwezig.filter((g) => g.is_kind)
+  const volwassenen = aanwezig.length - kinderen.length
+
+  // Een zachte reservering van een Save the Date is geen definitieve
+  // aanmelding. Die twee bij elkaar optellen zou het bruidspaar op een te hoog
+  // getal laten plannen.
+  const voorlopig = aanwezig.filter((g) => g.status === "voorlopig").length
 
   const perGroep = new Map<string, number>()
   for (const g of aanwezig) {
@@ -83,15 +97,22 @@ export default async function GastenPrintPagina({
 
   // Dieetwensen met de namen erbij: een cateraar wil weten wie, niet alleen
   // hoeveel, want dat bord moet bij de juiste stoel staan.
-  const perDieet = new Map<string, { label: string; namen: string[] }>()
-  for (const g of aanwezig) {
-    if (!g.dietary?.trim()) continue
-    const k = dieetSleutel(g.dietary)
-    const bestaand = perDieet.get(k)
-    if (bestaand) bestaand.namen.push(g.name)
-    else perDieet.set(k, { label: g.dietary.trim(), namen: [g.name] })
+  function groepeer(veld: "dietary" | "allergie") {
+    const per = new Map<string, { label: string; namen: string[] }>()
+    for (const g of aanwezig) {
+      const waarde = g[veld]
+      if (!waarde?.trim()) continue
+      const k = dieetSleutel(waarde)
+      const bestaand = per.get(k)
+      if (bestaand) bestaand.namen.push(g.name)
+      else per.set(k, { label: waarde.trim(), namen: [g.name] })
+    }
+    return [...per.values()].sort((a, b) => b.namen.length - a.namen.length)
   }
-  const dieetLijst = [...perDieet.values()].sort((a, b) => b.namen.length - a.namen.length)
+  const dieetLijst = groepeer("dietary")
+  // Een allergie is veiligheid en een voorkeur is een voorkeur. Voor een
+  // cateraar zijn dat twee verschillende lijstjes.
+  const allergieLijst = groepeer("allergie")
 
   const blijftSlapen = aanwezig.filter((g) => g.overnachting)
 
@@ -139,6 +160,23 @@ export default async function GastenPrintPagina({
                     <td style={{ padding: "8px 0", fontWeight: 700 }}>Komt</td>
                     <td style={{ padding: "8px 0", textAlign: "right", fontWeight: 700 }}>{aanwezig.length}</td>
                   </tr>
+                  <tr style={{ borderBottom: `1px solid ${KLEUR.zand}` }}>
+                    <td style={{ padding: "8px 0 8px 16px", color: KLEUR.tekst }}>Volwassenen</td>
+                    <td style={{ padding: "8px 0", textAlign: "right" }}>{volwassenen}</td>
+                  </tr>
+                  <tr style={{ borderBottom: `1px solid ${KLEUR.zand}` }}>
+                    <td style={{ padding: "8px 0 8px 16px", color: KLEUR.tekst }}>
+                      Kinderen
+                      {kinderen.length > 0 && (
+                        <span style={{ color: KLEUR.zacht }}>
+                          {" "}({kinderen
+                            .map((k) => (k.leeftijd != null ? `${k.leeftijd} jaar` : "leeftijd onbekend"))
+                            .join(", ")})
+                        </span>
+                      )}
+                    </td>
+                    <td style={{ padding: "8px 0", textAlign: "right" }}>{kinderen.length}</td>
+                  </tr>
                   {[...perGroep.entries()].map(([groep, aantal]) => (
                     <tr key={groep} style={{ borderBottom: `1px solid ${KLEUR.zand}` }}>
                       <td style={{ padding: "8px 0 8px 16px", color: KLEUR.tekst }}>
@@ -148,9 +186,18 @@ export default async function GastenPrintPagina({
                     </tr>
                   ))}
                   {afgemeld > 0 && (
-                    <tr>
+                    <tr style={{ borderBottom: `1px solid ${KLEUR.zand}` }}>
                       <td style={{ padding: "8px 0", color: KLEUR.tekst }}>Afgemeld</td>
                       <td style={{ padding: "8px 0", textAlign: "right" }}>{afgemeld}</td>
+                    </tr>
+                  )}
+                  {voorlopig > 0 && (
+                    <tr>
+                      <td style={{ padding: "8px 0", color: KLEUR.tekst }}>
+                        Waarvan voorlopig
+                        <span style={{ color: KLEUR.zacht }}> (reageerde op de Save the Date, nog geen volledige aanmelding)</span>
+                      </td>
+                      <td style={{ padding: "8px 0", textAlign: "right" }}>{voorlopig}</td>
                     </tr>
                   )}
                 </tbody>
@@ -158,7 +205,26 @@ export default async function GastenPrintPagina({
             </section>
 
             <section className="blok" style={{ marginBottom: 28 }}>
-              <h2 style={{ fontSize: 15, fontWeight: 700, margin: "0 0 12px" }}>Dieetwensen en allergieën</h2>
+              <h2 style={{ fontSize: 15, fontWeight: 700, margin: "0 0 12px" }}>Allergieën</h2>
+              {allergieLijst.length === 0 ? (
+                <p style={{ fontSize: 14, color: KLEUR.tekst, margin: 0 }}>Niemand heeft een allergie doorgegeven.</p>
+              ) : (
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+                  <tbody>
+                    {allergieLijst.map((d) => (
+                      <tr key={d.label} style={{ borderBottom: `1px solid ${KLEUR.zand}` }}>
+                        <td style={{ padding: "8px 0", width: 56, fontWeight: 700 }}>{d.namen.length}&times;</td>
+                        <td style={{ padding: "8px 0", fontWeight: 600 }}>{d.label}</td>
+                        <td style={{ padding: "8px 0", color: KLEUR.tekst, textAlign: "right" }}>{d.namen.join(", ")}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </section>
+
+            <section className="blok" style={{ marginBottom: 28 }}>
+              <h2 style={{ fontSize: 15, fontWeight: 700, margin: "0 0 12px" }}>Dieetwensen</h2>
               {dieetLijst.length === 0 ? (
                 <p style={{ fontSize: 14, color: KLEUR.tekst, margin: 0 }}>Niemand heeft iets doorgegeven.</p>
               ) : (
@@ -198,7 +264,8 @@ export default async function GastenPrintPagina({
                   <tr style={{ borderBottom: `1px solid ${KLEUR.goudLicht}` }}>
                     <th style={{ padding: "6px 0", textAlign: "left", fontWeight: 700 }}>Naam</th>
                     <th style={{ padding: "6px 0", textAlign: "left", fontWeight: 700 }}>Groep</th>
-                    <th style={{ padding: "6px 0", textAlign: "left", fontWeight: 700 }}>Dieet</th>
+                    <th style={{ padding: "6px 0", textAlign: "left", fontWeight: 700 }}>Leeftijd</th>
+                    <th style={{ padding: "6px 0", textAlign: "left", fontWeight: 700 }}>Dieet en allergie</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -208,7 +275,12 @@ export default async function GastenPrintPagina({
                       <td style={{ padding: "6px 0", color: KLEUR.tekst }}>
                         {GROEP_LABEL[g.guest_type ?? "daggast"] ?? g.guest_type}
                       </td>
-                      <td style={{ padding: "6px 0", color: KLEUR.tekst }}>{g.dietary?.trim() || "—"}</td>
+                      <td style={{ padding: "6px 0", color: KLEUR.tekst }}>
+                        {g.is_kind ? (g.leeftijd != null ? `${g.leeftijd} jaar` : "kind") : "volwassen"}
+                      </td>
+                      <td style={{ padding: "6px 0", color: KLEUR.tekst }}>
+                        {[g.dietary?.trim(), g.allergie?.trim()].filter(Boolean).join(", ") || "—"}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
