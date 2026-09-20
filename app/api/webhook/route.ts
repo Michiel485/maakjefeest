@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { createMollieClient } from "@mollie/api-client"
 import type { Payment } from "@mollie/api-client"
-import { revalidatePath } from "next/cache"
+import { verversEvent } from "@/lib/db"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { createServiceClient } from "@/lib/supabase"
 import { sendWebsiteLiveEmail, sendInvoiceEmail, sendPlanActivatedEmail } from "@/lib/mail"
@@ -201,7 +201,7 @@ export async function POST(request: Request) {
         now,
       })
 
-      if (eventRow.slug) revalidatePath(`/events/${eventRow.slug}`, "layout")
+      await verversEvent(eventRow.slug as string | null)
     }
     return NextResponse.json({ received: true }, { status: 200 })
   }
@@ -244,7 +244,7 @@ export async function POST(request: Request) {
         }
       }
 
-      if (eventRow.slug) revalidatePath(`/events/${eventRow.slug}`, "layout")
+      await verversEvent(eventRow.slug as string | null)
     }
     return NextResponse.json({ received: true }, { status: 200 })
   }
@@ -281,7 +281,7 @@ export async function POST(request: Request) {
   }
 
   if (updatedEvent?.slug) {
-    revalidatePath(`/events/${updatedEvent.slug}`, "layout")
+    await verversEvent(updatedEvent.slug as string | null)
   }
 
   // Mark discount code as used

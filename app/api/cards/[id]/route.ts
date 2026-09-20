@@ -1,6 +1,7 @@
 import { createServiceClient } from "@/lib/supabase"
 import { createClient } from "@/lib/supabase-server"
 import { cardAnimatie, type CardContent, type CardGuestType, type CardTemplate } from "@/lib/cards"
+import { verversKaart } from "@/lib/db"
 
 const CARD_TEMPLATES: CardTemplate[] = ["klassiek", "sierlijk", "bohemian", "foto"]
 const GUEST_TYPES: CardGuestType[] = ["daggast", "avondgast", "receptiegast"]
@@ -68,12 +69,21 @@ export async function PATCH(
   }
 
   const service = createServiceClient()
-  const { error } = await service.from("cards").update(update).eq("id", id)
+  const { data: bijgewerkt, error } = await service
+    .from("cards")
+    .update(update)
+    .eq("id", id)
+    .select("share_token")
+    .single()
 
   if (error) {
     console.error("[cards] update:", error.message)
     return Response.json({ error: "Opslaan mislukt" }, { status: 500 })
   }
+
+  // De kaartpagina is gecached; zonder dit zou het bruidspaar zijn eigen
+  // wijziging een minuut lang niet terugzien op de deelbare link.
+  await verversKaart(bijgewerkt?.share_token as string | null)
 
   return Response.json({ success: true })
 }

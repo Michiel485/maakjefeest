@@ -1,10 +1,21 @@
 export const revalidate = 60
 
+// Leeg, maar verplicht: zonder generateStaticParams cachet Next een route met
+// een dynamisch stuk in het pad helemaal niet, ook niet met revalidate erbij.
+// Zie node_modules/next/dist/docs/01-app/03-api-reference/04-functions/
+// generate-static-params.md. Niets vooraf renderen dus, maar wel bewaren zodra
+// een pagina een keer is opgevraagd.
+export async function generateStaticParams() {
+  return []
+}
+
+
 import { notFound } from "next/navigation"
 import { createServiceClient } from "@/lib/supabase"
 import { getStyleConfig } from "@/lib/event-styles"
 import EventPageSection, { type PageData } from "../EventPageSection"
 import { publicPageTypes } from "@/lib/plans"
+import { rijOfNiets } from "@/lib/db"
 
 export default async function EventSubPage({
   params,
@@ -14,22 +25,22 @@ export default async function EventSubPage({
   const { slug, type } = await params
   const supabase = createServiceClient()
 
-  const { data: event } = await supabase
+  const event = rijOfNiets(await supabase
     .from("events")
     .select("id, style, font_hero, font_initials, font_frame_names, font_page_titles, plan")
     .eq("slug", slug)
     .eq("status", "published")
-    .single()
+    .single(), "Website")
 
   if (!event) notFound()
 
-  const { data: page } = await supabase
+  const page = rijOfNiets(await supabase
     .from("pages")
     .select("id, type, title, content")
     .eq("event_id", event.id)
     .eq("type", type)
     .eq("is_enabled", true)
-    .single<PageData>()
+    .single<PageData>(), "Pagina")
 
   // Subpagina's die niet bij het pakket horen bestaan publiek niet
   if (!page || publicPageTypes(event.plan, [page]).length === 0) notFound()

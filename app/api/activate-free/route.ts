@@ -1,5 +1,5 @@
 import { createServiceClient } from "@/lib/supabase"
-import { revalidatePath } from "next/cache"
+import { verversEvent } from "@/lib/db"
 import { sendWebsiteLiveEmail, sendPlanActivatedEmail } from "@/lib/mail"
 import { PLANS, normalizePlan, planExpiry } from "@/lib/plans"
 
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
 
   if (updateError) return Response.json({ error: "DB update mislukt" }, { status: 500 })
 
-  if (updatedEvent?.slug) revalidatePath(`/events/${updatedEvent.slug}`, "layout")
+  await verversEvent(updatedEvent?.slug as string | null)
 
   // Mark code used
   await supabase

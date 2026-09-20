@@ -1,4 +1,19 @@
-export const dynamic = "force-dynamic"
+// Gecached en op de achtergrond verversd, zodat een kaart die door honderd
+// gasten tegelijk geopend wordt niet honderd queries kost en blijft werken als
+// de database er even uit ligt. De eigenaarscontrole hieronder leest een cookie
+// en maakt de render alleen voor die ene bezoeker dynamisch. Na activeren
+// ververst verversEvent() deze pagina direct.
+export const revalidate = 60
+
+// Leeg, maar verplicht: zonder generateStaticParams cachet Next een route met
+// een dynamisch stuk in het pad helemaal niet, ook niet met revalidate erbij.
+// Zie node_modules/next/dist/docs/01-app/03-api-reference/04-functions/
+// generate-static-params.md. Niets vooraf renderen dus, maar wel bewaren zodra
+// een pagina een keer is opgevraagd.
+export async function generateStaticParams() {
+  return []
+}
+
 
 import type { Metadata } from "next"
 import Link from "next/link"
@@ -18,7 +33,16 @@ export async function generateMetadata({
   params: Promise<{ token: string }>
 }): Promise<Metadata> {
   const { token } = await params
-  const data = await fetchCardByToken(token)
+
+  // Bij een storing in de database mag de metadata de pagina niet naar een 404
+  // duwen: "deze kaart bestaat niet" is dan een leugen tegen de gast. De
+  // pagina zelf loopt op dezelfde fout en geeft een eerlijke storingsmelding.
+  let data: Awaited<ReturnType<typeof fetchCardByToken>>
+  try {
+    data = await fetchCardByToken(token)
+  } catch {
+    return { title: "Kaart", robots: { index: false, follow: false } }
+  }
   if (!data) return { title: "Kaart niet gevonden" }
 
   const geenIndex = { index: false, follow: false, googleBot: { index: false, follow: false } }

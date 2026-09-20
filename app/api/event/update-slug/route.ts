@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr"
 import { createServiceClient } from "@/lib/supabase"
 import { cookies } from "next/headers"
+import { verversEvent } from "@/lib/db"
 
 function toSlug(value: string): string {
   return value
@@ -95,5 +96,10 @@ export async function PATCH(request: Request) {
   }
 
   console.log("[update-slug] slug updated:", existing.slug, "→", newSlug, "for event:", eventId)
+
+  // Beide adressen verversen: het oude bestaat niet meer, het nieuwe nog niet
+  await verversEvent(existing.slug as string | null)
+  await verversEvent(newSlug)
+
   return Response.json({ slug: newSlug })
 }

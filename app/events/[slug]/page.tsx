@@ -5,8 +5,23 @@ import EventHomePreview, { type HomepageSettings } from "@/components/EventHomeP
 import EventPageSection, { type PageData } from "./EventPageSection"
 import BackToTopButton from "@/components/BackToTopButton"
 import { normalizePlan, publicPageTypes } from "@/lib/plans"
+import { rijOfNiets } from "@/lib/db"
 
-export const dynamic = "force-dynamic"
+// Gecached en op de achtergrond verversd. Zo blijft een klantsite in de lucht
+// als de database er even uit ligt, en is een druk bezochte kaartlink niet
+// meteen honderden queries. Na activeren of publiceren wordt de pagina direct
+// verversd met verversEvent().
+export const revalidate = 60
+
+// Leeg, maar verplicht: zonder generateStaticParams cachet Next een route met
+// een dynamisch stuk in het pad helemaal niet, ook niet met revalidate erbij.
+// Zie node_modules/next/dist/docs/01-app/03-api-reference/04-functions/
+// generate-static-params.md. Niets vooraf renderen dus, maar wel bewaren zodra
+// een pagina een keer is opgevraagd.
+export async function generateStaticParams() {
+  return []
+}
+
 
 export default async function EventHomePage({
   params,
@@ -17,12 +32,12 @@ export default async function EventHomePage({
   const basePath = process.env.NODE_ENV === "production" ? "" : `/events/${slug}`
   const supabase = createServiceClient()
 
-  const { data: event } = await supabase
+  const event = rijOfNiets(await supabase
     .from("events")
     .select("id, type, title, datum, locatie, style, font_hero, font_initials, font_frame_names, font_page_titles, hero_image_url, hero_image_pos_x, hero_image_pos_y, hero_overlay, use_frame, frame_style, initials, frame_names, frame_location, frame_initials_size, frame_names_size, frame_date_size, frame_location_size, homepage_settings, plan")
     .eq("slug", slug)
     .eq("status", "published")
-    .single()
+    .single(), "Website")
 
   if (!event) {
     return (
@@ -44,13 +59,13 @@ export default async function EventHomePage({
   const isSinglePage = !isCompleet || hs?.pageMode === 'single'
   const rsvpHref = isSinglePage ? "#rsvp" : `${basePath}/RSVP`
 
-  const { data: homePage } = await supabase
+  const homePage = rijOfNiets(await supabase
     .from("pages")
     .select("content")
     .eq("event_id", event.id)
     .eq("type", "Home")
     .eq("is_enabled", true)
-    .single()
+    .single(), "Homepagina")
 
   const sc = getStyleConfig(event.style, {
     fontHero:       event.font_hero        as string | null,

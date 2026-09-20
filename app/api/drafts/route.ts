@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr"
 import { createServiceClient } from "@/lib/supabase"
 import { cookies } from "next/headers"
 import { DEFAULT_PLAN, isPlan } from "@/lib/plans"
+import { verversEvent } from "@/lib/db"
 
 async function getAuthClient() {
   const cookieStore = await cookies()
@@ -207,6 +208,10 @@ export async function POST(request: Request) {
         console.error("[drafts] pages insert fout:", pagesErr)
         return Response.json({ error: pagesErr.message }, { status: 500 })
       }
+
+      // Een gepubliceerde site is gecached, dus die moet na het opslaan
+      // opnieuw gerenderd worden. Bij een concept staat er nog niets publiek.
+      if (existing.status === "published") await verversEvent(existing.slug as string | null)
 
       return Response.json({ id: event_id, slug: existing.slug })
     }

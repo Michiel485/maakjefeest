@@ -1,6 +1,7 @@
 // Server-side helpers voor digitale kaarten (gedeeld door pagina, og-image en download)
 
 import { createServiceClient } from "./supabase"
+import { rijOfNiets } from "./db"
 import type { CardEventSource, CardRow } from "./cards"
 
 export interface CardEventRow extends CardEventSource {
@@ -24,21 +25,21 @@ export interface CardWithEvent {
 export async function fetchCardByToken(token: string): Promise<CardWithEvent | null> {
   const supabase = createServiceClient()
 
-  const { data: card } = await supabase
+  const card = rijOfNiets(await supabase
     .from("cards")
     .select("id, event_id, type, template, share_token, content, view_count, created_at")
     .eq("share_token", token)
-    .single()
+    .single(), "Kaart")
 
   if (!card) return null
 
-  const { data: event } = await supabase
+  const event = rijOfNiets(await supabase
     .from("events")
     .select(
       "title, frame_names, datum, locatie, hero_image_url, slug, status, plan, user_email, style, initials, font_hero, font_initials, font_frame_names, font_page_titles"
     )
     .eq("id", card.event_id)
-    .single()
+    .single(), "Website bij de kaart")
 
   if (!event) return null
 

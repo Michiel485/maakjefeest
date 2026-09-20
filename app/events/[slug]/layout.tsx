@@ -3,6 +3,7 @@ import { getStyleConfig } from "@/lib/event-styles"
 import EventNav from "./event-nav"
 import EventGatekeeper from "@/components/EventGatekeeper"
 import { normalizePlan, publicPageTypes } from "@/lib/plans"
+import { rijOfNiets } from "@/lib/db"
 import type { Metadata, Viewport } from "next"
 
 export const revalidate = 60
@@ -34,12 +35,12 @@ export default async function EventLayout({
   const { slug } = await params
   const supabase = createServiceClient()
 
-  const { data: event } = await supabase
+  const event = rijOfNiets(await supabase
     .from("events")
     .select("id, title, nav_title, frame_names, style, font_frame_names, font_page_titles, nav_layout, pw_enabled, pw_type, pw_value, pw_question, pw_answer, homepage_settings, plan")
     .eq("slug", slug)
     .eq("status", "published")
-    .single()
+    .single(), "Website")
 
   if (!event) return <>{children}</>
 

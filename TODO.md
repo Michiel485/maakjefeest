@@ -40,3 +40,8 @@ Persoonlijke actielijst van Michiel. Claude houdt deze bij; afgeronde punten gaa
 - [x] 9 sep 2026: Uitgezocht en besloten: zelf satellietsites bouwen met links naar sayingyes.nl doen we niet. Google ziet dat als een linkschema (nul effect tot risico op straf); alleen zinvol als zo'n site zelfstandig waardevol is. Energie gaat naar artikelen op sayingyes.nl en echte partnerlinks.
 - [x] 9 sep 2026: SEO-ronde (www-canonicals, structured data, FAQ, snellere homepage, 3 artikelen, eigen 404) en kaderafbeeldingen geoptimaliseerd.
 - [x] 8 sep 2026: Supabase hersteld na pauze, CRON_SECRET ingesteld, cron werkt.
+
+## Klein en nog open (20 sep 2026)
+- Een onbekende slug op /events/[slug] geeft nu HTTP 200 met een nette
+  "pagina niet gevonden" in beeld. Voor een gast is dat prima, voor Google een
+  soft 404. Niet dringend, want klantsites staan op noindex.

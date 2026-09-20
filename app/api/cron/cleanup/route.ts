@@ -1,6 +1,6 @@
 import { createServiceClient } from "@/lib/supabase"
 import { sendDraftReminderEmail, sendRenewalReminderEmail, sendExpiryWarningEmail } from "@/lib/mail"
-import { revalidatePath } from "next/cache"
+import { verversEvent } from "@/lib/db"
 import { sendVisitorDigest } from "@/lib/visitors"
 import { PLAN_MAIL, bewaarschema, normalizePlan, renewalAllowed } from "@/lib/plans"
 
@@ -211,7 +211,7 @@ export async function GET(request: Request) {
         .update({ status: "expired" })
         .eq("id", event.id)
         .eq("status", "published")
-      revalidatePath(`/events/${event.slug}`, "layout")
+      await verversEvent(event.slug as string | null)
       results.expired.push(event.id as string)
       continue
     }
