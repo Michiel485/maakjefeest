@@ -13,6 +13,7 @@ import { buildCardDisplay } from "@/lib/cards"
 import type { CardWithEvent } from "@/lib/cards-server"
 import { eventSiteUrl } from "@/lib/site-url"
 import { planAllows, PLANS, normalizePlan, formatEur } from "@/lib/plans"
+import { aanmeldStand } from "@/lib/gasten"
 import CardReveal from "./card-reveal"
 import KaartKijkTeller from "@/components/KaartKijkTeller"
 
@@ -94,6 +95,8 @@ export function KaartWeergave({
         siteUrl={siteUrl}
         rsvpUrl={rsvpUrl}
         agendaUrl={event.datum ? `/kaart/${card.share_token}/agenda` : null}
+        aanmeldStand={aanmeldStand(card.content.aanmelden)}
+        bronToken={card.share_token}
         previewNotice={isEigenaar}
         siteVolgt={heeftSite && !siteLive}
       />

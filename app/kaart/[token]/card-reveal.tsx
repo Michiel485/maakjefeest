@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react"
 import type { SC } from "@/lib/event-styles"
 import { CARD_DESIGN_STYLE, type CardDisplay } from "@/lib/cards"
+import AanmeldFormulier from "@/components/AanmeldFormulier"
+import type { AanmeldStand } from "@/lib/gasten"
 
 // "zegel" is de stap waarin het lakzegel breekt; die bestaat alleen in de
 // nieuwe animatie. De klassieke animatie slaat hem over.
@@ -72,6 +74,8 @@ export default function CardReveal({
   siteUrl,
   rsvpUrl,
   agendaUrl = null,
+  aanmeldStand = "geen",
+  bronToken = null,
   demo = false,
   previewNotice = false,
   siteVolgt = false,
@@ -85,6 +89,10 @@ export default function CardReveal({
   rsvpUrl: string | null
   // Het agendabestand met de trouwdatum, voor in de agenda van de gast
   agendaUrl?: string | null
+  // Of er onder de kaart om een aanmelding wordt gevraagd, en hoeveel
+  aanmeldStand?: AanmeldStand
+  // De kaartlink, zodat een aanmelding weet uit welke gastengroep hij komt
+  bronToken?: string | null
   // Voorbeeldkaart op de marketingsite: geen site-knoppen, wel een CTA
   demo?: boolean
   // Het bruidspaar bekijkt zijn eigen nog niet geactiveerde kaart
@@ -849,6 +857,36 @@ export default function CardReveal({
               </p>
             )}
 
+            {/* Aanmelden, direct onder de kaart. Niet doorsturen naar een
+                aparte pagina: de drempel zit in het wisselen van pagina, niet
+                in het aantal vragen. Wie net op ja heeft getikt is op zijn
+                meest bereidwillige moment; dan vraag je door. */}
+            {aanmeldStand !== "geen" && bronToken && !demo && (
+              <div
+                className="mt-8 rounded-2xl p-5 sm:p-6"
+                style={{
+                  backgroundColor: sc.cardBg ?? "#ffffff",
+                  border: `1px solid ${sc.accent}33`,
+                  ...eindBlok,
+                }}
+              >
+                <p
+                  className="text-center text-xs font-semibold uppercase tracking-[0.18em] mb-4"
+                  style={{ color: sc.accent }}
+                >
+                  {aanmeldStand === "janee" ? "Ben je erbij?" : "Aanmelden"}
+                </p>
+                <AanmeldFormulier
+                  bronToken={bronToken}
+                  stand={aanmeldStand}
+                  accentColor={sc.accent}
+                  labelColor={sc.cardText ?? sc.bodyText}
+                  knopTekstKleur={sc.buttonText}
+                  compact
+                />
+              </div>
+            )}
+
             {/* De datum in de agenda. Staat bewust boven de rest: bij een Save
                 the Date is dit de enige zinnige stap, en de kaart vraagt er
                 letterlijk om in de standaardtekst. */}
@@ -872,12 +910,12 @@ export default function CardReveal({
             )}
 
             {/* Knoppen naar de trouwsite */}
-            {(siteUrl || rsvpUrl) && (
+            {(siteUrl || (rsvpUrl && aanmeldStand === "geen")) && (
               <div
                 className="mt-6 flex flex-col sm:flex-row gap-3"
                 style={eindBlok}
               >
-                {rsvpUrl && (
+                {rsvpUrl && aanmeldStand === "geen" && (
                   <a
                     href={rsvpUrl}
                     className="flex-1 py-3.5 rounded-xl text-sm font-semibold text-center transition-opacity hover:opacity-85"

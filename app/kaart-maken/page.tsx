@@ -35,6 +35,13 @@ import { hoogstePlan, planMagVersturen, PLANS, formatEur, isPlan, upgradePrice, 
 import { compressImage } from "@/lib/client-image"
 import CardReveal from "@/app/kaart/[token]/card-reveal"
 import { KLEUR } from "@/lib/ontwerp"
+import {
+  AANMELD_LABEL,
+  AANMELD_UITLEG,
+  aanmeldStand,
+  standaardAanmeldStand,
+  type AanmeldStand,
+} from "@/lib/gasten"
 import { Knop, Melding } from "@/components/ui"
 import BouwerSchakelaar from "@/components/BouwerSchakelaar"
 import {
@@ -72,7 +79,7 @@ interface ConceptRij {
   status: string
 }
 
-type Stap = "stijl" | "template" | "tekst" | "taal" | "foto" | "animatie" | "bekijken"
+type Stap = "stijl" | "template" | "tekst" | "aanmelden" | "taal" | "foto" | "animatie" | "bekijken"
 type Actie = "bewaar" | "activeer"
 
 interface KaartOntwerp {
@@ -91,6 +98,7 @@ interface KaartOntwerp {
   photoUrl: string | null
   animatie: CardAnimatie
   taal: CardTaal
+  aanmelden: AanmeldStand
 }
 
 const LEEG: KaartOntwerp = {
@@ -108,6 +116,7 @@ const LEEG: KaartOntwerp = {
   photoUrl: null,
   animatie: "rustig",
   taal: "nl",
+  aanmelden: "janee",
 }
 
 
@@ -288,6 +297,9 @@ export default function KaartMakenPage() {
               photoUrl: kaart?.content.photoUrl ?? null,
               animatie: cardAnimatie(kaart?.content.animatie),
               taal: cardTaal(kaart?.content.taal),
+              aanmelden: kaart?.content.aanmelden
+                ? aanmeldStand(kaart.content.aanmelden)
+                : standaardAanmeldStand(kaart?.type ?? gewenstType),
             })
           }
         } catch {}
@@ -353,6 +365,7 @@ export default function KaartMakenPage() {
     photoUrl: ontwerp.photoUrl ?? ontwerp.photoDataUrl ?? undefined,
     animatie: ontwerp.animatie,
     taal: ontwerp.taal,
+    aanmelden: ontwerp.aanmelden,
   }
   const display = buildCardDisplay(ontwerp.type, ontwerp.template, content, {
     title: ontwerp.names || "Jullie namen",
@@ -524,6 +537,7 @@ export default function KaartMakenPage() {
       photoUrl: k.content.photoUrl ?? null,
       animatie: cardAnimatie(k.content.animatie),
       taal: cardTaal(k.content.taal),
+      aanmelden: k.content.aanmelden ? aanmeldStand(k.content.aanmelden) : standaardAanmeldStand(k.type),
     }))
   }
 
@@ -944,6 +958,31 @@ export default function KaartMakenPage() {
           {/* Hoe de envelop opengaat bij de gast. Het uitschuiven, het brekende
               zegel en het verende landen zitten in beide keuzes; het verschil
               is alleen of er gouden stofjes bij komen. */}
+          <Sectie open={stap === "aanmelden"} onToggle={() => setStap(stap === "aanmelden" ? null : "aanmelden")} titel="Aanmelden">
+            <div className="flex flex-col gap-2">
+              {(["geen", "janee", "volledig"] as AanmeldStand[]).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => update({ aanmelden: s })}
+                  className="text-left px-3 py-2.5 rounded-xl"
+                  style={{
+                    border: `2px solid ${ontwerp.aanmelden === s ? GOLD : GOLD_LIGHT}`,
+                    backgroundColor: ontwerp.aanmelden === s ? "#fff" : "transparent",
+                    cursor: "pointer",
+                  }}
+                >
+                  <span className="block text-xs font-semibold" style={{ color: CHARCOAL }}>{AANMELD_LABEL[s]}</span>
+                  <span className="block text-[11px] leading-snug" style={{ color: SUBTLE }}>{AANMELD_UITLEG[s]}</span>
+                </button>
+              ))}
+            </div>
+            <p className="text-[11px] leading-snug" style={{ color: SUBTLE }}>
+              Wat je gasten invullen komt in je gastenlijst. Bij een Save the Date is alleen vragen of ze
+              komen meestal genoeg; dieetwensen vraag je pas bij de uitnodiging, want zo ver vooruit weet
+              niemand dat. Volledig aanmelden hoort bij het pakket Uitnodiging &amp; RSVP.
+            </p>
+          </Sectie>
+
           <Sectie open={stap === "taal"} onToggle={() => setStap(stap === "taal" ? null : "taal")} titel="Taal van de kaart">
             <div className="grid grid-cols-2 gap-2">
               {CARD_TALEN.map((tl) => (

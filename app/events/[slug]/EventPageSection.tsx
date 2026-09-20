@@ -1,5 +1,8 @@
 import { type SC } from "@/lib/event-styles"
-import RsvpForm from "./rsvp-form"
+// Hetzelfde formulier als onder de trouwkaart. Zie de uitleg boven in
+// components/AanmeldFormulier.tsx: identiek is hier de opdracht, niet
+// "ongeveer hetzelfde".
+import AanmeldFormulier from "@/components/AanmeldFormulier"
 import EventMastersPreview from "@/components/EventMastersPreview"
 import EventProgramPreview from "@/components/EventProgramPreview"
 import StoryPreview from "@/components/StoryPreview"
@@ -88,8 +91,10 @@ export default function EventPageSection({ page, sc, eventId }: { page: PageData
         }}>
           📋 Check even je uitnodiging welk type gast je bent. Als daggast verschijnen aan de avondtafel — we zeggen er verder niets over, maar de catering wel. 😉
         </p>
-        <RsvpForm
+        <AanmeldFormulier
           eventId={eventId}
+          stand="volledig"
+          knopTekstKleur={sc.buttonText}
           accentColor={sc.accent}
           labelColor={sc.goldBorder ? (sc.cardText ?? sc.bodyText) : sc.bodyText}
           guestTypes={rsvpGuestTypes}

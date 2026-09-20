@@ -60,6 +60,9 @@ export interface CardContent {
   animatie?: CardAnimatie
   // In welke taal de vaste teksten op de kaart staan
   taal?: CardTaal
+  // Of er onder de kaart om een aanmelding wordt gevraagd, en hoeveel. Zie
+  // AanmeldStand in lib/gasten.ts: geen, alleen ja of nee, of volledig.
+  aanmelden?: string
 }
 
 export interface CardRow {

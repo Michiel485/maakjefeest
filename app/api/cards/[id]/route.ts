@@ -1,5 +1,6 @@
 import { createServiceClient } from "@/lib/supabase"
 import { createClient } from "@/lib/supabase-server"
+import { aanmeldStand } from "@/lib/gasten"
 import { cardAnimatie, cardTaal, type CardContent, type CardGuestType, type CardTemplate, type CardType } from "@/lib/cards"
 import { verversKaart } from "@/lib/db"
 
@@ -34,6 +35,7 @@ function sanitizeContent(raw: unknown): CardContent {
     timeText: text(input.timeText, 80),
     animatie: cardAnimatie(input.animatie),
     taal: cardTaal(input.taal),
+    aanmelden: aanmeldStand(input.aanmelden),
   }
 }
 
