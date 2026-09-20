@@ -45,3 +45,15 @@ Persoonlijke actielijst van Michiel. Claude houdt deze bij; afgeronde punten gaa
 - Een onbekende slug op /events/[slug] geeft nu HTTP 200 met een nette
   "pagina niet gevonden" in beeld. Voor een gast is dat prima, voor Google een
   soft 404. Niet dringend, want klantsites staan op noindex.
+- KENNISBANK.md bijwerken: geschreven bij één product van 49,99, kent de
+  prijsladder, de kaarten en de conceptteller nog niet. Er staat nu een
+  waarschuwing boven.
+- Vraag: horen de facturen van een site mee te verdwijnen als het bruidspaar
+  die site weggooit? Nu gebeurt dat wel. Voor de boekhouding lijkt bewaren
+  logischer. Zie lib/opruimen.ts.
+- supabase/migration_opruimen_dode_kolommen.sql draaien zodra deze versie een
+  tijdje goed loopt (tien dode kolommen en de tabel magic_links).
+- Twee oude agent-worktrees staan nog op de schijf onder .claude/worktrees
+  (146 MB). Uit de repo gehaald, maar nog niet van de schijf. Een ervan heeft
+  één commit die niet in main zit, over homepage-layouts; die functie zit er
+  inmiddels wel in. Weggooien kan met `git worktree remove`.

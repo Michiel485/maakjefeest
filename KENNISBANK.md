@@ -1,5 +1,14 @@
 # Kennisbank — SayingYes
 
+> **Let op, dit document loopt achter (stand 20 september 2026).** Het is
+> geschreven toen er één product was van 49,99 euro. Sindsdien zijn er drie
+> pakketten (15, 25 en 49,99; `lib/plans.ts` is de enige bron), digitale
+> kaarten met een eigen bouwer, en zijn de drie datumkolommen voor de
+> conceptherinneringen vervangen door één teller. Het Stripe-pakket is
+> verwijderd; Mollie was en is de enige betaalprovider. Bijwerken staat in
+> `TODO.md`. Voor de actuele stand: `lib/plans.ts`, `docs/PLAN-afmaken.md` en
+> de commitgeschiedenis.
+
 > Digitale bruiloftswebsite-builder. Bruidsparen maken in minuten een eigen
 > trouwwebsite met RSVP, fotogalerij, "ons verhaal" en meer. Eenmalig €49,99
 > voor een jaar; verlengen kan per 6 maanden voor €22,00.
