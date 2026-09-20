@@ -302,3 +302,43 @@ Klein en concreet, in de volgorde waarin ik het zou doen:
   Instagram. Nu is er alleen staand.
 - Bij de RSVP vragen waar de papieren kaart naartoe mag, voor bruidsparen die
   beide doen. Adressen verzamelen is nu een apart Excelletje.
+
+---
+
+## 5. Hoe de vormgeving nu werkt (recept voor de rest)
+
+`#C5A059` stond 115 keer in 38 bestanden, en 28 bestanden definieerden hun
+eigen palet met eigen namen. Nu is er één bron:
+
+- **`lib/ontwerp.ts`** met `KLEUR`, `LETTER` en `VORM`. Voor inline stijlen,
+  voor satori (de kaartafbeelding) en voor de PDF-factuur, want die twee
+  kunnen geen CSS lezen.
+- **`app/globals.css`** met dezelfde waarden als CSS-variabelen, plus een
+  `@theme`-blok zodat Tailwind-klassen als `text-goud`, `bg-ivoor` en
+  `border-goud-licht` werken.
+
+Tailwind is de basis: 2230 `className` tegen 1353 inline `style`, en Tailwind
+staat in elk bestand. Inline blijft waar een waarde pas tijdens het draaien
+bekend is, zoals de kleur per kaartontwerp of de gemeten stand van de
+envelop-animatie. Dat is geen rommel, dat kan niet anders.
+
+**`components/ui.tsx`** heeft de bouwstenen: `Knop`, `Melding`, `Paneel`,
+`Veld` en `Draaier`. Twee van de drie dingen die vertrouwen maken zitten erin
+gebakken, zodat ze nergens meer vergeten kunnen worden:
+
+- een `Knop` met `bezig` laat een draaiend rondje zien en blokkeert de tweede
+  klik
+- een `Melding` neemt een `actie` mee, want "opslaan mislukt" zonder volgende
+  stap laat iemand met lege handen staan
+
+Het derde, beeld dat verspringt, is per pagina en kan geen bouwsteen zijn.
+
+### Om te zetten
+De kaartbouwer en `/start` zijn om, als voorbeeld van het patroon. De rest is
+mechanisch: het eigen palet bovenaan een bestand vervangen door de namen uit
+`KLEUR`, en losse knoppen en meldingen vervangen door `Knop` en `Melding`. In
+volgorde van belang: `/betalen`, `/dashboard`, `/bouwen`, de homepage, en
+daarna de admin-pagina's (die ziet alleen Michiel).
+
+Doe het per pagina en kijk er daarna naar. Eén grote zoek-en-vervang over 28
+bestanden verandert dingen die niemand meer nakijkt.

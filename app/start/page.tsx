@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { PLANS, PLAN_ORDER, formatEur, planStartUrl, upgradeHint, type Plan } from "@/lib/plans"
+import { KLEUR } from "@/lib/ontwerp"
 
 export const metadata: Metadata = {
   title: "Waarmee wil je beginnen?",
@@ -8,12 +9,13 @@ export const metadata: Metadata = {
 }
 
 // Zelfde palet als het prijsblok op de homepage, zodat die twee één geheel zijn
-const GOLD      = "#C5A059"
-const DARK      = "#0E0C09"
-const DARK_CARD = "#161209"
-const IVORY     = "#FAF7F2"
-const MUTED     = "#8A7E72"
-const FEATURE   = "#B5A995"
+// Kleuren uit lib/ontwerp.ts; de korte namen houden de opmaak hieronder leesbaar
+const GOLD      = KLEUR.goud
+const DARK      = KLEUR.donker
+const DARK_CARD = KLEUR.donkerKaart
+const IVORY     = KLEUR.ivoor
+const MUTED     = KLEUR.donkerZacht
+const FEATURE   = KLEUR.donkerTekst
 
 // Per pakket één regel over wat je nu gaat doen, plus het woord op de knop.
 // De opsomming eronder komt uit PLANS, zodat homepage en keuzepagina niet

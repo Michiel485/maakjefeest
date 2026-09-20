@@ -8,6 +8,34 @@
   --background: #ffffff;
   --foreground: #171717;
   color-scheme: only light;
+
+  /* Het palet van SayingYes. Dezelfde waarden als KLEUR in lib/ontwerp.ts;
+     verander je er een, verander hem daar ook. Twee vormen omdat satori (de
+     kaartafbeelding) en de PDF-factuur geen var() kunnen lezen. */
+  --goud: #C5A059;
+  --goud-licht: #E8D5A3;
+  --goud-vlak: #FBF5E8;
+
+  --inkt: #1A1A1A;
+  --tekst: #5C5248;
+  --zacht: #9A8E82;
+
+  --ivoor: #FAF7F2;
+  --ivoor-kaart: #F5EFE4;
+  --zand: #EDE6D8;
+
+  --donker: #0E0C09;
+  --donker-kaart: #161209;
+  --donker-tekst: #B5A995;
+  --donker-zacht: #8A7E72;
+
+  --groen: #059669;
+  --groen-vlak: #ECFDF5;
+  --groen-tekst: #065F46;
+
+  --rood: #DC2626;
+  --rood-vlak: #FEF2F2;
+  --rood-tekst: #991B1B;
 }
 
 @theme inline {
@@ -15,6 +43,23 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Zo werken ook klassen als text-goud, bg-ivoor en border-goud-licht */
+  --color-goud: var(--goud);
+  --color-goud-licht: var(--goud-licht);
+  --color-goud-vlak: var(--goud-vlak);
+  --color-inkt: var(--inkt);
+  --color-tekst: var(--tekst);
+  --color-zacht: var(--zacht);
+  --color-ivoor: var(--ivoor);
+  --color-ivoor-kaart: var(--ivoor-kaart);
+  --color-zand: var(--zand);
+  --color-donker: var(--donker);
+  --color-donker-kaart: var(--donker-kaart);
+  --color-donker-tekst: var(--donker-tekst);
+  --color-donker-zacht: var(--donker-zacht);
+  --color-groen: var(--groen);
+  --color-rood: var(--rood);
 }
 
 body {
@@ -84,4 +129,19 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   top: 0;
   width: auto;
   opacity: 0;
+}
+
+/* ── Draaiend rondje voor "bezig" ──────────────────────────────────────────── */
+/* Gebruikt door Draaier in components/ui.tsx. Puur CSS, zodat een knop kan
+   laten zien dat hij bezig is zonder JavaScript. */
+@keyframes sy-draai {
+  to { transform: rotate(360deg); }
+}
+
+/* Wie beweging liever niet ziet, krijgt een stilstaand rondje in plaats van
+   niets: het moet nog wel te zien zijn dat er iets gebeurt. */
+@media (prefers-reduced-motion: reduce) {
+  @keyframes sy-draai {
+    to { transform: none; }
+  }
 }

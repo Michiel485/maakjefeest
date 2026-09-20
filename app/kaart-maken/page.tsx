@@ -31,15 +31,18 @@ import {
 import { hoogstePlan, planMagVersturen, PLANS, formatEur, isPlan, upgradePrice, type Plan } from "@/lib/plans"
 import { compressImage } from "@/lib/client-image"
 import CardReveal from "@/app/kaart/[token]/card-reveal"
+import { KLEUR } from "@/lib/ontwerp"
+import { Knop, Melding } from "@/components/ui"
 
-// ── Kleuren (zelfde palet als dashboard en bouwer) ──────────────────────────
-const GOLD       = "#C5A059"
-const GOLD_LIGHT = "#E8D5A3"
-const GOLD_BG    = "#FBF5E8"
-const CHARCOAL   = "#1A1A1A"
-const IVORY      = "#FAF7F2"
-const BODY       = "#5C5248"
-const SUBTLE     = "#9A8E82"
+// Kleuren komen uit lib/ontwerp.ts, de enige bron. De korte namen hieronder
+// staan er alleen zodat de rest van dit bestand leesbaar blijft.
+const GOLD       = KLEUR.goud
+const GOLD_LIGHT = KLEUR.goudLicht
+const GOLD_BG    = KLEUR.goudVlak
+const CHARCOAL   = KLEUR.inkt
+const IVORY      = KLEUR.ivoor
+const BODY       = KLEUR.tekst
+const SUBTLE     = KLEUR.zacht
 
 const LS_ONTWERP = "sayingyes_kaart"
 const LS_ACTIE   = "sayingyes_kaart_actie"
@@ -560,52 +563,53 @@ export default function KaartMakenPage() {
         </div>
         <div className="flex items-center gap-2">
           {userEmail && (
-            <Link href="/dashboard" className="hidden sm:inline-flex text-sm font-semibold px-3 py-2 rounded-xl" style={{ color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, textDecoration: "none" }}>
+            <Knop href="/dashboard" soort="rand" klein className="hidden sm:inline-flex">
               Mijn dashboard
-            </Link>
+            </Knop>
           )}
-          <button
+          <Knop
+            soort="rustig"
+            klein
             onClick={() => voerUit("bewaar")}
             disabled={busy !== null}
-            className="text-sm font-semibold px-3 py-2 rounded-xl disabled:opacity-60"
-            style={{ backgroundColor: GOLD_BG, color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
+            bezig={busy === "bewaar"}
+            bezigTekst="Bewaren"
           >
-            {busy === "bewaar" ? "Bezig..." : "Bewaar ontwerp"}
-          </button>
+            Bewaar ontwerp
+          </Knop>
           {/* Zit deze kaart al in het afgenomen pakket, dan is er niets te
               activeren: bewaren is genoeg en de link werkt al. */}
           {alAfgenomen && huidigeKaart ? (
-            <a
-              href={`/kaart/${huidigeKaart.share_token}/voorbeeld`}
-              target="_blank"
-              rel="noreferrer"
-              className="text-sm font-bold px-4 py-2 rounded-xl transition-all hover:-translate-y-0.5"
-              style={{ backgroundColor: "#059669", color: "#fff", textDecoration: "none", boxShadow: "0 4px 14px rgba(5,150,105,0.3)" }}
-            >
+            <Knop soort="actie" href={`/kaart/${huidigeKaart.share_token}/voorbeeld`} nieuwTabblad>
               Bekijk de kaart
-            </a>
+            </Knop>
           ) : (
-            <button
+            <Knop
+              soort="actie"
               onClick={() => voerUit("activeer")}
               disabled={busy !== null}
-              className="text-sm font-bold px-4 py-2 rounded-xl disabled:opacity-60 transition-all hover:-translate-y-0.5"
-              style={{ backgroundColor: "#059669", color: "#fff", border: "none", cursor: "pointer", boxShadow: "0 4px 14px rgba(5,150,105,0.3)" }}
+              bezig={busy === "activeer"}
+              bezigTekst="Naar de kassa"
             >
-              {busy === "activeer" ? "Bezig..." : `Activeer voor ${prijs}`}
-            </button>
+              {`Activeer voor ${prijs}`}
+            </Knop>
           )}
         </div>
       </header>
 
       {melding && (
-        <div className="px-4 py-2.5 text-sm text-center" style={{ backgroundColor: melding.fout ? "#FEF2F2" : "#ECFDF5", color: melding.fout ? "#991B1B" : "#065F46" }}>
+        <Melding
+          soort={melding.fout ? "fout" : "goed"}
+          actie={
+            !melding.fout && eventId ? (
+              <Link href="/dashboard" className="underline font-semibold">
+                Naar het dashboard
+              </Link>
+            ) : undefined
+          }
+        >
           {melding.tekst}
-          {!melding.fout && eventId && (
-            <>
-              {" "}<Link href="/dashboard" className="underline font-semibold">Naar het dashboard</Link>
-            </>
-          )}
-        </div>
+        </Melding>
       )}
 
       {/* ── Welke kaart bewerk je? ──

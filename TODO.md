@@ -57,3 +57,7 @@ Persoonlijke actielijst van Michiel. Claude houdt deze bij; afgeronde punten gaa
   (146 MB). Uit de repo gehaald, maar nog niet van de schijf. Een ervan heeft
   één commit die niet in main zit, over homepage-layouts; die functie zit er
   inmiddels wel in. Weggooien kan met `git worktree remove`.
+- Vormgeving omzetten naar lib/ontwerp.ts en components/ui.tsx. De
+  kaartbouwer en /start zijn om als voorbeeld; recept staat in
+  docs/AUDIT-en-ideeen.md deel 5. Volgorde: /betalen, /dashboard, /bouwen,
+  homepage, daarna admin.
