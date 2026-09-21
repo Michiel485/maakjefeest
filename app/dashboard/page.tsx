@@ -20,6 +20,12 @@ import DeleteDraftButton from "./DeleteDraftButton"
 import RenewalButton from "./RenewalButton"
 import DeleteEventButton from "./DeleteEventButton"
 import { PLANS, PLAN_ORDER, normalizePlan, planAllows, planRank, renewalAllowed, upgradePrice, formatEur } from "@/lib/plans"
+import Bruiloft, { Altijd, NogNiets } from "./Bruiloft"
+import Checklist from "./Checklist"
+import { huidigeFase } from "@/lib/fasen"
+import { LEGE_STAND, type Stand } from "@/lib/dashboard-tegels"
+import { GEEN_SIGNALEN, type Signalen } from "@/lib/checklist"
+import { komtGast, reis } from "@/lib/gasten"
 
 const GOLD       = "#C5A059"
 const GOLD_LIGHT = "#E8D5A3"
@@ -28,6 +34,7 @@ const CHARCOAL   = "#1A1A1A"
 const IVORY      = "#FAF7F2"
 const IVORY_CARD = "#F5EFE4"
 const BODY       = "#5C5248"
+const SOFT       = "#9A8E82"
 
 type Event = {
   id: string
@@ -35,6 +42,8 @@ type Event = {
   title: string
   type: string
   status: string
+  datum?: string | null
+  locatie?: string | null
   plan?: string | null
   created_at: string
   expires_at: string | null
@@ -196,7 +205,12 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   )
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const params = searchParams ? await searchParams : undefined
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect("/inloggen")
@@ -204,7 +218,7 @@ export default async function DashboardPage() {
   const service = createServiceClient()
   const { data: events } = await service
     .from("events")
-    .select("id, slug, title, type, status, plan, created_at, expires_at, hero_image_url")
+    .select("id, slug, title, type, status, plan, created_at, expires_at, hero_image_url, datum, locatie")
     .eq("user_email", user.email!)
     .order("created_at", { ascending: false })
 
@@ -277,6 +291,148 @@ export default async function DashboardPage() {
     }
   }
 
+
+  // ── Eén bruiloft, met onderdelen eronder ──────────────────────────────────
+  // Uit het klantreisgesprek van 21 september 2026. Elk concept was een eigen
+  // rij in events, en daardoor kreeg het dashboard een losse kolom per concept.
+  // De kolom hoort_bij wijst een ontwerp naar zijn bruiloft; leeg betekent dat
+  // de rij zelf een bruiloft is.
+  //
+  // Apart opgevraagd, zodat het dashboard blijft werken zolang
+  // migration_klantreis.sql nog niet gedraaid is. Dezelfde voorzichtigheid als
+  // bij de kaarten en de fotomuur hieronder.
+  let extra: Record<string, { hoort_bij: string | null; checklist: unknown; deadline: unknown }> = {}
+  if ((events ?? []).length > 0) {
+    const { data: extraData, error: extraErr } = await service
+      .from("events")
+      .select("id, hoort_bij, checklist, deadline")
+      .in("id", (events ?? []).map((e: Event) => e.id))
+    if (!extraErr && extraData) {
+      extra = Object.fromEntries(
+        extraData.map((e) => [
+          e.id as string,
+          {
+            hoort_bij: (e.hoort_bij as string | null) ?? null,
+            checklist: e.checklist,
+            deadline: e.deadline,
+          },
+        ])
+      )
+    }
+  }
+
+  const alle = events ?? []
+  const hoofden = alle.filter((e: Event) => !extra[e.id]?.hoort_bij)
+  // Wie live staat heeft betaald, dus die bruiloft is de belangrijkste. Daarna
+  // de nieuwste. Met ?b= kiest de klant zelf, als hij er meer dan één heeft.
+  const gesorteerd = [...hoofden].sort((a: Event, b: Event) => {
+    const aLive = ["published", "expired"].includes(a.status) ? 0 : 1
+    const bLive = ["published", "expired"].includes(b.status) ? 0 : 1
+    if (aLive !== bLive) return aLive - bLive
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  })
+  const gekozenId = typeof params?.b === "string" ? params.b : null
+  const bruiloft = gesorteerd.find((e: Event) => e.id === gekozenId) ?? gesorteerd[0] ?? null
+  // De bruiloft zelf plus zijn ontwerpen.
+  const groep = bruiloft
+    ? alle.filter((e: Event) => e.id === bruiloft.id || extra[e.id]?.hoort_bij === bruiloft.id)
+    : []
+  const groepIds = new Set(groep.map((e: Event) => e.id))
+
+  // ── De stand van deze bruiloft ────────────────────────────────────────────
+  // Alles hieronder komt uit gegevens die we toch al ophaalden.
+  let stand: Stand = LEGE_STAND
+  let signalen: Signalen = GEEN_SIGNALEN
+  let fase = huidigeFase(null)
+  let checklistStand: unknown = null
+
+  if (bruiloft) {
+    const mijnRsvps = rsvps.filter((r) => groepIds.has(r.event_id))
+    const mijnKaarten = cards.filter((c) => groepIds.has(c.event_id))
+    const mijnFotos = guestPhotos.filter((f) => groepIds.has(f.event_id))
+    const liveInGroep = groep.some((e: Event) => e.status === "published")
+    const magSite = groep.some((e: Event) => planAllows(e.plan, "site"))
+
+    const huishoudens = new Set(
+      mijnRsvps.map((r) => (r.huishouden_naam ?? "").toLowerCase().trim() || r.id)
+    ).size
+
+    let komen = 0
+    let nietKomen = 0
+    let stil = 0
+    for (const r of mijnRsvps) {
+      const k = komtGast(reis(r.std_status), reis(r.inv_status))
+      if (k === true) komen++
+      else if (k === false) nietKomen++
+      else stil++
+    }
+
+    const dl = (extra[bruiloft.id]?.deadline ?? null) as
+      | { naam?: string; datum?: string; gedaan?: boolean }
+      | null
+    const deadlineOver =
+      dl?.datum && !Number.isNaN(new Date(dl.datum).getTime())
+        ? Math.round(
+            (Date.UTC(
+              new Date(dl.datum).getUTCFullYear(),
+              new Date(dl.datum).getUTCMonth(),
+              new Date(dl.datum).getUTCDate()
+            ) -
+              Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate())) /
+              86400000
+          )
+        : null
+
+    stand = {
+      datum: bruiloft.datum ?? null,
+      locatie: bruiloft.locatie ?? null,
+      live: liveInGroep,
+      magSite,
+      gasten: mijnRsvps.length,
+      huishoudens,
+      kinderen: mijnRsvps.filter((r) => r.is_kind === true).length,
+      stdVerstuurd: mijnRsvps.filter((r) => reis(r.std_status) !== "niet_verstuurd").length,
+      stdGereageerd: mijnRsvps.filter((r) => ["ja", "nee"].includes(reis(r.std_status))).length,
+      invVerstuurd: mijnRsvps.filter((r) => reis(r.inv_status) !== "niet_verstuurd").length,
+      invGereageerd: mijnRsvps.filter((r) => ["ja", "nee"].includes(reis(r.inv_status))).length,
+      komen,
+      nietKomen,
+      stil,
+      dieet: mijnRsvps.filter((r) => !!r.dietary).length,
+      allergie: mijnRsvps.filter((r) => !!r.allergie).length,
+      heeftStdKaart: mijnKaarten.some((c) => c.type === "save_the_date"),
+      heeftInvKaart: mijnKaarten.some((c) => c.type === "trouwkaart"),
+      stdKaartLink: mijnKaarten.find((c) => c.type === "save_the_date")?.share_token ?? null,
+      invKaartLink: mijnKaarten.find((c) => c.type === "trouwkaart")?.share_token ?? null,
+      deadlineNaam: dl?.naam ?? null,
+      deadlineOver,
+      deadlineGedaan: dl?.gedaan === true,
+      fotos: mijnFotos.length,
+      fotomuurAan: groep.some((e: Event) => gpSettings[e.id]?.enabled === true),
+      ontwerpen: groep.length,
+    }
+
+    signalen = {
+      datumGezet: !!bruiloft.datum,
+      locatieGezet: !!bruiloft.locatie,
+      gastenInLijst: stand.gasten,
+      stdVerstuurd: stand.stdVerstuurd > 0,
+      invVerstuurd: stand.invVerstuurd > 0,
+      siteLive: liveInGroep && magSite,
+      aanmeldingen: stand.komen + stand.nietKomen,
+      aantallenDoorgegeven: stand.deadlineGedaan,
+      fotos: stand.fotos,
+    }
+
+    fase = huidigeFase(bruiloft.datum ?? null, {
+      stdVerstuurd: signalen.stdVerstuurd,
+      invVerstuurd: signalen.invVerstuurd,
+      aantallenDoorgegeven: signalen.aantallenDoorgegeven,
+    })
+
+    checklistStand = extra[bruiloft.id]?.checklist ?? null
+  }
+
   return (
     <div translate="no" className="min-h-screen" style={{ backgroundColor: IVORY }}>
 
@@ -301,116 +457,61 @@ export default async function DashboardPage() {
           en die vielen weg in de witruimte links en rechts. */}
       <main className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
 
-        {/* Welcome */}
-        <div className="mb-12">
-          <h1
-            className="mb-2"
-            style={{
-              fontFamily: "var(--font-cormorant)",
-              fontSize: "clamp(1.8rem, 4vw, 2.5rem)",
-              fontWeight: 700,
-              color: CHARCOAL,
-            }}
-          >
-            Welkom, {firstName}
-          </h1>
-          <p className="text-sm" style={{ color: BODY }}>
-            Hier vind je al jullie bruiloftsprojecten en RSVP-aanmeldingen.
-          </p>
-          {/* Thin gold rule */}
-          <div className="flex items-center gap-3 mt-6">
-            <div style={{ width: 32, height: 1, backgroundColor: GOLD_LIGHT }} />
-            <svg width="6" height="6" viewBox="0 0 8 8" fill={GOLD_LIGHT}>
-              <path d="M4 0 L8 4 L4 8 L0 4 Z" />
-            </svg>
-            <div style={{ flex: 1, height: 1, backgroundColor: GOLD_LIGHT }} />
-          </div>
-        </div>
-
-        {/* Live websites */}
-        <section className="mb-10">
-          <div className="flex items-center justify-between mb-5">
-            <SectionLabel>Live: kaarten en websites</SectionLabel>
-            <Link
-              href="/start"
-              className="text-sm font-semibold transition-colors"
-              style={{ color: GOLD }}
-            >
-              + Nieuwe aanmaken
-            </Link>
-          </div>
-
-          {published.length === 0 ? (
-            <div
-              className="rounded-2xl p-10 text-center"
-              style={{ backgroundColor: IVORY_CARD, border: `1px solid ${GOLD_LIGHT}` }}
-            >
-              <div
-                className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4"
-                style={{ backgroundColor: GOLD_BG, border: `1px solid ${GOLD_LIGHT}` }}
-              >
-                <svg className="w-5 h-5" style={{ color: GOLD }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253" />
-                </svg>
+        {/* ── Eén bruiloft, en wat er nu telt ──
+            Hier stond een platte lijst van vijf secties die er altijd allemaal
+            waren. Nu staat bovenaan de bruiloft met de fase waarin je zit, en
+            zijn de secties hieronder de uitwerking. */}
+        {!bruiloft ? (
+          <NogNiets />
+        ) : (
+          <div className="flex flex-col gap-10">
+            {/* Meer dan één bruiloft komt zelden voor, maar wie een oud concept
+                heeft staan moet er wel bij kunnen. */}
+            {gesorteerd.length > 1 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span
+                  className="text-[11px] font-semibold uppercase"
+                  style={{ letterSpacing: "0.14em", color: SOFT }}
+                >
+                  Bruiloft
+                </span>
+                {gesorteerd.map((e: Event) => (
+                  <Link
+                    key={e.id}
+                    href={`/dashboard?b=${e.id}`}
+                    className="text-sm px-3 py-1.5 rounded-full"
+                    style={
+                      e.id === bruiloft.id
+                        ? { backgroundColor: GOLD_BG, border: `1px solid ${GOLD}`, color: CHARCOAL, fontWeight: 600 }
+                        : { border: `1px solid ${GOLD_LIGHT}`, color: BODY }
+                    }
+                  >
+                    {e.title || "Naamloos"}
+                    {e.status === "draft" && (
+                      <span className="ml-1.5 text-[11px]" style={{ color: SOFT }}>
+                        concept
+                      </span>
+                    )}
+                  </Link>
+                ))}
               </div>
-              {/* Staat er al een concept? Dan verder daarmee in plaats van
-                  opnieuw dezelfde gegevens invullen. */}
-              <p className="text-sm mb-5" style={{ color: BODY }}>
-                {drafts.length > 0
-                  ? `Nog niets live. Jullie concept staat klaar: maak het af en activeer het vanaf ${formatEur(PLANS[normalizePlan(drafts[0].plan)].price).replace(",00", "")}.`
-                  : "Nog niets live. Begin met een digitale Save the Date vanaf €15, of bouw meteen jullie complete trouwwebsite."}
-              </p>
-              <Link
-                href={drafts.length > 0 ? (planAllows(drafts[0].plan, "site") ? `/bouwen?event_id=${drafts[0].id}` : `/kaart-maken?event_id=${drafts[0].id}`) : "/start"}
-                className="inline-flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-xl transition-all hover:-translate-y-0.5"
-                style={{ backgroundColor: CHARCOAL, color: IVORY }}
-              >
-                {drafts.length > 0 ? "Verder met jullie concept" : "Start nu gratis"}
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </Link>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-4">
-              {published.map((ev: Event) => <EventCard key={ev.id} event={ev} />)}
-            </div>
-          )}
-        </section>
+            )}
 
-        {/* Drafts */}
-        {drafts.length > 0 && (
-          <section className="mb-10">
-            <div className="mb-5">
-              <SectionLabel>Opgeslagen concepten</SectionLabel>
-            </div>
-            <div className="flex flex-col gap-4">
-              {drafts.map((ev: Event) => <EventCard key={ev.id} event={ev} isDraft />)}
-            </div>
-          </section>
-        )}
+            <Bruiloft titel={bruiloft.title} fase={fase} stand={stand} />
 
-        {/* Digitale kaarten */}
-        {cardsAvailable && (events ?? []).length > 0 && (
-          <section className="mb-10">
-            <div className="mb-5">
-              <SectionLabel>Digitale kaarten</SectionLabel>
-            </div>
-            <CardsSection
-              events={(events ?? []).map((e: Event) => ({
-                id: e.id,
-                title: e.title,
-                status: e.status,
-                plan: normalizePlan(e.plan),
-                heroImageUrl: e.hero_image_url ?? null,
-              }))}
-              cards={cards}
+            <Altijd gasten={stand.gasten} ontwerpen={stand.ontwerpen} magSite={stand.magSite} />
+
+            <Checklist
+              eventId={bruiloft.id}
+              fase={fase}
+              stand={checklistStand}
+              signalen={signalen}
             />
-          </section>
+          </div>
         )}
 
         {/* RSVP */}
-        <section>
+        <section id="gasten" className="mb-10 scroll-mt-24">
           <div className="mb-5">
             <SectionLabel>RSVP-aanmeldingen</SectionLabel>
           </div>
@@ -433,9 +534,28 @@ export default async function DashboardPage() {
           />
         </section>
 
+        {/* Digitale kaarten */}
+        {cardsAvailable && (events ?? []).length > 0 && (
+          <section id="kaarten" className="mb-10 scroll-mt-24">
+            <div className="mb-5">
+              <SectionLabel>Digitale kaarten</SectionLabel>
+            </div>
+            <CardsSection
+              events={(events ?? []).map((e: Event) => ({
+                id: e.id,
+                title: e.title,
+                status: e.status,
+                plan: normalizePlan(e.plan),
+                heroImageUrl: e.hero_image_url ?? null,
+              }))}
+              cards={cards}
+            />
+          </section>
+        )}
+
         {/* Gastenfotomuur */}
         {photoEvents.length > 0 && Object.keys(gpSettings).length > 0 && (
-          <section className="mt-10">
+          <section id="fotos" className="mb-10 scroll-mt-24">
             <div className="mb-5">
               <SectionLabel>Gastenfotomuur</SectionLabel>
             </div>
@@ -451,6 +571,30 @@ export default async function DashboardPage() {
                   />
                 ) : null
               )}
+            </div>
+          </section>
+        )}
+
+        {/* ── Je ontwerpen ──
+            Beheer: wat er live staat, wat concept is, en de knoppen om te
+            verlengen, het adres te wijzigen of iets weg te gooien. Dit hoort
+            onderaan: je komt er een paar keer, niet elke week. */}
+        {groep.length > 0 && (
+          <section id="ontwerpen" className="mb-10 scroll-mt-24">
+            <div className="mb-5">
+              <SectionLabel>Je ontwerpen</SectionLabel>
+            </div>
+            <div className="flex flex-col gap-4">
+              {groep
+                .filter((ev: Event) => ["published", "expired"].includes(ev.status))
+                .map((ev: Event) => (
+                  <EventCard key={ev.id} event={ev} />
+                ))}
+              {groep
+                .filter((ev: Event) => ev.status === "draft")
+                .map((ev: Event) => (
+                  <EventCard key={ev.id} event={ev} isDraft />
+                ))}
             </div>
           </section>
         )}
