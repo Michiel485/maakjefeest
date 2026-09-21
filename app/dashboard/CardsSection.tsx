@@ -330,6 +330,28 @@ export default function CardsSection({
                       >
                         WhatsApp
                       </a>
+                      {/* Voor wie zijn papieren kaart niet wil opgeven. De code
+                          wijst naar deze digitale kaart, dus je gast kan vanaf
+                          papier alsnog aanmelden en doorlopen naar de site.
+                          Alleen bij een geactiveerde kaart: een code die niet
+                          werkt op driehonderd gedrukte kaarten is niet meer te
+                          herstellen. */}
+                      <a
+                        href={`/api/cards/qr?token=${card.share_token}`}
+                        className="text-xs font-semibold px-3 py-2 rounded-lg"
+                        style={{ backgroundColor: "white", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, textDecoration: "none" }}
+                        title="Zet deze code op je papieren kaart, dan kunnen je gasten toch digitaal aanmelden"
+                      >
+                        ⬇ QR-code
+                      </a>
+                      <a
+                        href={`/api/cards/qr?token=${card.share_token}&vorm=svg`}
+                        className="text-xs px-2 py-2 rounded-lg"
+                        style={{ color: BODY, textDecoration: "none" }}
+                        title="Zelfde code als vector, voor je drukker"
+                      >
+                        svg
+                      </a>
                     </>
                   )}
                   {/* De voorbeeldroute, niet de publieke link: die is gecached
