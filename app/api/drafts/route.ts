@@ -61,6 +61,28 @@ const PAGE_TITLES: Record<string, string> = {
 }
 
 // GET /api/drafts — list all events for the logged-in user
+// ── Kolommen die pas na een handmatige migratie bestaan ─────────────────────
+// De migraties draait Michiel zelf in Supabase, en dat gaat een keer mis. Op
+// 21 september 2026 bleek concept_naam nooit gedraaid te zijn, waardoor de
+// kaartbouwer helemaal niets meer kon bewaren: één ontbrekende kolom voor een
+// bijzaak nam de hoofdzaak mee.
+//
+// Daarom proberen we het bij een fout één keer opnieuw zonder deze kolommen.
+// De klant verliest dan een conceptnaam, niet zijn ontwerp.
+const NA_MIGRATIE = ["concept_naam", "hoort_bij"] as const
+
+function zonderNieuweKolommen(rij: Record<string, unknown>): Record<string, unknown> | null {
+  const uit = { ...rij }
+  let weg = false
+  for (const k of NA_MIGRATIE) {
+    if (k in uit) {
+      delete uit[k]
+      weg = true
+    }
+  }
+  return weg ? uit : null
+}
+
 export async function GET() {
   const { db, user } = await getAuthClient()
   if (!user?.email) {
@@ -69,7 +91,7 @@ export async function GET() {
 
   const { data, error } = await db
     .from("events")
-    .select("id, slug, title, concept_naam, type, status, plan, datum, created_at")
+    .select("id, slug, title, concept_naam, type, status, plan, datum, created_at, hoort_bij")
     .eq("user_email", user.email)
     .order("created_at", { ascending: false })
 
@@ -122,6 +144,10 @@ export async function POST(request: Request) {
     plan?: string
     // Eigen naam van dit concept, alleen voor het bruidspaar zelf
     concept_naam?: string | null
+    // Bij welke bruiloft dit ontwerp hoort. Uit het klantreisgesprek van
+    // 21 september 2026: een tweede concept was een tweede bruiloft, en
+    // daardoor kreeg het dashboard een losse kolom per concept.
+    hoort_bij?: string | null
   }
 
   try {
@@ -186,10 +212,19 @@ export async function POST(request: Request) {
       .single()
 
     if (existing) {
-      const { error: updateErr } = await db
-        .from("events")
-        .update({ type, title: naam, datum, locatie, style, font_hero, font_initials, font_frame_names, font_page_titles, hero_image_url, hero_image_pos_x: Math.round(hero_image_pos_x), hero_image_pos_y: Math.round(hero_image_pos_y), hero_overlay: heroOverlay, nav_layout, nav_title: nav_title ?? naam, use_frame, frame_style, initials, frame_names, frame_location, frame_initials_size: frameInitialsSize, frame_names_size: frameNamesSize, frame_date_size: frameDateSize, frame_location_size: frameLocationSize, homepage_settings, pw_enabled, pw_type, pw_value, pw_question, pw_answer, ...(body.concept_naam !== undefined ? { concept_naam } : {}), last_active_at: new Date().toISOString() })
-        .eq("id", event_id)
+      const velden = { type, title: naam, datum, locatie, style, font_hero, font_initials, font_frame_names, font_page_titles, hero_image_url, hero_image_pos_x: Math.round(hero_image_pos_x), hero_image_pos_y: Math.round(hero_image_pos_y), hero_overlay: heroOverlay, nav_layout, nav_title: nav_title ?? naam, use_frame, frame_style, initials, frame_names, frame_location, frame_initials_size: frameInitialsSize, frame_names_size: frameNamesSize, frame_date_size: frameDateSize, frame_location_size: frameLocationSize, homepage_settings, pw_enabled, pw_type, pw_value, pw_question, pw_answer, ...(body.concept_naam !== undefined ? { concept_naam } : {}), last_active_at: new Date().toISOString() }
+
+      let { error: updateErr } = await db.from("events").update(velden).eq("id", event_id)
+      if (updateErr) {
+        const tweedeKans = zonderNieuweKolommen(velden)
+        if (tweedeKans) {
+          const opnieuw = await db.from("events").update(tweedeKans).eq("id", event_id)
+          if (!opnieuw.error) {
+            console.warn("[drafts] bijgewerkt zonder", NA_MIGRATIE.join(", "), "- migratie nog niet gedraaid?")
+          }
+          updateErr = opnieuw.error
+        }
+      }
 
       if (updateErr) {
         console.error("[drafts] update fout:", updateErr)
@@ -222,11 +257,26 @@ export async function POST(request: Request) {
 
   // Create new draft
   const baseSlug = providedSlug || toSlug(naam || "mijn-feest")
+  // ── Bij welke bruiloft hoort dit ontwerp? ─────────────────────────────────
+  // Alleen een bruiloft van deze klant, en nooit een ontwerp van een ontwerp:
+  // dan zou de keten dieper worden dan iemand kan volgen. Wijst de opgegeven
+  // rij zelf naar een bruiloft, dan nemen we die.
+  let hoortBij: string | null = null
+  if (typeof body.hoort_bij === "string" && body.hoort_bij) {
+    const { data: ouder } = await db
+      .from("events")
+      .select("id, user_email, hoort_bij")
+      .eq("id", body.hoort_bij)
+      .single()
+    if (ouder && ouder.user_email === user.email) {
+      hoortBij = ((ouder.hoort_bij as string | null) ?? null) || (ouder.id as string)
+    }
+  }
+
   const slug = await uniqueSlug(baseSlug)
-  const { data: event, error: eventError } = await db
-    .from("events")
-    .insert({
+  const nieuweRij: Record<string, unknown> = {
       type,
+      ...(hoortBij ? { hoort_bij: hoortBij } : {}),
       title: naam,
       nav_title: nav_title ?? naam,
       datum,
@@ -261,13 +311,32 @@ export async function POST(request: Request) {
       pw_value,
       pw_question,
       pw_answer,
-    })
+  }
+
+  let { data: event, error: eventError } = await db
+    .from("events")
+    .insert(nieuweRij)
     .select("id, slug")
     .single()
 
   if (eventError) {
+    const tweedeKans = zonderNieuweKolommen(nieuweRij)
+    if (tweedeKans) {
+      const opnieuw = await db.from("events").insert(tweedeKans).select("id, slug").single()
+      if (!opnieuw.error) {
+        console.warn("[drafts] aangemaakt zonder", NA_MIGRATIE.join(", "), "- migratie nog niet gedraaid?")
+      }
+      event = opnieuw.data
+      eventError = opnieuw.error
+    }
+  }
+
+  if (eventError || !event) {
     console.error("[drafts] nieuw event fout:", eventError)
-    return Response.json({ error: eventError.message }, { status: 500 })
+    return Response.json(
+      { error: eventError?.message ?? "Kon het concept niet aanmaken" },
+      { status: 500 }
+    )
   }
 
   const pageRows = pageList.map((t, i) => ({

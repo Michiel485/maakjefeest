@@ -196,6 +196,11 @@ export default function KaartMakenPage() {
   const [eventLocatie, setEventLocatie] = useState("")
   // Een eigen naam voor dit concept, zodat je varianten uit elkaar houdt.
   // Leeg is prima: dan toont de lijst de namen en de datum.
+  // Bij welke bruiloft een nieuw ontwerp hoort. Uit het klantreisgesprek van
+  // 21 september 2026: een tweede concept werd een tweede bruiloft, en daardoor
+  // kreeg het dashboard een losse kolom per concept. Begin je een variant
+  // binnen dezelfde bruiloft, dan onthouden we hier welke dat is.
+  const [hoortBij, setHoortBij] = useState<string | null>(null)
   const [conceptNaam, setConceptNaam] = useState("")
   // Alle concepten van deze klant, voor de keuzelijst bovenin
   const [concepten, setConcepten] = useState<ConceptRij[]>([])
@@ -268,6 +273,7 @@ export default function KaartMakenPage() {
             if (isPlan(event.plan)) setEventPlan(event.plan)
             setEventStatus(typeof event.status === "string" ? event.status : null)
             setConceptNaam(typeof event.concept_naam === "string" ? event.concept_naam : "")
+            setHoortBij(typeof event.hoort_bij === "string" ? event.hoort_bij : null)
             const kr = await fetch(`/api/cards?event_id=${eventUitUrl}`)
             const { cards } = kr.ok ? ((await kr.json()) as { cards: CardRow[] }) : { cards: [] }
             setKaarten(cards)
@@ -318,6 +324,7 @@ export default function KaartMakenPage() {
             if (isPlan(event.plan)) setEventPlan(event.plan)
             setEventStatus(typeof event.status === "string" ? event.status : null)
             setConceptNaam(typeof event.concept_naam === "string" ? event.concept_naam : "")
+            setHoortBij(typeof event.hoort_bij === "string" ? event.hoort_bij : null)
             setEventLocatie(typeof event.locatie === "string" ? event.locatie : "")
           }
         } catch {}
@@ -406,6 +413,7 @@ export default function KaartMakenPage() {
       plan,
       concept_naam: conceptNaam.trim() || null,
       ...(eventId ? { event_id: eventId } : {}),
+      ...(!eventId && hoortBij ? { hoort_bij: hoortBij } : {}),
     }
     const er = await fetch("/api/drafts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(eventBody) })
     if (!er.ok) throw new Error("Opslaan van het event mislukt")
@@ -505,6 +513,10 @@ export default function KaartMakenPage() {
   // koppeling met het bewaarde concept gaat los, zodat opslaan een nieuw
   // concept maakt in plaats van het oude te overschrijven.
   function nieuwConcept() {
+    // Een variant hoort bij dezelfde bruiloft, niet naast hem. Was dit concept
+    // zelf al een variant, dan pakken we zijn bruiloft, zodat de keten nooit
+    // dieper wordt dan één stap.
+    if (eventId) setHoortBij(hoortBij ?? eventId)
     setEventId(null)
     setEventLocatie("")
     setCardId(null)
