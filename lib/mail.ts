@@ -1,6 +1,7 @@
 import { Resend } from "resend"
 import { PLANS, draftReminderTekst, isCardPlan, type DraftVariant, type Plan } from "./plans"
 import { deadlineTekst, type DeadlineMoment } from "./deadline"
+import { standAdvies, standKop, type StandCijfers } from "./stand"
 
 const FROM = "SayingYes <info@sayingyes.nl>"
 
@@ -1579,6 +1580,118 @@ export async function sendDeadlineEmail({
     return { success: true as const, id: result?.id }
   } catch (err) {
     console.error("[mail] Unexpected error sending deadline mail:", err)
+    return { success: false as const, error: err }
+  }
+}
+
+// ── De stand van je gastenlijst ──────────────────────────────────────────────
+// Eén mail, met een frequentie die de klant zelf kiest. De regels staan in
+// lib/stand.ts, waaronder de belangrijkste: niets sturen als er niets nieuws
+// is. Een mail die zegt dat er niets gebeurd is, leert de klant om onze mails
+// weg te klikken.
+
+export async function sendStandEmail({
+  toEmail,
+  eventTitle,
+  cijfers,
+  dashboardUrl,
+}: {
+  toEmail: string
+  eventTitle: string
+  cijfers: StandCijfers
+  dashboardUrl: string
+}) {
+  const kop = standKop(cijfers)
+  const advies = standAdvies(cijfers)
+  const totaal = Math.max(cijfers.gasten, 1)
+  const breedteJa = Math.round((cijfers.komen / totaal) * 100)
+  const breedteNee = Math.round((cijfers.nietKomen / totaal) * 100)
+
+  const cijfer = (label: string, waarde: number, kleur: string) => `
+    <td width="33%" style="padding:14px 10px;text-align:center;">
+      <p style="margin:0;font-size:28px;font-weight:700;color:${kleur};font-family:'Georgia',serif;">${waarde}</p>
+      <p style="margin:4px 0 0;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#9A8E82;">${label}</p>
+    </td>`
+
+  const html = `<!DOCTYPE html>
+<html lang="nl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f1ec;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f1ec;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);">
+        <tr>
+          <td bgcolor="#c9a96e" style="background-color:#c9a96e;padding:44px 40px 36px;text-align:center;">
+            <p style="margin:0 0 10px;font-size:26px;font-weight:600;letter-spacing:0.06em;color:#f5ead6;font-family:'Georgia',serif;">SayingYes</p>
+            <h1 style="margin:0;font-size:22px;font-weight:800;color:#111827;line-height:1.25;">${kop}</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:36px 40px 0;">
+            <p style="margin:0 0 20px;font-size:15px;line-height:1.65;color:#374151;">
+              De gastenlijst van <strong style="color:#111827;">${eventTitle}</strong> staat er zo voor:
+            </p>
+
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#FBF5E8;border:1px solid #E8D5A3;border-radius:12px;margin-bottom:14px;">
+              <tr>
+                ${cijfer("Komen", cijfers.komen, "#065F46")}
+                ${cijfer("Komen niet", cijfers.nietKomen, "#111827")}
+                ${cijfer("Nog stil", cijfers.stil, cijfers.stil > 0 ? "#B45309" : "#111827")}
+              </tr>
+            </table>
+
+            ${
+              cijfers.gasten > 0
+                ? `<table width="100%" cellpadding="0" cellspacing="0" style="border-radius:999px;overflow:hidden;background:#EDE6D8;margin-bottom:8px;">
+                     <tr style="height:8px;">
+                       <td width="${breedteJa}%" style="background-color:#059669;height:8px;"></td>
+                       <td width="${breedteNee}%" style="background-color:#E8D5A3;height:8px;"></td>
+                       <td style="height:8px;"></td>
+                     </tr>
+                   </table>
+                   <p style="margin:0 0 22px;font-size:12px;color:#9A8E82;">
+                     ${cijfers.komen} van ${cijfers.gasten} gasten komen.
+                   </p>`
+                : ""
+            }
+
+            <p style="margin:0 0 26px;font-size:14px;line-height:1.65;color:#374151;">${advies}</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:0 40px 36px;text-align:center;">
+            <a href="${dashboardUrl}" style="display:inline-block;background-color:#1A1A1A;color:#ffffff;text-decoration:none;padding:14px 30px;border-radius:12px;font-size:15px;font-weight:600;">Naar je gastenlijst</a>
+          </td>
+        </tr>
+        <tr>
+          <td bgcolor="#faf7f2" style="background-color:#faf7f2;padding:22px 40px;text-align:center;border-top:1px solid #E8D5A3;">
+            <p style="margin:0;font-size:12px;line-height:1.6;color:#9A8E82;">
+              Je hebt zelf gekozen hoe vaak je dit hoort. In je dashboard zet je het op dagelijks,
+              wekelijks, maandelijks of nooit. We sturen niets als er niets nieuws is.
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+
+  try {
+    const { data: result, error } = await getResend().emails.send({
+      from: FROM,
+      to: toEmail,
+      subject: `${kop} voor ${eventTitle}`,
+      html,
+    })
+    if (error) {
+      console.error("[mail] Stand mail failed:", error)
+      return { success: false as const, error }
+    }
+    console.log("[mail] Stand mail sent →", toEmail, "| nieuw:", cijfers.nieuw, "| id:", result?.id)
+    return { success: true as const, id: result?.id }
+  } catch (err) {
+    console.error("[mail] Unexpected error sending stand mail:", err)
     return { success: false as const, error: err }
   }
 }

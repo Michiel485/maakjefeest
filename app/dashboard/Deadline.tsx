@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { FREQUENTIE_LABEL, FREQUENTIE_UITLEG, type Frequentie } from "@/lib/stand"
 import {
   EERSTE_HERINNERING_DAGEN,
   MAX_LOCATIE_NAAM,
@@ -21,12 +22,10 @@ const GREEN_TEXT = "#065F46"
 const ATTN = "#B45309"
 const RED = "#991B1B"
 
-const FREQUENTIES: { waarde: string; label: string; uitleg: string }[] = [
-  { waarde: "dagelijks", label: "Dagelijks", uitleg: "alleen op dagen dat er iets binnenkwam" },
-  { waarde: "wekelijks", label: "Wekelijks", uitleg: "één mail per week met de stand" },
-  { waarde: "maandelijks", label: "Maandelijks", uitleg: "genoeg als je bruiloft nog ver weg is" },
-  { waarde: "nooit", label: "Nooit", uitleg: "je kijkt zelf in je dashboard" },
-]
+// De keuzes en hun woorden komen uit lib/stand.ts, waar ook de regel staat
+// wanneer er echt een mail uitgaat. Twee lijstjes met dezelfde labels lopen
+// binnen een maand uit elkaar.
+const FREQUENTIES: Frequentie[] = ["dagelijks", "wekelijks", "maandelijks", "nooit"]
 
 // De deadline voor de aantallen bij de locatie, en hoe vaak je een tussenstand
 // wilt horen.
@@ -327,13 +326,13 @@ export default function DeadlineInstelling({
         </div>
         <div className="flex flex-wrap gap-2">
           {FREQUENTIES.map((f) => {
-            const aan = frequentie === f.waarde
+            const aan = frequentie === f
             return (
               <button
-                key={f.waarde}
-                onClick={() => void stuur({ stand_frequentie: f.waarde }, `f-${f.waarde}`)}
-                disabled={bezig === `f-${f.waarde}`}
-                title={f.uitleg}
+                key={f}
+                onClick={() => void stuur({ stand_frequentie: f }, `f-${f}`)}
+                disabled={bezig === `f-${f}`}
+                title={FREQUENTIE_UITLEG[f]}
                 className="text-sm px-3.5 py-2 rounded-xl"
                 style={
                   aan
@@ -341,13 +340,13 @@ export default function DeadlineInstelling({
                     : { border: `1px solid ${GOLD_LIGHT}`, color: BODY, cursor: "pointer" }
                 }
               >
-                {f.label}
+                {FREQUENTIE_LABEL[f]}
               </button>
             )
           })}
         </div>
         <p className="text-xs m-0" style={{ color: SOFT }}>
-          {FREQUENTIES.find((f) => f.waarde === frequentie)?.uitleg}
+          {FREQUENTIE_UITLEG[frequentie as Frequentie]}
         </p>
       </div>
     </section>

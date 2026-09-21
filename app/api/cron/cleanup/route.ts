@@ -1,7 +1,8 @@
 import { createServiceClient } from "@/lib/supabase"
 import { verwijderEventInhoud } from "@/lib/opruimen"
-import { sendDraftReminderEmail, sendRenewalReminderEmail, sendExpiryWarningEmail, sendDeadlineEmail } from "@/lib/mail"
+import { sendDraftReminderEmail, sendRenewalReminderEmail, sendExpiryWarningEmail, sendDeadlineEmail, sendStandEmail } from "@/lib/mail"
 import { dagenTotDeadline, leesDeadline, welkBericht } from "@/lib/deadline"
+import { frequentie, magStandMail } from "@/lib/stand"
 import { komtGast, reis } from "@/lib/gasten"
 import { verversEvent } from "@/lib/db"
 import { sendVisitorDigest } from "@/lib/visitors"
@@ -39,6 +40,8 @@ export async function GET(request: Request) {
     visitorDigest:    "" as string,
     // Per bruiloft welk deadlinebericht eruit ging, bijvoorbeeld "abc123:tien"
     deadlines:        [] as string[],
+    // Per bruiloft hoeveel nieuwe reacties er in de standmail stonden
+    standen:          [] as string[],
   }
 
   // ── Fetch all draft events ─────────────────────────────────────────────────
@@ -217,6 +220,7 @@ export async function GET(request: Request) {
   //
   // Wij sturen nooit iets naar de locatie. Alleen naar het bruidspaar.
   results.deadlines = await stuurDeadlines(service, now)
+  results.standen = await stuurStanden(service, now)
 
   // ── Bezoekersoverzicht van de afgelopen 24 uur naar de eigenaar (+ opruimen >90 dagen) ──
   results.visitorDigest = await sendVisitorDigest(service, now)
@@ -307,6 +311,88 @@ async function stuurDeadlines(
       .eq("id", event.id)
 
     uit.push(`${event.id}:${moment}`)
+  }
+
+  return uit
+}
+
+// ── De stand van de gastenlijst ──────────────────────────────────────────────
+// Michiels vraag: per reactie, dagelijks of wekelijks? Het antwoord is dat de
+// klant het zelf kiest, en dat we niets sturen als er niets nieuws is. Zonder
+// die tweede regel krijgt iemand die wekelijks koos ook in de stille maanden
+// elke week een mail waarin niets staat, en leert hij ons weg te klikken.
+async function stuurStanden(
+  service: ReturnType<typeof createServiceClient>,
+  now: Date
+): Promise<string[]> {
+  const uit: string[] = []
+
+  const { data: events, error } = await service
+    .from("events")
+    .select("id, title, user_email, stand_frequentie, stand_gemaild_at")
+    .eq("status", "published")
+    .neq("stand_frequentie", "nooit")
+
+  // Staan de kolommen er nog niet, dan is er niets te doen en is dat geen fout.
+  if (error) {
+    console.log("[cron/cleanup] standmails overgeslagen:", error.message)
+    return uit
+  }
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://sayingyes.nl"
+
+  for (const event of events ?? []) {
+    const email = event.user_email as string | null
+    if (!email) continue
+
+    const keuze = frequentie(event.stand_frequentie)
+    const laatst = event.stand_gemaild_at as string | null
+
+    const { data: gasten } = await service
+      .from("rsvp")
+      .select("std_status, inv_status, bijgewerkt_at, created_at")
+      .eq("event_id", event.id)
+
+    const rijen = gasten ?? []
+    const sinds = laatst ? new Date(laatst).getTime() : 0
+    let komen = 0
+    let nietKomen = 0
+    let stil = 0
+    let nieuw = 0
+    for (const g of rijen) {
+      const k = komtGast(reis(g.std_status), reis(g.inv_status))
+      if (k === true) komen++
+      else if (k === false) nietKomen++
+      else stil++
+
+      // Bijgewerkt telt, niet alleen nieuw: een gast die zijn eigen antwoord
+      // wijzigt maakt geen nieuwe regel, en dat is juist het antwoord dat telt.
+      const gewijzigd = new Date(
+        (g.bijgewerkt_at as string | null) ?? (g.created_at as string)
+      ).getTime()
+      if (gewijzigd > sinds) nieuw++
+    }
+
+    if (!magStandMail(keuze, laatst, nieuw > 0, now)) continue
+
+    const mail = await sendStandEmail({
+      toEmail: email,
+      eventTitle: (event.title as string) || "jullie bruiloft",
+      cijfers: { gasten: rijen.length, komen, nietKomen, stil, nieuw },
+      dashboardUrl: `${siteUrl}/dashboard#gasten`,
+    })
+
+    if (!mail.success) {
+      uit.push(`${event.id}:mislukt`)
+      continue
+    }
+
+    await service
+      .from("events")
+      .update({ stand_gemaild_at: now.toISOString() })
+      .eq("id", event.id)
+
+    uit.push(`${event.id}:${nieuw}`)
   }
 
   return uit

@@ -283,6 +283,11 @@ export async function POST(request: Request) {
         : { inv_status: g.attending === "no" ? "nee" : "ja" }),
       bron_token: bronToken,
       apparaat,
+      // bijgewerkt_at zetten we hier niet: dat doet de database zelf, met een
+      // standaard bij het aanmaken en een trigger bij het bijwerken. Zou de
+      // code die kolom noemen, dan zou het opslaan van een gast stukgaan
+      // zolang de migratie niet gedraaid is. Dat is vandaag precies één keer
+      // gebeurd met concept_naam, en één keer is genoeg.
       ...(g.song != null ? { song: tekst(g.song, MAX_KORT) } : {}),
       ...(g.overnachting != null ? { overnachting: g.overnachting } : {}),
       ...(g.custom_answer != null ? { custom_answer: g.custom_answer } : {}),

@@ -184,6 +184,7 @@ export async function PATCH(request: Request) {
   if (mag.length === 0) return Response.json({ error: "Geen toegang" }, { status: 403 })
 
   const kolom = product === "inv" ? "inv_status" : "std_status"
+  // bijgewerkt_at zet de database zelf, via een trigger. Zie app/api/rsvp.
   const update: Record<string, unknown> = { [kolom]: waarde }
   // Een antwoord is ook een antwoord op de aanwezigheid; de cateraarslijst
   // rekent daarmee.
