@@ -338,6 +338,13 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
   },
 }
 
+/** De gastengroepen, op de volgorde waarin je ze zou uitnodigen. */
+export const CARD_GUEST_TYPES: readonly CardGuestType[] = [
+  "daggast",
+  "avondgast",
+  "receptiegast",
+] as const
+
 export const GUEST_TYPE_LABEL: Record<CardGuestType, string> = {
   daggast: "Daggasten",
   avondgast: "Avondgasten",

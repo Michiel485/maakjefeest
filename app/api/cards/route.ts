@@ -55,11 +55,12 @@ export async function POST(request: Request) {
   const chosenTemplate = CARD_TEMPLATES.includes(template as CardTemplate)
     ? (template as CardTemplate)
     : "klassiek"
-  // Gasttype geldt alleen voor trouwkaarten
-  const guestType =
-    type === "trouwkaart" && GUEST_TYPES.includes(guest_type as CardGuestType)
-      ? (guest_type as CardGuestType)
-      : undefined
+  // De gastengroep geldt voor elke kaart. Stond eerst alleen bij trouwkaarten,
+  // maar wie zijn indeling al weet kan ook twee losse Save the Dates maken:
+  // de daggasten moeten de hele dag vrijhouden, de avondgasten alleen de avond.
+  const guestType = GUEST_TYPES.includes(guest_type as CardGuestType)
+    ? (guest_type as CardGuestType)
+    : undefined
   // Een foto hoort bij de kaart zodra er één gekozen is, los van het ontwerp
   const photoUrl =
     typeof photo_url === "string" && /^https?:\/\//.test(photo_url)

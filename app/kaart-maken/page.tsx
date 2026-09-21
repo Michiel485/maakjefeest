@@ -20,6 +20,7 @@ import {
   CARD_TEMPLATE_UITLEG,
   CARD_TYPE_PLAN,
   KAART_TEKST,
+  CARD_GUEST_TYPES,
   GUEST_TYPE_LABEL,
   kaartLabel,
   MAX_KAARTEN_PER_EVENT,
@@ -79,7 +80,7 @@ interface ConceptRij {
   status: string
 }
 
-type Stap = "stijl" | "template" | "tekst" | "aanmelden" | "taal" | "foto" | "animatie" | "bekijken"
+type Stap = "stijl" | "template" | "tekst" | "groep" | "aanmelden" | "taal" | "foto" | "animatie" | "bekijken"
 type Actie = "bewaar" | "activeer"
 
 interface KaartOntwerp {
@@ -437,7 +438,7 @@ export default function KaartMakenPage() {
           event_id: nieuwEventId,
           type: ontwerp.type,
           template: ontwerp.template,
-          guest_type: isTrouwkaart && ontwerp.guestType ? ontwerp.guestType : undefined,
+          guest_type: ontwerp.guestType || undefined,
           photo_url: fotoUrl ?? undefined,
         }),
       })
@@ -1009,6 +1010,52 @@ export default function KaartMakenPage() {
           {/* Hoe de envelop opengaat bij de gast. Het uitschuiven, het brekende
               zegel en het verende landen zitten in beide keuzes; het verschil
               is alleen of er gouden stofjes bij komen. */}
+          {/* ── Voor wie is deze kaart ──
+              Daggasten en avondgasten is een typisch Nederlands onderscheid
+              waar geen buitenlands platform iets mee doet, en het model kende
+              het al: een kaart heeft een gastengroep, het dashboard laat hem
+              zien en de gastenlijst rekent ermee. Alleen kon je hem nergens
+              kiezen. Nu wel, en dan verandert ook de standaardtekst mee.
+
+              Ook bij een Save the Date, want wie zijn indeling al weet kan
+              meteen twee losse kaarten maken. */}
+          <Sectie open={stap === "groep"} onToggle={() => setStap(stap === "groep" ? null : "groep")} titel="Voor wie is deze kaart">
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => update({ guestType: "" })}
+                className="text-xs font-semibold px-3 py-2 rounded-xl"
+                style={{
+                  border: `2px solid ${ontwerp.guestType === "" ? GOLD : GOLD_LIGHT}`,
+                  backgroundColor: ontwerp.guestType === "" ? "#fff" : "transparent",
+                  color: CHARCOAL,
+                  cursor: "pointer",
+                }}
+              >
+                Alle gasten
+              </button>
+              {CARD_GUEST_TYPES.map((g) => (
+                <button
+                  key={g}
+                  onClick={() => update({ guestType: g })}
+                  className="text-xs font-semibold px-3 py-2 rounded-xl"
+                  style={{
+                    border: `2px solid ${ontwerp.guestType === g ? GOLD : GOLD_LIGHT}`,
+                    backgroundColor: ontwerp.guestType === g ? "#fff" : "transparent",
+                    color: CHARCOAL,
+                    cursor: "pointer",
+                  }}
+                >
+                  {GUEST_TYPE_LABEL[g]}
+                </button>
+              ))}
+            </div>
+            <p className="text-[11px] leading-snug" style={{ color: SUBTLE }}>
+              Maak je één kaart voor iedereen, dan kies je Alle gasten. Wil je de avondgasten een
+              andere tijd en een andere tekst geven, maak dan een tweede kaart met hun eigen link.
+              In je gastenlijst zie je per gast bij welke groep hij hoort.
+            </p>
+          </Sectie>
+
           <Sectie open={stap === "aanmelden"} onToggle={() => setStap(stap === "aanmelden" ? null : "aanmelden")} titel="Aanmelden">
             <div className="flex flex-col gap-2">
               {(["geen", "janee", "volledig"] as AanmeldStand[]).map((s) => (
