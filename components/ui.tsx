@@ -230,3 +230,97 @@ export const invoerStijl: React.CSSProperties = {
   color: KLEUR.inkt,
   borderColor: KLEUR.goudLicht,
 }
+
+// ── Inklapbare stap in de zijbalk van een bouwer ────────────────────────────
+// Stond als lokale functie in de kaartbouwer, en als met de hand uitgetypte
+// HTML op drie plekken in de websitebouwer: letterlijk dezelfde klassen, dus
+// ooit gekopieerd. Twee kopieën lopen uit elkaar, en dat is precies wat
+// Michiel voelt als "twee producten die op elkaar lijken". Eén bron dus.
+//
+// Bewust een los component en niet iets binnen een pagina: anders wordt het
+// bij elke render een nieuw componenttype en verliezen de invoervelden erin
+// hun focus bij elke toetsaanslag.
+
+export function Chevron({ open }: { open: boolean }) {
+  return (
+    <svg
+      className={`w-4 h-4 transition-transform ${open ? "rotate-180" : ""}`}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+      aria-hidden="true"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+    </svg>
+  )
+}
+
+/**
+ * Alleen de kop van een stap: de knop met de titel en het pijltje. Los
+ * beschikbaar omdat de websitebouwer zijn eigen inhoud onder de kop heeft,
+ * met rijen die hun eigen randen tekenen. Die inhoud blijft van hem; de kop
+ * komt hier vandaan, zodat beide bouwers dezelfde kop hebben.
+ */
+export function SectieKop({
+  titel,
+  open,
+  onToggle,
+  uitgelicht = false,
+}: {
+  titel: string
+  open: boolean
+  onToggle: () => void
+  uitgelicht?: boolean
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={open}
+      className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-gray-50 transition-colors min-h-[44px]"
+    >
+      <span
+        className={`text-xs font-bold uppercase tracking-widest ${uitgelicht ? "" : "text-gray-500"}`}
+        style={uitgelicht ? { color: KLEUR.goud } : undefined}
+      >
+        {titel}
+      </span>
+      <span className="text-gray-400">
+        <Chevron open={open} />
+      </span>
+    </button>
+  )
+}
+
+export function Sectie({
+  titel,
+  open,
+  onToggle,
+  children,
+  /** De eerste stap, die je altijd invult: valt op in goud. */
+  uitgelicht = false,
+  kaal = false,
+  className,
+}: {
+  titel: string
+  open: boolean
+  onToggle: () => void
+  children: React.ReactNode
+  uitgelicht?: boolean
+  /**
+   * Geen binnenrand om de inhoud. Voor de websitebouwer, waar de inhoud zelf
+   * uit rijen met eigen randen bestaat; die zouden met een rand eromheen
+   * dubbel ingesprongen staan. De kop is dan gedeeld, de inhoud blijft
+   * precies zoals hij was.
+   */
+  kaal?: boolean
+  className?: string
+}) {
+  return (
+    <div className={`border-b border-gray-100 ${className ?? ""}`}>
+      <SectieKop titel={titel} open={open} onToggle={onToggle} uitgelicht={uitgelicht} />
+      {open && (kaal ? children : <div className="px-5 pb-5 flex flex-col gap-4">{children}</div>)}
+    </div>
+  )
+}

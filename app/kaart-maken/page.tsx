@@ -43,7 +43,7 @@ import {
   standaardAanmeldStand,
   type AanmeldStand,
 } from "@/lib/gasten"
-import { Draaier, Knop, Melding } from "@/components/ui"
+import { Draaier, Knop, Melding, Sectie } from "@/components/ui"
 import AanmeldFormulier from "@/components/AanmeldFormulier"
 import BouwerSchakelaar from "@/components/BouwerSchakelaar"
 import {
@@ -140,38 +140,8 @@ function initialenVan(names: string): string {
     .join("")
 }
 
-function Chevron({ open }: { open: boolean }) {
-  return (
-    <svg className={`w-4 h-4 transition-transform ${open ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-    </svg>
-  )
-}
-
 const inputCls = "w-full rounded-xl border bg-white px-3 py-2.5 text-sm placeholder-gray-400 focus:outline-none"
 const inputStyle: React.CSSProperties = { color: CHARCOAL, borderColor: GOLD_LIGHT }
-
-// Inklapbare stap in de zijbalk. Bewust buiten de pagina-component gedefinieerd:
-// anders wordt het bij elke render een nieuw componenttype en verliezen de
-// invoervelden erin hun focus bij elke toetsaanslag.
-function Sectie({ titel, open, onToggle, children }: { titel: string; open: boolean; onToggle: () => void; children: React.ReactNode }) {
-  return (
-    <div className="border-b border-gray-100">
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-gray-50 transition-colors"
-      >
-        <span className="text-xs font-bold uppercase tracking-widest text-gray-500">{titel}</span>
-        <span className="text-gray-400"><Chevron open={open} /></span>
-      </button>
-      {open && (
-        <div className="px-5 pb-5 flex flex-col gap-4">
-          {children}
-        </div>
-      )}
-    </div>
-  )
-}
 
 export default function KaartMakenPage() {
   const router = useRouter()

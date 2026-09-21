@@ -17,7 +17,7 @@ import { createClient } from "@/lib/supabase"
 import { eventSiteUrl } from "@/lib/site-url"
 import { DEFAULT_PLAN, hoogstePlan, PLANS, formatEur, isCardPlan, isPlan, type Plan } from "@/lib/plans"
 import BouwerSchakelaar from "@/components/BouwerSchakelaar"
-import { Knop, Melding } from "@/components/ui"
+import { Knop, Melding, SectieKop } from "@/components/ui"
 import { KLEUR } from "@/lib/ontwerp"
 import SophieTutorial, { type SophieNav } from "@/components/SophieTutorial"
 import { LS_NAAR_WEBSITE, NAAR_WEBSITE_GELDIG_MS } from "@/lib/nieuw-concept"
@@ -377,17 +377,6 @@ function FontSelect({ value, onChange }: { value: string; onChange: (v: string) 
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-
-// Buiten de paginacomponent: binnenin wordt het bij elke render een nieuw
-// componenttype, en dan hangt React de hele boom eronder opnieuw op. Bij een
-// pijltje valt dat nauwelijks op, bij een sectie met invoervelden verliest het
-// veld zijn focus bij elke toetsaanslag. Zelfde reden als Sectie in de
-// kaartbouwer.
-const Chevron = ({ open }: { open: boolean }) => (
-  <svg className={`w-4 h-4 text-gray-400 transition-transform duration-200 flex-shrink-0 ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-  </svg>
-)
 
 export default function BouwenPage() {
   const router = useRouter()
@@ -1415,13 +1404,11 @@ export default function BouwenPage() {
 
           {/* ── 3. URL & BEVEILIGING (alleen bij een pakket met publieke site) ── */}
           <div>
-            <button
-              onClick={() => setActiveSection(prev => prev === 'url' ? null : 'url')}
-              className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-gray-50 transition-colors"
-            >
-              <span className="text-xs font-bold uppercase tracking-widest text-gray-500">URL &amp; Beveiliging</span>
-              <Chevron open={activeSection === 'url'} />
-            </button>
+            <SectieKop
+              titel="URL & Beveiliging"
+              open={activeSection === 'url'}
+              onToggle={() => setActiveSection(prev => prev === 'url' ? null : 'url')}
+            />
             {activeSection === 'url' && (
               <div className="flex flex-col">
 
@@ -1590,13 +1577,11 @@ export default function BouwenPage() {
           </div>
           {/* ── 1. ALGEMEEN ── */}
           <div className="border-b border-gray-100">
-            <button
-              onClick={() => setActiveSection(prev => prev === 'algemeen' ? null : 'algemeen')}
-              className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-gray-50 transition-colors"
-            >
-              <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Algemeen</span>
-              <Chevron open={activeSection === 'algemeen'} />
-            </button>
+            <SectieKop
+              titel="Algemeen"
+              open={activeSection === 'algemeen'}
+              onToggle={() => setActiveSection(prev => prev === 'algemeen' ? null : 'algemeen')}
+            />
             {activeSection === 'algemeen' && (
               <div className="flex flex-col">
 
@@ -1716,13 +1701,11 @@ export default function BouwenPage() {
 
           {/* ── 2. PAGINA'S ── */}
           <div className="border-b border-gray-100 flex-1">
-            <button
-              onClick={() => setActiveSection(prev => prev === 'paginas' ? null : 'paginas')}
-              className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-gray-50 transition-colors"
-            >
-              <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Pagina&apos;s</span>
-              <Chevron open={activeSection === 'paginas'} />
-            </button>
+            <SectieKop
+              titel="Pagina's"
+              open={activeSection === 'paginas'}
+              onToggle={() => setActiveSection(prev => prev === 'paginas' ? null : 'paginas')}
+            />
             {activeSection === 'paginas' && (
               <div>
                 {PAGES.map((page) => {
