@@ -158,6 +158,10 @@ export function TegelKnop({
 
 export interface KaartRegel {
   card: CardRow
+  /** Naar hoeveel gasten deze kaart is gestuurd, voor zover we dat weten:
+   *  wat het bruidspaar aangaf bij verstuurd zetten, plus wie via de link
+   *  antwoordde. */
+  verstuurd: number
   /** Hoeveel gasten via deze kaart hebben gereageerd. */
   gereageerd: number
 }
@@ -252,7 +256,7 @@ function Varianten({ regels, eventId }: { regels: KaartRegel[]; eventId: string 
         >
           <span className="font-medium flex-1 min-w-[120px]" style={{ color: KLEUR.inkt }}>{kaartNaam(r.card)}</span>
           <span className="tabular-nums" style={{ color: KLEUR.zacht }}>
-            {r.gereageerd} gereageerd {"·"} {r.card.view_count}{"×"} bekeken
+            {r.verstuurd} verstuurd {"·"} {r.gereageerd} gereageerd {"·"} {r.card.view_count}{"×"} bekeken
           </span>
           <Link
             href={`/kaart-maken?event_id=${eventId ?? r.card.event_id}&card_id=${r.card.id}&type=${r.card.type}`}

@@ -14,6 +14,7 @@ import { normalizePlan, planAllows, planMagVersturen, PLANS, formatEur } from "@
 import { afstandInWoorden } from "@/lib/fasen"
 import { leesStand, voortgang } from "@/lib/checklist"
 import { komtGast, reis } from "@/lib/gasten"
+import { kaartLabel } from "@/lib/cards"
 import { eventSiteLabel } from "@/lib/site-url"
 import { KLEUR } from "@/lib/ontwerp"
 import type { Onderdeel } from "@/components/BouwerSchakelaar"
@@ -62,15 +63,32 @@ export default async function DashboardPage({
   // als de klant dat per kaart aangeeft; tot die tijd staat het totaal per
   // soort in het chipje.
   function regels(type: "save_the_date" | "trouwkaart"): KaartRegel[] {
+    const kaartKolom = type === "save_the_date" ? "std_kaart_id" : "inv_kaart_id"
+    const statusKolom = type === "save_the_date" ? "std_status" : "inv_status"
     return cards
       .filter((c) => c.type === type)
       .map((card) => ({
         card,
+        // Verstuurd: wat het bruidspaar bij "verstuurd zetten" aangaf, plus wie
+        // via deze link antwoordde (die heeft hem per definitie gekregen).
+        verstuurd: rsvps.filter(
+          (r) =>
+            (r[kaartKolom] === card.id && reis(r[statusKolom]) !== "niet_verstuurd") ||
+            (r.bron_token === card.share_token && r[kaartKolom] == null)
+        ).length,
         gereageerd: rsvps.filter(
           (r) => r.bron_token === card.share_token && komtGast(reis(r.std_status), reis(r.inv_status)) !== null
         ).length,
       }))
   }
+
+  // Voor de gastenlijst: welke kaarten er zijn, met een korte naam.
+  const kaartRefs = cards.map((c) => ({
+    id: c.id,
+    type: c.type,
+    naam: kaartLabel(c),
+    share_token: c.share_token,
+  }))
   const stdRegels = regels("save_the_date")
   const invRegels = regels("trouwkaart")
   const magStd = groep.some((e) => planMagVersturen(e.plan, "save_the_date"))
@@ -223,6 +241,7 @@ export default async function DashboardPage({
               <RsvpSection
                 rsvps={rsvps}
                 events={groep.filter((e) => ["published", "expired"].includes(e.status)).map((e) => ({ id: e.id, title: e.title }))}
+                kaarten={kaartRefs}
               />
             ) : (
               <div className="flex gap-2">

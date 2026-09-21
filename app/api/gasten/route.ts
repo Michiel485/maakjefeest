@@ -151,7 +151,7 @@ export async function PATCH(request: Request) {
   if (!user?.email) return Response.json({ error: "Niet ingelogd" }, { status: 401 })
 
   const body = (await request.json().catch(() => null)) as
-    | { ids?: unknown; product?: unknown; waarde?: unknown }
+    | { ids?: unknown; product?: unknown; waarde?: unknown; kaart_id?: unknown }
     | null
 
   const ids = Array.isArray(body?.ids) ? body.ids.filter((v): v is string => typeof v === "string") : []
@@ -190,7 +190,28 @@ export async function PATCH(request: Request) {
   // rekent daarmee.
   if (waarde === "ja" || waarde === "nee") update.attending = waarde === "ja" ? "yes" : "no"
 
-  const { error } = await service.from("rsvp").update(update).in("id", mag)
+  // Welke kaart je stuurde, als er van een soort meer dan één is. Alleen een
+  // kaart van een van deze bruiloften, anders zou je een vreemde kaart aan je
+  // gasten kunnen hangen.
+  const kaartKolom = product === "inv" ? "inv_kaart_id" : "std_kaart_id"
+  if (typeof body?.kaart_id === "string" && body.kaart_id) {
+    const { data: k } = await service
+      .from("cards")
+      .select("id, event_id")
+      .eq("id", body.kaart_id)
+      .single()
+    if (k && vanMij.has(k.event_id as string)) update[kaartKolom] = k.id
+  }
+
+  let { error } = await service.from("rsvp").update(update).in("id", mag)
+  // De kaartkolommen bestaan pas na migration_gekregen.sql. Mist die nog, dan
+  // mag dat het verstuurd zetten niet kosten: dan zonder de kaart.
+  if (error && kaartKolom in update) {
+    delete update[kaartKolom]
+    const opnieuw = await service.from("rsvp").update(update).in("id", mag)
+    if (!opnieuw.error) console.warn("[gasten] bijgewerkt zonder", kaartKolom, "- migratie nog niet gedraaid?")
+    error = opnieuw.error
+  }
   if (error) {
     console.error("[gasten] patch:", error)
     return Response.json({ error: "Bijwerken mislukt" }, { status: 500 })

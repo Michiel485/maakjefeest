@@ -145,6 +145,25 @@ export async function laadBruiloft(email: string, gekozenId?: string | null): Pr
       .order("created_at", { ascending: false })
     rsvps = (rsvpData ?? []) as RsvpRow[]
 
+    // Welke kaart het bruidspaar zegt gestuurd te hebben. Die kolommen bestaan
+    // pas na migration_gekregen.sql, dus apart opgevraagd: mislukt dit, dan
+    // weten we het gewoon niet en werkt de rest door.
+    if (rsvps.length > 0) {
+      const { data: kaartIds, error: kaartErr } = await service
+        .from("rsvp")
+        .select("id, std_kaart_id, inv_kaart_id")
+        .in("event_id", groepIds)
+      if (!kaartErr && kaartIds) {
+        const per = new Map(kaartIds.map((k) => [k.id as string, k]))
+        rsvps = rsvps.map((r) => {
+          const k = per.get(r.id)
+          return k
+            ? { ...r, std_kaart_id: (k.std_kaart_id as string | null) ?? null, inv_kaart_id: (k.inv_kaart_id as string | null) ?? null }
+            : r
+        })
+      }
+    }
+
     const { data: cardData, error: cardError } = await service
       .from("cards")
       .select("id, event_id, type, template, share_token, content, view_count, created_at")

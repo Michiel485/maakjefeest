@@ -35,6 +35,10 @@ export interface RsvpRow {
   inv_status: string | null
   /** Op welke kaartlink dit binnenkwam. */
   bron_token: string | null
+  /** Welke kaart het bruidspaar zegt gestuurd te hebben (bij "verstuurd zetten").
+   *  Optioneel: bestaat pas na migration_gekregen.sql. */
+  std_kaart_id?: string | null
+  inv_kaart_id?: string | null
   huishouden_naam: string | null
   is_primary: boolean
   attending: string | null
@@ -47,6 +51,9 @@ export interface RsvpRow {
 }
 
 interface EventRef { id: string; title: string }
+
+/** Een kaart van deze bruiloft, om te kunnen zeggen welke een gast kreeg. */
+export interface KaartRef { id: string; type: string; naam: string; share_token: string }
 
 interface EditForm {
   name: string
@@ -82,11 +89,30 @@ const inputStyle: React.CSSProperties = { color: CHARCOAL, borderColor: GOLD_LIG
 export default function RsvpSection({
   rsvps: initialRsvps,
   events,
+  kaarten = [],
 }: {
   rsvps: RsvpRow[]
   events: EventRef[]
+  kaarten?: KaartRef[]
 }) {
   const [rsvps, setRsvps] = useState<RsvpRow[]>(initialRsvps)
+  // Welke kaart je hebt gestuurd, als er van een soort meer dan één is
+  // (daggasten, avondgasten, een andere taal). Standaard de eerste.
+  const stdKaarten = kaarten.filter((k) => k.type === "save_the_date")
+  const invKaarten = kaarten.filter((k) => k.type === "trouwkaart")
+  const [stdKaart, setStdKaart] = useState<string>(stdKaarten[0]?.id ?? "")
+  const [invKaart, setInvKaart] = useState<string>(invKaarten[0]?.id ?? "")
+
+  /** Welke kaart een gast kreeg: wat het bruidspaar aangaf, anders de link
+   *  waarop de gast antwoordde. */
+  function gekregen(row: RsvpRow, product: "std" | "inv"): string | null {
+    const id = product === "std" ? row.std_kaart_id : row.inv_kaart_id
+    const viaId = id ? kaarten.find((k) => k.id === id) : null
+    if (viaId) return viaId.naam
+    const viaLink = row.bron_token ? kaarten.find((k) => k.share_token === row.bron_token) : null
+    if (viaLink && (product === "std" ? viaLink.type === "save_the_date" : viaLink.type === "trouwkaart")) return viaLink.naam
+    return null
+  }
   const [editingRow, setEditingRow] = useState<RsvpRow | null>(null)
   const [editForm, setEditForm] = useState<EditForm | null>(null)
   const [saving, setSaving] = useState(false)
@@ -235,21 +261,26 @@ export default function RsvpSection({
   async function zetReis(product: "std" | "inv", waarde: Reis) {
     setBerichtBezig(true)
     setBerichtUitslag(null)
+    // Bij "verstuurd" onthouden we ook welke kaart je stuurde, zodat de lijst
+    // kan zeggen wie de avondgastenkaart kreeg en wie de Engelse.
+    const kaartId = waarde === "verstuurd" ? (product === "std" ? stdKaart : invKaart) || null : null
     try {
       const res = await fetch("/api/gasten", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids: [...gekozen], product, waarde }),
+        body: JSON.stringify({ ids: [...gekozen], product, waarde, kaart_id: kaartId }),
       })
       const j = (await res.json().catch(() => ({}))) as { error?: string; bijgewerkt?: number }
       if (!res.ok) throw new Error(j.error || "Bijwerken mislukte")
       const kolom = product === "inv" ? "inv_status" : "std_status"
+      const kaartKolom = product === "inv" ? "inv_kaart_id" : "std_kaart_id"
       setRsvps((vorig) =>
         vorig.map((r) =>
           gekozen.has(r.id)
             ? {
                 ...r,
                 [kolom]: waarde,
+                ...(kaartId ? { [kaartKolom]: kaartId } : {}),
                 ...(waarde === "ja" || waarde === "nee" ? { attending: waarde === "ja" ? "yes" : "no" } : {}),
               }
             : r
@@ -486,6 +517,19 @@ export default function RsvpSection({
               >
                 Save the Date verstuurd
               </button>
+              {/* Meer dan één Save the Date (daggasten, avondgasten, een andere
+                  taal)? Dan zeg je welke je stuurde; de lijst onthoudt het. */}
+              {stdKaarten.length > 1 && (
+                <select
+                  value={stdKaart}
+                  onChange={(e) => setStdKaart(e.target.value)}
+                  aria-label="Welke Save the Date heb je gestuurd"
+                  className="text-sm px-2 py-2 rounded-xl"
+                  style={{ border: `1px solid ${GOLD_LIGHT}`, color: CHARCOAL, backgroundColor: "#fff" }}
+                >
+                  {stdKaarten.map((k) => <option key={k.id} value={k.id}>{k.naam}</option>)}
+                </select>
+              )}
               <button
                 onClick={() => zetReis("inv", "verstuurd")}
                 disabled={berichtBezig}
@@ -495,6 +539,17 @@ export default function RsvpSection({
               >
                 Uitnodiging verstuurd
               </button>
+              {invKaarten.length > 1 && (
+                <select
+                  value={invKaart}
+                  onChange={(e) => setInvKaart(e.target.value)}
+                  aria-label="Welke trouwkaart heb je gestuurd"
+                  className="text-sm px-2 py-2 rounded-xl"
+                  style={{ border: `1px solid ${GOLD_LIGHT}`, color: CHARCOAL, backgroundColor: "#fff" }}
+                >
+                  {invKaarten.map((k) => <option key={k.id} value={k.id}>{k.naam}</option>)}
+                </select>
+              )}
               <button
                 onClick={verwijderGekozen}
                 className="text-sm font-semibold px-3 py-2 rounded-xl"
@@ -675,8 +730,21 @@ export default function RsvpSection({
                           </span>
                         )}
                       </td>
-                      <td className="px-5 py-3"><ReisBadge waarde={reis(row.std_status)} /></td>
-                      <td className="px-5 py-3"><ReisBadge waarde={reis(row.inv_status)} /></td>
+                      {/* Onder de stand: welke kaart deze gast kreeg, als we
+                          dat weten. Uit wat je zelf aangaf bij verstuurd
+                          zetten, of uit de link waarop hij antwoordde. */}
+                      <td className="px-5 py-3">
+                        <ReisBadge waarde={reis(row.std_status)} />
+                        {gekregen(row, "std") && (
+                          <span className="block text-[11px] mt-1" style={{ color: SOFT }}>{gekregen(row, "std")}</span>
+                        )}
+                      </td>
+                      <td className="px-5 py-3">
+                        <ReisBadge waarde={reis(row.inv_status)} />
+                        {gekregen(row, "inv") && (
+                          <span className="block text-[11px] mt-1" style={{ color: SOFT }}>{gekregen(row, "inv")}</span>
+                        )}
+                      </td>
                       <td className="px-5 py-3 hidden sm:table-cell">
                         {isDeclined ? <span style={{ color: GOLD_LIGHT }}>—</span> : <GuestTypeBadge type={row.guest_type} />}
                       </td>
