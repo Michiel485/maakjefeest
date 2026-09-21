@@ -25,8 +25,15 @@ export async function proxy(req: NextRequest) {
     return NextResponse.rewrite(url)
   }
 
-  // Dashboard protection: require Supabase Auth session
-  if (req.nextUrl.pathname.startsWith("/dashboard")) {
+  // Dashboard protection: require Supabase Auth session.
+  //
+  // Behalve voor /dashboard zelf. Wie niet is ingelogd ziet daar het lege
+  // dashboard: drie grijze tegels en de gastenlijst, zonder iets van iemand.
+  // Dat ís de pakketkeuze na Start gratis, en die moet je kunnen zien voordat
+  // je een account hebt. De pagina's eronder (instellingen, checklist) blijven
+  // achter de inlog.
+  const pad = req.nextUrl.pathname
+  if (pad.startsWith("/dashboard") && pad !== "/dashboard") {
     let supabaseResponse = NextResponse.next({ request: req })
 
     const supabase = createServerClient(

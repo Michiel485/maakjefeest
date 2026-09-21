@@ -1,8 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase-server"
-import { laadBruiloft, bruiloftNaam } from "@/lib/bruiloft-server"
+import { laadBruiloft, bruiloftNaam, leegResultaat } from "@/lib/bruiloft-server"
 import BouwerSchil from "@/components/BouwerSchil"
 import RsvpSection from "./RsvpSection"
 import GuestPhotosSection from "./GuestPhotosSection"
@@ -47,11 +46,15 @@ export default async function DashboardPage({
   const params = searchParams ? await searchParams : undefined
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user?.email) redirect("/inloggen")
 
+  // Niet ingelogd? Dan geen doorstuur naar inloggen, maar het lege dashboard:
+  // drie grijze tegels en de gastenlijst. Dat ís de pakketkeuze na Start
+  // gratis, en die moet je kunnen zien voordat je een account hebt. Er staat
+  // niets van iemand in, dus er lekt niets.
+  const ingelogd = !!user?.email
   const gekozen = typeof params?.b === "string" ? params.b : null
   const { bruiloft, alle, groep, extra, rsvps, cards, cardsAvailable, guestPhotos, gpSettings, stand, signalen } =
-    await laadBruiloft(user.email, gekozen)
+    ingelogd ? await laadBruiloft(user!.email!, gekozen) : leegResultaat()
 
   const naam = bruiloftNaam(bruiloft)
   const datum = bruiloft?.datum
@@ -110,7 +113,7 @@ export default async function DashboardPage({
       actief="dashboard"
       eventId={bruiloft?.id ?? null}
       metInhoud={metInhoud}
-      acties={
+      acties={ingelogd ? (
         <Link
           href="/dashboard/instellingen"
           aria-label="Instellingen"
@@ -124,7 +127,7 @@ export default async function DashboardPage({
           </svg>
           <span className="md:hidden">Instellingen</span>
         </Link>
-      }
+      ) : undefined}
     >
       <main className="max-w-7xl w-full mx-auto px-4 md:px-6 py-7 md:py-9 flex flex-col gap-6">
 
@@ -299,12 +302,21 @@ export default async function DashboardPage({
 
         {/* ── Eén regel onderaan ── */}
         <div className="flex flex-wrap justify-between gap-2 pt-2 text-sm" style={{ color: KLEUR.zacht }}>
-          <Link href="/dashboard/checklist" style={{ color: KLEUR.tekst, textDecoration: "none" }}>
-            Checklist{checklist ? ` · ${checklist.af} van ${checklist.totaal} af` : ""} {"›"}
-          </Link>
-          <Link href="/dashboard/instellingen" style={{ color: KLEUR.tekst, textDecoration: "none" }}>
-            Instellingen {"·"} Account
-          </Link>
+          {ingelogd ? (
+            <>
+              <Link href="/dashboard/checklist" style={{ color: KLEUR.tekst, textDecoration: "none" }}>
+                Checklist{checklist ? ` · ${checklist.af} van ${checklist.totaal} af` : ""} {"›"}
+              </Link>
+              <Link href="/dashboard/instellingen" style={{ color: KLEUR.tekst, textDecoration: "none" }}>
+                Instellingen {"·"} Account
+              </Link>
+            </>
+          ) : (
+            <span>
+              Al eerder iets gemaakt?{" "}
+              <Link href="/inloggen" style={{ color: KLEUR.tekst }}>Inloggen</Link>
+            </span>
+          )}
         </div>
       </main>
     </BouwerSchil>

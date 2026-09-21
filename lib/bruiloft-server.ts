@@ -80,6 +80,27 @@ const LEGE_STAND: Stand = {
   live: false, magSite: false, magRsvp: false, magFotos: false, fotos: 0, fotomuurAan: false,
 }
 
+/**
+ * Wat het dashboard laat zien aan iemand die nog niet is ingelogd: niets van
+ * niemand, maar wel de drie grijze tegels. Het lege dashboard is de
+ * pakketkeuze, dus dat moet je kunnen zien voordat je een account hebt.
+ */
+export function leegResultaat(): BruiloftMetAlles {
+  return {
+    bruiloft: null,
+    alle: [],
+    groep: [],
+    extra: {},
+    rsvps: [],
+    cards: [],
+    cardsAvailable: false,
+    guestPhotos: [],
+    gpSettings: {},
+    stand: LEGE_STAND,
+    signalen: GEEN_SIGNALEN,
+  }
+}
+
 export async function laadBruiloft(email: string, gekozenId?: string | null): Promise<BruiloftMetAlles> {
   const service = createServiceClient()
 

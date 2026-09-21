@@ -124,7 +124,7 @@ export default function Home() {
           </Link>
           <NavLoginButton />
           <Link
-            href="/start"
+            href="/dashboard"
             className="hidden sm:inline-flex text-sm font-semibold px-5 py-2.5 rounded-xl transition-all duration-300 hover:opacity-85"
             style={{ backgroundColor: CHARCOAL, color: IVORY }}
           >
@@ -200,7 +200,7 @@ export default function Home() {
 
           {/* CTA */}
           <Link
-            href="/start"
+            href="/dashboard"
             className="inline-flex items-center gap-3 text-base font-semibold px-10 py-4 rounded-2xl transition-all duration-300 hover:-translate-y-1 mb-5"
             style={{
               backgroundColor: GOLD,
@@ -656,7 +656,7 @@ export default function Home() {
             </ul>
             <div className="flex flex-wrap gap-3 mt-2">
               <Link
-                href="/start"
+                href="/dashboard"
                 className="inline-flex items-center gap-2 text-sm font-semibold px-7 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:opacity-90"
                 style={{ backgroundColor: CHARCOAL, color: IVORY }}
               >
@@ -1037,7 +1037,7 @@ export default function Home() {
             Start vandaag nog: jullie website is in minuten klaar.
           </p>
           <Link
-            href="/start"
+            href="/dashboard"
             className="inline-flex items-center gap-2.5 text-base font-semibold px-10 py-4 rounded-2xl transition-all duration-300 hover:-translate-y-0.5"
             style={{ backgroundColor: CHARCOAL, color: IVORY, boxShadow: "0 8px 32px rgba(26,26,26,0.18)" }}
           >
