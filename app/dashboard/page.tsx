@@ -22,6 +22,7 @@ import DeleteEventButton from "./DeleteEventButton"
 import { PLANS, PLAN_ORDER, normalizePlan, planAllows, planRank, renewalAllowed, upgradePrice, formatEur } from "@/lib/plans"
 import Bruiloft, { Altijd, NogNiets } from "./Bruiloft"
 import Checklist from "./Checklist"
+import DeadlineInstelling from "./Deadline"
 import { huidigeFase } from "@/lib/fasen"
 import { LEGE_STAND, type Stand } from "@/lib/dashboard-tegels"
 import { GEEN_SIGNALEN, type Signalen } from "@/lib/checklist"
@@ -301,11 +302,14 @@ export default async function DashboardPage({
   // Apart opgevraagd, zodat het dashboard blijft werken zolang
   // migration_klantreis.sql nog niet gedraaid is. Dezelfde voorzichtigheid als
   // bij de kaarten en de fotomuur hieronder.
-  let extra: Record<string, { hoort_bij: string | null; checklist: unknown; deadline: unknown }> = {}
+  let extra: Record<
+    string,
+    { hoort_bij: string | null; checklist: unknown; deadline: unknown; stand_frequentie: string }
+  > = {}
   if ((events ?? []).length > 0) {
     const { data: extraData, error: extraErr } = await service
       .from("events")
-      .select("id, hoort_bij, checklist, deadline")
+      .select("id, hoort_bij, checklist, deadline, stand_frequentie")
       .in("id", (events ?? []).map((e: Event) => e.id))
     if (!extraErr && extraData) {
       extra = Object.fromEntries(
@@ -315,6 +319,7 @@ export default async function DashboardPage({
             hoort_bij: (e.hoort_bij as string | null) ?? null,
             checklist: e.checklist,
             deadline: e.deadline,
+            stand_frequentie: (e.stand_frequentie as string | null) ?? "wekelijks",
           },
         ])
       )
@@ -533,6 +538,22 @@ export default async function DashboardPage({
             events={gastEvents.map((e: Event) => ({ id: e.id, title: e.title }))}
           />
         </section>
+
+        {/* ── Aantallen naar de locatie ──
+            Hoort bij de gastenlijst, want het gaat over dezelfde cijfers.
+            Alleen zinvol als er een datum is om vanaf te rekenen. */}
+        {bruiloft && bruiloft.datum && (
+          <div className="mb-10">
+            <DeadlineInstelling
+              eventId={bruiloft.id}
+              trouwdag={bruiloft.datum}
+              deadline={extra[bruiloft.id]?.deadline ?? null}
+              frequentie={extra[bruiloft.id]?.stand_frequentie ?? "wekelijks"}
+              komen={stand.komen}
+              stil={stand.stil}
+            />
+          </div>
+        )}
 
         {/* Digitale kaarten */}
         {cardsAvailable && (events ?? []).length > 0 && (

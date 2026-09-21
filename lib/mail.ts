@@ -1,5 +1,6 @@
 import { Resend } from "resend"
 import { PLANS, draftReminderTekst, isCardPlan, type DraftVariant, type Plan } from "./plans"
+import { deadlineTekst, type DeadlineMoment } from "./deadline"
 
 const FROM = "SayingYes <info@sayingyes.nl>"
 
@@ -1449,6 +1450,135 @@ export async function sendGastBerichtEmail({
     return { success: true as const, id: result?.id }
   } catch (err) {
     console.error("[mail] Unexpected error sending gastbericht:", err)
+    return { success: false as const, error: err }
+  }
+}
+
+// ── Aantallen naar de locatie ────────────────────────────────────────────────
+// Drie momenten, één template. Michiels waarschuwing over mails op vaste
+// momenten is hier verwerkt: drie losse templates lopen binnen een half jaar
+// uit elkaar, en dan staat er in één ervan een verkeerd bedrag of een knop
+// naar de verkeerde plek. Dat is in september 2026 precies één keer gebeurd
+// met de conceptherinnering, en dat is één keer te veel.
+//
+// De woorden staan in lib/deadline.ts, net zoals de pakketwoorden in
+// lib/plans.ts staan. Hier staat alleen de vorm.
+
+export async function sendDeadlineEmail({
+  toEmail,
+  eventTitle,
+  moment,
+  locatie,
+  over,
+  deadlineStr,
+  komen,
+  kinderen,
+  stil,
+  dashboardUrl,
+  cateraarUrl,
+}: {
+  toEmail: string
+  eventTitle: string
+  moment: DeadlineMoment
+  locatie: string | null
+  over: number
+  deadlineStr: string
+  komen: number
+  kinderen: number
+  stil: number
+  dashboardUrl: string
+  cateraarUrl: string | null
+}) {
+  const t = deadlineTekst(moment, locatie, over)
+  const dringend = moment !== "navraag"
+  const knopUrl = moment === "navraag" || !cateraarUrl ? dashboardUrl : cateraarUrl
+
+  const cijfer = (label: string, waarde: number, kleur: string) => `
+    <td width="33%" style="padding:14px 10px;text-align:center;">
+      <p style="margin:0;font-size:28px;font-weight:700;color:${kleur};font-family:'Georgia',serif;">${waarde}</p>
+      <p style="margin:4px 0 0;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#9A8E82;">${label}</p>
+    </td>`
+
+  const html = `<!DOCTYPE html>
+<html lang="nl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f1ec;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f1ec;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);">
+        <tr>
+          <td bgcolor="#c9a96e" style="background-color:#c9a96e;padding:44px 40px 36px;text-align:center;">
+            <p style="margin:0 0 10px;font-size:26px;font-weight:600;letter-spacing:0.06em;color:#f5ead6;font-family:'Georgia',serif;">SayingYes</p>
+            <h1 style="margin:0;font-size:22px;font-weight:800;color:#111827;line-height:1.25;">${t.kop}</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:36px 40px 0;">
+            <p style="margin:0 0 20px;font-size:15px;line-height:1.65;color:#374151;">
+              Voor <strong style="color:#111827;">${eventTitle}</strong>${
+                dringend ? ` staat de datum op <strong style="color:#111827;">${deadlineStr}</strong>` : ""
+              }. ${t.eerste}
+            </p>
+
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#FBF5E8;border:1px solid #E8D5A3;border-radius:12px;margin-bottom:8px;">
+              <tr>
+                ${cijfer("Komen", komen, "#065F46")}
+                ${cijfer("Waarvan kind", kinderen, "#111827")}
+                ${cijfer("Nog stil", stil, stil > 0 ? "#B45309" : "#111827")}
+              </tr>
+            </table>
+            ${
+              stil > 0 && dringend
+                ? `<p style="margin:0 0 20px;font-size:13px;line-height:1.6;color:#9A8E82;">
+                     Van ${stil} ${stil === 1 ? "gast" : "gasten"} heb je nog niets gehoord. In je gastenlijst
+                     selecteer je ze met één druk, zodat je ze nog even kunt najagen voordat je de aantallen doorgeeft.
+                   </p>`
+                : `<p style="margin:0 0 20px;"></p>`
+            }
+
+            <p style="margin:0 0 26px;font-size:14px;line-height:1.65;color:#374151;">
+              Wij sturen niets naar ${locatie ?? "je locatie"}. Dat blijft aan jou, net als alle berichten aan je gasten.
+              Wij zorgen dat je het niet vergeet en dat de lijst klaarstaat.
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:0 40px 36px;text-align:center;">
+            <a href="${knopUrl}" style="display:inline-block;background-color:#1A1A1A;color:#ffffff;text-decoration:none;padding:14px 30px;border-radius:12px;font-size:15px;font-weight:600;">${t.knop}</a>
+            <p style="margin:16px 0 0;font-size:13px;color:#9A8E82;">
+              <a href="${dashboardUrl}" style="color:#C5A059;text-decoration:underline;">Naar je dashboard</a>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td bgcolor="#faf7f2" style="background-color:#faf7f2;padding:22px 40px;text-align:center;border-top:1px solid #E8D5A3;">
+            <p style="margin:0;font-size:12px;line-height:1.6;color:#9A8E82;">
+              Je krijgt dit omdat je een datum hebt gezet voor je definitieve aantallen.
+              Zeg in je dashboard dat het gelukt is, dan houden we er voorgoed over op.
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+
+  try {
+    const { data: result, error } = await getResend().emails.send({
+      from: FROM,
+      to: toEmail,
+      subject: t.onderwerp,
+      html,
+    })
+    if (error) {
+      console.error("[mail] Deadline mail failed:", error)
+      return { success: false as const, error }
+    }
+    console.log("[mail] Deadline mail sent →", toEmail, "| moment:", moment, "| id:", result?.id)
+    return { success: true as const, id: result?.id }
+  } catch (err) {
+    console.error("[mail] Unexpected error sending deadline mail:", err)
     return { success: false as const, error: err }
   }
 }

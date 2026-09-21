@@ -1,6 +1,8 @@
 import { createServiceClient } from "@/lib/supabase"
 import { verwijderEventInhoud } from "@/lib/opruimen"
-import { sendDraftReminderEmail, sendRenewalReminderEmail, sendExpiryWarningEmail } from "@/lib/mail"
+import { sendDraftReminderEmail, sendRenewalReminderEmail, sendExpiryWarningEmail, sendDeadlineEmail } from "@/lib/mail"
+import { dagenTotDeadline, leesDeadline, welkBericht } from "@/lib/deadline"
+import { komtGast, reis } from "@/lib/gasten"
 import { verversEvent } from "@/lib/db"
 import { sendVisitorDigest } from "@/lib/visitors"
 import { PLAN_MAIL, bewaarschema, normalizePlan, renewalAllowed } from "@/lib/plans"
@@ -35,6 +37,8 @@ export async function GET(request: Request) {
     expired:          [] as string[],
     errors:           [] as string[],
     visitorDigest:    "" as string,
+    // Per bruiloft welk deadlinebericht eruit ging, bijvoorbeeld "abc123:tien"
+    deadlines:        [] as string[],
   }
 
   // ── Fetch all draft events ─────────────────────────────────────────────────
@@ -205,9 +209,105 @@ export async function GET(request: Request) {
     }
   }
 
+  // ── Aantallen naar de locatie ─────────────────────────────────────────────
+  // Uit Michiels eigen bruiloft: hij gaf zijn aantallen te laat door, de
+  // locatie had de inkoop al gedaan, en hij betaalde voor gasten die niet
+  // kwamen. Drie berichten, en ze stoppen allemaal zodra hij zegt dat het
+  // gelukt is.
+  //
+  // Wij sturen nooit iets naar de locatie. Alleen naar het bruidspaar.
+  results.deadlines = await stuurDeadlines(service, now)
+
   // ── Bezoekersoverzicht van de afgelopen 24 uur naar de eigenaar (+ opruimen >90 dagen) ──
   results.visitorDigest = await sendVisitorDigest(service, now)
 
   console.log("[cron/cleanup] Done:", results)
   return Response.json({ ok: true, ...results })
+}
+
+// ── Aantallen naar de locatie ────────────────────────────────────────────────
+// Los gehouden van de rest van de cron, zodat een fout hier de opruiming en de
+// verloopmails niet meesleept. Dezelfde keuze als bij het bezoekersoverzicht.
+async function stuurDeadlines(
+  service: ReturnType<typeof createServiceClient>,
+  now: Date
+): Promise<string[]> {
+  const uit: string[] = []
+
+  const { data: events, error } = await service
+    .from("events")
+    .select("id, title, user_email, datum, deadline")
+    .eq("status", "published")
+    .not("deadline", "is", null)
+
+  // Staat de kolom er nog niet, dan is er niets te doen en is dat geen fout.
+  if (error) {
+    console.log("[cron/cleanup] deadlines overgeslagen:", error.message)
+    return uit
+  }
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://sayingyes.nl"
+
+  for (const event of events ?? []) {
+    const dl = leesDeadline(event.deadline)
+    const moment = welkBericht(dl, now)
+    if (!moment) continue
+
+    const email = event.user_email as string | null
+    if (!email) continue
+
+    // De stand van vandaag, uit dezelfde reis waar de gastenlijst op rekent.
+    const { data: gasten } = await service
+      .from("rsvp")
+      .select("std_status, inv_status, is_kind")
+      .eq("event_id", event.id)
+
+    let komen = 0
+    let kinderen = 0
+    let stil = 0
+    for (const g of gasten ?? []) {
+      const k = komtGast(reis(g.std_status), reis(g.inv_status))
+      if (k === true) {
+        komen++
+        if (g.is_kind === true) kinderen++
+      } else if (k === null) {
+        stil++
+      }
+    }
+
+    const over = dagenTotDeadline(dl, now) ?? 0
+    const mail = await sendDeadlineEmail({
+      toEmail: email,
+      eventTitle: (event.title as string) || "jullie bruiloft",
+      moment,
+      locatie: dl.naam,
+      over,
+      deadlineStr: dl.datum
+        ? new Date(dl.datum).toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })
+        : "",
+      komen,
+      kinderen,
+      stil,
+      dashboardUrl: `${siteUrl}/dashboard#deadline`,
+      cateraarUrl: `${siteUrl}/print/gasten/${event.id}`,
+    })
+
+    if (!mail.success) {
+      uit.push(`${event.id}:${moment}:mislukt`)
+      continue
+    }
+
+    // Pas na een gelukte mail vastleggen dat hij eruit is. Andersom zou een
+    // mislukte verzending het moment voorgoed overslaan.
+    await service
+      .from("events")
+      .update({
+        deadline: { ...dl, gemaild: { ...dl.gemaild, [moment]: now.toISOString() } },
+      })
+      .eq("id", event.id)
+
+    uit.push(`${event.id}:${moment}`)
+  }
+
+  return uit
 }
