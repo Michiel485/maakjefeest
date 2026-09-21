@@ -12,6 +12,7 @@ const CHARCOAL   = "#1A1A1A"
 const IVORY      = "#FAF7F2"
 const IVORY_CARD = "#F5EFE4"
 const BODY       = "#5C5248"
+const SOFT       = "#9A8E82"
 
 export interface RsvpRow {
   id: string
@@ -134,6 +135,14 @@ export default function RsvpSection({
 
   // Alle zichtbare regels, voor het vinkje in de kop
   const alleIds = sortedGroups.flat().map((r) => r.id)
+
+  // Wie nog geen antwoord heeft gegeven, op geen van beide producten. Dat is
+  // letterlijk de lijst "wie moet ik nog najagen", en met één druk te pakken:
+  // in de praktijk is dat waar je de herinnering naartoe stuurt.
+  const stilleIds = sortedGroups
+    .flat()
+    .filter((r) => komtGast(reis(r.std_status), reis(r.inv_status)) === null)
+    .map((r) => r.id)
 
   // Namen die twee keer voorkomen binnen dezelfde bruiloft. Eén gedeelde
   // kaartlink gaat naar tachtig mensen, dus dubbele invoer komt voor. Wij
@@ -540,6 +549,47 @@ export default function RsvpSection({
 
             {berichtUitslag && (
               <p className="text-sm font-semibold" style={{ color: CHARCOAL }}>{berichtUitslag}</p>
+            )}
+          </div>
+        )}
+
+        {/* ── Snel selecteren ──
+            De herinnering gaat bijna altijd naar dezelfde groep: iedereen die
+            nog niets heeft laten weten. Dat hoort één druk te zijn en niet
+            veertig vinkjes. */}
+        {alleIds.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs uppercase tracking-wider font-semibold" style={{ color: SOFT }}>
+              Selecteer
+            </span>
+            <button
+              onClick={() => { setGekozen(new Set(stilleIds)); setBerichtUitslag(null) }}
+              disabled={stilleIds.length === 0}
+              className="text-sm font-semibold px-3 py-1.5 rounded-xl"
+              style={{
+                backgroundColor: stilleIds.length ? GOLD_BG : "transparent",
+                color: stilleIds.length ? CHARCOAL : SOFT,
+                border: `1px solid ${GOLD_LIGHT}`,
+                cursor: stilleIds.length ? "pointer" : "default",
+              }}
+            >
+              Wie nog niet reageerde ({stilleIds.length})
+            </button>
+            <button
+              onClick={() => { setGekozen(new Set(alleIds)); setBerichtUitslag(null) }}
+              className="text-sm font-semibold px-3 py-1.5 rounded-xl"
+              style={{ backgroundColor: "transparent", color: BODY, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
+            >
+              Iedereen ({alleIds.length})
+            </button>
+            {gekozen.size > 0 && (
+              <button
+                onClick={() => { setGekozen(new Set()); setBerichtSoort(null); setBerichtUitslag(null) }}
+                className="text-sm underline"
+                style={{ color: SOFT, cursor: "pointer" }}
+              >
+                Selectie wissen
+              </button>
             )}
           </div>
         )}

@@ -39,3 +39,13 @@ De nummering loopt door onder de lijst hierboven, maar de eerste twee zou ik naa
 19. **Save the Date of meteen de uitnodiging: wat stuur je wanneer?** Zoekwoord: save the date of uitnodiging, heb je een save the date nodig. Beslisvraag met een duidelijk antwoord per situatie (trouwen in het buitenland, zomerbruiloft, korte verloving). Vraag-vormig, dus goed citeerbaar, en het leidt logisch naar de twee goedkoopste pakketten.
 
 20. **Wedding invitations in the Netherlands: what Dutch couples do differently.** Engelstalig. Zoekwoord: dutch wedding traditions invitations, wedding website netherlands. De expatgroep rond Amsterdam uit het zoekwoordonderzoek, waar de Engelse term groter is dan alle Nederlandse termen samen. Let op: dit is een strategische keuze, niet zomaar een artikel. Als we dit doen moet de rest van de site ook Engels kunnen worden, en dat is echt werk (zie het geheugen bij zoekwoorden). Eerst bespreken.
+
+## Toegevoegd 21 september 2026
+
+Twee onderwerpen uit het gesprek over de klantreis. Deze twee zijn anders dan de
+rest van de lijst: ze komen niet uit zoekwoordonderzoek maar uit wat wij weten en
+wat Michiel zelf heeft meegemaakt. Dat maakt ze moeilijker te kopiëren.
+
+21. **De complete tijdlijn van een bruiloft plannen: wat doe je wanneer?** Zoekwoord: bruiloft plannen tijdlijn, checklist bruiloft plannen, hoeveel maanden vooraf trouwkaart. Het momentenschema uit de klantreis, twaalf momenten van net verloofd tot na de bruiloft, met per moment wat er dan te beslissen valt en waar het meestal fout gaat. Bij de momenten waar wij iets hebben noemen we dat, maar het artikel moet ook zonder ons compleet zijn: iemand die het leest en niets bij ons koopt moet er nog steeds iets aan hebben gehad. Dit is het langste en belangrijkste artikel van de hele lijst en het bindt alle andere artikelen samen, want bijna elk ander onderwerp hangt aan één moment. Schrijven zodra de klantreis in het product zit, niet ervoor.
+
+22. **Te laat je aantallen doorgeven aan de locatie: wat het kost.** Zoekwoord: definitieve aantallen bruiloft doorgeven, wanneer aantallen doorgeven cateraar, bruiloft minder gasten dan opgegeven. Uit Michiels eigen bruiloft: hij gaf de definitieve gastenlijst te laat door, de locatie had de inkoop al gedaan, en hij heeft betaald voor gasten die niet kwamen. Persoonlijk verhaal met het bedrag erin als dat kan, daarna hoe het hoort: wanneer locaties hun deadline leggen, waarom die deadline er is, en wat je zelf kunt doen. Leidt naar de herinneringsfunctie in het volledige pakket.
