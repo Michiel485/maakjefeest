@@ -146,7 +146,9 @@ export function planStartUrl(plan: unknown): string {
   const p = normalizePlan(plan)
   if (p === "save_the_date") return "/kaart-maken?type=save_the_date"
   if (p === "uitnodiging") return "/kaart-maken?type=trouwkaart"
-  return "/aanmaken?plan=compleet"
+  // Rechtstreeks de bouwer in. Het aanmaakformulier is weg: namen, datum en
+  // locatie vul je in de bouwer zelf in, bij Algemene info.
+  return "/bouwen?plan=compleet"
 }
 
 export function planRank(plan: unknown): number {

@@ -82,7 +82,7 @@ interface ConceptRij {
   status: string
 }
 
-type Stap = "stijl" | "template" | "tekst" | "groep" | "aanmelden" | "taal" | "foto" | "animatie" | "bekijken"
+type Stap = "info" | "stijl" | "template" | "tekst" | "groep" | "aanmelden" | "taal" | "foto" | "animatie" | "bekijken"
 type Actie = "bewaar" | "activeer"
 
 interface KaartOntwerp {
@@ -151,7 +151,9 @@ export default function KaartMakenPage() {
   const [geladen, setGeladen] = useState(false)
   // null betekent: alles dichtgeklapt. Zonder die stand kon een blok alleen
   // wisselen naar een ander blok, en was Tekst dus nooit dicht te krijgen.
-  const [stap, setStap] = useState<Stap | null>("tekst")
+  // Algemene info staat standaard open: namen, datum en locatie vul je één
+  // keer in, en daarna staan ze op elke kaart en op de website.
+  const [stap, setStap] = useState<Stap | null>("info")
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [eventId, setEventId] = useState<string | null>(null)
   const [cardId, setCardId] = useState<string | null>(null)
@@ -513,36 +515,10 @@ export default function KaartMakenPage() {
     }
   }
 
-  /** Een korte naam voor een concept in de keuzelijst. */
-  function conceptLabel(c: ConceptRij): string {
-    if (c.concept_naam?.trim()) return c.concept_naam.trim()
-    const datum = c.datum ? ` (${formatDate(c.datum)})` : ""
-    return `${c.title || "Naamloos"}${datum}`
-  }
-
-  function kiesConcept(id: string) {
-    if (id === eventId) return
-    router.push(`/kaart-maken?event_id=${id}`)
-  }
-
-  // Een tweede variant naast de bestaande. Het ontwerp blijft staan, alleen de
-  // koppeling met het bewaarde concept gaat los, zodat opslaan een nieuw
-  // concept maakt in plaats van het oude te overschrijven.
-  function nieuwConcept() {
-    // Een variant hoort bij dezelfde bruiloft, niet naast hem. Was dit concept
-    // zelf al een variant, dan pakken we zijn bruiloft, zodat de keten nooit
-    // dieper wordt dan één stap.
-    if (eventId) setHoortBij(hoortBij ?? eventId)
-    setEventId(null)
-    setEventLocatie("")
-    setCardId(null)
-    setKaarten([])
-    setEventPlan(null)
-    setEventStatus(null)
-    setConceptNaam("")
-    try { localStorage.removeItem(LS_IDS) } catch {}
-    setMelding({ tekst: "Nieuw concept. Je ontwerp blijft staan; bewaren maakt er een tweede van, je eerste blijft gewoon bestaan." })
-  }
+  // De keuzelijst met concepten is weg: er is één bruiloft, en varianten zijn
+  // kaarten binnen die bruiloft (zie "Je kaarten" hieronder). Een tweede
+  // bruiloft naast de eerste was precies wat het dashboard onoverzichtelijk
+  // maakte.
 
   // ── Wisselen tussen de kaarten van deze bruiloft ──────────────────────────
   // Namen, datum, locatie en stijl horen bij de bruiloft en blijven staan. Wat
@@ -924,38 +900,18 @@ export default function KaartMakenPage() {
       <div className="flex flex-col-reverse md:flex-row flex-1 min-h-0">
         {/* ── Stappen ── */}
         <aside className="w-full md:w-80 md:flex-shrink-0 bg-white border-r border-gray-100 md:overflow-y-auto">
-          {/* Je concepten. Alleen zinvol als er iets bewaard is, en dat kan
-              pas als je bent ingelogd. */}
-          {userEmail && (concepten.length > 0 || eventId) && (
-            <div className="px-5 py-4 border-b border-gray-100 flex flex-col gap-2" style={{ backgroundColor: GOLD_BG }}>
-              <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: GOLD }}>Concept</span>
-              <select
-                value={eventId ?? "nieuw"}
-                onChange={(e) => (e.target.value === "nieuw" ? nieuwConcept() : kiesConcept(e.target.value))}
-                className={inputCls}
-                style={{ ...inputStyle, fontWeight: 600, cursor: "pointer" }}
-              >
-                {concepten.map((c) => (
-                  <option key={c.id} value={c.id}>{conceptLabel(c)}</option>
-                ))}
-                {!eventId && <option value="nieuw">Nieuw concept, nog niet bewaard</option>}
-                {eventId && <option value="nieuw">+ Nieuw concept beginnen</option>}
-              </select>
-              <input
-                className={inputCls}
-                style={inputStyle}
-                placeholder="Geef dit concept een naam"
-                value={conceptNaam}
-                onChange={(e) => setConceptNaam(e.target.value)}
-                maxLength={60}
-              />
-              <p className="text-[11px] leading-snug" style={{ color: SUBTLE }}>
-                Alleen voor jezelf, om varianten uit elkaar te houden. Je gasten zien dit niet.
-              </p>
-            </div>
-          )}
-
-          <Sectie open={stap === "tekst"} onToggle={() => setStap(stap === "tekst" ? null : "tekst")} titel="Tekst op de kaart">
+          {/* ── Algemene info ──
+              Eén plek voor wat bij de bruiloft hoort en niet bij een kaart:
+              de namen, de datum en de locatie. Vul je dit hier in, dan staat
+              het op elke kaart en op de website, en hoef je het in de
+              websitebouwer niet nog een keer te doen. Michiels punt van
+              21 september 2026: één plek voor die gegevens. */}
+          <Sectie
+            open={stap === "info"}
+            onToggle={() => setStap(stap === "info" ? null : "info")}
+            titel="Algemene info"
+            uitgelicht
+          >
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Jullie namen</span>
               {/* Een tekstvak en geen invoerregel, zodat een enter werkt: veel
@@ -974,6 +930,23 @@ export default function KaartMakenPage() {
               <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Trouwdatum</span>
               <input type="date" className={inputCls} style={inputStyle} value={ontwerp.datum} onChange={(e) => update({ datum: e.target.value })} />
             </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Locatie van de bruiloft</span>
+              <input
+                className={inputCls}
+                style={inputStyle}
+                placeholder="Kasteel Wijenburg, Echteld"
+                value={eventLocatie}
+                onChange={(e) => setEventLocatie(e.target.value)}
+                maxLength={120}
+              />
+              <span className="text-[11px] leading-snug" style={{ color: SUBTLE }}>
+                Dit is de locatie van de bruiloft zelf, voor de website en als standaard op je kaarten. Een kaart mag er hieronder een eigen locatie bij krijgen.
+              </span>
+            </label>
+          </Sectie>
+
+          <Sectie open={stap === "tekst"} onToggle={() => setStap(stap === "tekst" ? null : "tekst")} titel="Tekst op de kaart">
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Locatie</span>
               <textarea

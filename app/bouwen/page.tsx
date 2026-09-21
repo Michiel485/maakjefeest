@@ -20,7 +20,15 @@ import BouwerSchil from "@/components/BouwerSchil"
 import { Knop, Melding, SectieKop } from "@/components/ui"
 import { KLEUR } from "@/lib/ontwerp"
 import SophieTutorial, { type SophieNav } from "@/components/SophieTutorial"
-import { LS_NAAR_WEBSITE, NAAR_WEBSITE_GELDIG_MS } from "@/lib/nieuw-concept"
+import {
+  DEFAULT_PRAKTISCH,
+  DEFAULT_PROGRAMMA,
+  LS_NAAR_WEBSITE,
+  LS_WEBSITE_CONCEPT,
+  LS_WEBSITE_INHOUD,
+  NAAR_WEBSITE_GELDIG_MS,
+  nieuwWebsiteConcept,
+} from "@/lib/nieuw-concept"
 
 type EventType = "bruiloft" | "verjaardag" | "evenement"
 type PageId = "Home" | "Programma" | "RSVP" | "Informatie" | "Cadeautips" | "Fotos" | "Ceremoniemeesters" | "OnsVerhaal"
@@ -401,7 +409,9 @@ export default function BouwenPage() {
   // pas na het monteren uit de URL of localStorage gelezen.
   const [plan, setPlan] = useState<Plan>(DEFAULT_PLAN)
   const [previewPage, setPreviewPage] = useState<PageId>("Home")
-  const [activeSection, setActiveSection] = useState<'algemeen' | 'paginas' | 'url' | null>(null)
+  // Algemene info staat standaard open: namen, datum en locatie vul je één
+  // keer in, en de website wacht erop.
+  const [activeSection, setActiveSection] = useState<'info' | 'algemeen' | 'paginas' | 'url' | null>('info')
   const [activeSubPage, setActiveSubPage] = useState<PageId | null>(null)
   const [content, setContent] = useState<ContentMap>({})
   const [style, setStyle] = useState<Style>("zand")
@@ -624,7 +634,9 @@ export default function BouwenPage() {
       fetch(`/api/drafts/${urlEventId}`)
         .then((r) => r.json())
         .then(({ event, pages }: { event: Record<string, unknown>; pages: Array<{ type: string; content: Record<string, unknown>; is_enabled: boolean }> }) => {
-          if (!event) { router.replace("/aanmaken"); return }
+          // Bestaat de bruiloft niet (meer), dan gewoon opnieuw beginnen in de
+          // bouwer, niet in een apart formulier.
+          if (!event) { router.replace("/bouwen"); return }
 
           const newContent: ContentMap = {}
           const newActive: Record<PageId, boolean> = {
@@ -707,7 +719,7 @@ export default function BouwenPage() {
           const heroUrl = event.hero_image_url as string | null
           if (heroUrl) setHeroImageUrl(heroUrl)
         })
-        .catch(() => router.replace("/aanmaken"))
+        .catch(() => router.replace("/bouwen"))
       return
     }
 
@@ -775,9 +787,37 @@ export default function BouwenPage() {
         }
       }
 
+      // Leeg beginnen. Het aanmaakformulier is weg: wie hier zonder iets
+      // binnenkomt krijgt een lege website met de standaardpagina's, en vult
+      // namen, datum en locatie in bij Algemene info. Tot die tijd wacht het
+      // voorbeeld. Dezelfde standaardwaarden als de overdracht uit de
+      // kaartbouwer, uit lib/nieuw-concept.ts, zodat er één beginpunt is.
+      function beginLeeg(email?: string | null) {
+        try {
+          // Echt leeg: nieuwWebsiteConcept vult lege namen met "Ons", en dan
+          // zou het voorbeeld doen alsof er iets ingevuld is. Hier moet het
+          // juist wachten tot de klant zijn namen en datum heeft ingevuld.
+          const leeg = {
+            ...nieuwWebsiteConcept({ namen: "", datum: "", locatie: "", style: "ivoor" }),
+            naam: "",
+            nav_title: "",
+            frame_names: "",
+            initials: "",
+          }
+          localStorage.setItem(LS_WEBSITE_CONCEPT, JSON.stringify(leeg))
+          localStorage.setItem(
+            LS_WEBSITE_INHOUD,
+            JSON.stringify({ Programma: DEFAULT_PROGRAMMA, Informatie: DEFAULT_PRAKTISCH })
+          )
+        } catch {}
+        laadConceptUitBrowser(email)
+        // En Algemene info open, want dat is het enige dat nu te doen is.
+        setActiveSection('info')
+      }
+
       if (!user) {
         if (laadConceptUitBrowser()) return
-        window.location.replace("/aanmaken")
+        beginLeeg()
         return
       }
 
@@ -852,10 +892,14 @@ export default function BouwenPage() {
         if (Array.isArray(events) && events.length > 0) {
           window.location.replace(`/bouwen?event_id=${events[0].id}`)
         } else {
-          window.location.replace("/aanmaken")
+          beginLeeg(user.email)
         }
-      })
-    }).catch(() => window.location.replace("/aanmaken"))
+      }).catch(() => beginLeeg(user.email))
+    }).catch(() => {
+      // Alleen als we niet eens konden nakijken of je ingelogd bent. Dan helpt
+      // doorsturen niet; zeggen wat er is wel.
+      setPublishError("We konden je account niet controleren. Ververs de pagina en probeer het opnieuw.")
+    })
   }, [router])
 
   useEffect(() => {
@@ -1378,7 +1422,69 @@ export default function BouwenPage() {
         {/* ── Sidebar ── */}
         <aside className="w-full md:w-80 md:flex-shrink-0 bg-white border-r border-gray-100 flex flex-col md:overflow-y-auto">
 
-
+          {/* ── 0. ALGEMENE INFO ──
+              Eén plek voor wat bij de bruiloft hoort: de namen, de datum en de
+              locatie. Kom je uit de kaartbouwer, dan staat dit al ingevuld.
+              Kom je leeg binnen, dan wacht het voorbeeld hierop. Dezelfde
+              velden en dezelfde kop als in de kaartbouwer. */}
+          <div className="border-b border-gray-100">
+            <SectieKop
+              titel="Algemene info"
+              open={activeSection === 'info'}
+              onToggle={() => setActiveSection(prev => prev === 'info' ? null : 'info')}
+              uitgelicht
+            />
+            {activeSection === 'info' && draft && (
+              <div className="px-5 pb-5 flex flex-col gap-4">
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-xs font-semibold" style={{ color: KLEUR.inkt }}>Jullie namen</span>
+                  <input
+                    className="w-full rounded-xl border bg-white px-3 py-2.5 text-sm placeholder-gray-400 focus:outline-none"
+                    style={{ color: KLEUR.inkt, borderColor: KLEUR.goudLicht }}
+                    placeholder="Sophie & Daan"
+                    value={draft.naam}
+                    maxLength={80}
+                    onChange={(e) => {
+                      const naam = e.target.value
+                      setDraft((d) => d ? { ...d, naam, frame_names: naam, nav_title: naam } : d)
+                    }}
+                  />
+                </label>
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-xs font-semibold" style={{ color: KLEUR.inkt }}>Trouwdatum</span>
+                  <input
+                    type="date"
+                    className="w-full rounded-xl border bg-white px-3 py-2.5 text-sm focus:outline-none"
+                    style={{ color: KLEUR.inkt, borderColor: KLEUR.goudLicht }}
+                    value={draft.datum}
+                    onChange={(e) => {
+                      const datum = e.target.value
+                      setDraft((d) => d ? { ...d, datum } : d)
+                    }}
+                  />
+                </label>
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-xs font-semibold" style={{ color: KLEUR.inkt }}>Locatie van de bruiloft</span>
+                  <input
+                    className="w-full rounded-xl border bg-white px-3 py-2.5 text-sm placeholder-gray-400 focus:outline-none"
+                    style={{ color: KLEUR.inkt, borderColor: KLEUR.goudLicht }}
+                    placeholder="Kasteel Wijenburg, Echteld"
+                    value={draft.locatie}
+                    maxLength={120}
+                    onChange={(e) => {
+                      const locatie = e.target.value
+                      setDraft((d) => d ? { ...d, locatie, frame_location: locatie } : d)
+                    }}
+                  />
+                </label>
+                {(!draft.naam.trim() || !draft.datum) && (
+                  <p className="text-[11px] leading-snug m-0" style={{ color: KLEUR.zacht }}>
+                    Vul je namen en je datum in, dan bouwen we je eerste pagina.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* ── 3. URL & BEVEILIGING (alleen bij een pakket met publieke site) ── */}
           <div>
@@ -2758,7 +2864,37 @@ export default function BouwenPage() {
         </aside>
 
         {/* ── Main panel ── */}
-        <main className="flex flex-1 flex-col overflow-hidden bg-gray-100 border-t md:border-t-0 border-[var(--goud-licht)]">
+        <main className="relative flex flex-1 flex-col overflow-hidden bg-gray-100 border-t md:border-t-0 border-[var(--goud-licht)]">
+          {/* Zonder namen en datum is een websitevoorbeeld een voorbeeld van
+              niets. Dan ligt hier één paneel over het voorbeeld dat zegt wat
+              er moet gebeuren. De kaartbouwer wacht niet; de website wel,
+              want een kaart met "Jullie namen" ziet er al uit als een kaart. */}
+          {draft && (!draft.naam.trim() || !draft.datum) && (
+            <div
+              className="absolute inset-0 z-20 flex items-center justify-center p-6"
+              style={{ backgroundColor: "rgba(250,247,242,0.92)", backdropFilter: "blur(2px)" }}
+            >
+              <div
+                className="max-w-sm w-full rounded-2xl p-6 text-center"
+                style={{ backgroundColor: "#fff", border: `1px dashed ${KLEUR.goudLicht}` }}
+              >
+                <p className="m-0 mb-1.5" style={{ fontFamily: "var(--font-cormorant)", fontSize: 24, fontWeight: 600, color: KLEUR.inkt }}>
+                  Eerst jullie namen en datum
+                </p>
+                <p className="m-0 text-sm" style={{ color: KLEUR.tekst }}>
+                  Vul die links in bij Algemene info, dan bouwen we hier meteen je eerste pagina met programma en praktische informatie.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setActiveSection('info')}
+                  className="mt-4 text-sm font-semibold px-4 py-2.5 rounded-xl"
+                  style={{ backgroundColor: KLEUR.inkt, color: KLEUR.ivoor, border: 0, cursor: "pointer" }}
+                >
+                  Naar Algemene info
+                </button>
+              </div>
+            </div>
+          )}
           <div className="flex items-center justify-between px-4 py-2 bg-gray-100 border-b border-[var(--goud-licht)] flex-shrink-0">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Live preview</p>
             <div className="flex items-center gap-2">
