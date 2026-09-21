@@ -24,6 +24,8 @@ export interface GastEvent {
 interface Regel {
   voornaam: string
   achternaam: string
+  /** Vrije tekst. Regels met dezelfde naam horen bij hetzelfde gezin. */
+  huishouden: string
   email: string
   telefoon: string
   groep: string
@@ -32,7 +34,7 @@ interface Regel {
 }
 
 const leeg = (): Regel => ({
-  voornaam: "", achternaam: "", email: "", telefoon: "", groep: "daggast", kind: false, leeftijd: "",
+  voornaam: "", achternaam: "", huishouden: "", email: "", telefoon: "", groep: "daggast", kind: false, leeftijd: "",
 })
 
 const GROEPEN: { waarde: string; label: string }[] = [
@@ -42,13 +44,14 @@ const GROEPEN: { waarde: string; label: string }[] = [
 ]
 
 /** De kolomnamen van het sjabloon, ook gebruikt om een upload te herkennen. */
-const KOLOMMEN = ["Voornaam", "Achternaam", "E-mail", "Telefoon", "Gastengroep", "Kind (ja/nee)", "Leeftijd"]
+const KOLOMMEN = ["Voornaam", "Achternaam", "Huishouden", "E-mail", "Telefoon", "Gastengroep", "Kind (ja/nee)", "Leeftijd"]
 
 /** Welke kolom is dit? Op een stukje van de naam, zodat kleine afwijkingen goed gaan. */
 function kolomSoort(kop: string): keyof Regel | null {
   const k = kop.toLowerCase()
   if (k.includes("voornaam")) return "voornaam"
   if (k.includes("achternaam")) return "achternaam"
+  if (k.includes("huishouden") || k.includes("gezin")) return "huishouden"
   if (k.includes("mail")) return "email"
   if (k.includes("tel")) return "telefoon"
   if (k.includes("groep")) return "groep"
@@ -108,7 +111,7 @@ export default function GastenToevoegen({
 
   async function downloadSjabloon() {
     const XLSX = await laadXlsx()
-    const voorbeeld = ["Sanne", "de Vries", "sanne@voorbeeld.nl", "0612345678", "Daggast", "nee", ""]
+    const voorbeeld = ["Sanne", "de Vries", "Familie de Vries", "sanne@voorbeeld.nl", "0612345678", "Daggast", "nee", ""]
     const ws = XLSX.utils.aoa_to_sheet([KOLOMMEN, voorbeeld])
     ws["!cols"] = KOLOMMEN.map((k) => ({ wch: Math.max(k.length + 4, 14) }))
     const wb = XLSX.utils.book_new()
@@ -171,6 +174,7 @@ export default function GastenToevoegen({
             email: r.email,
             telefoon: r.telefoon,
             guest_type: r.groep,
+            huishouden_naam: r.huishouden,
             is_kind: r.kind,
             leeftijd: r.leeftijd ? Number(r.leeftijd) : null,
           })),
@@ -233,10 +237,10 @@ export default function GastenToevoegen({
 
           {/* ── De tabel ── */}
           <div className="overflow-x-auto rounded-xl" style={{ border: `1px solid ${KLEUR.goudLicht}` }}>
-            <table className="w-full text-sm" style={{ minWidth: 760 }}>
+            <table className="w-full text-sm" style={{ minWidth: 900 }}>
               <thead>
                 <tr style={{ backgroundColor: KLEUR.goudVlak }}>
-                  {["Voornaam", "Achternaam", "E-mail", "Telefoon", "Gastengroep", "Kind", "Leeftijd"].map((k) => (
+                  {["Voornaam", "Achternaam", "Huishouden", "E-mail", "Telefoon", "Gastengroep", "Kind", "Leeftijd"].map((k) => (
                     <th
                       key={k}
                       className="px-2 py-2 text-left text-xs font-bold uppercase tracking-wider"
@@ -256,6 +260,9 @@ export default function GastenToevoegen({
                     </td>
                     <td className="px-2 py-1.5">
                       <input className={veld} style={veldStijl} value={r.achternaam} onChange={(e) => zet(i, "achternaam", e.target.value)} placeholder="de Vries" maxLength={80} />
+                    </td>
+                    <td className="px-2 py-1.5">
+                      <input className={veld} style={veldStijl} value={r.huishouden} onChange={(e) => zet(i, "huishouden", e.target.value)} placeholder="Familie de Vries" maxLength={160} />
                     </td>
                     <td className="px-2 py-1.5">
                       <input type="email" className={veld} style={veldStijl} value={r.email} onChange={(e) => zet(i, "email", e.target.value)} placeholder="sanne@voorbeeld.nl" maxLength={160} />
@@ -372,8 +379,10 @@ export default function GastenToevoegen({
           )}
 
           <p className="text-xs leading-relaxed" style={{ color: KLEUR.tekst }}>
-            Alleen een voornaam is verplicht. Wat je hier toevoegt staat op &quot;nog niets gehoord&quot;
-            tot de gast zelf reageert. Een mailadres heb je nodig om een herinnering te kunnen sturen.
+            Alleen een voornaam is verplicht. Wat je hier toevoegt staat op &quot;niet verstuurd&quot;
+            tot je de kaart deelt; reageert de gast daarna, dan verandert de stand vanzelf. Een
+            mailadres heb je nodig om een herinnering te kunnen sturen. Vul bij een gezin dezelfde
+            huishoudnaam in, dan horen die regels bij elkaar.
           </p>
 
           <div className="flex flex-wrap items-center gap-3">

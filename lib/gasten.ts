@@ -185,3 +185,58 @@ export function leesGeplakteLijst(tekst: string): GeplakteGast[] {
 
   return uit
 }
+
+// ── De reis per product ─────────────────────────────────────────────────────
+// Michiels model, en het is beter dan één statuskolom. Dat kon namelijk niet
+// twee dingen tegelijk zeggen: of wíj het verstuurd hebben, en of de gast
+// gereageerd heeft. Een met de hand toegevoegde gast stond daardoor meteen op
+// "aanwezig" terwijl je nog niets had gehoord.
+//
+// Nu per product vier standen. Het verstuurd-zetten doet het bruidspaar zelf,
+// want delen gaat via WhatsApp en dat kunnen wij niet zien. Reageert een gast
+// via de kaart, dan zetten wij de stand automatisch op ja of nee.
+export type Reis = "niet_verstuurd" | "verstuurd" | "ja" | "nee"
+
+export const REIS_LABEL: Record<Reis, string> = {
+  niet_verstuurd: "Niet verstuurd",
+  verstuurd: "Verstuurd",
+  ja: "Komt",
+  nee: "Komt niet",
+}
+
+/** Welke van de twee producten. */
+export type Product = "std" | "inv"
+
+export const PRODUCT_LABEL: Record<Product, string> = {
+  std: "Save the Date",
+  inv: "Uitnodiging",
+}
+
+export function reis(waarde: unknown): Reis {
+  return waarde === "verstuurd" || waarde === "ja" || waarde === "nee" ? waarde : "niet_verstuurd"
+}
+
+/** Heeft de gast op dit product gereageerd? */
+export function heeftGereageerd(r: Reis): boolean {
+  return r === "ja" || r === "nee"
+}
+
+/**
+ * Wie kan een herinnering gebruiken: iedereen die de uitnodiging heeft gekregen
+ * maar nog niet heeft gereageerd, plus wie hem nog niet eens heeft gehad.
+ * Dat is letterlijk de lijst "wie moet ik nog najagen".
+ */
+export function moetNagejaagd(std: Reis, inv: Reis): boolean {
+  return !heeftGereageerd(inv)
+}
+
+/**
+ * Komt deze gast? Het laatste woord is van de uitnodiging; is die nog niet
+ * beantwoord, dan geldt het voorlopige antwoord van de Save the Date. Zonder
+ * antwoord weten we het niet, en dan is het geen ja.
+ */
+export function komtGast(std: Reis, inv: Reis): boolean | null {
+  if (heeftGereageerd(inv)) return inv === "ja"
+  if (heeftGereageerd(std)) return std === "ja"
+  return null
+}

@@ -225,6 +225,11 @@ export async function POST(request: Request) {
     allergie: tekst(g.allergie, MAX_KORT),
     message: tekst(g.message, MAX_BERICHT),
     status,
+    // Een gast die via een kaart reageert heeft die kaart per definitie
+    // gekregen, dus de reis van dat product springt meteen naar ja of nee.
+    ...(status === "voorlopig"
+      ? { std_status: g.attending === "no" ? "nee" : "ja" }
+      : { inv_status: g.attending === "no" ? "nee" : "ja", std_status: "verstuurd" }),
     bron_token: bronToken,
     apparaat,
     ...(g.song != null ? { song: tekst(g.song, MAX_KORT) } : {}),

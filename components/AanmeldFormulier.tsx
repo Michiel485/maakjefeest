@@ -450,6 +450,11 @@ export default function AanmeldFormulier({
             <JaNee label={customQuestion2!} waarde={eigen2} zet={setEigen2} accentColor={accentColor} labelColor={labelColor} knopTekstKleur={knopTekstKleur} labelKlassen={labelKlassen} />
           )}
 
+          {/* Een berichtje hoort bij de uitnodiging, niet bij een Save the
+              Date: dat formulier moet in tien seconden te doen zijn. Wie zich
+              afmeldt mag wel altijd iets kwijt, want dat is vaak het moment
+              waarop iemand uitlegt waarom. */}
+          {(volledig || komt === "no") && (
           <div>
             <label className={labelKlassen} style={{ color: labelColor }}>
               {komt === "no" ? "Wil je nog iets meegeven?" : "Een berichtje voor het bruidspaar?"}
@@ -463,6 +468,7 @@ export default function AanmeldFormulier({
               maxLength={1000}
             />
           </div>
+          )}
 
           {fout && (
             <p className="text-sm font-semibold" style={{ color: "#991B1B" }} role="alert">{fout}</p>

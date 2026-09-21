@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { laadXlsx } from "@/lib/xlsx-laden"
-import { gastSleutel } from "@/lib/gasten"
+import { gastSleutel, reis, REIS_LABEL, type Reis } from "@/lib/gasten"
 import GastenToevoegen from "./GastenToevoegen"
 
 const GOLD       = "#C5A059"
@@ -29,6 +29,9 @@ export interface RsvpRow {
   leeftijd: number | null
   /** uitgenodigd, voorlopig of definitief. Zie lib/gasten.ts. */
   status: string | null
+  /** Hoe ver de Save the Date en de uitnodiging staan. Zie Reis in lib/gasten.ts. */
+  std_status: string | null
+  inv_status: string | null
   /** Op welke kaartlink dit binnenkwam. */
   bron_token: string | null
   huishouden_naam: string | null
@@ -216,6 +219,39 @@ export default function RsvpSection({
       }
       return n
     })
+  }
+
+  // Verstuurd-zetten doet het bruidspaar zelf, want delen gaat via WhatsApp en
+  // dat kunnen wij niet zien. Meestal voor tientallen mensen tegelijk.
+  async function zetReis(product: "std" | "inv", waarde: Reis) {
+    setBerichtBezig(true)
+    setBerichtUitslag(null)
+    try {
+      const res = await fetch("/api/gasten", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: [...gekozen], product, waarde }),
+      })
+      const j = (await res.json().catch(() => ({}))) as { error?: string; bijgewerkt?: number }
+      if (!res.ok) throw new Error(j.error || "Bijwerken mislukte")
+      const kolom = product === "inv" ? "inv_status" : "std_status"
+      setRsvps((vorig) =>
+        vorig.map((r) =>
+          gekozen.has(r.id)
+            ? {
+                ...r,
+                [kolom]: waarde,
+                ...(waarde === "ja" || waarde === "nee" ? { attending: waarde === "ja" ? "yes" : "no" } : {}),
+              }
+            : r
+        )
+      )
+      setBerichtUitslag(`${j.bijgewerkt ?? 0} bijgewerkt.`)
+    } catch (e) {
+      setBerichtUitslag(e instanceof Error ? e.message : "Bijwerken mislukte")
+    } finally {
+      setBerichtBezig(false)
+    }
   }
 
   async function verwijderGekozen() {
@@ -428,6 +464,24 @@ export default function RsvpSection({
                 Laat weten dat er iets is veranderd
               </button>
               <button
+                onClick={() => zetReis("std", "verstuurd")}
+                disabled={berichtBezig}
+                className="text-sm font-semibold px-3 py-2 rounded-xl disabled:opacity-60"
+                style={{ backgroundColor: "#fff", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
+                title="Zet de Save the Date op verstuurd voor de aangevinkte gasten"
+              >
+                Save the Date verstuurd
+              </button>
+              <button
+                onClick={() => zetReis("inv", "verstuurd")}
+                disabled={berichtBezig}
+                className="text-sm font-semibold px-3 py-2 rounded-xl disabled:opacity-60"
+                style={{ backgroundColor: "#fff", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
+                title="Zet de uitnodiging op verstuurd voor de aangevinkte gasten"
+              >
+                Uitnodiging verstuurd
+              </button>
+              <button
                 onClick={verwijderGekozen}
                 className="text-sm font-semibold px-3 py-2 rounded-xl"
                 style={{ backgroundColor: "#fff", color: "#DC2626", border: "1px solid #fca5a5", cursor: "pointer" }}
@@ -503,8 +557,8 @@ export default function RsvpSection({
                   />
                 </Th>
                 <Th>Naam</Th>
-                <Th>Aanwezig</Th>
-                <Th>Aanmelding</Th>
+                <Th>Save the Date</Th>
+                <Th>Uitnodiging</Th>
                 <Th className="hidden sm:table-cell">Type</Th>
                 <Th className="hidden md:table-cell">E-mail</Th>
                 <Th className="hidden lg:table-cell">Dieetwensen</Th>
@@ -566,14 +620,8 @@ export default function RsvpSection({
                           </span>
                         )}
                       </td>
-                      <td className="px-5 py-3">
-                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${isDeclined ? "bg-red-100 text-red-600" : "bg-emerald-100 text-emerald-700"}`}>
-                          {isDeclined ? "Afwezig" : "Aanwezig"}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3">
-                        <StandBadge status={row.status} />
-                      </td>
+                      <td className="px-5 py-3"><ReisBadge waarde={reis(row.std_status)} /></td>
+                      <td className="px-5 py-3"><ReisBadge waarde={reis(row.inv_status)} /></td>
                       <td className="px-5 py-3 hidden sm:table-cell">
                         {isDeclined ? <span style={{ color: GOLD_LIGHT }}>—</span> : <GuestTypeBadge type={row.guest_type} />}
                       </td>
@@ -836,23 +884,22 @@ function TriStateButtons({ value, onChange }: { value: boolean | null; onChange:
 }
 
 /**
- * De stand van een aanmelding. Een voorlopig ja van een Save the Date is een
- * zachte reservering en geen definitieve aanmelding; die twee mogen niet op
- * één hoop, anders plant een bruidspaar op een getal dat niet vaststaat.
+ * Hoe ver een product staat bij deze gast. Vier standen: niet verstuurd,
+ * verstuurd, komt, komt niet. Zie Reis in lib/gasten.ts.
  */
-function StandBadge({ status }: { status: string | null }) {
-  const s = status === "voorlopig" ? "voorlopig" : status === "uitgenodigd" ? "uitgenodigd" : "definitief"
+function ReisBadge({ waarde }: { waarde: Reis }) {
   const stijl = {
-    uitgenodigd: { bg: "#F3F4F6", tekst: "#6B7280", label: "Nog niets" },
-    voorlopig:   { bg: "#FEF3C7", tekst: "#92400E", label: "Voorlopig" },
-    definitief:  { bg: "#D1FAE5", tekst: "#065F46", label: "Definitief" },
-  }[s]
+    niet_verstuurd: { bg: "#F3F4F6", tekst: "#6B7280" },
+    verstuurd:      { bg: "#FEF3C7", tekst: "#92400E" },
+    ja:             { bg: "#D1FAE5", tekst: "#065F46" },
+    nee:            { bg: "#FEE2E2", tekst: "#991B1B" },
+  }[waarde]
   return (
     <span
       className="text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap"
       style={{ backgroundColor: stijl.bg, color: stijl.tekst }}
     >
-      {stijl.label}
+      {REIS_LABEL[waarde]}
     </span>
   )
 }

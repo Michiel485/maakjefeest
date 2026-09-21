@@ -228,7 +228,7 @@ export default async function DashboardPage() {
   if (gastEvents.length > 0) {
     const { data: rsvpData } = await service
       .from("rsvp")
-      .select("id, event_id, submission_id, name, voornaam, achternaam, email, telefoon, guest_type, dietary, allergie, is_primary, attending, message, song, overnachting, custom_answer, custom_answer_2, is_kind, leeftijd, status, bron_token, huishouden_naam, created_at")
+      .select("id, event_id, submission_id, name, voornaam, achternaam, email, telefoon, guest_type, dietary, allergie, is_primary, attending, message, song, overnachting, custom_answer, custom_answer_2, is_kind, leeftijd, status, std_status, inv_status, bron_token, huishouden_naam, created_at")
       .in("event_id", gastEvents.map((e: Event) => e.id))
       .order("created_at", { ascending: false })
     rsvps = (rsvpData ?? []) as RsvpRow[]
@@ -285,7 +285,7 @@ export default async function DashboardPage() {
         className="sticky top-0 z-10"
         style={{ backgroundColor: IVORY, borderBottom: `1px solid ${GOLD_LIGHT}` }}
       >
-        <div className="max-w-5xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
           <Link
             href="/"
             className="text-2xl tracking-wide transition-opacity hover:opacity-70"
@@ -297,7 +297,9 @@ export default async function DashboardPage() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 md:px-6 py-8 md:py-12">
+      {/* Breder dan de rest van de site: de gastenlijst heeft kolommen nodig
+          en die vielen weg in de witruimte links en rechts. */}
+      <main className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
 
         {/* Welcome */}
         <div className="mb-12">

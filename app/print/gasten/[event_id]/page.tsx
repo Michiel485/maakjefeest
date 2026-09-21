@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase-server"
 import { createServiceClient } from "@/lib/supabase"
 import { formatDate } from "@/lib/event-styles"
 import { KLEUR } from "@/lib/ontwerp"
+import { komtGast, reis, heeftGereageerd } from "@/lib/gasten"
 import PrintKnop from "./print-knop"
 import type { Metadata } from "next"
 
@@ -24,6 +25,8 @@ interface Gast {
   dietary: string | null
   allergie: string | null
   attending: string | null
+  std_status: string | null
+  inv_status: string | null
   overnachting: boolean | null
   is_kind: boolean | null
   leeftijd: number | null
@@ -36,9 +39,14 @@ const GROEP_LABEL: Record<string, string> = {
   receptiegast: "Receptiegasten",
 }
 
-/** Aanwezig of niet. Het formulier stuurt "yes" of "no", soms niets. */
+/**
+ * Komt deze gast? Alleen wie echt ja heeft gezegd telt mee. Eerder stond hier
+ * dat een leeg antwoord als ja gold, en daardoor kwam een met de hand
+ * toegevoegde gast van wie je nog niets had gehoord in de aantallen terecht.
+ * Voor een cateraarslijst is dat precies de verkeerde kant om te gokken.
+ */
 function komt(g: Gast): boolean {
-  return (g.attending ?? "yes") === "yes"
+  return komtGast(reis(g.std_status), reis(g.inv_status)) === true
 }
 
 /** "Vegetarisch" en "vegetarisch " horen op één hoop. */
@@ -71,13 +79,15 @@ export default async function GastenPrintPagina({
 
   const { data: rijen } = await service
     .from("rsvp")
-    .select("name, guest_type, dietary, allergie, attending, overnachting, is_kind, leeftijd, status")
+    .select("name, guest_type, dietary, allergie, attending, std_status, inv_status, overnachting, is_kind, leeftijd, status")
     .eq("event_id", event_id)
     .order("name")
 
   const gasten = (rijen ?? []) as Gast[]
   const aanwezig = gasten.filter(komt)
-  const afgemeld = gasten.length - aanwezig.length
+  const afgemeld = gasten.filter((g) => komtGast(reis(g.std_status), reis(g.inv_status)) === false).length
+  // Wie nog niets heeft laten weten is geen ja en geen nee
+  const nogNiets = gasten.length - aanwezig.length - afgemeld
 
   // Kinderen tellen apart: de catering rekent voor hen vaak een ander tarief,
   // en de locatie vraagt er standaard naar.
@@ -87,7 +97,9 @@ export default async function GastenPrintPagina({
   // Een zachte reservering van een Save the Date is geen definitieve
   // aanmelding. Die twee bij elkaar optellen zou het bruidspaar op een te hoog
   // getal laten plannen.
-  const voorlopig = aanwezig.filter((g) => g.status === "voorlopig").length
+  // Een ja op de Save the Date zonder antwoord op de uitnodiging is een zachte
+  // reservering; die mag niet als vaststaand worden meegeteld.
+  const voorlopig = aanwezig.filter((g) => !heeftGereageerd(reis(g.inv_status))).length
 
   const perGroep = new Map<string, number>()
   for (const g of aanwezig) {
@@ -185,6 +197,12 @@ export default async function GastenPrintPagina({
                       <td style={{ padding: "8px 0", textAlign: "right" }}>{aantal}</td>
                     </tr>
                   ))}
+                  {nogNiets > 0 && (
+                    <tr style={{ borderBottom: `1px solid ${KLEUR.zand}` }}>
+                      <td style={{ padding: "8px 0", color: KLEUR.tekst }}>Nog niets gehoord</td>
+                      <td style={{ padding: "8px 0", textAlign: "right" }}>{nogNiets}</td>
+                    </tr>
+                  )}
                   {afgemeld > 0 && (
                     <tr style={{ borderBottom: `1px solid ${KLEUR.zand}` }}>
                       <td style={{ padding: "8px 0", color: KLEUR.tekst }}>Afgemeld</td>

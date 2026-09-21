@@ -85,6 +85,20 @@ export async function POST(request: Request) {
     )
   }
 
+  // Regels met dezelfde huishoudnaam horen bij elkaar. Zo kun je een gezin
+  // invoeren zonder een apart scherm voor huishoudens: je typt dezelfde naam.
+  const huishoudens = new Map<string, string>()
+  function huishoudenVan(naam: string | null): string {
+    if (!naam) return crypto.randomUUID()
+    const sleutel = naam.toLowerCase().trim()
+    let id = huishoudens.get(sleutel)
+    if (!id) {
+      id = crypto.randomUUID()
+      huishoudens.set(sleutel, id)
+    }
+    return id
+  }
+
   const rows = schoon.map(({ voornaam, achternaam, g }) => ({
     event_id,
     submission_id: crypto.randomUUID(),
@@ -100,10 +114,14 @@ export async function POST(request: Request) {
         ? Math.round(g.leeftijd)
         : null,
     huishouden_naam: tekst(g.huishouden_naam, MAX_NAAM * 2),
-    // Met de hand toegevoegd betekent: uitgenodigd, nog niets gehoord. De
-    // aanwezigheid blijft leeg tot de gast zelf reageert.
+    huishouden_id: huishoudenVan(tekst(g.huishouden_naam, MAX_NAAM * 2)),
+    // Met de hand toegevoegd betekent: je hebt nog niets verstuurd en dus ook
+    // nog niets gehoord. Eerder stond attending hier op "yes", waardoor zo
+    // iemand meteen als aanwezig in de lijst kwam. Dat was een fout.
     status: "uitgenodigd",
-    attending: "yes",
+    std_status: "niet_verstuurd",
+    inv_status: "niet_verstuurd",
+    attending: null,
     is_primary: true,
   }))
 
@@ -115,4 +133,62 @@ export async function POST(request: Request) {
   }
 
   return Response.json({ success: true, toegevoegd: nieuw?.length ?? 0 }, { status: 201 })
+}
+
+// PATCH: van een groep gasten de reis bijwerken.
+//
+// Delen gaat via WhatsApp en dat kunnen wij niet zien, dus "verstuurd" zet het
+// bruidspaar zelf. Meestal voor veertig mensen tegelijk, vandaar dat dit op een
+// selectie werkt en niet per regel.
+export async function PATCH(request: Request) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user?.email) return Response.json({ error: "Niet ingelogd" }, { status: 401 })
+
+  const body = (await request.json().catch(() => null)) as
+    | { ids?: unknown; product?: unknown; waarde?: unknown }
+    | null
+
+  const ids = Array.isArray(body?.ids) ? body.ids.filter((v): v is string => typeof v === "string") : []
+  const product = body?.product === "inv" ? "inv" : "std"
+  const waarde = body?.waarde
+  const geldig = ["niet_verstuurd", "verstuurd", "ja", "nee"]
+
+  if (ids.length === 0) return Response.json({ error: "Selecteer eerst een paar gasten." }, { status: 400 })
+  if (ids.length > 500) return Response.json({ error: "Maximaal 500 per keer." }, { status: 400 })
+  if (typeof waarde !== "string" || !geldig.includes(waarde)) {
+    return Response.json({ error: "Onbekende stand" }, { status: 400 })
+  }
+
+  const service = createServiceClient()
+  const { data: gasten } = await service.from("rsvp").select("id, event_id").in("id", ids)
+  if (!gasten || gasten.length === 0) {
+    return Response.json({ error: "Deze gasten bestaan niet meer." }, { status: 404 })
+  }
+
+  // Alleen bruiloften van deze klant, zoals bij het berichtendpoint
+  const { data: events } = await service
+    .from("events")
+    .select("id, user_email")
+    .in("id", [...new Set(gasten.map((g) => g.event_id as string))])
+
+  const vanMij = new Set(
+    (events ?? []).filter((e) => e.user_email === user.email).map((e) => e.id as string)
+  )
+  const mag = gasten.filter((g) => vanMij.has(g.event_id as string)).map((g) => g.id as string)
+  if (mag.length === 0) return Response.json({ error: "Geen toegang" }, { status: 403 })
+
+  const kolom = product === "inv" ? "inv_status" : "std_status"
+  const update: Record<string, unknown> = { [kolom]: waarde }
+  // Een antwoord is ook een antwoord op de aanwezigheid; de cateraarslijst
+  // rekent daarmee.
+  if (waarde === "ja" || waarde === "nee") update.attending = waarde === "ja" ? "yes" : "no"
+
+  const { error } = await service.from("rsvp").update(update).in("id", mag)
+  if (error) {
+    console.error("[gasten] patch:", error)
+    return Response.json({ error: "Bijwerken mislukt" }, { status: 500 })
+  }
+
+  return Response.json({ success: true, bijgewerkt: mag.length })
 }
