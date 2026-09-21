@@ -16,7 +16,7 @@ import { TITLE_FONT_OPTIONS, getTitleFont } from "@/lib/title-fonts"
 import { createClient } from "@/lib/supabase"
 import { eventSiteUrl } from "@/lib/site-url"
 import { DEFAULT_PLAN, hoogstePlan, PLANS, formatEur, isCardPlan, isPlan, type Plan } from "@/lib/plans"
-import BouwerSchakelaar from "@/components/BouwerSchakelaar"
+import BouwerSchil from "@/components/BouwerSchil"
 import { Knop, Melding, SectieKop } from "@/components/ui"
 import { KLEUR } from "@/lib/ontwerp"
 import SophieTutorial, { type SophieNav } from "@/components/SophieTutorial"
@@ -1315,63 +1315,46 @@ export default function BouwenPage() {
 
 
   return (
-    <div translate="no" className="min-h-screen md:h-screen flex flex-col bg-gray-50 font-sans antialiased md:overflow-hidden">
-
-      {/* ── Top bar ── */}
-      {/* Dezelfde kop als de kaartbouwer: zelfde hoogte, zelfde randkleur,
-          zelfde knoppen. Het zijn twee pagina's maar het hoort als één bouwer
-          te voelen. */}
-      <header
-        className="sticky top-0 z-30 flex items-center justify-between gap-3 px-4 sm:px-6 py-3 border-b flex-shrink-0"
-        style={{ backgroundColor: "#fff", borderColor: `${KLEUR.goudLicht}80` }}
-      >
-        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-          <Link
-            href="/"
-            className="hidden sm:inline text-xl tracking-wide"
-            style={{ fontFamily: "var(--font-cormorant)", color: KLEUR.inkt, fontWeight: 600, textDecoration: "none" }}
-          >
-            SayingYes
-          </Link>
-          <BouwerSchakelaar actief="website" eventId={savedEventId} />
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Knop soort="rand" klein onClick={handleDashboardClick} disabled={dashboardLoading || anyUploading} bezig={dashboardLoading} bezigTekst="Openen">
-            <span className="hidden sm:inline">Mijn dashboard</span>
-            <span className="sm:hidden">Dashboard</span>
-          </Knop>
-
-          {/* Opslaan. De vier standen van hiervoor blijven, maar in dezelfde
-              vorm als de knoppen in de kaartbouwer. */}
+    <BouwerSchil
+      actief="website"
+      eventId={savedEventId}
+      className="md:h-screen md:overflow-hidden"
+      /* Fouten onder de kop, zodat de kop zelf niet van hoogte verspringt
+         terwijl je aan het werk bent. */
+      onderKop={
+        (publishError || saveError) ? <Melding soort="fout">{publishError || saveError}</Melding> : null
+      }
+      acties={
+        <>
+          {/* Opslaan. De vier standen blijven, in dezelfde vorm als de knoppen
+              in de kaartbouwer. */}
           {anyUploading || saving ? (
-            <Knop soort="rustig" klein bezig bezigTekst={anyUploading ? "Uploaden" : "Opslaan"}>
+            <Knop soort="rustig" klein bezig bezigTekst={anyUploading ? "Uploaden" : "Opslaan"} className="flex-1 md:flex-none">
               Opslaan
             </Knop>
           ) : saveError ? (
-            <Knop soort="gevaar" klein onClick={handleSave}>
+            <Knop soort="gevaar" klein onClick={handleSave} className="flex-1 md:flex-none">
               Opnieuw proberen
             </Knop>
           ) : hasPendingChanges ? (
-            <Knop soort="rustig" klein onClick={handleSave}>
+            <Knop soort="rustig" klein onClick={handleSave} className="flex-1 md:flex-none">
               Opslaan
             </Knop>
           ) : (
             <span
-              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl"
+              className="inline-flex items-center justify-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl flex-1 md:flex-none"
               style={{ backgroundColor: KLEUR.groenVlak, color: KLEUR.groenTekst, border: `1px solid ${KLEUR.groen}33` }}
             >
               <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
-              <span className="hidden sm:inline">Opgeslagen</span>
+              Opgeslagen
             </span>
           )}
 
           {isPublished ? (
-            <Knop soort="actie" href={eventSiteUrl(slugPreview)} nieuwTabblad>
-              <span className="hidden sm:inline">Bekijk live site</span>
-              <span className="sm:hidden">Bekijken</span>
+            <Knop soort="actie" href={eventSiteUrl(slugPreview)} nieuwTabblad className="flex-1 md:flex-none">
+              Bekijk live site
             </Knop>
           ) : (
             <Knop
@@ -1380,19 +1363,14 @@ export default function BouwenPage() {
               disabled={publishing || anyUploading}
               bezig={publishing}
               bezigTekst="Naar de kassa"
+              className="flex-1 md:flex-none"
             >
-              <span className="hidden sm:inline">Publiceren voor&nbsp;</span>
-              {formatEur(PLANS.compleet.price)}
+              Publiceren voor&nbsp;{formatEur(PLANS.compleet.price)}
             </Knop>
           )}
-        </div>
-      </header>
-
-      {/* Fouten en de melding over automatisch opslaan onder de kop, zodat de
-          kop zelf niet van hoogte verspringt terwijl je aan het werk bent. */}
-      {(publishError || saveError) && (
-        <Melding soort="fout">{publishError || saveError}</Melding>
-      )}
+        </>
+      }
+    >
 
       {/* ── Body ── */}
       <div className="flex flex-col md:flex-row flex-1 md:min-h-0">
@@ -3353,7 +3331,7 @@ export default function BouwenPage() {
           if ('openHomeSection' in nav) setOpenHomeSection(nav.openHomeSection ?? null)
         }}
       />
-    </div>
+    </BouwerSchil>
   )
 }
 

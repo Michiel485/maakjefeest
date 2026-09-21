@@ -45,7 +45,7 @@ import {
 } from "@/lib/gasten"
 import { Draaier, Knop, Melding, Sectie } from "@/components/ui"
 import AanmeldFormulier from "@/components/AanmeldFormulier"
-import BouwerSchakelaar from "@/components/BouwerSchakelaar"
+import BouwerSchil from "@/components/BouwerSchil"
 import {
   DEFAULT_PRAKTISCH,
   DEFAULT_PROGRAMMA,
@@ -738,29 +738,14 @@ export default function KaartMakenPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col antialiased" style={{ backgroundColor: IVORY }}>
-      {/* ── Kop ── */}
-      <header className="sticky top-0 z-30 flex items-center justify-between gap-3 px-4 sm:px-6 py-3 border-b" style={{ backgroundColor: "#fff", borderColor: `${GOLD_LIGHT}80` }}>
-        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-          <Link href="/" className="hidden sm:inline text-xl tracking-wide" style={{ fontFamily: "var(--font-cormorant)", color: CHARCOAL, fontWeight: 600, textDecoration: "none" }}>
-            SayingYes
-          </Link>
-          {/* Wat maak je? Stond eerst in de zijbalk, maar hoort hier: zo is het
-              het eerste dat je ziet en voelt de website als onderdeel van
-              dezelfde bouwer in plaats van een aparte plek. */}
-          <BouwerSchakelaar
-            actief={ontwerp.type}
-            eventId={eventId}
-            opKaartType={(type) => update({ type })}
-            opWebsite={neemMeeNaarWebsite}
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          {userEmail && (
-            <Knop href="/dashboard" soort="rand" klein className="hidden sm:inline-flex">
-              Mijn dashboard
-            </Knop>
-          )}
+    <BouwerSchil
+      actief={ontwerp.type}
+      eventId={eventId}
+      opKaartType={(type) => update({ type })}
+      opWebsite={neemMeeNaarWebsite}
+      metInhoud={kaarten.map((k) => k.type as "save_the_date" | "trouwkaart")}
+      acties={
+        <>
           <Knop
             soort="rustig"
             klein
@@ -768,13 +753,14 @@ export default function KaartMakenPage() {
             disabled={busy !== null}
             bezig={busy === "bewaar"}
             bezigTekst="Bewaren"
+            className="flex-1 md:flex-none"
           >
             Bewaar ontwerp
           </Knop>
           {/* Zit deze kaart al in het afgenomen pakket, dan is er niets te
               activeren: bewaren is genoeg en de link werkt al. */}
           {alAfgenomen && huidigeKaart ? (
-            <Knop soort="actie" href={`/kaart/${huidigeKaart.share_token}/voorbeeld`} nieuwTabblad>
+            <Knop soort="actie" href={`/kaart/${huidigeKaart.share_token}/voorbeeld`} nieuwTabblad className="flex-1 md:flex-none">
               Bekijk de kaart
             </Knop>
           ) : (
@@ -784,12 +770,14 @@ export default function KaartMakenPage() {
               disabled={busy !== null}
               bezig={busy === "activeer"}
               bezigTekst="Naar de kassa"
+              className="flex-1 md:flex-none"
             >
               {`Activeer voor ${prijs}`}
             </Knop>
           )}
-        </div>
-      </header>
+        </>
+      }
+    >
 
       {/* ── Terug van de inloglink ──
           Een paar tellen werk, maar zonder uitleg voelt het als stilstand. */}
@@ -930,7 +918,10 @@ export default function KaartMakenPage() {
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row flex-1 min-h-0">
+      {/* Op een telefoon staat het voorbeeld boven de secties: dat is waarom
+          iemand blijft, dus dat zie je eerst. Op een groot scherm links de
+          stappen, rechts de kaart. */}
+      <div className="flex flex-col-reverse md:flex-row flex-1 min-h-0">
         {/* ── Stappen ── */}
         <aside className="w-full md:w-80 md:flex-shrink-0 bg-white border-r border-gray-100 md:overflow-y-auto">
           {/* Je concepten. Alleen zinvol als er iets bewaard is, en dat kan
@@ -1228,7 +1219,13 @@ export default function KaartMakenPage() {
         </aside>
 
         {/* ── Voorbeeld ── */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-8" style={{ backgroundColor: "#F1ECE3" }}>
+        {/* Op de telefoon blijft het voorbeeld bovenin staan terwijl je onder
+            de secties doorscrolt, op iets minder dan de helft van het scherm.
+            Zo zie je je kaart veranderen terwijl je typt. */}
+        <main
+          className="flex-1 overflow-y-auto p-4 sm:p-8 sticky top-[57px] z-20 max-h-[46vh] md:static md:max-h-none md:z-auto"
+          style={{ backgroundColor: "#F1ECE3" }}
+        >
           <div className="mx-auto max-w-md">
             <p className="text-center text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: SUBTLE }}>
               Zo ziet jullie kaart eruit
@@ -1364,6 +1361,6 @@ export default function KaartMakenPage() {
           </div>
         </div>
       )}
-    </div>
+    </BouwerSchil>
   )
 }
