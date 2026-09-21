@@ -42,7 +42,7 @@ import {
   standaardAanmeldStand,
   type AanmeldStand,
 } from "@/lib/gasten"
-import { Knop, Melding } from "@/components/ui"
+import { Knop, Melding, Paneel } from "@/components/ui"
 import BouwerSchakelaar from "@/components/BouwerSchakelaar"
 import {
   DEFAULT_PRAKTISCH,
@@ -210,6 +210,11 @@ export default function KaartMakenPage() {
   const [mailVerstuurd, setMailVerstuurd] = useState(false)
   const [busy, setBusy] = useState<Actie | "download" | "foto" | "proef" | null>(null)
   const [melding, setMelding] = useState<{ tekst: string; fout?: boolean } | null>(null)
+  // Is dit de eerste keer dat dit ontwerp bewaard wordt? Dan krijgt de klant
+  // geen smalle meldingsbalk maar een echte overdracht. Dat is het enige moment
+  // waarop iemand net iets gemaakt heeft en openstaat voor de vraag "en nu?",
+  // en tot nu toe gebruikten we het voor een onderstreept linkje.
+  const [overdracht, setOverdracht] = useState(false)
 
   // Welk pakket deze kaart nodig heeft om verstuurd te mogen worden. Ontwerpen
   // mag altijd; dit is puur wat de kassa straks vraagt.
@@ -588,13 +593,16 @@ export default function KaartMakenPage() {
     if (!userEmail) { setMailActie(actie); setMailVerstuurd(false); return }
     setBusy(actie)
     setMelding(null)
+    // Voor het opslaan vastleggen, want daarna is eventId gevuld.
+    const eersteKeer = !eventId
     try {
       const ids = await slaOp()
       if (actie === "activeer") {
         router.push(`/betalen?event_id=${ids.eventId}&plan=${plan}`)
         return
       }
-      setMelding({ tekst: "Opgeslagen. Je vindt dit ontwerp terug in je dashboard." })
+      if (eersteKeer) setOverdracht(true)
+      else setMelding({ tekst: "Opgeslagen. Je vindt dit ontwerp terug in je dashboard." })
     } catch (e) {
       setMelding({ tekst: e instanceof Error ? e.message : "Er ging iets mis, probeer opnieuw.", fout: true })
     } finally {
@@ -770,6 +778,37 @@ export default function KaartMakenPage() {
           )}
         </div>
       </header>
+
+      {/* ── De overdracht na het eerste bewaren ──
+          Hier komt de gastenlijst voor het eerst ter sprake, op het enige
+          moment waarop dat logisch is: je hebt net een kaart gemaakt, dus de
+          vraag die je nu zelf hebt is wie hem moet krijgen. Niet als functie in
+          een menu, maar als antwoord op die vraag. */}
+      {overdracht && (
+        <div className="px-4 md:px-6 pt-4">
+          <Paneel>
+            <p className="text-lg mb-1" style={{ fontFamily: "var(--font-cormorant)", color: KLEUR.inkt, fontWeight: 600 }}>
+              Bewaard. Je hebt nu een {isTrouwkaart ? "trouwkaart" : "Save the Date"} in concept.
+            </p>
+            <p className="text-sm mb-3" style={{ color: KLEUR.tekst }}>
+              Je vindt hem terug in je dashboard, ook als je dit venster sluit. Wie ga je uitnodigen?
+              Je gastenlijst hoort bij elk pakket en is gratis: je houdt er zelf bij wie je hebt
+              uitgenodigd en wie er komt, of je laat hem zich vullen door de reacties op je kaart.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Knop soort="primair" href="/dashboard#gasten" klein>
+                Begin je gastenlijst
+              </Knop>
+              <Knop soort="rand" klein onClick={() => setOverdracht(false)}>
+                Verder ontwerpen
+              </Knop>
+              <Knop soort="rand" href="/dashboard" klein>
+                Naar je dashboard
+              </Knop>
+            </div>
+          </Paneel>
+        </div>
+      )}
 
       {melding && (
         <Melding

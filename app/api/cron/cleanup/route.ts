@@ -190,7 +190,25 @@ export async function GET(request: Request) {
 
     // ── Verloopwaarschuwing: 7 dagen voor verloopdatum ───────────────────
     if (timeToExpiry <= SEVEN_DAYS_MS && !event.expiry_warning_sent_at) {
-      const mailResult = await sendExpiryWarningEmail({ toEmail: email, eventTitle: title, expiresAt, dashboardUrl })
+      // Hoeveel foto's er van gasten klaarstaan. Dit is het laatste moment
+      // waarop het bruidspaar erbij kan, en tot nu toe zei niemand dat.
+      //
+      // Alles meetellen, ook wat nog op goedkeuring wacht: het zijn hun foto's,
+      // en bij het binnenhalen maakt het niet uit of ze al op de muur staan.
+      // Een geweigerde foto bestaat niet meer, die wordt verwijderd.
+      const { count: fotos } = await service
+        .from("guest_photos")
+        .select("id", { count: "exact", head: true })
+        .eq("event_id", event.id)
+
+      const mailResult = await sendExpiryWarningEmail({
+        toEmail: email,
+        eventTitle: title,
+        expiresAt,
+        dashboardUrl,
+        fotos: fotos ?? 0,
+        fotosUrl: `${siteUrl}/dashboard#fotos`,
+      })
       if (mailResult.success) {
         await service.from("events").update({ expiry_warning_sent_at: now.toISOString() }).eq("id", event.id)
         results.expiryWarnings.push(event.id as string)

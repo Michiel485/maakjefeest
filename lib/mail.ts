@@ -1021,11 +1021,16 @@ export async function sendExpiryWarningEmail({
   eventTitle,
   expiresAt,
   dashboardUrl,
+  fotos = 0,
+  fotosUrl,
 }: {
   toEmail: string
   eventTitle: string
   expiresAt: Date
   dashboardUrl: string
+  /** Hoeveel foto's gasten hebben geüpload. */
+  fotos?: number
+  fotosUrl?: string
 }) {
   const expireStr = expiresAt.toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })
 
@@ -1054,15 +1059,42 @@ export async function sendExpiryWarningEmail({
               </tr>
             </table>
             <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.7;">
-              Jullie trouwwebsite staat al bijna een jaar online &mdash; maar het abonnement loopt over 7 dagen af. Verleng nu voor <strong>&euro;&nbsp;22,-</strong> en houd de mooie herinneringen, foto's en RSVP-overzichten nog 6 maanden beschikbaar.
+              Jullie trouwwebsite staat al bijna een jaar online, maar het abonnement loopt over 7 dagen af. Verleng nu voor <strong>&euro;&nbsp;22,-</strong> en houd de mooie herinneringen, foto's en RSVP-overzichten nog 6 maanden beschikbaar.
             </p>
             <table cellpadding="0" cellspacing="0" style="margin:0 0 32px;">
               <tr>
                 <td style="border-radius:12px;background-color:#111827;">
-                  <a href="${dashboardUrl}" style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:12px;">Verleng nu &mdash; &euro;&nbsp;22,- voor 6 maanden &rarr;</a>
+                  <a href="${dashboardUrl}" style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:12px;">Verleng nu voor &euro;&nbsp;22,- &rarr;</a>
                 </td>
               </tr>
             </table>
+            ${
+              // Uit het klantreisgesprek van 21 september 2026. De foto's van je
+              // gasten blijven bij ons staan, maar de deur gaat dicht, en tot nu
+              // toe zei niemand dat. Dit is het laatste moment waarop het nog
+              // kan, dus het hoort in deze mail en niet in een eigen mail
+              // ernaast: daar zou niemand op zitten wachten.
+              fotos > 0
+                ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
+                     <tr>
+                       <td style="background-color:#FBF5E8;border:1px solid #E8D5A3;border-radius:12px;padding:18px 20px;">
+                         <p style="margin:0 0 8px;font-size:15px;color:#111827;line-height:1.6;">
+                           <strong>Er staan ${fotos} foto's van je gasten klaar.</strong>
+                         </p>
+                         <p style="margin:0;font-size:14px;color:#374151;line-height:1.65;">
+                           Haal ze binnen voordat de site offline gaat. Ze blijven bij ons bewaard, maar
+                           daarna kun je er niet meer bij.
+                           ${
+                             fotosUrl
+                               ? `<a href="${fotosUrl}" style="color:#C5A059;font-weight:600;">Naar je fotomuur</a>`
+                               : ""
+                           }
+                         </p>
+                       </td>
+                     </tr>
+                   </table>`
+                : ""
+            }
             <p style="margin:0 0 36px;font-size:13px;color:#9ca3af;line-height:1.6;">
               Verleng je niet voor ${expireStr}? Dan wordt de site automatisch offline gehaald. Je kunt daarna altijd opnieuw verlengen via je dashboard.
             </p>
