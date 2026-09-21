@@ -118,10 +118,15 @@ export async function POST(request: Request) {
     // Met de hand toegevoegd betekent: je hebt nog niets verstuurd en dus ook
     // nog niets gehoord. Eerder stond attending hier op "yes", waardoor zo
     // iemand meteen als aanwezig in de lijst kwam. Dat was een fout.
+    //
+    // "maybe" staat voor nog geen antwoord. Leeg zou netter lezen, maar de
+    // kolom attending is NOT NULL en dat omzetten kost een migratie die we
+    // niet nodig hebben: sinds de twee reiskolommen is attending niet meer de
+    // waarheid, alleen nog een samenvatting van het laatste antwoord.
     status: "uitgenodigd",
     std_status: "niet_verstuurd",
     inv_status: "niet_verstuurd",
-    attending: null,
+    attending: "maybe",
     is_primary: true,
   }))
 

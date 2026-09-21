@@ -5,6 +5,8 @@ import { bezoekerIp, teVeelPogingen } from "@/lib/rem"
 import {
   gastSleutel,
   gastStatus,
+  heeftGereageerd,
+  reis,
   volledigeNaam,
   MAX_BERICHT,
   MAX_EMAIL,
@@ -48,6 +50,20 @@ interface GuestInput {
   custom_answer?: boolean
   custom_answer_2?: boolean
   antwoorden?: Record<string, string | boolean>
+}
+
+/** Een regel die al in de lijst staat, met alleen wat we nodig hebben. */
+interface BestaandeRij {
+  id: string
+  voornaam: string | null
+  achternaam: string | null
+  name: string | null
+  huishouden_id: string | null
+  huishouden_naam: string | null
+  std_status: string | null
+  inv_status: string | null
+  apparaat: string | null
+  bron_token: string | null
 }
 
 /** Tekst afkappen en leegte als null teruggeven. */
@@ -163,86 +179,152 @@ export async function POST(request: Request) {
     })
   }
 
-  // ── Past dit nog in de lijst? ─────────────────────────────────────────────
+  // ── Wat staat er al in de lijst? ──────────────────────────────────────────
+  // Deze gast kan er al in staan: het bruidspaar heeft hem zelf ingetypt, of
+  // hij heeft eerder op dit toestel geantwoord. In beide gevallen horen we
+  // zijn regel bij te werken en er geen tweede naast te zetten. Anders maakt
+  // de belofte "je gastenlijst vult zich vanzelf" er juist een lijst met
+  // dubbelingen van, en dat is precies het werk dat wij zouden schelen.
   const apparaat = tekst(body.apparaat, 64)
-  const { count: aantalNu } = await supabase
+
+  const { data: bestaand } = await supabase
     .from("rsvp")
-    .select("id", { count: "exact", head: true })
+    .select(
+      "id, voornaam, achternaam, name, huishouden_id, huishouden_naam, std_status, inv_status, apparaat, bron_token"
+    )
     .eq("event_id", event_id)
 
-  // Wie zijn eigen antwoord bijwerkt telt niet als nieuwe gast, dus dat kijken
-  // we hieronder pas na. Zonder apparaat is elke inzending nieuw.
-  if (!apparaat && (aantalNu ?? 0) + schoon.length > MAX_GASTEN_PER_EVENT) {
-    return Response.json(
-      { error: "De gastenlijst van deze bruiloft zit vol." },
-      { status: 400 }
-    )
+  const kolom = status === "voorlopig" ? "std_status" : "inv_status"
+
+  const opSleutel = new Map<string, BestaandeRij>()
+  for (const r of (bestaand ?? []) as BestaandeRij[]) {
+    const sleutel = gastSleutel(r.voornaam ?? r.name ?? "", r.achternaam)
+    if (!sleutel || opSleutel.has(sleutel)) continue
+    // Hetzelfde toestel mag zijn eigen antwoord altijd corrigeren. Een regel
+    // die het bruidspaar zelf intypte en waar nog geen antwoord op staat is
+    // precies de regel die deze gast hoort te vullen. Een regel waarop al
+    // iemand anders geantwoord heeft laten we met rust.
+    const magBij = (apparaat && r.apparaat === apparaat) || !heeftGereageerd(reis(r[kolom]))
+    if (magBij) opSleutel.set(sleutel, r)
   }
 
-  // ── Heeft dit toestel al eerder ingevuld? ─────────────────────────────────
-  // Dan werken we dat antwoord bij in plaats van er een tweede naast te
-  // zetten. Dat vangt verreweg de meest voorkomende dubbel af: "heb ik dit al
-  // gedaan?" En de gast kan zich zo bedenken zonder ons te mailen.
-  let vervangt = false
+  const paren = schoon.map((g) => {
+    const sleutel = gastSleutel(g.voornaamSchoon, g.achternaam)
+    const rij = sleutel ? opSleutel.get(sleutel) : undefined
+    // Eén bestaande regel kan maar één gast zijn, dus na een match is hij op.
+    if (rij && sleutel) opSleutel.delete(sleutel)
+    return { g, bestaand: rij ?? null }
+  })
+
+  // ── Past dit nog in de lijst? ─────────────────────────────────────────────
+  // Alleen wat er echt bijkomt telt mee. Wie zijn eigen antwoord bijwerkt is
+  // geen nieuwe gast.
+  const erbij = paren.filter((p) => !p.bestaand).length
+  if ((bestaand?.length ?? 0) + erbij > MAX_GASTEN_PER_EVENT) {
+    return Response.json({ error: "De gastenlijst van deze bruiloft zit vol." }, { status: 400 })
+  }
+
+  // ── Heeft dit toestel eerder meer ingevuld dan nu? ────────────────────────
+  // Iemand die eerst voor zichzelf en zijn partner antwoordde en daarna alleen
+  // voor zichzelf, moet die partner kwijt kunnen. We wissen die regel niet:
+  // hij kan door het bruidspaar zijn ingetypt, en een gast hoort niets uit hun
+  // lijst te kunnen verwijderen. We zetten hem terug op verstuurd, dus op
+  // "nog niets gehoord". Een regel die echt niet bestaat haalt het bruidspaar
+  // er zelf uit, met de knop die er al is.
+  const houden = new Set(paren.map((p) => p.bestaand?.id).filter(Boolean) as string[])
+  const vervangt = apparaat
+    ? ((bestaand ?? []) as BestaandeRij[]).some((r) => r.apparaat === apparaat)
+    : false
+
   if (apparaat) {
-    const { data: eerder } = await supabase
-      .from("rsvp")
-      .select("id")
-      .eq("event_id", event_id)
-      .eq("apparaat", apparaat)
-      .limit(1)
-    vervangt = (eerder?.length ?? 0) > 0
-    if (vervangt) {
-      await supabase.from("rsvp").delete().eq("event_id", event_id).eq("apparaat", apparaat)
-    } else if ((aantalNu ?? 0) + schoon.length > MAX_GASTEN_PER_EVENT) {
-      return Response.json({ error: "De gastenlijst van deze bruiloft zit vol." }, { status: 400 })
+    const terug = ((bestaand ?? []) as BestaandeRij[])
+      .filter((r) => r.apparaat === apparaat && !houden.has(r.id))
+      .map((r) => r.id)
+    if (terug.length > 0) {
+      await supabase
+        .from("rsvp")
+        // maybe betekent hier: nog geen antwoord. Zou attending blijven
+        // staan op het oude ja, dan las de export hem als aanwezig.
+        .update({ [kolom]: "verstuurd", apparaat: null, attending: "maybe" })
+        .in("id", terug)
     }
   }
 
   // ── Wegschrijven ──────────────────────────────────────────────────────────
   // Iedereen die samen instuurt hoort bij hetzelfde huishouden. Dat is precies
-  // wat een gezin is: één keer invullen, meerdere mensen.
+  // wat een gezin is: één keer invullen, meerdere mensen. Stond er al een
+  // huishouden van het bruidspaar, dan is dat de betere indeling en houden we
+  // die aan, ook voor wie er nieuw bij komt.
   const submission_id = crypto.randomUUID()
-  const huishouden_id = crypto.randomUUID()
-  const huishouden_naam = schoon[0]?.naam ?? null
+  const alBekend = paren.find((p) => p.bestaand?.huishouden_id)?.bestaand
+  const huishouden_id = alBekend?.huishouden_id ?? crypto.randomUUID()
+  const huishouden_naam = alBekend?.huishouden_naam ?? schoon[0]?.naam ?? null
 
-  const rows = schoon.map((g) => ({
-    event_id,
-    submission_id,
-    huishouden_id,
-    huishouden_naam,
-    name: g.naam,
-    voornaam: g.voornaamSchoon,
-    achternaam: tekst(g.achternaam, MAX_NAAM),
-    email: tekst(g.email, MAX_EMAIL),
-    telefoon: tekst(g.telefoon, MAX_TELEFOON),
-    attending: tekst(g.attending, 20) ?? "yes",
-    is_primary: g.is_primary,
-    guest_type: tekst(g.guest_type, 40) ?? groepUitKaart ?? "daggast",
-    is_kind: g.is_kind === true,
-    leeftijd: g.is_kind === true ? leeftijd(g.leeftijd) : null,
-    dietary: tekst(g.dietary, MAX_KORT),
-    allergie: tekst(g.allergie, MAX_KORT),
-    message: tekst(g.message, MAX_BERICHT),
-    status,
-    // Een gast die via een kaart reageert heeft die kaart per definitie
-    // gekregen, dus de reis van dat product springt meteen naar ja of nee.
-    ...(status === "voorlopig"
-      ? { std_status: g.attending === "no" ? "nee" : "ja" }
-      : { inv_status: g.attending === "no" ? "nee" : "ja", std_status: "verstuurd" }),
-    bron_token: bronToken,
-    apparaat,
-    ...(g.song != null ? { song: tekst(g.song, MAX_KORT) } : {}),
-    ...(g.overnachting != null ? { overnachting: g.overnachting } : {}),
-    ...(g.custom_answer != null ? { custom_answer: g.custom_answer } : {}),
-    ...(g.custom_answer_2 != null ? { custom_answer_2: g.custom_answer_2 } : {}),
-    ...(g.antwoorden ? { antwoorden: g.antwoorden } : {}),
-  }))
+  function velden(g: (typeof schoon)[number]) {
+    return {
+      name: g.naam,
+      voornaam: g.voornaamSchoon,
+      achternaam: tekst(g.achternaam, MAX_NAAM),
+      email: tekst(g.email, MAX_EMAIL),
+      telefoon: tekst(g.telefoon, MAX_TELEFOON),
+      attending: tekst(g.attending, 20) ?? "yes",
+      is_primary: g.is_primary,
+      guest_type: tekst(g.guest_type, 40) ?? groepUitKaart ?? "daggast",
+      is_kind: g.is_kind === true,
+      leeftijd: g.is_kind === true ? leeftijd(g.leeftijd) : null,
+      dietary: tekst(g.dietary, MAX_KORT),
+      allergie: tekst(g.allergie, MAX_KORT),
+      message: tekst(g.message, MAX_BERICHT),
+      status,
+      // Een gast die via een kaart reageert heeft die kaart per definitie
+      // gekregen, dus de reis van dat product springt meteen naar ja of nee.
+      ...(status === "voorlopig"
+        ? { std_status: g.attending === "no" ? "nee" : "ja" }
+        : { inv_status: g.attending === "no" ? "nee" : "ja" }),
+      bron_token: bronToken,
+      apparaat,
+      ...(g.song != null ? { song: tekst(g.song, MAX_KORT) } : {}),
+      ...(g.overnachting != null ? { overnachting: g.overnachting } : {}),
+      ...(g.custom_answer != null ? { custom_answer: g.custom_answer } : {}),
+      ...(g.custom_answer_2 != null ? { custom_answer_2: g.custom_answer_2 } : {}),
+      ...(g.antwoorden ? { antwoorden: g.antwoorden } : {}),
+    }
+  }
 
-  const { error } = await supabase.from("rsvp").insert(rows)
+  // Wie de uitnodiging beantwoordt heeft ook de Save the Date gehad, dus die
+  // staat minstens op verstuurd. Een echt antwoord daarop overschrijven we
+  // niet: dan zou de kolom liegen over wat de gast gezegd heeft.
+  function stdErbij(p: { bestaand: BestaandeRij | null }) {
+    if (status !== "definitief") return {}
+    const nu = reis(p.bestaand?.std_status)
+    return nu === "niet_verstuurd" ? { std_status: "verstuurd" } : {}
+  }
 
-  if (error) {
-    console.error("[rsvp] insert:", error)
+  const rows = paren.map((p) => velden(p.g))
+  let fout: { message: string } | null = null
+
+  const nieuwe = paren
+    .filter((p) => !p.bestaand)
+    .map((p) => ({ event_id, submission_id, huishouden_id, huishouden_naam, ...velden(p.g), ...stdErbij(p) }))
+
+  if (nieuwe.length > 0) {
+    const { error } = await supabase.from("rsvp").insert(nieuwe)
+    if (error) fout = error
+  }
+
+  // Bij een bestaande regel laten we het huishouden staan zoals het bruidspaar
+  // het indeelde. Wij weten niet beter dan zij wie bij wie hoort.
+  for (const p of paren) {
+    if (!p.bestaand || fout) continue
+    const { error } = await supabase
+      .from("rsvp")
+      .update({ submission_id, ...velden(p.g), ...stdErbij(p) })
+      .eq("id", p.bestaand.id)
+    if (error) fout = error
+  }
+
+  if (fout) {
+    console.error("[rsvp] wegschrijven:", fout)
     return Response.json({ error: "Kon aanmelding niet opslaan" }, { status: 500 })
   }
 

@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { laadXlsx } from "@/lib/xlsx-laden"
-import { gastSleutel, reis, REIS_LABEL, type Reis } from "@/lib/gasten"
+import { gastSleutel, komtGast, reis, REIS_LABEL, type Reis } from "@/lib/gasten"
 import GastenToevoegen from "./GastenToevoegen"
 
 const GOLD       = "#C5A059"
@@ -304,7 +304,12 @@ export default function RsvpSection({
     ]
     const rows = rsvps.map((r) => [
       r.name, r.email ?? "",
-      r.attending === "no" ? "Afwezig" : "Aanwezig",
+      // De reis is de waarheid, niet de oude attending-kolom: zonder antwoord
+      // is het geen aanwezig.
+      (() => {
+        const k = komtGast(reis(r.std_status), reis(r.inv_status))
+        return k === true ? "Aanwezig" : k === false ? "Afwezig" : "Nog niets gehoord"
+      })(),
       r.guest_type, r.dietary ?? "",
       ...(hasSong ? [r.song ?? ""] : []),
       ...(hasOvernachting ? [r.overnachting === true ? "Ja" : r.overnachting === false ? "Nee" : ""] : []),
