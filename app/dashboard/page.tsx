@@ -23,6 +23,7 @@ import { PLANS, PLAN_ORDER, normalizePlan, planAllows, planRank, renewalAllowed,
 import Bruiloft, { Altijd, NogNiets } from "./Bruiloft"
 import Checklist from "./Checklist"
 import DeadlineInstelling from "./Deadline"
+import AccountVerwijderen from "./AccountVerwijderen"
 import { huidigeFase } from "@/lib/fasen"
 import { LEGE_STAND, type Stand } from "@/lib/dashboard-tegels"
 import { GEEN_SIGNALEN, type Signalen } from "@/lib/checklist"
@@ -619,6 +620,11 @@ export default async function DashboardPage({
             </div>
           </section>
         )}
+
+        {/* ── Onderaan, klein ──
+            Je moet van ons af kunnen komen zonder te mailen. Niet te opvallend,
+            want dit is geen knop waar je naartoe geleid wilt worden. */}
+        <AccountVerwijderen email={user.email!} aantalBruiloften={hoofden.length} />
 
       </main>
     </div>

@@ -9,6 +9,22 @@
 export const LS_WEBSITE_CONCEPT = "sayingyes_draft"
 export const LS_WEBSITE_INHOUD = "sayingyes_content"
 
+/**
+ * Tijdstip waarop de kaartbouwer een concept klaarzette voor de websitebouwer.
+ *
+ * Dit bestaat omdat de overdracht alleen werkte als je niet was ingelogd. Was
+ * je dat wel, dan keek de websitebouwer alleen naar de server, vond daar niets
+ * en zette je in het aanmaakformulier. Precies wat we met de knop Website
+ * wilden voorkomen: het moet voelen alsof je in dezelfde bouwer blijft.
+ *
+ * Een los tijdstip en niet alleen het concept zelf, want een oud concept in de
+ * browser mag een gewoon bezoek aan de bouwer niet overnemen.
+ */
+export const LS_NAAR_WEBSITE = "sayingyes_naar_website"
+
+/** Hoe lang zo'n overdracht geldig is. Eén klik hoort binnen een uur te volgen. */
+export const NAAR_WEBSITE_GELDIG_MS = 60 * 60 * 1000
+
 export const DEFAULT_PROGRAMMA = {
   layout: "timeline",
   items: [

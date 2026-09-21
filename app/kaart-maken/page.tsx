@@ -32,7 +32,7 @@ import {
   type CardTemplate,
   type CardType,
 } from "@/lib/cards"
-import { hoogstePlan, planMagVersturen, PLANS, formatEur, isPlan, upgradePrice, type Plan } from "@/lib/plans"
+import { hoogstePlan, planMagVersturen, PLANS, formatEur, isPlan, upgradePrice, type Plan, planAllows} from "@/lib/plans"
 import { compressImage } from "@/lib/client-image"
 import CardReveal from "@/app/kaart/[token]/card-reveal"
 import { KLEUR } from "@/lib/ontwerp"
@@ -43,11 +43,13 @@ import {
   standaardAanmeldStand,
   type AanmeldStand,
 } from "@/lib/gasten"
-import { Knop, Melding, Paneel } from "@/components/ui"
+import { Draaier, Knop, Melding } from "@/components/ui"
+import AanmeldFormulier from "@/components/AanmeldFormulier"
 import BouwerSchakelaar from "@/components/BouwerSchakelaar"
 import {
   DEFAULT_PRAKTISCH,
   DEFAULT_PROGRAMMA,
+  LS_NAAR_WEBSITE,
   LS_WEBSITE_CONCEPT,
   LS_WEBSITE_INHOUD,
   nieuwWebsiteConcept,
@@ -217,12 +219,41 @@ export default function KaartMakenPage() {
   // en tot nu toe gebruikten we het voor een onderstreept linkje.
   const [overdracht, setOverdracht] = useState(false)
 
+  // Kom je net terug van de inloglink, dan moet je ontwerp eerst bewaard worden
+  // voordat je naar de kassa kunt. Dat duurt een paar tellen, en je zag in die
+  // tijd de bouwer zonder dat er iets gebeurde. Michiel zat er twintig seconden
+  // naar te kijken en dacht dat het klaar was. Nu ligt er een laag over met wat
+  // er gebeurt.
+  const [hervatten, setHervatten] = useState(() => {
+    if (typeof window === "undefined") return false
+    return new URLSearchParams(window.location.search).get("resume") === "1"
+  })
+
   // Welk pakket deze kaart nodig heeft om verstuurd te mogen worden. Ontwerpen
   // mag altijd; dit is puur wat de kassa straks vraagt.
   const kaartPlan = CARD_TYPE_PLAN[ontwerp.type]
   // Wat de klant afneemt is het hoogste van wat hij al koos en wat deze kaart
   // vraagt: wie Compleet heeft, hoeft voor een tweede kaart niets meer.
   const plan = hoogstePlan(eventPlan ?? kaartPlan, kaartPlan)
+
+  // Mag deze kaart het volledige aanmeldformulier hebben? Op een Save the Date
+  // niet: dat pakket kent geen RSVP, dus een gast die het invulde kreeg van het
+  // aanmeldendpoint een weigering. Je kon het wel kiezen en daarna gewoon voor
+  // 15 euro activeren, en dan beloofde de bouwer iets dat de rest van de site
+  // niet kan leveren.
+  const magVolledig = planAllows(plan, "rsvp")
+  const aanmeldKeuzes: AanmeldStand[] = magVolledig
+    ? ["geen", "janee", "volledig"]
+    : ["geen", "janee"]
+
+  // Stond er al volledig op een kaart die dat niet mag, bijvoorbeeld omdat het
+  // ooit wel kon, dan zetten we hem terug. Anders staat er een keuze in de
+  // kaart die nergens in de knoppen te zien is.
+  useEffect(() => {
+    if (!magVolledig && ontwerp.aanmelden === "volledig") {
+      setOntwerp((o) => ({ ...o, aanmelden: "janee" }))
+    }
+  }, [magVolledig, ontwerp.aanmelden])
   // Al betaald en het pakket dekt deze kaart? Dan is de kaart meteen live.
   const alAfgenomen = eventStatus === "published" && planMagVersturen(eventPlan, ontwerp.type)
   // Wat er nog bij komt: bij een betaalde bruiloft alleen het verschil.
@@ -482,7 +513,13 @@ export default function KaartMakenPage() {
   // websiteconcept laten we met rust.
   function neemMeeNaarWebsite() {
     try {
-      if (localStorage.getItem(LS_WEBSITE_CONCEPT)) return
+      // Staat er al een websiteconcept, dan laten we dat met rust; alleen de
+      // overdracht markeren, zodat de bouwer hem oppakt in plaats van je naar
+      // het aanmaakformulier te sturen.
+      if (localStorage.getItem(LS_WEBSITE_CONCEPT)) {
+        localStorage.setItem(LS_NAAR_WEBSITE, String(Date.now()))
+        return
+      }
       localStorage.setItem(
         LS_WEBSITE_CONCEPT,
         JSON.stringify(
@@ -498,6 +535,9 @@ export default function KaartMakenPage() {
         LS_WEBSITE_INHOUD,
         JSON.stringify({ Programma: DEFAULT_PROGRAMMA, Informatie: DEFAULT_PRAKTISCH })
       )
+      // Zodat de websitebouwer weet dat dit een overdracht is en niet een oud
+      // concept dat nog in de browser stond.
+      localStorage.setItem(LS_NAAR_WEBSITE, String(Date.now()))
     } catch {
       // Zonder browseropslag begint de websitebouwer gewoon leeg
     }
@@ -624,7 +664,8 @@ export default function KaartMakenPage() {
     } catch {}
     params.delete("resume")
     window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`)
-    if (actie) void voerUit(actie)
+    if (actie) void voerUit(actie).finally(() => setHervatten(false))
+    else setHervatten(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [geladen, userEmail])
 
@@ -780,34 +821,83 @@ export default function KaartMakenPage() {
         </div>
       </header>
 
+      {/* ── Terug van de inloglink ──
+          Een paar tellen werk, maar zonder uitleg voelt het als stilstand. */}
+      {hervatten && (
+        <div
+          className="fixed inset-0 z-[140] flex items-center justify-center p-4"
+          style={{ backgroundColor: "rgba(250,247,242,0.94)", backdropFilter: "blur(2px)" }}
+          role="status"
+          aria-live="polite"
+        >
+          <div className="flex flex-col items-center gap-3 text-center">
+            <span style={{ color: GOLD }}>
+              <Draaier maat={28} />
+            </span>
+            <p
+              className="text-xl"
+              style={{ fontFamily: "var(--font-cormorant)", color: CHARCOAL, fontWeight: 600 }}
+            >
+              Je bent ingelogd
+            </p>
+            <p className="text-sm max-w-xs" style={{ color: BODY }}>
+              We bewaren je ontwerp en brengen je naar de volgende stap. Dit duurt een paar tellen.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* ── De overdracht na het eerste bewaren ──
           Hier komt de gastenlijst voor het eerst ter sprake, op het enige
           moment waarop dat logisch is: je hebt net een kaart gemaakt, dus de
-          vraag die je nu zelf hebt is wie hem moet krijgen. Niet als functie in
-          een menu, maar als antwoord op die vraag. */}
+          vraag die je nu zelf hebt is wie hem moet krijgen.
+
+          Als pop-up en niet als blok boven de bouwer. Zo stond het eerst, en
+          dan schuift het hele ontwerp naar beneden en zie je niet wat er
+          gebeurd is. Michiels woorden: heel raar, maak er een pop-up van. */}
       {overdracht && (
-        <div className="px-4 md:px-6 pt-4">
-          <Paneel>
-            <p className="text-lg mb-1" style={{ fontFamily: "var(--font-cormorant)", color: KLEUR.inkt, fontWeight: 600 }}>
-              Bewaard. Je hebt nu een {isTrouwkaart ? "trouwkaart" : "Save the Date"} in concept.
+        <div
+          className="fixed inset-0 z-[130] flex items-center justify-center p-4"
+          style={{ backgroundColor: "rgba(26,26,26,0.5)", backdropFilter: "blur(4px)" }}
+          onClick={() => setOverdracht(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Je ontwerp is bewaard"
+        >
+          <div
+            className="w-full max-w-md rounded-3xl p-7"
+            style={{ backgroundColor: IVORY }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p
+              className="text-2xl mb-2"
+              style={{ fontFamily: "var(--font-cormorant)", color: CHARCOAL, fontWeight: 600 }}
+            >
+              Bewaard
             </p>
-            <p className="text-sm mb-3" style={{ color: KLEUR.tekst }}>
-              Je vindt hem terug in je dashboard, ook als je dit venster sluit. Wie ga je uitnodigen?
-              Je gastenlijst hoort bij elk pakket en is gratis: je houdt er zelf bij wie je hebt
-              uitgenodigd en wie er komt, of je laat hem zich vullen door de reacties op je kaart.
+            <p className="text-sm mb-1.5" style={{ color: BODY }}>
+              Je hebt nu een {isTrouwkaart ? "trouwkaart" : "Save the Date"} in concept. Je vindt
+              hem terug in je dashboard, ook als je dit venster sluit.
             </p>
-            <div className="flex flex-wrap gap-2">
-              <Knop soort="primair" href="/dashboard#gasten" klein>
+            <p className="text-sm mb-5" style={{ color: BODY }}>
+              <strong style={{ color: CHARCOAL }}>Wie ga je uitnodigen?</strong> Je gastenlijst hoort
+              bij elk pakket en is gratis. Je houdt er zelf bij wie je hebt uitgenodigd en wie er
+              komt, of je laat hem zich vullen door de reacties op je kaart.
+            </p>
+            <div className="flex flex-col gap-2">
+              <Knop soort="primair" href="/dashboard#gasten" breed>
                 Begin je gastenlijst
               </Knop>
-              <Knop soort="rand" klein onClick={() => setOverdracht(false)}>
-                Verder ontwerpen
-              </Knop>
-              <Knop soort="rand" href="/dashboard" klein>
-                Naar je dashboard
-              </Knop>
+              <div className="flex gap-2">
+                <Knop soort="rand" breed onClick={() => setOverdracht(false)}>
+                  Verder ontwerpen
+                </Knop>
+                <Knop soort="rand" breed href="/dashboard">
+                  Naar je dashboard
+                </Knop>
+              </div>
             </div>
-          </Paneel>
+          </div>
         </div>
       )}
 
@@ -1058,7 +1148,7 @@ export default function KaartMakenPage() {
 
           <Sectie open={stap === "aanmelden"} onToggle={() => setStap(stap === "aanmelden" ? null : "aanmelden")} titel="Aanmelden">
             <div className="flex flex-col gap-2">
-              {(["geen", "janee", "volledig"] as AanmeldStand[]).map((s) => (
+              {aanmeldKeuzes.map((s) => (
                 <button
                   key={s}
                   onClick={() => update({ aanmelden: s })}
@@ -1074,11 +1164,34 @@ export default function KaartMakenPage() {
                 </button>
               ))}
             </div>
-            <p className="text-[11px] leading-snug" style={{ color: SUBTLE }}>
-              Wat je gasten invullen komt in je gastenlijst. Bij een Save the Date is alleen vragen of ze
-              komen meestal genoeg; dieetwensen vraag je pas bij de uitnodiging, want zo ver vooruit weet
-              niemand dat. Volledig aanmelden hoort bij het pakket Uitnodiging &amp; RSVP.
-            </p>
+
+            {/* Wat de gastenlijst is, uitgelegd op de plek waar je er voor het
+                eerst tegenaan loopt. Hier stond alleen "komt in je gastenlijst",
+                en dat zegt niets als je nog nooit een dashboard hebt gezien. */}
+            {ontwerp.aanmelden !== "geen" && (
+              <div
+                className="px-3 py-2.5 rounded-xl flex flex-col gap-1.5"
+                style={{ backgroundColor: GOLD_BG, border: `1px solid ${GOLD_LIGHT}` }}
+              >
+                <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>
+                  Je krijgt er een gastenlijst bij, gratis
+                </span>
+                <span className="text-[11px] leading-snug" style={{ color: SUBTLE }}>
+                  Elk antwoord komt in één lijst te staan: wie komt, wie niet, en van wie je nog
+                  niets hebt gehoord. Daar zie je met één druk wie je nog moet najagen, en je kunt
+                  er zelf namen bij typen of een lijst uit Excel in plakken. Je vindt hem in je
+                  dashboard zodra je dit ontwerp bewaart.
+                </span>
+              </div>
+            )}
+
+            {!magVolledig && (
+              <p className="text-[11px] leading-snug" style={{ color: SUBTLE }}>
+                De volledige aanmelding, met dieetwensen, allergieën en je eigen vragen, hoort bij de
+                trouwkaart. Op een Save the Date vraag je alleen of iemand komt: dieetwensen weet
+                niemand een jaar vooruit, en een kort formulier vullen mensen wel in.
+              </p>
+            )}
           </Sectie>
 
           <Sectie open={stap === "taal"} onToggle={() => setStap(stap === "taal" ? null : "taal")} titel="Taal van de kaart">
@@ -1159,8 +1272,32 @@ export default function KaartMakenPage() {
                 rsvpUrl={null}
                 startOpen
                 watermerk="licht"
-              />
-            </div>
+              />            </div>
+
+            {/* ── Wat je gasten zien ──
+                Michiels punt: de keuze die je bij Aanmelden maakt moet ook in de
+                bouwer te zien zijn, en niet pas als de kaart de deur uit is.
+                Dit is hetzelfde formulier dat je gast krijgt, alleen kan er
+                niets verstuurd worden. */}
+            {ontwerp.aanmelden !== "geen" && (
+              <div className="mt-6">
+                <p className="text-center text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: SUBTLE }}>
+                  En dit vullen je gasten in
+                </p>
+                <div
+                  className="rounded-2xl p-5"
+                  style={{ backgroundColor: "#fff", border: `1px solid ${GOLD_LIGHT}` }}
+                >
+                  <AanmeldFormulier
+                    stand={ontwerp.aanmelden}
+                    voorbeeld
+                    compact
+                    accentColor={sc.accent ?? GOLD}
+                    guestTypes={ontwerp.guestType ? [ontwerp.guestType] : ["daggast"]}
+                  />
+                </div>
+              </div>
+            )}
 
           </div>
         </main>
@@ -1190,6 +1327,25 @@ export default function KaartMakenPage() {
             agendaUrl={huidigeKaart && ontwerp.datum ? `/kaart/${huidigeKaart.share_token}/agenda` : null}
             previewNotice
           />
+
+          {/* Ook hier het formulier, want dit is "hoe de kaart opengaat" en je
+              gast krijgt de vraag onder de kaart te zien. */}
+          {ontwerp.aanmelden !== "geen" && (
+            <div className="mx-auto max-w-md px-4 pb-16">
+              <div
+                className="rounded-2xl p-5"
+                style={{ backgroundColor: "#fff", border: `1px solid ${GOLD_LIGHT}` }}
+              >
+                <AanmeldFormulier
+                  stand={ontwerp.aanmelden}
+                  voorbeeld
+                  compact
+                  accentColor={sc.accent ?? GOLD}
+                  guestTypes={ontwerp.guestType ? [ontwerp.guestType] : ["daggast"]}
+                />
+              </div>
+            </div>
+          )}
         </div>
       )}
 

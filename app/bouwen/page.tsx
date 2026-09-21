@@ -20,6 +20,7 @@ import BouwerSchakelaar from "@/components/BouwerSchakelaar"
 import { Knop, Melding } from "@/components/ui"
 import { KLEUR } from "@/lib/ontwerp"
 import SophieTutorial, { type SophieNav } from "@/components/SophieTutorial"
+import { LS_NAAR_WEBSITE, NAAR_WEBSITE_GELDIG_MS } from "@/lib/nieuw-concept"
 
 type EventType = "bruiloft" | "verjaardag" | "evenement"
 type PageId = "Home" | "Programma" | "RSVP" | "Informatie" | "Cadeautips" | "Fotos" | "Ceremoniemeesters" | "OnsVerhaal"
@@ -723,60 +724,70 @@ export default function BouwenPage() {
 
     // No URL param — check auth, then fall back to localStorage draft for new (guest) users
     createClient().auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) {
-        // Not logged in — try to load a localStorage draft written by /aanmaken
+      // Een concept uit de browseropslag inlezen. Dit staat als functie los,
+      // omdat er twee wegen naartoe zijn: iemand die niet is ingelogd en zijn
+      // werk uit het aanmaakformulier heeft, en iemand die wel is ingelogd en
+      // net vanuit de kaartbouwer op Website drukte. Dat tweede ging eerst mis,
+      // want alleen de eerste tak keek naar de browser.
+      function laadConceptUitBrowser(email?: string | null): boolean {
         try {
           const savedDraft = localStorage.getItem("sayingyes_draft")
-          if (savedDraft) {
-            const d = JSON.parse(savedDraft) as Record<string, unknown>
-            const savedContent = localStorage.getItem("sayingyes_content")
-            const extraContent: ContentMap = savedContent ? JSON.parse(savedContent) : {}
-            const hp = d.homepage_settings as Partial<HomepageSettings> | undefined
-            const hc = d.homeContent as HomeContent | undefined
+          if (!savedDraft) return false
+        const d = JSON.parse(savedDraft) as Record<string, unknown>
+        const savedContent = localStorage.getItem("sayingyes_content")
+        const extraContent: ContentMap = savedContent ? JSON.parse(savedContent) : {}
+        const hp = d.homepage_settings as Partial<HomepageSettings> | undefined
+        const hc = d.homeContent as HomeContent | undefined
 
-            setDraft({
-              type: (d.type as EventType) ?? "bruiloft",
-              naam: (d.naam as string) ?? "",
-              datum: (d.datum as string) ?? "",
-              locatie: (d.locatie as string) ?? "",
-              email: (d.email as string) ?? "",
-              slug: (d.slug as string) ?? undefined,
-              nav_title: (d.nav_title as string) ?? undefined,
-              style: (d.style as string) ?? "ivoor",
-              navLayout: (d.nav_layout as Draft["navLayout"]) ?? "split",
-              use_frame: (d.use_frame as boolean) ?? true,
-              frame_style: (d.frame_style as string) ?? "olive-square",
-              initials: (d.initials as string) ?? undefined,
-              frame_names: (d.frame_names as string) ?? undefined,
-              frame_location: (d.frame_location as string) ?? undefined,
-              frameInitialsSize: (d.frameInitialsSize as number) ?? undefined,
-              frameNamesSize: (d.frameNamesSize as number) ?? undefined,
-              frameDateSize: (d.frameDateSize as number) ?? undefined,
-              frameLocationSize: (d.frameLocationSize as number) ?? undefined,
-              font_hero: (d.font_hero as string) ?? "cormorant",
-              font_initials: (d.font_initials as string) ?? "cormorant",
-              font_frame_names: (d.font_frame_names as string) ?? "cormorant",
-              font_page_titles: (d.font_page_titles as string) ?? "cormorant",
-              homeContent: hc,
-            })
-            setStyle(((d.style as string) || "ivoor") as Style)
-            setFontHero((d.font_hero as string) || "cormorant")
-            setFontInitials((d.font_initials as string) || "cormorant")
-            setFontFrameNames((d.font_frame_names as string) || "cormorant")
-            setFontPageTitles((d.font_page_titles as string) || "cormorant")
-            if (hp) setHpSettings({ ...DEFAULT_HOMEPAGE_SETTINGS, ...hp })
-            setContent({
-              ...extraContent,
-              ...(hc ? { Home: hc as unknown as Record<string, unknown> } : {}),
-            })
-            setActive({
-              Home: true, Programma: true, RSVP: true, Informatie: true,
-              Cadeautips: true, OnsVerhaal: true, Ceremoniemeesters: true, Fotos: false,
-            })
-            if (d.email) setAuthEmail(d.email as string)
-            return
-          }
-        } catch {}
+        setDraft({
+          type: (d.type as EventType) ?? "bruiloft",
+          naam: (d.naam as string) ?? "",
+          datum: (d.datum as string) ?? "",
+          locatie: (d.locatie as string) ?? "",
+          email: (d.email as string) ?? "",
+          slug: (d.slug as string) ?? undefined,
+          nav_title: (d.nav_title as string) ?? undefined,
+          style: (d.style as string) ?? "ivoor",
+          navLayout: (d.nav_layout as Draft["navLayout"]) ?? "split",
+          use_frame: (d.use_frame as boolean) ?? true,
+          frame_style: (d.frame_style as string) ?? "olive-square",
+          initials: (d.initials as string) ?? undefined,
+          frame_names: (d.frame_names as string) ?? undefined,
+          frame_location: (d.frame_location as string) ?? undefined,
+          frameInitialsSize: (d.frameInitialsSize as number) ?? undefined,
+          frameNamesSize: (d.frameNamesSize as number) ?? undefined,
+          frameDateSize: (d.frameDateSize as number) ?? undefined,
+          frameLocationSize: (d.frameLocationSize as number) ?? undefined,
+          font_hero: (d.font_hero as string) ?? "cormorant",
+          font_initials: (d.font_initials as string) ?? "cormorant",
+          font_frame_names: (d.font_frame_names as string) ?? "cormorant",
+          font_page_titles: (d.font_page_titles as string) ?? "cormorant",
+          homeContent: hc,
+        })
+        setStyle(((d.style as string) || "ivoor") as Style)
+        setFontHero((d.font_hero as string) || "cormorant")
+        setFontInitials((d.font_initials as string) || "cormorant")
+        setFontFrameNames((d.font_frame_names as string) || "cormorant")
+        setFontPageTitles((d.font_page_titles as string) || "cormorant")
+        if (hp) setHpSettings({ ...DEFAULT_HOMEPAGE_SETTINGS, ...hp })
+        setContent({
+          ...extraContent,
+          ...(hc ? { Home: hc as unknown as Record<string, unknown> } : {}),
+        })
+        setActive({
+          Home: true, Programma: true, RSVP: true, Informatie: true,
+          Cadeautips: true, OnsVerhaal: true, Ceremoniemeesters: true, Fotos: false,
+        })
+          const mail = (d.email as string) || email
+          if (mail) setAuthEmail(mail)
+          return true
+        } catch {
+          return false
+        }
+      }
+
+      if (!user) {
+        if (laadConceptUitBrowser()) return
         window.location.replace("/aanmaken")
         return
       }
@@ -829,6 +840,21 @@ export default function BouwenPage() {
             window.location.replace(`/bouwen?event_id=${json.id}`)
             return
           }
+        }
+      } catch {}
+
+      // Komt dit net uit de kaartbouwer? Dan hoort dat concept voor te gaan op
+      // wat er op de server staat. Anders belandt iemand die op Website drukt
+      // in het aanmaakformulier, terwijl de knop juist bedoeld is om te laten
+      // voelen dat je in dezelfde bouwer blijft. Dit ging alleen goed zolang je
+      // niet was ingelogd, want alleen die tak keek naar de browseropslag.
+      try {
+        const overdracht = Number(localStorage.getItem(LS_NAAR_WEBSITE) ?? 0)
+        const versGenoeg = overdracht > 0 && Date.now() - overdracht < NAAR_WEBSITE_GELDIG_MS
+        const vanKaart = localStorage.getItem("sayingyes_draft")
+        if (versGenoeg && vanKaart) {
+          localStorage.removeItem(LS_NAAR_WEBSITE)
+          if (laadConceptUitBrowser(user.email)) return
         }
       } catch {}
 

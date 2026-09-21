@@ -71,6 +71,13 @@ export interface AanmeldFormulierProps {
   showOvernachting?: boolean
   customQuestion?: string | null
   customQuestion2?: string | null
+  /**
+   * Alleen om te laten zien. In de kaartbouwer wil het bruidspaar zien wat zijn
+   * gasten te zien krijgen, en dan mag er niets verstuurd worden. Michiels punt
+   * van 21 september 2026: de keuze die je maakt moet ook in de bouwer zichtbaar
+   * zijn, en niet pas als de kaart al de deur uit is.
+   */
+  voorbeeld?: boolean
 }
 
 export default function AanmeldFormulier({
@@ -87,6 +94,7 @@ export default function AanmeldFormulier({
   showOvernachting = false,
   customQuestion = null,
   customQuestion2 = null,
+  voorbeeld = false,
 }: AanmeldFormulierProps) {
   const stand = aanmeldStand(standIn)
   const volledig = stand === "volledig"
@@ -127,6 +135,10 @@ export default function AanmeldFormulier({
   async function verstuur(e: React.FormEvent) {
     e.preventDefault()
     setFout(null)
+
+    // In de bouwer staat dit formulier er alleen om te laten zien wat je gasten
+    // krijgen. Er hoort niets naar de database te gaan.
+    if (voorbeeld) return
 
     if (!komt) { setFout("Laat even weten of je erbij bent."); return }
     if (!personen[0].voornaam.trim()) { setFout("Vul je voornaam in."); return }
@@ -476,15 +488,20 @@ export default function AanmeldFormulier({
 
           <button
             type="submit"
-            disabled={status === "bezig"}
+            disabled={status === "bezig" || voorbeeld}
             className="w-full py-3.5 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-60"
-            style={{ backgroundColor: accentColor, color: knopTekstKleur, border: "none", cursor: "pointer" }}
+            style={{
+              backgroundColor: accentColor,
+              color: knopTekstKleur,
+              border: "none",
+              cursor: voorbeeld ? "default" : "pointer",
+            }}
           >
             {status === "bezig" ? "Versturen..." : "Versturen"}
           </button>
 
           <p className="text-[11px] leading-snug text-center" style={{ color: labelColor, opacity: 0.6 }}>
-            Je gegevens gaan naar het bruidspaar.
+            {voorbeeld ? "Dit is wat je gasten zien" : "Je gegevens gaan naar het bruidspaar."}
           </p>
         </>
       )}
