@@ -1,211 +1,42 @@
-﻿import type { Metadata } from "next"
-import { redirect } from "next/navigation"
+import type { Metadata } from "next"
 import Link from "next/link"
+import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase-server"
+import { laadBruiloft, bruiloftNaam } from "@/lib/bruiloft-server"
+import BouwerSchil from "@/components/BouwerSchil"
+import RsvpSection from "./RsvpSection"
+import GuestPhotosSection from "./GuestPhotosSection"
+import CardsSection from "./CardsSection"
+import { EventCard, SectionLabel } from "./Beheer"
+import { KaartTegel, Tegel, TegelKnop, Teller, WebsiteTegel, type KaartRegel } from "./Tegels"
+import { maxPhotosPerEvent } from "@/lib/guest-photos"
+import { normalizePlan, planAllows, planMagVersturen, PLANS, formatEur } from "@/lib/plans"
+import { afstandInWoorden } from "@/lib/fasen"
+import { leesStand, voortgang } from "@/lib/checklist"
+import { komtGast, reis } from "@/lib/gasten"
+import { eventSiteLabel } from "@/lib/site-url"
+import { KLEUR } from "@/lib/ontwerp"
+import type { Onderdeel } from "@/components/BouwerSchakelaar"
 
 export const metadata: Metadata = {
   title: "Dashboard",
   robots: { index: false, follow: false },
 }
-import { createServiceClient } from "@/lib/supabase"
-import { SignOutButton } from "./SignOutButton"
-import RsvpSection, { type RsvpRow } from "./RsvpSection"
-import GuestPhotosSection, { type GuestPhotoRow, type GuestPhotoSettings } from "./GuestPhotosSection"
-import { maxPhotosPerEvent } from "@/lib/guest-photos"
-import CardsSection from "./CardsSection"
-import type { CardRow } from "@/lib/cards"
-import { eventSiteUrl, eventSiteLabel } from "@/lib/site-url"
-import SlugEditor from "./SlugEditor"
-import DeleteDraftButton from "./DeleteDraftButton"
-import RenewalButton from "./RenewalButton"
-import DeleteEventButton from "./DeleteEventButton"
-import { PLANS, PLAN_ORDER, normalizePlan, planAllows, planRank, renewalAllowed, upgradePrice, formatEur } from "@/lib/plans"
-import Bruiloft, { Altijd, NogNiets } from "./Bruiloft"
-import Checklist from "./Checklist"
-import DeadlineInstelling from "./Deadline"
-import AccountVerwijderen from "./AccountVerwijderen"
-import { huidigeFase } from "@/lib/fasen"
-import { LEGE_STAND, type Stand } from "@/lib/dashboard-tegels"
-import { GEEN_SIGNALEN, type Signalen } from "@/lib/checklist"
-import { komtGast, reis } from "@/lib/gasten"
 
-const GOLD       = "#C5A059"
-const GOLD_LIGHT = "#E8D5A3"
-const GOLD_BG    = "#FBF5E8"
-const CHARCOAL   = "#1A1A1A"
-const IVORY      = "#FAF7F2"
-const IVORY_CARD = "#F5EFE4"
-const BODY       = "#5C5248"
-const SOFT       = "#9A8E82"
+// Het dashboard: het eerste tabblad van dezelfde schil als de bouwers.
+//
+// Uit het klantreisgesprek van 21 september 2026. De vorige versie stapelde
+// een fasenbalk, drie banden, een checklist van tweeëndertig punten en de
+// instellingen op één pagina, en zei bovendien dingen die uit de kalender
+// kwamen in plaats van uit de bruiloft ("je Save the Date is eruit" terwijl
+// er niets verstuurd was). Michiels oordeel: overweldigend, en het dashboard
+// moet een USP zijn en niet als werk voelen.
+//
+// Nu: de bruiloft, een teller, vier tegels, en één regel onderaan. Alles komt
+// uit wat er echt gebeurd is. Wat je niet hebt gekocht is grijs met één zin en
+// een prijs. Checklist en instellingen hebben een eigen pagina.
 
-type Event = {
-  id: string
-  slug: string
-  title: string
-  type: string
-  status: string
-  datum?: string | null
-  locatie?: string | null
-  plan?: string | null
-  created_at: string
-  expires_at: string | null
-  hero_image_url?: string | null
-}
-
-// Upgrade-knoppen naar elk hoger pakket, met het bij te betalen bedrag
-function UpgradeLinks({ event }: { event: Event }) {
-  const huidig = normalizePlan(event.plan)
-  const hoger = PLAN_ORDER.filter((p) => planRank(p) > planRank(huidig))
-  if (hoger.length === 0) return null
-  return (
-    <div className="flex flex-wrap gap-2 mt-2">
-      {hoger.map((p) => {
-        const bedrag = upgradePrice(huidig, p)
-        return (
-          <Link
-            key={p}
-            href={`/betalen?event_id=${event.id}&upgrade=${p}`}
-            className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all hover:-translate-y-0.5"
-            style={{ backgroundColor: GOLD_BG, color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}` }}
-          >
-            Upgrade naar {PLANS[p].label}{bedrag != null ? ` (+${formatEur(bedrag)})` : ""}
-          </Link>
-        )
-      })}
-    </div>
-  )
-}
-
-const TYPE_LABEL: Record<string, string> = {
-  bruiloft: "Bruiloft",
-  verjaardag: "Verjaardag",
-  evenement: "Evenement",
-}
-
-function EventCard({ event, isDraft = false }: { event: Event; isDraft?: boolean }) {
-  const typeLabel = TYPE_LABEL[event.type] ?? event.type
-  const date = new Date(event.created_at).toLocaleDateString("nl-NL", {
-    day: "numeric", month: "long", year: "numeric",
-  })
-
-  const expiresAt           = event.expires_at ? new Date(event.expires_at) : null
-  const now                 = new Date()
-  const daysUntilExpiry     = expiresAt ? Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : null
-  const isSubscriptionExpired = event.status === "expired" || (daysUntilExpiry !== null && daysUntilExpiry <= 0)
-  const isExpiringSoon      = !isSubscriptionExpired && daysUntilExpiry !== null && daysUntilExpiry <= 30
-
-  return (
-    <div
-      className="rounded-2xl p-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between md:gap-4 md:p-6"
-      style={{ backgroundColor: IVORY_CARD, border: `1px solid ${GOLD_LIGHT}` }}
-    >
-      {/* Text section */}
-      <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-2 mb-1.5">
-          <span className="text-xs font-semibold uppercase tracking-[0.1em]" style={{ color: GOLD }}>{typeLabel}</span>
-          {!isDraft && (
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: GOLD_BG, color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}` }}>
-              {PLANS[normalizePlan(event.plan)].label}
-            </span>
-          )}
-          {isDraft ? (
-            <span className="text-xs bg-amber-100 text-amber-700 font-semibold px-2 py-0.5 rounded-full">
-              Concept
-            </span>
-          ) : isSubscriptionExpired ? (
-            <span className="text-xs bg-red-100 text-red-700 font-semibold px-2 py-0.5 rounded-full">
-              Verlopen
-            </span>
-          ) : isExpiringSoon ? (
-            <span className="text-xs bg-orange-100 text-orange-700 font-semibold px-2 py-0.5 rounded-full">
-              Verloopt binnenkort
-            </span>
-          ) : (
-            <span className="text-xs bg-emerald-100 text-emerald-700 font-semibold px-2 py-0.5 rounded-full">
-              Live
-            </span>
-          )}
-        </div>
-        <h3
-          className={planAllows(event.plan, "rsvp") ? "text-lg font-mono" : "text-lg"}
-          style={{ fontWeight: 700, color: CHARCOAL }}
-        >
-          {planAllows(event.plan, "rsvp") ? `${event.slug}.sayingyes.nl` : event.title}
-        </h3>
-        <p className="text-xs mt-0.5" style={{ color: BODY }}>Opgeslagen op {date}</p>
-        {!isDraft && !renewalAllowed(event.plan) && (
-          <p className="text-xs mt-0.5" style={{ color: BODY }}>
-            Geen einddatum, jullie kaartlink blijft werken
-          </p>
-        )}
-        {!isDraft && renewalAllowed(event.plan) && (
-          <p className="text-xs mt-0.5" style={{ color: isSubscriptionExpired ? "#b45309" : isExpiringSoon ? "#b45309" : BODY }}>
-            {!expiresAt
-              ? "Vervaldatum niet ingesteld"
-              : isSubscriptionExpired
-              ? `Verlopen op ${expiresAt.toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })}`
-              : `Geldig tot ${expiresAt.toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })}${isExpiringSoon ? `, nog ${daysUntilExpiry} dagen` : ""}`
-            }
-          </p>
-        )}
-        {/* Het webadres is alleen relevant als er een publieke pagina bij hoort */}
-        {planAllows(event.plan, "rsvp") && (
-          <div className="mt-2">
-            <SlugEditor eventId={event.id} currentSlug={event.slug} isLive={!isDraft} />
-          </div>
-        )}
-        {!isDraft && <UpgradeLinks event={event} />}
-      </div>
-
-      {/* Actions */}
-      <div className="flex flex-col gap-3 md:flex-shrink-0 md:min-w-[200px]">
-        <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
-          {isDraft && (
-            <DeleteDraftButton eventId={event.id} />
-          )}
-          {!isDraft && !isSubscriptionExpired && planAllows(event.plan, "rsvp") && (
-            <a
-              href={eventSiteUrl(event.slug)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm font-medium text-center py-2 md:py-0 transition-colors"
-              style={{ color: BODY }}
-              title={eventSiteLabel(event.slug)}
-            >
-              {planAllows(event.plan, "site") ? "Bekijken →" : "Bekijk RSVP-pagina →"}
-            </a>
-          )}
-          {!isDraft && renewalAllowed(event.plan) && (
-            <RenewalButton eventId={event.id} />
-          )}
-          <Link
-            href={planAllows(event.plan, "site") ? `/bouwen?event_id=${event.id}` : `/kaart-maken?event_id=${event.id}`}
-            className="text-sm font-semibold px-4 py-3 md:py-2 rounded-xl text-center transition-all hover:-translate-y-0.5 w-full md:w-auto"
-            style={{ backgroundColor: CHARCOAL, color: IVORY }}
-          >
-            {planAllows(event.plan, "site") ? "Verder bewerken" : "Ontwerp aanpassen"}
-          </Link>
-        </div>
-        {!isDraft && (
-          <div className="flex flex-wrap items-center gap-4 pt-1" style={{ borderTop: `1px solid #E8D5A3` }}>
-            <DeleteEventButton eventId={event.id} />
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <h2
-      className="text-xs font-semibold uppercase tracking-[0.18em]"
-      style={{ color: GOLD }}
-    >
-      {children}
-    </h2>
-  )
-}
+const FONT_KOP = "var(--font-cormorant)"
 
 export default async function DashboardPage({
   searchParams,
@@ -215,355 +46,198 @@ export default async function DashboardPage({
   const params = searchParams ? await searchParams : undefined
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect("/inloggen")
+  if (!user?.email) redirect("/inloggen")
 
-  const service = createServiceClient()
-  const { data: events } = await service
-    .from("events")
-    .select("id, slug, title, type, status, plan, created_at, expires_at, hero_image_url, datum, locatie")
-    .eq("user_email", user.email!)
-    .order("created_at", { ascending: false })
+  const gekozen = typeof params?.b === "string" ? params.b : null
+  const { bruiloft, alle, groep, extra, rsvps, cards, cardsAvailable, guestPhotos, gpSettings, stand, signalen } =
+    await laadBruiloft(user.email, gekozen)
 
-  const published = (events ?? []).filter((e: Event) => ["published", "expired"].includes(e.status))
-  const drafts    = (events ?? []).filter((e: Event) => e.status === "draft")
-  const firstName = user.email?.split("@")[0] ?? "daar"
-  // Pakketrechten: RSVP-overzicht vanaf Uitnodiging & RSVP, fotomuur alleen bij Compleet
-  // De gastenlijst hoort bij elk pakket: ook met alleen een Save the Date kun
-  // je bijhouden wie je uitnodigt en wie voorlopig ja zei. Wat per pakket
-  // verschilt is hoeveel er gevraagd wordt, niet of je een lijst hebt.
-  const gastEvents  = published
-  // Alleen deze pakketten hebben het volledige aanmeldformulier
-  const rsvpEvents  = published.filter((e: Event) => planAllows(e.plan, "rsvp"))
-  const photoEvents = published.filter((e: Event) => planAllows(e.plan, "photos"))
+  const naam = bruiloftNaam(bruiloft)
+  const datum = bruiloft?.datum
+    ? new Date(bruiloft.datum).toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })
+    : null
 
-  let rsvps: RsvpRow[] = []
-  // Gastenfotomuur: apart opgevraagd zodat het dashboard blijft werken zolang
-  // de migratie (guest_photos) nog niet is gedraaid.
-  let guestPhotos: GuestPhotoRow[] = []
-  let gpSettings: Record<string, GuestPhotoSettings> = {}
-  if (gastEvents.length > 0) {
-    const { data: rsvpData } = await service
-      .from("rsvp")
-      .select("id, event_id, submission_id, name, voornaam, achternaam, email, telefoon, guest_type, dietary, allergie, is_primary, attending, message, song, overnachting, custom_answer, custom_answer_2, is_kind, leeftijd, status, std_status, inv_status, bron_token, huishouden_naam, created_at")
-      .in("event_id", gastEvents.map((e: Event) => e.id))
-      .order("created_at", { ascending: false })
-    rsvps = (rsvpData ?? []) as RsvpRow[]
+  // Per kaart: hoeveel gasten via die kaart reageerden. Dat weten we uit de
+  // link waarop ze antwoordden. Hoeveel er per kaart verstuurd is weten we pas
+  // als de klant dat per kaart aangeeft; tot die tijd staat het totaal per
+  // soort in het chipje.
+  function regels(type: "save_the_date" | "trouwkaart"): KaartRegel[] {
+    return cards
+      .filter((c) => c.type === type)
+      .map((card) => ({
+        card,
+        gereageerd: rsvps.filter(
+          (r) => r.bron_token === card.share_token && komtGast(reis(r.std_status), reis(r.inv_status)) !== null
+        ).length,
+      }))
   }
-  if (photoEvents.length > 0) {
-    const eventIds = photoEvents.map((e: Event) => e.id)
-    const { data: gpEvents } = await service
-      .from("events")
-      .select("id, guest_photos_enabled, guest_photos_moderation, style")
-      .in("id", eventIds)
-    if (gpEvents) {
-      gpSettings = Object.fromEntries(
-        gpEvents.map((e) => [
-          e.id,
-          {
-            enabled: (e.guest_photos_enabled as boolean | null) ?? false,
-            moderation: (e.guest_photos_moderation as "live" | "approve" | null) ?? "live",
-            style: (e.style as string | null) ?? "roze",
-          },
-        ])
-      )
-      const { data: gpData } = await service
-        .from("guest_photos")
-        .select("id, event_id, name, caption, url, status, created_at")
-        .in("event_id", eventIds)
-        .order("created_at", { ascending: false })
-      guestPhotos = (gpData ?? []) as GuestPhotoRow[]
-    }
-  }
+  const stdRegels = regels("save_the_date")
+  const invRegels = regels("trouwkaart")
+  const magStd = groep.some((e) => planMagVersturen(e.plan, "save_the_date"))
+  const magInv = groep.some((e) => planMagVersturen(e.plan, "trouwkaart"))
 
-  // Digitale kaarten: voor alle events (ook concepten — een Save the Date
-  // verstuur je juist vóór de site live is). Apart opgevraagd zodat het
-  // dashboard blijft werken zolang de cards-migratie nog niet is gedraaid.
-  let cards: CardRow[] = []
-  let cardsAvailable = false
-  const allEventIds = (events ?? []).map((e: Event) => e.id)
-  if (allEventIds.length > 0) {
-    const { data: cardData, error: cardError } = await service
-      .from("cards")
-      .select("id, event_id, type, template, share_token, content, view_count, created_at")
-      .in("event_id", allEventIds)
-      .order("created_at", { ascending: false })
-    if (!cardError) {
-      cardsAvailable = true
-      cards = (cardData ?? []) as CardRow[]
-    }
-  }
+  const metInhoud: Onderdeel[] = [
+    ...(stdRegels.length ? (["save_the_date"] as Onderdeel[]) : []),
+    ...(invRegels.length ? (["trouwkaart"] as Onderdeel[]) : []),
+    ...(stand.magSite ? (["website"] as Onderdeel[]) : []),
+  ]
 
-
-  // ── Eén bruiloft, met onderdelen eronder ──────────────────────────────────
-  // Uit het klantreisgesprek van 21 september 2026. Elk concept was een eigen
-  // rij in events, en daardoor kreeg het dashboard een losse kolom per concept.
-  // De kolom hoort_bij wijst een ontwerp naar zijn bruiloft; leeg betekent dat
-  // de rij zelf een bruiloft is.
-  //
-  // Apart opgevraagd, zodat het dashboard blijft werken zolang
-  // migration_klantreis.sql nog niet gedraaid is. Dezelfde voorzichtigheid als
-  // bij de kaarten en de fotomuur hieronder.
-  let extra: Record<
-    string,
-    { hoort_bij: string | null; checklist: unknown; deadline: unknown; stand_frequentie: string }
-  > = {}
-  if ((events ?? []).length > 0) {
-    const { data: extraData, error: extraErr } = await service
-      .from("events")
-      .select("id, hoort_bij, checklist, deadline, stand_frequentie")
-      .in("id", (events ?? []).map((e: Event) => e.id))
-    if (!extraErr && extraData) {
-      extra = Object.fromEntries(
-        extraData.map((e) => [
-          e.id as string,
-          {
-            hoort_bij: (e.hoort_bij as string | null) ?? null,
-            checklist: e.checklist,
-            deadline: e.deadline,
-            stand_frequentie: (e.stand_frequentie as string | null) ?? "wekelijks",
-          },
-        ])
-      )
-    }
-  }
-
-  const alle = events ?? []
-  const hoofden = alle.filter((e: Event) => !extra[e.id]?.hoort_bij)
-  // Wie live staat heeft betaald, dus die bruiloft is de belangrijkste. Daarna
-  // de nieuwste. Met ?b= kiest de klant zelf, als hij er meer dan één heeft.
-  const gesorteerd = [...hoofden].sort((a: Event, b: Event) => {
-    const aLive = ["published", "expired"].includes(a.status) ? 0 : 1
-    const bLive = ["published", "expired"].includes(b.status) ? 0 : 1
-    if (aLive !== bLive) return aLive - bLive
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  })
-  const gekozenId = typeof params?.b === "string" ? params.b : null
-  const bruiloft = gesorteerd.find((e: Event) => e.id === gekozenId) ?? gesorteerd[0] ?? null
-  // De bruiloft zelf plus zijn ontwerpen.
-  const groep = bruiloft
-    ? alle.filter((e: Event) => e.id === bruiloft.id || extra[e.id]?.hoort_bij === bruiloft.id)
-    : []
-  const groepIds = new Set(groep.map((e: Event) => e.id))
-
-  // ── De stand van deze bruiloft ────────────────────────────────────────────
-  // Alles hieronder komt uit gegevens die we toch al ophaalden.
-  let stand: Stand = LEGE_STAND
-  let signalen: Signalen = GEEN_SIGNALEN
-  let fase = huidigeFase(null)
-  let checklistStand: unknown = null
-
-  if (bruiloft) {
-    const mijnRsvps = rsvps.filter((r) => groepIds.has(r.event_id))
-    const mijnKaarten = cards.filter((c) => groepIds.has(c.event_id))
-    const mijnFotos = guestPhotos.filter((f) => groepIds.has(f.event_id))
-    const liveInGroep = groep.some((e: Event) => e.status === "published")
-    const magSite = groep.some((e: Event) => planAllows(e.plan, "site"))
-
-    const huishoudens = new Set(
-      mijnRsvps.map((r) => (r.huishouden_naam ?? "").toLowerCase().trim() || r.id)
-    ).size
-
-    let komen = 0
-    let nietKomen = 0
-    let stil = 0
-    for (const r of mijnRsvps) {
-      const k = komtGast(reis(r.std_status), reis(r.inv_status))
-      if (k === true) komen++
-      else if (k === false) nietKomen++
-      else stil++
-    }
-
-    const dl = (extra[bruiloft.id]?.deadline ?? null) as
-      | { naam?: string; datum?: string; gedaan?: boolean }
-      | null
-    const deadlineOver =
-      dl?.datum && !Number.isNaN(new Date(dl.datum).getTime())
-        ? Math.round(
-            (Date.UTC(
-              new Date(dl.datum).getUTCFullYear(),
-              new Date(dl.datum).getUTCMonth(),
-              new Date(dl.datum).getUTCDate()
-            ) -
-              Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate())) /
-              86400000
-          )
-        : null
-
-    stand = {
-      datum: bruiloft.datum ?? null,
-      locatie: bruiloft.locatie ?? null,
-      live: liveInGroep,
-      magSite,
-      gasten: mijnRsvps.length,
-      huishoudens,
-      kinderen: mijnRsvps.filter((r) => r.is_kind === true).length,
-      stdVerstuurd: mijnRsvps.filter((r) => reis(r.std_status) !== "niet_verstuurd").length,
-      stdGereageerd: mijnRsvps.filter((r) => ["ja", "nee"].includes(reis(r.std_status))).length,
-      invVerstuurd: mijnRsvps.filter((r) => reis(r.inv_status) !== "niet_verstuurd").length,
-      invGereageerd: mijnRsvps.filter((r) => ["ja", "nee"].includes(reis(r.inv_status))).length,
-      komen,
-      nietKomen,
-      stil,
-      dieet: mijnRsvps.filter((r) => !!r.dietary).length,
-      allergie: mijnRsvps.filter((r) => !!r.allergie).length,
-      heeftStdKaart: mijnKaarten.some((c) => c.type === "save_the_date"),
-      heeftInvKaart: mijnKaarten.some((c) => c.type === "trouwkaart"),
-      stdKaartLink: mijnKaarten.find((c) => c.type === "save_the_date")?.share_token ?? null,
-      invKaartLink: mijnKaarten.find((c) => c.type === "trouwkaart")?.share_token ?? null,
-      deadlineNaam: dl?.naam ?? null,
-      deadlineOver,
-      deadlineGedaan: dl?.gedaan === true,
-      fotos: mijnFotos.length,
-      fotomuurAan: groep.some((e: Event) => gpSettings[e.id]?.enabled === true),
-      ontwerpen: groep.length,
-    }
-
-    signalen = {
-      datumGezet: !!bruiloft.datum,
-      locatieGezet: !!bruiloft.locatie,
-      gastenInLijst: stand.gasten,
-      stdVerstuurd: stand.stdVerstuurd > 0,
-      invVerstuurd: stand.invVerstuurd > 0,
-      siteLive: liveInGroep && magSite,
-      aanmeldingen: stand.komen + stand.nietKomen,
-      aantallenDoorgegeven: stand.deadlineGedaan,
-      fotos: stand.fotos,
-    }
-
-    fase = huidigeFase(bruiloft.datum ?? null, {
-      stdVerstuurd: signalen.stdVerstuurd,
-      invVerstuurd: signalen.invVerstuurd,
-      aantallenDoorgegeven: signalen.aantallenDoorgegeven,
-    })
-
-    checklistStand = extra[bruiloft.id]?.checklist ?? null
-  }
+  const checklist = bruiloft ? voortgang(leesStand(extra[bruiloft.id]?.checklist), signalen) : null
+  const liveSite = groep.find((e) => e.status === "published" && planAllows(e.plan, "site")) ?? null
+  const siteAdres = stand.magSite && stand.live && bruiloft ? eventSiteLabel(bruiloft.slug) : null
+  const fotoEvents = groep.filter((e) => gpSettings[e.id])
 
   return (
-    <div translate="no" className="min-h-screen" style={{ backgroundColor: IVORY }}>
+    <BouwerSchil
+      actief="dashboard"
+      eventId={bruiloft?.id ?? null}
+      metInhoud={metInhoud}
+      acties={
+        <Link
+          href="/dashboard/instellingen"
+          aria-label="Instellingen"
+          title="Instellingen: deadline voor je locatie, hoe vaak je een tussenstand hoort, je account"
+          className="inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold min-h-[40px] flex-1 md:flex-none"
+          style={{ backgroundColor: "#fff", color: KLEUR.inkt, border: `1px solid ${KLEUR.goudLicht}`, textDecoration: "none" }}
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <span className="md:hidden">Instellingen</span>
+        </Link>
+      }
+    >
+      <main className="max-w-7xl w-full mx-auto px-4 md:px-6 py-7 md:py-9 flex flex-col gap-6">
 
-      {/* Nav */}
-      <header
-        className="sticky top-0 z-10"
-        style={{ backgroundColor: IVORY, borderBottom: `1px solid ${GOLD_LIGHT}` }}
-      >
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
-          <Link
-            href="/"
-            className="text-2xl tracking-wide transition-opacity hover:opacity-70"
-            style={{ fontFamily: "var(--font-cormorant)", color: CHARCOAL, fontWeight: 600 }}
-          >
-            SayingYes
-          </Link>
-          <SignOutButton />
-        </div>
-      </header>
-
-      {/* Breder dan de rest van de site: de gastenlijst heeft kolommen nodig
-          en die vielen weg in de witruimte links en rechts. */}
-      <main className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
-
-        {/* ── Eén bruiloft, en wat er nu telt ──
-            Hier stond een platte lijst van vijf secties die er altijd allemaal
-            waren. Nu staat bovenaan de bruiloft met de fase waarin je zit, en
-            zijn de secties hieronder de uitwerking. */}
-        {!bruiloft ? (
-          <NogNiets />
-        ) : (
-          <div className="flex flex-col gap-10">
-            {/* Meer dan één bruiloft komt zelden voor, maar wie een oud concept
-                heeft staan moet er wel bij kunnen. */}
-            {gesorteerd.length > 1 && (
-              <div className="flex flex-wrap items-center gap-2">
-                <span
-                  className="text-[11px] font-semibold uppercase"
-                  style={{ letterSpacing: "0.14em", color: SOFT }}
+        {/* ── De bruiloft ── */}
+        <header className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h1
+              className="m-0"
+              style={{ fontFamily: FONT_KOP, fontWeight: 600, fontSize: "clamp(1.7rem, 4vw, 2.5rem)", lineHeight: 1.05, color: KLEUR.inkt, textWrap: "balance" }}
+            >
+              {naam}
+              {bruiloft && (
+                <Link
+                  href={`/kaart-maken?event_id=${bruiloft.id}`}
+                  className="ml-3 align-middle text-xs font-medium px-2.5 py-1 rounded-full"
+                  style={{ fontFamily: "inherit", color: KLEUR.zacht, border: `1px solid ${KLEUR.zand}`, textDecoration: "none", fontSize: 12 }}
                 >
-                  Bruiloft
-                </span>
-                {gesorteerd.map((e: Event) => (
-                  <Link
-                    key={e.id}
-                    href={`/dashboard?b=${e.id}`}
-                    className="text-sm px-3 py-1.5 rounded-full"
-                    style={
-                      e.id === bruiloft.id
-                        ? { backgroundColor: GOLD_BG, border: `1px solid ${GOLD}`, color: CHARCOAL, fontWeight: 600 }
-                        : { border: `1px solid ${GOLD_LIGHT}`, color: BODY }
-                    }
-                  >
+                  wijzig
+                </Link>
+              )}
+            </h1>
+            <p className="text-sm mt-1.5 m-0" style={{ color: KLEUR.zacht }}>
+              {datum ? (
+                <>
+                  {datum}
+                  {bruiloft?.locatie ? ` · ${bruiloft.locatie}` : ""} {"·"}{" "}
+                  <span style={{ color: KLEUR.tekst }}>{afstandInWoorden(bruiloft?.datum)}</span>
+                </>
+              ) : (
+                "Nog geen trouwdatum. Die zet je in de bouwer, bij Algemene info."
+              )}
+            </p>
+          </div>
+
+          {/* Meer dan één bruiloft komt niet meer voor, maar wie er van vroeger
+              nog een heeft moet er wel bij kunnen. */}
+          {alle.filter((e) => !extra[e.id]?.hoort_bij).length > 1 && (
+            <div className="flex flex-wrap items-center gap-1.5 text-xs" style={{ color: KLEUR.zacht }}>
+              <span>Andere bruiloft:</span>
+              {alle
+                .filter((e) => !extra[e.id]?.hoort_bij && e.id !== bruiloft?.id)
+                .map((e) => (
+                  <Link key={e.id} href={`/dashboard?b=${e.id}`} className="underline" style={{ color: KLEUR.tekst }}>
                     {e.title || "Naamloos"}
-                    {e.status === "draft" && (
-                      <span className="ml-1.5 text-[11px]" style={{ color: SOFT }}>
-                        concept
-                      </span>
-                    )}
                   </Link>
                 ))}
-              </div>
-            )}
-
-            <Bruiloft titel={bruiloft.title} fase={fase} stand={stand} />
-
-            <Altijd gasten={stand.gasten} ontwerpen={stand.ontwerpen} magSite={stand.magSite} />
-
-            <Checklist
-              eventId={bruiloft.id}
-              fase={fase}
-              stand={checklistStand}
-              signalen={signalen}
-            />
-          </div>
-        )}
-
-        {/* RSVP */}
-        <section id="gasten" className="mb-10 scroll-mt-24">
-          <div className="mb-5">
-            <SectionLabel>RSVP-aanmeldingen</SectionLabel>
-          </div>
-          {/* De lijst staat er altijd. Wat er bij een kaartpakket nog niet in
-              zit is het volledige aanmeldformulier met dieetwensen; dat zegt de
-              regel hieronder, en de lijst zelf werkt gewoon. */}
-          {rsvpEvents.length === 0 && published.length > 0 && (
-            <div
-              className="rounded-2xl p-6 mb-5 text-sm leading-relaxed"
-              style={{ backgroundColor: IVORY_CARD, border: `1px solid ${GOLD_LIGHT}`, color: BODY }}
-            >
-              Je gasten kunnen nu alleen laten weten of ze erbij zijn. Dieetwensen, een liedje en
-              je eigen vragen horen bij het pakket <strong style={{ color: CHARCOAL }}>Uitnodiging &amp; RSVP</strong>.
-              Upgraden gaat via de knop bij jullie kaart hierboven; alles wat jullie al maakten blijft staan.
             </div>
           )}
-          <RsvpSection
-            rsvps={rsvps}
-            events={gastEvents.map((e: Event) => ({ id: e.id, title: e.title }))}
+        </header>
+
+        {/* ── De teller ── */}
+        <Teller
+          gasten={stand.gasten}
+          komen={stand.komen}
+          nietKomen={stand.nietKomen}
+          stil={stand.stil}
+          heeftKaart={cards.length > 0}
+          live={stand.live}
+        />
+
+        {/* ── De tegels ── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <KaartTegel
+            soort="save_the_date"
+            titel="Save the Date"
+            prijs={formatEur(PLANS.save_the_date.price).replace(",00", "")}
+            uitleg="Zodat mensen de dag vrijhouden. Eén link, elke gast antwoordt met één tik."
+            mag={magStd}
+            live={stand.live}
+            eventId={bruiloft?.id ?? null}
+            regels={stdRegels}
+            verstuurd={stand.stdVerstuurd}
+            gereageerd={stand.stdGereageerd}
           />
-        </section>
+          <KaartTegel
+            soort="trouwkaart"
+            titel="Trouwkaart"
+            prijs={formatEur(PLANS.uitnodiging.price).replace(",00", "")}
+            uitleg="Tijden, dresscode en de volledige aanmelding met dieetwensen en allergieën."
+            mag={magInv}
+            live={stand.live}
+            eventId={bruiloft?.id ?? null}
+            regels={invRegels}
+            verstuurd={stand.invVerstuurd}
+            gereageerd={stand.invGereageerd}
+          />
+          <WebsiteTegel
+            mag={stand.magSite}
+            live={stand.live && !!liveSite}
+            eventId={bruiloft?.id ?? null}
+            adres={siteAdres}
+            fotomuurAan={stand.fotomuurAan}
+            fotos={stand.fotos}
+          />
 
-        {/* ── Aantallen naar de locatie ──
-            Hoort bij de gastenlijst, want het gaat over dezelfde cijfers.
-            Alleen zinvol als er een datum is om vanaf te rekenen. */}
-        {bruiloft && bruiloft.datum && (
-          <div className="mb-10">
-            <DeadlineInstelling
-              eventId={bruiloft.id}
-              trouwdag={bruiloft.datum}
-              deadline={extra[bruiloft.id]?.deadline ?? null}
-              frequentie={extra[bruiloft.id]?.stand_frequentie ?? "wekelijks"}
-              komen={stand.komen}
-              stil={stand.stil}
-            />
-          </div>
-        )}
+          {/* ── De gastenlijst, met de lijst zelf erin ── */}
+          <Tegel
+            id="gasten"
+            titel="Gastenlijst"
+            breed
+            rechts={
+              <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full" style={{ backgroundColor: KLEUR.goudVlak, color: stand.gasten ? KLEUR.inkt : KLEUR.zacht }}>
+                {stand.gasten ? `${stand.gasten} ${stand.gasten === 1 ? "gast" : "gasten"}` : "Gratis, bij elk pakket"}
+              </span>
+            }
+          >
+            {stand.gasten === 0 && (
+              <p className="m-0 text-sm" style={{ color: KLEUR.tekst }}>
+                Nog leeg. Je kunt alvast namen typen of een lijst uit Excel plakken. Of je doet niets en laat hem
+                zich vullen door wie op je kaart antwoordt.
+              </p>
+            )}
+            {bruiloft ? (
+              <RsvpSection
+                rsvps={rsvps}
+                events={groep.filter((e) => ["published", "expired"].includes(e.status)).map((e) => ({ id: e.id, title: e.title }))}
+              />
+            ) : (
+              <div className="flex gap-2">
+                <TegelKnop href="/kaart-maken?type=save_the_date" soort="primair">Begin met een kaart</TegelKnop>
+              </div>
+            )}
+          </Tegel>
+        </div>
 
-        {/* Digitale kaarten */}
-        {cardsAvailable && (events ?? []).length > 0 && (
-          <section id="kaarten" className="mb-10 scroll-mt-24">
-            <div className="mb-5">
-              <SectionLabel>Digitale kaarten</SectionLabel>
-            </div>
+        {/* ── Delen en bekijken ── */}
+        {cardsAvailable && cards.length > 0 && (
+          <section id="kaarten" className="scroll-mt-24">
+            <div className="mb-3"><SectionLabel>Je kaarten delen</SectionLabel></div>
             <CardsSection
-              events={(events ?? []).map((e: Event) => ({
+              events={groep.map((e) => ({
                 id: e.id,
                 title: e.title,
                 status: e.status,
@@ -575,58 +249,45 @@ export default async function DashboardPage({
           </section>
         )}
 
-        {/* Gastenfotomuur */}
-        {photoEvents.length > 0 && Object.keys(gpSettings).length > 0 && (
-          <section id="fotos" className="mb-10 scroll-mt-24">
-            <div className="mb-5">
-              <SectionLabel>Gastenfotomuur</SectionLabel>
-            </div>
+        {/* ── Fotomuur ── */}
+        {fotoEvents.length > 0 && (
+          <section id="fotos" className="scroll-mt-24">
+            <div className="mb-3"><SectionLabel>Gastenfotomuur</SectionLabel></div>
             <div className="flex flex-col gap-6">
-              {photoEvents.map((ev: Event) =>
-                gpSettings[ev.id] ? (
-                  <GuestPhotosSection
-                    key={ev.id}
-                    event={{ id: ev.id, title: ev.title, slug: ev.slug }}
-                    settings={gpSettings[ev.id]}
-                    photos={guestPhotos.filter((p) => p.event_id === ev.id)}
-                    maxPhotos={maxPhotosPerEvent()}
-                  />
-                ) : null
-              )}
+              {fotoEvents.map((ev) => (
+                <GuestPhotosSection
+                  key={ev.id}
+                  event={{ id: ev.id, title: ev.title, slug: ev.slug }}
+                  settings={gpSettings[ev.id]}
+                  photos={guestPhotos.filter((p) => p.event_id === ev.id)}
+                  maxPhotos={maxPhotosPerEvent()}
+                />
+              ))}
             </div>
           </section>
         )}
 
-        {/* ── Je ontwerpen ──
-            Beheer: wat er live staat, wat concept is, en de knoppen om te
-            verlengen, het adres te wijzigen of iets weg te gooien. Dit hoort
-            onderaan: je komt er een paar keer, niet elke week. */}
+        {/* ── Beheer: verlengen, adres, weggooien ── */}
         {groep.length > 0 && (
-          <section id="ontwerpen" className="mb-10 scroll-mt-24">
-            <div className="mb-5">
-              <SectionLabel>Je ontwerpen</SectionLabel>
-            </div>
+          <section id="ontwerpen" className="scroll-mt-24">
+            <div className="mb-3"><SectionLabel>Beheer</SectionLabel></div>
             <div className="flex flex-col gap-4">
-              {groep
-                .filter((ev: Event) => ["published", "expired"].includes(ev.status))
-                .map((ev: Event) => (
-                  <EventCard key={ev.id} event={ev} />
-                ))}
-              {groep
-                .filter((ev: Event) => ev.status === "draft")
-                .map((ev: Event) => (
-                  <EventCard key={ev.id} event={ev} isDraft />
-                ))}
+              {groep.filter((e) => ["published", "expired"].includes(e.status)).map((e) => <EventCard key={e.id} event={e} />)}
+              {groep.filter((e) => e.status === "draft").map((e) => <EventCard key={e.id} event={e} isDraft />)}
             </div>
           </section>
         )}
 
-        {/* ── Onderaan, klein ──
-            Je moet van ons af kunnen komen zonder te mailen. Niet te opvallend,
-            want dit is geen knop waar je naartoe geleid wilt worden. */}
-        <AccountVerwijderen email={user.email!} aantalBruiloften={hoofden.length} />
-
+        {/* ── Eén regel onderaan ── */}
+        <div className="flex flex-wrap justify-between gap-2 pt-2 text-sm" style={{ color: KLEUR.zacht }}>
+          <Link href="/dashboard/checklist" style={{ color: KLEUR.tekst, textDecoration: "none" }}>
+            Checklist{checklist ? ` · ${checklist.af} van ${checklist.totaal} af` : ""} {"›"}
+          </Link>
+          <Link href="/dashboard/instellingen" style={{ color: KLEUR.tekst, textDecoration: "none" }}>
+            Instellingen {"·"} Account
+          </Link>
+        </div>
       </main>
-    </div>
+    </BouwerSchil>
   )
 }
