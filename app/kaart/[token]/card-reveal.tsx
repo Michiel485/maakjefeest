@@ -522,6 +522,12 @@ export default function CardReveal({
                     : {}),
                 }}
               >
+                {/* Omhulsel met dezelfde afronding als de envelop. Een clip-path
+                    maakt scherpe hoeken en negeert de border-radius, dus liepen
+                    de vouwlijnen door tot buiten de ronding van de envelop. Door
+                    het omhulsel te laten afronden lopen de lijn en de rand
+                    precies op hetzelfde punt af. */}
+                <span className="absolute inset-0" style={{ borderRadius: 16, overflow: "hidden" }}>
                 {/* De voorkant: de zijvouwen en de ondervouw samen. Die dekken
                     de hele envelop af behalve een V bovenin, en juist in die V
                     zie je de kaart in de envelop zitten. De vorm sluit precies
@@ -547,10 +553,30 @@ export default function CardReveal({
                     backgroundColor: `${sc.accent}55`,
                   }}
                 />
+                </span>
                 {/* Zegel met initialen. Bij de nieuwe animatie bestaat het uit
                     twee helften die eerst kraken en dan wegvallen. Elke helft
                     toont de volledige initialen en knipt de andere helft weg,
                     zodat ze samen naadloos één zegel vormen. */}
+                {/* De schaduw van het zegel staat apart en zonder clip-path.
+                    Zat hij op de twee helften zelf, dan knipte hun clip-path
+                    ook de schaduw af tot precies het vierkant van 62 bij 62,
+                    en zag je de hoeken van die afgeknipte schaduw als een
+                    grijzig blokje om het zegel heen. */}
+                <span
+                  aria-hidden="true"
+                  className="absolute left-1/2 rounded-full"
+                  style={{
+                    top: `${ENVELOP_V_PUNT}%`,
+                    marginTop: -31,
+                    marginLeft: -31,
+                    width: 62,
+                    height: 62,
+                    boxShadow: "0 3px 12px rgba(0,0,0,0.22)",
+                    opacity: zegelHeel ? 1 : 0,
+                    transition: "opacity 0.25s ease",
+                  }}
+                />
                 {(klassiekeAnimatie ? [0] : [0, 1]).map((helft) => (
                   <span
                     key={helft}
@@ -565,7 +591,6 @@ export default function CardReveal({
                       color: sc.buttonText,
                       fontFamily: sc.fontInitials ?? sc.fontPageTitles,
                       fontSize: "1.35rem",
-                      boxShadow: "0 3px 12px rgba(0,0,0,0.22)",
                       clipPath: klassiekeAnimatie
                         ? undefined
                         : helft === 0

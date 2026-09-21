@@ -1,7 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { gastSleutel, leesGeplakteLijst } from "@/lib/gasten"
+import { laadXlsx } from "@/lib/xlsx-laden"
+import { gastSleutel } from "@/lib/gasten"
+import GastenToevoegen from "./GastenToevoegen"
 
 const GOLD       = "#C5A059"
 const GOLD_LIGHT = "#E8D5A3"
@@ -94,14 +96,7 @@ export default function RsvpSection({
   const [berichtTekst, setBerichtTekst] = useState("")
   const [berichtBezig, setBerichtBezig] = useState(false)
   const [berichtUitslag, setBerichtUitslag] = useState<string | null>(null)
-  // Gasten met de hand toevoegen: los invullen of een lijst plakken.
-  const [toevoegenOpen, setToevoegenOpen] = useState(false)
-  const [toevoegEvent, setToevoegEvent] = useState(events[0]?.id ?? "")
-  const [plaklijst, setPlaklijst] = useState("")
-  const [toevoegBezig, setToevoegBezig] = useState(false)
-  const [toevoegUitslag, setToevoegUitslag] = useState<string | null>(null)
 
-  const geplakt = leesGeplakteLijst(plaklijst)
 
   const eventMap = Object.fromEntries(events.map((e) => [e.id, e.title]))
 
@@ -262,29 +257,6 @@ export default function RsvpSection({
     }
   }
 
-  async function voegGastenToe() {
-    if (geplakt.length === 0) return
-    setToevoegBezig(true)
-    setToevoegUitslag(null)
-    try {
-      const res = await fetch("/api/gasten", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ event_id: toevoegEvent, gasten: geplakt }),
-      })
-      const j = (await res.json().catch(() => ({}))) as { error?: string; toegevoegd?: number }
-      if (!res.ok) throw new Error(j.error || "Toevoegen mislukte")
-      setToevoegUitslag(
-        `${j.toegevoegd ?? 0} ${j.toegevoegd === 1 ? "gast" : "gasten"} toegevoegd. Ververs de pagina om ze in de lijst te zien.`
-      )
-      setPlaklijst("")
-    } catch (e) {
-      setToevoegUitslag(e instanceof Error ? e.message : "Toevoegen mislukte")
-    } finally {
-      setToevoegBezig(false)
-    }
-  }
-
   function buildExportRows() {
     const headers = [
       "Naam", "E-mail", "Status", "Type", "Dieetwensen",
@@ -326,7 +298,7 @@ export default function RsvpSection({
 
   async function exportExcel() {
     const { headers, rows } = buildExportRows()
-    const XLSX = (await import("xlsx")).default
+    const XLSX = await laadXlsx()
     const ws = XLSX.utils.aoa_to_sheet([headers, ...rows])
     const range = XLSX.utils.decode_range(ws["!ref"] ?? "A1")
     for (let col = range.s.c; col <= range.e.c; col++) {
@@ -343,94 +315,10 @@ export default function RsvpSection({
 
   // Staat in beide toestanden, ook als de lijst nog leeg is: een gastenlijst
   // begint bij wie je uitnodigt, niet bij wie zich meldt.
-  // Plakken is hier het snelst, want de meeste bruidsparen hebben hun lijst al
-  // ergens staan.
-  const toevoegPaneel = (
-      <div className="rounded-2xl" style={{ backgroundColor: IVORY_CARD, border: `1px solid ${GOLD_LIGHT}` }}>
-        <button
-          onClick={() => setToevoegenOpen((v) => !v)}
-          className="w-full flex items-center justify-between px-5 py-3.5"
-          style={{ cursor: "pointer" }}
-        >
-          <span className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: GOLD }}>
-            Gasten toevoegen
-          </span>
-          <span className="text-sm font-semibold" style={{ color: BODY }}>{toevoegenOpen ? "Sluiten" : "Openen"}</span>
-        </button>
-
-        {toevoegenOpen && (
-          <div className="px-5 pb-5 flex flex-col gap-3">
-            {events.length > 1 && (
-              <select
-                value={toevoegEvent}
-                onChange={(e) => setToevoegEvent(e.target.value)}
-                className="rounded-xl border bg-white px-3 py-2.5 text-sm font-semibold"
-                style={{ borderColor: GOLD_LIGHT, color: CHARCOAL, cursor: "pointer" }}
-              >
-                {events.map((e) => (
-                  <option key={e.id} value={e.id}>{e.title}</option>
-                ))}
-              </select>
-            )}
-
-            <textarea
-              rows={6}
-              value={plaklijst}
-              onChange={(e) => setPlaklijst(e.target.value)}
-              className="w-full rounded-xl border bg-white px-3 py-2.5 text-sm resize-y focus:outline-none"
-              style={{ borderColor: GOLD_LIGHT, color: CHARCOAL }}
-              placeholder={"Eén per regel. Bijvoorbeeld:\n\nSanne de Vries\nTom de Vries, tom@example.com\nKarin Bos; karin@example.com; 0612345678"}
-            />
-            <p className="text-xs" style={{ color: BODY }}>
-              Plakken uit Excel werkt ook: de kolommen komen met tabs binnen en die herkennen we.
-              Een mailadres en een telefoonnummer pikken we er vanzelf uit, in welke volgorde ze ook staan.
-            </p>
-
-            {geplakt.length > 0 && (
-              <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${GOLD_LIGHT}` }}>
-                <p className="px-3 py-2 text-xs font-semibold" style={{ backgroundColor: GOLD_BG, color: CHARCOAL }}>
-                  Zo hebben wij het gelezen ({geplakt.length})
-                </p>
-                <div className="max-h-48 overflow-y-auto">
-                  <table className="w-full text-sm">
-                    <tbody>
-                      {geplakt.map((g, i) => (
-                        <tr key={i} style={{ borderTop: `1px solid ${GOLD_LIGHT}40` }}>
-                          <td className="px-3 py-1.5" style={{ color: CHARCOAL }}>
-                            {g.voornaam} {g.achternaam}
-                          </td>
-                          <td className="px-3 py-1.5" style={{ color: BODY }}>{g.email || "—"}</td>
-                          <td className="px-3 py-1.5" style={{ color: BODY }}>{g.telefoon || "—"}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            <div className="flex items-center gap-3">
-              <button
-                onClick={voegGastenToe}
-                disabled={toevoegBezig || geplakt.length === 0}
-                className="text-sm font-semibold px-4 py-2 rounded-xl disabled:opacity-60"
-                style={{ backgroundColor: CHARCOAL, color: IVORY_CARD, border: "none", cursor: "pointer" }}
-              >
-                {toevoegBezig ? "Toevoegen..." : geplakt.length > 0 ? `Voeg ${geplakt.length} toe` : "Voeg toe"}
-              </button>
-              {toevoegUitslag && (
-                <span className="text-sm font-semibold" style={{ color: CHARCOAL }}>{toevoegUitslag}</span>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-  )
-
   if (rsvps.length === 0) {
     return (
       <div className="flex flex-col gap-6">
-        {toevoegPaneel}
+        <GastenToevoegen events={events} bruikbaar={events.length > 0} />
         <div
         className="rounded-2xl p-10 text-center"
         style={{ backgroundColor: IVORY_CARD, border: `1px solid ${GOLD_LIGHT}` }}
@@ -511,7 +399,7 @@ export default function RsvpSection({
           </div>
         </div>
 
-        {toevoegPaneel}
+        <GastenToevoegen events={events} bruikbaar={events.length > 0} />
 
         {/* ── Wat je met de aangevinkte regels kunt ──
             Verschijnt alleen als er iets gekozen is, zodat de lijst rustig

@@ -212,6 +212,11 @@ export default async function DashboardPage() {
   const drafts    = (events ?? []).filter((e: Event) => e.status === "draft")
   const firstName = user.email?.split("@")[0] ?? "daar"
   // Pakketrechten: RSVP-overzicht vanaf Uitnodiging & RSVP, fotomuur alleen bij Compleet
+  // De gastenlijst hoort bij elk pakket: ook met alleen een Save the Date kun
+  // je bijhouden wie je uitnodigt en wie voorlopig ja zei. Wat per pakket
+  // verschilt is hoeveel er gevraagd wordt, niet of je een lijst hebt.
+  const gastEvents  = published
+  // Alleen deze pakketten hebben het volledige aanmeldformulier
   const rsvpEvents  = published.filter((e: Event) => planAllows(e.plan, "rsvp"))
   const photoEvents = published.filter((e: Event) => planAllows(e.plan, "photos"))
 
@@ -220,11 +225,11 @@ export default async function DashboardPage() {
   // de migratie (guest_photos) nog niet is gedraaid.
   let guestPhotos: GuestPhotoRow[] = []
   let gpSettings: Record<string, GuestPhotoSettings> = {}
-  if (rsvpEvents.length > 0) {
+  if (gastEvents.length > 0) {
     const { data: rsvpData } = await service
       .from("rsvp")
       .select("id, event_id, submission_id, name, voornaam, achternaam, email, telefoon, guest_type, dietary, allergie, is_primary, attending, message, song, overnachting, custom_answer, custom_answer_2, is_kind, leeftijd, status, bron_token, huishouden_naam, created_at")
-      .in("event_id", rsvpEvents.map((e: Event) => e.id))
+      .in("event_id", gastEvents.map((e: Event) => e.id))
       .order("created_at", { ascending: false })
     rsvps = (rsvpData ?? []) as RsvpRow[]
   }
@@ -407,19 +412,23 @@ export default async function DashboardPage() {
           <div className="mb-5">
             <SectionLabel>RSVP-aanmeldingen</SectionLabel>
           </div>
-          {rsvpEvents.length === 0 && published.length > 0 ? (
+          {/* De lijst staat er altijd. Wat er bij een kaartpakket nog niet in
+              zit is het volledige aanmeldformulier met dieetwensen; dat zegt de
+              regel hieronder, en de lijst zelf werkt gewoon. */}
+          {rsvpEvents.length === 0 && published.length > 0 && (
             <div
-              className="rounded-2xl p-6 text-sm leading-relaxed"
+              className="rounded-2xl p-6 mb-5 text-sm leading-relaxed"
               style={{ backgroundColor: IVORY_CARD, border: `1px solid ${GOLD_LIGHT}`, color: BODY }}
             >
-              Het RSVP-overzicht hoort bij het pakket <strong style={{ color: CHARCOAL }}>Uitnodiging &amp; RSVP</strong>: gasten laten met een tik weten of ze komen en jullie zien hier alle aanmeldingen met dieetwensen. Upgrade via de knop bij jullie kaart hierboven; alles wat jullie al maakten blijft staan.
+              Je gasten kunnen nu alleen laten weten of ze erbij zijn. Dieetwensen, een liedje en
+              je eigen vragen horen bij het pakket <strong style={{ color: CHARCOAL }}>Uitnodiging &amp; RSVP</strong>.
+              Upgraden gaat via de knop bij jullie kaart hierboven; alles wat jullie al maakten blijft staan.
             </div>
-          ) : (
-            <RsvpSection
-              rsvps={rsvps}
-              events={rsvpEvents.map((e: Event) => ({ id: e.id, title: e.title }))}
-            />
           )}
+          <RsvpSection
+            rsvps={rsvps}
+            events={gastEvents.map((e: Event) => ({ id: e.id, title: e.title }))}
+          />
         </section>
 
         {/* Gastenfotomuur */}
