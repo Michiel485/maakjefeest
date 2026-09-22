@@ -438,9 +438,6 @@ export default function BouwenPage() {
   const [authEmail, setAuthEmail] = useState("")
   const [authSent, setAuthSent] = useState(false)
   const [authLoading, setAuthLoading] = useState(false)
-  const [showDashboardModal, setShowDashboardModal] = useState(false)
-  const [dashboardLoading, setDashboardLoading] = useState(false)
-  const [showLeaveModal, setShowLeaveModal] = useState(false)
   const [changeKey, setChangeKey] = useState(0)
   /**
    * Pas tellen als het laden klaar is.
@@ -495,19 +492,6 @@ export default function BouwenPage() {
   useEffect(() => { if (activeSection !== 'paginas') setActiveSubPage(null) }, [activeSection])
   useEffect(() => { if (activeSection !== 'paginas' || activeSubPage !== 'Home') setOpenHomeSection(null) }, [activeSection, activeSubPage])
 
-  // Intercept browser back button — show a branded leave modal instead of instant navigation.
-  // Two buffer entries: rapid double-tap on mobile consumes the first, second prevents escape.
-  useEffect(() => {
-    window.history.pushState({ builder: true }, '')
-    window.history.pushState({ builder: true }, '')
-    const handlePopState = () => {
-      window.history.pushState({ builder: true }, '')
-      window.history.pushState({ builder: true }, '')
-      setShowLeaveModal(true)
-    }
-    window.addEventListener('popstate', handlePopState)
-    return () => window.removeEventListener('popstate', handlePopState)
-  }, [])
   const [pwType, setPwType] = useState<'password' | 'secret_question'>('password')
   const [pwValue, setPwValue] = useState('')
   const [pwQuestion, setPwQuestion] = useState('')
@@ -794,6 +778,7 @@ export default function BouwenPage() {
         setFontFrameNames((d.font_frame_names as string) || "cormorant")
         setFontPageTitles((d.font_page_titles as string) || "cormorant")
         if (hp) setHpSettings({ ...DEFAULT_HOMEPAGE_SETTINGS, ...hp })
+        if (typeof d.concept_naam === "string") setConceptNaam(d.concept_naam)
         setContent({
           ...extraContent,
           ...(hc ? { Home: hc as unknown as Record<string, unknown> } : {}),
@@ -985,6 +970,7 @@ export default function BouwenPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [changeKey])
 
+
   function updateDraft(fields: Partial<Draft>) {
     setChangeKey(k => k + 1)
     setDraft((prev) => {
@@ -1122,6 +1108,61 @@ export default function BouwenPage() {
     })
   }
 
+  // De terugknop van de browser werd hier onderschept met een eigen venster.
+  // Dat is weg: de bouwer bewaart nu zelf (op de server zodra er een bruiloft
+  // is, anders in je browser) en waarschuwt alleen nog als er echt iets
+  // verloren zou gaan. Zie de twee effecten hieronder.
+
+  // Nog niet bewaard op de server? Dan gaat elke wijziging naar je browser,
+  // zodat je na een ongelukje (tabblad dicht, laptop leeg) gewoon verder
+  // kunt. Dezelfde sleutels als de overdracht vanuit de kaartbouwer, en
+  // dezelfde die het laden hierboven terugleest.
+  useEffect(() => {
+    if (changeKey === 0 || !ladenKlaar || !draft || savedEventId) return
+    const timer = setTimeout(() => {
+      try {
+        localStorage.setItem("sayingyes_draft", JSON.stringify({
+          ...draft,
+          style,
+          nav_layout: "stacked", // de enige indeling die de bouwer nog kent, zie navLayout verderop
+          homepage_settings: hpSettings,
+          homeContent: content.Home ?? draft.homeContent,
+          concept_naam: conceptNaam,
+        }))
+        const { Home: _home, ...restContent } = content
+        localStorage.setItem("sayingyes_content", JSON.stringify(restContent))
+      } catch {}
+    }, 800)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [changeKey])
+
+  // Staat er iets dat nog niet op de server staat, dan vraagt de browser
+  // bij het sluiten of je dat zeker weet. Alleen dan: een waarschuwing bij
+  // elke keer weggaan leert mensen erop te klikken zonder te lezen.
+  useEffect(() => {
+    if (!hasPendingChanges || !savedEventId) return
+    function waarschuw(e: BeforeUnloadEvent) {
+      e.preventDefault()
+    }
+    window.addEventListener("beforeunload", waarschuw)
+    return () => window.removeEventListener("beforeunload", waarschuw)
+  }, [hasPendingChanges, savedEventId])
+
+  // Van tabblad wisselen in de schil: eerst bewaren, dan pas gaan. Lukt het
+  // bewaren niet, dan is het aan jou.
+  async function voorVerlaten(): Promise<boolean> {
+    if (!hasPendingChanges) return true
+    if (!savedEventId) return true // staat in je browser, zie hierboven
+    try {
+      await doSave()
+      setHasPendingChanges(false)
+      return true
+    } catch {
+      return window.confirm("Bewaren lukte niet. Toch weggaan? Je laatste wijzigingen gaan dan verloren.")
+    }
+  }
+
   // ── Shared core: stuurt opgeslagen state op via /api/drafts ─────────────────
   // Alle foto-uploads zijn al gedaan in de upload-handlers (immediate upload).
   // doSave() hoeft alleen de huidige state te lezen en naar de API te sturen.
@@ -1241,36 +1282,6 @@ export default function BouwenPage() {
       return
     }
     await performSave()
-  }
-
-  async function handleDashboardClick() {
-    if (!savedEventId) {
-      setShowDashboardModal(true)
-      return
-    }
-    const { data: { user } } = await createClient().auth.getUser()
-    if (!user) { setShowAuthModal(true); return }
-    setDashboardLoading(true)
-    try {
-      await doSave()
-      router.push(`/dashboard?event_id=${savedEventId}`)
-    } catch (err) {
-      setSaveError(err instanceof Error ? err.message : "Opslaan mislukt")
-      setDashboardLoading(false)
-    }
-  }
-
-  async function handleDashboardModalSave() {
-    const { data: { user } } = await createClient().auth.getUser()
-    if (!user) { setShowDashboardModal(false); setShowAuthModal(true); return }
-    setDashboardLoading(true)
-    try {
-      const { id } = await doSave()
-      router.push(`/dashboard?event_id=${id}`)
-    } catch (err) {
-      setSaveError(err instanceof Error ? err.message : "Opslaan mislukt")
-      setDashboardLoading(false)
-    }
   }
 
   async function handleAuthSubmit(e: React.FormEvent) {
@@ -1444,6 +1455,7 @@ export default function BouwenPage() {
     <BouwerSchil
       actief="website"
       eventId={savedEventId}
+      voorVerlaten={voorVerlaten}
       className="md:h-screen md:overflow-hidden"
       /* Fouten onder de kop, zodat de kop zelf niet van hoogte verspringt
          terwijl je aan het werk bent. */
@@ -3258,54 +3270,6 @@ export default function BouwenPage() {
         </main>
       </div>
 
-      {/* ── Dashboard unlock modal ── */}
-      {showDashboardModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ backgroundColor: "rgba(26,26,26,0.5)", backdropFilter: "blur(4px)" }}
-          onClick={() => setShowDashboardModal(false)}
-        >
-          <div
-            className="rounded-3xl shadow-2xl p-8 max-w-sm w-full"
-            style={{ backgroundColor: "#FDFAF6", border: "1px solid #E8D5A3" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div
-              className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-5"
-              style={{ backgroundColor: "#FBF5E8", border: "1px solid #E8D5A3" }}
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} style={{ color: "#C5A059" }}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
-              </svg>
-            </div>
-            <h3
-              className="text-center mb-2"
-              style={{ fontFamily: "var(--font-cormorant)", fontSize: "1.5rem", fontWeight: 700, color: "#1A1A1A" }}
-            >
-              Ontgrendel je dashboard
-            </h3>
-            <p className="text-sm text-center mb-6 leading-relaxed" style={{ color: "#5C5248" }}>
-              Sla je website gratis op om direct toegang te krijgen tot je persoonlijke dashboard. Beheer je gastenlijst en houd RSVP&apos;s bij.
-            </p>
-            <button
-              onClick={handleDashboardModalSave}
-              disabled={dashboardLoading}
-              className="w-full font-semibold py-3.5 rounded-2xl text-sm transition-all mb-2.5 disabled:opacity-50 hover:-translate-y-0.5"
-              style={{ backgroundColor: "#1A1A1A", color: "#FAF7F2", boxShadow: "0 4px 16px rgba(26,26,26,0.15)" }}
-            >
-              {dashboardLoading ? "Opslaan..." : "Nu opslaan & doorgaan"}
-            </button>
-            <button
-              onClick={() => setShowDashboardModal(false)}
-              className="w-full text-center text-sm py-1 transition-opacity hover:opacity-60"
-              style={{ color: "#9A8E82" }}
-            >
-              Annuleren
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* ── Auth / magic-link modal ── */}
       {showAuthModal && (
         <div
@@ -3400,74 +3364,6 @@ export default function BouwenPage() {
                 </button>
               </>
             )}
-          </div>
-        </div>
-      )}
-
-      {/* ── Leave builder modal ── */}
-      {showLeaveModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ backgroundColor: "rgba(26,26,26,0.5)", backdropFilter: "blur(4px)" }}
-        >
-          <div
-            className="rounded-3xl shadow-2xl p-8 max-w-sm w-full"
-            style={{ backgroundColor: "#FDFAF6", border: "1px solid #E8D5A3" }}
-          >
-            <div
-              className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-5"
-              style={{ backgroundColor: "#FBF5E8", border: "1px solid #E8D5A3" }}
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} style={{ color: "#C5A059" }}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
-              </svg>
-            </div>
-            <h3
-              className="text-center mb-2"
-              style={{ fontFamily: "var(--font-cormorant)", fontSize: "1.5rem", fontWeight: 700, color: "#1A1A1A" }}
-            >
-              De builder verlaten?
-            </h3>
-            <p className="text-sm text-center mb-6 leading-relaxed" style={{ color: "#5C5248" }}>
-              {hasPendingChanges
-                ? "Je hebt niet-opgeslagen wijzigingen. Wil je eerst opslaan voor je weggaat?"
-                : "Wil je terug naar je dashboard of naar de startpagina?"}
-            </p>
-
-            {hasPendingChanges && (
-              <button
-                onClick={async () => {
-                  setShowLeaveModal(false)
-                  await handleSave()
-                  if (savedEventId) router.push(`/dashboard?event_id=${savedEventId}`)
-                  else router.push("/dashboard")
-                }}
-                className="w-full font-semibold py-3.5 rounded-2xl text-sm transition-all mb-2.5 hover:-translate-y-0.5"
-                style={{ backgroundColor: "#1A1A1A", color: "#FAF7F2", boxShadow: "0 4px 16px rgba(26,26,26,0.15)" }}
-              >
-                Opslaan & naar dashboard
-              </button>
-            )}
-
-            <button
-              onClick={() => setShowLeaveModal(false)}
-              className="w-full font-semibold py-3.5 rounded-2xl text-sm transition-all mb-2.5 hover:-translate-y-0.5"
-              style={{ backgroundColor: "#1A1A1A", color: "#FAF7F2", boxShadow: "0 4px 16px rgba(26,26,26,0.15)" }}
-            >
-              Blijf in de builder
-            </button>
-
-            <button
-              onClick={() => {
-                setShowLeaveModal(false)
-                if (savedEventId) router.push(`/dashboard?event_id=${savedEventId}`)
-                else router.push("/dashboard")
-              }}
-              className="w-full text-center text-sm py-1 transition-opacity hover:opacity-60"
-              style={{ color: "#9A8E82" }}
-            >
-              {hasPendingChanges ? "Verlaten zonder opslaan" : "Naar dashboard"}
-            </button>
           </div>
         </div>
       )}

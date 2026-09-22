@@ -141,6 +141,11 @@ function isStyle(v: unknown): v is Style {
   return typeof v === "string" && v in STYLE_CONFIG
 }
 
+/** Het ontwerp als tekst, zonder de foto in bewerking: die zit niet op de server. */
+function ontwerpSleutel(o: KaartOntwerp): string {
+  return JSON.stringify({ ...o, photoDataUrl: null })
+}
+
 function initialenVan(names: string): string {
   return names
     // Ook splitsen op een enter: die mag in het namenveld staan
@@ -165,6 +170,11 @@ export default function KaartMakenPage() {
 
   const [ontwerp, setOntwerp] = useState<KaartOntwerp>(LEEG)
   const [geladen, setGeladen] = useState(false)
+  // Wat er op de server staat, om te weten of er iets onbewaard is. Het
+  // ontwerp zelf staat altijd in je browser, maar open je de kaart later
+  // vanuit het dashboard, dan wint de server. Vandaar de waarschuwing.
+  const laatstBewaard = useRef<string | null>(null)
+  const [bewaardTeller, setBewaardTeller] = useState(0)
   // null betekent: alles dichtgeklapt. Zonder die stand kon een blok alleen
   // wisselen naar een ander blok, en was Tekst dus nooit dicht te krijgen.
   const [stap, setStap] = useState<Stap | null>("tekst")
@@ -394,6 +404,23 @@ export default function KaartMakenPage() {
     return () => window.removeEventListener("keydown", onKey)
   }, [])
 
+  // Het ijkpunt voor "onbewaard": na het laden, en na elk bewaren. Als effect,
+  // zodat het de foto-url meeneemt die het bewaren zelf in het ontwerp zet.
+  useEffect(() => {
+    if (geladen) laatstBewaard.current = ontwerpSleutel(ontwerp)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [geladen, bewaardTeller])
+  const onbewaard = geladen && !!eventId && !!cardId && laatstBewaard.current !== null && ontwerpSleutel(ontwerp) !== laatstBewaard.current
+
+  useEffect(() => {
+    if (!onbewaard) return
+    function waarschuw(e: BeforeUnloadEvent) {
+      e.preventDefault()
+    }
+    window.addEventListener("beforeunload", waarschuw)
+    return () => window.removeEventListener("beforeunload", waarschuw)
+  }, [onbewaard])
+
   // Ontwerp altijd lokaal bewaren, zodat niets verloren gaat bij inloggen of verversen
   useEffect(() => {
     if (!geladen) return
@@ -520,6 +547,7 @@ export default function KaartMakenPage() {
 
     setEventId(nieuwEventId)
     setCardId(nieuwCardId)
+    setBewaardTeller((n) => n + 1)
     try { localStorage.setItem(LS_IDS, JSON.stringify({ eventId: nieuwEventId, cardId: nieuwCardId })) } catch {}
 
     // De keuzelijsten bijwerken: de net bewaarde kaart, en het concept zelf
@@ -784,6 +812,9 @@ export default function KaartMakenPage() {
     <BouwerSchil
       actief={ontwerp.type}
       eventId={eventId}
+      voorVerlaten={() =>
+        !onbewaard || window.confirm("Deze kaart heeft wijzigingen die nog niet bewaard zijn. Toch weggaan?")
+      }
       opKaartType={(type) => update({ type })}
       opWebsite={neemMeeNaarWebsite}
       metInhoud={kaarten.map((k) => k.type as "save_the_date" | "trouwkaart")}

@@ -9,7 +9,7 @@ import { SectionLabel } from "./Beheer"
 import BruiloftInfo from "./BruiloftInfo"
 import { Aftellen, KaartTegel, Tegel, TegelKnop, Teller, WebsiteTegel, type KaartRegel } from "./Tegels"
 import { maxPhotosPerEvent } from "@/lib/guest-photos"
-import { planAllows, planMagVersturen, PLANS, formatEur } from "@/lib/plans"
+import { planAllows, planMagVersturen, PLANS, formatEur, upgradePrice } from "@/lib/plans"
 import { afstandInWoorden } from "@/lib/fasen"
 import { leesStand, voortgang } from "@/lib/checklist"
 import { komtGast, reis } from "@/lib/gasten"
@@ -95,6 +95,8 @@ export default async function DashboardPage({
   const stdRegels = regels("save_the_date")
   const invRegels = regels("trouwkaart")
   const magStd = groep.some((e) => planMagVersturen(e.plan, "save_the_date"))
+  const betaaldPlan = groep.find((e) => ["published", "expired"].includes(e.status))?.plan ?? null
+  const prijsInv = (betaaldPlan && upgradePrice(betaaldPlan, "uitnodiging")) || PLANS.uitnodiging.price
   const magInv = groep.some((e) => planMagVersturen(e.plan, "trouwkaart"))
 
   const metInhoud: Onderdeel[] = [
@@ -222,7 +224,9 @@ export default async function DashboardPage({
           <KaartTegel
             soort="trouwkaart"
             titel="Trouwkaart"
-            prijs={formatEur(PLANS.uitnodiging.price).replace(",00", "")}
+            /* Heb je de Save the Date al betaald, dan betaal je alleen het
+               verschil bij. Dit stond hier als de volle prijs. */
+            prijs={formatEur(prijsInv).replace(",00", "")}
             uitleg="Tijden, dresscode en de volledige aanmelding met dieetwensen en allergieën."
             mag={magInv}
             live={stand.live}
@@ -240,6 +244,8 @@ export default async function DashboardPage({
             fotos={stand.fotos}
             heeftOntwerp={groep.some((e) => e.heeftSite)}
             naam={bruiloft?.conceptNaam ?? null}
+            slug={bruiloft?.slug ?? null}
+            geldigTot={liveSite?.expires_at ?? null}
           />
 
           {/* ── De gastenlijst, met de lijst zelf erin ── */}

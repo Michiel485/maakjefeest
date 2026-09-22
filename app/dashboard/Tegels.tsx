@@ -1,5 +1,6 @@
 import Link from "next/link"
 import KaartActies from "./KaartActies"
+import WebsiteActies from "./WebsiteActies"
 import { KLEUR } from "@/lib/ontwerp"
 import type { CardRow } from "@/lib/cards"
 import { GUEST_TYPE_LABEL, CARD_TAAL_KORT, cardTaal, type CardGuestType } from "@/lib/cards"
@@ -309,7 +310,7 @@ function Varianten({
   live: boolean
 }) {
   return (
-    <div className="flex flex-col rounded-xl overflow-hidden" style={{ border: `1px solid ${KLEUR.zand}` }}>
+    <div className="flex flex-col rounded-xl" style={{ border: `1px solid ${KLEUR.zand}` }}>
       {regels.map((r, i) => (
         <div
           key={r.card.id}
@@ -317,10 +318,12 @@ function Varianten({
           style={{ borderTop: i === 0 ? undefined : `1px solid ${KLEUR.zand}` }}
         >
           <span className="font-medium flex-1 min-w-[120px]" style={{ color: KLEUR.inkt }}>{kaartNaam(r.card)}</span>
-          <span className="tabular-nums" style={{ color: KLEUR.zacht }}>
-            {r.verstuurd} verstuurd {"·"} {r.gereageerd} gereageerd {"·"} {r.card.view_count}{"×"} bekeken
+          <span className="flex items-center gap-3 ml-auto">
+            <span className="tabular-nums" style={{ color: KLEUR.zacht }}>
+              {r.verstuurd} verstuurd {"·"} {r.gereageerd} gereageerd {"·"} {r.card.view_count}{"×"} bekeken
+            </span>
+            <KaartActies card={r.card} eventId={eventId} live={live} naam={r.card.content.naam ?? ""} />
           </span>
-          <KaartActies card={r.card} eventId={eventId} live={live} naam={r.card.content.naam ?? ""} />
         </div>
       ))}
     </div>
@@ -328,6 +331,12 @@ function Varianten({
 }
 
 // ── De website ──────────────────────────────────────────────────────────────
+
+/** Hoeveel dagen tot een datum; nul of negatief betekent voorbij. Buiten de
+ *  component, want de dag van vandaag is geen zuivere invoer voor het tekenen. */
+function dagenTot(datum: string): number {
+  return Math.ceil((new Date(datum).getTime() - Date.now()) / 86_400_000)
+}
 
 export function WebsiteTegel({
   mag,
@@ -338,6 +347,8 @@ export function WebsiteTegel({
   fotos,
   heeftOntwerp,
   naam,
+  slug,
+  geldigTot,
 }: {
   mag: boolean
   live: boolean
@@ -349,8 +360,33 @@ export function WebsiteTegel({
   heeftOntwerp: boolean
   /** De naam die het bruidspaar zijn ontwerp gaf, als die er is. */
   naam: string | null
+  /** Het webadres, voor het actiemenu. */
+  slug: string | null
+  /** Tot wanneer de betaalde site geldig is; leeg als er geen einddatum is. */
+  geldigTot: string | null
 }) {
   const bouwer = eventId ? `/bouwen?event_id=${eventId}` : "/bouwen?plan=compleet"
+
+  // Verlopen, bijna verlopen, of gewoon geldig. Alleen bij een betaalde site.
+  const dagenOver = geldigTot ? dagenTot(geldigTot) : null
+  const verlopen = dagenOver !== null && dagenOver <= 0
+  const bijnaVerlopen = dagenOver !== null && dagenOver > 0 && dagenOver <= 30
+  const datumTekst = (d: string) => new Date(d).toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })
+  const geldigTekst = geldigTot
+    ? verlopen
+      ? `Verlopen op ${datumTekst(geldigTot)}`
+      : `Geldig tot ${datumTekst(geldigTot)}${bijnaVerlopen ? `, nog ${dagenOver} dagen` : ""}`
+    : null
+
+  const menu = eventId && slug ? (
+    <WebsiteActies
+      eventId={eventId}
+      slug={slug}
+      live={live && mag}
+      magVerlengen={live && mag && !!geldigTot}
+      fotomuurAan={fotomuurAan}
+    />
+  ) : null
 
   // Wel gebouwd, nog niet betaald: dezelfde vorm als een kaart in concept.
   // Michiels bevinding van 22 september 2026: hij bouwde een site, ging terug
@@ -363,15 +399,13 @@ export function WebsiteTegel({
           Je ontwerp staat klaar. Zet hem live, dan staat je site op internet en kan je trouwkaart
           ernaar verwijzen voor de route, het programma en de cadeautips.
         </p>
-        <div className="flex flex-col rounded-xl overflow-hidden" style={{ border: `1px solid ${KLEUR.zand}` }}>
+        <div className="flex flex-col rounded-xl" style={{ border: `1px solid ${KLEUR.zand}` }}>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-[13px]">
             <span className="font-medium flex-1 min-w-[120px]" style={{ color: KLEUR.inkt }}>
               {naam ?? "Jullie website"}
             </span>
             <span style={{ color: KLEUR.zacht }}>Nog niet live</span>
-            <Link href={bouwer} className="text-[13px] font-semibold ml-auto" style={{ color: KLEUR.goud, textDecoration: "none" }}>
-              Openen
-            </Link>
+            {menu}
           </div>
         </div>
         <div className="flex flex-wrap gap-2 mt-auto">
@@ -395,22 +429,49 @@ export function WebsiteTegel({
     )
   }
 
+  const chip = !live
+    ? <Chip soort="stil">Nog niet live</Chip>
+    : verlopen
+      ? <Chip soort="stil">Verlopen</Chip>
+      : <Chip soort="goed">Live</Chip>
+  const aandacht = verlopen || bijnaVerlopen
+
   return (
-    <Tegel titel="Website" breed rechts={<Chip soort={live ? "goed" : "stil"}>{live ? "Live" : "Nog niet live"}</Chip>}>
+    <Tegel titel="Website" breed rechts={chip}>
       <p className="m-0 text-sm" style={{ color: KLEUR.tekst }}>
-        {live && adres ? (
+        {live && adres
+          ? <>Route, programma, cadeautips{fotomuurAan ? `, en de fotomuur staat aan${fotos > 0 ? ` (${fotos} foto's)` : ""}` : ""}.</>
+          : "Je site staat klaar om live te zetten. Daarna kan de trouwkaart ernaar verwijzen voor de route, het programma en de cadeautips."}
+      </p>
+      <div className="flex flex-col rounded-xl" style={{ border: `1px solid ${KLEUR.zand}` }}>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-[13px]">
+          <span className="font-medium flex-1 min-w-[120px]" style={{ color: KLEUR.inkt }}>
+            {naam ?? adres ?? "Jullie website"}
+          </span>
+          {live && adres && naam && (
+            <span className="font-mono" style={{ color: KLEUR.zacht }}>{adres}</span>
+          )}
+          {geldigTekst && (
+            <span style={{ color: aandacht ? "#B45309" : KLEUR.zacht }}>{geldigTekst}</span>
+          )}
+          {menu}
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-2 mt-auto">
+        {live ? (
           <>
-            <b style={{ color: KLEUR.inkt }}>{adres}</b> {"·"} route, programma, cadeautips
-            {fotomuurAan ? `, fotomuur aan${fotos > 0 ? ` (${fotos} foto's)` : ""}` : ""}.
+            {aandacht && eventId && (
+              <TegelKnop href={`/verlengen?event_id=${eventId}`} soort="actie">Verlengen voor {"€"}22</TegelKnop>
+            )}
+            <TegelKnop href={bouwer} soort={aandacht ? "rand" : "primair"}>Bewerken</TegelKnop>
+            {adres && <TegelKnop href={`https://${adres}`} soort="stil">Bekijk je site</TegelKnop>}
           </>
         ) : (
-          "Je site staat klaar om live te zetten. Daarna kan de trouwkaart ernaar verwijzen voor de route, het programma en de cadeautips."
+          <>
+            <TegelKnop href={eventId ? `/betalen?event_id=${eventId}&plan=compleet` : bouwer} soort="actie">Live zetten voor {"€"}49,99</TegelKnop>
+            <TegelKnop href={bouwer}>Verder bouwen</TegelKnop>
+          </>
         )}
-      </p>
-      <div className="flex flex-wrap gap-2 mt-auto">
-        <TegelKnop href={bouwer} soort={live ? "rand" : "actie"}>{live ? "Bewerken" : "Live zetten"}</TegelKnop>
-        {live && adres && <TegelKnop href={`https://${adres}`} soort="stil">Bekijk je site</TegelKnop>}
-        {fotomuurAan && <TegelKnop href="/dashboard#fotos" soort="stil">Fotomuur</TegelKnop>}
       </div>
     </Tegel>
   )

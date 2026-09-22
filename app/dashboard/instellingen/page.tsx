@@ -5,7 +5,8 @@ import { createClient } from "@/lib/supabase-server"
 import { laadBruiloft, bruiloftNaam } from "@/lib/bruiloft-server"
 import BouwerSchil from "@/components/BouwerSchil"
 import DeadlineInstelling from "../Deadline"
-import { EventCard } from "../Beheer"
+import DeleteEventButton from "../DeleteEventButton"
+import DeleteDraftButton from "../DeleteDraftButton"
 import AccountVerwijderen from "../AccountVerwijderen"
 import { KLEUR } from "@/lib/ontwerp"
 
@@ -60,19 +61,32 @@ export default async function InstellingenPage() {
           </p>
         )}
 
-        {/* Webadres, verlengen en weggooien. Kwam van het dashboard: daar
-            stond het onder de tegels en dat leidde af van het overzicht. */}
+        {/* De bruiloft weggooien. Webadres, verlengen en bekijken zitten in
+            het actiemenu van de websitetegel op het dashboard; weggooien is
+            het enige dat hier hoort, naast je account. */}
         {groep.length > 0 && (
-          <section className="flex flex-col gap-4">
-            <h2 className="m-0 text-base font-semibold" style={{ color: KLEUR.inkt }}>
-              Je bruiloft
-            </h2>
-            {groep.filter((e) => ["published", "expired"].includes(e.status)).map((e) => (
-              <EventCard key={e.id} event={e} />
-            ))}
-            {groep.filter((e) => e.status === "draft").map((e) => (
-              <EventCard key={e.id} event={e} isDraft />
-            ))}
+          <section
+            className="rounded-2xl p-5 flex flex-col gap-3"
+            style={{ backgroundColor: "#fff", border: `1px solid ${KLEUR.goudLicht}` }}
+          >
+            <div>
+              <h2 className="m-0 text-base font-semibold" style={{ color: KLEUR.inkt }}>
+                Je bruiloft weggooien
+              </h2>
+              <p className="m-0 text-sm mt-1 max-w-[62ch]" style={{ color: KLEUR.tekst }}>
+                Alles gaat weg: je kaarten, je website, je gastenlijst en de foto&apos;s. Je account blijft
+                bestaan. Facturen bewaren we, die horen bij de administratie.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-4">
+              {groep.map((e) =>
+                e.status === "draft" ? (
+                  <DeleteDraftButton key={e.id} eventId={e.id} />
+                ) : (
+                  <DeleteEventButton key={e.id} eventId={e.id} />
+                ),
+              )}
+            </div>
           </section>
         )}
 

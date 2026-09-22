@@ -23,6 +23,8 @@ export default function BouwerSchil({
   opKaartType,
   opWebsite,
   metInhoud,
+  /** Zie BouwerSchakelaar: bewaren of bevestigen voordat je van tabblad wisselt. */
+  voorVerlaten,
   /** De knoppen rechtsboven, en op de telefoon in de balk onderaan. */
   acties,
   /** Iets dat onder de kop hoort, zoals een foutmelding. */
@@ -35,6 +37,7 @@ export default function BouwerSchil({
   opKaartType?: (type: "save_the_date" | "trouwkaart") => void
   opWebsite?: () => void
   metInhoud?: Onderdeel[]
+  voorVerlaten?: () => boolean | Promise<boolean>
   acties?: React.ReactNode
   onderKop?: React.ReactNode
   /** Extra klassen op het omhulsel, bijvoorbeeld een vaste hoogte op desktop. */
@@ -66,6 +69,7 @@ export default function BouwerSchil({
               opKaartType={opKaartType}
               opWebsite={opWebsite}
               metInhoud={metInhoud}
+              voorVerlaten={voorVerlaten}
             />
           </div>
         </div>
@@ -77,6 +81,7 @@ export default function BouwerSchil({
             opKaartType={opKaartType}
             opWebsite={opWebsite}
             metInhoud={metInhoud}
+            voorVerlaten={voorVerlaten}
             variant="menu"
           />
         </div>

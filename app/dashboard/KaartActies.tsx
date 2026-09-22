@@ -1,9 +1,10 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { KLEUR } from "@/lib/ontwerp"
 import { CARD_TYPE_PLAN, type CardContent, type CardRow } from "@/lib/cards"
+import ActieMenu, { ActieFout, ActieItem, ActieScheiding, ActieUitleg, ActieVeld } from "./ActieMenu"
 
 // Alles wat je met één kaart kunt doen, achter één knop op de regel zelf.
 //
@@ -31,44 +32,12 @@ export default function KaartActies({
   naam: string
 }) {
   const router = useRouter()
-  const [open, setOpen] = useState(false)
   const [hernoemen, setHernoemen] = useState(false)
   const [nieuweNaam, setNieuweNaam] = useState(naam)
   const [weetJeHetZeker, setWeetJeHetZeker] = useState(false)
   const [bezig, setBezig] = useState(false)
   const [gekopieerd, setGekopieerd] = useState(false)
   const [fout, setFout] = useState<string | null>(null)
-  const wrap = useRef<HTMLDivElement>(null)
-
-  // Buiten het menu klikken sluit het, net als Escape. Zonder dit blijft er
-  // een open paneel achter zodra je verderop in het dashboard iets aanraakt.
-  useEffect(() => {
-    if (!open) return
-    function buiten(e: MouseEvent) {
-      if (wrap.current && !wrap.current.contains(e.target as Node)) {
-        setOpen(false)
-        setHernoemen(false)
-        setWeetJeHetZeker(false)
-        setFout(null)
-      }
-    }
-    function toets(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false)
-    }
-    document.addEventListener("mousedown", buiten)
-    document.addEventListener("keydown", toets)
-    return () => {
-      document.removeEventListener("mousedown", buiten)
-      document.removeEventListener("keydown", toets)
-    }
-  }, [open])
-
-  function sluit() {
-    setOpen(false)
-    setHernoemen(false)
-    setWeetJeHetZeker(false)
-    setFout(null)
-  }
 
   const kaartUrl =
     typeof window !== "undefined" ? `${window.location.origin}/kaart/${card.share_token}` : ""
@@ -83,7 +52,7 @@ export default function KaartActies({
     )
   }
 
-  async function bewaarNaam() {
+  async function bewaarNaam(sluit: () => void) {
     setBezig(true)
     setFout(null)
     try {
@@ -96,6 +65,7 @@ export default function KaartActies({
         body: JSON.stringify({ content }),
       })
       if (!res.ok) throw new Error()
+      setHernoemen(false)
       sluit()
       router.refresh()
     } catch {
@@ -105,12 +75,13 @@ export default function KaartActies({
     }
   }
 
-  async function verwijder() {
+  async function verwijder(sluit: () => void) {
     setBezig(true)
     setFout(null)
     try {
       const res = await fetch(`/api/cards/${card.id}`, { method: "DELETE" })
       if (!res.ok) throw new Error()
+      setWeetJeHetZeker(false)
       sluit()
       router.refresh()
     } catch {
@@ -124,102 +95,55 @@ export default function KaartActies({
   const betalen = `/betalen?event_id=${eventId ?? card.event_id}&plan=${CARD_TYPE_PLAN[card.type]}`
 
   return (
-    <div className="relative ml-auto" ref={wrap}>
-      <button
-        type="button"
-        onClick={() => (open ? sluit() : setOpen(true))}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        className="text-[13px] font-semibold px-2.5 py-1 rounded-lg"
-        style={{
-          color: KLEUR.inkt,
-          backgroundColor: open ? KLEUR.goudVlak : "transparent",
-          border: `1px solid ${KLEUR.zand}`,
-          cursor: "pointer",
-        }}
-      >
-        Acties <span aria-hidden style={{ color: KLEUR.zacht }}>▾</span>
-      </button>
-
-      {open && (
-        <div
-          role="menu"
-          className="absolute right-0 z-30 mt-1 w-60 rounded-xl overflow-hidden shadow-lg"
-          style={{ backgroundColor: "#fff", border: `1px solid ${KLEUR.goudLicht}` }}
-        >
-          <Item href={bouwer}>Verder bewerken</Item>
-          <Item href={`/kaart/${card.share_token}/voorbeeld`} nieuwTabblad>
+    <ActieMenu>
+      {(sluit) => (
+        <>
+          <ActieItem href={bouwer}>Verder bewerken</ActieItem>
+          <ActieItem href={`/kaart/${card.share_token}/voorbeeld`} nieuwTabblad>
             Bekijken zoals je gast hem ziet
-          </Item>
-          <Item href={`/kaart/${card.share_token}/afbeelding`}>
+          </ActieItem>
+          <ActieItem href={`/kaart/${card.share_token}/afbeelding`}>
             {live ? "Afbeelding downloaden" : "Voorbeeld downloaden"}
-          </Item>
+          </ActieItem>
 
-          <Scheiding />
+          <ActieScheiding />
 
           {live ? (
             <>
-              <Item onClick={kopieerLink}>{gekopieerd ? "Link gekopieerd" : "Link kopiëren"}</Item>
-              <Item
+              <ActieItem onClick={kopieerLink}>{gekopieerd ? "Link gekopieerd" : "Link kopiëren"}</ActieItem>
+              <ActieItem
                 href={`https://wa.me/?text=${encodeURIComponent(`Er is post voor je 💌 ${kaartUrl}`)}`}
                 nieuwTabblad
               >
                 Versturen via WhatsApp
-              </Item>
-              <Item href={`/api/cards/qr?token=${card.share_token}`}>QR-code downloaden</Item>
-              <Item href={`/api/cards/qr?token=${card.share_token}&vorm=svg`}>
+              </ActieItem>
+              <ActieItem href={`/api/cards/qr?token=${card.share_token}`}>QR-code downloaden</ActieItem>
+              <ActieItem href={`/api/cards/qr?token=${card.share_token}&vorm=svg`}>
                 QR-code als svg, voor je drukker
-              </Item>
+              </ActieItem>
             </>
           ) : (
             <>
-              <Item href={betalen} nadruk>
+              <ActieItem href={betalen} nadruk>
                 Activeren en versturen
-              </Item>
-              <p className="m-0 px-3 pb-2 text-[11px] leading-snug" style={{ color: KLEUR.zacht }}>
-                De link, WhatsApp en de QR-code komen vrij zodra deze kaart geactiveerd is.
-              </p>
+              </ActieItem>
+              <ActieUitleg>De link, WhatsApp en de QR-code komen vrij zodra deze kaart geactiveerd is.</ActieUitleg>
             </>
           )}
 
-          <Scheiding />
+          <ActieScheiding />
 
           {hernoemen ? (
-            <div className="p-3 flex flex-col gap-2">
-              <input
-                autoFocus
-                value={nieuweNaam}
-                onChange={(e) => setNieuweNaam(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") void bewaarNaam()
-                }}
-                placeholder="Daggasten Nederlands"
-                maxLength={60}
-                className="w-full rounded-lg border px-2.5 py-2 text-[13px] focus:outline-none"
-                style={{ borderColor: KLEUR.goudLicht, color: KLEUR.inkt }}
-              />
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => void bewaarNaam()}
-                  disabled={bezig}
-                  className="text-[13px] font-semibold px-3 py-1.5 rounded-lg"
-                  style={{ backgroundColor: KLEUR.inkt, color: KLEUR.ivoor, border: 0, cursor: "pointer" }}
-                >
-                  {bezig ? "Bewaren…" : "Bewaren"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setHernoemen(false)}
-                  className="text-[13px] px-2 py-1.5 rounded-lg"
-                  style={{ color: KLEUR.zacht, background: "none", border: 0, cursor: "pointer" }}
-                >
-                  Laat maar
-                </button>
-              </div>
-            </div>
+            <ActieVeld
+              waarde={nieuweNaam}
+              opWaarde={setNieuweNaam}
+              placeholder="Daggasten Nederlands"
+              bewaar={() => void bewaarNaam(sluit)}
+              annuleer={() => setHernoemen(false)}
+              bezig={bezig}
+            />
           ) : (
-            <Item onClick={() => setHernoemen(true)}>Naam van deze kaart wijzigen</Item>
+            <ActieItem onClick={() => setHernoemen(true)}>Naam van deze kaart wijzigen</ActieItem>
           )}
 
           {weetJeHetZeker ? (
@@ -230,7 +154,7 @@ export default function KaartActies({
               <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => void verwijder()}
+                  onClick={() => void verwijder(sluit)}
                   disabled={bezig}
                   className="text-[13px] font-semibold px-3 py-1.5 rounded-lg"
                   style={{ backgroundColor: "#991B1B", color: "#fff", border: 0, cursor: "pointer" }}
@@ -248,66 +172,14 @@ export default function KaartActies({
               </div>
             </div>
           ) : (
-            <Item onClick={() => setWeetJeHetZeker(true)} rood>
+            <ActieItem onClick={() => setWeetJeHetZeker(true)} rood>
               Verwijderen
-            </Item>
+            </ActieItem>
           )}
 
-          {fout && (
-            <p className="m-0 px-3 py-2 text-[12px] font-semibold" style={{ color: "#991B1B" }}>
-              {fout}
-            </p>
-          )}
-        </div>
+          {fout && <ActieFout>{fout}</ActieFout>}
+        </>
       )}
-    </div>
-  )
-}
-
-function Scheiding() {
-  return <div style={{ borderTop: `1px solid ${KLEUR.zand}` }} />
-}
-
-function Item({
-  children,
-  href,
-  onClick,
-  nieuwTabblad,
-  rood,
-  nadruk,
-}: {
-  children: React.ReactNode
-  href?: string
-  onClick?: () => void
-  nieuwTabblad?: boolean
-  rood?: boolean
-  nadruk?: boolean
-}) {
-  const stijl: React.CSSProperties = {
-    color: rood ? "#991B1B" : KLEUR.inkt,
-    fontWeight: nadruk ? 700 : 500,
-    textDecoration: "none",
-    background: "none",
-    border: 0,
-    cursor: "pointer",
-  }
-  const cls = "block w-full text-left px-3 py-2 text-[13px] hover:bg-[#FBF5E8]"
-  if (href) {
-    return (
-      <a
-        href={href}
-        role="menuitem"
-        className={cls}
-        style={stijl}
-        {...(nieuwTabblad ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-      >
-        {children}
-      </a>
-    )
-  }
-  return (
-    <button type="button" role="menuitem" onClick={onClick} className={cls} style={stijl}>
-      {children}
-    </button>
+    </ActieMenu>
   )
 }

@@ -30,6 +30,13 @@ export const ONDERDEEL_LABEL: Record<Onderdeel, string> = {
 
 const VOLGORDE: Onderdeel[] = ["dashboard", "save_the_date", "trouwkaart", "website"]
 
+/** Waar een onderdeel woont, met de bruiloft erbij zodra die er is. */
+function doel(o: Onderdeel, eventId: string | null): string {
+  if (o === "dashboard") return "/dashboard"
+  if (o === "website") return eventId ? `/bouwen?event_id=${eventId}` : "/bouwen?plan=compleet"
+  return eventId ? `/kaart-maken?event_id=${eventId}&type=${o}` : `/kaart-maken?type=${o}`
+}
+
 export default function BouwerSchakelaar({
   actief,
   eventId,
@@ -46,6 +53,7 @@ export default function BouwerSchakelaar({
   variant = "tabs",
   /** Bij welke onderdelen staat al iets van de klant: die krijgen een stip. */
   metInhoud = [],
+  voorVerlaten,
 }: {
   actief: Onderdeel
   eventId: string | null
@@ -53,10 +61,25 @@ export default function BouwerSchakelaar({
   opWebsite?: () => void
   variant?: "tabs" | "menu"
   metInhoud?: Onderdeel[]
+  /**
+   * Wordt gevraagd voordat we deze pagina verlaten. De bouwer kan hier zijn
+   * werk bewaren of om bevestiging vragen; geeft hij false terug, dan blijven
+   * we. Zonder dit verloor je bij het wisselen van tabblad wat je net had
+   * getypt, want de bouwers zijn nog aparte pagina's.
+   */
+  voorVerlaten?: () => boolean | Promise<boolean>
 }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const wrap = useRef<HTMLDivElement>(null)
+
+  // De andere onderdelen alvast ophalen, zodat wisselen aanvoelt als een
+  // tabblad en niet als een nieuwe pagina. Knoppen doen dat niet uit zichzelf,
+  // links wel; dit haalt dat verschil weg.
+  useEffect(() => {
+    const doelen = VOLGORDE.filter((o) => o !== actief).map((o) => doel(o, eventId))
+    for (const d of doelen) router.prefetch(d)
+  }, [actief, eventId, router])
 
   // Het menu sluit als je ernaast tikt.
   useEffect(() => {
@@ -68,35 +91,21 @@ export default function BouwerSchakelaar({
     return () => document.removeEventListener("mousedown", dicht)
   }, [open])
 
-  function ga(naar: Onderdeel) {
+  async function ga(naar: Onderdeel) {
     setOpen(false)
     if (naar === actief) return
 
-    if (naar === "dashboard") {
-      router.push("/dashboard")
-      return
-    }
-
-    if (naar === "website") {
-      if (eventId) {
-        router.push(`/bouwen?event_id=${eventId}`)
-        return
-      }
-      opWebsite?.()
-      router.push("/bouwen?plan=compleet")
-      return
-    }
-
     // Binnen de kaartbouwer: gewoon het soort kaart omzetten, geen navigatie,
-    // anders knippert het beeld voor niets.
-    if (opKaartType && actief !== "dashboard" && actief !== "website") {
+    // anders knippert het beeld voor niets. Dit is ook geen verlaten.
+    if (opKaartType && naar !== "dashboard" && naar !== "website" && actief !== "dashboard" && actief !== "website") {
       opKaartType(naar)
       return
     }
 
-    router.push(
-      eventId ? `/kaart-maken?event_id=${eventId}&type=${naar}` : `/kaart-maken?type=${naar}`
-    )
+    if (voorVerlaten && !(await voorVerlaten())) return
+
+    if (naar === "website" && !eventId) opWebsite?.()
+    router.push(doel(naar, eventId))
   }
 
   if (variant === "menu") {
