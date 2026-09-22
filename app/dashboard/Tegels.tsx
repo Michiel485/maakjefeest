@@ -29,8 +29,10 @@ export function Teller({
   live: boolean
 }) {
   if (gasten === 0) {
+    // Michiels punt: als je hier zonder account komt moet duidelijk zijn
+    // waarom er niets staat, en wanneer er wel iets komt te staan.
     const zin = !heeftKaart
-      ? "Nog niets gemaakt. Begin met een Save the Date of een trouwkaart; ontwerpen kost niets."
+      ? "Nog niets om te tonen. Begin met een Save the Date of een trouwkaart; ontwerpen kost niets. Zodra je een ontwerp bewaart, komt het hier te staan, gratis. Pas als je tevreden bent en iets wilt versturen, betaal je."
       : !live
         ? "Nog niets verstuurd. Activeer je kaart en deel de link, dan verschijnen hier wie er komen en van wie je nog niets hebt gehoord."
         : "Nog geen reacties. Zodra de eerste binnen is, staat hij hier."

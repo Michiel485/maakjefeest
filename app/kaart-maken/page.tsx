@@ -66,6 +66,9 @@ const BODY       = KLEUR.tekst
 const SUBTLE     = KLEUR.zacht
 
 const LS_ONTWERP = "sayingyes_kaart"
+/** De locatie van de bruiloft hoort niet bij het kaartontwerp, dus die staat
+ *  apart. Zonder dit was hij weg zodra je even naar de websitebouwer ging. */
+const LS_BRUILOFT_LOCATIE = "sayingyes_bruiloft_locatie"
 const LS_ACTIE   = "sayingyes_kaart_actie"
 const LS_IDS     = "sayingyes_kaart_ids"
 
@@ -146,6 +149,11 @@ const inputStyle: React.CSSProperties = { color: CHARCOAL, borderColor: GOLD_LIG
 export default function KaartMakenPage() {
   const router = useRouter()
   const fileRef = useRef<HTMLInputElement>(null)
+  // Het formulier onder de kaart in het voorbeeld. Zet je Aanmelden aan, dan
+  // scrollen we daarnaartoe, anders zie je niet dat er iets bij is gekomen.
+  const formulierRef = useRef<HTMLDivElement>(null)
+  /** Het voorbeeldvlak zelf, zodat we daarbinnen scrollen en niet de hele pagina. */
+  const voorbeeldRef = useRef<HTMLElement>(null)
 
   const [ontwerp, setOntwerp] = useState<KaartOntwerp>(LEEG)
   const [geladen, setGeladen] = useState(false)
@@ -226,6 +234,22 @@ export default function KaartMakenPage() {
       setOntwerp((o) => ({ ...o, aanmelden: "janee" }))
     }
   }, [magVolledig, ontwerp.aanmelden])
+
+  // Zet je Aanmelden aan, dan scrollt het voorbeeld naar het formulier dat er
+  // onder de kaart bij is gekomen. Anders zie je niet dat er iets veranderde.
+  // Alleen bij een wissel, niet bij het laden: dan hoort de kaart bovenaan.
+  const vorigeAanmelden = useRef(ontwerp.aanmelden)
+  useEffect(() => {
+    if (vorigeAanmelden.current === ontwerp.aanmelden) return
+    vorigeAanmelden.current = ontwerp.aanmelden
+    if (ontwerp.aanmelden !== "geen") {
+      // Binnen het voorbeeldvlak scrollen, niet de hele pagina: anders schuift
+      // de kop van de bouwer mee omhoog.
+      const vlak = voorbeeldRef.current
+      const doel = formulierRef.current
+      if (vlak && doel) vlak.scrollTo({ top: Math.max(0, doel.offsetTop - 16), behavior: "smooth" })
+    }
+  }, [ontwerp.aanmelden])
   // Al betaald en het pakket dekt deze kaart? Dan is de kaart meteen live.
   const alAfgenomen = eventStatus === "published" && planMagVersturen(eventPlan, ontwerp.type)
   // Wat er nog bij komt: bij een betaalde bruiloft alleen het verschil.
@@ -251,6 +275,8 @@ export default function KaartMakenPage() {
     try {
       const bewaard = localStorage.getItem(LS_ONTWERP)
       if (bewaard) basis = { ...LEEG, ...(JSON.parse(bewaard) as Partial<KaartOntwerp>) }
+      const locatieBewaard = localStorage.getItem(LS_BRUILOFT_LOCATIE)
+      if (locatieBewaard) setEventLocatie(locatieBewaard)
       const ids = localStorage.getItem(LS_IDS)
       if (ids) {
         const { eventId: e, cardId: c } = JSON.parse(ids) as { eventId?: string; cardId?: string }
@@ -365,8 +391,11 @@ export default function KaartMakenPage() {
   // Ontwerp altijd lokaal bewaren, zodat niets verloren gaat bij inloggen of verversen
   useEffect(() => {
     if (!geladen) return
-    try { localStorage.setItem(LS_ONTWERP, JSON.stringify(ontwerp)) } catch {}
-  }, [ontwerp, geladen])
+    try {
+      localStorage.setItem(LS_ONTWERP, JSON.stringify(ontwerp))
+      localStorage.setItem(LS_BRUILOFT_LOCATIE, eventLocatie)
+    } catch {}
+  }, [ontwerp, eventLocatie, geladen])
 
   // ── Weergave ──────────────────────────────────────────────────────────────
   const sc = getStyleConfig(ontwerp.style)
@@ -1162,9 +1191,11 @@ export default function KaartMakenPage() {
                 </button>
               ))}
             </div>
+            {/* Op een telefoon is er geen ruimte voor de knop rechtsboven in
+                het voorbeeld, dus daar staat hij hier. */}
             <button
               onClick={() => setSimulatie(true)}
-              className="text-sm font-semibold px-3 py-2.5 rounded-xl"
+              className="md:hidden text-sm font-semibold px-3 py-2.5 rounded-xl"
               style={{ backgroundColor: "#fff", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
             >
               Bekijk hoe het opengaat
@@ -1196,14 +1227,29 @@ export default function KaartMakenPage() {
             de secties doorscrolt, op iets minder dan de helft van het scherm.
             Zo zie je je kaart veranderen terwijl je typt. */}
         <main
-          className="flex-1 overflow-y-auto p-4 sm:p-8 sticky top-[57px] z-20 max-h-[46vh] md:static md:max-h-none md:z-auto"
+          ref={voorbeeldRef}
+          className="flex-1 overflow-y-auto p-4 sm:p-5 sticky top-[57px] z-20 max-h-[46vh] md:relative md:top-auto md:max-h-none md:z-auto"
           style={{ backgroundColor: "#F1ECE3" }}
         >
+          {/* Rechtsboven in het voorbeeld, in dezelfde stijl als "Terug naar
+              ontwerpen" in de simulatie. Michiels punt: die knop hoort bij
+              het voorbeeld, niet ergens in een sectie. */}
+          <button
+            type="button"
+            onClick={() => setSimulatie(true)}
+            className="hidden md:inline-flex absolute top-4 right-4 z-10 text-sm font-semibold px-4 py-2 rounded-xl shadow-lg"
+            style={{ backgroundColor: "#fff", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
+          >
+            {"💌"} Bekijk hoe het opengaat
+          </button>
           <div className="mx-auto max-w-md">
             <p className="text-center text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: SUBTLE }}>
               Zo ziet jullie kaart eruit
             </p>
-            <div className="rounded-2xl shadow-xl overflow-clip">
+            {/* Geen overflow-clip en geen eigen schaduw om de kaart heen: de
+                kaart tekent zijn eigen schaduw, en een klippende doos eromheen
+                sneed die af tot een vierkant. */}
+            <div className="rounded-2xl">
               <CardReveal
                 display={display}
                 initials={initialen}
@@ -1220,7 +1266,7 @@ export default function KaartMakenPage() {
                 Dit is hetzelfde formulier dat je gast krijgt, alleen kan er
                 niets verstuurd worden. */}
             {ontwerp.aanmelden !== "geen" && (
-              <div className="mt-6">
+              <div className="mt-6" ref={formulierRef}>
                 <p className="text-center text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: SUBTLE }}>
                   En dit vullen je gasten in
                 </p>

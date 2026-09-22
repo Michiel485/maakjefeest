@@ -1380,9 +1380,12 @@ export default function BouwenPage() {
             <Knop soort="gevaar" klein onClick={handleSave} className="flex-1 md:flex-none">
               Opnieuw proberen
             </Knop>
-          ) : hasPendingChanges ? (
+          ) : hasPendingChanges || !savedEventId ? (
+            // Nog nooit bewaard? Dan is er niets "opgeslagen", en een groen
+            // vinkje zou liegen. Dan staat hier gewoon de bewaarknop, net als
+            // in de kaartbouwer.
             <Knop soort="rustig" klein onClick={handleSave} className="flex-1 md:flex-none">
-              Opslaan
+              {savedEventId ? "Opslaan" : "Bewaar ontwerp"}
             </Knop>
           ) : (
             <span
@@ -1442,7 +1445,7 @@ export default function BouwenPage() {
                     className="w-full rounded-xl border bg-white px-3 py-2.5 text-sm placeholder-gray-400 focus:outline-none"
                     style={{ color: KLEUR.inkt, borderColor: KLEUR.goudLicht }}
                     placeholder="Sophie & Daan"
-                    value={draft.naam}
+                    value={draft.naam ?? ""}
                     maxLength={80}
                     onChange={(e) => {
                       const naam = e.target.value
@@ -1469,7 +1472,7 @@ export default function BouwenPage() {
                     className="w-full rounded-xl border bg-white px-3 py-2.5 text-sm placeholder-gray-400 focus:outline-none"
                     style={{ color: KLEUR.inkt, borderColor: KLEUR.goudLicht }}
                     placeholder="Kasteel Wijenburg, Echteld"
-                    value={draft.locatie}
+                    value={draft.locatie ?? ""}
                     maxLength={120}
                     onChange={(e) => {
                       const locatie = e.target.value
@@ -1477,7 +1480,7 @@ export default function BouwenPage() {
                     }}
                   />
                 </label>
-                {(!draft.naam.trim() || !draft.datum) && (
+                {(!(draft.naam ?? "").trim() || !draft.datum) && (
                   <p className="text-[11px] leading-snug m-0" style={{ color: KLEUR.zacht }}>
                     Vul je namen en je datum in, dan bouwen we je eerste pagina.
                   </p>
@@ -2869,7 +2872,7 @@ export default function BouwenPage() {
               niets. Dan ligt hier één paneel over het voorbeeld dat zegt wat
               er moet gebeuren. De kaartbouwer wacht niet; de website wel,
               want een kaart met "Jullie namen" ziet er al uit als een kaart. */}
-          {draft && (!draft.naam.trim() || !draft.datum) && (
+          {draft && (!(draft.naam ?? "").trim() || !draft.datum) && (
             <div
               className="absolute inset-0 z-20 flex items-center justify-center p-6"
               style={{ backgroundColor: "rgba(250,247,242,0.92)", backdropFilter: "blur(2px)" }}

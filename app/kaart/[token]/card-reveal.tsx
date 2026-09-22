@@ -259,7 +259,17 @@ export default function CardReveal({
     }
 
     frame = requestAnimationFrame(stap)
-    return () => cancelAnimationFrame(frame)
+    return () => {
+      cancelAnimationFrame(frame)
+      // Wordt de animatie onderbroken, bijvoorbeeld omdat de kaart in de
+      // bouwer opnieuw tekent terwijl hij nog opengaat, dan bleef de
+      // clip-path van het laatste beeld op het element staan. Je zag dan een
+      // kaart met een afgesneden schaduw en vierkante onderhoeken, en alleen
+      // soms, afhankelijk van het moment. Hier dus altijd opruimen.
+      kaart.style.transform = ""
+      kaart.style.clipPath = ""
+      kaart.style.opacity = ""
+    }
   }, [stage, klassiekeAnimatie, reduceMotion])
   const cardVisible = stage === "card" || stage === "open"
   const envelopeGone = stage === "card" || stage === "open"

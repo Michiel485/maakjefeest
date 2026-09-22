@@ -121,7 +121,10 @@ export async function renderCardImage(
             fontSize: mode === "og" ? 34 : 56,
             letterSpacing: mode === "og" ? 5 : 9,
             color: "#111111",
-            opacity: 0.16,
+            // Zichtbaar genoeg om niet als echte kaart te worden gebruikt,
+            // licht genoeg om de kaart zelf te kunnen beoordelen. Op 0.16 lag
+            // het er als een raster overheen.
+            opacity: 0.07,
           }}
         >
           {WATERMERK_TEKST}
