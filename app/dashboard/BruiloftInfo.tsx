@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { KLEUR } from "@/lib/ontwerp"
 import { afstandInWoorden } from "@/lib/fasen"
+import { Aftellen } from "./Tegels"
 
 // Jullie namen, de trouwdatum en de locatie, op één plek gevraagd.
 //
@@ -17,6 +18,20 @@ import { afstandInWoorden } from "@/lib/fasen"
 
 const LS_ONTWERP = "sayingyes_kaart"
 const LS_BRUILOFT_LOCATIE = "sayingyes_bruiloft_locatie"
+
+/** Wat er in de browser staat, voor wie nog geen account heeft. */
+function uitBrowser(): { naam: string; datum: string; locatie: string } {
+  try {
+    const o = JSON.parse(localStorage.getItem(LS_ONTWERP) ?? "{}") as Record<string, unknown>
+    return {
+      naam: typeof o.names === "string" ? o.names : "",
+      datum: typeof o.datum === "string" ? o.datum : "",
+      locatie: localStorage.getItem(LS_BRUILOFT_LOCATIE) ?? "",
+    }
+  } catch {
+    return { naam: "", datum: "", locatie: "" }
+  }
+}
 
 export default function BruiloftInfo({
   eventId,
@@ -37,6 +52,19 @@ export default function BruiloftInfo({
   const [bezig, setBezig] = useState(false)
   const [fout, setFout] = useState<string | null>(null)
 
+  // Zonder account staat je bruiloft in je browser en niet op de server, dus
+  // die lezen we hier. Op de server weten we niet wat erin staat, vandaar dat
+  // dit pas ná het eerste tekenen gebeurt.
+  useEffect(() => {
+    if (eventId) return
+    const b = uitBrowser()
+    if (!b.naam && !b.datum && !b.locatie) return
+    setNaam(b.naam)
+    setDatum(b.datum)
+    setLocatie(b.locatie)
+    setOpen(!b.naam.trim() || !b.datum)
+  }, [eventId])
+
   async function bewaar() {
     setBezig(true)
     setFout(null)
@@ -48,6 +76,9 @@ export default function BruiloftInfo({
           localStorage.setItem(LS_ONTWERP, JSON.stringify({ ...vorig, names: naam, datum }))
           localStorage.setItem(LS_BRUILOFT_LOCATIE, locatie)
         } catch {}
+        // Dichtklappen, zodat je meteen ziet dat het gelukt is: de kop
+        // hierboven toont dan je namen, je datum en het aftellen. Eerder
+        // gebeurde er zichtbaar niets en leek de knop stuk.
         setOpen(false)
         return
       }
@@ -188,7 +219,55 @@ export default function BruiloftInfo({
     </div>
   )
 
-  if (!inKop) return formulier
+  if (!inKop) {
+    const heeftIets = !!naam.trim() || !!datum
+    return (
+      <div className="flex flex-col gap-4">
+        {heeftIets && (
+          <header className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h1
+                className="m-0"
+                style={{
+                  fontFamily: "var(--font-cormorant)",
+                  fontWeight: 600,
+                  fontSize: "clamp(1.7rem, 4vw, 2.5rem)",
+                  lineHeight: 1.05,
+                  color: KLEUR.inkt,
+                  textWrap: "balance",
+                }}
+              >
+                {naam.trim() ? `Bruiloft van ${naam.trim()}` : "Jullie bruiloft"}
+              </h1>
+              <div className="text-sm mt-1.5" style={{ color: KLEUR.zacht }}>
+                {datum
+                  ? new Date(datum).toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })
+                  : "Nog geen trouwdatum"}
+                {locatie ? ` · ${locatie}` : ""}
+                {" · "}
+                <button
+                  type="button"
+                  onClick={() => setOpen((v) => !v)}
+                  className="underline underline-offset-2"
+                  style={{ color: KLEUR.zacht, background: "none", border: 0, padding: 0, font: "inherit", cursor: "pointer" }}
+                >
+                  {open ? "sluiten" : "wijzig"}
+                </button>
+              </div>
+            </div>
+            <Aftellen datum={datum || null} />
+          </header>
+        )}
+        {open && formulier}
+        {heeftIets && !open && (
+          <p className="m-0 text-sm" style={{ color: KLEUR.tekst }}>
+            Bewaard in deze browser. Zodra je je eerste ontwerp opslaat, verhuist het mee naar je
+            eigen dashboard.
+          </p>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div

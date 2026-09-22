@@ -132,7 +132,11 @@ export default async function DashboardPage({
     >
       <main className="max-w-7xl w-full mx-auto px-4 md:px-6 py-7 md:py-9 flex flex-col gap-6">
 
-        {/* ── De bruiloft ── */}
+        {/* ── De bruiloft ──
+            Alleen als er een bewaarde bruiloft is. Zonder account staat je
+            bruiloft in je browser, en dan tekent BruiloftInfo de kop zelf,
+            want de server weet niet wat daarin staat. */}
+        {bruiloft && (
         <header className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1
@@ -181,6 +185,7 @@ export default async function DashboardPage({
             </div>
           )}
         </header>
+        )}
 
         {/* ── Jullie namen, datum en locatie ──
             Eén plek waar dit gevraagd wordt. Dat stond eerst in beide bouwers
