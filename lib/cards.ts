@@ -63,6 +63,12 @@ export interface CardContent {
   // Of er onder de kaart om een aanmelding wordt gevraagd, en hoeveel. Zie
   // AanmeldStand in lib/gasten.ts: geen, alleen ja of nee, of volledig.
   aanmelden?: string
+  // ── Details op de kaart ───────────────────────────────────────────────────
+  // Michiels wens van 22 september 2026: subtiel kunnen tonen voor wie de
+  // kaart is, hoe laat het is en wat de dresscode is, zonder de kaart te
+  // verpesten. Ze komen samen in één regel in de accentkleur, onder de tekst.
+  toonGastType?: boolean
+  dresscode?: string
 }
 
 export interface CardRow {
@@ -243,6 +249,10 @@ interface KaartTeksten {
   bericht: Record<CardType, string>
   /** De uitnodigingsregel per gastengroep, op een trouwkaart. */
   uitnodiging: Record<CardGuestType, string>
+  /** Het woord voor de kledingaanwijzing op de kaart. */
+  dresscode: string
+  /** De gastengroepen zoals ze óp de kaart komen te staan, in de taal van de kaart. */
+  gasten: Record<CardGuestType, string>
   rsvpKnop: string
   siteKnop: string
   /** De knop die de datum in de agenda van de gast zet. */
@@ -275,6 +285,8 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
     siteVolgt: "Meer informatie volgt binnenkort 🤍",
     openEnvelop: "Open de envelop",
     gemaaktMet: "Gemaakt met",
+    dresscode: "Dresscode",
+    gasten: { daggast: "Daggasten", avondgast: "Avondgasten", receptiegast: "Receptiegasten" },
     locale: "nl-NL",
   },
   en: {
@@ -294,6 +306,8 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
     siteVolgt: "More details coming soon 🤍",
     openEnvelop: "Open the envelope",
     gemaaktMet: "Made with",
+    dresscode: "Dress code",
+    gasten: { daggast: "Day guests", avondgast: "Evening guests", receptiegast: "Reception guests" },
     // en-GB geeft "14 August 2027"; en-US zou "August 14, 2027" geven en dat
     // leest voor Europese gasten vreemd op een kaart.
     locale: "en-GB",
@@ -315,6 +329,8 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
     siteVolgt: "Plus d'informations bientôt 🤍",
     openEnvelop: "Ouvrir l'enveloppe",
     gemaaktMet: "Créé avec",
+    dresscode: "Tenue",
+    gasten: { daggast: "Invités de la journée", avondgast: "Invités de la soirée", receptiegast: "Invités de la réception" },
     locale: "fr-FR",
   },
   de: {
@@ -334,6 +350,8 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
     siteVolgt: "Weitere Infos folgen bald 🤍",
     openEnvelop: "Umschlag öffnen",
     gemaaktMet: "Erstellt mit",
+    dresscode: "Dresscode",
+    gasten: { daggast: "Tagesgäste", avondgast: "Abendgäste", receptiegast: "Empfangsgäste" },
     locale: "de-DE",
   },
 }
@@ -415,12 +433,23 @@ export function buildCardDisplay(
     names: content.names?.trim() || fallbackNames,
     dateText: content.dateText?.trim() || (event.datum ? formatDate(event.datum, tk.locale) : ""),
     location: content.location?.trim() || event.locatie?.trim() || "",
+    // Een eigen uitnodigingsregel mag op elke kaart; de standaardregel per
+    // gastengroep alleen op een trouwkaart, want op een Save the Date nodig je
+    // nog niet uit.
     inviteLine:
-      type === "trouwkaart"
-        ? content.inviteText?.trim() ||
-          (content.guestType ? tk.uitnodiging[content.guestType] : null)
-        : null,
-    timeText: type === "trouwkaart" ? content.timeText?.trim() || null : null,
+      content.inviteText?.trim() ||
+      (type === "trouwkaart" && content.guestType ? tk.uitnodiging[content.guestType] : null),
+    // Eén regel in de accentkleur onder de tekst met wat er verder te weten
+    // is: voor wie, hoe laat, welke kleding. Alleen wat is ingevuld, met een
+    // puntje ertussen, zodat het één rustige regel blijft.
+    timeText:
+      [
+        content.toonGastType && content.guestType ? tk.gasten[content.guestType] : null,
+        content.timeText?.trim() || null,
+        content.dresscode?.trim() ? `${tk.dresscode}: ${content.dresscode.trim()}` : null,
+      ]
+        .filter((d): d is string => !!d)
+        .join(" · ") || null,
     message: content.message?.trim() || tk.bericht[type],
     // Een foto hoort bij de kaart zodra er één gekozen is, los van het ontwerp
     photoUrl: content.photoUrl?.trim() || (template === "foto" ? event.hero_image_url?.trim() || null : null),

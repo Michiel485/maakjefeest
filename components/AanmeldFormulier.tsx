@@ -100,6 +100,11 @@ export default function AanmeldFormulier({
   const volledig = stand === "volledig"
 
   const [komt, setKomt] = useState<"yes" | "no" | null>(null)
+  // Alleen bij de stand "adres": straat en huisnummer, postcode en plaats, in
+  // één veld. Het bruidspaar wil er een envelop mee kunnen adresseren, meer
+  // niet, en één veld vult sneller dan drie.
+  const [adres, setAdres] = useState("")
+  const vraagAdres = stand === "adres"
   const [aantal, setAantal] = useState(1)
   const [personen, setPersonen] = useState<Persoon[]>([leegPersoon()])
   const [metKinderen, setMetKinderen] = useState(false)
@@ -153,6 +158,7 @@ export default function AanmeldFormulier({
               achternaam: personen[0].achternaam,
               email: hoofdEmail || undefined,
               telefoon: personen[0].telefoon || undefined,
+              adres: vraagAdres ? adres.trim() || undefined : undefined,
               is_primary: true,
               attending: "no",
               message: bericht || undefined,
@@ -360,6 +366,17 @@ export default function AanmeldFormulier({
                       maxLength={32}
                     />
                   </div>
+                )}
+                {i === 0 && vraagAdres && komt === "yes" && (
+                  <textarea
+                    className={`${veldKlassen} resize-none`}
+                    style={{ ...veldStijl, minHeight: 60 }}
+                    rows={2}
+                    placeholder={"Adres voor de trouwkaart\nStraat 12, 1234 AB Plaats"}
+                    value={adres}
+                    onChange={(e) => setAdres(e.target.value)}
+                    maxLength={200}
+                  />
                 )}
                 {volledig && komt === "yes" && (
                   <div className="flex flex-col sm:flex-row gap-2">

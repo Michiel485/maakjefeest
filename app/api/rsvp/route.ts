@@ -50,6 +50,8 @@ interface GuestInput {
   custom_answer?: boolean
   custom_answer_2?: boolean
   antwoorden?: Record<string, string | boolean>
+  /** Alleen bij de aanmeldstand "adres": voor een papieren trouwkaart. */
+  adres?: string
 }
 
 /** Een regel die al in de lijst staat, met alleen wat we nodig hebben. */
@@ -293,7 +295,20 @@ export async function POST(request: Request) {
       ...(g.custom_answer != null ? { custom_answer: g.custom_answer } : {}),
       ...(g.custom_answer_2 != null ? { custom_answer_2: g.custom_answer_2 } : {}),
       ...(g.antwoorden ? { antwoorden: g.antwoorden } : {}),
+      // Alleen meegeven als het er is: de kolom bestaat pas na
+      // migration_adres.sql, en zonder deze sleutel raakt de insert hem niet.
+      ...(g.adres ? { adres: tekst(g.adres, 200) } : {}),
     }
+  }
+
+  // Mist de kolom adres nog, dan mag dat een aanmelding nooit kosten. Dezelfde
+  // les als concept_naam: één ontbrekende kolom voor een bijzaak mag de
+  // hoofdzaak niet meenemen. Dan zonder adres, en dat staat in het log.
+  function zonderAdres<T extends Record<string, unknown>>(rij: T): T {
+    if (!("adres" in rij)) return rij
+    const kopie = { ...rij }
+    delete (kopie as Record<string, unknown>).adres
+    return kopie
   }
 
   // Wie de uitnodiging beantwoordt heeft ook de Save the Date gehad, dus die
@@ -313,7 +328,11 @@ export async function POST(request: Request) {
     .map((p) => ({ event_id, submission_id, huishouden_id, huishouden_naam, ...velden(p.g), ...stdErbij(p) }))
 
   if (nieuwe.length > 0) {
-    const { error } = await supabase.from("rsvp").insert(nieuwe)
+    let { error } = await supabase.from("rsvp").insert(nieuwe)
+    if (error && nieuwe.some((r) => "adres" in r)) {
+      console.warn("[rsvp] insert zonder adres geprobeerd - migratie nog niet gedraaid?")
+      error = (await supabase.from("rsvp").insert(nieuwe.map(zonderAdres))).error
+    }
     if (error) fout = error
   }
 
@@ -321,10 +340,12 @@ export async function POST(request: Request) {
   // het indeelde. Wij weten niet beter dan zij wie bij wie hoort.
   for (const p of paren) {
     if (!p.bestaand || fout) continue
-    const { error } = await supabase
-      .from("rsvp")
-      .update({ submission_id, ...velden(p.g), ...stdErbij(p) })
-      .eq("id", p.bestaand.id)
+    const rij = { submission_id, ...velden(p.g), ...stdErbij(p) }
+    let { error } = await supabase.from("rsvp").update(rij).eq("id", p.bestaand.id)
+    if (error && "adres" in rij) {
+      console.warn("[rsvp] update zonder adres geprobeerd - migratie nog niet gedraaid?")
+      error = (await supabase.from("rsvp").update(zonderAdres(rij)).eq("id", p.bestaand.id)).error
+    }
     if (error) fout = error
   }
 

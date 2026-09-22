@@ -166,6 +166,20 @@ export async function laadBruiloft(email: string, gekozenId?: string | null): Pr
       .order("created_at", { ascending: false })
     rsvps = (rsvpData ?? []) as RsvpRow[]
 
+    // Het adres dat een gast invulde voor een papieren trouwkaart. Bestaat pas
+    // na migration_adres.sql, dus apart opgevraagd: mislukt dit, dan weten we
+    // het gewoon niet en werkt de rest door.
+    if (rsvps.length > 0) {
+      const { data: adressen, error: adresErr } = await service
+        .from("rsvp")
+        .select("id, adres")
+        .in("event_id", groepIds)
+      if (!adresErr && adressen) {
+        const per = new Map(adressen.map((a) => [a.id as string, (a.adres as string | null) ?? null]))
+        rsvps = rsvps.map((r) => (per.has(r.id) ? { ...r, adres: per.get(r.id) ?? null } : r))
+      }
+    }
+
     // Welke kaart het bruidspaar zegt gestuurd te hebben. Die kolommen bestaan
     // pas na migration_gekregen.sql, dus apart opgevraagd: mislukt dit, dan
     // weten we het gewoon niet en werkt de rest door.

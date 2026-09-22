@@ -39,6 +39,8 @@ export interface RsvpRow {
    *  Optioneel: bestaat pas na migration_gekregen.sql. */
   std_kaart_id?: string | null
   inv_kaart_id?: string | null
+  /** Voor een papieren trouwkaart, als de gast dat invulde. Bestaat pas na migration_adres.sql. */
+  adres?: string | null
   huishouden_naam: string | null
   is_primary: boolean
   attending: string | null
@@ -335,7 +337,7 @@ export default function RsvpSection({
 
   function buildExportRows() {
     const headers = [
-      "Naam", "E-mail", "Status", "Type", "Dieetwensen",
+      "Naam", "E-mail", "Adres", "Status", "Type", "Dieetwensen",
       ...(hasSong ? ["Song Request"] : []),
       ...(hasOvernachting ? ["Overnachting"] : []),
       ...(hasCustomAnswer ? ["Extra vraag 1"] : []),
@@ -343,7 +345,7 @@ export default function RsvpSection({
       "Berichtje", "Event", "Datum",
     ]
     const rows = rsvps.map((r) => [
-      r.name, r.email ?? "",
+      r.name, r.email ?? "", r.adres ?? "",
       // De reis is de waarheid, niet de oude attending-kolom: zonder antwoord
       // is het geen aanwezig.
       (() => {
@@ -750,6 +752,9 @@ export default function RsvpSection({
                       </td>
                       <td className="px-5 py-3 hidden md:table-cell text-sm" style={{ color: BODY }}>
                         {row.email ?? <span style={{ color: GOLD_LIGHT }}>—</span>}
+                        {row.adres && (
+                          <span className="block text-[11px] mt-0.5 whitespace-pre-line" style={{ color: SOFT }}>{row.adres}</span>
+                        )}
                       </td>
                       <td className="px-5 py-3 hidden lg:table-cell text-sm" style={{ color: BODY }}>
                         {row.dietary || <span style={{ color: GOLD_LIGHT }}>—</span>}

@@ -42,22 +42,32 @@ export function moetNogReageren(status: GastStatus): boolean {
 // hem bereikt. Dieetwensen achttien maanden vooraf zijn zinloos: niemand weet
 // dan of hij tegen die tijd vegetarisch eet. Het korte formulier moet in tien
 // seconden te doen zijn, want dat is waarom mensen het invullen.
-export type AanmeldStand = "geen" | "janee" | "volledig"
+// "adres" is Michiels toevoeging van 22 september 2026: wie straks papieren
+// trouwkaarten wil sturen maar niet alle adressen heeft, laat zijn gasten die
+// zelf invullen bij de Save the Date. Dat scheelt een avond appen.
+export type AanmeldStand = "geen" | "janee" | "adres" | "volledig"
 
 export const AANMELD_LABEL: Record<AanmeldStand, string> = {
   geen: "Niets vragen",
-  janee: "Alleen of ze komen",
+  janee: "Aanwezig ja/nee",
+  adres: "Aanwezig ja/nee, met adres",
   volledig: "Volledig aanmelden",
 }
 
 export const AANMELD_UITLEG: Record<AanmeldStand, string> = {
   geen: "de gast ziet alleen de kaart",
-  janee: "wie komt er, met hoeveel personen en hoe bereik ik je",
+  janee: "vraag je gasten alvast of ze komen, zo vormt zich een beeld van wie erbij zijn",
+  adres: "wil je straks papieren trouwkaarten sturen? Laat je gasten hier zelf hun adres achterlaten",
   volledig: "alles, inclusief dieetwensen en je eigen vragen",
 }
 
 export function aanmeldStand(waarde: unknown): AanmeldStand {
-  return waarde === "janee" || waarde === "volledig" ? waarde : "geen"
+  return waarde === "janee" || waarde === "adres" || waarde === "volledig" ? waarde : "geen"
+}
+
+/** Vraagt deze stand om een adres? */
+export function vraagtAdres(stand: AanmeldStand): boolean {
+  return stand === "adres"
 }
 
 /** Wat standaard aanstaat bij een nieuw gemaakte kaart. */

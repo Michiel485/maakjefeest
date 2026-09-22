@@ -85,7 +85,7 @@ interface ConceptRij {
   status: string
 }
 
-type Stap = "info" | "stijl" | "template" | "tekst" | "groep" | "aanmelden" | "taal" | "foto" | "animatie" | "bekijken"
+type Stap = "info" | "stijl" | "template" | "tekst" | "groep" | "details" | "aanmelden" | "taal" | "foto" | "animatie" | "bekijken"
 type Actie = "bewaar" | "activeer"
 
 interface KaartOntwerp {
@@ -100,6 +100,9 @@ interface KaartOntwerp {
   guestType: CardGuestType | ""
   inviteText: string
   timeText: string
+  /** De gastengroep subtiel op de kaart tonen. */
+  toonGastType: boolean
+  dresscode: string
   photoDataUrl: string | null
   photoUrl: string | null
   animatie: CardAnimatie
@@ -118,6 +121,8 @@ const LEEG: KaartOntwerp = {
   guestType: "",
   inviteText: "",
   timeText: "",
+  toonGastType: false,
+  dresscode: "",
   photoDataUrl: null,
   photoUrl: null,
   animatie: "rustig",
@@ -223,8 +228,8 @@ export default function KaartMakenPage() {
   // niet kan leveren.
   const magVolledig = planAllows(plan, "rsvp")
   const aanmeldKeuzes: AanmeldStand[] = magVolledig
-    ? ["geen", "janee", "volledig"]
-    : ["geen", "janee"]
+    ? ["geen", "janee", "adres", "volledig"]
+    : ["geen", "janee", "adres"]
 
   // Stond er al volledig op een kaart die dat niet mag, bijvoorbeeld omdat het
   // ooit wel kon, dan zetten we hem terug. Anders staat er een keuze in de
@@ -334,6 +339,8 @@ export default function KaartMakenPage() {
               guestType: kaart?.content.guestType ?? "",
               inviteText: kaart?.content.inviteText ?? "",
               timeText: kaart?.content.timeText ?? "",
+              toonGastType: kaart?.content.toonGastType === true,
+              dresscode: kaart?.content.dresscode ?? "",
               photoDataUrl: null,
               photoUrl: kaart?.content.photoUrl ?? null,
               animatie: cardAnimatie(kaart?.content.animatie),
@@ -407,6 +414,8 @@ export default function KaartMakenPage() {
     guestType: ontwerp.guestType || undefined,
     inviteText: ontwerp.inviteText || undefined,
     timeText: ontwerp.timeText || undefined,
+    toonGastType: ontwerp.toonGastType || undefined,
+    dresscode: ontwerp.dresscode || undefined,
     photoUrl: ontwerp.photoUrl ?? ontwerp.photoDataUrl ?? undefined,
     animatie: ontwerp.animatie,
     taal: ontwerp.taal,
@@ -566,6 +575,8 @@ export default function KaartMakenPage() {
       guestType: k.content.guestType ?? "",
       inviteText: k.content.inviteText ?? "",
       timeText: k.content.timeText ?? "",
+      toonGastType: k.content.toonGastType === true,
+      dresscode: k.content.dresscode ?? "",
       photoDataUrl: null,
       photoUrl: k.content.photoUrl ?? null,
       animatie: cardAnimatie(k.content.animatie),
@@ -583,6 +594,8 @@ export default function KaartMakenPage() {
       guestType: "",
       inviteText: "",
       timeText: "",
+      toonGastType: false,
+      dresscode: "",
       photoDataUrl: null,
       photoUrl: null,
     }))
@@ -1109,6 +1122,76 @@ export default function KaartMakenPage() {
             </p>
           </Sectie>
 
+          {/* ── Details op de kaart ──
+              Michiels wens: voor wie de kaart is, hoe laat het is en wat de
+              dresscode is, subtiel en zonder de kaart te verpesten. Alles wat
+              hier aanstaat komt samen in één regel in de accentkleur onder de
+              tekst, in dezelfde letter als de datum. Wat leeg is, staat er
+              niet. */}
+          <Sectie open={stap === "details"} onToggle={() => setStap(stap === "details" ? null : "details")} titel="Details op de kaart">
+            <label className="flex items-center justify-between gap-3">
+              <span className="flex flex-col">
+                <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Gastengroep op de kaart</span>
+                <span className="text-[11px] leading-snug" style={{ color: SUBTLE }}>
+                  {ontwerp.guestType
+                    ? `Zet "${GUEST_TYPE_LABEL[ontwerp.guestType]}" klein op de kaart.`
+                    : "Kies eerst hierboven voor wie deze kaart is."}
+                </span>
+              </span>
+              <input
+                type="checkbox"
+                checked={ontwerp.toonGastType}
+                disabled={!ontwerp.guestType}
+                onChange={(e) => update({ toonGastType: e.target.checked })}
+                className="w-5 h-5"
+                style={{ accentColor: GOLD, cursor: ontwerp.guestType ? "pointer" : "default" }}
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Tijden</span>
+              <input
+                className={inputCls}
+                style={inputStyle}
+                placeholder="Van 14:00 tot 23:00 uur"
+                value={ontwerp.timeText}
+                onChange={(e) => update({ timeText: e.target.value })}
+                maxLength={60}
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Dresscode</span>
+              <input
+                className={inputCls}
+                style={inputStyle}
+                placeholder="Feestelijk"
+                value={ontwerp.dresscode}
+                onChange={(e) => update({ dresscode: e.target.value })}
+                maxLength={40}
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Eigen uitnodigingsregel</span>
+              <textarea
+                className={`${inputCls} resize-none`}
+                style={{ ...inputStyle, minHeight: 56 }}
+                rows={2}
+                placeholder={
+                  isTrouwkaart && ontwerp.guestType
+                    ? KAART_TEKST[ontwerp.taal].uitnodiging[ontwerp.guestType]
+                    : "Bijvoorbeeld: Wij vieren het graag met jou"
+                }
+                value={ontwerp.inviteText}
+                onChange={(e) => update({ inviteText: e.target.value })}
+                maxLength={160}
+              />
+              <span className="text-[11px] leading-snug" style={{ color: SUBTLE }}>
+                {isTrouwkaart && ontwerp.guestType
+                  ? "Leeg betekent: de standaardregel voor deze gastengroep."
+                  : "Leeg betekent: geen extra regel."}
+              </span>
+            </label>
+          </Sectie>
+
           <Sectie open={stap === "aanmelden"} onToggle={() => setStap(stap === "aanmelden" ? null : "aanmelden")} titel="Aanmelden">
             <div className="flex flex-col gap-2">
               {aanmeldKeuzes.map((s) => (
@@ -1137,13 +1220,22 @@ export default function KaartMakenPage() {
                 style={{ backgroundColor: GOLD_BG, border: `1px solid ${GOLD_LIGHT}` }}
               >
                 <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>
-                  Je krijgt er een gastenlijst bij, gratis
+                  Je krijgt er een gratis gastenlijst bij, in je dashboard
                 </span>
                 <span className="text-[11px] leading-snug" style={{ color: SUBTLE }}>
-                  Elk antwoord komt in één lijst te staan: wie komt, wie niet, en van wie je nog
-                  niets hebt gehoord. Daar zie je met één druk wie je nog moet najagen, en je kunt
-                  er zelf namen bij typen of een lijst uit Excel in plakken. Je vindt hem in je
-                  dashboard zodra je dit ontwerp bewaart.
+                  <b style={{ color: CHARCOAL }}>Gemak.</b> Maak de link, stuur hem naar je gasten,
+                  en de lijst vult zich vanzelf met wie er komt, met mailadres en telefoonnummer.
+                </span>
+                <span className="text-[11px] leading-snug" style={{ color: SUBTLE }}>
+                  <b style={{ color: CHARCOAL }}>Controle.</b> Of vul de lijst vooraf zelf in en
+                  houd bij aan wie je de kaart al stuurde. Antwoordt een gast, dan koppelt het
+                  dashboard dat antwoord aan de juiste naam. Je weet dus altijd van iedereen hoe het
+                  staat.
+                </span>
+                <span className="text-[11px] leading-snug" style={{ color: SUBTLE }}>
+                  <b style={{ color: CHARCOAL }}>Adressen.</b> Stuur je straks papieren trouwkaarten
+                  maar heb je niet alle adressen? Laat je gasten ze hier zelf invullen. Dat scheelt
+                  een avond appen.
                 </span>
               </div>
             )}
