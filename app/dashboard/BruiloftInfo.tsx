@@ -259,12 +259,6 @@ export default function BruiloftInfo({
           </header>
         )}
         {open && formulier}
-        {heeftIets && !open && (
-          <p className="m-0 text-sm" style={{ color: KLEUR.tekst }}>
-            Bewaard in deze browser. Zodra je je eerste ontwerp opslaat, verhuist het mee naar je
-            eigen dashboard.
-          </p>
-        )}
       </div>
     )
   }
