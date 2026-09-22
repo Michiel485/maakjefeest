@@ -451,6 +451,8 @@ export default function BouwenPage() {
    * bouwer opende, terwijl je niets had aangeraakt.
    */
   const [ladenKlaar, setLadenKlaar] = useState(false)
+  /** Het laden is echt mislukt. Dan niet doorsturen, maar zeggen wat er is. */
+  const [laadFout, setLaadFout] = useState<string | null>(null)
   const [hasPendingChanges, setHasPendingChanges] = useState(false)
   const savingRef = useRef(false)
   const [slugEditOpen, setSlugEditOpen]         = useState(false)
@@ -644,9 +646,13 @@ export default function BouwenPage() {
       fetch(`/api/drafts/${urlEventId}`)
         .then((r) => r.json())
         .then(({ event, pages }: { event: Record<string, unknown>; pages: Array<{ type: string; content: Record<string, unknown>; is_enabled: boolean }> }) => {
-          // Bestaat de bruiloft niet (meer), dan gewoon opnieuw beginnen in de
-          // bouwer, niet in een apart formulier.
-          if (!event) { router.replace("/bouwen"); return }
+          // Bestaat de bruiloft niet (meer), dan zeggen we dat. Doorsturen naar
+          // /bouwen zou een lus maken: die stuurt je bij een bewaarde bruiloft
+          // weer hierheen, en dan blijft het laadscherm staan.
+          if (!event) {
+            setLaadFout("We konden deze bruiloft niet vinden. Misschien is hij verwijderd.")
+            return
+          }
 
           const newContent: ContentMap = {}
           const newActive: Record<PageId, boolean> = {
@@ -730,7 +736,7 @@ export default function BouwenPage() {
           const heroUrl = event.hero_image_url as string | null
           if (heroUrl) setHeroImageUrl(heroUrl)
         })
-        .catch(() => router.replace("/bouwen"))
+        .catch(() => setLaadFout("We konden je bruiloft niet laden. Ververs de pagina en probeer het opnieuw."))
       return
     }
 
@@ -806,16 +812,25 @@ export default function BouwenPage() {
       // kaartbouwer, uit lib/nieuw-concept.ts, zodat er één beginpunt is.
       function beginLeeg(email?: string | null) {
         try {
-          // Echt leeg: nieuwWebsiteConcept vult lege namen met "Ons", en dan
-          // zou het voorbeeld doen alsof er iets ingevuld is. Hier moet het
-          // juist wachten tot de klant zijn namen en datum heeft ingevuld.
-          const leeg = {
-            ...nieuwWebsiteConcept({ namen: "", datum: "", locatie: "", style: "ivoor" }),
-            naam: "",
-            nav_title: "",
-            frame_names: "",
-            initials: "",
-          }
+          // Wat je in het dashboard invulde staat in je browser onder de
+          // sleutels van de kaartbouwer. Die nemen we hier over, want anders
+          // zou je je namen en datum twee keer moeten typen.
+          let namen = ""
+          let datum = ""
+          let locatie = ""
+          try {
+            const uitDashboard = JSON.parse(localStorage.getItem("sayingyes_kaart") ?? "{}") as Record<string, unknown>
+            if (typeof uitDashboard.names === "string") namen = uitDashboard.names
+            if (typeof uitDashboard.datum === "string") datum = uitDashboard.datum
+            locatie = localStorage.getItem("sayingyes_bruiloft_locatie") ?? ""
+          } catch {}
+
+          // Zonder namen niet "Ons" invullen, zoals nieuwWebsiteConcept doet:
+          // dan zou het voorbeeld doen alsof er iets ingevuld is.
+          const basis = nieuwWebsiteConcept({ namen, datum, locatie, style: "ivoor" })
+          const leeg = namen.trim()
+            ? basis
+            : { ...basis, naam: "", nav_title: "", frame_names: "", initials: "" }
           localStorage.setItem(LS_WEBSITE_CONCEPT, JSON.stringify(leeg))
           localStorage.setItem(
             LS_WEBSITE_INHOUD,
@@ -1368,12 +1383,34 @@ export default function BouwenPage() {
   const showSection = (id: string) => isSinglePagePreview ? activePageIds.has(id) : previewPage === id
 
 
+  // Vangnet: blijft het laden om wat voor reden ook hangen, dan beginnen we
+  // na een paar tellen gewoon leeg. Beter een lege bouwer dan een hartje dat
+  // eeuwig klopt.
+  useEffect(() => {
+    if (draft || laadFout) return
+    const t = setTimeout(() => {
+      if (!draft) setLaadFout("Het laden duurde te lang. Ververs de pagina, dan pakken we het opnieuw op.")
+    }, 12000)
+    return () => clearTimeout(t)
+  }, [draft, laadFout])
+
   // Zolang we je gegevens ophalen is er nog geen voorbeeld. Dat duurt een paar
   // tellen en zonder iets in beeld voelt het als een lege bouwer.
   if (!draft) {
     return (
       <BouwerSchil actief="website" eventId={savedEventId}>
         <div className="flex-1 flex items-center justify-center p-8">
+          {laadFout ? (
+            <div className="flex flex-col items-center gap-3 text-center max-w-sm">
+              <p className="m-0 text-lg" style={{ fontFamily: "var(--font-cormorant)", fontWeight: 600, color: KLEUR.inkt }}>
+                Dat ging even mis
+              </p>
+              <p className="m-0 text-sm" style={{ color: KLEUR.tekst }}>{laadFout}</p>
+              <Knop soort="primair" onClick={() => window.location.reload()}>
+                Opnieuw proberen
+              </Knop>
+            </div>
+          ) : (
           <div className="flex flex-col items-center gap-3 text-center">
             <span
               aria-hidden="true"
@@ -1389,6 +1426,7 @@ export default function BouwenPage() {
               Een paar tellen, dan staat je eerste pagina er met jullie namen en datum erin.
             </p>
           </div>
+          )}
         </div>
         <style>{`@keyframes sy-klop { 0%, 100% { transform: scale(1); opacity: 0.85 } 50% { transform: scale(1.18); opacity: 1 } }`}</style>
       </BouwerSchil>
