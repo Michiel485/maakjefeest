@@ -1368,6 +1368,33 @@ export default function BouwenPage() {
   const showSection = (id: string) => isSinglePagePreview ? activePageIds.has(id) : previewPage === id
 
 
+  // Zolang we je gegevens ophalen is er nog geen voorbeeld. Dat duurt een paar
+  // tellen en zonder iets in beeld voelt het als een lege bouwer.
+  if (!draft) {
+    return (
+      <BouwerSchil actief="website" eventId={savedEventId}>
+        <div className="flex-1 flex items-center justify-center p-8">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <span
+              aria-hidden="true"
+              className="text-3xl"
+              style={{ color: KLEUR.goud, animation: "sy-klop 1.1s ease-in-out infinite" }}
+            >
+              {"♥"}
+            </span>
+            <p className="m-0 text-lg" style={{ fontFamily: "var(--font-cormorant)", fontWeight: 600, color: KLEUR.inkt }}>
+              We zetten jullie website klaar
+            </p>
+            <p className="m-0 text-sm max-w-xs" style={{ color: KLEUR.tekst }}>
+              Een paar tellen, dan staat je eerste pagina er met jullie namen en datum erin.
+            </p>
+          </div>
+        </div>
+        <style>{`@keyframes sy-klop { 0%, 100% { transform: scale(1); opacity: 0.85 } 50% { transform: scale(1.18); opacity: 1 } }`}</style>
+      </BouwerSchil>
+    )
+  }
+
   return (
     <BouwerSchil
       actief="website"

@@ -942,7 +942,9 @@ export default function KaartMakenPage() {
           </button>
 
           <span className="text-[11px] leading-snug ml-auto max-w-sm" style={{ color: SUBTLE }}>
-            Elke kaart heeft zijn eigen link. Handig voor daggasten en avondgasten, of dezelfde kaart in een andere taal.
+            <b style={{ color: CHARCOAL }}>Meerdere kaarten zitten in de prijs.</b> Maak er een voor
+            je daggasten en een voor je avondgasten, of dezelfde kaart in een andere taal. Elke
+            kaart krijgt zijn eigen link, en in je gastenlijst zie je wie welke kreeg.
           </span>
         </div>
       )}
