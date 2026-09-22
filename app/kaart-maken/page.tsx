@@ -100,6 +100,8 @@ interface KaartOntwerp {
   guestType: CardGuestType | ""
   inviteText: string
   timeText: string
+  /** Hoe jij deze kaart noemt, om ze uit elkaar te houden. Gasten zien dit niet. */
+  naam: string
   /** De gastengroep subtiel op de kaart tonen. */
   toonGastType: boolean
   dresscode: string
@@ -121,6 +123,7 @@ const LEEG: KaartOntwerp = {
   guestType: "",
   inviteText: "",
   timeText: "",
+  naam: "",
   toonGastType: false,
   dresscode: "",
   photoDataUrl: null,
@@ -187,7 +190,6 @@ export default function KaartMakenPage() {
   // kreeg het dashboard een losse kolom per concept. Begin je een variant
   // binnen dezelfde bruiloft, dan onthouden we hier welke dat is.
   const [hoortBij, setHoortBij] = useState<string | null>(null)
-  const [conceptNaam, setConceptNaam] = useState("")
   // Alle concepten van deze klant, voor de keuzelijst bovenin
   const [concepten, setConcepten] = useState<ConceptRij[]>([])
   const [simulatie, setSimulatie] = useState(false)
@@ -310,7 +312,6 @@ export default function KaartMakenPage() {
             const { event } = (await r.json()) as { event: Record<string, unknown> }
             if (isPlan(event.plan)) setEventPlan(event.plan)
             setEventStatus(typeof event.status === "string" ? event.status : null)
-            setConceptNaam(typeof event.concept_naam === "string" ? event.concept_naam : "")
             setHoortBij(typeof event.hoort_bij === "string" ? event.hoort_bij : null)
             const kr = await fetch(`/api/cards?event_id=${eventUitUrl}`)
             const { cards } = kr.ok ? ((await kr.json()) as { cards: CardRow[] }) : { cards: [] }
@@ -337,6 +338,7 @@ export default function KaartMakenPage() {
               guestType: kaart?.content.guestType ?? "",
               inviteText: kaart?.content.inviteText ?? "",
               timeText: kaart?.content.timeText ?? "",
+              naam: kaart?.content.naam ?? "",
               toonGastType: kaart?.content.toonGastType === true,
               dresscode: kaart?.content.dresscode ?? "",
               photoDataUrl: null,
@@ -363,7 +365,6 @@ export default function KaartMakenPage() {
             const { event } = (await er.json()) as { event: Record<string, unknown> }
             if (isPlan(event.plan)) setEventPlan(event.plan)
             setEventStatus(typeof event.status === "string" ? event.status : null)
-            setConceptNaam(typeof event.concept_naam === "string" ? event.concept_naam : "")
             setHoortBij(typeof event.hoort_bij === "string" ? event.hoort_bij : null)
             setEventLocatie(typeof event.locatie === "string" ? event.locatie : "")
           }
@@ -412,6 +413,7 @@ export default function KaartMakenPage() {
     guestType: ontwerp.guestType || undefined,
     inviteText: ontwerp.inviteText || undefined,
     timeText: ontwerp.timeText || undefined,
+    naam: ontwerp.naam.trim() || undefined,
     toonGastType: ontwerp.toonGastType || undefined,
     dresscode: ontwerp.dresscode || undefined,
     photoUrl: ontwerp.photoUrl ?? ontwerp.photoDataUrl ?? undefined,
@@ -419,6 +421,11 @@ export default function KaartMakenPage() {
     taal: ontwerp.taal,
     aanmelden: ontwerp.aanmelden,
   }
+  // Hoe deze kaart heet als je zelf niets invult: het soort kaart, de
+  // gastengroep en de taal. Dat is ook de grijze tekst in het naamveld, zodat
+  // je ziet wat er in je dashboard komt te staan als je het zo laat.
+  const automatischeNaam = kaartLabel({ type: ontwerp.type, content: { ...content, naam: undefined } })
+
   // De datum wordt in buildCardDisplay opgemaakt met de locale van de gekozen
   // kaarttaal, dus die volgt de taal vanzelf mee.
   const display = buildCardDisplay(ontwerp.type, ontwerp.template, content, {
@@ -458,7 +465,9 @@ export default function KaartMakenPage() {
       pages: ["Home"],
       content: {},
       plan,
-      concept_naam: conceptNaam.trim() || null,
+      // concept_naam wordt hier niet meegestuurd: dat is de naam van het
+      // website-ontwerp, die het bruidspaar in de websitebouwer zet. Stuurden
+      // we hem leeg mee, dan wiste het bewaren van een kaart die naam.
       ...(eventId ? { event_id: eventId } : {}),
       ...(!eventId && hoortBij ? { hoort_bij: hoortBij } : {}),
     }
@@ -526,7 +535,7 @@ export default function KaartMakenPage() {
 
     return { eventId: nieuwEventId, cardId: nieuwCardId }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ontwerp, eventId, cardId, plan, isTrouwkaart, conceptNaam, eventLocatie])
+  }, [ontwerp, eventId, cardId, plan, isTrouwkaart, eventLocatie])
 
   // Overstappen naar de websitebouwer zonder dat er al iets bewaard is. Wat
   // hier al ingevuld staat gaat mee, inclusief de stijl, zodat de website
@@ -586,6 +595,7 @@ export default function KaartMakenPage() {
       guestType: k.content.guestType ?? "",
       inviteText: k.content.inviteText ?? "",
       timeText: k.content.timeText ?? "",
+      naam: k.content.naam ?? "",
       toonGastType: k.content.toonGastType === true,
       dresscode: k.content.dresscode ?? "",
       photoDataUrl: null,
@@ -605,6 +615,7 @@ export default function KaartMakenPage() {
       guestType: "",
       inviteText: "",
       timeText: "",
+      naam: "",
       toonGastType: false,
       dresscode: "",
       photoDataUrl: null,
@@ -618,6 +629,9 @@ export default function KaartMakenPage() {
   // gastengroep: aanpassen wat anders moet, de rest staat er al.
   function dupliceerKaart() {
     setCardId(null)
+    // De naam gaat niet mee: twee kaarten die hetzelfde heten is precies wat
+    // we willen voorkomen. Leeg betekent weer de automatische naam.
+    setOntwerp((o) => ({ ...o, naam: "" }))
     setMelding({ tekst: "Kopie gemaakt. Pas aan wat anders moet en bewaar; je vorige kaart blijft bestaan." })
   }
 
@@ -907,8 +921,28 @@ export default function KaartMakenPage() {
           Verschijnt zodra er iets bewaard is. Zonder deze balk is niet te zien
           dat een bruiloft meerdere kaarten kan hebben, en overschreef opslaan
           stilletjes de vorige. */}
-      {eventId && kaarten.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 px-4 sm:px-6 py-2.5 border-b" style={{ backgroundColor: "#fff", borderColor: `${GOLD_LIGHT}80` }}>
+      <div className="flex flex-wrap items-center gap-2 px-4 sm:px-6 py-2.5 border-b" style={{ backgroundColor: "#fff", borderColor: `${GOLD_LIGHT}80` }}>
+        {/* De naam is van jou, niet van de kaart: je gasten zien hem nergens.
+            Hij staat hier en niet in de zijbalk omdat hij niets met het
+            ontwerp te maken heeft, en hij staat er meteen, zodat je hem al
+            kunt invullen voordat je voor het eerst bewaart. */}
+        <label className="flex items-center gap-2">
+          <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: GOLD }}>
+            Naam
+          </span>
+          <input
+            value={ontwerp.naam}
+            onChange={(e) => update({ naam: e.target.value })}
+            placeholder={automatischeNaam}
+            maxLength={60}
+            className="rounded-xl border bg-white px-3 py-2 text-sm w-44 sm:w-56 focus:outline-none"
+            style={{ color: CHARCOAL, borderColor: GOLD_LIGHT }}
+            title="Alleen voor jullie, om je kaarten uit elkaar te houden"
+          />
+        </label>
+
+        {eventId && kaarten.length > 0 && (
+        <>
           <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: GOLD }}>
             Je kaarten
           </span>
@@ -946,8 +980,9 @@ export default function KaartMakenPage() {
             je daggasten en een voor je avondgasten, of dezelfde kaart in een andere taal. Elke
             kaart krijgt zijn eigen link, en in je gastenlijst zie je wie welke kreeg.
           </span>
-        </div>
-      )}
+        </>
+        )}
+      </div>
 
       {/* Op een telefoon staat het voorbeeld boven de secties: dat is waarom
           iemand blijft, dus dat zie je eerst. Op een groot scherm links de

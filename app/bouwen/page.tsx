@@ -451,6 +451,10 @@ export default function BouwenPage() {
    * bouwer opende, terwijl je niets had aangeraakt.
    */
   const [ladenKlaar, setLadenKlaar] = useState(false)
+  // Hoe jullie dit ontwerp noemen. Staat op de bruiloft (concept_naam) en is
+  // wat het dashboard bij de websitetegel laat zien, net als de naam van een
+  // kaart. Michiels wens van 22 september 2026.
+  const [conceptNaam, setConceptNaam] = useState("")
   /** Het laden is echt mislukt. Dan niet doorsturen, maar zeggen wat er is. */
   const [laadFout, setLaadFout] = useState<string | null>(null)
   const [hasPendingChanges, setHasPendingChanges] = useState(false)
@@ -653,6 +657,8 @@ export default function BouwenPage() {
             setLaadFout("We konden deze bruiloft niet vinden. Misschien is hij verwijderd.")
             return
           }
+
+          setConceptNaam(typeof event.concept_naam === "string" ? event.concept_naam : "")
 
           const newContent: ContentMap = {}
           const newActive: Record<PageId, boolean> = {
@@ -1158,6 +1164,7 @@ export default function BouwenPage() {
       nav_layout: navLayout,
       pages: activePages,
       content: mergedContent,
+      concept_naam: conceptNaam.trim() || null,
       event_id: savedEventId ?? undefined,
       plan,
       homepage_settings: hpSettings,
@@ -1441,7 +1448,30 @@ export default function BouwenPage() {
       /* Fouten onder de kop, zodat de kop zelf niet van hoogte verspringt
          terwijl je aan het werk bent. */
       onderKop={
-        (publishError || saveError) ? <Melding soort="fout">{publishError || saveError}</Melding> : null
+        <>
+          {/* De naam van dit ontwerp, op dezelfde plek als in de kaartbouwer.
+              Alleen voor jullie: je gasten zien hem nergens. */}
+          <div className="flex flex-wrap items-center gap-2 px-4 sm:px-6 py-2.5 border-b" style={{ backgroundColor: "#fff", borderColor: `${KLEUR.goudLicht}80` }}>
+            <label className="flex items-center gap-2">
+              <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: KLEUR.goud }}>
+                Naam
+              </span>
+              <input
+                value={conceptNaam}
+                onChange={(e) => { setConceptNaam(e.target.value); setChangeKey((k) => k + 1) }}
+                placeholder="Onze trouwwebsite"
+                maxLength={60}
+                className="rounded-xl border bg-white px-3 py-2 text-sm w-44 sm:w-56 focus:outline-none"
+                style={{ color: KLEUR.inkt, borderColor: KLEUR.goudLicht }}
+                title="Alleen voor jullie, zo heet je website in je dashboard"
+              />
+            </label>
+            <span className="text-[11px] leading-snug ml-auto max-w-sm" style={{ color: KLEUR.zacht }}>
+              Zo heet dit ontwerp in je dashboard. Je gasten zien deze naam niet.
+            </span>
+          </div>
+          {(publishError || saveError) ? <Melding soort="fout">{publishError || saveError}</Melding> : null}
+        </>
       }
       acties={
         <>

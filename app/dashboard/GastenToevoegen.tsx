@@ -67,7 +67,7 @@ function jaNee(waarde: unknown): boolean {
 
 export default function GastenToevoegen({
   events,
-  /** Zonder een geactiveerde bruiloft kan er niets bewaard worden. */
+  /** Zonder een bewaarde bruiloft is er niets om gasten aan te hangen. */
   bruikbaar,
 }: {
   events: GastEvent[]
@@ -216,9 +216,8 @@ export default function GastenToevoegen({
               className="rounded-xl px-4 py-3 text-sm leading-relaxed"
               style={{ backgroundColor: KLEUR.goudVlak, border: `1px solid ${KLEUR.goudLicht}`, color: KLEUR.tekst }}
             >
-              Zo gaat je gastenlijst eruitzien. Je kunt hem vullen zodra je een kaart of website
-              hebt geactiveerd, want tot die tijd is er nog niets om gasten aan te koppelen.
-              Kijken en het sjabloon downloaden kan wel.
+              Zo gaat je gastenlijst eruitzien. Bewaar eerst een ontwerp, dan weten we bij welke
+              bruiloft je gasten horen. Kijken en het sjabloon downloaden kan nu al.
             </p>
           )}
 

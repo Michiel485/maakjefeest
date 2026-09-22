@@ -28,6 +28,16 @@ export interface Bruiloft {
   created_at: string
   expires_at: string | null
   hero_image_url: string | null
+  /**
+   * Is er een website-ontwerp, los van of het pakket betaald is? De
+   * kaartbouwer maakt dezelfde bruiloftrij aan met een lege content, dus
+   * alleen een gevulde content betekent dat er in de websitebouwer is
+   * gewerkt. Zonder dit zag het dashboard geen verschil tussen "nog geen
+   * website" en "wel gebouwd, nog niet betaald".
+   */
+  heeftSite: boolean
+  /** De naam die het bruidspaar zijn website-ontwerp gaf. */
+  conceptNaam: string | null
 }
 
 export interface Extra {
@@ -106,11 +116,38 @@ export async function laadBruiloft(email: string, gekozenId?: string | null): Pr
 
   const { data: events } = await service
     .from("events")
-    .select("id, slug, title, type, status, plan, created_at, expires_at, hero_image_url, datum, locatie")
+    .select("id, slug, title, type, status, plan, created_at, expires_at, hero_image_url, datum, locatie, concept_naam")
     .eq("user_email", email)
     .order("created_at", { ascending: false })
 
-  const alle = (events ?? []) as Bruiloft[]
+  const alle = ((events ?? []) as Record<string, unknown>[]).map((e) => {
+    const { concept_naam, ...rest } = e
+    return {
+      ...rest,
+      // Wordt hieronder gevuld uit de paginatabel.
+      heeftSite: false,
+      conceptNaam: typeof concept_naam === "string" && concept_naam.trim() ? concept_naam : null,
+    }
+  }) as Bruiloft[]
+
+  // Is er in de websitebouwer gewerkt? De pagina's staan in een eigen tabel.
+  // De kaartbouwer maakt dezelfde bruiloft aan met alleen een lege Home, dus
+  // een tweede pagina of een gevulde Home betekent: hier is een website.
+  if (alle.length > 0) {
+    const { data: paginas } = await service
+      .from("pages")
+      .select("event_id, type, content")
+      .in("event_id", alle.map((e) => e.id))
+    if (paginas) {
+      const metSite = new Set<string>()
+      for (const p of paginas) {
+        const inhoud = p.content as Record<string, unknown> | null
+        const gevuld = !!inhoud && Object.keys(inhoud).length > 0
+        if (p.type !== "Home" || gevuld) metSite.add(p.event_id as string)
+      }
+      for (const e of alle) e.heeftSite = metSite.has(e.id)
+    }
+  }
 
   // De kolommen die pas na migration_klantreis.sql bestaan, apart opgevraagd
   // zodat het dashboard blijft werken zolang die nog niet gedraaid is.

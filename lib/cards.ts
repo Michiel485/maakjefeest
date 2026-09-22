@@ -69,6 +69,12 @@ export interface CardContent {
   // verpesten. Ze komen samen in één regel in de accentkleur, onder de tekst.
   toonGastType?: boolean
   dresscode?: string
+  /**
+   * Hoe jij deze kaart noemt, om je kaarten uit elkaar te houden. Alleen voor
+   * het bruidspaar; je gasten zien dit niet. Leeg betekent: de automatische
+   * naam uit het soort kaart, de gastengroep en de taal.
+   */
+  naam?: string
 }
 
 export interface CardRow {
@@ -103,6 +109,10 @@ export const MAX_KAARTEN_PER_EVENT = 10
  * bruidspaar twee kaarten die anders identiek heten.
  */
 export function kaartLabel(card: { type: CardType; content: CardContent }): string {
+  // Heb je hem zelf een naam gegeven, dan die. Anders bouwen we er een uit
+  // wat de kaart onderscheidt, zodat twee kaarten nooit hetzelfde heten.
+  const eigen = card.content.naam?.trim()
+  if (eigen) return eigen
   const groep = card.content.guestType ? GUEST_TYPE_LABEL[card.content.guestType] : null
   const taal = cardTaal(card.content.taal)
   const basis = groep

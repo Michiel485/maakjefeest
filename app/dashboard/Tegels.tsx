@@ -1,4 +1,5 @@
 import Link from "next/link"
+import KaartActies from "./KaartActies"
 import { KLEUR } from "@/lib/ontwerp"
 import type { CardRow } from "@/lib/cards"
 import { GUEST_TYPE_LABEL, CARD_TAAL_KORT, cardTaal, type CardGuestType } from "@/lib/cards"
@@ -215,6 +216,11 @@ export interface KaartRegel {
 }
 
 function kaartNaam(card: CardRow): string {
+  // Heb je de kaart zelf een naam gegeven, dan die: twee kaarten voor dezelfde
+  // groep heetten anders allebei "Alle gasten" en waren niet uit elkaar te
+  // houden. Zie lib/cards.ts, kaartLabel.
+  const eigen = card.content.naam?.trim()
+  if (eigen) return eigen
   const groep = card.content.guestType ? GUEST_TYPE_LABEL[card.content.guestType as CardGuestType] : "Alle gasten"
   const taal = cardTaal(card.content.taal)
   return taal === "nl" ? groep : `${groep} · ${CARD_TAAL_KORT[taal]}`
@@ -266,7 +272,7 @@ export function KaartTegel({
         <p className="m-0 text-sm" style={{ color: KLEUR.tekst }}>
           Je ontwerp staat klaar. Activeer hem, dan krijg je de link om te delen en vult je gastenlijst zich met wie antwoordt.
         </p>
-        {regels.length > 1 && <Varianten regels={regels} eventId={eventId} />}
+        {regels.length > 0 && <Varianten regels={regels} eventId={eventId} live={false} />}
         <div className="flex flex-wrap gap-2 mt-auto">
           <TegelKnop href={bouwer} soort="actie">Activeer voor {prijs}</TegelKnop>
           <TegelKnop href={bouwer}>Verder ontwerpen</TegelKnop>
@@ -278,13 +284,12 @@ export function KaartTegel({
   return (
     <Tegel titel={titel} rechts={<Chip soort={verstuurd > 0 ? "goed" : "stil"}>{verstuurd > 0 ? `${verstuurd} verstuurd` : "Klaar om te delen"}</Chip>}>
       {regels.length > 0 ? (
-        <Varianten regels={regels} eventId={eventId} />
+        <Varianten regels={regels} eventId={eventId} live />
       ) : (
         <p className="m-0 text-sm" style={{ color: KLEUR.tekst }}>{uitleg}</p>
       )}
       <div className="flex flex-wrap items-center gap-2 mt-auto">
-        <TegelKnop href={`/dashboard#kaarten`} soort="primair">Deel de kaart</TegelKnop>
-        <TegelKnop href={bouwer}>+ Nieuwe variant</TegelKnop>
+        <TegelKnop href={bouwer} soort="primair">+ Nieuwe kaart</TegelKnop>
         {gereageerd > 0 && (
           <span className="text-xs" style={{ color: KLEUR.zacht }}>{gereageerd} gereageerd</span>
         )}
@@ -293,7 +298,16 @@ export function KaartTegel({
   )
 }
 
-function Varianten({ regels, eventId }: { regels: KaartRegel[]; eventId: string | null }) {
+function Varianten({
+  regels,
+  eventId,
+  live,
+}: {
+  regels: KaartRegel[]
+  eventId: string | null
+  /** Werkt de link al voor gasten? Bepaalt wat er in het actiemenu staat. */
+  live: boolean
+}) {
   return (
     <div className="flex flex-col rounded-xl overflow-hidden" style={{ border: `1px solid ${KLEUR.zand}` }}>
       {regels.map((r, i) => (
@@ -306,13 +320,7 @@ function Varianten({ regels, eventId }: { regels: KaartRegel[]; eventId: string 
           <span className="tabular-nums" style={{ color: KLEUR.zacht }}>
             {r.verstuurd} verstuurd {"·"} {r.gereageerd} gereageerd {"·"} {r.card.view_count}{"×"} bekeken
           </span>
-          <Link
-            href={`/kaart-maken?event_id=${eventId ?? r.card.event_id}&card_id=${r.card.id}&type=${r.card.type}`}
-            className="text-[13px] font-semibold ml-auto"
-            style={{ color: KLEUR.goud, textDecoration: "none" }}
-          >
-            Openen
-          </Link>
+          <KaartActies card={r.card} eventId={eventId} live={live} naam={r.card.content.naam ?? ""} />
         </div>
       ))}
     </div>
@@ -328,6 +336,8 @@ export function WebsiteTegel({
   adres,
   fotomuurAan,
   fotos,
+  heeftOntwerp,
+  naam,
 }: {
   mag: boolean
   live: boolean
@@ -335,8 +345,42 @@ export function WebsiteTegel({
   adres: string | null
   fotomuurAan: boolean
   fotos: number
+  /** Is er in de websitebouwer gewerkt, ook al is er niet betaald? */
+  heeftOntwerp: boolean
+  /** De naam die het bruidspaar zijn ontwerp gaf, als die er is. */
+  naam: string | null
 }) {
   const bouwer = eventId ? `/bouwen?event_id=${eventId}` : "/bouwen?plan=compleet"
+
+  // Wel gebouwd, nog niet betaald: dezelfde vorm als een kaart in concept.
+  // Michiels bevinding van 22 september 2026: hij bouwde een site, ging terug
+  // naar het dashboard en zag alleen de grijze verkooptegel, alsof zijn werk
+  // weg was.
+  if (!mag && heeftOntwerp) {
+    return (
+      <Tegel titel="Website" breed rechts={<Chip soort="stil">Concept</Chip>}>
+        <p className="m-0 text-sm" style={{ color: KLEUR.tekst }}>
+          Je ontwerp staat klaar. Zet hem live, dan staat je site op internet en kan je trouwkaart
+          ernaar verwijzen voor de route, het programma en de cadeautips.
+        </p>
+        <div className="flex flex-col rounded-xl overflow-hidden" style={{ border: `1px solid ${KLEUR.zand}` }}>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-[13px]">
+            <span className="font-medium flex-1 min-w-[120px]" style={{ color: KLEUR.inkt }}>
+              {naam ?? "Jullie website"}
+            </span>
+            <span style={{ color: KLEUR.zacht }}>Nog niet live</span>
+            <Link href={bouwer} className="text-[13px] font-semibold ml-auto" style={{ color: KLEUR.goud, textDecoration: "none" }}>
+              Openen
+            </Link>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2 mt-auto">
+          <TegelKnop href={bouwer} soort="actie">Live zetten voor {"€"}49,99</TegelKnop>
+          <TegelKnop href={bouwer}>Verder bouwen</TegelKnop>
+        </div>
+      </Tegel>
+    )
+  }
 
   if (!mag) {
     return (

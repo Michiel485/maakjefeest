@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase-server"
 import { laadBruiloft, bruiloftNaam } from "@/lib/bruiloft-server"
 import BouwerSchil from "@/components/BouwerSchil"
 import DeadlineInstelling from "../Deadline"
+import { EventCard } from "../Beheer"
 import AccountVerwijderen from "../AccountVerwijderen"
 import { KLEUR } from "@/lib/ontwerp"
 
@@ -23,7 +24,7 @@ export default async function InstellingenPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user?.email) redirect("/inloggen")
 
-  const { bruiloft, alle, extra, stand } = await laadBruiloft(user.email)
+  const { bruiloft, alle, groep, extra, stand } = await laadBruiloft(user.email)
 
   return (
     <BouwerSchil actief="dashboard" eventId={bruiloft?.id ?? null}>
@@ -57,6 +58,22 @@ export default async function InstellingenPage() {
             Zet eerst je trouwdatum in de bouwer, dan kun je hier je deadline voor de locatie
             instellen en kiezen hoe vaak je een tussenstand wilt horen.
           </p>
+        )}
+
+        {/* Webadres, verlengen en weggooien. Kwam van het dashboard: daar
+            stond het onder de tegels en dat leidde af van het overzicht. */}
+        {groep.length > 0 && (
+          <section className="flex flex-col gap-4">
+            <h2 className="m-0 text-base font-semibold" style={{ color: KLEUR.inkt }}>
+              Je bruiloft
+            </h2>
+            {groep.filter((e) => ["published", "expired"].includes(e.status)).map((e) => (
+              <EventCard key={e.id} event={e} />
+            ))}
+            {groep.filter((e) => e.status === "draft").map((e) => (
+              <EventCard key={e.id} event={e} isDraft />
+            ))}
+          </section>
         )}
 
         <AccountVerwijderen email={user.email} aantalBruiloften={alle.length} />

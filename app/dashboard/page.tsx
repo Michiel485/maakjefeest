@@ -5,12 +5,11 @@ import { laadBruiloft, bruiloftNaam, leegResultaat } from "@/lib/bruiloft-server
 import BouwerSchil from "@/components/BouwerSchil"
 import RsvpSection from "./RsvpSection"
 import GuestPhotosSection from "./GuestPhotosSection"
-import CardsSection from "./CardsSection"
-import { EventCard, SectionLabel } from "./Beheer"
+import { SectionLabel } from "./Beheer"
 import BruiloftInfo from "./BruiloftInfo"
 import { Aftellen, KaartTegel, Tegel, TegelKnop, Teller, WebsiteTegel, type KaartRegel } from "./Tegels"
 import { maxPhotosPerEvent } from "@/lib/guest-photos"
-import { normalizePlan, planAllows, planMagVersturen, PLANS, formatEur } from "@/lib/plans"
+import { planAllows, planMagVersturen, PLANS, formatEur } from "@/lib/plans"
 import { afstandInWoorden } from "@/lib/fasen"
 import { leesStand, voortgang } from "@/lib/checklist"
 import { komtGast, reis } from "@/lib/gasten"
@@ -54,7 +53,7 @@ export default async function DashboardPage({
   // niets van iemand in, dus er lekt niets.
   const ingelogd = !!user?.email
   const gekozen = typeof params?.b === "string" ? params.b : null
-  const { bruiloft, alle, groep, extra, rsvps, cards, cardsAvailable, guestPhotos, gpSettings, stand, signalen } =
+  const { bruiloft, alle, groep, extra, rsvps, cards, guestPhotos, gpSettings, stand, signalen } =
     ingelogd ? await laadBruiloft(user!.email!, gekozen) : leegResultaat()
 
   const naam = bruiloftNaam(bruiloft)
@@ -239,6 +238,8 @@ export default async function DashboardPage({
             adres={siteAdres}
             fotomuurAan={stand.fotomuurAan}
             fotos={stand.fotos}
+            heeftOntwerp={groep.some((e) => e.heeftSite)}
+            naam={bruiloft?.conceptNaam ?? null}
           />
 
           {/* ── De gastenlijst, met de lijst zelf erin ── */}
@@ -261,7 +262,10 @@ export default async function DashboardPage({
             {bruiloft ? (
               <RsvpSection
                 rsvps={rsvps}
-                events={groep.filter((e) => ["published", "expired"].includes(e.status)).map((e) => ({ id: e.id, title: e.title }))}
+                /* Ook een bruiloft die nog niet geactiveerd is. Je gastenlijst
+                   maken is het eerste wat je doet, ver voordat je een kaart
+                   koopt; wachten tot er betaald is stond precies in de weg. */
+                events={groep.map((e) => ({ id: e.id, title: e.title }))}
                 kaarten={kaartRefs}
               />
             ) : (
@@ -272,22 +276,10 @@ export default async function DashboardPage({
           </Tegel>
         </div>
 
-        {/* ── Delen en bekijken ── */}
-        {cardsAvailable && cards.length > 0 && (
-          <section id="kaarten" className="scroll-mt-24">
-            <div className="mb-3"><SectionLabel>Je kaarten delen</SectionLabel></div>
-            <CardsSection
-              events={groep.map((e) => ({
-                id: e.id,
-                title: e.title,
-                status: e.status,
-                plan: normalizePlan(e.plan),
-                heroImageUrl: e.hero_image_url ?? null,
-              }))}
-              cards={cards}
-            />
-          </section>
-        )}
+        {/* Het blok "Je kaarten delen" stond hier. Het toonde dezelfde kaarten
+            nog een keer, met een rij knoppen eronder. Alles wat je met een
+            kaart kunt doen zit nu in het menu op de kaartregel zelf, in de
+            tegel hierboven. Zie app/dashboard/KaartActies.tsx. */}
 
         {/* ── Fotomuur ── */}
         {fotoEvents.length > 0 && (
@@ -307,16 +299,9 @@ export default async function DashboardPage({
           </section>
         )}
 
-        {/* ── Beheer: verlengen, adres, weggooien ── */}
-        {groep.length > 0 && (
-          <section id="ontwerpen" className="scroll-mt-24">
-            <div className="mb-3"><SectionLabel>Beheer</SectionLabel></div>
-            <div className="flex flex-col gap-4">
-              {groep.filter((e) => ["published", "expired"].includes(e.status)).map((e) => <EventCard key={e.id} event={e} />)}
-              {groep.filter((e) => e.status === "draft").map((e) => <EventCard key={e.id} event={e} isDraft />)}
-            </div>
-          </section>
-        )}
+        {/* Het beheerblok (webadres, verlengen, weggooien) stond hier. Dat
+            is wat je één keer instelt en het stond het overzicht in de weg;
+            het staat nu op /dashboard/instellingen. */}
 
         {/* ── Eén regel onderaan ── */}
         <div className="flex flex-wrap justify-between gap-2 pt-2 text-sm" style={{ color: KLEUR.zacht }}>

@@ -35,6 +35,7 @@ function sanitizeContent(raw: unknown): CardContent {
     timeText: text(input.timeText, 80),
     // De details op de kaart. Stonden hier niet, en werden dus bij elke
     // opslag stilletjes weggegooid.
+    naam: text(input.naam, 60),
     toonGastType: input.toonGastType === true ? true : undefined,
     dresscode: text(input.dresscode, 40),
     animatie: cardAnimatie(input.animatie),
