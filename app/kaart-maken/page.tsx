@@ -85,7 +85,7 @@ interface ConceptRij {
   status: string
 }
 
-type Stap = "info" | "stijl" | "template" | "tekst" | "groep" | "details" | "aanmelden" | "taal" | "foto" | "animatie" | "bekijken"
+type Stap = "stijl" | "template" | "tekst" | "groep" | "details" | "aanmelden" | "taal" | "foto" | "animatie" | "bekijken"
 type Actie = "bewaar" | "activeer"
 
 interface KaartOntwerp {
@@ -164,9 +164,7 @@ export default function KaartMakenPage() {
   const [geladen, setGeladen] = useState(false)
   // null betekent: alles dichtgeklapt. Zonder die stand kon een blok alleen
   // wisselen naar een ander blok, en was Tekst dus nooit dicht te krijgen.
-  // Algemene info staat standaard open: namen, datum en locatie vul je één
-  // keer in, en daarna staan ze op elke kaart en op de website.
-  const [stap, setStap] = useState<Stap | null>("info")
+  const [stap, setStap] = useState<Stap | null>("tekst")
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [eventId, setEventId] = useState<string | null>(null)
   const [cardId, setCardId] = useState<string | null>(null)
@@ -240,21 +238,21 @@ export default function KaartMakenPage() {
     }
   }, [magVolledig, ontwerp.aanmelden])
 
-  // Zet je Aanmelden aan, dan scrollt het voorbeeld naar het formulier dat er
-  // onder de kaart bij is gekomen. Anders zie je niet dat er iets veranderde.
-  // Alleen bij een wissel, niet bij het laden: dan hoort de kaart bovenaan.
-  const vorigeAanmelden = useRef(ontwerp.aanmelden)
-  useEffect(() => {
-    if (vorigeAanmelden.current === ontwerp.aanmelden) return
-    vorigeAanmelden.current = ontwerp.aanmelden
-    if (ontwerp.aanmelden !== "geen") {
-      // Binnen het voorbeeldvlak scrollen, niet de hele pagina: anders schuift
-      // de kop van de bouwer mee omhoog.
+  /**
+   * Naar het formulier onder de kaart scrollen, binnen het voorbeeldvlak zodat
+   * de kop van de bouwer blijft staan.
+   *
+   * Aan de klik gehangen en niet aan een verandering: bij een Save the Date
+   * staat "Aanwezig ja/nee" al aan, en dan verandert er niets als je erop
+   * drukt. Je zag dus ook niets gebeuren.
+   */
+  function toonFormulier() {
+    setTimeout(() => {
       const vlak = voorbeeldRef.current
       const doel = formulierRef.current
       if (vlak && doel) vlak.scrollTo({ top: Math.max(0, doel.offsetTop - 16), behavior: "smooth" })
-    }
-  }, [ontwerp.aanmelden])
+    }, 60)
+  }
   // Al betaald en het pakket dekt deze kaart? Dan is de kaart meteen live.
   const alAfgenomen = eventStatus === "published" && planMagVersturen(eventPlan, ontwerp.type)
   // Wat er nog bij komt: bij een betaalde bruiloft alleen het verschil.
@@ -421,6 +419,8 @@ export default function KaartMakenPage() {
     taal: ontwerp.taal,
     aanmelden: ontwerp.aanmelden,
   }
+  // De datum wordt in buildCardDisplay opgemaakt met de locale van de gekozen
+  // kaarttaal, dus die volgt de taal vanzelf mee.
   const display = buildCardDisplay(ontwerp.type, ontwerp.template, content, {
     title: ontwerp.names || "Jullie namen",
     frame_names: ontwerp.names || null,
@@ -734,7 +734,7 @@ export default function KaartMakenPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type: ontwerp.type, template: ontwerp.template, style: ontwerp.style,
-          names: ontwerp.names, dateText: ontwerp.datum ? formatDate(ontwerp.datum) : "",
+          names: ontwerp.names, dateText: display.dateText,
           location: ontwerp.location, message: ontwerp.message,
           guestType: ontwerp.guestType, inviteText: ontwerp.inviteText, timeText: ontwerp.timeText,
           photoUrl: ontwerp.photoUrl, taal: ontwerp.taal,
@@ -942,18 +942,7 @@ export default function KaartMakenPage() {
       <div className="flex flex-col-reverse md:flex-row flex-1 min-h-0">
         {/* ── Stappen ── */}
         <aside className="w-full md:w-80 md:flex-shrink-0 bg-white border-r border-gray-100 md:overflow-y-auto">
-          {/* ── Algemene info ──
-              Eén plek voor wat bij de bruiloft hoort en niet bij een kaart:
-              de namen, de datum en de locatie. Vul je dit hier in, dan staat
-              het op elke kaart en op de website, en hoef je het in de
-              websitebouwer niet nog een keer te doen. Michiels punt van
-              21 september 2026: één plek voor die gegevens. */}
-          <Sectie
-            open={stap === "info"}
-            onToggle={() => setStap(stap === "info" ? null : "info")}
-            titel="Algemene info"
-            uitgelicht
-          >
+          <Sectie open={stap === "tekst"} onToggle={() => setStap(stap === "tekst" ? null : "tekst")} titel="Tekst op de kaart">
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Jullie namen</span>
               {/* Een tekstvak en geen invoerregel, zodat een enter werkt: veel
@@ -972,23 +961,6 @@ export default function KaartMakenPage() {
               <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Trouwdatum</span>
               <input type="date" className={inputCls} style={inputStyle} value={ontwerp.datum} onChange={(e) => update({ datum: e.target.value })} />
             </label>
-            <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Locatie van de bruiloft</span>
-              <input
-                className={inputCls}
-                style={inputStyle}
-                placeholder="Kasteel Wijenburg, Echteld"
-                value={eventLocatie}
-                onChange={(e) => setEventLocatie(e.target.value)}
-                maxLength={120}
-              />
-              <span className="text-[11px] leading-snug" style={{ color: SUBTLE }}>
-                Dit is de locatie van de bruiloft zelf, voor de website en als standaard op je kaarten. Een kaart mag er hieronder een eigen locatie bij krijgen.
-              </span>
-            </label>
-          </Sectie>
-
-          <Sectie open={stap === "tekst"} onToggle={() => setStap(stap === "tekst" ? null : "tekst")} titel="Tekst op de kaart">
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Locatie</span>
               <textarea
@@ -1120,15 +1092,6 @@ export default function KaartMakenPage() {
               andere tijd en een andere tekst geven, maak dan een tweede kaart met hun eigen link.
               In je gastenlijst zie je per gast bij welke groep hij hoort.
             </p>
-          </Sectie>
-
-          {/* ── Details op de kaart ──
-              Michiels wens: voor wie de kaart is, hoe laat het is en wat de
-              dresscode is, subtiel en zonder de kaart te verpesten. Alles wat
-              hier aanstaat komt samen in één regel in de accentkleur onder de
-              tekst, in dezelfde letter als de datum. Wat leeg is, staat er
-              niet. */}
-          <Sectie open={stap === "details"} onToggle={() => setStap(stap === "details" ? null : "details")} titel="Details op de kaart">
             <label className="flex items-center justify-between gap-3">
               <span className="flex flex-col">
                 <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Gastengroep op de kaart</span>
@@ -1147,6 +1110,15 @@ export default function KaartMakenPage() {
                 style={{ accentColor: GOLD, cursor: ontwerp.guestType ? "pointer" : "default" }}
               />
             </label>
+          </Sectie>
+
+          {/* ── Details op de kaart ──
+              Michiels wens: voor wie de kaart is, hoe laat het is en wat de
+              dresscode is, subtiel en zonder de kaart te verpesten. Alles wat
+              hier aanstaat komt samen in één regel in de accentkleur onder de
+              tekst, in dezelfde letter als de datum. Wat leeg is, staat er
+              niet. */}
+          <Sectie open={stap === "details"} onToggle={() => setStap(stap === "details" ? null : "details")} titel="Details op de kaart">
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Tijden</span>
               <input
@@ -1197,7 +1169,10 @@ export default function KaartMakenPage() {
               {aanmeldKeuzes.map((s) => (
                 <button
                   key={s}
-                  onClick={() => update({ aanmelden: s })}
+                  onClick={() => {
+                    update({ aanmelden: s })
+                    if (s !== "geen") toonFormulier()
+                  }}
                   className="text-left px-3 py-2.5 rounded-xl"
                   style={{
                     border: `2px solid ${ontwerp.aanmelden === s ? GOLD : GOLD_LIGHT}`,
@@ -1240,13 +1215,6 @@ export default function KaartMakenPage() {
               </div>
             )}
 
-            {!magVolledig && (
-              <p className="text-[11px] leading-snug" style={{ color: SUBTLE }}>
-                De volledige aanmelding, met dieetwensen, allergieën en je eigen vragen, hoort bij de
-                trouwkaart. Op een Save the Date vraag je alleen of iemand komt: dieetwensen weet
-                niemand een jaar vooruit, en een kort formulier vullen mensen wel in.
-              </p>
-            )}
           </Sectie>
 
           <Sectie open={stap === "taal"} onToggle={() => setStap(stap === "taal" ? null : "taal")} titel="Taal van de kaart">
@@ -1349,6 +1317,7 @@ export default function KaartMakenPage() {
                 siteUrl={null}
                 rsvpUrl={null}
                 startOpen
+                compact
                 watermerk="licht"
               />            </div>
 

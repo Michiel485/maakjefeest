@@ -80,6 +80,7 @@ export default function CardReveal({
   previewNotice = false,
   siteVolgt = false,
   startOpen = false,
+  compact = false,
   watermerk = "geen",
 }: {
   display: CardDisplay
@@ -101,6 +102,12 @@ export default function CardReveal({
   siteVolgt?: boolean
   // Voorbeeld in de bouwer: meteen de kaart tonen, zonder envelop
   startOpen?: boolean
+  /**
+   * Alleen zo hoog als de kaart zelf. De gewone kaartpagina vult het scherm,
+   * want daar is de kaart het enige dat er is. In het voorbeeld in de bouwer
+   * gaf dat een halve schermhoogte lucht boven en onder de kaart.
+   */
+  compact?: boolean
   // Watermerkbanen zonder de strook bovenaan. "licht" is voor het voorbeeld in
   // de bouwer: genoeg om misbruik te ontmoedigen, zonder het ontwerp te verpesten.
   watermerk?: "geen" | "licht" | "vol"
@@ -292,7 +299,7 @@ export default function CardReveal({
 
   return (
     <div
-      className="relative min-h-screen flex flex-col items-center justify-center px-4 py-10"
+      className={`relative flex flex-col items-center justify-center px-4 ${compact ? "py-4" : "min-h-screen py-10"}`}
       style={{
         background: sc.bodyBackground ?? sc.bodyBg,
         // De envelop zakt tijdens de animatie onder deze doos uit. Zonder dit

@@ -409,9 +409,7 @@ export default function BouwenPage() {
   // pas na het monteren uit de URL of localStorage gelezen.
   const [plan, setPlan] = useState<Plan>(DEFAULT_PLAN)
   const [previewPage, setPreviewPage] = useState<PageId>("Home")
-  // Algemene info staat standaard open: namen, datum en locatie vul je één
-  // keer in, en de website wacht erop.
-  const [activeSection, setActiveSection] = useState<'info' | 'algemeen' | 'paginas' | 'url' | null>('info')
+  const [activeSection, setActiveSection] = useState<'algemeen' | 'paginas' | 'url' | null>(null)
   const [activeSubPage, setActiveSubPage] = useState<PageId | null>(null)
   const [content, setContent] = useState<ContentMap>({})
   const [style, setStyle] = useState<Style>("zand")
@@ -441,6 +439,15 @@ export default function BouwenPage() {
   const [dashboardLoading, setDashboardLoading] = useState(false)
   const [showLeaveModal, setShowLeaveModal] = useState(false)
   const [changeKey, setChangeKey] = useState(0)
+  /**
+   * Pas tellen als het laden klaar is.
+   *
+   * Tijdens het inlezen van een bewaarde bruiloft zetten voorvertoningen en
+   * standaardwaarden nog van alles, en dat telde mee als een wijziging van de
+   * klant. Je zag dan "Opslaan" of zelfs een automatische opslag zodra je de
+   * bouwer opende, terwijl je niets had aangeraakt.
+   */
+  const [ladenKlaar, setLadenKlaar] = useState(false)
   const [hasPendingChanges, setHasPendingChanges] = useState(false)
   const savingRef = useRef(false)
   const [slugEditOpen, setSlugEditOpen]         = useState(false)
@@ -450,7 +457,7 @@ export default function BouwenPage() {
   const [hpSettings, setHpSettings] = useState<HomepageSettings>(DEFAULT_HOMEPAGE_SETTINGS)
   const [hpOpenGear, setHpOpenGear] = useState<string | null>(null)
   const [deleteConfirmIdx, setDeleteConfirmIdx] = useState<number | null>(null)
-  const [openAlgSection, setOpenAlgSection] = useState<'stijl' | 'layout' | 'lettertype' | null>(null)
+  const [openAlgSection, setOpenAlgSection] = useState<'gegevens' | 'stijl' | 'layout' | 'lettertype' | null>(null)
   const [openUrlSection, setOpenUrlSection] = useState<'url' | 'beveiliging' | null>(null)
   const [openHomeSection, setOpenHomeSection] = useState<'layout' | 'headerfoto' | 'kaders' | 'tekstvelden' | 'welkomst' | null>(null)
   const [pwEnabled, setPwEnabled] = useState(false)
@@ -700,6 +707,7 @@ export default function BouwenPage() {
           const published = event.status === "published"
           if (isPlan(event.plan)) setPlan(event.plan)
           setDraft(restoredDraft)
+          setLadenKlaar(true)
           setStyle(((event.style as string) || "zand") as Style)
           setFontHero((event.font_hero as string) || "pinyonscript")
           setFontInitials((event.font_initials as string) || "pinyonscript")
@@ -781,6 +789,7 @@ export default function BouwenPage() {
         })
           const mail = (d.email as string) || email
           if (mail) setAuthEmail(mail)
+          setLadenKlaar(true)
           return true
         } catch {
           return false
@@ -811,8 +820,6 @@ export default function BouwenPage() {
           )
         } catch {}
         laadConceptUitBrowser(email)
-        // En Algemene info open, want dat is het enige dat nu te doen is.
-        setActiveSection('info')
       }
 
       if (!user) {
@@ -925,13 +932,13 @@ export default function BouwenPage() {
   }, [viewport])
 
   // Mark pending whenever the user makes a change; cleared after save.
-  useEffect(() => { if (changeKey > 0) setHasPendingChanges(true) }, [changeKey])
+  useEffect(() => { if (changeKey > 0 && ladenKlaar) setHasPendingChanges(true) }, [changeKey, ladenKlaar])
 
   // Auto-save: 2 seconds after the last user change, save to DB.
   // changeKey is incremented by every user-triggered state mutation.
   // changeKey === 0 means no user changes yet (only the initial server load happened).
   useEffect(() => {
-    if (changeKey === 0 || !draft || !savedEventId) return
+    if (changeKey === 0 || !ladenKlaar || !draft || !savedEventId) return
     const timer = setTimeout(async () => {
       if (savingRef.current) return // a manual save is already in progress
       savingRef.current = true
@@ -1425,70 +1432,6 @@ export default function BouwenPage() {
         {/* ── Sidebar ── */}
         <aside className="w-full md:w-80 md:flex-shrink-0 bg-white border-r border-gray-100 flex flex-col md:overflow-y-auto">
 
-          {/* ── 0. ALGEMENE INFO ──
-              Eén plek voor wat bij de bruiloft hoort: de namen, de datum en de
-              locatie. Kom je uit de kaartbouwer, dan staat dit al ingevuld.
-              Kom je leeg binnen, dan wacht het voorbeeld hierop. Dezelfde
-              velden en dezelfde kop als in de kaartbouwer. */}
-          <div className="border-b border-gray-100">
-            <SectieKop
-              titel="Algemene info"
-              open={activeSection === 'info'}
-              onToggle={() => setActiveSection(prev => prev === 'info' ? null : 'info')}
-              uitgelicht
-            />
-            {activeSection === 'info' && draft && (
-              <div className="px-5 pb-5 flex flex-col gap-4">
-                <label className="flex flex-col gap-1.5">
-                  <span className="text-xs font-semibold" style={{ color: KLEUR.inkt }}>Jullie namen</span>
-                  <input
-                    className="w-full rounded-xl border bg-white px-3 py-2.5 text-sm placeholder-gray-400 focus:outline-none"
-                    style={{ color: KLEUR.inkt, borderColor: KLEUR.goudLicht }}
-                    placeholder="Sophie & Daan"
-                    value={draft.naam ?? ""}
-                    maxLength={80}
-                    onChange={(e) => {
-                      const naam = e.target.value
-                      setDraft((d) => d ? { ...d, naam, frame_names: naam, nav_title: naam } : d)
-                    }}
-                  />
-                </label>
-                <label className="flex flex-col gap-1.5">
-                  <span className="text-xs font-semibold" style={{ color: KLEUR.inkt }}>Trouwdatum</span>
-                  <input
-                    type="date"
-                    className="w-full rounded-xl border bg-white px-3 py-2.5 text-sm focus:outline-none"
-                    style={{ color: KLEUR.inkt, borderColor: KLEUR.goudLicht }}
-                    value={draft.datum}
-                    onChange={(e) => {
-                      const datum = e.target.value
-                      setDraft((d) => d ? { ...d, datum } : d)
-                    }}
-                  />
-                </label>
-                <label className="flex flex-col gap-1.5">
-                  <span className="text-xs font-semibold" style={{ color: KLEUR.inkt }}>Locatie van de bruiloft</span>
-                  <input
-                    className="w-full rounded-xl border bg-white px-3 py-2.5 text-sm placeholder-gray-400 focus:outline-none"
-                    style={{ color: KLEUR.inkt, borderColor: KLEUR.goudLicht }}
-                    placeholder="Kasteel Wijenburg, Echteld"
-                    value={draft.locatie ?? ""}
-                    maxLength={120}
-                    onChange={(e) => {
-                      const locatie = e.target.value
-                      setDraft((d) => d ? { ...d, locatie, frame_location: locatie } : d)
-                    }}
-                  />
-                </label>
-                {(!(draft.naam ?? "").trim() || !draft.datum) && (
-                  <p className="text-[11px] leading-snug m-0" style={{ color: KLEUR.zacht }}>
-                    Vul je namen en je datum in, dan bouwen we je eerste pagina.
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-
           {/* ── 3. URL & BEVEILIGING (alleen bij een pakket met publieke site) ── */}
           <div>
             <SectieKop
@@ -1671,6 +1614,66 @@ export default function BouwenPage() {
             />
             {activeSection === 'algemeen' && (
               <div className="flex flex-col">
+
+                {/* ── Jullie gegevens ──
+                    Namen, datum en locatie van de bruiloft. Die vraagt het
+                    dashboard bij het begin, en hier kun je ze bijstellen.
+                    Ze staan standaard op je kaarten en op je website. */}
+                <div className="border-t border-gray-100">
+                  <button
+                    onClick={() => setOpenAlgSection(prev => prev === 'gegevens' ? null : 'gegevens')}
+                    className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
+                  >
+                    <span className={`transition-transform duration-200 flex-shrink-0 ${openAlgSection === 'gegevens' ? 'rotate-90' : ''}`}>
+                      <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </span>
+                    <span className="text-sm font-medium text-gray-800">Jullie gegevens</span>
+                  </button>
+                  {openAlgSection === 'gegevens' && draft && (
+                    <div className="px-8 pb-4 flex flex-col gap-3">
+                      <label className="flex flex-col gap-1.5">
+                        <span className="text-xs font-semibold" style={{ color: KLEUR.inkt }}>Jullie namen</span>
+                        <input
+                          className="w-full rounded-xl border bg-white px-3 py-2.5 text-sm placeholder-gray-400 focus:outline-none"
+                          style={{ color: KLEUR.inkt, borderColor: KLEUR.goudLicht }}
+                          placeholder="Sophie & Daan"
+                          value={draft.naam ?? ""}
+                          maxLength={80}
+                          onChange={(e) => {
+                            const naam = e.target.value
+                            updateDraft({ naam, frame_names: naam, nav_title: naam })
+                          }}
+                        />
+                      </label>
+                      <label className="flex flex-col gap-1.5">
+                        <span className="text-xs font-semibold" style={{ color: KLEUR.inkt }}>Trouwdatum</span>
+                        <input
+                          type="date"
+                          className="w-full rounded-xl border bg-white px-3 py-2.5 text-sm focus:outline-none"
+                          style={{ color: KLEUR.inkt, borderColor: KLEUR.goudLicht }}
+                          value={draft.datum ?? ""}
+                          onChange={(e) => updateDraft({ datum: e.target.value })}
+                        />
+                      </label>
+                      <label className="flex flex-col gap-1.5">
+                        <span className="text-xs font-semibold" style={{ color: KLEUR.inkt }}>Locatie</span>
+                        <input
+                          className="w-full rounded-xl border bg-white px-3 py-2.5 text-sm placeholder-gray-400 focus:outline-none"
+                          style={{ color: KLEUR.inkt, borderColor: KLEUR.goudLicht }}
+                          placeholder="Kasteel Wijenburg, Echteld"
+                          value={draft.locatie ?? ""}
+                          maxLength={120}
+                          onChange={(e) => {
+                            const locatie = e.target.value
+                            updateDraft({ locatie, frame_location: locatie })
+                          }}
+                        />
+                      </label>
+                    </div>
+                  )}
+                </div>
 
                 {/* ── Stijl ── */}
                 <div className="border-t border-gray-100">
@@ -2868,36 +2871,6 @@ export default function BouwenPage() {
 
         {/* ── Main panel ── */}
         <main className="relative flex flex-1 flex-col overflow-hidden bg-gray-100 border-t md:border-t-0 border-[var(--goud-licht)]">
-          {/* Zonder namen en datum is een websitevoorbeeld een voorbeeld van
-              niets. Dan ligt hier één paneel over het voorbeeld dat zegt wat
-              er moet gebeuren. De kaartbouwer wacht niet; de website wel,
-              want een kaart met "Jullie namen" ziet er al uit als een kaart. */}
-          {draft && (!(draft.naam ?? "").trim() || !draft.datum) && (
-            <div
-              className="absolute inset-0 z-20 flex items-center justify-center p-6"
-              style={{ backgroundColor: "rgba(250,247,242,0.92)", backdropFilter: "blur(2px)" }}
-            >
-              <div
-                className="max-w-sm w-full rounded-2xl p-6 text-center"
-                style={{ backgroundColor: "#fff", border: `1px dashed ${KLEUR.goudLicht}` }}
-              >
-                <p className="m-0 mb-1.5" style={{ fontFamily: "var(--font-cormorant)", fontSize: 24, fontWeight: 600, color: KLEUR.inkt }}>
-                  Eerst jullie namen en datum
-                </p>
-                <p className="m-0 text-sm" style={{ color: KLEUR.tekst }}>
-                  Vul die links in bij Algemene info, dan bouwen we hier meteen je eerste pagina met programma en praktische informatie.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setActiveSection('info')}
-                  className="mt-4 text-sm font-semibold px-4 py-2.5 rounded-xl"
-                  style={{ backgroundColor: KLEUR.inkt, color: KLEUR.ivoor, border: 0, cursor: "pointer" }}
-                >
-                  Naar Algemene info
-                </button>
-              </div>
-            </div>
-          )}
           <div className="flex items-center justify-between px-4 py-2 bg-gray-100 border-b border-[var(--goud-licht)] flex-shrink-0">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Live preview</p>
             <div className="flex items-center gap-2">

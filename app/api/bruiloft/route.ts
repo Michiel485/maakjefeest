@@ -29,6 +29,10 @@ export async function PATCH(request: Request) {
         gedaan?: unknown
         /** Hoe vaak een tussenstand. */
         stand_frequentie?: unknown
+        /** De gegevens van de bruiloft zelf, gevraagd op het dashboard. */
+        naam?: unknown
+        datum?: unknown
+        locatie?: unknown
       }
     | null
 
@@ -46,6 +50,29 @@ export async function PATCH(request: Request) {
   if (event.user_email !== user.email) return Response.json({ error: "Geen toegang" }, { status: 403 })
 
   const update: Record<string, unknown> = {}
+
+  // ── De gegevens van de bruiloft ───────────────────────────────────────────
+  // Namen, datum en locatie horen bij de bruiloft en niet bij een kaart of een
+  // pagina. Het dashboard vraagt ze één keer; de bouwers nemen ze over.
+  if (typeof body?.naam === "string") {
+    const naam = body.naam.trim().slice(0, 80)
+    if (!naam) return Response.json({ error: "Vul jullie namen in." }, { status: 400 })
+    update.title = naam
+    update.frame_names = naam
+    update.nav_title = naam
+  }
+  if (body?.datum !== undefined) {
+    const datum = typeof body.datum === "string" ? body.datum.slice(0, 10) : null
+    if (datum && Number.isNaN(new Date(datum).getTime())) {
+      return Response.json({ error: "Vul een geldige datum in." }, { status: 400 })
+    }
+    update.datum = datum || null
+  }
+  if (typeof body?.locatie === "string") {
+    const locatie = body.locatie.trim().slice(0, 120)
+    update.locatie = locatie || null
+    update.frame_location = locatie || null
+  }
 
   // ── De deadline ───────────────────────────────────────────────────────────
   if (body?.deadline !== undefined) {

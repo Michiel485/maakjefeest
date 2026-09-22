@@ -7,6 +7,7 @@ import RsvpSection from "./RsvpSection"
 import GuestPhotosSection from "./GuestPhotosSection"
 import CardsSection from "./CardsSection"
 import { EventCard, SectionLabel } from "./Beheer"
+import BruiloftInfo from "./BruiloftInfo"
 import { KaartTegel, Tegel, TegelKnop, Teller, WebsiteTegel, type KaartRegel } from "./Tegels"
 import { maxPhotosPerEvent } from "@/lib/guest-photos"
 import { normalizePlan, planAllows, planMagVersturen, PLANS, formatEur } from "@/lib/plans"
@@ -139,15 +140,6 @@ export default async function DashboardPage({
               style={{ fontFamily: FONT_KOP, fontWeight: 600, fontSize: "clamp(1.7rem, 4vw, 2.5rem)", lineHeight: 1.05, color: KLEUR.inkt, textWrap: "balance" }}
             >
               {naam}
-              {bruiloft && (
-                <Link
-                  href={`/kaart-maken?event_id=${bruiloft.id}`}
-                  className="ml-3 align-middle text-xs font-medium px-2.5 py-1 rounded-full"
-                  style={{ fontFamily: "inherit", color: KLEUR.zacht, border: `1px solid ${KLEUR.zand}`, textDecoration: "none", fontSize: 12 }}
-                >
-                  wijzig
-                </Link>
-              )}
             </h1>
             <p className="text-sm mt-1.5 m-0" style={{ color: KLEUR.zacht }}>
               {datum ? (
@@ -157,7 +149,7 @@ export default async function DashboardPage({
                   <span style={{ color: KLEUR.tekst }}>{afstandInWoorden(bruiloft?.datum)}</span>
                 </>
               ) : (
-                "Nog geen trouwdatum. Die zet je in de bouwer, bij Algemene info."
+                "Nog geen trouwdatum."
               )}
             </p>
           </div>
@@ -177,6 +169,17 @@ export default async function DashboardPage({
             </div>
           )}
         </header>
+
+        {/* ── Jullie namen, datum en locatie ──
+            Eén plek waar dit gevraagd wordt. Dat stond eerst in beide bouwers
+            onder "Algemene info", en dat voelde niet als een centrale plek en
+            werkte niet lekker. Nu hier, en de bouwers nemen het over. */}
+        <BruiloftInfo
+          eventId={bruiloft?.id ?? null}
+          naam={bruiloft?.title ?? ""}
+          datum={bruiloft?.datum ?? null}
+          locatie={bruiloft?.locatie ?? null}
+        />
 
         {/* ── De teller ── */}
         <Teller

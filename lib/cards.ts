@@ -251,7 +251,8 @@ interface KaartTeksten {
   uitnodiging: Record<CardGuestType, string>
   /** Het woord voor de kledingaanwijzing op de kaart. */
   dresscode: string
-  /** De gastengroepen zoals ze óp de kaart komen te staan, in de taal van de kaart. */
+  /** De gastengroepen zoals ze óp de kaart komen te staan, in de taal van de
+   *  kaart. Enkelvoud: die regel gaat over deze ene gast, niet over een groep. */
   gasten: Record<CardGuestType, string>
   rsvpKnop: string
   siteKnop: string
@@ -286,7 +287,7 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
     openEnvelop: "Open de envelop",
     gemaaktMet: "Gemaakt met",
     dresscode: "Dresscode",
-    gasten: { daggast: "Daggasten", avondgast: "Avondgasten", receptiegast: "Receptiegasten" },
+    gasten: { daggast: "Daggast", avondgast: "Avondgast", receptiegast: "Receptiegast" },
     locale: "nl-NL",
   },
   en: {
@@ -307,7 +308,7 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
     openEnvelop: "Open the envelope",
     gemaaktMet: "Made with",
     dresscode: "Dress code",
-    gasten: { daggast: "Day guests", avondgast: "Evening guests", receptiegast: "Reception guests" },
+    gasten: { daggast: "Day guest", avondgast: "Evening guest", receptiegast: "Reception guest" },
     // en-GB geeft "14 August 2027"; en-US zou "August 14, 2027" geven en dat
     // leest voor Europese gasten vreemd op een kaart.
     locale: "en-GB",
@@ -330,7 +331,7 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
     openEnvelop: "Ouvrir l'enveloppe",
     gemaaktMet: "Créé avec",
     dresscode: "Tenue",
-    gasten: { daggast: "Invités de la journée", avondgast: "Invités de la soirée", receptiegast: "Invités de la réception" },
+    gasten: { daggast: "Invité de la journée", avondgast: "Invité de la soirée", receptiegast: "Invité de la réception" },
     locale: "fr-FR",
   },
   de: {
@@ -351,7 +352,7 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
     openEnvelop: "Umschlag öffnen",
     gemaaktMet: "Erstellt mit",
     dresscode: "Dresscode",
-    gasten: { daggast: "Tagesgäste", avondgast: "Abendgäste", receptiegast: "Empfangsgäste" },
+    gasten: { daggast: "Tagesgast", avondgast: "Abendgast", receptiegast: "Empfangsgast" },
     locale: "de-DE",
   },
 }
