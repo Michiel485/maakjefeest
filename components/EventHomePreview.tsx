@@ -520,8 +520,10 @@ export default function EventHomePreview({
       {/* Title under photo (if applicable) */}
       {hasPhoto && showTitleUnderPhoto && titleUnderSection}
 
-      {/* No photo → title above frame/divider */}
-      {!hasPhoto && showTitleUnderPhoto && titleUnderSection}
+      {/* Geen headerfoto: de titel boven het kader. Niet in de elegante
+          weergave, want die zet de titel zelf al onder de subtitel; samen
+          stond de titel er twee keer. */}
+      {!hasPhoto && showTitleUnderPhoto && !elegantMode && titleUnderSection}
 
       {/* Card / Elegant Divider section */}
       <section

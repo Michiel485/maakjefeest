@@ -52,6 +52,18 @@ export default function LanguageSwitcher({
   const originalTitle = useRef("")
 
   useEffect(() => {
+    // Wie nog nooit een taal koos, hoort de site in het Nederlands te zien.
+    // Google Translate onthoudt een eerdere keuze in een cookie op het hele
+    // domein, ook van een ander tabblad of een vorig bezoek, en vertaalde de
+    // pagina dan alsnog. Zonder eigen keuze gooien we die cookie weg.
+    try {
+      if (!localStorage.getItem(LS_KEY) && document.cookie.includes("googtrans")) {
+        const host = window.location.hostname
+        document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
+        document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${host}`
+      }
+    } catch {}
+
     // Protect the browser tab title — Google Translate rewrites document.title;
     // watch the <title> element and immediately restore the original value.
     originalTitle.current = document.title

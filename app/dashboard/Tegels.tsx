@@ -18,6 +18,7 @@ export function Teller({
   komen,
   nietKomen,
   stil,
+  heeftBruiloft,
   heeftKaart,
   live,
 }: {
@@ -25,17 +26,22 @@ export function Teller({
   komen: number
   nietKomen: number
   stil: number
+  /** Staat er al iets van deze klant, ook al is het maar een naam en een datum? */
+  heeftBruiloft: boolean
   heeftKaart: boolean
   live: boolean
 }) {
   if (gasten === 0) {
-    // Michiels punt: als je hier zonder account komt moet duidelijk zijn
-    // waarom er niets staat, en wanneer er wel iets komt te staan.
-    const zin = !heeftKaart
+    // Vier standen, en elke zin hoort bij precies één ervan. Eerder zei hij
+    // "nog niets om te tonen" terwijl er al een bewaard concept stond, en dat
+    // klopte niet met wat je eronder zag.
+    const zin = !heeftBruiloft
       ? "Nog niets om te tonen. Begin met een Save the Date of een trouwkaart; ontwerpen kost niets. Zodra je een ontwerp bewaart, komt het hier te staan, gratis. Pas als je tevreden bent en iets wilt versturen, betaal je."
-      : !live
-        ? "Nog niets verstuurd. Activeer je kaart en deel de link, dan verschijnen hier wie er komen en van wie je nog niets hebt gehoord."
-        : "Nog geen reacties. Zodra de eerste binnen is, staat hij hier."
+      : !heeftKaart
+        ? "Je bruiloft staat klaar. Maak nu je eerste kaart; ontwerpen kost niets en je betaalt pas als je hem wilt versturen."
+        : !live
+          ? "Nog niets verstuurd. Activeer je kaart en deel de link, dan verschijnen hier wie er komen en van wie je nog niets hebt gehoord."
+          : "Nog geen reacties. Zodra de eerste binnen is, staat hij hier."
     return (
       <div
         className="rounded-2xl px-5 py-4 text-[15px]"
@@ -69,6 +75,46 @@ export function Teller({
       {cijfer("Niets gehoord", stil, stil > 0 ? "#B45309" : undefined)}
     </dl>
   )
+}
+
+/**
+ * Hoeveel dagen het nog duurt. Rechts naast de naam van de bruiloft.
+ *
+ * Bewust dagen en geen tikkende klok: een klok die elke seconde verspringt
+ * trekt de aandacht weg van waar het dashboard over gaat, en je bruiloft is
+ * geen lancering. Dit is groot genoeg om leuk te zijn en rustig genoeg om te
+ * blijven staan.
+ */
+export function Aftellen({ datum }: { datum: string | null }) {
+  if (!datum) return null
+  const dag = new Date(datum)
+  if (Number.isNaN(dag.getTime())) return null
+
+  const nu = new Date()
+  const dagen = Math.round(
+    (Date.UTC(dag.getUTCFullYear(), dag.getUTCMonth(), dag.getUTCDate()) -
+      Date.UTC(nu.getUTCFullYear(), nu.getUTCMonth(), nu.getUTCDate())) /
+      86400000
+  )
+
+  const groot = (waarde: string, onder: string) => (
+    <div
+      className="rounded-2xl px-5 py-3 text-center"
+      style={{ backgroundColor: KLEUR.goudVlak, border: `1px solid ${KLEUR.goudLicht}` }}
+    >
+      <p className="m-0 tabular-nums" style={{ fontFamily: FONT_KOP, fontSize: 38, lineHeight: 1, color: KLEUR.goud }}>
+        {waarde}
+      </p>
+      <p className="m-0 mt-1 text-[11px] uppercase" style={{ letterSpacing: "0.1em", color: KLEUR.zacht }}>
+        {onder}
+      </p>
+    </div>
+  )
+
+  if (dagen < 0) return groot("♥", "getrouwd")
+  if (dagen === 0) return groot("Vandaag", "de grote dag")
+  if (dagen === 1) return groot("1", "dag te gaan")
+  return groot(String(dagen), "dagen te gaan")
 }
 
 // ── Tegels ──────────────────────────────────────────────────────────────────

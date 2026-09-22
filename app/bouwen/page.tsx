@@ -73,7 +73,10 @@ const DEFAULT_HOMEPAGE_SETTINGS: HomepageSettings = {
   subtitleFont: 'lora',
   subtitleSize: 1.1,
   subtitleVisible: true,
-  hoofdtitelVisible: true,
+  // Uit: het kader toont de namen al. Aan zou dezelfde namen er een tweede
+  // keer boven zetten, en dat gebeurde ook echt bij een bruiloft die in de
+  // kaartbouwer was begonnen. Wie hem wil, zet hem aan bij Tekstvelden.
+  hoofdtitelVisible: false,
   hoofdtitelFont: 'pinyonscript',
   hoofdtitelSize: 5.5,
   datumFont: 'playfair',
@@ -457,7 +460,7 @@ export default function BouwenPage() {
   const [hpSettings, setHpSettings] = useState<HomepageSettings>(DEFAULT_HOMEPAGE_SETTINGS)
   const [hpOpenGear, setHpOpenGear] = useState<string | null>(null)
   const [deleteConfirmIdx, setDeleteConfirmIdx] = useState<number | null>(null)
-  const [openAlgSection, setOpenAlgSection] = useState<'gegevens' | 'stijl' | 'layout' | 'lettertype' | null>(null)
+  const [openAlgSection, setOpenAlgSection] = useState<'stijl' | 'layout' | 'lettertype' | null>(null)
   const [openUrlSection, setOpenUrlSection] = useState<'url' | 'beveiliging' | null>(null)
   const [openHomeSection, setOpenHomeSection] = useState<'layout' | 'headerfoto' | 'kaders' | 'tekstvelden' | 'welkomst' | null>(null)
   const [pwEnabled, setPwEnabled] = useState(false)
@@ -1614,66 +1617,6 @@ export default function BouwenPage() {
             />
             {activeSection === 'algemeen' && (
               <div className="flex flex-col">
-
-                {/* ── Jullie gegevens ──
-                    Namen, datum en locatie van de bruiloft. Die vraagt het
-                    dashboard bij het begin, en hier kun je ze bijstellen.
-                    Ze staan standaard op je kaarten en op je website. */}
-                <div className="border-t border-gray-100">
-                  <button
-                    onClick={() => setOpenAlgSection(prev => prev === 'gegevens' ? null : 'gegevens')}
-                    className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
-                  >
-                    <span className={`transition-transform duration-200 flex-shrink-0 ${openAlgSection === 'gegevens' ? 'rotate-90' : ''}`}>
-                      <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                      </svg>
-                    </span>
-                    <span className="text-sm font-medium text-gray-800">Jullie gegevens</span>
-                  </button>
-                  {openAlgSection === 'gegevens' && draft && (
-                    <div className="px-8 pb-4 flex flex-col gap-3">
-                      <label className="flex flex-col gap-1.5">
-                        <span className="text-xs font-semibold" style={{ color: KLEUR.inkt }}>Jullie namen</span>
-                        <input
-                          className="w-full rounded-xl border bg-white px-3 py-2.5 text-sm placeholder-gray-400 focus:outline-none"
-                          style={{ color: KLEUR.inkt, borderColor: KLEUR.goudLicht }}
-                          placeholder="Sophie & Daan"
-                          value={draft.naam ?? ""}
-                          maxLength={80}
-                          onChange={(e) => {
-                            const naam = e.target.value
-                            updateDraft({ naam, frame_names: naam, nav_title: naam })
-                          }}
-                        />
-                      </label>
-                      <label className="flex flex-col gap-1.5">
-                        <span className="text-xs font-semibold" style={{ color: KLEUR.inkt }}>Trouwdatum</span>
-                        <input
-                          type="date"
-                          className="w-full rounded-xl border bg-white px-3 py-2.5 text-sm focus:outline-none"
-                          style={{ color: KLEUR.inkt, borderColor: KLEUR.goudLicht }}
-                          value={draft.datum ?? ""}
-                          onChange={(e) => updateDraft({ datum: e.target.value })}
-                        />
-                      </label>
-                      <label className="flex flex-col gap-1.5">
-                        <span className="text-xs font-semibold" style={{ color: KLEUR.inkt }}>Locatie</span>
-                        <input
-                          className="w-full rounded-xl border bg-white px-3 py-2.5 text-sm placeholder-gray-400 focus:outline-none"
-                          style={{ color: KLEUR.inkt, borderColor: KLEUR.goudLicht }}
-                          placeholder="Kasteel Wijenburg, Echteld"
-                          value={draft.locatie ?? ""}
-                          maxLength={120}
-                          onChange={(e) => {
-                            const locatie = e.target.value
-                            updateDraft({ locatie, frame_location: locatie })
-                          }}
-                        />
-                      </label>
-                    </div>
-                  )}
-                </div>
 
                 {/* ── Stijl ── */}
                 <div className="border-t border-gray-100">

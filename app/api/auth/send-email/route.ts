@@ -99,9 +99,24 @@ export async function POST(request: Request) {
   // Log the full user object once so we can see exactly what Supabase sends.
   console.log("[send-email] user payload:", JSON.stringify(user))
 
+  // De bestemming zit als ingepakte parameter in redirect_to, dus eerst
+  // uitpakken. Zonder dit stond "/kaart-maken" er als "%2Fkaart-maken" en zag
+  // de mail niet dat iemand een kaart aan het maken was: wie een Save the Date
+  // bewaarde kreeg de welkomstmail over een trouwwebsite.
+  let bestemming = redirect_to
+  for (let i = 0; i < 3; i++) {
+    try {
+      const uit = decodeURIComponent(bestemming)
+      if (uit === bestemming) break
+      bestemming = uit
+    } catch {
+      break
+    }
+  }
+
   // If the redirect goes to /bouwen it's always from the aanmaken form → "basis staat" mail.
   // Otherwise use created_at age to distinguish new vs returning users.
-  const isFromAanmaken = redirect_to.includes("/bouwen") || redirect_to.includes("/kaart-maken")
+  const isFromAanmaken = bestemming.includes("/bouwen") || bestemming.includes("/kaart-maken")
   const isNewUser = isFromAanmaken || (() => {
     if (user.created_at) {
       const ageMs = Date.now() - new Date(user.created_at).getTime()
@@ -113,7 +128,7 @@ export async function POST(request: Request) {
 
   // Het gekozen pakket reist mee in de doorverwijzing van /aanmaken, zodat de
   // welkomstmail over een kaart praat als iemand een kaart maakt.
-  const planUitLink = /[?&]plan(?:=|%3D)(save_the_date|uitnodiging|compleet)/.exec(redirect_to)?.[1]
+  const planUitLink = /[?&]plan=(save_the_date|uitnodiging|compleet)/.exec(bestemming)?.[1]
   const plan = isPlan(planUitLink) ? planUitLink : undefined
 
   const result = isNewUser

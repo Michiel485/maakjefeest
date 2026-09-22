@@ -75,20 +75,26 @@ export default function BruiloftInfo({
   const veld = "w-full rounded-xl border bg-white px-3 py-2.5 text-sm placeholder-gray-400 focus:outline-none"
   const veldStijl = { color: KLEUR.inkt, borderColor: KLEUR.goudLicht }
 
-  if (!open) {
+  // Staat er al een bruiloft, dan is dit alleen een klein "wijzig" achter de
+  // datum, en opent het formulier in een venster. Een balk over de volle
+  // breedte onder je naam was lelijk en trok te veel aandacht voor iets dat
+  // je één keer invult.
+  const inKop = !!eventId
+
+  if (inKop && !open) {
     return (
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="text-xs font-medium px-2.5 py-1 rounded-full"
-        style={{ color: KLEUR.zacht, border: `1px solid ${KLEUR.zand}`, background: "transparent", cursor: "pointer" }}
+        className="underline underline-offset-2"
+        style={{ color: KLEUR.zacht, background: "none", border: 0, padding: 0, font: "inherit", cursor: "pointer" }}
       >
         wijzig
       </button>
     )
   }
 
-  return (
+  const formulier = (
     <div
       className="rounded-2xl p-5 flex flex-col gap-3 w-full"
       style={{ backgroundColor: "#fff", border: `1px solid ${KLEUR.goudLicht}` }}
@@ -178,6 +184,23 @@ export default function BruiloftInfo({
             Laat maar
           </button>
         )}
+      </div>
+    </div>
+  )
+
+  if (!inKop) return formulier
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ backgroundColor: "rgba(26,26,26,0.5)", backdropFilter: "blur(4px)" }}
+      onClick={() => setOpen(false)}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Jullie gegevens"
+    >
+      <div className="w-full max-w-2xl" onClick={(e) => e.stopPropagation()}>
+        {formulier}
       </div>
     </div>
   )

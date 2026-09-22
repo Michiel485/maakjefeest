@@ -33,6 +33,10 @@ function sanitizeContent(raw: unknown): CardContent {
       : undefined,
     inviteText: text(input.inviteText, 160),
     timeText: text(input.timeText, 80),
+    // De details op de kaart. Stonden hier niet, en werden dus bij elke
+    // opslag stilletjes weggegooid.
+    toonGastType: input.toonGastType === true ? true : undefined,
+    dresscode: text(input.dresscode, 40),
     animatie: cardAnimatie(input.animatie),
     taal: cardTaal(input.taal),
     aanmelden: aanmeldStand(input.aanmelden),

@@ -470,7 +470,13 @@ export default function KaartMakenPage() {
     // en de locatie alleen als hij afwijkt; anders zou een wijziging aan de
     // bruiloft de kaarten niet meer bereiken.
     const kaartContent: CardContent = { ...content, photoUrl: fotoUrl ?? undefined }
-    let nieuwCardId = cardId
+
+    // Hoort dit kaart-id echt bij deze bruiloft? Je browser onthoudt het, en
+    // dat id kan verouderd zijn: bijvoorbeeld nadat je opnieuw begonnen bent
+    // of je account hebt verwijderd. Dan bestaat de kaart niet meer en gaf het
+    // bijwerken een foutmelding in plaats van een nieuwe kaart.
+    const kaartBestaatNog = !!cardId && kaarten.some((k) => k.id === cardId)
+    let nieuwCardId = kaartBestaatNog ? cardId : null
     if (!nieuwCardId) {
       const cr = await fetch("/api/cards", {
         method: "POST",
@@ -496,7 +502,12 @@ export default function KaartMakenPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ content: kaartContent, template: ontwerp.template, type: ontwerp.type }),
     })
-    if (!pr.ok) throw new Error("Opslaan van de kaarttekst mislukt")
+    if (!pr.ok) {
+      // De server weet beter wat er mis is dan wij. Zonder dit zag je alleen
+      // "Opslaan mislukt" en was er niets te achterhalen.
+      const { error } = (await pr.json().catch(() => ({}))) as { error?: string }
+      throw new Error(error || "Opslaan van de kaarttekst mislukt")
+    }
 
     setEventId(nieuwEventId)
     setCardId(nieuwCardId)

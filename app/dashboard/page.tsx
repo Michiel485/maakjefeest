@@ -8,7 +8,7 @@ import GuestPhotosSection from "./GuestPhotosSection"
 import CardsSection from "./CardsSection"
 import { EventCard, SectionLabel } from "./Beheer"
 import BruiloftInfo from "./BruiloftInfo"
-import { KaartTegel, Tegel, TegelKnop, Teller, WebsiteTegel, type KaartRegel } from "./Tegels"
+import { Aftellen, KaartTegel, Tegel, TegelKnop, Teller, WebsiteTegel, type KaartRegel } from "./Tegels"
 import { maxPhotosPerEvent } from "@/lib/guest-photos"
 import { normalizePlan, planAllows, planMagVersturen, PLANS, formatEur } from "@/lib/plans"
 import { afstandInWoorden } from "@/lib/fasen"
@@ -133,7 +133,7 @@ export default async function DashboardPage({
       <main className="max-w-7xl w-full mx-auto px-4 md:px-6 py-7 md:py-9 flex flex-col gap-6">
 
         {/* ── De bruiloft ── */}
-        <header className="flex flex-wrap items-end justify-between gap-3">
+        <header className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1
               className="m-0"
@@ -141,7 +141,7 @@ export default async function DashboardPage({
             >
               {naam}
             </h1>
-            <p className="text-sm mt-1.5 m-0" style={{ color: KLEUR.zacht }}>
+            <div className="text-sm mt-1.5" style={{ color: KLEUR.zacht }}>
               {datum ? (
                 <>
                   {datum}
@@ -151,8 +151,20 @@ export default async function DashboardPage({
               ) : (
                 "Nog geen trouwdatum."
               )}
-            </p>
+              {bruiloft && (
+                <>
+                  {" · "}
+                  <BruiloftInfo
+                    eventId={bruiloft.id}
+                    naam={bruiloft.title ?? ""}
+                    datum={bruiloft.datum ?? null}
+                    locatie={bruiloft.locatie ?? null}
+                  />
+                </>
+              )}
+            </div>
           </div>
+          {bruiloft?.datum && <Aftellen datum={bruiloft.datum} />}
 
           {/* Meer dan één bruiloft komt niet meer voor, maar wie er van vroeger
               nog een heeft moet er wel bij kunnen. */}
@@ -174,12 +186,9 @@ export default async function DashboardPage({
             Eén plek waar dit gevraagd wordt. Dat stond eerst in beide bouwers
             onder "Algemene info", en dat voelde niet als een centrale plek en
             werkte niet lekker. Nu hier, en de bouwers nemen het over. */}
-        <BruiloftInfo
-          eventId={bruiloft?.id ?? null}
-          naam={bruiloft?.title ?? ""}
-          datum={bruiloft?.datum ?? null}
-          locatie={bruiloft?.locatie ?? null}
-        />
+        {!bruiloft && (
+          <BruiloftInfo eventId={null} naam="" datum={null} locatie={null} />
+        )}
 
         {/* ── De teller ── */}
         <Teller
@@ -187,6 +196,7 @@ export default async function DashboardPage({
           komen={stand.komen}
           nietKomen={stand.nietKomen}
           stil={stand.stil}
+          heeftBruiloft={!!bruiloft}
           heeftKaart={cards.length > 0}
           live={stand.live}
         />
