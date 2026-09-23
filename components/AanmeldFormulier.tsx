@@ -276,7 +276,9 @@ export default function AanmeldFormulier({
                 style={{
                   backgroundColor: aan ? (v === "yes" ? "#ECFDF5" : "#FFF7ED") : "#fff",
                   border: `2px solid ${aan ? (v === "yes" ? "#10b981" : "#f59e0b") : `${accentColor}44`}`,
-                  color: aan ? (v === "yes" ? "#065F46" : "#92400E") : labelColor,
+                  // De knop is wit, dus de tekst is altijd donker. Met de
+                  // labelkleur stond er op een donkere kaart wit op wit.
+                  color: aan ? (v === "yes" ? "#065F46" : "#92400E") : "#1A1A1A",
                   cursor: "pointer",
                 }}
               >
@@ -517,9 +519,11 @@ export default function AanmeldFormulier({
             {status === "bezig" ? "Versturen..." : "Versturen"}
           </button>
 
-          <p className="text-[11px] leading-snug text-center" style={{ color: labelColor, opacity: 0.6 }}>
-            {voorbeeld ? "Dit is wat je gasten zien" : "Je gegevens gaan naar het bruidspaar."}
-          </p>
+          {!voorbeeld && (
+            <p className="text-[11px] leading-snug text-center" style={{ color: labelColor, opacity: 0.6 }}>
+              Je gegevens gaan naar het bruidspaar.
+            </p>
+          )}
         </>
       )}
     </form>

@@ -885,18 +885,26 @@ export default function CardReveal({
                 onder de knoppen; Michiel wil de volgorde kaart, gemaakt met,
                 aanmelden, agenda (23 september 2026), met evenveel lucht boven
                 als onder deze regel. */}
-            <a
-              href="https://www.sayingyes.nl"
-              className="mt-5 block text-center text-xs"
-              style={{
-                color: sc.bodyText,
-                opacity: 0.55,
-                textDecoration: "none",
-                ...eindBlok,
-              }}
-            >
-              {display.gemaaktMet} <span style={{ fontWeight: 600, color: sc.accent }}>SayingYes</span> · sayingyes.nl
-            </a>
+            {previewNotice || compact ? (
+              /* In de bouwer geen link: daar wil je niet per ongeluk de bouwer
+                 uit klikken (Michiel, 23 september 2026). */
+              <p className="mt-8 mb-0 text-center text-xs" style={{ color: sc.bodyText, opacity: 0.55, ...eindBlok }}>
+                {display.gemaaktMet} <span style={{ fontWeight: 600, color: sc.accent }}>SayingYes</span> · sayingyes.nl
+              </p>
+            ) : (
+              <a
+                href="https://www.sayingyes.nl"
+                className="mt-8 block text-center text-xs"
+                style={{
+                  color: sc.bodyText,
+                  opacity: 0.55,
+                  textDecoration: "none",
+                  ...eindBlok,
+                }}
+              >
+                {display.gemaaktMet} <span style={{ fontWeight: 600, color: sc.accent }}>SayingYes</span> · sayingyes.nl
+              </a>
+            )}
 
             {/* Demo op de marketingsite: CTA in plaats van site-knoppen */}
             {demo && (
@@ -934,7 +942,7 @@ export default function CardReveal({
                 meest bereidwillige moment; dan vraag je door. */}
             {aanmeldStand !== "geen" && bronToken && !demo && (
               <div
-                className="mt-5 rounded-2xl p-5 sm:p-6"
+                className="mt-8 rounded-2xl p-5 sm:p-6"
                 style={{
                   backgroundColor: sc.cardBg ?? "#ffffff",
                   border: `1px solid ${sc.accent}33`,
@@ -960,7 +968,7 @@ export default function CardReveal({
 
             {aanmeldVoorbeeld && aanmeldStand !== "geen" && (
               <div
-                className="mt-5 rounded-2xl p-5 sm:p-6"
+                className="mt-8 rounded-2xl p-5 sm:p-6"
                 style={{
                   backgroundColor: sc.cardBg ?? "#ffffff",
                   border: `1px solid ${sc.accent}33`,

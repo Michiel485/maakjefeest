@@ -662,6 +662,41 @@ export default function KaartMakenPage() {
   }
 
 
+  // Deze kaart weggooien. Michiels wens van 23 september 2026: dat moet ook
+  // vanuit de bouwer kunnen, niet alleen vanuit het dashboard. Daarna komt de
+  // volgende kaart van de bruiloft in beeld, of een leeg ontwerp.
+  const [verwijderVraag, setVerwijderVraag] = useState(false)
+  async function verwijderKaart() {
+    if (!cardId) return
+    setBusy("bewaar")
+    setMelding(null)
+    try {
+      const res = await fetch(`/api/cards/${cardId}`, { method: "DELETE" })
+      if (!res.ok) {
+        const { error } = (await res.json().catch(() => ({}))) as { error?: string }
+        throw new Error(error || "Verwijderen mislukte")
+      }
+      const rest = kaarten.filter((k) => k.id !== cardId)
+      setKaarten(rest)
+      setVerwijderVraag(false)
+      setWijzigingen(0)
+      if (rest[0]) {
+        kiesKaart(rest[0].id)
+        // kiesKaart kijkt in de oude lijst; het id zelf zetten we hier.
+        setCardId(rest[0].id)
+        setMelding({ tekst: "Kaart weggegooid. Je ziet nu je volgende kaart." })
+      } else {
+        setCardId(null)
+        setMelding({ tekst: "Kaart weggegooid. Wat hier staat is een nieuw ontwerp; bewaar het als je het wilt houden." })
+      }
+      try { localStorage.setItem(LS_IDS, JSON.stringify({ eventId, cardId: rest[0]?.id ?? null })) } catch {}
+    } catch (e) {
+      setMelding({ tekst: e instanceof Error ? e.message : "Verwijderen mislukte", fout: true })
+    } finally {
+      setBusy(null)
+    }
+  }
+
   // Een nieuwe kaart is een kopie van deze: alles blijft staan en de volgende
   // opslag wordt een nieuwe kaart. Dat is de snelste weg naar dezelfde kaart
   // in een andere taal of voor een andere gastengroep. Er was ook een "lege"
@@ -1015,7 +1050,43 @@ export default function KaartMakenPage() {
                   <path d="M12 5v14M5 12h14" />
                 </svg>
               </IconKnop>
+              <IconKnop
+                title={cardId ? "Deze kaart weggooien" : "Deze kaart is nog niet bewaard; er is niets om weg te gooien"}
+                onClick={() => setVerwijderVraag(true)}
+                disabled={busy !== null || !cardId}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M6 6l1 14a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-14M10 11v6M14 11v6" />
+                </svg>
+              </IconKnop>
             </div>
+
+            {verwijderVraag && cardId && (
+              <div className="rounded-xl p-3 flex flex-col gap-2 text-[13px]" style={{ backgroundColor: "#FEF2F2", border: "1px solid #FECACA" }}>
+                <span style={{ color: "#991B1B" }}>
+                  <b>{huidigeKaart ? kaartLabel(huidigeKaart) : "Deze kaart"}</b> weggooien? Weg is weg; de link werkt daarna niet meer.
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void verwijderKaart()}
+                    disabled={busy !== null}
+                    className="text-[13px] font-semibold px-3 py-1.5 rounded-lg"
+                    style={{ backgroundColor: "#991B1B", color: "#fff", border: 0, cursor: "pointer" }}
+                  >
+                    {busy ? "Bezig…" : "Ja, weggooien"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setVerwijderVraag(false)}
+                    className="text-[13px] px-2 py-1.5 rounded-lg"
+                    style={{ color: SUBTLE, background: "none", border: 0, cursor: "pointer" }}
+                  >
+                    Laat maar
+                  </button>
+                </div>
+              </div>
+            )}
 
             {eventId && kaarten.length > 0 && (
               <select
@@ -1425,15 +1496,19 @@ export default function KaartMakenPage() {
                 <p className="text-center text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: sc.headingColor, opacity: 0.75 }}>
                   En dit vullen je gasten in
                 </p>
+                {/* Dezelfde doos en kleuren als op de kaartpagina, zodat het
+                    voorbeeld hier klopt met wat de gast ziet. */}
                 <div
                   className="rounded-2xl p-5"
-                  style={{ backgroundColor: "#fff", border: `1px solid ${GOLD_LIGHT}` }}
+                  style={{ backgroundColor: sc.cardBg ?? "#ffffff", border: `1px solid ${sc.accent}33` }}
                 >
                   <AanmeldFormulier
                     stand={ontwerp.aanmelden}
                     voorbeeld
                     compact
                     accentColor={sc.accent ?? GOLD}
+                    labelColor={sc.cardText ?? sc.bodyText}
+                    knopTekstKleur={sc.buttonText}
                     guestTypes={ontwerp.guestType ? [ontwerp.guestType] : ["daggast"]}
                   />
                 </div>
