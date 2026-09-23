@@ -194,83 +194,75 @@ export async function laadBruiloft(email: string, gekozenId?: string | null): Pr
   let gpSettings: Record<string, GuestPhotoSettings> = {}
 
   if (groepIds.length > 0) {
-    const { data: rsvpData } = await service
-      .from("rsvp")
-      .select(
-        "id, event_id, submission_id, name, voornaam, achternaam, email, telefoon, guest_type, dietary, allergie, is_primary, attending, message, song, overnachting, custom_answer, custom_answer_2, is_kind, leeftijd, status, std_status, inv_status, bron_token, huishouden_naam, created_at"
-      )
-      .in("event_id", groepIds)
-      .order("created_at", { ascending: false })
-    rsvps = (rsvpData ?? []) as RsvpRow[]
-
-    // Het adres dat een gast invulde voor een papieren trouwkaart. Bestaat pas
-    // na migration_adres.sql, dus apart opgevraagd: mislukt dit, dan weten we
-    // het gewoon niet en werkt de rest door.
-    if (rsvps.length > 0) {
-      const { data: adressen, error: adresErr } = await service
+    // Alles wat alleen van de bruiloft afhangt tegelijk ophalen. Dit liep
+    // eerst na elkaar, zes ritjes naar de database, en dat was het wachten
+    // bij het terugkeren naar het dashboard (Michiel, 23 september 2026).
+    // De adres- en kaartkolommen op rsvp bestaan pas na hun migratie, dus die
+    // staan apart: mislukt zo'n vraag, dan weten we het gewoon niet en werkt
+    // de rest door.
+    const fotoIds = groep.filter((e) => planAllows(e.plan, "photos")).map((e) => e.id)
+    const leeg = Promise.resolve({ data: null as Record<string, unknown>[] | null, error: null as unknown })
+    const [rsvpRes, adresRes, kaartIdRes, cardRes, gpEventsRes, gpDataRes] = await Promise.all([
+      service
         .from("rsvp")
-        .select("id, adres")
-        .in("event_id", groepIds)
-      if (!adresErr && adressen) {
-        const per = new Map(adressen.map((a) => [a.id as string, (a.adres as string | null) ?? null]))
-        rsvps = rsvps.map((r) => (per.has(r.id) ? { ...r, adres: per.get(r.id) ?? null } : r))
-      }
-    }
-
-    // Welke kaart het bruidspaar zegt gestuurd te hebben. Die kolommen bestaan
-    // pas na migration_gekregen.sql, dus apart opgevraagd: mislukt dit, dan
-    // weten we het gewoon niet en werkt de rest door.
-    if (rsvps.length > 0) {
-      const { data: kaartIds, error: kaartErr } = await service
-        .from("rsvp")
-        .select("id, std_kaart_id, inv_kaart_id")
-        .in("event_id", groepIds)
-      if (!kaartErr && kaartIds) {
-        const per = new Map(kaartIds.map((k) => [k.id as string, k]))
-        rsvps = rsvps.map((r) => {
-          const k = per.get(r.id)
-          return k
-            ? { ...r, std_kaart_id: (k.std_kaart_id as string | null) ?? null, inv_kaart_id: (k.inv_kaart_id as string | null) ?? null }
-            : r
-        })
-      }
-    }
-
-    const { data: cardData, error: cardError } = await service
-      .from("cards")
-      .select("id, event_id, type, template, share_token, content, view_count, created_at")
-      .in("event_id", groepIds)
-      .order("created_at", { ascending: true })
-    if (!cardError) {
-      cardsAvailable = true
-      cards = (cardData ?? []) as CardRow[]
-    }
-
-    const fotoEvents = groep.filter((e) => planAllows(e.plan, "photos"))
-    if (fotoEvents.length > 0) {
-      const ids = fotoEvents.map((e) => e.id)
-      const { data: gpEvents } = await service
-        .from("events")
-        .select("id, guest_photos_enabled, guest_photos_moderation, style")
-        .in("id", ids)
-      if (gpEvents) {
-        gpSettings = Object.fromEntries(
-          gpEvents.map((e) => [
-            e.id,
-            {
-              enabled: (e.guest_photos_enabled as boolean | null) ?? false,
-              moderation: (e.guest_photos_moderation as "live" | "approve" | null) ?? "live",
-              style: (e.style as string | null) ?? "roze",
-            },
-          ])
+        .select(
+          "id, event_id, submission_id, name, voornaam, achternaam, email, telefoon, guest_type, dietary, allergie, is_primary, attending, message, song, overnachting, custom_answer, custom_answer_2, is_kind, leeftijd, status, std_status, inv_status, bron_token, huishouden_naam, created_at"
         )
-        const { data: gpData } = await service
-          .from("guest_photos")
-          .select("id, event_id, name, caption, url, status, created_at")
-          .in("event_id", ids)
-          .order("created_at", { ascending: false })
-        guestPhotos = (gpData ?? []) as GuestPhotoRow[]
-      }
+        .in("event_id", groepIds)
+        .order("created_at", { ascending: false }),
+      service.from("rsvp").select("id, adres").in("event_id", groepIds),
+      service.from("rsvp").select("id, std_kaart_id, inv_kaart_id").in("event_id", groepIds),
+      service
+        .from("cards")
+        .select("id, event_id, type, template, share_token, content, view_count, created_at")
+        .in("event_id", groepIds)
+        .order("created_at", { ascending: true }),
+      fotoIds.length > 0
+        ? service.from("events").select("id, guest_photos_enabled, guest_photos_moderation, style").in("id", fotoIds)
+        : leeg,
+      fotoIds.length > 0
+        ? service
+            .from("guest_photos")
+            .select("id, event_id, name, caption, url, status, created_at")
+            .in("event_id", fotoIds)
+            .order("created_at", { ascending: false })
+        : leeg,
+    ])
+
+    rsvps = (rsvpRes.data ?? []) as RsvpRow[]
+
+    if (!adresRes.error && adresRes.data) {
+      const per = new Map(adresRes.data.map((a) => [a.id as string, (a.adres as string | null) ?? null]))
+      rsvps = rsvps.map((r) => (per.has(r.id) ? { ...r, adres: per.get(r.id) ?? null } : r))
+    }
+
+    if (!kaartIdRes.error && kaartIdRes.data) {
+      const per = new Map(kaartIdRes.data.map((k) => [k.id as string, k]))
+      rsvps = rsvps.map((r) => {
+        const k = per.get(r.id)
+        return k
+          ? { ...r, std_kaart_id: (k.std_kaart_id as string | null) ?? null, inv_kaart_id: (k.inv_kaart_id as string | null) ?? null }
+          : r
+      })
+    }
+
+    if (!cardRes.error) {
+      cardsAvailable = true
+      cards = (cardRes.data ?? []) as CardRow[]
+    }
+
+    if (gpEventsRes.data) {
+      gpSettings = Object.fromEntries(
+        gpEventsRes.data.map((e) => [
+          e.id as string,
+          {
+            enabled: (e.guest_photos_enabled as boolean | null) ?? false,
+            moderation: (e.guest_photos_moderation as "live" | "approve" | null) ?? "live",
+            style: (e.style as string | null) ?? "roze",
+          },
+        ])
+      )
+      guestPhotos = (gpDataRes.data ?? []) as GuestPhotoRow[]
     }
   }
 

@@ -1,5 +1,5 @@
 import Link from "next/link"
-import KaartRijen from "./KaartRijen"
+import KaartLijst from "./KaartLijst"
 import WebsiteActies from "./WebsiteActies"
 import { KLEUR } from "@/lib/ontwerp"
 import type { CardRow } from "@/lib/cards"
@@ -153,11 +153,19 @@ export function Tegel({
   return (
     <article
       id={id}
-      className={`flex flex-col gap-3 p-5 rounded-2xl scroll-mt-24 ${breed ? "md:col-span-2" : ""}`}
+      /* Een heel lichte nadruk als je er met de muis overheen gaat: de tegel
+         komt een pixel omhoog en de schaduw wordt iets dieper. Michiels wens
+         van 23 september 2026; subtiel, geen knop-gevoel. */
+      className={`flex flex-col gap-3 p-5 rounded-2xl scroll-mt-24 transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-px ${
+        breed ? "md:col-span-2" : ""
+      } ${
+        grijs
+          ? "hover:border-[#E8D5A3]"
+          : "shadow-[0_18px_40px_-22px_rgba(26,18,4,0.18)] hover:shadow-[0_22px_44px_-20px_rgba(26,18,4,0.28)] hover:border-[#E8D5A3]"
+      }`}
       style={{
         backgroundColor: grijs ? KLEUR.ivoorKaart : "#fff",
         border: `1px ${grijs ? "dashed" : "solid"} ${KLEUR.zand}`,
-        boxShadow: grijs ? "none" : "0 18px 40px -22px rgba(26,18,4,0.18)",
       }}
     >
       <header className="flex items-baseline justify-between gap-3">
@@ -254,35 +262,37 @@ export function KaartTegel({
     )
   }
 
-  // Wel iets gemaakt, nog niet geactiveerd: concept met een knop om te activeren.
-  if (!live || !mag) {
+  // Betaald, maar nog niets ontworpen.
+  if (regels.length === 0) {
     return (
-      <Tegel titel={titel} rechts={<Chip soort="stil">Concept</Chip>}>
-        <p className="m-0 text-sm" style={{ color: KLEUR.tekst }}>
-          Je ontwerp staat klaar. Activeer hem, dan krijg je de link om te delen en vult je gastenlijst zich met wie antwoordt.
-        </p>
-        {regels.length > 0 && <KaartRijen regels={regels} eventId={eventId} live={false} />}
-        <div className="flex flex-wrap gap-2 mt-auto">
-          <TegelKnop href={bouwer} soort="actie">Activeer voor {prijs}</TegelKnop>
-          <TegelKnop href={bouwer}>Verder ontwerpen</TegelKnop>
+      <Tegel titel={titel} rechts={<Chip soort="stil">Nog geen kaart</Chip>}>
+        <p className="m-0 text-sm" style={{ color: KLEUR.tekst }}>{uitleg}</p>
+        <div className="flex gap-2 mt-auto">
+          <TegelKnop href={bouwer} soort="primair">Ontwerpen</TegelKnop>
         </div>
       </Tegel>
     )
   }
 
+  // Eén of meer kaarten. De lijst en de knoppen eronder zitten in KaartLijst;
+  // die weet of de link al werkt (betaald) en toont anders het venster met
+  // wat activeren kost en oplevert.
+  const werkt = live && mag
+  const chip = !werkt
+    ? <Chip soort="stil">Concept</Chip>
+    : verstuurd > 0
+      ? <Chip soort="goed">{verstuurd} verstuurd</Chip>
+      : <Chip soort="stil">Klaar om te delen</Chip>
   return (
-    <Tegel titel={titel} rechts={<Chip soort={verstuurd > 0 ? "goed" : "stil"}>{verstuurd > 0 ? `${verstuurd} verstuurd` : "Klaar om te delen"}</Chip>}>
-      {regels.length > 0 ? (
-        <KaartRijen regels={regels} eventId={eventId} live />
-      ) : (
-        <p className="m-0 text-sm" style={{ color: KLEUR.tekst }}>{uitleg}</p>
-      )}
-      <div className="flex flex-wrap items-center gap-2 mt-auto">
-        <TegelKnop href={bouwer} soort="primair">+ Nieuwe kaart</TegelKnop>
-        {gereageerd > 0 && (
-          <span className="text-xs" style={{ color: KLEUR.zacht }}>{gereageerd} gereageerd</span>
-        )}
-      </div>
+    <Tegel titel={titel} rechts={chip}>
+      <p className="m-0 text-sm" style={{ color: KLEUR.tekst }}>
+        {werkt
+          ? gereageerd > 0
+            ? `${gereageerd} ${gereageerd === 1 ? "gast heeft" : "gasten hebben"} via deze kaart gereageerd.`
+            : "Je kaart is geactiveerd. Deel de link, dan vult je gastenlijst zich met wie antwoordt."
+          : "Je ontwerp staat klaar. Kies een kaart, bekijk hem als gast, of vraag de link voor je gasten op."}
+      </p>
+      <KaartLijst regels={regels} eventId={eventId} soort={soort} live={werkt} prijs={prijs} />
     </Tegel>
   )
 }
