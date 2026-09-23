@@ -263,7 +263,11 @@ export default function AanmeldFormulier({
     <form onSubmit={verstuur} className={`flex flex-col ${compact ? "gap-4" : "gap-6"}`}>
       {/* ── Ben je erbij? ── */}
       <div>
-        <label className={labelKlassen} style={{ color: labelColor }}>Ben je erbij?</label>
+        {/* In de kaart staat de vraag al als kop boven het formulier; dan
+            niet nog eens als label eronder. */}
+        {!compact && (
+          <label className={labelKlassen} style={{ color: labelColor }}>Ben je erbij?</label>
+        )}
         <div className="flex flex-col sm:flex-row gap-2">
           {(["yes", "no"] as const).map((v) => {
             const aan = komt === v
@@ -272,7 +276,7 @@ export default function AanmeldFormulier({
                 key={v}
                 type="button"
                 onClick={() => setKomt(v)}
-                className="flex-1 py-3 px-4 rounded-xl font-semibold text-sm text-left flex items-center gap-2 transition-all"
+                className="flex-1 py-3 px-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 whitespace-nowrap transition-all"
                 style={{
                   backgroundColor: aan ? (v === "yes" ? "#ECFDF5" : "#FFF7ED") : "#fff",
                   border: `2px solid ${aan ? (v === "yes" ? "#10b981" : "#f59e0b") : `${accentColor}44`}`,
