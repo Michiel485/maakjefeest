@@ -74,6 +74,7 @@ export default function CardReveal({
   siteUrl,
   rsvpUrl,
   agendaUrl = null,
+  agendaVoorbeeld = false,
   aanmeldVoorbeeld = null,
   aanmeldStand = "geen",
   bronToken = null,
@@ -91,6 +92,11 @@ export default function CardReveal({
   rsvpUrl: string | null
   // Het agendabestand met de trouwdatum, voor in de agenda van de gast
   agendaUrl?: string | null
+  /**
+   * De agendaknop tonen zonder dat er al een link is: in de bouwer, zolang de
+   * kaart nog niet bewaard is. Hij ziet er dan hetzelfde uit, maar doet niets.
+   */
+  agendaVoorbeeld?: boolean
   /**
    * Het aanmeldformulier zoals de bouwer het laat zien: zonder kaartlink,
    * dus zonder echte verzending. Komt op dezelfde plek als het echte
@@ -988,19 +994,24 @@ export default function CardReveal({
             {/* De datum in de agenda. Staat bewust boven de rest: bij een Save
                 the Date is dit de enige zinnige stap, en de kaart vraagt er
                 letterlijk om in de standaardtekst. */}
-            {agendaUrl && (
+            {(agendaUrl || agendaVoorbeeld) && (
               <div className="mt-6" style={eindBlok}>
                 <a
-                  href={agendaUrl}
+                  href={agendaUrl ?? undefined}
+                  role={agendaUrl ? undefined : "button"}
+                  aria-disabled={agendaUrl ? undefined : true}
+                  title={agendaUrl ? undefined : "Werkt zodra de kaart bewaard is"}
                   className="block w-full py-3.5 rounded-xl text-sm font-semibold text-center transition-opacity hover:opacity-85"
                   // Bij een trouwkaart is aanmelden de belangrijkste stap, dus
                   // dan staat deze knop in de tweede vorm. Op een Save the
                   // Date is hij de enige en dus de opvallende.
-                  style={
-                    rsvpUrl
-                      ? { backgroundColor: "transparent", color: sc.headingColor, border: `1.5px solid ${sc.accent}`, textDecoration: "none" }
-                      : { backgroundColor: sc.accent, color: sc.buttonText, textDecoration: "none" }
-                  }
+                  style={{
+                    ...(rsvpUrl
+                      ? { backgroundColor: "transparent", color: sc.headingColor, border: `1.5px solid ${sc.accent}` }
+                      : { backgroundColor: sc.accent, color: sc.buttonText }),
+                    textDecoration: "none",
+                    cursor: agendaUrl ? "pointer" : "default",
+                  }}
                 >
                   {display.agendaKnop}
                 </a>

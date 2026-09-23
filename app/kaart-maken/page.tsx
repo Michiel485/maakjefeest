@@ -1593,6 +1593,10 @@ export default function KaartMakenPage() {
             /* Pas zichtbaar zodra de kaart bewaard is; eerder is er geen link
                om de datum vandaan te halen. */
             agendaUrl={huidigeKaart && ontwerp.datum ? `/kaart/${huidigeKaart.share_token}/agenda` : null}
+            /* Nog niet bewaard? Dan staat de knop er wel, maar doet hij nog
+               niets: de link bestaat pas na het bewaren. Anders leek de knop
+               verdwenen bij een nieuwe kaart (Michiel, 23 september 2026). */
+            agendaVoorbeeld={!!ontwerp.datum && !huidigeKaart}
             previewNotice
             /* Het formulier op de plek waar je gast het krijgt, tussen de
                kaart en de agendaknop. */
