@@ -98,6 +98,15 @@ export default function RsvpSection({
   kaarten?: KaartRef[]
 }) {
   const [rsvps, setRsvps] = useState<RsvpRow[]>(initialRsvps)
+  // Komt er een nieuwe lijst van de server (na het toevoegen van gasten
+  // ververst het dashboard zichzelf), dan nemen we die over. Zonder dit bleef
+  // de oude kopie staan en zag je je nieuwe gasten pas na een handmatige
+  // verversing.
+  const [vorigeLijst, setVorigeLijst] = useState(initialRsvps)
+  if (initialRsvps !== vorigeLijst) {
+    setVorigeLijst(initialRsvps)
+    setRsvps(initialRsvps)
+  }
   // Welke kaart je hebt gestuurd, als er van een soort meer dan één is
   // (daggasten, avondgasten, een andere taal). Standaard de eerste.
   const stdKaarten = kaarten.filter((k) => k.type === "save_the_date")

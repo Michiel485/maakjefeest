@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { laadXlsx } from "@/lib/xlsx-laden"
 import { KLEUR } from "@/lib/ontwerp"
 import { leesGeplakteLijst, MAX_KIND_LEEFTIJD } from "@/lib/gasten"
@@ -73,6 +74,7 @@ export default function GastenToevoegen({
   events: GastEvent[]
   bruikbaar: boolean
 }) {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [eventId, setEventId] = useState(events[0]?.id ?? "")
   const [regels, setRegels] = useState<Regel[]>([leeg(), leeg(), leeg()])
@@ -183,9 +185,13 @@ export default function GastenToevoegen({
       const j = (await res.json().catch(() => ({}))) as { error?: string; toegevoegd?: number }
       if (!res.ok) throw new Error(j.error || "Toevoegen mislukte")
       setUitslag({
-        tekst: `${j.toegevoegd ?? 0} ${j.toegevoegd === 1 ? "gast" : "gasten"} toegevoegd. Ververs de pagina om ze in de lijst te zien.`,
+        tekst: `${j.toegevoegd ?? 0} ${j.toegevoegd === 1 ? "gast" : "gasten"} toegevoegd.`,
       })
       setRegels([leeg(), leeg(), leeg()])
+      // De lijst komt van de server, dus die opnieuw laten lezen. Eerder
+      // stond hier "ververs de pagina", en dat is precies wat niemand wil
+      // doen na het invullen van tien regels.
+      router.refresh()
     } catch (e) {
       setUitslag({ tekst: e instanceof Error ? e.message : "Toevoegen mislukte", fout: true })
     } finally {
