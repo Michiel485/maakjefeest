@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { KLEUR } from "@/lib/ontwerp"
@@ -16,6 +17,7 @@ import {
   type CardRow,
   type CardType,
 } from "@/lib/cards"
+import { PLANS, PLAN_ORDER, planRank, upgradePrice, formatEur } from "@/lib/plans"
 import type { KaartRegel } from "./Tegels"
 
 // De kaarten in een tegel, zoals een lijst bestanden: je kiest er een, en de
@@ -30,6 +32,14 @@ import type { KaartRegel } from "./Tegels"
 //
 // De lijst houdt zijn eigen staat bij, zodat hernoemen en verwijderen meteen
 // te zien zijn; het dashboard haalt op de achtergrond de echte stand op.
+
+function Vinkje() {
+  return (
+    <svg className="w-4 h-4 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke={KLEUR.groen} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M5 13l4 4L19 7" />
+    </svg>
+  )
+}
 
 function kaartNaam(card: CardRow): string {
   const eigen = card.content.naam?.trim()
@@ -86,6 +96,13 @@ export default function KaartLijst({
   const bouwerNieuw = eventId ? `/kaart-maken?event_id=${eventId}&type=${soort}` : `/kaart-maken?type=${soort}`
   const bouwerVoor = (c: CardRow) => `/kaart-maken?event_id=${eventId ?? c.event_id}&card_id=${c.id}&type=${c.type}`
   const betalen = `/betalen?event_id=${eventId ?? gekozen?.card.event_id ?? ""}&plan=${CARD_TYPE_PLAN[soort]}`
+  // Wat je later bijbetaalt als je alsnog een groter pakket kiest: het
+  // verschil, dus dit bedrag is dan korting. Uit lib/plans, de enige bron.
+  const ditPlan = CARD_TYPE_PLAN[soort]
+  const laterBij = PLAN_ORDER.filter((p) => planRank(p) > planRank(ditPlan)).map((p) => ({
+    label: PLANS[p].label,
+    bij: upgradePrice(ditPlan, p),
+  }))
   const kaartUrl = (c: CardRow) =>
     typeof window !== "undefined" ? `${window.location.origin}/kaart/${c.share_token}` : `/kaart/${c.share_token}`
 
@@ -288,8 +305,12 @@ export default function KaartLijst({
         <p className="m-0 text-[13px] font-semibold" style={{ color: "#991B1B" }}>{fout}</p>
       )}
 
-      {/* ── Het venster: delen, of eerst activeren ── */}
-      {venster && gekozen && (
+      {/* ── Het venster: delen, of eerst activeren ──
+          Via een portal buiten de tegel. De tegel verschuift een pixel als je
+          eroverheen gaat, en een verschuiving maakt van "fixed" iets dat aan
+          de tegel hangt: het venster sprong dan heen en weer zodra je muis
+          van het venster af ging (Michiels bevinding van 23 september 2026). */}
+      {venster && gekozen && createPortal(
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ backgroundColor: "rgba(26,26,26,0.5)", backdropFilter: "blur(4px)" }}
@@ -365,11 +386,41 @@ export default function KaartLijst({
                   Voor <b style={{ color: KLEUR.inkt }}>{prijs}</b> activeer je je {CARD_TYPE_LABEL[soort]}. Daarna werkt de link voor je
                   gasten, krijg je een QR-code voor op papier, en vult je gastenlijst zich met wie antwoordt.
                 </p>
-                <p className="m-0 text-sm leading-relaxed rounded-xl px-3.5 py-3" style={{ color: KLEUR.tekst, backgroundColor: KLEUR.goudVlak, border: `1px solid ${KLEUR.goudLicht}` }}>
-                  <b style={{ color: KLEUR.inkt }}>Meerdere kaarten zitten in de prijs.</b> Binnen deze bruiloft maak je tot{" "}
-                  {MAX_KAARTEN_PER_EVENT} kaarten: voor je daggasten en je avondgasten, of dezelfde kaart in een andere taal.
-                  Elke kaart krijgt zijn eigen link.
-                </p>
+                {/* De drie dingen die de drempel wegnemen. Michiel, 23 september
+                    2026: aanpassen kan altijd, ook na het versturen, en wat je
+                    nu betaalt is later korting. Dat hoort hier nadrukkelijk. */}
+                <ul className="m-0 p-0 list-none flex flex-col gap-2.5 rounded-xl px-3.5 py-3 text-sm leading-relaxed" style={{ color: KLEUR.tekst, backgroundColor: KLEUR.goudVlak, border: `1px solid ${KLEUR.goudLicht}` }}>
+                  <li className="flex gap-2.5">
+                    <Vinkje />
+                    <span>
+                      <b style={{ color: KLEUR.inkt }}>Aanpassen kan altijd, ook na het versturen.</b> Wijzig je iets, dan zien
+                      je gasten de nieuwe kaart zodra ze de link opnieuw openen. Je stuurt dus nooit iets fout de wereld in.
+                    </span>
+                  </li>
+                  <li className="flex gap-2.5">
+                    <Vinkje />
+                    <span>
+                      <b style={{ color: KLEUR.inkt }}>Meerdere kaarten zitten in de prijs.</b> Binnen deze bruiloft maak je tot{" "}
+                      {MAX_KAARTEN_PER_EVENT} kaarten: voor je daggasten en je avondgasten, of dezelfde kaart in een andere taal.
+                      Elke kaart krijgt zijn eigen link.
+                    </span>
+                  </li>
+                  {laterBij.length > 0 && (
+                    <li className="flex gap-2.5">
+                      <Vinkje />
+                      <span>
+                        <b style={{ color: KLEUR.inkt }}>Dit bedrag is later korting.</b> Kies je alsnog{" "}
+                        {laterBij.map((l, i) => (
+                          <span key={l.label}>
+                            {i > 0 ? (i === laterBij.length - 1 ? " of " : ", ") : ""}
+                            de {l.label} ({l.bij != null ? `${formatEur(l.bij).replace(",00", "")} bijbetalen` : ""})
+                          </span>
+                        ))}
+                        , dan betaal je alleen het verschil.
+                      </span>
+                    </li>
+                  )}
+                </ul>
                 <div className="flex flex-col gap-2">
                   <Link href={betalen} className={knop} style={{ backgroundColor: KLEUR.groen, color: "#fff", border: `1px solid ${KLEUR.groen}`, textDecoration: "none", minHeight: 44 }}>
                     Activeer voor {prijs}
@@ -384,7 +435,8 @@ export default function KaartLijst({
               </>
             )}
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   )
