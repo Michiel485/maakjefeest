@@ -298,6 +298,9 @@ export default function KaartMakenPage() {
   const prijs = formatEur(bijTeBetalen).replace(",00", "")
   const isTrouwkaart = ontwerp.type === "trouwkaart"
   const huidigeKaart = kaarten.find((k) => k.id === cardId) ?? null
+  // Alleen de kaarten van het soort waar je nu in zit: in de trouwkaart heb
+  // je niets aan de lijst met Save the Dates.
+  const kaartenVanDitSoort = kaarten.filter((k) => k.type === ontwerp.type)
 
   function update(patch: Partial<KaartOntwerp>) {
     setOntwerp((o) => ({ ...o, ...patch }))
@@ -355,10 +358,15 @@ export default function KaartMakenPage() {
             // Een link mag een kaart aanwijzen; anders valt hij terug op het
             // gevraagde type en als laatste op de nieuwste kaart.
             const gewenstType: CardType = isCardType(typeUitUrl) ? typeUitUrl : (event.plan === "uitnodiging" ? "trouwkaart" : "save_the_date")
+            // Wijst de link een kaart aan, dan die. Anders de eerste kaart van
+            // het gevraagde soort. Is die er niet, dan begin je een nieuwe
+            // kaart van dat soort: eerder viel hij hier terug op de eerste
+            // kaart van de bruiloft, een Save the Date, terwijl je op
+            // Trouwkaart had geklikt (Michiel, 23 september 2026).
             const kaart =
               (kaartUitUrl ? cards.find((c) => c.id === kaartUitUrl) : undefined) ??
               cards.find((c) => c.type === gewenstType) ??
-              cards[0]
+              (isCardType(typeUitUrl) ? undefined : cards[0])
             setEventId(eventUitUrl)
             setCardId(kaart?.id ?? null)
             // Een bestaande kaart openen: alles ingeklapt, je komt kijken en
@@ -537,7 +545,9 @@ export default function KaartMakenPage() {
     // dat id kan verouderd zijn: bijvoorbeeld nadat je opnieuw begonnen bent
     // of je account hebt verwijderd. Dan bestaat de kaart niet meer en gaf het
     // bijwerken een foutmelding in plaats van een nieuwe kaart.
-    const kaartBestaatNog = !!cardId && kaarten.some((k) => k.id === cardId)
+    // Alleen een kaart van hetzelfde soort werken we bij; anders wordt dit
+    // een nieuwe kaart. Zo kan een Save the Date nooit een trouwkaart worden.
+    const kaartBestaatNog = !!cardId && kaarten.some((k) => k.id === cardId && k.type === ontwerp.type)
     let nieuwCardId = kaartBestaatNog ? cardId : null
     if (!nieuwCardId) {
       const cr = await fetch("/api/cards", {
@@ -661,6 +671,36 @@ export default function KaartMakenPage() {
     }))
   }
 
+
+  // Van Save the Date naar trouwkaart of terug, via de tabbladen in de kop.
+  // Dit is nooit "deze kaart van soort veranderen": een bewaarde Save the
+  // Date werd zo bij het opslaan stilletjes een trouwkaart (Michiels
+  // bevinding van 23 september 2026). Bestaat er een kaart van dat soort,
+  // dan open je die. Anders begin je een nieuwe, met de namen, datum en
+  // stijl van wat er staat, maar zonder de teksten van het andere soort.
+  function wisselSoort(type: CardType) {
+    if (type === ontwerp.type) return
+    const bestaand = kaarten.find((k) => k.type === type)
+    if (bestaand) {
+      kiesKaart(bestaand.id)
+      return
+    }
+    setCardId(null)
+    setWijzigingen(0)
+    setMelding(null)
+    setOntwerp((o) => ({
+      ...o,
+      type,
+      message: "",
+      guestType: "",
+      inviteText: "",
+      timeText: "",
+      naam: "",
+      toonGastType: false,
+      dresscode: "",
+      aanmelden: standaardAanmeldStand(type),
+    }))
+  }
 
   // Deze kaart weggooien. Michiels wens van 23 september 2026: dat moet ook
   // vanuit de bouwer kunnen, niet alleen vanuit het dashboard. Daarna komt de
@@ -870,7 +910,7 @@ export default function KaartMakenPage() {
         }
         return window.confirm("Deze kaart heeft wijzigingen die nog niet bewaard zijn. Toch weggaan?")
       }}
-      opKaartType={(type) => update({ type })}
+      opKaartType={wisselSoort}
       opWebsite={neemMeeNaarWebsite}
       metInhoud={kaarten.map((k) => k.type as "save_the_date" | "trouwkaart")}
       acties={
@@ -1088,7 +1128,7 @@ export default function KaartMakenPage() {
               </div>
             )}
 
-            {eventId && kaarten.length > 0 && (
+            {eventId && kaartenVanDitSoort.length > 0 && (
               <select
                 value={cardId ?? "nieuw"}
                 onChange={(e) => e.target.value !== "nieuw" && kiesKaart(e.target.value)}
@@ -1096,7 +1136,7 @@ export default function KaartMakenPage() {
                 className="w-full rounded-xl border bg-white px-3 py-2 text-sm"
                 style={{ color: CHARCOAL, borderColor: GOLD_LIGHT, cursor: "pointer" }}
               >
-                {kaarten.map((k) => (
+                {kaartenVanDitSoort.map((k) => (
                   <option key={k.id} value={k.id}>{kaartLabel(k)}</option>
                 ))}
                 {!cardId && <option value="nieuw">Nieuwe kaart, nog niet bewaard</option>}

@@ -103,6 +103,9 @@ export default function KaartLijst({
     label: PLANS[p].label,
     bij: upgradePrice(ditPlan, p),
   }))
+  // Wat er gratis bij zit: de kleinere pakketten. Bij de trouwkaart is dat de
+  // Save the Date.
+  const zitErbij = PLAN_ORDER.filter((p) => planRank(p) < planRank(ditPlan)).map((p) => PLANS[p].label)
   const kaartUrl = (c: CardRow) =>
     typeof window !== "undefined" ? `${window.location.origin}/kaart/${c.share_token}` : `/kaart/${c.share_token}`
 
@@ -175,7 +178,9 @@ export default function KaartLijst({
   const uit: React.CSSProperties = { opacity: 0.4, pointerEvents: "none" }
 
   return (
-    <div className="flex flex-col gap-3">
+    /* flex-1, zodat mt-auto op de knoppenrij ze onderaan de tegel zet en de
+       knoppen van twee tegels naast elkaar op één lijn staan. */
+    <div className="flex flex-col gap-3 flex-1">
       {/* ── De regels ── */}
       <div role="listbox" aria-label={`Je ${CARD_TYPE_LABEL[soort].toLowerCase()}s`} className="flex flex-col rounded-xl" style={{ border: `1px solid ${KLEUR.zand}` }}>
         {regels.map((r, i) => {
@@ -390,6 +395,23 @@ export default function KaartLijst({
                     2026: aanpassen kan altijd, ook na het versturen, en wat je
                     nu betaalt is later korting. Dat hoort hier nadrukkelijk. */}
                 <ul className="m-0 p-0 list-none flex flex-col gap-2.5 rounded-xl px-3.5 py-3 text-sm leading-relaxed" style={{ color: KLEUR.tekst, backgroundColor: KLEUR.goudVlak, border: `1px solid ${KLEUR.goudLicht}` }}>
+                  <li className="flex gap-2.5">
+                    <Vinkje />
+                    <span>
+                      {zitErbij.length > 0 ? (
+                        <>
+                          <b style={{ color: KLEUR.inkt }}>De {zitErbij.join(" en de ")} en de gastenlijst zitten erbij.</b> Activeer je
+                          de {CARD_TYPE_LABEL[soort].toLowerCase()}, dan verstuur je ook een {zitErbij.join(" en een ")} zonder bij te
+                          betalen, en wie antwoordt staat meteen in je gastenlijst.
+                        </>
+                      ) : (
+                        <>
+                          <b style={{ color: KLEUR.inkt }}>De gastenlijst zit erbij.</b> Wie antwoordt staat meteen in je lijst, en je
+                          ziet wie nog stil is.
+                        </>
+                      )}
+                    </span>
+                  </li>
                   <li className="flex gap-2.5">
                     <Vinkje />
                     <span>
