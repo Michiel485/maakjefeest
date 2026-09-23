@@ -141,9 +141,33 @@ function isStyle(v: unknown): v is Style {
   return typeof v === "string" && v in STYLE_CONFIG
 }
 
-/** Het ontwerp als tekst, zonder de foto in bewerking: die zit niet op de server. */
-function ontwerpSleutel(o: KaartOntwerp): string {
-  return JSON.stringify({ ...o, photoDataUrl: null })
+/** Een vierkant knopje met alleen een pictogram; de uitleg zit in de title. */
+function IconKnop({
+  title,
+  onClick,
+  disabled,
+  bezig,
+  children,
+}: {
+  title: string
+  onClick: () => void
+  disabled?: boolean
+  bezig?: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      title={title}
+      aria-label={title}
+      onClick={onClick}
+      disabled={disabled}
+      className="w-9 h-9 flex-shrink-0 inline-flex items-center justify-center rounded-xl disabled:opacity-40 [&>svg]:w-[18px] [&>svg]:h-[18px]"
+      style={{ backgroundColor: "#fff", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: disabled ? "default" : "pointer" }}
+    >
+      {bezig ? <Draaier maat={16} /> : children}
+    </button>
+  )
 }
 
 function initialenVan(names: string): string {
@@ -170,11 +194,12 @@ export default function KaartMakenPage() {
 
   const [ontwerp, setOntwerp] = useState<KaartOntwerp>(LEEG)
   const [geladen, setGeladen] = useState(false)
-  // Wat er op de server staat, om te weten of er iets onbewaard is. Het
-  // ontwerp zelf staat altijd in je browser, maar open je de kaart later
-  // vanuit het dashboard, dan wint de server. Vandaar de waarschuwing.
-  const laatstBewaard = useRef<string | null>(null)
-  const [bewaardTeller, setBewaardTeller] = useState(0)
+  // Hoeveel keer je zelf iets veranderd hebt sinds het laatste bewaren. Het
+  // ontwerp staat altijd in je browser, maar open je de kaart later vanuit
+  // het dashboard, dan wint de server; vandaar dat we het bijhouden. Geteld
+  // in update(), want alleen dat is een wijziging van jou: het laden en het
+  // wisselen van kaart gaan buiten update() om.
+  const [wijzigingen, setWijzigingen] = useState(0)
   // null betekent: alles dichtgeklapt. Zonder die stand kon een blok alleen
   // wisselen naar een ander blok, en was Tekst dus nooit dicht te krijgen.
   const [stap, setStap] = useState<Stap | null>("tekst")
@@ -276,6 +301,7 @@ export default function KaartMakenPage() {
 
   function update(patch: Partial<KaartOntwerp>) {
     setOntwerp((o) => ({ ...o, ...patch }))
+    setWijzigingen((n) => n + 1)
   }
 
   // ── Laden: URL, bestaand event, of ontwerp uit de browser ─────────────────
@@ -404,13 +430,9 @@ export default function KaartMakenPage() {
     return () => window.removeEventListener("keydown", onKey)
   }, [])
 
-  // Het ijkpunt voor "onbewaard": na het laden, en na elk bewaren. Als effect,
-  // zodat het de foto-url meeneemt die het bewaren zelf in het ontwerp zet.
-  useEffect(() => {
-    if (geladen) laatstBewaard.current = ontwerpSleutel(ontwerp)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [geladen, bewaardTeller])
-  const onbewaard = geladen && !!eventId && !!cardId && laatstBewaard.current !== null && ontwerpSleutel(ontwerp) !== laatstBewaard.current
+  // Alleen een kaart die al op de server staat kan "onbewaard" zijn: een
+  // nieuw ontwerp staat gewoon in je browser.
+  const onbewaard = geladen && !!eventId && !!cardId && wijzigingen > 0
 
   useEffect(() => {
     if (!onbewaard) return
@@ -547,7 +569,7 @@ export default function KaartMakenPage() {
 
     setEventId(nieuwEventId)
     setCardId(nieuwCardId)
-    setBewaardTeller((n) => n + 1)
+    setWijzigingen(0)
     try { localStorage.setItem(LS_IDS, JSON.stringify({ eventId: nieuwEventId, cardId: nieuwCardId })) } catch {}
 
     // De keuzelijsten bijwerken: de net bewaarde kaart, en het concept zelf
@@ -613,6 +635,7 @@ export default function KaartMakenPage() {
     const k = kaarten.find((c) => c.id === id)
     if (!k) return
     setCardId(k.id)
+    setWijzigingen(0)
     setMelding(null)
     setOntwerp((o) => ({
       ...o,
@@ -812,9 +835,18 @@ export default function KaartMakenPage() {
     <BouwerSchil
       actief={ontwerp.type}
       eventId={eventId}
-      voorVerlaten={() =>
-        !onbewaard || window.confirm("Deze kaart heeft wijzigingen die nog niet bewaard zijn. Toch weggaan?")
-      }
+      voorVerlaten={async () => {
+        if (!onbewaard) return true
+        // Ingelogd en compleet genoeg om te bewaren? Dan bewaren en gaan, net
+        // als de websitebouwer. Alleen als dat niet kan vragen we het.
+        if (userEmail && !controleer()) {
+          try {
+            await slaOp()
+            return true
+          } catch {}
+        }
+        return window.confirm("Deze kaart heeft wijzigingen die nog niet bewaard zijn. Toch weggaan?")
+      }}
       opKaartType={(type) => update({ type })}
       opWebsite={neemMeeNaarWebsite}
       metInhoud={kaarten.map((k) => k.type as "save_the_date" | "trouwkaart")}
@@ -948,79 +980,79 @@ export default function KaartMakenPage() {
         </Melding>
       )}
 
-      {/* ── Welke kaart bewerk je? ──
-          Verschijnt zodra er iets bewaard is. Zonder deze balk is niet te zien
-          dat een bruiloft meerdere kaarten kan hebben, en overschreef opslaan
-          stilletjes de vorige. */}
-      <div className="flex flex-wrap items-center gap-2 px-4 sm:px-6 py-2.5 border-b" style={{ backgroundColor: "#fff", borderColor: `${GOLD_LIGHT}80` }}>
-        {/* De naam is van jou, niet van de kaart: je gasten zien hem nergens.
-            Hij staat hier en niet in de zijbalk omdat hij niets met het
-            ontwerp te maken heeft, en hij staat er meteen, zodat je hem al
-            kunt invullen voordat je voor het eerst bewaart. */}
-        <label className="flex items-center gap-2">
-          <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: GOLD }}>
-            Naam
-          </span>
-          <input
-            value={ontwerp.naam}
-            onChange={(e) => update({ naam: e.target.value })}
-            placeholder={automatischeNaam}
-            maxLength={60}
-            className="rounded-xl border bg-white px-3 py-2 text-sm w-44 sm:w-56 focus:outline-none"
-            style={{ color: CHARCOAL, borderColor: GOLD_LIGHT }}
-            title="Alleen voor jullie, om je kaarten uit elkaar te houden"
-          />
-        </label>
-
-        {eventId && kaarten.length > 0 && (
-        <>
-          <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: GOLD }}>
-            Je kaarten
-          </span>
-          <select
-            value={cardId ?? "nieuw"}
-            onChange={(e) => (e.target.value === "nieuw" ? nieuweKaart() : kiesKaart(e.target.value))}
-            className="rounded-xl border bg-white px-3 py-2 text-sm font-semibold"
-            style={{ color: CHARCOAL, borderColor: GOLD_LIGHT, cursor: "pointer" }}
-          >
-            {kaarten.map((k) => (
-              <option key={k.id} value={k.id}>{kaartLabel(k)}</option>
-            ))}
-            {!cardId && <option value="nieuw">Nieuwe kaart, nog niet bewaard</option>}
-          </select>
-
-          <button
-            onClick={dupliceerKaart}
-            disabled={busy !== null || !cardId}
-            className="text-sm font-semibold px-3 py-2 rounded-xl disabled:opacity-40"
-            style={{ backgroundColor: GOLD_BG, color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
-          >
-            Deze kopiëren
-          </button>
-          <button
-            onClick={nieuweKaart}
-            disabled={busy !== null || kaarten.length >= MAX_KAARTEN_PER_EVENT}
-            className="text-sm font-semibold px-3 py-2 rounded-xl disabled:opacity-40"
-            style={{ color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
-          >
-            Nieuwe kaart
-          </button>
-
-          <span className="text-[11px] leading-snug ml-auto max-w-sm" style={{ color: SUBTLE }}>
-            <b style={{ color: CHARCOAL }}>Meerdere kaarten zitten in de prijs.</b> Maak er een voor
-            je daggasten en een voor je avondgasten, of dezelfde kaart in een andere taal. Elke
-            kaart krijgt zijn eigen link, en in je gastenlijst zie je wie welke kreeg.
-          </span>
-        </>
-        )}
-      </div>
-
       {/* Op een telefoon staat het voorbeeld boven de secties: dat is waarom
           iemand blijft, dus dat zie je eerst. Op een groot scherm links de
           stappen, rechts de kaart. */}
       <div className="flex flex-col-reverse md:flex-row flex-1 min-h-0">
         {/* ── Stappen ── */}
         <aside className="w-full md:w-80 md:flex-shrink-0 bg-white border-r border-gray-100 md:overflow-y-auto">
+          {/* ── Welke kaart, hoe heet hij, bewaren ──
+              Bovenaan de zijbalk, zoals de titelbalk van een document: de
+              naam met daarnaast bewaren, kopiëren en nieuw, en eronder de
+              keuzelijst zodra er meer dan één kaart is. Michiels wens van
+              23 september 2026, in plaats van een balk over de volle breedte
+              onder de kop. Staat er vanaf het begin, ook voor er iets bewaard
+              is, zodat je je ontwerp meteen een naam kunt geven. */}
+          <div className="px-4 py-3 border-b border-gray-100 flex flex-col gap-2" style={{ backgroundColor: GOLD_BG }}>
+            <div className="flex items-center gap-1.5">
+              <input
+                value={ontwerp.naam}
+                onChange={(e) => update({ naam: e.target.value })}
+                placeholder={automatischeNaam}
+                maxLength={60}
+                aria-label="Naam van deze kaart"
+                title="De naam van deze kaart, alleen voor jullie. Zo heet hij in je dashboard en in je gastenlijst."
+                className="flex-1 min-w-0 rounded-xl border bg-white px-3 py-2 text-sm font-semibold placeholder-gray-400 focus:outline-none"
+                style={{ color: CHARCOAL, borderColor: GOLD_LIGHT }}
+              />
+              <IconKnop
+                title="Bewaren"
+                onClick={() => voerUit("bewaar")}
+                disabled={busy !== null}
+                bezig={busy === "bewaar"}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                  <path d="M17 21v-8H7v8M7 3v5h8" />
+                </svg>
+              </IconKnop>
+              <IconKnop
+                title={cardId ? "Deze kaart kopiëren, bijvoorbeeld voor een andere gastengroep of taal" : "Bewaar de kaart eerst, dan kun je hem kopiëren"}
+                onClick={dupliceerKaart}
+                disabled={busy !== null || !cardId}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="9" y="9" width="12" height="12" rx="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+              </IconKnop>
+              <IconKnop
+                title={eventId ? "Nieuwe kaart. Meerdere kaarten zitten in de prijs: voor daggasten en avondgasten, of in een andere taal." : "Bewaar de kaart eerst, dan kun je er een tweede naast maken"}
+                onClick={nieuweKaart}
+                disabled={busy !== null || !eventId || kaarten.length >= MAX_KAARTEN_PER_EVENT}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true">
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+              </IconKnop>
+            </div>
+
+            {eventId && kaarten.length > 0 && (
+              <select
+                value={cardId ?? "nieuw"}
+                onChange={(e) => (e.target.value === "nieuw" ? nieuweKaart() : kiesKaart(e.target.value))}
+                aria-label="Welke kaart bewerk je"
+                className="w-full rounded-xl border bg-white px-3 py-2 text-sm"
+                style={{ color: CHARCOAL, borderColor: GOLD_LIGHT, cursor: "pointer" }}
+              >
+                {kaarten.map((k) => (
+                  <option key={k.id} value={k.id}>{kaartLabel(k)}</option>
+                ))}
+                {!cardId && <option value="nieuw">Nieuwe kaart, nog niet bewaard</option>}
+              </select>
+            )}
+          </div>
+
           <Sectie open={stap === "tekst"} onToggle={() => setStap(stap === "tekst" ? null : "tekst")} titel="Tekst op de kaart">
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Jullie namen</span>
@@ -1368,7 +1400,10 @@ export default function KaartMakenPage() {
         <main
           ref={voorbeeldRef}
           className="flex-1 overflow-y-auto p-4 sm:p-5 sticky top-[57px] z-20 max-h-[46vh] md:relative md:top-auto md:max-h-none md:z-auto"
-          style={{ backgroundColor: "#F1ECE3" }}
+          /* Dezelfde achtergrond als je gast straks ziet, zodat het voorbeeld
+             in de bouwer klopt met de kaart die aankomt. Michiels wens van
+             23 september 2026. */
+          style={{ background: sc.bodyBackground ?? sc.bodyBg }}
         >
           {/* Rechtsboven in het voorbeeld, in dezelfde stijl als "Terug naar
               ontwerpen" in de simulatie. Michiels punt: die knop hoort bij
@@ -1382,7 +1417,7 @@ export default function KaartMakenPage() {
             {"💌"} Bekijk hoe het opengaat
           </button>
           <div className="mx-auto max-w-md">
-            <p className="text-center text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: SUBTLE }}>
+            <p className="text-center text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: sc.headingColor, opacity: 0.75 }}>
               Zo ziet jullie kaart eruit
             </p>
             {/* Geen overflow-clip en geen eigen schaduw om de kaart heen: de
@@ -1407,7 +1442,7 @@ export default function KaartMakenPage() {
                 niets verstuurd worden. */}
             {ontwerp.aanmelden !== "geen" && (
               <div className="mt-6" ref={formulierRef}>
-                <p className="text-center text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: SUBTLE }}>
+                <p className="text-center text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: sc.headingColor, opacity: 0.75 }}>
                   En dit vullen je gasten in
                 </p>
                 <div
@@ -1431,7 +1466,11 @@ export default function KaartMakenPage() {
 
       {/* ── Envelopsimulatie ── */}
       {simulatie && (
-        <div className="fixed inset-0 z-[100] overflow-y-auto" style={{ backgroundColor: sc.bodyBackground ?? sc.bodyBg }}>
+        /* "background" en niet "backgroundColor": bij Roze is de achtergrond
+           een patroon met een kleur erachter, en dat is als kleur ongeldig.
+           Dan viel de achtergrond weg en zag je de bouwer erdoorheen zodra je
+           onder de kaart scrolde (Michiels bevinding van 23 september 2026). */
+        <div className="fixed inset-0 z-[100] overflow-y-auto" style={{ background: sc.bodyBackground ?? sc.bodyBg }}>
           <button
             onClick={() => setSimulatie(false)}
             className="fixed top-12 right-4 z-[110] text-sm font-semibold px-4 py-2 rounded-xl shadow-lg"
