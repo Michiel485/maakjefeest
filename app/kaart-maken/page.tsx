@@ -898,6 +898,11 @@ export default function KaartMakenPage() {
     <BouwerSchil
       actief={ontwerp.type}
       eventId={eventId}
+      /* Op een groot scherm de hoogte van het venster: dan scrollen de
+         zijbalk en het voorbeeld elk apart, net als in de websitebouwer, en
+         blijft de zijbalk staan als je onder de kaart kijkt. Michiels wens
+         van 23 september 2026. Op de telefoon blijft alles één pagina. */
+      className="md:h-screen md:overflow-hidden"
       voorVerlaten={async () => {
         if (!onbewaard) return true
         // Ingelogd en compleet genoeg om te bewaren? Dan bewaren en gaan, net
