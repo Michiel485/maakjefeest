@@ -1128,7 +1128,10 @@ export default function KaartMakenPage() {
               </div>
             )}
 
-            {eventId && kaartenVanDitSoort.length > 0 && (
+            {/* Altijd zichtbaar, ook zonder bewaarde kaarten van dit soort: dan
+                staat er "Nieuwe kaart, nog niet bewaard", zodat je ziet waar je
+                aan werkt. Michiels wens van 23 september 2026. */}
+            {(
               <select
                 value={cardId ?? "nieuw"}
                 onChange={(e) => e.target.value !== "nieuw" && kiesKaart(e.target.value)}
