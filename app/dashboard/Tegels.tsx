@@ -1,9 +1,8 @@
 import Link from "next/link"
-import KaartActies from "./KaartActies"
+import KaartRijen from "./KaartRijen"
 import WebsiteActies from "./WebsiteActies"
 import { KLEUR } from "@/lib/ontwerp"
 import type { CardRow } from "@/lib/cards"
-import { GUEST_TYPE_LABEL, CARD_TAAL_KORT, cardTaal, type CardGuestType } from "@/lib/cards"
 
 // De tegels van het dashboard. Less is more, Michiels woorden van 21 september
 // 2026: in één klap zien wat belangrijk is. Elke tegel zegt alleen wat er
@@ -216,17 +215,6 @@ export interface KaartRegel {
   gereageerd: number
 }
 
-function kaartNaam(card: CardRow): string {
-  // Heb je de kaart zelf een naam gegeven, dan die: twee kaarten voor dezelfde
-  // groep heetten anders allebei "Alle gasten" en waren niet uit elkaar te
-  // houden. Zie lib/cards.ts, kaartLabel.
-  const eigen = card.content.naam?.trim()
-  if (eigen) return eigen
-  const groep = card.content.guestType ? GUEST_TYPE_LABEL[card.content.guestType as CardGuestType] : "Alle gasten"
-  const taal = cardTaal(card.content.taal)
-  return taal === "nl" ? groep : `${groep} · ${CARD_TAAL_KORT[taal]}`
-}
-
 export function KaartTegel({
   soort,
   titel,
@@ -273,7 +261,7 @@ export function KaartTegel({
         <p className="m-0 text-sm" style={{ color: KLEUR.tekst }}>
           Je ontwerp staat klaar. Activeer hem, dan krijg je de link om te delen en vult je gastenlijst zich met wie antwoordt.
         </p>
-        {regels.length > 0 && <Varianten regels={regels} eventId={eventId} live={false} />}
+        {regels.length > 0 && <KaartRijen regels={regels} eventId={eventId} live={false} />}
         <div className="flex flex-wrap gap-2 mt-auto">
           <TegelKnop href={bouwer} soort="actie">Activeer voor {prijs}</TegelKnop>
           <TegelKnop href={bouwer}>Verder ontwerpen</TegelKnop>
@@ -285,7 +273,7 @@ export function KaartTegel({
   return (
     <Tegel titel={titel} rechts={<Chip soort={verstuurd > 0 ? "goed" : "stil"}>{verstuurd > 0 ? `${verstuurd} verstuurd` : "Klaar om te delen"}</Chip>}>
       {regels.length > 0 ? (
-        <Varianten regels={regels} eventId={eventId} live />
+        <KaartRijen regels={regels} eventId={eventId} live />
       ) : (
         <p className="m-0 text-sm" style={{ color: KLEUR.tekst }}>{uitleg}</p>
       )}
@@ -299,36 +287,6 @@ export function KaartTegel({
   )
 }
 
-function Varianten({
-  regels,
-  eventId,
-  live,
-}: {
-  regels: KaartRegel[]
-  eventId: string | null
-  /** Werkt de link al voor gasten? Bepaalt wat er in het actiemenu staat. */
-  live: boolean
-}) {
-  return (
-    <div className="flex flex-col rounded-xl" style={{ border: `1px solid ${KLEUR.zand}` }}>
-      {regels.map((r, i) => (
-        <div
-          key={r.card.id}
-          className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-[13px]"
-          style={{ borderTop: i === 0 ? undefined : `1px solid ${KLEUR.zand}` }}
-        >
-          <span className="font-medium flex-1 min-w-[120px]" style={{ color: KLEUR.inkt }}>{kaartNaam(r.card)}</span>
-          <span className="flex items-center gap-3 ml-auto">
-            <span className="tabular-nums" style={{ color: KLEUR.zacht }}>
-              {r.verstuurd} verstuurd {"·"} {r.gereageerd} gereageerd {"·"} {r.card.view_count}{"×"} bekeken
-            </span>
-            <KaartActies card={r.card} eventId={eventId} live={live} naam={r.card.content.naam ?? ""} />
-          </span>
-        </div>
-      ))}
-    </div>
-  )
-}
 
 // ── De website ──────────────────────────────────────────────────────────────
 

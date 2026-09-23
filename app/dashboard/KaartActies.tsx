@@ -23,6 +23,8 @@ export default function KaartActies({
   eventId,
   live,
   naam,
+  onHernoemd,
+  onVerwijderd,
 }: {
   card: CardRow
   eventId: string | null
@@ -30,6 +32,9 @@ export default function KaartActies({
   live: boolean
   /** Hoe de kaart nu heet, voor het naamveld in het menu. */
   naam: string
+  /** Meteen laten zien, nog voordat de server de nieuwe stand heeft. */
+  onHernoemd?: (naam: string) => void
+  onVerwijderd?: () => void
 }) {
   const router = useRouter()
   const [hernoemen, setHernoemen] = useState(false)
@@ -67,6 +72,7 @@ export default function KaartActies({
       if (!res.ok) throw new Error()
       setHernoemen(false)
       sluit()
+      onHernoemd?.(nieuweNaam.trim())
       router.refresh()
     } catch {
       setFout("Bewaren lukte niet, probeer het nog eens.")
@@ -83,6 +89,7 @@ export default function KaartActies({
       if (!res.ok) throw new Error()
       setWeetJeHetZeker(false)
       sluit()
+      onVerwijderd?.()
       router.refresh()
     } catch {
       setFout("Verwijderen lukte niet, probeer het nog eens.")
