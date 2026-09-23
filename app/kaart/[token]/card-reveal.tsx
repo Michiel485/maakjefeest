@@ -299,7 +299,12 @@ export default function CardReveal({
 
   return (
     <div
-      className={`relative flex flex-col items-center justify-center px-4 ${compact ? "py-4" : "min-h-screen py-10"}`}
+      // Als hele pagina: lucht boven en onder de kaart. Bij het voorbeeld staat
+      // er een vaste balk bovenaan; die at de bovenruimte op, zodat de kaart
+      // er strak tegenaan stond (Michiels bevinding van 23 september 2026).
+      className={`relative flex flex-col items-center justify-center px-4 ${
+        compact ? "py-4" : previewNotice ? "min-h-screen pt-24 pb-12" : "min-h-screen py-12"
+      }`}
       style={{
         background: sc.bodyBackground ?? sc.bodyBg,
         // De envelop zakt tijdens de animatie onder deze doos uit. Zonder dit
