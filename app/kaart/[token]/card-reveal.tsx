@@ -74,6 +74,7 @@ export default function CardReveal({
   siteUrl,
   rsvpUrl,
   agendaUrl = null,
+  aanmeldVoorbeeld = null,
   aanmeldStand = "geen",
   bronToken = null,
   demo = false,
@@ -90,6 +91,12 @@ export default function CardReveal({
   rsvpUrl: string | null
   // Het agendabestand met de trouwdatum, voor in de agenda van de gast
   agendaUrl?: string | null
+  /**
+   * Het aanmeldformulier zoals de bouwer het laat zien: zonder kaartlink,
+   * dus zonder echte verzending. Komt op dezelfde plek als het echte
+   * formulier, zodat de demo klopt met wat de gast straks ziet.
+   */
+  aanmeldVoorbeeld?: React.ReactNode
   // Of er onder de kaart om een aanmelding wordt gevraagd, en hoeveel
   aanmeldStand?: AanmeldStand
   // De kaartlink, zodat een aanmelding weet uit welke gastengroep hij komt
@@ -874,6 +881,23 @@ export default function CardReveal({
               </div>
             </div>
 
+            {/* Wie het maakte, direct onder de kaart. Stond helemaal onderaan,
+                onder de knoppen; Michiel wil de volgorde kaart, gemaakt met,
+                aanmelden, agenda (23 september 2026), met evenveel lucht boven
+                als onder deze regel. */}
+            <a
+              href="https://www.sayingyes.nl"
+              className="mt-5 block text-center text-xs"
+              style={{
+                color: sc.bodyText,
+                opacity: 0.55,
+                textDecoration: "none",
+                ...eindBlok,
+              }}
+            >
+              {display.gemaaktMet} <span style={{ fontWeight: 600, color: sc.accent }}>SayingYes</span> · sayingyes.nl
+            </a>
+
             {/* Demo op de marketingsite: CTA in plaats van site-knoppen */}
             {demo && (
               <a
@@ -910,7 +934,7 @@ export default function CardReveal({
                 meest bereidwillige moment; dan vraag je door. */}
             {aanmeldStand !== "geen" && bronToken && !demo && (
               <div
-                className="mt-8 rounded-2xl p-5 sm:p-6"
+                className="mt-5 rounded-2xl p-5 sm:p-6"
                 style={{
                   backgroundColor: sc.cardBg ?? "#ffffff",
                   border: `1px solid ${sc.accent}33`,
@@ -931,6 +955,25 @@ export default function CardReveal({
                   knopTekstKleur={sc.buttonText}
                   compact
                 />
+              </div>
+            )}
+
+            {aanmeldVoorbeeld && aanmeldStand !== "geen" && (
+              <div
+                className="mt-5 rounded-2xl p-5 sm:p-6"
+                style={{
+                  backgroundColor: sc.cardBg ?? "#ffffff",
+                  border: `1px solid ${sc.accent}33`,
+                  ...eindBlok,
+                }}
+              >
+                <p
+                  className="text-center text-xs font-semibold uppercase tracking-[0.18em] mb-4"
+                  style={{ color: sc.accent }}
+                >
+                  {aanmeldStand === "janee" ? "Ben je erbij?" : "Aanmelden"}
+                </p>
+                {aanmeldVoorbeeld}
               </div>
             )}
 
@@ -990,19 +1033,6 @@ export default function CardReveal({
           </div>
       </div>
 
-      {/* Groeimotor */}
-      <a
-        href="https://www.sayingyes.nl"
-        className="mt-10 text-xs"
-        style={{
-          color: sc.bodyText,
-          opacity: 0.55,
-          textDecoration: "none",
-          ...eindBlok,
-        }}
-      >
-        {display.gemaaktMet} <span style={{ fontWeight: 600, color: sc.accent }}>SayingYes</span> · sayingyes.nl
-      </a>
     </div>
   )
 }

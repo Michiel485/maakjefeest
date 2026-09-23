@@ -361,6 +361,10 @@ export default function KaartMakenPage() {
               cards[0]
             setEventId(eventUitUrl)
             setCardId(kaart?.id ?? null)
+            // Een bestaande kaart openen: alles ingeklapt, je komt kijken en
+            // niet om van voren af aan te beginnen. Michiels wens van
+            // 23 september 2026. Een nieuw ontwerp begint wel bij de tekst.
+            setStap(null)
             setOntwerp({
               type: kaart?.type ?? gewenstType,
               style: isStyle(event.style) ? event.style : "zand",
@@ -657,33 +661,17 @@ export default function KaartMakenPage() {
     }))
   }
 
-  // Een lege kaart naast de bestaande: hetzelfde ontwerp, nog geen groepstekst
-  function nieuweKaart() {
-    setCardId(null)
-    setOntwerp((o) => ({
-      ...o,
-      message: "",
-      guestType: "",
-      inviteText: "",
-      timeText: "",
-      naam: "",
-      toonGastType: false,
-      dresscode: "",
-      photoDataUrl: null,
-      photoUrl: null,
-    }))
-    setMelding({ tekst: "Nieuwe kaart. Namen, datum en stijl blijven staan, vul de rest aan en bewaar." })
-  }
 
-  // Alles behouden en de volgende opslag een nieuwe kaart laten worden. Dit is
-  // de snelste weg naar dezelfde kaart in een andere taal of voor een andere
-  // gastengroep: aanpassen wat anders moet, de rest staat er al.
+  // Een nieuwe kaart is een kopie van deze: alles blijft staan en de volgende
+  // opslag wordt een nieuwe kaart. Dat is de snelste weg naar dezelfde kaart
+  // in een andere taal of voor een andere gastengroep. Er was ook een "lege"
+  // variant; voor een Save the Date deed die hetzelfde, dus die is weg.
   function dupliceerKaart() {
     setCardId(null)
     // De naam gaat niet mee: twee kaarten die hetzelfde heten is precies wat
     // we willen voorkomen. Leeg betekent weer de automatische naam.
     setOntwerp((o) => ({ ...o, naam: "" }))
-    setMelding({ tekst: "Kopie gemaakt. Pas aan wat anders moet en bewaar; je vorige kaart blijft bestaan." })
+    setMelding({ tekst: "Nieuwe kaart, op basis van de vorige. Pas aan wat anders moet en bewaar; je vorige kaart blijft bestaan." })
   }
 
   function controleer(): string | null {
@@ -1017,19 +1005,11 @@ export default function KaartMakenPage() {
                 </svg>
               </IconKnop>
               <IconKnop
-                title={cardId ? "Deze kaart kopiëren, bijvoorbeeld voor een andere gastengroep of taal" : "Bewaar de kaart eerst, dan kun je hem kopiëren"}
+                title={cardId
+                  ? "Nieuwe kaart op basis van deze. Alles blijft staan; pas aan wat anders moet, bijvoorbeeld de gastengroep of de taal. Meerdere kaarten zitten in de prijs."
+                  : "Bewaar de kaart eerst, dan kun je er een tweede naast maken"}
                 onClick={dupliceerKaart}
-                disabled={busy !== null || !cardId}
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <rect x="9" y="9" width="12" height="12" rx="2" />
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                </svg>
-              </IconKnop>
-              <IconKnop
-                title={eventId ? "Nieuwe kaart. Meerdere kaarten zitten in de prijs: voor daggasten en avondgasten, of in een andere taal." : "Bewaar de kaart eerst, dan kun je er een tweede naast maken"}
-                onClick={nieuweKaart}
-                disabled={busy !== null || !eventId || kaarten.length >= MAX_KAARTEN_PER_EVENT}
+                disabled={busy !== null || !cardId || kaarten.length >= MAX_KAARTEN_PER_EVENT}
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true">
                   <path d="M12 5v14M5 12h14" />
@@ -1040,7 +1020,7 @@ export default function KaartMakenPage() {
             {eventId && kaarten.length > 0 && (
               <select
                 value={cardId ?? "nieuw"}
-                onChange={(e) => (e.target.value === "nieuw" ? nieuweKaart() : kiesKaart(e.target.value))}
+                onChange={(e) => e.target.value !== "nieuw" && kiesKaart(e.target.value)}
                 aria-label="Welke kaart bewerk je"
                 className="w-full rounded-xl border bg-white px-3 py-2 text-sm"
                 style={{ color: CHARCOAL, borderColor: GOLD_LIGHT, cursor: "pointer" }}
@@ -1491,26 +1471,22 @@ export default function KaartMakenPage() {
                om de datum vandaan te halen. */
             agendaUrl={huidigeKaart && ontwerp.datum ? `/kaart/${huidigeKaart.share_token}/agenda` : null}
             previewNotice
+            /* Het formulier op de plek waar je gast het krijgt, tussen de
+               kaart en de agendaknop. */
+            aanmeldStand={ontwerp.aanmelden}
+            aanmeldVoorbeeld={
+              <AanmeldFormulier
+                stand={ontwerp.aanmelden}
+                voorbeeld
+                compact
+                accentColor={sc.accent ?? GOLD}
+                labelColor={sc.cardText ?? sc.bodyText}
+                knopTekstKleur={sc.buttonText}
+                guestTypes={ontwerp.guestType ? [ontwerp.guestType] : ["daggast"]}
+              />
+            }
           />
 
-          {/* Ook hier het formulier, want dit is "hoe de kaart opengaat" en je
-              gast krijgt de vraag onder de kaart te zien. */}
-          {ontwerp.aanmelden !== "geen" && (
-            <div className="mx-auto max-w-md px-4 pb-16">
-              <div
-                className="rounded-2xl p-5"
-                style={{ backgroundColor: "#fff", border: `1px solid ${GOLD_LIGHT}` }}
-              >
-                <AanmeldFormulier
-                  stand={ontwerp.aanmelden}
-                  voorbeeld
-                  compact
-                  accentColor={sc.accent ?? GOLD}
-                  guestTypes={ontwerp.guestType ? [ontwerp.guestType] : ["daggast"]}
-                />
-              </div>
-            </div>
-          )}
         </div>
       )}
 
