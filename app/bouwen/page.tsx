@@ -1460,30 +1460,7 @@ export default function BouwenPage() {
       /* Fouten onder de kop, zodat de kop zelf niet van hoogte verspringt
          terwijl je aan het werk bent. */
       onderKop={
-        <>
-          {/* De naam van dit ontwerp, op dezelfde plek als in de kaartbouwer.
-              Alleen voor jullie: je gasten zien hem nergens. */}
-          <div className="flex flex-wrap items-center gap-2 px-4 sm:px-6 py-2.5 border-b" style={{ backgroundColor: "#fff", borderColor: `${KLEUR.goudLicht}80` }}>
-            <label className="flex items-center gap-2">
-              <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: KLEUR.goud }}>
-                Naam
-              </span>
-              <input
-                value={conceptNaam}
-                onChange={(e) => { setConceptNaam(e.target.value); setChangeKey((k) => k + 1) }}
-                placeholder="Onze trouwwebsite"
-                maxLength={60}
-                className="rounded-xl border bg-white px-3 py-2 text-sm w-44 sm:w-56 focus:outline-none"
-                style={{ color: KLEUR.inkt, borderColor: KLEUR.goudLicht }}
-                title="Alleen voor jullie, zo heet je website in je dashboard"
-              />
-            </label>
-            <span className="text-[11px] leading-snug ml-auto max-w-sm" style={{ color: KLEUR.zacht }}>
-              Zo heet dit ontwerp in je dashboard. Je gasten zien deze naam niet.
-            </span>
-          </div>
-          {(publishError || saveError) ? <Melding soort="fout">{publishError || saveError}</Melding> : null}
-        </>
+        (publishError || saveError) ? <Melding soort="fout">{publishError || saveError}</Melding> : null
       }
       acties={
         <>
@@ -1497,10 +1474,11 @@ export default function BouwenPage() {
             <Knop soort="gevaar" klein onClick={handleSave} className="flex-1 md:flex-none">
               Opnieuw proberen
             </Knop>
-          ) : hasPendingChanges || !savedEventId ? (
-            // Nog nooit bewaard? Dan is er niets "opgeslagen", en een groen
-            // vinkje zou liegen. Dan staat hier gewoon de bewaarknop, net als
-            // in de kaartbouwer.
+          ) : !justSaved ? (
+            // Gewoon de bewaarknop, net als in de kaartbouwer. Het groene
+            // "Opgeslagen" is een bevestiging vlak na het bewaren, geen
+            // toestand: bij binnenkomen stond hij er meteen, en dat wekte de
+            // indruk dat er al iets was gebeurd (Michiel, 23 september 2026).
             <Knop soort="rustig" klein onClick={handleSave} className="flex-1 md:flex-none">
               {savedEventId ? "Opslaan" : "Bewaar ontwerp"}
             </Knop>
@@ -1541,6 +1519,37 @@ export default function BouwenPage() {
 
         {/* ── Sidebar ── */}
         <aside className="w-full md:w-80 md:flex-shrink-0 bg-white border-r border-gray-100 flex flex-col md:overflow-y-auto">
+          {/* ── De naam van dit ontwerp, en bewaren ──
+              Bovenaan de zijbalk, op dezelfde plek en in dezelfde vorm als in
+              de kaartbouwer. Alleen voor jullie: je gasten zien de naam
+              nergens. Michiels wens van 23 september 2026; eerst stond dit
+              als balk over de volle breedte onder de kop. */}
+          <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-1.5" style={{ backgroundColor: "#FBF5E8" }}>
+            <input
+              value={conceptNaam}
+              onChange={(e) => { setConceptNaam(e.target.value); setChangeKey((k) => k + 1) }}
+              placeholder="Onze trouwwebsite"
+              maxLength={60}
+              aria-label="Naam van deze website"
+              title="De naam van dit ontwerp, alleen voor jullie. Zo heet je website in je dashboard."
+              className="flex-1 min-w-0 rounded-xl border bg-white px-3 py-2 text-sm font-semibold placeholder-gray-400 focus:outline-none"
+              style={{ color: KLEUR.inkt, borderColor: KLEUR.goudLicht }}
+            />
+            <button
+              type="button"
+              title="Bewaren"
+              aria-label="Bewaren"
+              onClick={handleSave}
+              disabled={saving || anyUploading}
+              className="w-9 h-9 flex-shrink-0 inline-flex items-center justify-center rounded-xl disabled:opacity-40"
+              style={{ backgroundColor: "#fff", color: KLEUR.inkt, border: `1px solid ${KLEUR.goudLicht}`, cursor: "pointer" }}
+            >
+              <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                <path d="M17 21v-8H7v8M7 3v5h8" />
+              </svg>
+            </button>
+          </div>
 
           {/* ── 3. URL & BEVEILIGING (alleen bij een pakket met publieke site) ── */}
           <div>

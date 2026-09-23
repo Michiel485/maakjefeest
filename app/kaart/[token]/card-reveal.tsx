@@ -323,8 +323,10 @@ export default function CardReveal({
         // De envelop zakt tijdens de animatie onder deze doos uit. Zonder dit
         // groeit de pagina daardoor en verschuift het beeld een paar pixels,
         // soms met een scrollbalk erbij. Clip in plaats van hidden, zodat dit
-        // geen scrollcontainer wordt.
-        overflow: "clip",
+        // geen scrollcontainer wordt. In het paneel van de bouwer (compact) is
+        // er geen envelop en sneed dit juist de schaduw van de kaart af aan de
+        // zijkanten; daar mag alles gewoon zichtbaar zijn.
+        overflow: compact ? "visible" : "clip",
         fontFamily: sc.fontFamily,
         letterSpacing: sc.bodyLetterSpacing,
       }}
