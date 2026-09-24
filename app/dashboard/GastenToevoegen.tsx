@@ -210,7 +210,7 @@ export default function GastenToevoegen({
         style={{ cursor: "pointer" }}
       >
         <span className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: KLEUR.goud }}>
-          Gasten toevoegen
+          Importeren uit Excel of een lijst
         </span>
         <span className="text-sm font-semibold" style={{ color: KLEUR.tekst }}>{open ? "Sluiten" : "Openen"}</span>
       </button>

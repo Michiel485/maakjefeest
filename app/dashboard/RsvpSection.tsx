@@ -223,6 +223,19 @@ export default function RsvpSection({
     })
   }
   const [sortering, setSortering] = useState<Sortering>({ sleutel: "naam", op: true })
+
+  // Een gast met de hand toevoegen: het plusje onder de lijst opent een lege
+  // regel onderaan, die je ter plekke invult. Enter bewaart en opent meteen
+  // de volgende, Escape sluit hem. Michiels wens van 24 september 2026; het
+  // formulier met Excel en plakken blijft voor een hele lijst tegelijk.
+  const [nieuw, setNieuw] = useState<NieuweRegel | null>(null)
+  const [nieuwBezig, setNieuwBezig] = useState(false)
+  const [nieuwFout, setNieuwFout] = useState<string | null>(null)
+  const [nieuwTeller, setNieuwTeller] = useState(0)
+  const bruiloftId = events[0]?.id ?? null
+  function zetNieuw(veld: keyof NieuweRegel, waarde: string) {
+    setNieuw((v) => (v ? { ...v, [veld]: waarde } : v))
+  }
   const [voegtSamen, setVoegtSamen] = useState(false)
   const [samenvoegFout, setSamenvoegFout] = useState<string | null>(null)
 
@@ -464,6 +477,43 @@ export default function RsvpSection({
     else setWhatsappVoor(row)
   }
 
+  async function bewaarNieuw() {
+    if (!nieuw || !bruiloftId || nieuwBezig) return
+    if (!nieuw.voornaam.trim()) {
+      setNieuwFout("Vul minstens een voornaam in.")
+      return
+    }
+    setNieuwBezig(true)
+    setNieuwFout(null)
+    try {
+      const res = await fetch("/api/gasten", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          event_id: bruiloftId,
+          gasten: [{
+            voornaam: nieuw.voornaam,
+            achternaam: nieuw.achternaam,
+            email: nieuw.email,
+            telefoon: nieuw.telefoon,
+            guest_type: nieuw.type,
+          }],
+        }),
+      })
+      const j = (await res.json().catch(() => ({}))) as { error?: string; gasten?: RsvpRow[] }
+      if (!res.ok) throw new Error(j.error || "Toevoegen mislukte")
+      setRsvps((v) => [...v, ...(j.gasten ?? [])])
+      // Meteen de volgende, met hetzelfde type: je voert meestal een hele
+      // groep daggasten achter elkaar in.
+      setNieuw({ ...LEGE_REGEL, type: nieuw.type })
+      setNieuwTeller((n) => n + 1)
+    } catch (e) {
+      setNieuwFout(e instanceof Error ? e.message : "Toevoegen mislukte")
+    } finally {
+      setNieuwBezig(false)
+    }
+  }
+
   async function verwijderGekozen() {
     const ids = [...gekozen]
     for (const id of ids) {
@@ -564,29 +614,265 @@ export default function RsvpSection({
     XLSX.writeFile(wb, "gasten.xlsx")
   }
 
+  // De lijst zelf, met het plusje eronder. Staat ook bij een lege lijst, want
+  // daar begin je met het eerste plusje.
+  const invoer = "w-full min-w-[90px] rounded-lg border bg-white px-2 py-1.5 text-sm focus:outline-none"
+  const invoerStijl: React.CSSProperties = { borderColor: GOLD_LIGHT, color: CHARCOAL }
+  function toetsNieuw(e: React.KeyboardEvent) {
+    if (e.key === "Enter") { e.preventDefault(); void bewaarNieuw() }
+    if (e.key === "Escape") { setNieuw(null); setNieuwFout(null) }
+  }
+  const tabelBlok = (
+    <div className="flex flex-col gap-3">
+        {/* ── De lijst ──
+            Een gewone tabel, één regel per persoon. Michiels wens van
+            24 september 2026: naam, type, de Save the Date, de trouwkaart,
+            mail en telefoon, zonder gekleurde kaders. Het huishouden staat
+            niet meer als groep in beeld: het zijn mensen met elk hun eigen
+            antwoord en dieetwensen. Onder water blijft het bestaan, zodat een
+            persoonlijke link het hele gezin herkent. Klik op een kop om te
+            sorteren. Wat er verder is (liedje, berichtje, eigen vragen) staat
+            in het bewerkvenster en in de export. */}
+        <div className="rounded-2xl overflow-x-auto" style={{ border: `1px solid ${GOLD_LIGHT}`, backgroundColor: "#fff" }}>
+          <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ borderBottom: `1px solid ${GOLD_LIGHT}`, backgroundColor: GOLD_BG }}>
+                <th className="w-10 px-4 py-2.5 text-left">
+                  <input
+                    type="checkbox"
+                    aria-label="Alles selecteren"
+                    checked={alleIds.length > 0 && alleIds.every((id) => gekozen.has(id))}
+                    onChange={(e) => kiesAlle(alleIds, e.target.checked)}
+                    style={{ accentColor: GOLD, cursor: "pointer" }}
+                  />
+                </th>
+                <SorteerKop sleutel="naam" sortering={sortering} zet={setSortering}>Naam</SorteerKop>
+                <SorteerKop sleutel="type" sortering={sortering} zet={setSortering}>Type</SorteerKop>
+                <SorteerKop sleutel="std" sortering={sortering} zet={setSortering}>Save the Date</SorteerKop>
+                <SorteerKop sleutel="inv" sortering={sortering} zet={setSortering}>Trouwkaart</SorteerKop>
+                <th className="px-3 py-2.5 text-left text-xs font-semibold" style={{ color: BODY }}>E-mail</th>
+                <th className="px-3 py-2.5 text-left text-xs font-semibold" style={{ color: BODY }}>Telefoon</th>
+                {heeftDieet && <th className="px-3 py-2.5 text-left text-xs font-semibold" style={{ color: BODY }}>Dieetwensen</th>}
+                <th className="w-24" />
+              </tr>
+            </thead>
+            <tbody>
+              {gesorteerd.map((row) => {
+                const isDeleting = deletingId === row.id
+                const confirmingDel = deleteConfirmId === row.id
+                const dieet = [row.dietary, row.allergie].filter(Boolean).join(", ")
+                return (
+                  <tr
+                    key={row.id}
+                    className={`transition-colors hover:bg-[#FCF9F2] ${isDeleting ? "opacity-40" : ""}`}
+                    style={{ borderTop: `1px solid ${GOLD_LIGHT}66`, backgroundColor: gekozen.has(row.id) ? GOLD_BG : undefined }}
+                  >
+                    <td className="px-4 py-2">
+                      <input
+                        type="checkbox"
+                        aria-label={`${row.name} selecteren`}
+                        checked={gekozen.has(row.id)}
+                        onChange={() => wissel(row.id)}
+                        style={{ accentColor: GOLD, cursor: "pointer" }}
+                      />
+                    </td>
+                    <td className="px-3 py-2" style={{ color: CHARCOAL }}>
+                      <span className="font-medium">{row.name}</span>
+                      {row.is_kind && (
+                        <span className="ml-1.5 text-xs" style={{ color: SOFT }}>
+                          ({row.leeftijd != null ? `${row.leeftijd} jaar` : "kind"})
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap" style={{ color: BODY }}>{TYPE_NAAM[row.guest_type] ?? row.guest_type}</td>
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      <ReisTekst waarde={reis(row.std_status)} />
+                      {gekregen(row, "std") && <span className="block text-[11px]" style={{ color: SOFT }}>{gekregen(row, "std")}</span>}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      <ReisTekst waarde={reis(row.inv_status)} />
+                      {gekregen(row, "inv") && <span className="block text-[11px]" style={{ color: SOFT }}>{gekregen(row, "inv")}</span>}
+                    </td>
+                    <td className="px-3 py-2" style={{ color: BODY }}>{row.email || <span style={{ color: GOLD_LIGHT }}>—</span>}</td>
+                    <td className="px-3 py-2 whitespace-nowrap" style={{ color: BODY }}>{row.telefoon || <span style={{ color: GOLD_LIGHT }}>—</span>}</td>
+                    {heeftDieet && (
+                      <td className="px-3 py-2" style={{ color: BODY }}>{dieet || <span style={{ color: GOLD_LIGHT }}>—</span>}</td>
+                    )}
+                      <td className="px-3 py-2 text-right whitespace-nowrap">
+                        {confirmingDel ? (
+                          <div className="flex items-center gap-1 justify-end">
+                            <button onClick={() => handleDelete(row.id)} className="text-xs font-semibold text-red-500 hover:text-red-600 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors">Ja</button>
+                            <button onClick={() => setDeleteConfirmId(null)} className="text-xs font-semibold px-2 py-1 rounded-lg transition-colors" style={{ color: BODY }}>Nee</button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1 justify-end">
+                            {werkendeKaarten.length > 0 && !row.is_kind && (
+                              <button
+                                onClick={() => kiesWhatsApp(row)}
+                                title={`Stuur ${row.voornaam || row.name} een persoonlijke link via WhatsApp`}
+                                aria-label={`Stuur ${row.name} een persoonlijke link via WhatsApp`}
+                                className="p-1.5 rounded-lg transition-colors"
+                                style={{ color: "#25D366", background: "none", border: 0, cursor: "pointer" }}
+                              >
+                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                  <path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.28-.1-.48-.15-.68.15-.2.3-.78.97-.95 1.17-.18.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.38-.02-.53-.08-.15-.68-1.62-.93-2.22-.24-.58-.49-.5-.68-.5h-.58c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.49s1.07 2.89 1.22 3.09c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.7.63.71.22 1.36.19 1.87.12.57-.09 1.76-.72 2-1.41.25-.7.25-1.29.18-1.41-.07-.13-.27-.2-.57-.35zM12.04 21.5h-.01a9.45 9.45 0 01-4.82-1.32l-.35-.2-3.58.94.96-3.49-.23-.36a9.43 9.43 0 01-1.45-5.03c0-5.22 4.25-9.47 9.48-9.47 2.53 0 4.9.99 6.7 2.78a9.4 9.4 0 012.77 6.7c0 5.22-4.25 9.46-9.47 9.46zm8.06-17.53A11.33 11.33 0 0012.04.63C5.76.63.65 5.74.65 12.02c0 2 .52 3.96 1.52 5.69L.55 23.62l6.04-1.58a11.36 11.36 0 005.44 1.39h.01c6.28 0 11.39-5.11 11.39-11.39 0-3.04-1.18-5.9-3.33-8.05z" />
+                                </svg>
+                              </button>
+                            )}
+                            <button
+                              onClick={() => openEdit(row)}
+                              title="Bewerken"
+                              className="p-1.5 rounded-lg transition-colors"
+                              style={{ color: GOLD_LIGHT }}
+                              onMouseEnter={(e) => (e.currentTarget.style.color = GOLD)}
+                              onMouseLeave={(e) => (e.currentTarget.style.color = GOLD_LIGHT)}
+                            >
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => setDeleteConfirmId(row.id)}
+                              title="Verwijderen"
+                              className="p-1.5 rounded-lg transition-colors text-red-300 hover:text-red-500"
+                            >
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                  </tr>
+                )
+              })}
+              {nieuw && (
+                <tr key={`nieuw-${nieuwTeller}`} style={{ borderTop: `1px solid ${GOLD_LIGHT}66`, backgroundColor: GOLD_BG }}>
+                  <td className="px-4 py-2" />
+                  <td className="px-3 py-2">
+                    <div className="flex gap-1.5">
+                      <input
+                        autoFocus
+                        value={nieuw.voornaam}
+                        onChange={(e) => zetNieuw("voornaam", e.target.value)}
+                        onKeyDown={toetsNieuw}
+                        placeholder="Voornaam"
+                        aria-label="Voornaam"
+                        maxLength={80}
+                        className={invoer}
+                        style={invoerStijl}
+                      />
+                      <input
+                        value={nieuw.achternaam}
+                        onChange={(e) => zetNieuw("achternaam", e.target.value)}
+                        onKeyDown={toetsNieuw}
+                        placeholder="Achternaam"
+                        aria-label="Achternaam"
+                        maxLength={80}
+                        className={invoer}
+                        style={invoerStijl}
+                      />
+                    </div>
+                  </td>
+                  <td className="px-3 py-2">
+                    <select
+                      value={nieuw.type}
+                      onChange={(e) => zetNieuw("type", e.target.value)}
+                      onKeyDown={toetsNieuw}
+                      aria-label="Type gast"
+                      className={invoer}
+                      style={{ ...invoerStijl, cursor: "pointer" }}
+                    >
+                      {Object.entries(TYPE_NAAM).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                    </select>
+                  </td>
+                  <td className="px-3 py-2 whitespace-nowrap" style={{ color: SOFT }}>Niet verstuurd</td>
+                  <td className="px-3 py-2 whitespace-nowrap" style={{ color: SOFT }}>Niet verstuurd</td>
+                  <td className="px-3 py-2">
+                    <input
+                      type="email"
+                      value={nieuw.email}
+                      onChange={(e) => zetNieuw("email", e.target.value)}
+                      onKeyDown={toetsNieuw}
+                      placeholder="naam@voorbeeld.nl"
+                      aria-label="E-mail"
+                      maxLength={160}
+                      className={invoer}
+                      style={invoerStijl}
+                    />
+                  </td>
+                  <td className="px-3 py-2">
+                    <input
+                      type="tel"
+                      value={nieuw.telefoon}
+                      onChange={(e) => zetNieuw("telefoon", e.target.value)}
+                      onKeyDown={toetsNieuw}
+                      placeholder="06 12345678"
+                      aria-label="Telefoon"
+                      maxLength={32}
+                      className={invoer}
+                      style={invoerStijl}
+                    />
+                  </td>
+                  {heeftDieet && <td className="px-3 py-2" />}
+                  <td className="px-3 py-2 text-right whitespace-nowrap">
+                    <button
+                      type="button"
+                      onClick={() => void bewaarNieuw()}
+                      disabled={nieuwBezig}
+                      title="Bewaren (Enter)"
+                      aria-label="Gast bewaren"
+                      className="p-1.5 rounded-lg disabled:opacity-50"
+                      style={{ color: "#047857", background: "none", border: 0, cursor: "pointer" }}
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setNieuw(null); setNieuwFout(null) }}
+                      title="Sluiten (Escape)"
+                      aria-label="Niet toevoegen"
+                      className="p-1.5 rounded-lg"
+                      style={{ color: SOFT, background: "none", border: 0, cursor: "pointer" }}
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      {nieuwFout && <p className="m-0 text-sm font-semibold text-center" style={{ color: "#DC2626" }}>{nieuwFout}</p>}
+      {!nieuw && (
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={() => { setNieuw({ ...LEGE_REGEL }); setNieuwFout(null) }}
+            disabled={!bruiloftId}
+            title={bruiloftId ? "Gast toevoegen" : "Bewaar eerst een ontwerp, dan weten we bij welke bruiloft je gasten horen"}
+            aria-label="Gast toevoegen"
+            className="w-11 h-11 rounded-full inline-flex items-center justify-center transition-transform hover:-translate-y-px disabled:opacity-40"
+            style={{ backgroundColor: CHARCOAL, color: IVORY, border: 0, cursor: bruiloftId ? "pointer" : "default", boxShadow: "0 6px 16px -8px rgba(26,26,26,0.5)" }}
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+          </button>
+        </div>
+      )}
+    </div>
+  )
+
   // Staat in beide toestanden, ook als de lijst nog leeg is: een gastenlijst
   // begint bij wie je uitnodigt, niet bij wie zich meldt.
   if (rsvps.length === 0) {
     return (
       <div className="flex flex-col gap-6">
         <GastenToevoegen events={events} bruikbaar={events.length > 0} />
-        <div
-        className="rounded-2xl p-10 text-center"
-        style={{ backgroundColor: IVORY_CARD, border: `1px solid ${GOLD_LIGHT}` }}
-      >
-        <div
-          className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4"
-          style={{ backgroundColor: GOLD_BG, border: `1px solid ${GOLD_LIGHT}` }}
-        >
-          <svg className="w-5 h-5" style={{ color: GOLD }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-          </svg>
-        </div>
-        <p className="text-sm" style={{ color: BODY }}>
-          Nog geen gasten. Zet ze hierboven zelf in de lijst, of laat ze zichzelf invullen: wie
-          jullie kaart opent kan daar meteen laten weten of hij erbij is.
+        <p className="m-0 text-sm text-center" style={{ color: BODY }}>
+          Nog geen gasten. Druk op het plusje om er een toe te voegen, of laat ze zichzelf invullen: wie jullie kaart
+          opent kan daar meteen laten weten of hij erbij is.
         </p>
-      </div>
+        {tabelBlok}
       </div>
     )
   }
@@ -877,131 +1163,7 @@ export default function RsvpSection({
           </div>
         )}
 
-        {/* ── De lijst ──
-            Een gewone tabel, één regel per persoon. Michiels wens van
-            24 september 2026: naam, type, de Save the Date, de trouwkaart,
-            mail en telefoon, zonder gekleurde kaders. Het huishouden staat
-            niet meer als groep in beeld: het zijn mensen met elk hun eigen
-            antwoord en dieetwensen. Onder water blijft het bestaan, zodat een
-            persoonlijke link het hele gezin herkent. Klik op een kop om te
-            sorteren. Wat er verder is (liedje, berichtje, eigen vragen) staat
-            in het bewerkvenster en in de export. */}
-        <div className="rounded-2xl overflow-x-auto" style={{ border: `1px solid ${GOLD_LIGHT}`, backgroundColor: "#fff" }}>
-          <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ borderBottom: `1px solid ${GOLD_LIGHT}`, backgroundColor: GOLD_BG }}>
-                <th className="w-10 px-4 py-2.5 text-left">
-                  <input
-                    type="checkbox"
-                    aria-label="Alles selecteren"
-                    checked={alleIds.length > 0 && alleIds.every((id) => gekozen.has(id))}
-                    onChange={(e) => kiesAlle(alleIds, e.target.checked)}
-                    style={{ accentColor: GOLD, cursor: "pointer" }}
-                  />
-                </th>
-                <SorteerKop sleutel="naam" sortering={sortering} zet={setSortering}>Naam</SorteerKop>
-                <SorteerKop sleutel="type" sortering={sortering} zet={setSortering}>Type</SorteerKop>
-                <SorteerKop sleutel="std" sortering={sortering} zet={setSortering}>Save the Date</SorteerKop>
-                <SorteerKop sleutel="inv" sortering={sortering} zet={setSortering}>Trouwkaart</SorteerKop>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold" style={{ color: BODY }}>E-mail</th>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold" style={{ color: BODY }}>Telefoon</th>
-                {heeftDieet && <th className="px-3 py-2.5 text-left text-xs font-semibold" style={{ color: BODY }}>Dieetwensen</th>}
-                <th className="w-24" />
-              </tr>
-            </thead>
-            <tbody>
-              {gesorteerd.map((row) => {
-                const isDeleting = deletingId === row.id
-                const confirmingDel = deleteConfirmId === row.id
-                const dieet = [row.dietary, row.allergie].filter(Boolean).join(", ")
-                return (
-                  <tr
-                    key={row.id}
-                    className={`transition-colors hover:bg-[#FCF9F2] ${isDeleting ? "opacity-40" : ""}`}
-                    style={{ borderTop: `1px solid ${GOLD_LIGHT}66`, backgroundColor: gekozen.has(row.id) ? GOLD_BG : undefined }}
-                  >
-                    <td className="px-4 py-2">
-                      <input
-                        type="checkbox"
-                        aria-label={`${row.name} selecteren`}
-                        checked={gekozen.has(row.id)}
-                        onChange={() => wissel(row.id)}
-                        style={{ accentColor: GOLD, cursor: "pointer" }}
-                      />
-                    </td>
-                    <td className="px-3 py-2" style={{ color: CHARCOAL }}>
-                      <span className="font-medium">{row.name}</span>
-                      {row.is_kind && (
-                        <span className="ml-1.5 text-xs" style={{ color: SOFT }}>
-                          ({row.leeftijd != null ? `${row.leeftijd} jaar` : "kind"})
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-3 py-2 whitespace-nowrap" style={{ color: BODY }}>{TYPE_NAAM[row.guest_type] ?? row.guest_type}</td>
-                    <td className="px-3 py-2 whitespace-nowrap">
-                      <ReisTekst waarde={reis(row.std_status)} />
-                      {gekregen(row, "std") && <span className="block text-[11px]" style={{ color: SOFT }}>{gekregen(row, "std")}</span>}
-                    </td>
-                    <td className="px-3 py-2 whitespace-nowrap">
-                      <ReisTekst waarde={reis(row.inv_status)} />
-                      {gekregen(row, "inv") && <span className="block text-[11px]" style={{ color: SOFT }}>{gekregen(row, "inv")}</span>}
-                    </td>
-                    <td className="px-3 py-2" style={{ color: BODY }}>{row.email || <span style={{ color: GOLD_LIGHT }}>—</span>}</td>
-                    <td className="px-3 py-2 whitespace-nowrap" style={{ color: BODY }}>{row.telefoon || <span style={{ color: GOLD_LIGHT }}>—</span>}</td>
-                    {heeftDieet && (
-                      <td className="px-3 py-2" style={{ color: BODY }}>{dieet || <span style={{ color: GOLD_LIGHT }}>—</span>}</td>
-                    )}
-                      <td className="px-3 py-2 text-right whitespace-nowrap">
-                        {confirmingDel ? (
-                          <div className="flex items-center gap-1 justify-end">
-                            <button onClick={() => handleDelete(row.id)} className="text-xs font-semibold text-red-500 hover:text-red-600 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors">Ja</button>
-                            <button onClick={() => setDeleteConfirmId(null)} className="text-xs font-semibold px-2 py-1 rounded-lg transition-colors" style={{ color: BODY }}>Nee</button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1 justify-end">
-                            {werkendeKaarten.length > 0 && !row.is_kind && (
-                              <button
-                                onClick={() => kiesWhatsApp(row)}
-                                title={`Stuur ${row.voornaam || row.name} een persoonlijke link via WhatsApp`}
-                                aria-label={`Stuur ${row.name} een persoonlijke link via WhatsApp`}
-                                className="p-1.5 rounded-lg transition-colors"
-                                style={{ color: "#25D366", background: "none", border: 0, cursor: "pointer" }}
-                              >
-                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                  <path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.28-.1-.48-.15-.68.15-.2.3-.78.97-.95 1.17-.18.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.38-.02-.53-.08-.15-.68-1.62-.93-2.22-.24-.58-.49-.5-.68-.5h-.58c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.49s1.07 2.89 1.22 3.09c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.7.63.71.22 1.36.19 1.87.12.57-.09 1.76-.72 2-1.41.25-.7.25-1.29.18-1.41-.07-.13-.27-.2-.57-.35zM12.04 21.5h-.01a9.45 9.45 0 01-4.82-1.32l-.35-.2-3.58.94.96-3.49-.23-.36a9.43 9.43 0 01-1.45-5.03c0-5.22 4.25-9.47 9.48-9.47 2.53 0 4.9.99 6.7 2.78a9.4 9.4 0 012.77 6.7c0 5.22-4.25 9.46-9.47 9.46zm8.06-17.53A11.33 11.33 0 0012.04.63C5.76.63.65 5.74.65 12.02c0 2 .52 3.96 1.52 5.69L.55 23.62l6.04-1.58a11.36 11.36 0 005.44 1.39h.01c6.28 0 11.39-5.11 11.39-11.39 0-3.04-1.18-5.9-3.33-8.05z" />
-                                </svg>
-                              </button>
-                            )}
-                            <button
-                              onClick={() => openEdit(row)}
-                              title="Bewerken"
-                              className="p-1.5 rounded-lg transition-colors"
-                              style={{ color: GOLD_LIGHT }}
-                              onMouseEnter={(e) => (e.currentTarget.style.color = GOLD)}
-                              onMouseLeave={(e) => (e.currentTarget.style.color = GOLD_LIGHT)}
-                            >
-                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                              </svg>
-                            </button>
-                            <button
-                              onClick={() => setDeleteConfirmId(row.id)}
-                              title="Verwijderen"
-                              className="p-1.5 rounded-lg transition-colors text-red-300 hover:text-red-500"
-                            >
-                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>
-                          </div>
-                        )}
-                      </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
+        {tabelBlok}
       </div>
 
       {/* ── Edit modal ── */}
@@ -1205,6 +1367,15 @@ function WhatsAppKeuze({
 }
 
 type Sortering = { sleutel: "naam" | "type" | "std" | "inv"; op: boolean }
+
+interface NieuweRegel {
+  voornaam: string
+  achternaam: string
+  type: string
+  email: string
+  telefoon: string
+}
+const LEGE_REGEL: NieuweRegel = { voornaam: "", achternaam: "", type: "daggast", email: "", telefoon: "" }
 
 const TYPE_NAAM: Record<string, string> = {
   daggast: "Daggast",

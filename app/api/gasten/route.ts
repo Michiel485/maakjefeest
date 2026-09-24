@@ -130,14 +130,14 @@ export async function POST(request: Request) {
     is_primary: true,
   }))
 
-  const { data: nieuw, error } = await service.from("rsvp").insert(rows).select("id")
+  const { data: nieuw, error } = await service.from("rsvp").insert(rows).select("*")
 
   if (error) {
     console.error("[gasten] insert:", error)
     return Response.json({ error: "Toevoegen mislukt" }, { status: 500 })
   }
 
-  return Response.json({ success: true, toegevoegd: nieuw?.length ?? 0 }, { status: 201 })
+  return Response.json({ success: true, toegevoegd: nieuw?.length ?? 0, gasten: nieuw ?? [] }, { status: 201 })
 }
 
 // PATCH: van een groep gasten de reis bijwerken.
