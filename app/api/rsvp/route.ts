@@ -281,6 +281,11 @@ export async function POST(request: Request) {
   // (Michiels bevinding van 24 september 2026).
   const vanMij = (r: BestaandeRij) =>
     !!apparaat && modus === "aanpassen" && r.apparaat === apparaat && (!groep || r.submission_id === groep)
+  // Iemand terugzetten op "niets gehoord" doen we alleen als de gast in het
+  // formulier uitdrukkelijk koos om zijn eerdere aanmelding aan te passen.
+  // Zonder die keuze (de trouwsite, of een oud formulier) blijft elk eerder
+  // antwoord staan: liever een naam te veel dan een verdwenen antwoord.
+  const magTerugzetten = body.modus === "aanpassen"
 
   const { data: bestaand } = await supabase
     .from("rsvp")
@@ -344,7 +349,7 @@ export async function POST(request: Request) {
 
   if (apparaat || gastRij) {
     const terug = ((bestaand ?? []) as BestaandeRij[])
-      .filter((r) => (vanMij(r) || vanGast(r)) && !houden.has(r.id))
+      .filter((r) => magTerugzetten && (vanMij(r) || vanGast(r)) && !houden.has(r.id))
       .map((r) => r.id)
     if (terug.length > 0) {
       await supabase

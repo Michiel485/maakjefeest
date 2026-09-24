@@ -55,8 +55,8 @@ export const AANMELD_LABEL: Record<AanmeldStand, string> = {
 }
 
 export const AANMELD_UITLEG: Record<AanmeldStand, string> = {
-  geen: "de gast ziet alleen de kaart",
-  janee: "vraag je gasten alvast of ze komen, zo vormt zich een beeld van wie erbij zijn",
+  geen: "de gast ziet alleen de kaart en kan de datum in zijn agenda zetten",
+  janee: "je gasten laten met één tik weten of ze erbij zijn, en je gastenlijst vult zich vanzelf",
   adres: "wil je straks papieren trouwkaarten sturen? Laat je gasten hier zelf hun adres achterlaten",
   volledig: "alles, inclusief dieetwensen en je eigen vragen",
 }
@@ -71,8 +71,12 @@ export function vraagtAdres(stand: AanmeldStand): boolean {
 }
 
 /** Wat standaard aanstaat bij een nieuw gemaakte kaart. */
+// Een Save the Date vraagt standaard niets: je kiest zelf of je gasten
+// alvast ja of nee laten zeggen, met het advies erbij. Michiels wens van
+// 24 september 2026. Een trouwkaart vraagt standaard alles, want daar is hij
+// voor. Kaarten die al bestaan houden hun eigen keuze.
 export function standaardAanmeldStand(kaartType: string): AanmeldStand {
-  return kaartType === "trouwkaart" ? "volledig" : "janee"
+  return kaartType === "trouwkaart" ? "volledig" : "geen"
 }
 
 // ── Eén gast zoals het formulier hem instuurt ───────────────────────────────

@@ -86,15 +86,17 @@ const telefoonSleutel = (t: string | null) => (t ?? "").replace(/\D/g, "").slice
 /** Waarom deze twee op elkaar lijken, of null als ze dat niet doen. */
 function lijktOp(a: RsvpRow, b: RsvpRow): string | null {
   if (a.event_id !== b.event_id) return null
+  // Wie samen één formulier invult of samen een gezin is, typt zijn eigen
+  // gezinsleden niet dubbel: Henk en Sjenk zijn dan twee mensen. En mail en
+  // telefoon worden binnen een gezin vaak gedeeld. Dus alleen over
+  // huishoudens heen.
+  const zelfdeHuis = !!a.huishouden_id && a.huishouden_id === b.huishouden_id
+  if (zelfdeHuis || (!!a.submission_id && a.submission_id === b.submission_id)) return null
   const na = gastSleutel(a.voornaam ?? a.name, a.achternaam)
   const nb = gastSleutel(b.voornaam ?? b.name, b.achternaam)
   if (na && na === nb) return "dezelfde naam"
   const kort = Math.min(na.length, nb.length)
   if (kort >= 4 && afstand(na, nb, kort >= 8 ? 2 : 1) <= (kort >= 8 ? 2 : 1)) return "bijna dezelfde naam"
-  // Mail en telefoon worden binnen een gezin vaak gedeeld, dus alleen over
-  // huishoudens heen.
-  const zelfdeHuis = !!a.huishouden_id && a.huishouden_id === b.huishouden_id
-  if (zelfdeHuis || a.submission_id === b.submission_id) return null
   if (a.email && b.email && a.email.trim().toLowerCase() === b.email.trim().toLowerCase() && !a.is_kind && !b.is_kind) {
     return "hetzelfde mailadres"
   }
@@ -220,6 +222,7 @@ export default function RsvpSection({
       return n
     })
   }
+  const [sortering, setSortering] = useState<Sortering>({ sleutel: "naam", op: true })
   const [voegtSamen, setVoegtSamen] = useState(false)
   const [samenvoegFout, setSamenvoegFout] = useState<string | null>(null)
 
@@ -246,36 +249,30 @@ export default function RsvpSection({
   const hasCustomAnswer   = rsvps.some((r) => r.custom_answer !== null)
   const hasCustomAnswer2  = rsvps.some((r) => r.custom_answer_2 !== null)
 
-  const submissionGroups = rsvps.reduce<Record<string, RsvpRow[]>>((acc, row) => {
-    const key = row.submission_id ?? row.id
-    if (!acc[key]) acc[key] = []
-    acc[key].push(row)
-    return acc
-  }, {})
-
-  const sortedGroups = Object.values(submissionGroups).sort((a, b) => {
-    const aTime = Math.min(...a.map((r) => new Date(r.created_at).getTime()))
-    const bTime = Math.min(...b.map((r) => new Date(r.created_at).getTime()))
-    return bTime - aTime
+  // Sorteren op een kolom. Standaard op naam.
+  const RANG_REIS: Record<Reis, number> = { ja: 3, nee: 2, verstuurd: 1, niet_verstuurd: 0 }
+  const gesorteerd = [...rsvps].sort((a, b) => {
+    const r = sortering.op ? 1 : -1
+    switch (sortering.sleutel) {
+      case "type":
+        return r * (a.guest_type ?? "").localeCompare(b.guest_type ?? "", "nl") || a.name.localeCompare(b.name, "nl")
+      case "std":
+        return r * (RANG_REIS[reis(b.std_status)] - RANG_REIS[reis(a.std_status)]) || a.name.localeCompare(b.name, "nl")
+      case "inv":
+        return r * (RANG_REIS[reis(b.inv_status)] - RANG_REIS[reis(a.inv_status)]) || a.name.localeCompare(b.name, "nl")
+      default:
+        return r * a.name.localeCompare(b.name, "nl")
+    }
   })
+  const heeftDieet = rsvps.some((r) => r.dietary || r.allergie)
 
   // Alle zichtbare regels, voor het vinkje in de kop
-  const alleIds = sortedGroups.flat().map((r) => r.id)
+  const alleIds = gesorteerd.map((r) => r.id)
 
-  // Wie nog geen antwoord heeft gegeven, op geen van beide producten. Dat is
-  // letterlijk de lijst "wie moet ik nog najagen", en met één druk te pakken:
-  // in de praktijk is dat waar je de herinnering naartoe stuurt.
-  const stilleIds = sortedGroups
-    .flat()
-    .filter((r) => komtGast(reis(r.std_status), reis(r.inv_status)) === null)
-    .map((r) => r.id)
-
-  // Namen die twee keer voorkomen binnen dezelfde bruiloft. Eén gedeelde
-  // kaartlink gaat naar tachtig mensen, dus dubbele invoer komt voor. Wij
-  // voegen niet automatisch samen; we wijzen het alleen aan, want alleen het
-  // bruidspaar weet of het dezelfde persoon is.
-  // Vermoedelijke dubbelen, als paren, voor de melding boven de lijst.
-  // Hoogstens een paar honderd gasten, dus alle paren langs is geen probleem.
+  // Vermoedelijke dubbelen, als paren, voor de melding boven de lijst. Wij
+  // voegen niet uit onszelf samen; alleen het bruidspaar weet of het dezelfde
+  // persoon is. Hoogstens een paar honderd gasten, dus alle paren langs is
+  // geen probleem.
   const verdacht: { a: RsvpRow; b: RsvpRow; waarom: string }[] = []
   for (let i = 0; i < rsvps.length; i++) {
     for (let j = i + 1; j < rsvps.length; j++) {
@@ -287,20 +284,13 @@ export default function RsvpSection({
   }
   const gekozenRijen = rsvps.filter((r) => gekozen.has(r.id))
 
-  const dubbel = new Set<string>()
-  {
-    const gezien = new Map<string, string>()
-    for (const r of rsvps) {
-      const sleutel = `${r.event_id}:${gastSleutel(r.voornaam ?? r.name, r.achternaam)}`
-      const eerder = gezien.get(sleutel)
-      if (eerder) {
-        dubbel.add(eerder)
-        dubbel.add(r.id)
-      } else {
-        gezien.set(sleutel, r.id)
-      }
-    }
-  }
+  // Wie nog geen antwoord heeft gegeven, op geen van beide producten. Dat is
+  // letterlijk de lijst "wie moet ik nog najagen", en met één druk te pakken:
+  // in de praktijk is dat waar je de herinnering naartoe stuurt.
+  const stilleIds = rsvps
+    .filter((r) => komtGast(reis(r.std_status), reis(r.inv_status)) === null)
+    .map((r) => r.id)
+
 
   function openEdit(row: RsvpRow) {
     setEditingRow(row)
@@ -383,13 +373,14 @@ export default function RsvpSection({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids: [...gekozen], product, waarde, kaart_id: kaartId }),
       })
-      const j = (await res.json().catch(() => ({}))) as { error?: string; bijgewerkt?: number }
+      const j = (await res.json().catch(() => ({}))) as { error?: string; bijgewerkt?: number; ids?: string[]; overgeslagen?: number }
       if (!res.ok) throw new Error(j.error || "Bijwerken mislukte")
       const kolom = product === "inv" ? "inv_status" : "std_status"
       const kaartKolom = product === "inv" ? "inv_kaart_id" : "std_kaart_id"
+      const bijgewerkt = new Set(j.ids ?? [...gekozen])
       setRsvps((vorig) =>
         vorig.map((r) =>
-          gekozen.has(r.id)
+          bijgewerkt.has(r.id)
             ? {
                 ...r,
                 [kolom]: waarde,
@@ -399,7 +390,12 @@ export default function RsvpSection({
             : r
         )
       )
-      setBerichtUitslag(`${j.bijgewerkt ?? 0} bijgewerkt.`)
+      setBerichtUitslag(
+        `${j.bijgewerkt ?? 0} bijgewerkt.` +
+          (j.overgeslagen
+            ? ` ${j.overgeslagen} ${j.overgeslagen === 1 ? "had" : "hadden"} al geantwoord; dat antwoord blijft staan.`
+            : ""),
+      )
     } catch (e) {
       setBerichtUitslag(e instanceof Error ? e.message : "Bijwerken mislukte")
     } finally {
@@ -881,15 +877,20 @@ export default function RsvpSection({
           </div>
         )}
 
-        {/* Table */}
-        <div
-          className="rounded-2xl overflow-x-auto"
-          style={{ border: `1px solid ${GOLD_LIGHT}`, backgroundColor: IVORY_CARD }}
-        >
-          <table className="w-full text-sm">
+        {/* ── De lijst ──
+            Een gewone tabel, één regel per persoon. Michiels wens van
+            24 september 2026: naam, type, de Save the Date, de trouwkaart,
+            mail en telefoon, zonder gekleurde kaders. Het huishouden staat
+            niet meer als groep in beeld: het zijn mensen met elk hun eigen
+            antwoord en dieetwensen. Onder water blijft het bestaan, zodat een
+            persoonlijke link het hele gezin herkent. Klik op een kop om te
+            sorteren. Wat er verder is (liedje, berichtje, eigen vragen) staat
+            in het bewerkvenster en in de export. */}
+        <div className="rounded-2xl overflow-x-auto" style={{ border: `1px solid ${GOLD_LIGHT}`, backgroundColor: "#fff" }}>
+          <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ borderBottom: `1px solid ${GOLD_LIGHT}` }}>
-                <Th className="w-10">
+              <tr style={{ borderBottom: `1px solid ${GOLD_LIGHT}`, backgroundColor: GOLD_BG }}>
+                <th className="w-10 px-4 py-2.5 text-left">
                   <input
                     type="checkbox"
                     aria-label="Alles selecteren"
@@ -897,119 +898,60 @@ export default function RsvpSection({
                     onChange={(e) => kiesAlle(alleIds, e.target.checked)}
                     style={{ accentColor: GOLD, cursor: "pointer" }}
                   />
-                </Th>
-                <Th>Naam</Th>
-                <Th>Save the Date</Th>
-                <Th>Uitnodiging</Th>
-                <Th className="hidden sm:table-cell">Type</Th>
-                <Th className="hidden md:table-cell">E-mail</Th>
-                <Th className="hidden lg:table-cell">Dieetwensen</Th>
-                {hasSong       && <Th className="hidden xl:table-cell">Song</Th>}
-                {hasOvernachting && <Th className="hidden xl:table-cell">Overnachting</Th>}
-                {hasCustomAnswer && <Th className="hidden xl:table-cell">Extra vraag 1</Th>}
-                {hasCustomAnswer2 && <Th className="hidden xl:table-cell">Extra vraag 2</Th>}
-                <Th className="hidden lg:table-cell">Berichtje</Th>
-                <Th className="hidden lg:table-cell">Aangemeld</Th>
-                <Th className="w-20" />
+                </th>
+                <SorteerKop sleutel="naam" sortering={sortering} zet={setSortering}>Naam</SorteerKop>
+                <SorteerKop sleutel="type" sortering={sortering} zet={setSortering}>Type</SorteerKop>
+                <SorteerKop sleutel="std" sortering={sortering} zet={setSortering}>Save the Date</SorteerKop>
+                <SorteerKop sleutel="inv" sortering={sortering} zet={setSortering}>Trouwkaart</SorteerKop>
+                <th className="px-3 py-2.5 text-left text-xs font-semibold" style={{ color: BODY }}>E-mail</th>
+                <th className="px-3 py-2.5 text-left text-xs font-semibold" style={{ color: BODY }}>Telefoon</th>
+                {heeftDieet && <th className="px-3 py-2.5 text-left text-xs font-semibold" style={{ color: BODY }}>Dieetwensen</th>}
+                <th className="w-24" />
               </tr>
             </thead>
             <tbody>
-              {sortedGroups.flatMap((group, gi) => {
-                const rows = group.map((row) => {
-                  const isDeclined   = row.attending === "no"
-                  const isDeleting   = deletingId === row.id
-                  const confirmingDel = deleteConfirmId === row.id
-                  return (
-                    <tr
-                      key={row.id}
-                      className={isDeleting ? "opacity-40" : ""}
-                      style={{
-                        borderBottom: `1px solid ${GOLD_LIGHT}20`,
-                        backgroundColor: gi % 2 === 0 ? IVORY_CARD : "#F0E8D8",
-                      }}
-                    >
-                      <td className="px-5 py-3">
-                        <input
-                          type="checkbox"
-                          aria-label={`${row.name} selecteren`}
-                          checked={gekozen.has(row.id)}
-                          onChange={() => wissel(row.id)}
-                          style={{ accentColor: GOLD, cursor: "pointer" }}
-                        />
-                      </td>
-                      <td className="px-5 py-3 font-medium" style={{ color: CHARCOAL }}>
-                        {row.name}
-                        {row.is_kind && (
-                          <span className="ml-2 text-xs" style={{ color: BODY }}>
-                            ({row.leeftijd != null ? `${row.leeftijd} jaar` : "kind"})
-                          </span>
-                        )}
-                        {dubbel.has(row.id) && (
-                          <span
-                            className="ml-2 text-xs font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap"
-                            style={{ backgroundColor: "#FEF3C7", color: "#92400E" }}
-                            title="Deze naam staat er twee keer in. Kijk even of het dezelfde persoon is."
-                          >
-                            dubbel?
-                          </span>
-                        )}
-                        {row.is_primary && (
-                          <span
-                            className="ml-2 text-xs font-semibold px-1.5 py-0.5 rounded-full"
-                            style={{ backgroundColor: GOLD_BG, color: GOLD, border: `1px solid ${GOLD_LIGHT}` }}
-                          >
-                            hoofd
-                          </span>
-                        )}
-                      </td>
-                      {/* Onder de stand: welke kaart deze gast kreeg, als we
-                          dat weten. Uit wat je zelf aangaf bij verstuurd
-                          zetten, of uit de link waarop hij antwoordde. */}
-                      <td className="px-5 py-3">
-                        <ReisBadge waarde={reis(row.std_status)} />
-                        {gekregen(row, "std") && (
-                          <span className="block text-[11px] mt-1" style={{ color: SOFT }}>{gekregen(row, "std")}</span>
-                        )}
-                      </td>
-                      <td className="px-5 py-3">
-                        <ReisBadge waarde={reis(row.inv_status)} />
-                        {gekregen(row, "inv") && (
-                          <span className="block text-[11px] mt-1" style={{ color: SOFT }}>{gekregen(row, "inv")}</span>
-                        )}
-                      </td>
-                      <td className="px-5 py-3 hidden sm:table-cell">
-                        {isDeclined ? <span style={{ color: GOLD_LIGHT }}>—</span> : <GuestTypeBadge type={row.guest_type} />}
-                      </td>
-                      <td className="px-5 py-3 hidden md:table-cell text-sm" style={{ color: BODY }}>
-                        {row.email ?? <span style={{ color: GOLD_LIGHT }}>—</span>}
-                        {row.adres && (
-                          <span className="block text-[11px] mt-0.5 whitespace-pre-line" style={{ color: SOFT }}>{row.adres}</span>
-                        )}
-                      </td>
-                      <td className="px-5 py-3 hidden lg:table-cell text-sm" style={{ color: BODY }}>
-                        {row.dietary || <span style={{ color: GOLD_LIGHT }}>—</span>}
-                      </td>
-                      {hasSong && (
-                        <td className="px-5 py-3 hidden xl:table-cell text-sm" style={{ color: BODY }}>
-                          {row.song || <span style={{ color: GOLD_LIGHT }}>—</span>}
-                        </td>
+              {gesorteerd.map((row) => {
+                const isDeleting = deletingId === row.id
+                const confirmingDel = deleteConfirmId === row.id
+                const dieet = [row.dietary, row.allergie].filter(Boolean).join(", ")
+                return (
+                  <tr
+                    key={row.id}
+                    className={`transition-colors hover:bg-[#FCF9F2] ${isDeleting ? "opacity-40" : ""}`}
+                    style={{ borderTop: `1px solid ${GOLD_LIGHT}66`, backgroundColor: gekozen.has(row.id) ? GOLD_BG : undefined }}
+                  >
+                    <td className="px-4 py-2">
+                      <input
+                        type="checkbox"
+                        aria-label={`${row.name} selecteren`}
+                        checked={gekozen.has(row.id)}
+                        onChange={() => wissel(row.id)}
+                        style={{ accentColor: GOLD, cursor: "pointer" }}
+                      />
+                    </td>
+                    <td className="px-3 py-2" style={{ color: CHARCOAL }}>
+                      <span className="font-medium">{row.name}</span>
+                      {row.is_kind && (
+                        <span className="ml-1.5 text-xs" style={{ color: SOFT }}>
+                          ({row.leeftijd != null ? `${row.leeftijd} jaar` : "kind"})
+                        </span>
                       )}
-                      {hasOvernachting && (
-                        <td className="px-5 py-3 hidden xl:table-cell"><BoolBadge value={row.overnachting} /></td>
-                      )}
-                      {hasCustomAnswer && (
-                        <td className="px-5 py-3 hidden xl:table-cell"><BoolBadge value={row.custom_answer} /></td>
-                      )}
-                      {hasCustomAnswer2 && (
-                        <td className="px-5 py-3 hidden xl:table-cell"><BoolBadge value={row.custom_answer_2} /></td>
-                      )}
-                      <td className="px-5 py-3 hidden lg:table-cell text-xs italic" style={{ color: BODY }}>
-                        {isDeclined && row.message ? `"${row.message}"` : <span style={{ color: GOLD_LIGHT }}>—</span>}
-                      </td>
-                      <td className="px-5 py-3 hidden lg:table-cell text-xs" style={{ color: BODY }}>
-                        {new Date(row.created_at).toLocaleDateString("nl-NL")}
-                      </td>
-                      <td className="px-3 py-3 text-right">
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap" style={{ color: BODY }}>{TYPE_NAAM[row.guest_type] ?? row.guest_type}</td>
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      <ReisTekst waarde={reis(row.std_status)} />
+                      {gekregen(row, "std") && <span className="block text-[11px]" style={{ color: SOFT }}>{gekregen(row, "std")}</span>}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      <ReisTekst waarde={reis(row.inv_status)} />
+                      {gekregen(row, "inv") && <span className="block text-[11px]" style={{ color: SOFT }}>{gekregen(row, "inv")}</span>}
+                    </td>
+                    <td className="px-3 py-2" style={{ color: BODY }}>{row.email || <span style={{ color: GOLD_LIGHT }}>—</span>}</td>
+                    <td className="px-3 py-2 whitespace-nowrap" style={{ color: BODY }}>{row.telefoon || <span style={{ color: GOLD_LIGHT }}>—</span>}</td>
+                    {heeftDieet && (
+                      <td className="px-3 py-2" style={{ color: BODY }}>{dieet || <span style={{ color: GOLD_LIGHT }}>—</span>}</td>
+                    )}
+                      <td className="px-3 py-2 text-right whitespace-nowrap">
                         {confirmingDel ? (
                           <div className="flex items-center gap-1 justify-end">
                             <button onClick={() => handleDelete(row.id)} className="text-xs font-semibold text-red-500 hover:text-red-600 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors">Ja</button>
@@ -1054,13 +996,8 @@ export default function RsvpSection({
                           </div>
                         )}
                       </td>
-                    </tr>
-                  )
-                })
-                const sep = gi < sortedGroups.length - 1 ? (
-                  <tr key={`sep-${gi}`}><td colSpan={99} className="h-px p-0" style={{ backgroundColor: GOLD_LIGHT }} /></tr>
-                ) : null
-                return sep ? [...rows, sep] : rows
+                  </tr>
+                )
               })}
             </tbody>
           </table>
@@ -1267,16 +1204,52 @@ function WhatsAppKeuze({
   )
 }
 
-function Th({ children, className }: { children?: React.ReactNode; className?: string }) {
+type Sortering = { sleutel: "naam" | "type" | "std" | "inv"; op: boolean }
+
+const TYPE_NAAM: Record<string, string> = {
+  daggast: "Daggast",
+  avondgast: "Avondgast",
+  receptiegast: "Receptiegast",
+}
+
+/** De stand als gewone tekst: geen gekleurde kaders, alleen een kleur voor
+ *  wie komt en wie niet. */
+function ReisTekst({ waarde }: { waarde: Reis }) {
+  const kleur = { ja: "#047857", nee: "#9A3412", verstuurd: CHARCOAL, niet_verstuurd: SOFT }[waarde]
   return (
-    <th
-      className={`text-left px-5 py-3 text-xs font-semibold uppercase tracking-[0.14em] ${className ?? ""}`}
-      style={{ color: GOLD }}
-    >
-      {children}
+    <span className={waarde === "ja" || waarde === "nee" ? "font-semibold" : ""} style={{ color: kleur }}>
+      {REIS_LABEL[waarde]}
+    </span>
+  )
+}
+
+function SorteerKop({
+  sleutel,
+  sortering,
+  zet,
+  children,
+}: {
+  sleutel: Sortering["sleutel"]
+  sortering: Sortering
+  zet: (s: Sortering) => void
+  children: React.ReactNode
+}) {
+  const aan = sortering.sleutel === sleutel
+  return (
+    <th className="px-3 py-2.5 text-left" aria-sort={aan ? (sortering.op ? "ascending" : "descending") : "none"}>
+      <button
+        type="button"
+        onClick={() => zet({ sleutel, op: aan ? !sortering.op : true })}
+        className="text-xs font-semibold inline-flex items-center gap-1"
+        style={{ color: aan ? CHARCOAL : BODY, background: "none", border: 0, padding: 0, cursor: "pointer" }}
+      >
+        {children}
+        <span aria-hidden style={{ color: aan ? GOLD : GOLD_LIGHT }}>{aan ? (sortering.op ? "▲" : "▼") : "▲"}</span>
+      </button>
     </th>
   )
 }
+
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -1312,45 +1285,8 @@ function TriStateButtons({ value, onChange }: { value: boolean | null; onChange:
  * Hoe ver een product staat bij deze gast. Vier standen: niet verstuurd,
  * verstuurd, komt, komt niet. Zie Reis in lib/gasten.ts.
  */
-function ReisBadge({ waarde }: { waarde: Reis }) {
-  const stijl = {
-    niet_verstuurd: { bg: "#F3F4F6", tekst: "#6B7280" },
-    verstuurd:      { bg: "#FEF3C7", tekst: "#92400E" },
-    ja:             { bg: "#D1FAE5", tekst: "#065F46" },
-    nee:            { bg: "#FEE2E2", tekst: "#991B1B" },
-  }[waarde]
-  return (
-    <span
-      className="text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap"
-      style={{ backgroundColor: stijl.bg, color: stijl.tekst }}
-    >
-      {REIS_LABEL[waarde]}
-    </span>
-  )
-}
 
-function GuestTypeBadge({ type }: { type: string }) {
-  const map: Record<string, { bg: string; color: string }> = {
-    daggast:      { bg: "#eff6ff", color: "#1d4ed8" },
-    avondgast:    { bg: "#f5f3ff", color: "#6d28d9" },
-    receptiegast: { bg: GOLD_BG,   color: GOLD       },
-  }
-  const s = map[type] ?? { bg: GOLD_BG, color: BODY }
-  return (
-    <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: s.bg, color: s.color }}>
-      {type}
-    </span>
-  )
-}
 
-function BoolBadge({ value }: { value: boolean | null }) {
-  if (value === null) return <span style={{ color: GOLD_LIGHT }}>—</span>
-  return (
-    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${value ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-600"}`}>
-      {value ? "Ja" : "Nee"}
-    </span>
-  )
-}
 
 function KpiCard({ label, value, accent }: { label: string; value: number; accent: string }) {
   return (

@@ -166,7 +166,7 @@ export async function PATCH(request: Request) {
   }
 
   const service = createServiceClient()
-  const { data: gasten } = await service.from("rsvp").select("id, event_id").in("id", ids)
+  const { data: gasten } = await service.from("rsvp").select("id, event_id, std_status, inv_status").in("id", ids)
   if (!gasten || gasten.length === 0) {
     return Response.json({ error: "Deze gasten bestaan niet meer." }, { status: 404 })
   }
@@ -180,10 +180,26 @@ export async function PATCH(request: Request) {
   const vanMij = new Set(
     (events ?? []).filter((e) => e.user_email === user.email).map((e) => e.id as string)
   )
-  const mag = gasten.filter((g) => vanMij.has(g.event_id as string)).map((g) => g.id as string)
-  if (mag.length === 0) return Response.json({ error: "Geen toegang" }, { status: 403 })
-
   const kolom = product === "inv" ? "inv_status" : "std_status"
+  const vanDeze = gasten.filter((g) => vanMij.has(g.event_id as string))
+  if (vanDeze.length === 0) return Response.json({ error: "Geen toegang" }, { status: 403 })
+
+  // Wie al ja of nee zei, zet "verstuurd" of "niet verstuurd" niet terug.
+  // Dat gebeurde wel: iedereen aanvinken en op "Save the Date verstuurd"
+  // drukken wiste de antwoorden van wie al gereageerd had (Michiels
+  // bevinding van 24 september 2026). Een antwoord verandert alleen als de
+  // gast zelf opnieuw antwoordt, of als jij bewust komt of komt niet kiest.
+  const terugzetten = waarde === "verstuurd" || waarde === "niet_verstuurd"
+  const gereageerd = (g: (typeof vanDeze)[number]) => {
+    const w = g[kolom] as string | null
+    return w === "ja" || w === "nee"
+  }
+  const mag = vanDeze.filter((g) => !(terugzetten && gereageerd(g))).map((g) => g.id as string)
+  const overgeslagen = vanDeze.length - mag.length
+  if (mag.length === 0) {
+    return Response.json({ success: true, bijgewerkt: 0, ids: [], overgeslagen })
+  }
+
   // bijgewerkt_at zet de database zelf, via een trigger. Zie app/api/rsvp.
   const update: Record<string, unknown> = { [kolom]: waarde }
   // Een antwoord is ook een antwoord op de aanwezigheid; de cateraarslijst
@@ -217,5 +233,5 @@ export async function PATCH(request: Request) {
     return Response.json({ error: "Bijwerken mislukt" }, { status: 500 })
   }
 
-  return Response.json({ success: true, bijgewerkt: mag.length })
+  return Response.json({ success: true, bijgewerkt: mag.length, ids: mag, overgeslagen })
 }

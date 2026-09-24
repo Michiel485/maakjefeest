@@ -76,12 +76,14 @@ interface Persoon {
 interface Kind {
   voornaam: string
   leeftijd: string
+  /** Alleen bij het volledige formulier: ook een kind heeft zijn eigen wensen. */
+  dietary: string
 }
 
 const leegPersoon = (): Persoon => ({
   voornaam: "", achternaam: "", email: "", telefoon: "", dietary: "", allergie: "",
 })
-const leegKind = (): Kind => ({ voornaam: "", leeftijd: "" })
+const leegKind = (): Kind => ({ voornaam: "", leeftijd: "", dietary: "" })
 
 export interface AanmeldFormulierProps {
   /** Eén van beide: de bruiloft, of de kaartlink waar dit onder staat. */
@@ -172,7 +174,7 @@ export default function AanmeldFormulier({
     setPersonen(rijen)
     setAantal(rijen.length)
     setMetKinderen(kids.length > 0)
-    setKinderen(kids.length > 0 ? kids.map((k) => ({ voornaam: k.voornaam, leeftijd: k.leeftijd != null ? String(k.leeftijd) : "" })) : [leegKind()])
+    setKinderen(kids.length > 0 ? kids.map((k) => ({ ...leegKind(), voornaam: k.voornaam, leeftijd: k.leeftijd != null ? String(k.leeftijd) : "" })) : [leegKind()])
   }
 
   function kiesAanpassen(groep: EerdereGroep) {
@@ -293,6 +295,7 @@ export default function AanmeldFormulier({
                   attending: "yes",
                   is_kind: true,
                   leeftijd: k.leeftijd ? Number(k.leeftijd) : null,
+                  ...(volledig && k.dietary.trim() ? { dietary: k.dietary.trim() } : {}),
                 })),
             ]
 
@@ -589,25 +592,39 @@ export default function AanmeldFormulier({
               {metKinderen && (
                 <div className="mt-3 flex flex-col gap-2">
                   {kinderen.map((k, i) => (
-                    <div key={i} className="flex gap-2">
-                      <input
-                        className={veldKlassen}
-                        style={veldStijl}
-                        placeholder="Naam van het kind"
-                        value={k.voornaam}
-                        onChange={(e) => zetKind(i, "voornaam", e.target.value)}
-                        maxLength={80}
-                      />
-                      <input
-                        type="number"
-                        min={0}
-                        max={MAX_KIND_LEEFTIJD}
-                        className={`${veldKlassen} w-24`}
-                        style={veldStijl}
-                        placeholder="Leeftijd"
-                        value={k.leeftijd}
-                        onChange={(e) => zetKind(i, "leeftijd", e.target.value)}
-                      />
+                    <div key={i} className="flex flex-col gap-2">
+                      <div className="flex gap-2">
+                        <input
+                          className={veldKlassen}
+                          style={veldStijl}
+                          placeholder="Naam van het kind"
+                          value={k.voornaam}
+                          onChange={(e) => zetKind(i, "voornaam", e.target.value)}
+                          maxLength={80}
+                        />
+                        <input
+                          type="number"
+                          min={0}
+                          max={MAX_KIND_LEEFTIJD}
+                          className={`${veldKlassen} w-24`}
+                          style={veldStijl}
+                          placeholder="Leeftijd"
+                          value={k.leeftijd}
+                          onChange={(e) => zetKind(i, "leeftijd", e.target.value)}
+                        />
+                      </div>
+                      {/* Elke gast zijn eigen wensen, ook een kind (Michiel,
+                          24 september 2026). */}
+                      {volledig && k.voornaam.trim() && (
+                        <input
+                          className={veldKlassen}
+                          style={veldStijl}
+                          placeholder={`Dieetwensen of allergie van ${k.voornaam.trim()} (optioneel)`}
+                          value={k.dietary}
+                          onChange={(e) => zetKind(i, "dietary", e.target.value)}
+                          maxLength={120}
+                        />
+                      )}
                     </div>
                   ))}
                   {kinderen.length < 8 && (

@@ -130,7 +130,7 @@ const LEEG: KaartOntwerp = {
   photoUrl: null,
   animatie: "rustig",
   taal: "nl",
-  aanmelden: "janee",
+  aanmelden: "geen",
 }
 
 
@@ -752,8 +752,10 @@ export default function KaartMakenPage() {
   function dupliceerKaart() {
     setCardId(null)
     // De naam gaat niet mee: twee kaarten die hetzelfde heten is precies wat
-    // we willen voorkomen. Leeg betekent weer de automatische naam.
-    setOntwerp((o) => ({ ...o, naam: "" }))
+    // we willen voorkomen. Leeg betekent weer de automatische naam. En
+    // aanmelden begint weer bij de standaard, zodat je bij elke kaart zelf
+    // kiest of je gasten iets moeten laten weten.
+    setOntwerp((o) => ({ ...o, naam: "", aanmelden: standaardAanmeldStand(o.type) }))
     setMelding({ tekst: "Nieuwe kaart, op basis van de vorige. Pas aan wat anders moet en bewaar; je vorige kaart blijft bestaan." })
   }
 
@@ -1103,6 +1105,9 @@ export default function KaartMakenPage() {
                   <path d="M12 5v14M5 12h14" />
                 </svg>
               </IconKnop>
+              {/* Apart van bewaren en nieuw, zodat je hem niet raakt als je
+                  op het plusje bedoelt te drukken. */}
+              <span aria-hidden className="w-px h-6 mx-0.5" style={{ backgroundColor: GOLD_LIGHT }} />
               <IconKnop
                 title={cardId ? "Deze kaart weggooien" : "Deze kaart is nog niet bewaard; er is niets om weg te gooien"}
                 onClick={() => setVerwijderVraag(true)}
@@ -1117,7 +1122,8 @@ export default function KaartMakenPage() {
             {verwijderVraag && cardId && (
               <div className="rounded-xl p-3 flex flex-col gap-2 text-[13px]" style={{ backgroundColor: "#FEF2F2", border: "1px solid #FECACA" }}>
                 <span style={{ color: "#991B1B" }}>
-                  <b>{huidigeKaart ? kaartLabel(huidigeKaart) : "Deze kaart"}</b> weggooien? Weg is weg; de link werkt daarna niet meer.
+                  <b>{huidigeKaart ? kaartLabel(huidigeKaart) : "Deze kaart"}</b> weggooien? De link werkt daarna niet meer.
+                  Wie al reageerde blijft met zijn antwoord in je gastenlijst staan.
                 </span>
                 <div className="flex gap-2">
                   <button
@@ -1382,7 +1388,20 @@ export default function KaartMakenPage() {
             </label>
           </Sectie>
 
-          <Sectie open={stap === "aanmelden"} onToggle={() => setStap(stap === "aanmelden" ? null : "aanmelden")} titel="Aanmelden">
+          <Sectie
+            open={stap === "aanmelden"}
+            onToggle={() => setStap(stap === "aanmelden" ? null : "aanmelden")}
+            titel={`Aanmelden · ${AANMELD_LABEL[ontwerp.aanmelden].toLowerCase()}`}
+          >
+            {/* Een bewuste keuze, met het advies erbij. Standaard vraagt een
+                Save the Date niets; dat is aan jou. */}
+            {!isTrouwkaart && (
+              <p className="m-0 mb-1 text-[12px] leading-relaxed rounded-xl px-3 py-2.5" style={{ color: BODY, backgroundColor: GOLD_BG, border: `1px solid ${GOLD_LIGHT}` }}>
+                <b style={{ color: CHARCOAL }}>Ons advies: vraag alleen ja of nee.</b> Het kost je gasten één tik, en jij
+                weet maanden vooraf ongeveer met hoeveel je rekent. Wie antwoordt staat meteen in je gastenlijst, dus die
+                bouwt zich vanzelf op. Dieetwensen en de rest vraag je later op de trouwkaart.
+              </p>
+            )}
             <div className="flex flex-col gap-2">
               {aanmeldKeuzes.map((s) => (
                 <button

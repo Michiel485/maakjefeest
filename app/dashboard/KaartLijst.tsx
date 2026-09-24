@@ -301,7 +301,10 @@ export default function KaartLijst({
       {verwijderVraag && gekozen && (
         <div className="rounded-xl p-3 flex flex-wrap items-center gap-2 text-[13px]" style={{ backgroundColor: "#FEF2F2", border: "1px solid #FECACA" }}>
           <span style={{ color: "#991B1B" }} className="flex-1 min-w-[200px]">
-            <b>{kaartNaam(gekozen.card)}</b> weggooien? Weg is weg; de link werkt daarna niet meer, ook niet voor wie hem al heeft.
+            <b>{kaartNaam(gekozen.card)}</b> weggooien? De link werkt daarna niet meer, ook niet voor wie hem al heeft.
+            {gekozen.komen + gekozen.komenNiet > 0 && (
+              <> De antwoorden van de {gekozen.komen + gekozen.komenNiet} gasten die reageerden blijven gewoon in je gastenlijst staan.</>
+            )}
           </span>
           <button type="button" onClick={() => void verwijder()} disabled={bezig} className={knop} style={{ backgroundColor: "#991B1B", color: "#fff", border: 0, cursor: "pointer" }}>
             {bezig ? "Bezig…" : "Ja, weggooien"}
