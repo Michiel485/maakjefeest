@@ -2,12 +2,14 @@
 
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase"
+import { wisBruiloftUitBrowser } from "@/lib/browser-opslag"
 
 export function SignOutButton() {
   const router = useRouter()
 
   async function handleSignOut() {
     await createClient().auth.signOut()
+    wisBruiloftUitBrowser()
     router.push("/")
     // Anders houdt de app de serverpagina's van je ingelogde sessie nog even
     // in de cache en zie je bij een volgende klik je dashboard terug.

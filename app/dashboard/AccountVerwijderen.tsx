@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { createClient } from "@/lib/supabase"
+import { wisBruiloftUitBrowser } from "@/lib/browser-opslag"
 
 const GOLD_LIGHT = "#E8D5A3"
 const CHARCOAL = "#1A1A1A"
@@ -53,17 +54,8 @@ export default function AccountVerwijderen({
       try {
         await createClient().auth.signOut()
       } catch {}
-      // Ook wat er in deze browser stond: het ontwerp, de namen, de datum en
-      // de locatie van de bruiloft. Anders zag je na het verwijderen in het
-      // dashboard nog steeds je eigen gegevens, uit de browseropslag, alsof
-      // er niets gebeurd was (Michiel, 23 september 2026). Cookie- en
-      // meetvoorkeuren blijven staan: die zijn van de bezoeker, niet van de
-      // bruiloft.
-      try {
-        for (const sleutel of Object.keys(localStorage)) {
-          if (sleutel.startsWith("sayingyes_") || sleutel === "sophie_skipped") localStorage.removeItem(sleutel)
-        }
-      } catch {}
+      // Ook wat er in deze browser stond, zie lib/browser-opslag.ts.
+      wisBruiloftUitBrowser()
       window.location.href = "/?verwijderd=1"
     } catch {
       setFout("Verwijderen mislukte, probeer het nog eens.")
