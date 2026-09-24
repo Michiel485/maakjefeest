@@ -141,6 +141,14 @@ function isStyle(v: unknown): v is Style {
   return typeof v === "string" && v in STYLE_CONFIG
 }
 
+/** Wat er bij Aanmelden gekozen is, kort genoeg voor de kop van de sectie. */
+const AANMELD_KORT: Record<AanmeldStand, string> = {
+  geen: "uit",
+  janee: "ja of nee",
+  adres: "ja of nee, adres",
+  volledig: "volledig",
+}
+
 /** Een vierkant knopje met alleen een pictogram; de uitleg zit in de title. */
 function IconKnop({
   title,
@@ -202,7 +210,11 @@ export default function KaartMakenPage() {
   const [wijzigingen, setWijzigingen] = useState(0)
   // null betekent: alles dichtgeklapt. Zonder die stand kon een blok alleen
   // wisselen naar een ander blok, en was Tekst dus nooit dicht te krijgen.
-  const [stap, setStap] = useState<Stap | null>("tekst")
+  // Standaard alles dicht. Alleen een nieuw ontwerp opent bij de tekst, en dat
+  // beslist het laden hieronder meteen. Eerst stond hier "tekst", en dan klapte
+  // die sectie een paar tellen later dicht zodra een bestaande kaart binnen
+  // was (Michiel, 24 september 2026).
+  const [stap, setStap] = useState<Stap | null>(null)
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [eventId, setEventId] = useState<string | null>(null)
   const [cardId, setCardId] = useState<string | null>(null)
@@ -334,8 +346,16 @@ export default function KaartMakenPage() {
         if (c) setCardId(c)
       }
     } catch {}
-    if (isCardType(typeUitUrl)) basis = { ...basis, type: typeUitUrl }
+    // Een ander soort kaart dan wat er in de browser stond? Dan ook de
+    // aanmeldkeuze van dat soort, niet die van de vorige kaart.
+    if (isCardType(typeUitUrl)) {
+      basis = typeUitUrl === basis.type
+        ? basis
+        : { ...basis, type: typeUitUrl, aanmelden: standaardAanmeldStand(typeUitUrl) }
+    }
     setOntwerp(basis)
+    // Nieuw ontwerp, geen bruiloft in de link of in de browser: begin bij de tekst.
+    if (!eventUitUrl && !eventUitOpslag) setStap("tekst")
 
     createClient().auth.getUser().then(async ({ data }) => {
       const email = data.user?.email ?? null
@@ -1391,7 +1411,7 @@ export default function KaartMakenPage() {
           <Sectie
             open={stap === "aanmelden"}
             onToggle={() => setStap(stap === "aanmelden" ? null : "aanmelden")}
-            titel={`Aanmelden · ${AANMELD_LABEL[ontwerp.aanmelden].toLowerCase()}`}
+            titel={`Aanmelden · ${AANMELD_KORT[ontwerp.aanmelden]}`}
           >
             {/* Een bewuste keuze, met het advies erbij. Standaard vraagt een
                 Save the Date niets; dat is aan jou. */}

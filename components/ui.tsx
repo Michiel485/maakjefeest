@@ -281,7 +281,7 @@ export function SectieKop({
       className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-gray-50 transition-colors min-h-[44px]"
     >
       <span
-        className={`text-xs font-bold uppercase tracking-widest ${uitgelicht ? "" : "text-gray-500"}`}
+        className={`text-left text-xs font-bold uppercase tracking-widest ${uitgelicht ? "" : "text-gray-500"}`}
         style={uitgelicht ? { color: KLEUR.goud } : undefined}
       >
         {titel}
