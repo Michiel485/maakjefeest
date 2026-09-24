@@ -6,6 +6,7 @@ import BouwerSchil from "@/components/BouwerSchil"
 import RsvpSection from "./RsvpSection"
 import GuestPhotosSection from "./GuestPhotosSection"
 import { SectionLabel } from "./Beheer"
+import { SignOutButton } from "./SignOutButton"
 import BruiloftInfo from "./BruiloftInfo"
 import { Aftellen, KaartTegel, Tegel, TegelKnop, Teller, WebsiteTegel, type KaartRegel } from "./Tegels"
 import { maxPhotosPerEvent } from "@/lib/guest-photos"
@@ -316,9 +317,13 @@ export default async function DashboardPage({
               <Link href="/dashboard/checklist" style={{ color: KLEUR.tekst, textDecoration: "none" }}>
                 Checklist{checklist ? ` · ${checklist.af} van ${checklist.totaal} af` : ""} {"›"}
               </Link>
-              <Link href="/dashboard/instellingen" style={{ color: KLEUR.tekst, textDecoration: "none" }}>
-                Instellingen {"·"} Account
-              </Link>
+              <span className="flex items-center gap-3">
+                <Link href="/dashboard/instellingen" style={{ color: KLEUR.tekst, textDecoration: "none" }}>
+                  Instellingen {"·"} Account
+                </Link>
+                <span aria-hidden style={{ color: KLEUR.zand }}>|</span>
+                <SignOutButton />
+              </span>
             </>
           ) : (
             <span>

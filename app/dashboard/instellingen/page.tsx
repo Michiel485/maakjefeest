@@ -8,6 +8,7 @@ import DeadlineInstelling from "../Deadline"
 import DeleteEventButton from "../DeleteEventButton"
 import DeleteDraftButton from "../DeleteDraftButton"
 import AccountVerwijderen from "../AccountVerwijderen"
+import { SignOutButton } from "../SignOutButton"
 import { KLEUR } from "@/lib/ontwerp"
 
 export const metadata: Metadata = {
@@ -89,6 +90,17 @@ export default async function InstellingenPage() {
             </div>
           </section>
         )}
+
+        <section
+          className="rounded-2xl p-5 flex flex-wrap items-center justify-between gap-3"
+          style={{ backgroundColor: "#fff", border: `1px solid ${KLEUR.goudLicht}` }}
+        >
+          <div>
+            <h2 className="m-0 text-base font-semibold" style={{ color: KLEUR.inkt }}>Je account</h2>
+            <p className="m-0 text-sm mt-1" style={{ color: KLEUR.tekst }}>Ingelogd als {user.email}</p>
+          </div>
+          <SignOutButton />
+        </section>
 
         <AccountVerwijderen email={user.email} aantalBruiloften={alle.length} />
       </main>
