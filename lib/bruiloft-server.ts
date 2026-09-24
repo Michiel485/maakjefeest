@@ -114,52 +114,27 @@ export function leegResultaat(): BruiloftMetAlles {
 export async function laadBruiloft(email: string, gekozenId?: string | null): Promise<BruiloftMetAlles> {
   const service = createServiceClient()
 
-  const { data: events } = await service
+  // Eén vraag voor de bruiloften met alles wat het dashboard ervan nodig
+  // heeft. Dit waren er drie na elkaar (de bruiloften, de klantreiskolommen,
+  // de pagina's), en elke vraag kost een rondje naar de database. De
+  // klantreiskolommen bestaan pas na migration_klantreis.sql; ontbreken ze,
+  // dan vragen we het nog eens zonder, zodat het dashboard blijft werken.
+  const basis = "id, slug, title, type, status, plan, created_at, expires_at, hero_image_url, datum, locatie, concept_naam"
+  const eerst = await service
     .from("events")
-    .select("id, slug, title, type, status, plan, created_at, expires_at, hero_image_url, datum, locatie, concept_naam")
+    .select(`${basis}, hoort_bij, checklist, deadline, stand_frequentie`)
     .eq("user_email", email)
     .order("created_at", { ascending: false })
+  const eventsFout = eerst.error
+  const events: Record<string, unknown>[] | null = eventsFout
+    ? (await service.from("events").select(basis).eq("user_email", email).order("created_at", { ascending: false })).data
+    : eerst.data
 
-  const alle = ((events ?? []) as Record<string, unknown>[]).map((e) => {
-    const { concept_naam, ...rest } = e
-    return {
-      ...rest,
-      // Wordt hieronder gevuld uit de paginatabel.
-      heeftSite: false,
-      conceptNaam: typeof concept_naam === "string" && concept_naam.trim() ? concept_naam : null,
-    }
-  }) as Bruiloft[]
-
-  // Is er in de websitebouwer gewerkt? De pagina's staan in een eigen tabel.
-  // De kaartbouwer maakt dezelfde bruiloft aan met alleen een lege Home, dus
-  // een tweede pagina of een gevulde Home betekent: hier is een website.
-  if (alle.length > 0) {
-    const { data: paginas } = await service
-      .from("pages")
-      .select("event_id, type, content")
-      .in("event_id", alle.map((e) => e.id))
-    if (paginas) {
-      const metSite = new Set<string>()
-      for (const p of paginas) {
-        const inhoud = p.content as Record<string, unknown> | null
-        const gevuld = !!inhoud && Object.keys(inhoud).length > 0
-        if (p.type !== "Home" || gevuld) metSite.add(p.event_id as string)
-      }
-      for (const e of alle) e.heeftSite = metSite.has(e.id)
-    }
-  }
-
-  // De kolommen die pas na migration_klantreis.sql bestaan, apart opgevraagd
-  // zodat het dashboard blijft werken zolang die nog niet gedraaid is.
-  let extra: Record<string, Extra> = {}
-  if (alle.length > 0) {
-    const { data: extraData, error: extraErr } = await service
-      .from("events")
-      .select("id, hoort_bij, checklist, deadline, stand_frequentie")
-      .in("id", alle.map((e) => e.id))
-    if (!extraErr && extraData) {
-      extra = Object.fromEntries(
-        extraData.map((e) => [
+  const rijen = (events ?? []) as Record<string, unknown>[]
+  const extra: Record<string, Extra> = eventsFout
+    ? {}
+    : Object.fromEntries(
+        rijen.map((e) => [
           e.id as string,
           {
             hoort_bij: (e.hoort_bij as string | null) ?? null,
@@ -169,8 +144,18 @@ export async function laadBruiloft(email: string, gekozenId?: string | null): Pr
           },
         ])
       )
+
+  const KLANTREIS = new Set(["hoort_bij", "checklist", "deadline", "stand_frequentie", "concept_naam"])
+  const alle = rijen.map((e) => {
+    const { concept_naam } = e
+    const rest = Object.fromEntries(Object.entries(e).filter(([k]) => !KLANTREIS.has(k)))
+    return {
+      ...rest,
+      // Wordt hieronder gevuld uit de paginatabel.
+      heeftSite: false,
+      conceptNaam: typeof concept_naam === "string" && concept_naam.trim() ? concept_naam : null,
     }
-  }
+  }) as Bruiloft[]
 
   // Eén bruiloft. Wie live staat heeft betaald, dus die gaat voor; daarna de
   // nieuwste. Ontwerpen (hoort_bij) tellen niet als bruiloft.
@@ -202,7 +187,7 @@ export async function laadBruiloft(email: string, gekozenId?: string | null): Pr
     // de rest door.
     const fotoIds = groep.filter((e) => planAllows(e.plan, "photos")).map((e) => e.id)
     const leeg = Promise.resolve({ data: null as Record<string, unknown>[] | null, error: null as unknown })
-    const [rsvpRes, adresRes, kaartIdRes, cardRes, gpEventsRes, gpDataRes] = await Promise.all([
+    const [rsvpRes, adresRes, kaartIdRes, cardRes, gpEventsRes, gpDataRes, paginaRes] = await Promise.all([
       service
         .from("rsvp")
         .select(
@@ -227,7 +212,21 @@ export async function laadBruiloft(email: string, gekozenId?: string | null): Pr
             .in("event_id", fotoIds)
             .order("created_at", { ascending: false })
         : leeg,
+      // Is er in de websitebouwer gewerkt? De kaartbouwer maakt dezelfde
+      // bruiloft aan met alleen een lege Home, dus een tweede pagina of een
+      // gevulde Home betekent: hier is een website.
+      service.from("pages").select("event_id, type, content").in("event_id", groepIds),
     ])
+
+    if (paginaRes.data) {
+      const metSite = new Set<string>()
+      for (const p of paginaRes.data) {
+        const inhoud = p.content as Record<string, unknown> | null
+        const gevuld = !!inhoud && Object.keys(inhoud).length > 0
+        if (p.type !== "Home" || gevuld) metSite.add(p.event_id as string)
+      }
+      for (const e of alle) e.heeftSite = metSite.has(e.id)
+    }
 
     rsvps = (rsvpRes.data ?? []) as RsvpRow[]
 
