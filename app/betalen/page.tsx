@@ -212,7 +212,23 @@ function CheckoutContent() {
     if (!event_id) { setLoadingEvent(false); return }
     fetch(`/api/events/${event_id}`)
       .then(r => r.json())
-      .then((data: EventData) => { setEvent(data); setLoadingEvent(false) })
+      .then((data: EventData) => {
+        // Al betaald en nu een groter pakket? Dan naar het upgradescherm, met
+        // alleen het verschil. De server rekent hetzelfde, dit zorgt dat je
+        // ook het juiste bedrag ziet.
+        const gevraagd = searchParams.get("plan")
+        if (
+          !upgradeTo &&
+          ["published", "expired"].includes(data.status) &&
+          isPlan(gevraagd) &&
+          upgradePrice(data.plan, gevraagd) != null
+        ) {
+          window.location.replace(`/betalen?event_id=${event_id}&upgrade=${gevraagd}`)
+          return
+        }
+        setEvent(data)
+        setLoadingEvent(false)
+      })
       .catch(() => setLoadingEvent(false))
   }
 

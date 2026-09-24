@@ -23,6 +23,7 @@ export default function WebsiteActies({
   live,
   magVerlengen,
   fotomuurAan,
+  prijs,
 }: {
   eventId: string
   slug: string
@@ -31,6 +32,8 @@ export default function WebsiteActies({
   /** Alleen bij een betaalde site met een einddatum. */
   magVerlengen: boolean
   fotomuurAan: boolean
+  /** Wat live zetten kost, bijvoorbeeld "€34,99". */
+  prijs: string
 }) {
   const router = useRouter()
   const [adresWijzigen, setAdresWijzigen] = useState(false)
@@ -95,7 +98,7 @@ export default function WebsiteActies({
           ) : (
             <>
               <ActieItem href={`/betalen?event_id=${eventId}&plan=compleet`} nadruk>
-                Live zetten voor {"€"}49,99
+                Live zetten voor {prijs}
               </ActieItem>
               <ActieUitleg>Daarna staat je site op {eventSiteLabel(slug)} en kun je het adres delen.</ActieUitleg>
             </>

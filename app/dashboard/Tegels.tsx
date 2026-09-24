@@ -331,6 +331,7 @@ export function WebsiteTegel({
   naam,
   slug,
   geldigTot,
+  prijs,
 }: {
   mag: boolean
   live: boolean
@@ -346,6 +347,8 @@ export function WebsiteTegel({
   slug: string | null
   /** Tot wanneer de betaalde site geldig is; leeg als er geen einddatum is. */
   geldigTot: string | null
+  /** Wat live zetten kost: het verschil als er al iets betaald is. */
+  prijs: string
 }) {
   const bouwer = eventId ? `/bouwen?event_id=${eventId}` : "/bouwen?plan=compleet"
 
@@ -365,6 +368,7 @@ export function WebsiteTegel({
       eventId={eventId}
       slug={slug}
       live={live && mag}
+      prijs={prijs}
       magVerlengen={live && mag && !!geldigTot}
       fotomuurAan={fotomuurAan}
     />
@@ -391,7 +395,7 @@ export function WebsiteTegel({
           </div>
         </div>
         <div className="flex flex-wrap gap-2 mt-auto">
-          <TegelKnop href={bouwer} soort="actie">Live zetten voor {"€"}49,99</TegelKnop>
+          <TegelKnop href={bouwer} soort="actie">Live zetten voor {prijs}</TegelKnop>
           <TegelKnop href={bouwer}>Verder bouwen</TegelKnop>
         </div>
       </Tegel>
@@ -400,7 +404,7 @@ export function WebsiteTegel({
 
   if (!mag) {
     return (
-      <Tegel titel="Website" grijs breed rechts={<span className="text-xs font-semibold" style={{ color: KLEUR.goud, letterSpacing: "0.03em" }}>{"€"}49,99</span>}>
+      <Tegel titel="Website" grijs breed rechts={<span className="text-xs font-semibold" style={{ color: KLEUR.goud, letterSpacing: "0.03em" }}>{prijs}</span>}>
         <p className="m-0 text-sm" style={{ color: KLEUR.zacht }}>
           Voor alles wat niet op de kaart past: route, programma, cadeautips, en een fotomuur voor de dag zelf. Je kunt hem alvast bouwen; live zetten kost pas geld.
         </p>
@@ -450,7 +454,7 @@ export function WebsiteTegel({
           </>
         ) : (
           <>
-            <TegelKnop href={eventId ? `/betalen?event_id=${eventId}&plan=compleet` : bouwer} soort="actie">Live zetten voor {"€"}49,99</TegelKnop>
+            <TegelKnop href={eventId ? `/betalen?event_id=${eventId}&plan=compleet` : bouwer} soort="actie">Live zetten voor {prijs}</TegelKnop>
             <TegelKnop href={bouwer}>Verder bouwen</TegelKnop>
           </>
         )}

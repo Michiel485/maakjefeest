@@ -78,6 +78,26 @@ export async function POST(request: Request) {
   const baseUrl = new URL(request.url).origin
   const webhookUrl = `${baseUrl}/api/webhook?token=${process.env.MOLLIE_WEBHOOK_SECRET}`
 
+  // ── Al betaald? Dan is een groter pakket altijd een upgrade ─────────────
+  // Knoppen in het dashboard en de bouwers stuurden naar de kassa met
+  // plan=... en niet met upgrade=..., en dan rekende deze route het volle
+  // bedrag, ook als de Save the Date al betaald was (gevonden 24 september
+  // 2026). Hier, op één plek, zodat geen enkele route dubbel kan laten
+  // betalen.
+  if (!body.upgrade_to && isPlan(body.plan)) {
+    const { data: huidig } = await createServiceClient()
+      .from("events")
+      .select("plan, status")
+      .eq("id", event_id)
+      .single()
+    if (huidig && ["published", "expired"].includes(huidig.status as string)) {
+      if (upgradePrice(huidig.plan, body.plan) == null) {
+        return Response.json({ error: "Dit pakket hebben jullie al." }, { status: 400 })
+      }
+      body.upgrade_to = body.plan
+    }
+  }
+
   // ── Upgrade: alleen het verschil betalen ────────────────────────────────
   if (body.upgrade_to) {
     if (!isPlan(body.upgrade_to)) {

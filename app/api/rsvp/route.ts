@@ -65,6 +65,7 @@ interface BestaandeRij {
   std_status: string | null
   inv_status: string | null
   apparaat: string | null
+  submission_id: string | null
   bron_token: string | null
 }
 
@@ -82,6 +83,77 @@ function leeftijd(waarde: unknown): number | null {
   return n >= 0 && n <= MAX_KIND_LEEFTIJD ? n : null
 }
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+// GET: wie er eerder is aangemeld, zodat het formulier kan vragen "dat
+// aanpassen, of iemand anders aanmelden?" en bij aanpassen de namen alvast
+// invult. Geen typfout tussen de Save the Date en de trouwkaart, en geen
+// tweede regel voor dezelfde gast.
+//
+// Twee manieren:
+// - apparaat: het onzichtbare kenmerk uit de browser. Alleen wie dat kenmerk
+//   heeft, ziet deze namen, en dat is het toestel dat ze zelf intypte.
+// - gast: een persoonlijke link uit de gastenlijst. Die geeft het huishouden
+//   van die gast terug, zodat hij zichzelf herkent.
+// Alleen namen en of iemand een kind is; geen mail, telefoon of dieetwensen.
+export async function GET(request: Request) {
+  const url = new URL(request.url)
+  const bron = tekst(url.searchParams.get("bron"), 64)
+  const apparaat = tekst(url.searchParams.get("apparaat"), 64)
+  const gast = url.searchParams.get("gast") ?? ""
+  if (!bron || (!apparaat && !UUID.test(gast))) return Response.json({ groepen: [] })
+
+  if (teVeelPogingen("rsvp-lezen", bezoekerIp(request), 40)) {
+    return Response.json({ error: "Even rustig aan" }, { status: 429 })
+  }
+
+  const supabase = createServiceClient()
+  const { data: card } = await supabase.from("cards").select("event_id").eq("share_token", bron).single()
+  if (!card) return Response.json({ groepen: [] })
+
+  const kolommen = "id, voornaam, achternaam, name, is_kind, leeftijd, is_primary, huishouden_id, submission_id, created_at"
+  type Rij = { id: string; voornaam: string | null; achternaam: string | null; name: string | null; is_kind: boolean | null; leeftijd: number | null; is_primary: boolean | null; huishouden_id: string | null; submission_id: string | null; created_at: string }
+  const persoon = (r: Rij) => ({
+    voornaam: r.voornaam ?? r.name ?? "",
+    achternaam: r.achternaam ?? "",
+    is_kind: r.is_kind === true,
+    leeftijd: r.leeftijd,
+  })
+  // Volwassenen voor kinderen, de hoofdgast bovenaan.
+  const volgorde = (a: Rij, b: Rij) =>
+    Number(a.is_kind === true) - Number(b.is_kind === true) || Number(b.is_primary === true) - Number(a.is_primary === true)
+
+  if (UUID.test(gast)) {
+    const { data: rij } = await supabase.from("rsvp").select(kolommen).eq("id", gast).eq("event_id", card.event_id).maybeSingle()
+    if (!rij) return Response.json({ groepen: [] })
+    let leden = [rij as Rij]
+    if ((rij as Rij).huishouden_id) {
+      const { data } = await supabase
+        .from("rsvp")
+        .select(kolommen)
+        .eq("event_id", card.event_id)
+        .eq("huishouden_id", (rij as Rij).huishouden_id)
+      if (data && data.length > 0) leden = data as Rij[]
+    }
+    return Response.json({ persoonlijk: true, groepen: [{ id: null, personen: leden.sort(volgorde).map(persoon) }] })
+  }
+
+  const { data: rijen } = await supabase
+    .from("rsvp")
+    .select(kolommen)
+    .eq("event_id", card.event_id)
+    .eq("apparaat", apparaat)
+    .order("created_at", { ascending: true })
+  const perGroep = new Map<string, Rij[]>()
+  for (const r of (rijen ?? []) as Rij[]) {
+    const k = r.submission_id ?? r.id
+    perGroep.set(k, [...(perGroep.get(k) ?? []), r])
+  }
+  return Response.json({
+    groepen: [...perGroep.entries()].map(([id, leden]) => ({ id, personen: leden.sort(volgorde).map(persoon) })),
+  })
+}
+
 export async function POST(request: Request) {
   let body: {
     event_id?: string
@@ -91,6 +163,17 @@ export async function POST(request: Request) {
     /** Onzichtbaar kenmerk uit de browser, om een tweede inzending van
      *  dezelfde persoon te herkennen. */
     apparaat?: string
+    /**
+     * Wat de gast koos toen dit toestel al eens antwoordde. "aanpassen": hij
+     * wijzigt zijn eerdere aanmelding (groep), en wie hij daaruit weglaat
+     * staat weer op niets gehoord. "nieuw": hij meldt iemand anders aan, en
+     * eerdere antwoorden blijven onaangeroerd. Ontbreekt dit, dan gelden alle
+     * eerdere antwoorden van dit toestel als "aanpassen", zoals voorheen.
+     */
+    modus?: string
+    groep?: string
+    /** De gast van een persoonlijke link (rsvp.id), zie GET hieronder. */
+    gast?: string
     status?: string
     guests: GuestInput[]
   }
@@ -188,15 +271,31 @@ export async function POST(request: Request) {
   // de belofte "je gastenlijst vult zich vanzelf" er juist een lijst met
   // dubbelingen van, en dat is precies het werk dat wij zouden schelen.
   const apparaat = tekst(body.apparaat, 64)
+  const modus = body.modus === "nieuw" ? "nieuw" : "aanpassen"
+  const groep = modus === "aanpassen" ? tekst(body.groep, 64) : null
+  const gastId = UUID.test(body.gast ?? "") ? (body.gast as string) : null
+  // Alleen de regels die je echt aan het aanpassen bent, horen bij "dit is
+  // mijn eerdere antwoord". Vul je op je telefoon ook voor iemand anders in,
+  // dan blijft het eerdere antwoord staan. Zonder dit zette een tweede
+  // aanmelding op hetzelfde toestel de eerste terug op "niets gehoord"
+  // (Michiels bevinding van 24 september 2026).
+  const vanMij = (r: BestaandeRij) =>
+    !!apparaat && modus === "aanpassen" && r.apparaat === apparaat && (!groep || r.submission_id === groep)
 
   const { data: bestaand } = await supabase
     .from("rsvp")
     .select(
-      "id, voornaam, achternaam, name, huishouden_id, huishouden_naam, std_status, inv_status, apparaat, bron_token"
+      "id, voornaam, achternaam, name, huishouden_id, huishouden_naam, std_status, inv_status, apparaat, bron_token, submission_id"
     )
     .eq("event_id", event_id)
 
   const kolom = status === "voorlopig" ? "std_status" : "inv_status"
+
+  // De gast van een persoonlijke link, en zijn huishouden: die regels zijn van
+  // hem, ook als hij er al eerder op antwoordde.
+  const gastRij = gastId ? ((bestaand ?? []) as BestaandeRij[]).find((r) => r.id === gastId) ?? null : null
+  const vanGast = (r: BestaandeRij) =>
+    !!gastRij && (r.id === gastRij.id || (!!gastRij.huishouden_id && r.huishouden_id === gastRij.huishouden_id))
 
   const opSleutel = new Map<string, BestaandeRij>()
   for (const r of (bestaand ?? []) as BestaandeRij[]) {
@@ -206,7 +305,7 @@ export async function POST(request: Request) {
     // die het bruidspaar zelf intypte en waar nog geen antwoord op staat is
     // precies de regel die deze gast hoort te vullen. Een regel waarop al
     // iemand anders geantwoord heeft laten we met rust.
-    const magBij = (apparaat && r.apparaat === apparaat) || !heeftGereageerd(reis(r[kolom]))
+    const magBij = vanMij(r) || vanGast(r) || !heeftGereageerd(reis(r[kolom]))
     if (magBij) opSleutel.set(sleutel, r)
   }
 
@@ -217,6 +316,13 @@ export async function POST(request: Request) {
     if (rij && sleutel) opSleutel.delete(sleutel)
     return { g, bestaand: rij ?? null }
   })
+
+  // Via een persoonlijke link en toch een andere naam getypt? Dan is de eerste
+  // persoon nog steeds de gast aan wie de link gestuurd werd. Zo ontstaat er
+  // geen tweede regel door een typfout.
+  if (gastRij && !paren.some((p) => p.bestaand?.id === gastRij.id) && paren[0] && !paren[0].bestaand) {
+    paren[0] = { ...paren[0], bestaand: gastRij }
+  }
 
   // ── Past dit nog in de lijst? ─────────────────────────────────────────────
   // Alleen wat er echt bijkomt telt mee. Wie zijn eigen antwoord bijwerkt is
@@ -234,13 +340,11 @@ export async function POST(request: Request) {
   // "nog niets gehoord". Een regel die echt niet bestaat haalt het bruidspaar
   // er zelf uit, met de knop die er al is.
   const houden = new Set(paren.map((p) => p.bestaand?.id).filter(Boolean) as string[])
-  const vervangt = apparaat
-    ? ((bestaand ?? []) as BestaandeRij[]).some((r) => r.apparaat === apparaat)
-    : false
+  const vervangt = ((bestaand ?? []) as BestaandeRij[]).some((r) => vanMij(r) || vanGast(r))
 
-  if (apparaat) {
+  if (apparaat || gastRij) {
     const terug = ((bestaand ?? []) as BestaandeRij[])
-      .filter((r) => r.apparaat === apparaat && !houden.has(r.id))
+      .filter((r) => (vanMij(r) || vanGast(r)) && !houden.has(r.id))
       .map((r) => r.id)
     if (terug.length > 0) {
       await supabase

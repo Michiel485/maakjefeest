@@ -112,6 +112,7 @@ export default async function DashboardPage({
   const magStd = groep.some((e) => planMagVersturen(e.plan, "save_the_date"))
   const betaaldPlan = groep.find((e) => ["published", "expired"].includes(e.status))?.plan ?? null
   const prijsInv = (betaaldPlan && upgradePrice(betaaldPlan, "uitnodiging")) || PLANS.uitnodiging.price
+  const prijsSite = (betaaldPlan && upgradePrice(betaaldPlan, "compleet")) || PLANS.compleet.price
   const magInv = groep.some((e) => planMagVersturen(e.plan, "trouwkaart"))
 
   const metInhoud: Onderdeel[] = [
@@ -262,6 +263,7 @@ export default async function DashboardPage({
             naam={bruiloft?.conceptNaam ?? null}
             slug={bruiloft?.slug ?? null}
             geldigTot={liveSite?.expires_at ?? null}
+            prijs={formatEur(prijsSite).replace(",00", "")}
           />
 
           {/* ── De gastenlijst, met de lijst zelf erin ── */}

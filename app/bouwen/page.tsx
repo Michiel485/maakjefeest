@@ -15,7 +15,7 @@ import { formatDate } from "@/lib/event-styles"
 import { TITLE_FONT_OPTIONS, getTitleFont } from "@/lib/title-fonts"
 import { createClient } from "@/lib/supabase"
 import { eventSiteUrl } from "@/lib/site-url"
-import { DEFAULT_PLAN, hoogstePlan, PLANS, formatEur, isCardPlan, isPlan, type Plan } from "@/lib/plans"
+import { DEFAULT_PLAN, hoogstePlan, PLANS, formatEur, isCardPlan, isPlan, planAllows, upgradePrice, type Plan } from "@/lib/plans"
 import BouwerSchil from "@/components/BouwerSchil"
 import { Knop, Melding, SectieKop } from "@/components/ui"
 import { KLEUR } from "@/lib/ontwerp"
@@ -411,6 +411,9 @@ export default function BouwenPage() {
   // Server en client moeten dezelfde eerste render geven, dus het pakket wordt
   // pas na het monteren uit de URL of localStorage gelezen.
   const [plan, setPlan] = useState<Plan>(DEFAULT_PLAN)
+  // Wat er al betaald is, als de bruiloft al een pakket heeft. Dan kost
+  // publiceren alleen het verschil.
+  const [betaaldPlan, setBetaaldPlan] = useState<Plan | null>(null)
   const [previewPage, setPreviewPage] = useState<PageId>("Home")
   const [activeSection, setActiveSection] = useState<'algemeen' | 'paginas' | 'url' | null>(null)
   const [activeSubPage, setActiveSubPage] = useState<PageId | null>(null)
@@ -703,7 +706,14 @@ export default function BouwenPage() {
             newContent.Informatie = { ...(newContent.Informatie ?? {}), items: DEFAULT_PRAKTISCH_TILES }
           }
 
-          const published = event.status === "published"
+          // Betaald is nog niet "de site staat live": met alleen een Save the
+          // Date is de bruiloft wel gepubliceerd, maar hoort de website er
+          // niet bij. Dan toonde de bouwer "Bekijk live site" voor een site
+          // die er niet was (gevonden 24 september 2026).
+          const published = event.status === "published" && planAllows(event.plan, "site")
+          if (event.status === "published" || event.status === "expired") {
+            setBetaaldPlan(isPlan(event.plan) ? event.plan : null)
+          }
           if (isPlan(event.plan)) setPlan(event.plan)
           setDraft(restoredDraft)
           setLadenKlaar(true)
@@ -1507,7 +1517,7 @@ export default function BouwenPage() {
               bezigTekst="Naar de kassa"
               className="flex-1 md:flex-none"
             >
-              Publiceren voor&nbsp;{formatEur(PLANS.compleet.price)}
+              Publiceren voor&nbsp;{formatEur((betaaldPlan && upgradePrice(betaaldPlan, "compleet")) || PLANS.compleet.price)}
             </Knop>
           )}
         </>
