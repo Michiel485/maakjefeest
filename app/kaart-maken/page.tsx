@@ -86,6 +86,45 @@ interface ConceptRij {
 }
 
 type Stap = "stijl" | "template" | "tekst" | "groep" | "details" | "aanmelden" | "taal" | "foto" | "animatie" | "bekijken"
+
+// ── Op de telefoon ──────────────────────────────────────────────────────────
+// De kaart is het scherm en het gereedschap zit onder je duim, zoals in Canva
+// of een Instagram-verhaal. Vijf knoppen onderaan openen elk een paneel van
+// onderen met alleen die onderdelen; de kaart blijft erboven zichtbaar en
+// verandert live mee. Michiels wens van 24 september 2026: de lange lijst
+// onder een half afgesneden kaart was rommelig. Op een groot scherm blijft
+// alles zoals het was.
+type Blad = "kaart" | "tekst" | "stijl" | "foto" | "gasten" | "meer"
+const BLAD_SECTIES: Record<Exclude<Blad, "kaart">, Stap[]> = {
+  tekst: ["tekst", "details"],
+  stijl: ["stijl", "template"],
+  foto: ["foto"],
+  gasten: ["groep", "aanmelden"],
+  meer: ["taal", "animatie", "bekijken"],
+}
+const BLAD_TITEL: Record<Blad, string> = {
+  kaart: "Je kaarten",
+  tekst: "Tekst",
+  stijl: "Stijl en ontwerp",
+  foto: "Foto",
+  gasten: "Gasten",
+  meer: "Meer",
+}
+
+function BladIcoon({ blad }: { blad: Exclude<Blad, "kaart"> }) {
+  const pad = {
+    tekst: "M4 7V5h16v2M9 19h6M12 5v14",
+    stijl: "M12 21a9 9 0 1 1 0-18c4.97 0 9 3.58 9 8 0 2.76-2.24 4-5 4h-1.5a1.5 1.5 0 0 0-1.06 2.56A1.5 1.5 0 0 1 12 21zM7.5 11a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM12 7.5a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM16.5 11a1 1 0 1 0 0-2 1 1 0 0 0 0 2z",
+    foto: "M4 7h3l2-2h6l2 2h3v12H4zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z",
+    gasten: "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21v-1a6 6 0 0 1 12 0v1M16 3.13a4 4 0 0 1 0 7.75M22 21v-1a6 6 0 0 0-4-5.65",
+    meer: "M5 12h.01M12 12h.01M19 12h.01",
+  }[blad]
+  return (
+    <svg className="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={blad === "meer" ? 3 : 1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={pad} />
+    </svg>
+  )
+}
 type Actie = "bewaar" | "activeer"
 
 interface KaartOntwerp {
@@ -215,6 +254,39 @@ export default function KaartMakenPage() {
   // die sectie een paar tellen later dicht zodra een bestaande kaart binnen
   // was (Michiel, 24 september 2026).
   const [stap, setStap] = useState<Stap | null>(null)
+  // Welk paneel op de telefoon open is; op een groot scherm doet dit niets.
+  const [blad, setBlad] = useState<Blad | null>(null)
+  function openBlad(b: Blad | null) {
+    setBlad(b)
+    if (b && b !== "kaart") setStap(BLAD_SECTIES[b][0])
+  }
+  /** Op de telefoon: laat deze sectie alleen zien in het paneel waar hij bij hoort. */
+  function telefoon(s: Stap): string {
+    return blad && blad !== "kaart" && BLAD_SECTIES[blad].includes(s) ? "" : "max-md:hidden"
+  }
+  /**
+   * Tik op de kaart en je bewerkt wat je aanraakt: de namen, de datum, de
+   * locatie of de boodschap. Op de telefoon opent het tekstpaneel, op een
+   * groot scherm de sectie in de zijbalk.
+   */
+  function tikOpKaart(e: React.MouseEvent) {
+    const aangeraakt = ((e.target as HTMLElement).innerText ?? "").trim().toLowerCase()
+    if (!aangeraakt) return
+    const bevat = (s: string) => !!s.trim() && aangeraakt.includes(s.trim().toLowerCase().slice(0, 12))
+    // Vergelijken met wat er op de kaart staat, niet met wat er is ingevuld:
+    // zonder namen toont de kaart "Jullie namen", en daar tik je dan op.
+    const veld = bevat(display.names) ? "kaart-namen"
+      : bevat(display.dateText) || /\d{4}/.test(aangeraakt) ? "kaart-datum"
+      : bevat(display.location) ? "kaart-locatie"
+      : "kaart-boodschap"
+    if (window.matchMedia("(max-width: 767px)").matches) openBlad("tekst")
+    setStap("tekst")
+    setTimeout(() => {
+      const el = document.getElementById(veld)
+      el?.focus()
+      el?.scrollIntoView({ block: "center", behavior: "smooth" })
+    }, 60)
+  }
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [eventId, setEventId] = useState<string | null>(null)
   const [cardId, setCardId] = useState<string | null>(null)
@@ -933,6 +1005,72 @@ export default function KaartMakenPage() {
          blijft de zijbalk staan als je onder de kaart kijkt. Michiels wens
          van 23 september 2026. Op de telefoon blijft alles één pagina. */
       className="md:h-screen md:overflow-hidden"
+      onderKop={
+        <div className="md:hidden sticky top-[57px] z-20 flex items-center gap-2 px-3 py-2 border-b" style={{ backgroundColor: "#fff", borderColor: `${GOLD_LIGHT}80` }}>
+          <button
+            type="button"
+            onClick={() => openBlad(blad === "kaart" ? null : "kaart")}
+            className="flex-1 min-w-0 text-left"
+            style={{ background: "none", border: 0, padding: 0, cursor: "pointer" }}
+            aria-label="Je kaarten: naam, wisselen, nieuw of verwijderen"
+          >
+            <span className="flex items-center gap-1 text-sm font-semibold truncate" style={{ color: CHARCOAL }}>
+              <span className="truncate">{ontwerp.naam.trim() || automatischeNaam}</span>
+              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" /></svg>
+            </span>
+            <span className="block text-[11px]" style={{ color: onbewaard || !cardId ? "#B45309" : SUBTLE }}>
+              {!cardId ? "nog niet bewaard" : onbewaard ? "wijzigingen niet bewaard" : "bewaard"}
+            </span>
+          </button>
+          <IconKnop title="Bewaren" onClick={() => voerUit("bewaar")} disabled={busy !== null} bezig={busy === "bewaar"}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+              <path d="M17 21v-8H7v8M7 3v5h8" />
+            </svg>
+          </IconKnop>
+          {alAfgenomen && huidigeKaart ? (
+            <a
+              href={`/kaart/${huidigeKaart.share_token}/voorbeeld`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[13px] font-semibold px-3.5 py-2 rounded-full whitespace-nowrap"
+              style={{ backgroundColor: KLEUR.groen, color: "#fff", textDecoration: "none" }}
+            >
+              Bekijk
+            </a>
+          ) : (
+            <button
+              type="button"
+              onClick={() => voerUit("activeer")}
+              disabled={busy !== null}
+              className="text-[13px] font-semibold px-3.5 py-2 rounded-full whitespace-nowrap disabled:opacity-60"
+              style={{ backgroundColor: KLEUR.groen, color: "#fff", border: 0, cursor: "pointer" }}
+            >
+              {busy === "activeer" ? "Even..." : `Activeer ${prijs}`}
+            </button>
+          )}
+        </div>
+      }
+      onderbalk={
+        <nav className="flex justify-around px-1 pt-1.5 pb-2" aria-label="Onderdelen van de kaart">
+          {(["tekst", "stijl", "foto", "gasten", "meer"] as const).map((b) => {
+            const aan = blad === b
+            return (
+              <button
+                key={b}
+                type="button"
+                onClick={() => openBlad(aan ? null : b)}
+                aria-pressed={aan}
+                className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl text-[11px] font-semibold min-w-[56px]"
+                style={{ color: aan ? GOLD : SUBTLE, backgroundColor: aan ? GOLD_BG : "transparent", border: 0, cursor: "pointer" }}
+              >
+                <BladIcoon blad={b} />
+                {BLAD_TITEL[b] === "Stijl en ontwerp" ? "Stijl" : BLAD_TITEL[b]}
+              </button>
+            )
+          })}
+        </nav>
+      }
       voorVerlaten={async () => {
         if (!onbewaard) return true
         // Ingelogd en compleet genoeg om te bewaren? Dan bewaren en gaan, net
@@ -1083,7 +1221,29 @@ export default function KaartMakenPage() {
           stappen, rechts de kaart. */}
       <div className="flex flex-col-reverse md:flex-row flex-1 min-h-0">
         {/* ── Stappen ── */}
-        <aside className="w-full md:w-80 md:flex-shrink-0 bg-white border-r border-gray-100 md:overflow-y-auto">
+        <aside
+          className={`w-full md:w-80 md:flex-shrink-0 bg-white border-r border-gray-100 md:overflow-y-auto ${
+            blad
+              ? "max-md:fixed max-md:inset-x-0 max-md:bottom-[64px] max-md:z-40 max-md:max-h-[58vh] max-md:overflow-y-auto max-md:rounded-t-2xl max-md:border-t max-md:shadow-[0_-16px_40px_-16px_rgba(26,18,4,0.35)]"
+              : "max-md:hidden"
+          }`}
+        >
+          {/* De kop van het paneel, alleen op de telefoon */}
+          {blad && (
+            <div className="md:hidden sticky top-0 z-10 bg-white flex items-center justify-between px-5 pt-2 pb-2 border-b border-gray-100">
+              <span aria-hidden className="absolute left-1/2 -translate-x-1/2 top-1.5 w-9 h-1 rounded-full" style={{ backgroundColor: GOLD_LIGHT }} />
+              <span className="text-sm font-semibold mt-2" style={{ color: CHARCOAL }}>{BLAD_TITEL[blad]}</span>
+              <button
+                type="button"
+                onClick={() => openBlad(null)}
+                aria-label="Sluiten"
+                className="mt-2 w-8 h-8 inline-flex items-center justify-center rounded-full"
+                style={{ backgroundColor: GOLD_BG, color: CHARCOAL, border: 0, cursor: "pointer" }}
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round"><path d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+          )}
           {/* ── Welke kaart, hoe heet hij, bewaren ──
               Bovenaan de zijbalk, zoals de titelbalk van een document: de
               naam met daarnaast bewaren, kopiëren en nieuw, en eronder de
@@ -1091,7 +1251,7 @@ export default function KaartMakenPage() {
               23 september 2026, in plaats van een balk over de volle breedte
               onder de kop. Staat er vanaf het begin, ook voor er iets bewaard
               is, zodat je je ontwerp meteen een naam kunt geven. */}
-          <div className="px-4 py-3 border-b border-gray-100 flex flex-col gap-2" style={{ backgroundColor: GOLD_BG }}>
+          <div className={`px-4 py-3 border-b border-gray-100 flex flex-col gap-2 ${blad === "kaart" ? "" : "max-md:hidden"}`} style={{ backgroundColor: GOLD_BG }}>
             <div className="flex items-center gap-1.5">
               <input
                 value={ontwerp.naam}
@@ -1186,7 +1346,7 @@ export default function KaartMakenPage() {
             )}
           </div>
 
-          <Sectie open={stap === "tekst"} onToggle={() => setStap(stap === "tekst" ? null : "tekst")} titel="Tekst op de kaart">
+          <Sectie className={telefoon("tekst")} open={stap === "tekst"} onToggle={() => setStap(stap === "tekst" ? null : "tekst")} titel="Tekst op de kaart">
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Jullie namen</span>
               {/* Een tekstvak en geen invoerregel, zodat een enter werkt: veel
@@ -1196,6 +1356,7 @@ export default function KaartMakenPage() {
                 style={{ ...inputStyle, minHeight: 48 }}
                 rows={2}
                 placeholder="Sophie & Daan"
+                id="kaart-namen"
                 value={ontwerp.names}
                 onChange={(e) => update({ names: e.target.value })}
                 maxLength={80}
@@ -1203,7 +1364,7 @@ export default function KaartMakenPage() {
             </label>
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Trouwdatum</span>
-              <input type="date" className={inputCls} style={inputStyle} value={ontwerp.datum} onChange={(e) => update({ datum: e.target.value })} />
+              <input id="kaart-datum" type="date" className={inputCls} style={inputStyle} value={ontwerp.datum} onChange={(e) => update({ datum: e.target.value })} />
             </label>
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Locatie</span>
@@ -1212,6 +1373,7 @@ export default function KaartMakenPage() {
                 style={{ ...inputStyle, minHeight: 48 }}
                 rows={2}
                 placeholder={"Landgoed Duno\nDoorwerth"}
+                id="kaart-locatie"
                 value={ontwerp.location}
                 onChange={(e) => update({ location: e.target.value })}
                 maxLength={120}
@@ -1223,11 +1385,11 @@ export default function KaartMakenPage() {
 
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Boodschap</span>
-              <textarea className={inputCls} style={{ ...inputStyle, minHeight: 84 }} placeholder={display.message} value={ontwerp.message} onChange={(e) => update({ message: e.target.value })} maxLength={400} />
+              <textarea id="kaart-boodschap" className={inputCls} style={{ ...inputStyle, minHeight: 84 }} placeholder={display.message} value={ontwerp.message} onChange={(e) => update({ message: e.target.value })} maxLength={400} />
             </label>
           </Sectie>
 
-          <Sectie open={stap === "stijl"} onToggle={() => setStap(stap === "stijl" ? null : "stijl")} titel="Stijl">
+          <Sectie className={telefoon("stijl")} open={stap === "stijl"} onToggle={() => setStap(stap === "stijl" ? null : "stijl")} titel="Stijl">
             <div className="grid grid-cols-5 gap-2">
               {STYLE_KEYS.map((s) => {
                 const cfg = STYLE_CONFIG[s]
@@ -1254,7 +1416,7 @@ export default function KaartMakenPage() {
             </div>
           </Sectie>
 
-          <Sectie open={stap === "template"} onToggle={() => setStap(stap === "template" ? null : "template")} titel="Ontwerp">
+          <Sectie className={telefoon("template")} open={stap === "template"} onToggle={() => setStap(stap === "template" ? null : "template")} titel="Ontwerp">
             <div className="flex flex-col gap-2">
               {CARD_DESIGNS.map((t) => (
                 <button
@@ -1271,7 +1433,7 @@ export default function KaartMakenPage() {
           </Sectie>
 
           {/* Een foto kan bij elk ontwerp */}
-          <Sectie open={stap === "foto"} onToggle={() => setStap(stap === "foto" ? null : "foto")} titel="Foto (optioneel)">
+          <Sectie className={telefoon("foto")} open={stap === "foto"} onToggle={() => setStap(stap === "foto" ? null : "foto")} titel="Foto (optioneel)">
               <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void kiesFoto(f) }} />
               {(ontwerp.photoDataUrl || ontwerp.photoUrl) && (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -1301,7 +1463,7 @@ export default function KaartMakenPage() {
 
               Ook bij een Save the Date, want wie zijn indeling al weet kan
               meteen twee losse kaarten maken. */}
-          <Sectie open={stap === "groep"} onToggle={() => setStap(stap === "groep" ? null : "groep")} titel="Voor wie is deze kaart">
+          <Sectie className={telefoon("groep")} open={stap === "groep"} onToggle={() => setStap(stap === "groep" ? null : "groep")} titel="Voor wie is deze kaart">
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => update({ guestType: "" })}
@@ -1362,7 +1524,7 @@ export default function KaartMakenPage() {
               hier aanstaat komt samen in één regel in de accentkleur onder de
               tekst, in dezelfde letter als de datum. Wat leeg is, staat er
               niet. */}
-          <Sectie open={stap === "details"} onToggle={() => setStap(stap === "details" ? null : "details")} titel="Details op de kaart">
+          <Sectie className={telefoon("details")} open={stap === "details"} onToggle={() => setStap(stap === "details" ? null : "details")} titel="Details op de kaart">
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Tijden</span>
               <input
@@ -1409,6 +1571,7 @@ export default function KaartMakenPage() {
           </Sectie>
 
           <Sectie
+            className={telefoon("aanmelden")}
             open={stap === "aanmelden"}
             onToggle={() => setStap(stap === "aanmelden" ? null : "aanmelden")}
             titel={`Aanmelden · ${AANMELD_KORT[ontwerp.aanmelden]}`}
@@ -1474,7 +1637,7 @@ export default function KaartMakenPage() {
 
           </Sectie>
 
-          <Sectie open={stap === "taal"} onToggle={() => setStap(stap === "taal" ? null : "taal")} titel="Taal van de kaart">
+          <Sectie className={telefoon("taal")} open={stap === "taal"} onToggle={() => setStap(stap === "taal" ? null : "taal")} titel="Taal van de kaart">
             <div className="grid grid-cols-2 gap-2">
               {CARD_TALEN.map((tl) => (
                 <button
@@ -1494,7 +1657,7 @@ export default function KaartMakenPage() {
             </div>
           </Sectie>
 
-          <Sectie open={stap === "animatie"} onToggle={() => setStap(stap === "animatie" ? null : "animatie")} titel="Openen">
+          <Sectie className={telefoon("animatie")} open={stap === "animatie"} onToggle={() => setStap(stap === "animatie" ? null : "animatie")} titel="Openen">
             <div className="flex flex-col gap-2">
               {CARD_ANIMATIE_KEUZES.map((a) => (
                 <button
@@ -1519,7 +1682,7 @@ export default function KaartMakenPage() {
             </button>
           </Sectie>
 
-          <Sectie open={stap === "bekijken"} onToggle={() => setStap(stap === "bekijken" ? null : "bekijken")} titel="Bekijken">
+          <Sectie className={telefoon("bekijken")} open={stap === "bekijken"} onToggle={() => setStap(stap === "bekijken" ? null : "bekijken")} titel="Bekijken">
             <button
               onClick={() => setSimulatie(true)}
               className="w-full text-sm font-semibold px-3 py-3 rounded-xl transition-all hover:-translate-y-0.5"
@@ -1545,7 +1708,7 @@ export default function KaartMakenPage() {
             Zo zie je je kaart veranderen terwijl je typt. */}
         <main
           ref={voorbeeldRef}
-          className="flex-1 overflow-y-auto p-4 sm:p-5 sticky top-[57px] z-20 max-h-[46vh] md:relative md:top-auto md:max-h-none md:z-auto"
+          className={`flex-1 p-4 sm:p-5 md:overflow-y-auto md:relative ${blad && blad !== "kaart" ? "max-md:max-h-[34vh] max-md:overflow-hidden" : ""}`}
           /* Dezelfde achtergrond als je gast straks ziet, zodat het voorbeeld
              in de bouwer klopt met de kaart die aankomt. Michiels wens van
              23 september 2026. */
@@ -1562,14 +1725,26 @@ export default function KaartMakenPage() {
           >
             {"💌"} Bekijk hoe het opengaat
           </button>
-          <div className="mx-auto max-w-md">
-            <p className="text-center text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: sc.headingColor, opacity: 0.75 }}>
-              Zo ziet jullie kaart eruit
-            </p>
+          <div className={`mx-auto max-w-md transition-transform duration-200 origin-top ${blad && blad !== "kaart" ? "max-md:scale-[0.5]" : ""}`}>
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <p className="m-0 text-center text-xs font-semibold uppercase tracking-widest" style={{ color: sc.headingColor, opacity: 0.75 }}>
+                Zo ziet jullie kaart eruit
+              </p>
+              {/* Op de telefoon: de demo als een knopje naast het kopje */}
+              <button
+                type="button"
+                onClick={() => setSimulatie(true)}
+                className="md:hidden text-[11px] font-semibold px-2.5 py-1 rounded-full"
+                style={{ backgroundColor: "#fff", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
+              >
+                {"▶"} Demo
+              </button>
+            </div>
             {/* Geen overflow-clip en geen eigen schaduw om de kaart heen: de
                 kaart tekent zijn eigen schaduw, en een klippende doos eromheen
                 sneed die af tot een vierkant. */}
-            <div className="rounded-2xl">
+            {/* Tik op een tekst op de kaart en je bewerkt die tekst */}
+            <div className="rounded-2xl cursor-text" onClick={tikOpKaart} title="Tik op een tekst om hem te wijzigen">
               <CardReveal
                 display={display}
                 initials={initialen}

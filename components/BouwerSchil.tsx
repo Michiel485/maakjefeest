@@ -29,6 +29,11 @@ export default function BouwerSchil({
   acties,
   /** Iets dat onder de kop hoort, zoals een foutmelding. */
   onderKop,
+  /**
+   * Op de telefoon onderaan in plaats van de actieknoppen, zoals de
+   * werkbalk van de kaartbouwer. De acties staan dan zelf ergens anders.
+   */
+  onderbalk,
   className,
   children,
 }: {
@@ -40,6 +45,7 @@ export default function BouwerSchil({
   voorVerlaten?: () => boolean | Promise<boolean>
   acties?: React.ReactNode
   onderKop?: React.ReactNode
+  onderbalk?: React.ReactNode
   /** Extra klassen op het omhulsel, bijvoorbeeld een vaste hoogte op desktop. */
   className?: string
   children: React.ReactNode
@@ -92,9 +98,22 @@ export default function BouwerSchil({
       {onderKop}
 
       {/* Onderaan ruimte voor de balk op de telefoon, zodat die niets bedekt. */}
-      <div className={`flex flex-col flex-1 min-h-0 ${acties ? "pb-20 md:pb-0" : ""}`}>{children}</div>
+      <div className={`flex flex-col flex-1 min-h-0 ${acties || onderbalk ? "pb-20 md:pb-0" : ""}`}>{children}</div>
 
-      {acties && (
+      {onderbalk && (
+        <div
+          className="md:hidden fixed bottom-0 inset-x-0 z-30 border-t"
+          style={{
+            backgroundColor: "#fff",
+            borderColor: `${KLEUR.goudLicht}80`,
+            paddingBottom: "env(safe-area-inset-bottom, 0px)",
+          }}
+        >
+          {onderbalk}
+        </div>
+      )}
+
+      {acties && !onderbalk && (
         <div
           className="md:hidden fixed bottom-0 inset-x-0 z-30 flex items-center gap-2 px-3 pt-2.5 border-t"
           style={{
