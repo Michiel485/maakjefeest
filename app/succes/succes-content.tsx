@@ -20,21 +20,22 @@ interface EventData {
   plan?: string
 }
 
-// Teksten per pakket
+// Teksten per pakket. Eerder toonde de pagina altijd "Je website is live",
+// ook na het activeren van een Save the Date (Michiel, 24 september 2026).
 const COPY: Record<Plan, { titel: string; tekst: string; primaireKnop: string }> = {
   save_the_date: {
-    titel: "Jullie Save the Date staat klaar!",
-    tekst: "Je betaling is ontvangen. Maak in het dashboard jullie Save the Date, kopieer de link en verstuur hem via WhatsApp naar jullie gasten.",
-    primaireKnop: "Maak jullie Save the Date",
+    titel: "Jullie Save the Date is geactiveerd",
+    tekst: "De link werkt nu voor je gasten. Kies in je dashboard de kaart en druk op Link voor je gasten; kopieer hem of stuur hem meteen via WhatsApp.",
+    primaireKnop: "Naar je dashboard",
   },
   uitnodiging: {
-    titel: "Jullie uitnodiging en RSVP staan klaar!",
-    tekst: "Je betaling is ontvangen. Maak per gastengroep een trouwkaart in het dashboard; gasten reageren via jullie RSVP-pagina en jullie zien alles terug in het overzicht.",
-    primaireKnop: "Maak jullie trouwkaarten",
+    titel: "Jullie trouwkaart is geactiveerd",
+    tekst: "De link werkt nu voor je gasten, en de Save the Date zit erbij. Kies in je dashboard de kaart en druk op Link voor je gasten. Wie antwoordt staat meteen in je gastenlijst.",
+    primaireKnop: "Naar je dashboard",
   },
   compleet: {
-    titel: "Gefeliciteerd! Je website is live!",
-    tekst: "Je betaling is ontvangen en je trouwwebsite staat klaar. Deel hem met je gasten!",
+    titel: "Gefeliciteerd! Je website is live",
+    tekst: "Je trouwwebsite staat op internet, en de Save the Date en de trouwkaart zitten erbij. Deel het adres met je gasten.",
     primaireKnop: "Bekijk je website",
   },
 }
@@ -94,7 +95,7 @@ export default function SuccesContent() {
       <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: GOLD }}>
         {isUpgrade ? "Upgrade gelukt" : "Betaling ontvangen"} · {PLANS[plan].label}
       </p>
-      <h1 className="text-3xl font-extrabold mb-3" style={{ color: CHARCOAL }}>
+      <h1 className="mb-3" style={{ color: CHARCOAL, fontFamily: "var(--font-cormorant)", fontSize: "clamp(2rem, 5vw, 2.6rem)", fontWeight: 600, lineHeight: 1.1 }}>
         {copy.titel}
       </h1>
       <p className="mb-10 leading-relaxed" style={{ color: BODY }}>
@@ -160,11 +161,19 @@ export default function SuccesContent() {
         )}
       </div>
 
-      {plan !== "compleet" && (
-        <p className="mt-6 text-xs leading-relaxed" style={{ color: "#9A8E82" }}>
-          Later meer nodig? In het dashboard upgrade je naar een hoger pakket en betaal je alleen het verschil. Alles wat jullie maakten blijft staan.
-        </p>
+      {plan === "compleet" && (
+        <Link href="/dashboard" className="mt-4 text-sm font-semibold underline underline-offset-2" style={{ color: CHARCOAL }}>
+          Naar je dashboard
+        </Link>
       )}
+
+      <ul className="mt-8 w-full text-left list-none p-0 m-0 flex flex-col gap-2.5 rounded-2xl px-5 py-4 text-sm leading-relaxed" style={{ backgroundColor: "#FBF5E8", border: `1px solid ${GOLD_LIGHT}`, color: BODY }}>
+        <li><b style={{ color: CHARCOAL }}>Aanpassen kan altijd.</b> Ook na het versturen: je gasten zien de nieuwe versie zodra ze de link opnieuw openen.</li>
+        <li><b style={{ color: CHARCOAL }}>Je gastenlijst vult zichzelf.</b> Wie antwoordt staat meteen in je dashboard.</li>
+        {plan !== "compleet" && (
+          <li><b style={{ color: CHARCOAL }}>Later meer nodig?</b> Dan betaal je alleen het verschil. Alles wat jullie maakten blijft staan.</li>
+        )}
+      </ul>
 
       <Link
         href="/"

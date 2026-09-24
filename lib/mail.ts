@@ -1222,77 +1222,118 @@ export async function sendPlanActivatedEmail({
   toEmail,
   names,
   plan,
-  slug,
   isUpgrade,
 }: {
   toEmail: string
   names: string
   plan: "save_the_date" | "uitnodiging"
-  slug: string
+  /** Wordt nog meegegeven door de aanroepers; de mail verwijst naar het dashboard. */
+  slug?: string
   isUpgrade: boolean
 }) {
+  // Dezelfde opbouw als de andere mails: gouden kop, witte kaart, zachte
+  // voet. Deze stond nog in de oude vorm en klopte niet meer met hoe het
+  // dashboard werkt (Michiel, 24 september 2026). De bedragen komen uit
+  // lib/plans, zodat ze niet uit de pas lopen met de prijsladder.
   const dashboardUrl = "https://www.sayingyes.nl/dashboard"
-  const rsvpUrl = `https://${slug}.sayingyes.nl`
-
   const isStd = plan === "save_the_date"
-  const titel = isStd ? "Jullie Save the Date staat klaar" : "Jullie uitnodiging en RSVP staan klaar"
-  const kop = isUpgrade ? "Upgrade gelukt!" : "Gelukt!"
-  const intro = isStd
-    ? "Jullie kunnen nu een digitale Save the Date maken en versturen: een envelop met lakzegel die opent in jullie stijl. Maak hem in het dashboard, kopieer de link en stuur hem via WhatsApp naar jullie gasten."
-    : "Jullie kunnen nu trouwkaarten maken per gastengroep (dag, avond of receptie) met eigen tekst en tijden. Gasten laten met een tik weten of ze komen, en jullie zien alle aanmeldingen met dieetwensen in het dashboard."
+  const soort = isStd ? "Save the Date" : "trouwkaart"
+  const eur = (n: number) => `€${n.toFixed(2).replace(".", ",").replace(",00", "")}`
+  const bijInv = PLANS.uitnodiging.price - PLANS.save_the_date.price
+  const bijSite = PLANS.compleet.price - PLANS[plan].price
 
-  const stappen = isStd
-    ? [
-        "Open het dashboard en kies bij Digitale kaarten voor Save the Date.",
-        "Kies klassiek of met foto, pas de tekst aan en bekijk de voorvertoning.",
-        "Kopieer de link of download de afbeelding en verstuur via WhatsApp.",
-      ]
-    : [
-        "Open het dashboard en maak per gastengroep een trouwkaart.",
-        "Zet de tijden en jullie eigen uitnodigingstekst op de kaart.",
-        `Gasten reageren via de RSVP-pagina op ${slug}.sayingyes.nl; jullie volgen alles in het dashboard.`,
-      ]
+  const kop = isUpgrade
+    ? `Jullie ${soort} is erbij`
+    : `Jullie ${soort} is geactiveerd`
 
-  const html = `
-    <div style="font-family:Georgia,'Times New Roman',serif;max-width:560px;margin:0 auto;padding:32px 24px;background:#FAF7F2;color:#1A1A1A;">
-      <p style="font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:#C5A059;font-weight:600;margin:0 0 8px;">SayingYes</p>
-      <h1 style="font-size:26px;font-weight:700;margin:0 0 4px;">${kop} ${titel}.</h1>
-      <p style="margin:0 0 20px;color:#5C5248;font-size:15px;line-height:1.6;">Lieve ${names},</p>
-      <p style="margin:0 0 20px;color:#374151;font-size:15px;line-height:1.7;">${intro}</p>
+  const stappen = [
+    "Open je dashboard. Je kaart staat in de tegel " + (isStd ? "Save the Date" : "Trouwkaart") + ".",
+    "Kies de kaart en druk op <strong>Link voor je gasten</strong>.",
+    "Kopieer de link of stuur hem meteen via WhatsApp. Een QR-code voor op papier staat er ook.",
+  ]
 
-      <p style="margin:22px 0 8px;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#C5A059;font-weight:600;">Zo ga je verder</p>
-      <ol style="margin:0 0 24px;padding-left:20px;color:#374151;font-size:14px;line-height:1.8;">
-        ${stappen.map((s) => `<li>${s}</li>`).join("")}
-      </ol>
+  const beloften = [
+    ["Aanpassen kan altijd.", "Ook na het versturen. Wijzig je iets, dan zien je gasten de nieuwe kaart zodra ze de link opnieuw openen."],
+    ["Je gastenlijst vult zichzelf.", "Wie antwoordt staat meteen in je dashboard, en je ziet wie nog stil is."],
+    ["Meerdere kaarten zitten in de prijs.", "Een voor je daggasten en een voor je avondgasten, of dezelfde kaart in een andere taal."],
+    ...(isStd
+      ? [["De trouwkaart komt erbij voor " + eur(bijInv) + ".", "Wat je nu betaalde telt mee; de complete website kost " + eur(bijSite) + " extra."]]
+      : [["De Save the Date zit erbij.", "Die verstuur je zonder bij te betalen. Wil je later de complete website, dan betaal je " + eur(bijSite) + " bij."]]),
+  ]
 
-      <p style="text-align:center;margin:0 0 24px;">
-        <a href="${dashboardUrl}" style="display:inline-block;background:#1A1A1A;color:#FAF7F2;text-decoration:none;font-weight:600;padding:14px 28px;border-radius:14px;font-size:15px;">Naar het dashboard</a>
-      </p>
-      ${
-        isStd
-          ? ""
-          : `<p style="margin:0 0 24px;text-align:center;font-size:13px;color:#5C5248;">RSVP-pagina voor jullie gasten: <a href="${rsvpUrl}" style="color:#C5A059;">${slug}.sayingyes.nl</a></p>`
-      }
+  const html = `<!DOCTYPE html>
+<html lang="nl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f1ec;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f1ec;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);">
+        <tr>
+          <td bgcolor="#c9a96e" style="background-color:#c9a96e;padding:44px 40px 36px;text-align:center;">
+            <p style="margin:0 0 10px;font-size:26px;font-weight:600;letter-spacing:0.06em;color:#f5ead6;font-family:'Georgia',serif;">SayingYes</p>
+            <h1 style="margin:0;font-size:22px;font-weight:800;color:#111827;line-height:1.25;">${kop} 💌</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:36px 40px 0;">
+            <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:#374151;">Lieve ${names},</p>
+            <p style="margin:0 0 24px;font-size:15px;line-height:1.65;color:#374151;">
+              Gelukt. Jullie ${soort} werkt nu voor je gasten: de envelop gaat bij hen open in jullie stijl, en ze laten met een tik weten of ze erbij zijn.
+            </p>
 
-      <div style="background:#fff;border:1px solid #E8D5A3;border-radius:12px;padding:16px 18px;">
-        <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#1A1A1A;">Later meer nodig?</p>
-        <p style="margin:0;font-size:13px;color:#5C5248;line-height:1.6;">
-          ${
-            isStd
-              ? "Upgrade naar Uitnodiging & RSVP (bijbetalen: €10) voor trouwkaarten per gastengroep en een RSVP-pagina, of naar de complete trouwwebsite (bijbetalen: €34,99). Alles wat jullie al maakten blijft staan."
-              : "Upgrade naar de complete trouwwebsite (bijbetalen: €24,99) voor programma, informatie, cadeautips, fotogalerij en de live gastenfotomuur. Alles wat jullie al maakten blijft staan."
-          }
-        </p>
-      </div>
-
-      <p style="margin:28px 0 0;font-size:12px;color:#9A8E82;line-height:1.6;">Vragen? Antwoord gewoon op deze mail.</p>
-    </div>`
+            <p style="margin:0 0 10px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#C5A059;font-weight:700;">Zo verstuur je hem</p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:26px;">
+              ${stappen
+                .map(
+                  (s, i) => `<tr>
+                <td width="30" valign="top" style="padding:0 0 10px;">
+                  <span style="display:inline-block;width:22px;height:22px;line-height:22px;border-radius:999px;background:#FBF5E8;border:1px solid #E8D5A3;text-align:center;font-size:12px;font-weight:700;color:#1A1A1A;">${i + 1}</span>
+                </td>
+                <td valign="top" style="padding:1px 0 10px;font-size:14px;line-height:1.6;color:#374151;">${s}</td>
+              </tr>`,
+                )
+                .join("")}
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:0 40px 30px;text-align:center;">
+            <a href="${dashboardUrl}" style="display:inline-block;background-color:#1A1A1A;color:#ffffff;text-decoration:none;padding:14px 30px;border-radius:12px;font-size:15px;font-weight:600;">Naar je dashboard</a>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:0 40px 34px;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#FBF5E8;border:1px solid #E8D5A3;border-radius:12px;">
+              <tr><td style="padding:18px 20px 6px;">
+                ${beloften
+                  .map(
+                    ([kopje, tekst]) => `<p style="margin:0 0 12px;font-size:13px;line-height:1.6;color:#5C5248;">
+                  <span style="color:#059669;font-weight:700;">✓</span>&nbsp; <strong style="color:#1A1A1A;">${kopje}</strong> ${tekst}
+                </p>`,
+                  )
+                  .join("")}
+              </td></tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td bgcolor="#faf7f2" style="background-color:#faf7f2;padding:22px 40px;text-align:center;border-top:1px solid #E8D5A3;">
+            <p style="margin:0;font-size:12px;line-height:1.6;color:#9A8E82;">
+              Vragen? Antwoord gewoon op deze mail, dan lezen we mee.
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
 
   try {
     const { data: result, error } = await getResend().emails.send({
       from:    FROM,
       to:      [toEmail],
-      subject: `${isUpgrade ? "Upgrade gelukt: " : ""}${titel} 💌`,
+      subject: `${kop} 💌`,
       html,
     })
 
