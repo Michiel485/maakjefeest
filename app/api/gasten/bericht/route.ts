@@ -45,7 +45,7 @@ export async function POST(request: Request) {
   const service = createServiceClient()
   const { data: gasten } = await service
     .from("rsvp")
-    .select("id, name, email, event_id, bron_token")
+    .select("id, name, email, event_id, bron_token, huishouden_id, is_primary")
     .in("id", ids)
 
   if (!gasten || gasten.length === 0) {
@@ -67,18 +67,37 @@ export async function POST(request: Request) {
   )
   if (vanMij.size === 0) return Response.json({ error: "Geen toegang" }, { status: 403 })
 
+  // Een kind of partner zonder eigen mailadres krijgt het bericht via wie hem
+  // opgaf, en een gezin krijgt het één keer, niet drie keer op hetzelfde adres
+  // (Michiel, 24 september 2026).
+  const huizen = [...new Set(gasten.map((g) => g.huishouden_id as string | null).filter((v): v is string => !!v))]
+  const huisgenoten = huizen.length
+    ? ((await service.from("rsvp").select("name, email, huishouden_id, is_primary").in("huishouden_id", huizen)).data ?? [])
+    : []
+  function contactVan(g: NonNullable<typeof gasten>[number]): { email: string; naam: string } | null {
+    if (g.email) return { email: g.email as string, naam: g.name as string }
+    const leden = huisgenoten.filter((h) => h.huishouden_id === g.huishouden_id && h.email)
+    const hoofd = leden.find((h) => h.is_primary) ?? leden[0]
+    return hoofd ? { email: hoofd.email as string, naam: hoofd.name as string } : null
+  }
+
   let verstuurd = 0
   const zonderMail: string[] = []
+  const alGestuurd = new Set<string>()
 
   for (const g of gasten) {
     const event = vanMij.get(g.event_id as string)
     if (!event) continue
 
-    const email = g.email as string | null
-    if (!email) {
+    const contact = contactVan(g)
+    if (!contact) {
       zonderMail.push(g.name as string)
       continue
     }
+    const sleutel = `${g.event_id}:${contact.email.trim().toLowerCase()}`
+    if (alGestuurd.has(sleutel)) continue
+    alGestuurd.add(sleutel)
+    const email = contact.email
 
     // Precies de link die deze gast eerder kreeg: de kaart als hij daarvandaan
     // kwam, anders de trouwsite.
@@ -88,7 +107,7 @@ export async function POST(request: Request) {
 
     const r = await sendGastBerichtEmail({
       toEmail: email,
-      gastNaam: (g.name as string).split(" ")[0] || (g.name as string),
+      gastNaam: contact.naam.split(" ")[0] || contact.naam,
       eventTitle: event.title,
       soort,
       bericht,

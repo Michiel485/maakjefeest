@@ -292,11 +292,6 @@ export default function KaartLijst({
         </Link>
       </div>
 
-      {!gekozen && regels.length > 1 && (
-        <p className="m-0 text-xs -mt-1" style={{ color: KLEUR.zacht }}>
-          Kies een kaart in de lijst, dan gaan de knoppen over die kaart.
-        </p>
-      )}
 
       {verwijderVraag && gekozen && (
         <div className="rounded-xl p-3 flex flex-wrap items-center gap-2 text-[13px]" style={{ backgroundColor: "#FEF2F2", border: "1px solid #FECACA" }}>

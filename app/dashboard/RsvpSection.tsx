@@ -279,6 +279,36 @@ export default function RsvpSection({
   })
   const heeftDieet = rsvps.some((r) => r.dietary || r.allergie)
 
+  // Het contact van een gezin: de hoofdgast, anders de eerste met een mail of
+  // nummer. Een kind of partner zonder eigen gegevens toont die van hem, met
+  // "via". Niet gekopieerd, alleen getoond: zo krijgt een gezin één bericht,
+  // en wint een eigen nummer zodra iemand dat invult (Michiel, 24 september
+  // 2026).
+  const hoofdPerHuis = new Map<string, RsvpRow>()
+  for (const r of rsvps) {
+    if (!r.huishouden_id) continue
+    const nu = hoofdPerHuis.get(r.huishouden_id)
+    const beter = !nu || (r.is_primary && !nu.is_primary) || (!nu.email && !nu.telefoon && (r.email || r.telefoon) && !r.is_kind)
+    if (beter) hoofdPerHuis.set(r.huishouden_id, r)
+  }
+  function contact(r: RsvpRow): { email: string | null; telefoon: string | null; viaEmail: string | null; viaTel: string | null } {
+    const hoofd = r.huishouden_id ? hoofdPerHuis.get(r.huishouden_id) : undefined
+    const anders = hoofd && hoofd.id !== r.id ? hoofd : null
+    const via = anders ? anders.voornaam || anders.name.split(" ")[0] : null
+    const email = r.email || anders?.email || null
+    const telefoon = r.telefoon || anders?.telefoon || null
+    return {
+      email,
+      telefoon,
+      // "via" als het niet zijn eigen gegeven is, of als het formulier dat van
+      // de hoofdgast bij hem neerzette
+      viaEmail: anders && email && (!r.email || r.email === anders.email) ? via : null,
+      viaTel: anders && telefoon && (!r.telefoon || r.telefoon === anders.telefoon) ? via : null,
+    }
+  }
+  // Wie je als "hoort bij" kunt kiezen: volwassenen, op naam
+  const gastheren = [...rsvps].filter((r) => !r.is_kind).sort((a, b) => a.name.localeCompare(b.name, "nl"))
+
   // Alle zichtbare regels, voor het vinkje in de kop
   const alleIds = gesorteerd.map((r) => r.id)
 
@@ -450,7 +480,7 @@ export default function RsvpSection({
     const link = `${window.location.origin}/kaart/${kaart.share_token}?gast=${row.id}`
     const voornaam = row.voornaam || row.name.split(" ")[0]
     const tekst = encodeURIComponent(`Hoi ${voornaam}! Er is post voor je 💌\n${link}`)
-    const nummer = whatsappNummer(row.telefoon)
+    const nummer = whatsappNummer(row.telefoon || (row.huishouden_id ? hoofdPerHuis.get(row.huishouden_id)?.telefoon ?? null : null))
     // Eerst openen, dan pas de server: anders houdt de browser het venster tegen.
     window.open(nummer ? `https://wa.me/${nummer}?text=${tekst}` : `https://wa.me/?text=${tekst}`, "_blank", "noopener,noreferrer")
 
@@ -497,15 +527,19 @@ export default function RsvpSection({
             email: nieuw.email,
             telefoon: nieuw.telefoon,
             guest_type: nieuw.type,
+            is_kind: nieuw.kind === "ja",
+            leeftijd: nieuw.kind === "ja" && nieuw.leeftijd ? Number(nieuw.leeftijd) : null,
+            ...(nieuw.hoortBij ? { hoort_bij: nieuw.hoortBij } : {}),
           }],
         }),
       })
-      const j = (await res.json().catch(() => ({}))) as { error?: string; gasten?: RsvpRow[] }
+      const j = (await res.json().catch(() => ({}))) as { error?: string; gasten?: RsvpRow[]; bijgewerkt?: RsvpRow[] }
       if (!res.ok) throw new Error(j.error || "Toevoegen mislukte")
-      setRsvps((v) => [...v, ...(j.gasten ?? [])])
+      const bij = new Map((j.bijgewerkt ?? []).map((r) => [r.id, r]))
+      setRsvps((v) => [...v.map((r) => bij.get(r.id) ?? r), ...(j.gasten ?? [])])
       // Meteen de volgende, met hetzelfde type: je voert meestal een hele
       // groep daggasten achter elkaar in.
-      setNieuw({ ...LEGE_REGEL, type: nieuw.type })
+      setNieuw({ ...LEGE_REGEL, type: nieuw.type, hoortBij: nieuw.hoortBij })
       setNieuwTeller((n) => n + 1)
     } catch (e) {
       setNieuwFout(e instanceof Error ? e.message : "Toevoegen mislukte")
@@ -555,7 +589,7 @@ export default function RsvpSection({
 
   function buildExportRows() {
     const headers = [
-      "Naam", "E-mail", "Adres", "Status", "Type", "Dieetwensen",
+      "Naam", "E-mail", "Telefoon", "Adres", "Status", "Type", "Dieetwensen",
       ...(hasSong ? ["Song Request"] : []),
       ...(hasOvernachting ? ["Overnachting"] : []),
       ...(hasCustomAnswer ? ["Extra vraag 1"] : []),
@@ -563,14 +597,16 @@ export default function RsvpSection({
       "Berichtje", "Event", "Datum",
     ]
     const rows = rsvps.map((r) => [
-      r.name, r.email ?? "", r.adres ?? "",
+      // Het contact via het gezin, want in een export wil je per persoon
+      // kunnen bellen of mailen
+      r.name, contact(r).email ?? "", contact(r).telefoon ?? "", r.adres ?? "",
       // De reis is de waarheid, niet de oude attending-kolom: zonder antwoord
       // is het geen aanwezig.
       (() => {
         const k = komtGast(reis(r.std_status), reis(r.inv_status))
         return k === true ? "Aanwezig" : k === false ? "Afwezig" : "Nog niets gehoord"
       })(),
-      r.guest_type, r.dietary ?? "",
+      r.guest_type, [r.dietary, r.allergie].filter(Boolean).join(", "),
       ...(hasSong ? [r.song ?? ""] : []),
       ...(hasOvernachting ? [r.overnachting === true ? "Ja" : r.overnachting === false ? "Nee" : ""] : []),
       ...(hasCustomAnswer ? [r.custom_answer === true ? "Ja" : r.custom_answer === false ? "Nee" : ""] : []),
@@ -693,8 +729,14 @@ export default function RsvpSection({
                       <ReisTekst waarde={reis(row.inv_status)} />
                       {gekregen(row, "inv") && <span className="block text-[11px]" style={{ color: SOFT }}>{gekregen(row, "inv")}</span>}
                     </td>
-                    <td className="px-3 py-2" style={{ color: BODY }}>{row.email || <span style={{ color: GOLD_LIGHT }}>—</span>}</td>
-                    <td className="px-3 py-2 whitespace-nowrap" style={{ color: BODY }}>{row.telefoon || <span style={{ color: GOLD_LIGHT }}>—</span>}</td>
+                    <td className="px-3 py-2" style={{ color: contact(row).viaEmail ? SOFT : BODY }}>
+                      {contact(row).email || <span style={{ color: GOLD_LIGHT }}>—</span>}
+                      {contact(row).viaEmail && <span className="block text-[11px]">via {contact(row).viaEmail}</span>}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap" style={{ color: contact(row).viaTel ? SOFT : BODY }}>
+                      {contact(row).telefoon || <span style={{ color: GOLD_LIGHT }}>—</span>}
+                      {contact(row).viaTel && <span className="block text-[11px]">via {contact(row).viaTel}</span>}
+                    </td>
                     {heeftDieet && (
                       <td className="px-3 py-2" style={{ color: BODY }}>{dieet || <span style={{ color: GOLD_LIGHT }}>—</span>}</td>
                     )}
@@ -772,6 +814,49 @@ export default function RsvpSection({
                         className={invoer}
                         style={invoerStijl}
                       />
+                    </div>
+                    {/* Een kind of partner bij iemand die er al staat: dan
+                        hoort hij bij dat gezin en staat het contact van die
+                        persoon erbij. */}
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mt-1.5 text-xs" style={{ color: BODY }}>
+                      <label className="inline-flex items-center gap-1.5 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={nieuw.kind === "ja"}
+                          onChange={(e) => zetNieuw("kind", e.target.checked ? "ja" : "")}
+                          style={{ accentColor: GOLD }}
+                        />
+                        Kind
+                      </label>
+                      {nieuw.kind === "ja" && (
+                        <input
+                          type="number"
+                          min={0}
+                          max={17}
+                          value={nieuw.leeftijd}
+                          onChange={(e) => zetNieuw("leeftijd", e.target.value)}
+                          onKeyDown={toetsNieuw}
+                          placeholder="Leeftijd"
+                          aria-label="Leeftijd"
+                          className="w-20 rounded-lg border bg-white px-2 py-1 text-xs focus:outline-none"
+                          style={invoerStijl}
+                        />
+                      )}
+                      {gastheren.length > 0 && (
+                        <label className="inline-flex items-center gap-1.5">
+                          Hoort bij
+                          <select
+                            value={nieuw.hoortBij}
+                            onChange={(e) => zetNieuw("hoortBij", e.target.value)}
+                            onKeyDown={toetsNieuw}
+                            className="rounded-lg border bg-white px-2 py-1 text-xs focus:outline-none"
+                            style={{ ...invoerStijl, cursor: "pointer" }}
+                          >
+                            <option value="">niemand, losse gast</option>
+                            {gastheren.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+                          </select>
+                        </label>
+                      )}
                     </div>
                   </td>
                   <td className="px-3 py-2">
@@ -1376,8 +1461,13 @@ interface NieuweRegel {
   type: string
   email: string
   telefoon: string
+  /** "ja" als het een kind is */
+  kind: string
+  leeftijd: string
+  /** rsvp.id van de gast bij wie dit iemand hoort, of leeg */
+  hoortBij: string
 }
-const LEGE_REGEL: NieuweRegel = { voornaam: "", achternaam: "", type: "daggast", email: "", telefoon: "" }
+const LEGE_REGEL: NieuweRegel = { voornaam: "", achternaam: "", type: "daggast", email: "", telefoon: "", kind: "", leeftijd: "", hoortBij: "" }
 
 const TYPE_NAAM: Record<string, string> = {
   daggast: "Daggast",

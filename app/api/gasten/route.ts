@@ -27,6 +27,8 @@ interface NieuweGast {
   is_kind?: boolean
   leeftijd?: number | null
   huishouden_naam?: string
+  /** Een bestaande gast (rsvp.id) bij wie deze hoort: een kind of een partner. */
+  hoort_bij?: string
 }
 
 function tekst(waarde: unknown, max: number): string | null {
@@ -99,6 +101,30 @@ export async function POST(request: Request) {
     return id
   }
 
+  // Hoort een nieuwe gast bij iemand die er al staat? Dan komt hij in dat
+  // gezin, en ziet de lijst bij hem het contact van die persoon (Michiel,
+  // 24 september 2026). Heeft die persoon nog geen gezin, dan krijgt hij er nu
+  // een.
+  const gastheerIds = [...new Set(schoon.map((s) => s.g.hoort_bij).filter((v): v is string => typeof v === "string"))]
+  const gastheren = new Map<string, { id: string; huishouden_id: string; huishouden_naam: string | null }>()
+  const bijgewerkteGastheren: Record<string, unknown>[] = []
+  if (gastheerIds.length > 0) {
+    const { data: hosts } = await service
+      .from("rsvp")
+      .select("id, name, huishouden_id, huishouden_naam")
+      .eq("event_id", event_id)
+      .in("id", gastheerIds)
+    for (const h of hosts ?? []) {
+      let huis = h.huishouden_id as string | null
+      if (!huis) {
+        huis = crypto.randomUUID()
+        const { data: bij } = await service.from("rsvp").update({ huishouden_id: huis }).eq("id", h.id).select("*").single()
+        if (bij) bijgewerkteGastheren.push(bij)
+      }
+      gastheren.set(h.id as string, { id: h.id as string, huishouden_id: huis, huishouden_naam: (h.huishouden_naam as string | null) ?? (h.name as string) })
+    }
+  }
+
   const rows = schoon.map(({ voornaam, achternaam, g }) => ({
     event_id,
     submission_id: crypto.randomUUID(),
@@ -113,8 +139,8 @@ export async function POST(request: Request) {
       g.is_kind === true && typeof g.leeftijd === "number" && g.leeftijd >= 0 && g.leeftijd <= MAX_KIND_LEEFTIJD
         ? Math.round(g.leeftijd)
         : null,
-    huishouden_naam: tekst(g.huishouden_naam, MAX_NAAM * 2),
-    huishouden_id: huishoudenVan(tekst(g.huishouden_naam, MAX_NAAM * 2)),
+    huishouden_naam: gastheren.get(g.hoort_bij ?? "")?.huishouden_naam ?? tekst(g.huishouden_naam, MAX_NAAM * 2),
+    huishouden_id: gastheren.get(g.hoort_bij ?? "")?.huishouden_id ?? huishoudenVan(tekst(g.huishouden_naam, MAX_NAAM * 2)),
     // Met de hand toegevoegd betekent: je hebt nog niets verstuurd en dus ook
     // nog niets gehoord. Eerder stond attending hier op "yes", waardoor zo
     // iemand meteen als aanwezig in de lijst kwam. Dat was een fout.
@@ -127,7 +153,8 @@ export async function POST(request: Request) {
     std_status: "niet_verstuurd",
     inv_status: "niet_verstuurd",
     attending: "maybe",
-    is_primary: true,
+    // Wie bij iemand hoort is niet de hoofdgast van dat gezin.
+    is_primary: !gastheren.has(g.hoort_bij ?? ""),
   }))
 
   const { data: nieuw, error } = await service.from("rsvp").insert(rows).select("*")
@@ -137,7 +164,10 @@ export async function POST(request: Request) {
     return Response.json({ error: "Toevoegen mislukt" }, { status: 500 })
   }
 
-  return Response.json({ success: true, toegevoegd: nieuw?.length ?? 0, gasten: nieuw ?? [] }, { status: 201 })
+  return Response.json(
+    { success: true, toegevoegd: nieuw?.length ?? 0, gasten: nieuw ?? [], bijgewerkt: bijgewerkteGastheren },
+    { status: 201 },
+  )
 }
 
 // PATCH: van een groep gasten de reis bijwerken.
