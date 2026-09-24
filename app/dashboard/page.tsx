@@ -8,7 +8,7 @@ import GuestPhotosSection from "./GuestPhotosSection"
 import { SectionLabel } from "./Beheer"
 import { SignOutButton } from "./SignOutButton"
 import BruiloftInfo from "./BruiloftInfo"
-import { Aftellen, KaartTegel, Tegel, TegelKnop, Teller, WebsiteTegel, type KaartRegel, type TegelStand } from "./Tegels"
+import { Aftellen, KaartTegel, Tegel, TegelKnop, Teller, WebsiteTegel, type KaartRegel, type Reactie, type TegelStand } from "./Tegels"
 import { maxPhotosPerEvent } from "@/lib/guest-photos"
 import { planAllows, planMagVersturen, PLANS, formatEur, upgradePrice } from "@/lib/plans"
 import { afstandInWoorden } from "@/lib/fasen"
@@ -96,6 +96,15 @@ export default async function DashboardPage({
   // Gebruik je de gastenlijst? Dan staan er gasten op die niet via een link
   // binnenkwamen, en weten we wie nog stil is. Anders niet.
   const lijstGebruikt = rsvps.some((r) => !r.bron_token)
+  // Wie antwoordde op dit soort kaart, komers eerst, dan op naam.
+  function reacties(type: "save_the_date" | "trouwkaart"): Reactie[] {
+    const kolom = type === "save_the_date" ? "std_status" : "inv_status"
+    return rsvps
+      .filter((r) => reis(r[kolom]) === "ja" || reis(r[kolom]) === "nee")
+      .map((r) => ({ id: r.id, naam: r.name, komt: reis(r[kolom]) === "ja", kind: r.is_kind === true }))
+      .sort((a, b) => Number(b.komt) - Number(a.komt) || a.naam.localeCompare(b.naam, "nl"))
+  }
+
   function tegelStand(type: "save_the_date" | "trouwkaart"): TegelStand {
     return { ...antwoorden(rsvps, type), opLijst: lijstGebruikt ? rsvps.length : null }
   }
@@ -106,6 +115,9 @@ export default async function DashboardPage({
     type: c.type,
     naam: kaartLabel(c),
     share_token: c.share_token,
+    // Werkt de link al voor gasten? Alleen dan kun je hem vanuit de
+    // gastenlijst per gast via WhatsApp sturen.
+    werkt: stand.live && groep.some((e) => planMagVersturen(e.plan, c.type)),
   }))
   const stdRegels = regels("save_the_date")
   const invRegels = regels("trouwkaart")
@@ -238,6 +250,7 @@ export default async function DashboardPage({
             eventId={bruiloft?.id ?? null}
             regels={stdRegels}
             stand={tegelStand("save_the_date")}
+            reacties={reacties("save_the_date")}
           />
           <KaartTegel
             soort="trouwkaart"
@@ -251,6 +264,7 @@ export default async function DashboardPage({
             eventId={bruiloft?.id ?? null}
             regels={invRegels}
             stand={tegelStand("trouwkaart")}
+            reacties={reacties("trouwkaart")}
           />
           <WebsiteTegel
             mag={stand.magSite}

@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 import { laadXlsx } from "@/lib/xlsx-laden"
 import { gastSleutel, komtGast, reis, REIS_LABEL, type Reis } from "@/lib/gasten"
 import GastenToevoegen from "./GastenToevoegen"
@@ -41,6 +42,7 @@ export interface RsvpRow {
   inv_kaart_id?: string | null
   /** Voor een papieren trouwkaart, als de gast dat invulde. Bestaat pas na migration_adres.sql. */
   adres?: string | null
+  huishouden_id?: string | null
   huishouden_naam: string | null
   is_primary: boolean
   attending: string | null
@@ -55,7 +57,69 @@ export interface RsvpRow {
 interface EventRef { id: string; title: string }
 
 /** Een kaart van deze bruiloft, om te kunnen zeggen welke een gast kreeg. */
-export interface KaartRef { id: string; type: string; naam: string; share_token: string }
+export interface KaartRef { id: string; type: string; naam: string; share_token: string; werkt?: boolean }
+
+// ── Lijken twee gasten op dezelfde persoon? ─────────────────────────────────
+// Een typfout tussen de Save the Date en de trouwkaart, of een keer zelf
+// ingetypt en een keer zelf aangemeld. Wij wijzen het aan; samenvoegen doet
+// het bruidspaar, want twee neven met bijna dezelfde naam bestaan echt.
+
+/** Hoeveel letters verschillen er (Levenshtein), met een plafond. */
+function afstand(a: string, b: string, max: number): number {
+  if (Math.abs(a.length - b.length) > max) return max + 1
+  let vorige = Array.from({ length: b.length + 1 }, (_, i) => i)
+  for (let i = 1; i <= a.length; i++) {
+    const nu = [i]
+    let kleinste = i
+    for (let j = 1; j <= b.length; j++) {
+      nu[j] = Math.min(vorige[j] + 1, nu[j - 1] + 1, vorige[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1))
+      kleinste = Math.min(kleinste, nu[j])
+    }
+    if (kleinste > max) return max + 1
+    vorige = nu
+  }
+  return vorige[b.length]
+}
+
+const telefoonSleutel = (t: string | null) => (t ?? "").replace(/\D/g, "").slice(-9)
+
+/** Waarom deze twee op elkaar lijken, of null als ze dat niet doen. */
+function lijktOp(a: RsvpRow, b: RsvpRow): string | null {
+  if (a.event_id !== b.event_id) return null
+  const na = gastSleutel(a.voornaam ?? a.name, a.achternaam)
+  const nb = gastSleutel(b.voornaam ?? b.name, b.achternaam)
+  if (na && na === nb) return "dezelfde naam"
+  const kort = Math.min(na.length, nb.length)
+  if (kort >= 4 && afstand(na, nb, kort >= 8 ? 2 : 1) <= (kort >= 8 ? 2 : 1)) return "bijna dezelfde naam"
+  // Mail en telefoon worden binnen een gezin vaak gedeeld, dus alleen over
+  // huishoudens heen.
+  const zelfdeHuis = !!a.huishouden_id && a.huishouden_id === b.huishouden_id
+  if (zelfdeHuis || a.submission_id === b.submission_id) return null
+  if (a.email && b.email && a.email.trim().toLowerCase() === b.email.trim().toLowerCase() && !a.is_kind && !b.is_kind) {
+    return "hetzelfde mailadres"
+  }
+  const ta = telefoonSleutel(a.telefoon)
+  if (ta.length >= 9 && ta === telefoonSleutel(b.telefoon)) return "hetzelfde telefoonnummer"
+  return null
+}
+
+const LS_GEEN_DUBBEL = "sayingyes_geen_dubbel"
+const paarSleutel = (a: string, b: string) => [a, b].sort().join("|")
+
+/** Een telefoonnummer zoals WhatsApp het wil: landcode, geen plus of nullen. */
+function whatsappNummer(tel: string | null): string | null {
+  if (!tel) return null
+  const schoon = tel.trim()
+  let cijfers = schoon.replace(/\D/g, "")
+  if (schoon.startsWith("+")) {
+    // al met landcode
+  } else if (cijfers.startsWith("00")) {
+    cijfers = cijfers.slice(2)
+  } else if (cijfers.startsWith("0")) {
+    cijfers = "31" + cijfers.slice(1)
+  }
+  return cijfers.length >= 10 ? cijfers : null
+}
 
 interface EditForm {
   name: string
@@ -138,6 +202,31 @@ export default function RsvpSection({
   const [berichtBezig, setBerichtBezig] = useState(false)
   const [berichtUitslag, setBerichtUitslag] = useState<string | null>(null)
 
+  // Paren die het bruidspaar al als "twee mensen" aanwees. Per browser, want
+  // het is een vinkje voor jezelf, geen gegeven van de bruiloft.
+  const [geenDubbel, setGeenDubbel] = useState<Set<string>>(new Set())
+  useEffect(() => {
+    try {
+      const bewaard = JSON.parse(localStorage.getItem(LS_GEEN_DUBBEL) ?? "[]") as string[]
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (Array.isArray(bewaard) && bewaard.length > 0) setGeenDubbel(new Set(bewaard))
+    } catch {}
+  }, [])
+  function tweeMensen(a: string, b: string) {
+    setGeenDubbel((v) => {
+      const n = new Set(v)
+      n.add(paarSleutel(a, b))
+      try { localStorage.setItem(LS_GEEN_DUBBEL, JSON.stringify([...n])) } catch {}
+      return n
+    })
+  }
+  const [voegtSamen, setVoegtSamen] = useState(false)
+  const [samenvoegFout, setSamenvoegFout] = useState<string | null>(null)
+
+  // WhatsApp per gast: welke gast kiest nu een kaart
+  const [whatsappVoor, setWhatsappVoor] = useState<RsvpRow | null>(null)
+  const werkendeKaarten = kaarten.filter((k) => k.werkt)
+
 
   const eventMap = Object.fromEntries(events.map((e) => [e.id, e.title]))
 
@@ -185,6 +274,19 @@ export default function RsvpSection({
   // kaartlink gaat naar tachtig mensen, dus dubbele invoer komt voor. Wij
   // voegen niet automatisch samen; we wijzen het alleen aan, want alleen het
   // bruidspaar weet of het dezelfde persoon is.
+  // Vermoedelijke dubbelen, als paren, voor de melding boven de lijst.
+  // Hoogstens een paar honderd gasten, dus alle paren langs is geen probleem.
+  const verdacht: { a: RsvpRow; b: RsvpRow; waarom: string }[] = []
+  for (let i = 0; i < rsvps.length; i++) {
+    for (let j = i + 1; j < rsvps.length; j++) {
+      const waarom = lijktOp(rsvps[i], rsvps[j])
+      if (waarom && !geenDubbel.has(paarSleutel(rsvps[i].id, rsvps[j].id))) {
+        verdacht.push({ a: rsvps[i], b: rsvps[j], waarom })
+      }
+    }
+  }
+  const gekozenRijen = rsvps.filter((r) => gekozen.has(r.id))
+
   const dubbel = new Set<string>()
   {
     const gezien = new Map<string, string>()
@@ -303,6 +405,67 @@ export default function RsvpSection({
     } finally {
       setBerichtBezig(false)
     }
+  }
+
+  // Twee regels tot één. De oudste blijft, met zijn naam; de server vult aan
+  // en kiest per product het sterkste antwoord. Zie /api/gasten/samenvoegen.
+  async function voegSamen(a: RsvpRow, b: RsvpRow) {
+    const [houd, weg] = new Date(a.created_at) <= new Date(b.created_at) ? [a, b] : [b, a]
+    setVoegtSamen(true)
+    setSamenvoegFout(null)
+    try {
+      const res = await fetch("/api/gasten/samenvoegen", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ houd: houd.id, weg: weg.id }),
+      })
+      const j = (await res.json().catch(() => ({}))) as { error?: string; gast?: RsvpRow }
+      if (!res.ok || !j.gast) throw new Error(j.error || "Samenvoegen mislukte")
+      const samen = j.gast
+      setRsvps((v) => v.filter((r) => r.id !== weg.id).map((r) => (r.id === houd.id ? { ...r, ...samen } : r)))
+      setGekozen(new Set())
+    } catch (e) {
+      setSamenvoegFout(e instanceof Error ? e.message : "Samenvoegen mislukte")
+    } finally {
+      setVoegtSamen(false)
+    }
+  }
+
+  // Een gast zijn persoonlijke link sturen via je eigen WhatsApp. Wij kunnen
+  // niet namens jou versturen, en dat willen we ook niet: dit opent WhatsApp
+  // met zijn gesprek open en het bericht klaar, jij drukt op versturen. Met de
+  // persoonlijke link weten we wie reageert, en zijn naam staat er al. Daarna
+  // zetten we hem en zijn huishouden op verstuurd, als dat nog niet zo was.
+  async function stuurWhatsApp(row: RsvpRow, kaart: KaartRef) {
+    setWhatsappVoor(null)
+    const link = `${window.location.origin}/kaart/${kaart.share_token}?gast=${row.id}`
+    const voornaam = row.voornaam || row.name.split(" ")[0]
+    const tekst = encodeURIComponent(`Hoi ${voornaam}! Er is post voor je 💌\n${link}`)
+    const nummer = whatsappNummer(row.telefoon)
+    // Eerst openen, dan pas de server: anders houdt de browser het venster tegen.
+    window.open(nummer ? `https://wa.me/${nummer}?text=${tekst}` : `https://wa.me/?text=${tekst}`, "_blank", "noopener,noreferrer")
+
+    const product = kaart.type === "save_the_date" ? "std" : "inv"
+    const kolom = product === "std" ? "std_status" : "inv_status"
+    const kaartKolom = product === "std" ? "std_kaart_id" : "inv_kaart_id"
+    const huis = row.huishouden_id ? rsvps.filter((r) => r.huishouden_id === row.huishouden_id) : [row]
+    const ids = huis.filter((r) => reis(r[kolom]) === "niet_verstuurd").map((r) => r.id)
+    if (ids.length === 0) return
+    try {
+      const res = await fetch("/api/gasten", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids, product, waarde: "verstuurd", kaart_id: kaart.id }),
+      })
+      if (res.ok) {
+        setRsvps((v) => v.map((r) => (ids.includes(r.id) ? { ...r, [kolom]: "verstuurd", [kaartKolom]: kaart.id } : r)))
+      }
+    } catch {}
+  }
+
+  function kiesWhatsApp(row: RsvpRow) {
+    if (werkendeKaarten.length === 1) void stuurWhatsApp(row, werkendeKaarten[0])
+    else setWhatsappVoor(row)
   }
 
   async function verwijderGekozen() {
@@ -434,6 +597,14 @@ export default function RsvpSection({
 
   return (
     <>
+      {whatsappVoor && (
+        <WhatsAppKeuze
+          gast={whatsappVoor}
+          kaarten={werkendeKaarten}
+          kies={(k) => void stuurWhatsApp(whatsappVoor, k)}
+          sluit={() => setWhatsappVoor(null)}
+        />
+      )}
       <div className="flex flex-col gap-6">
 
         {/* KPI cards */}
@@ -561,6 +732,17 @@ export default function RsvpSection({
                   {invKaarten.map((k) => <option key={k.id} value={k.id}>{k.naam}</option>)}
                 </select>
               )}
+              {gekozenRijen.length === 2 && (
+                <button
+                  onClick={() => void voegSamen(gekozenRijen[0], gekozenRijen[1])}
+                  disabled={voegtSamen}
+                  className="text-sm font-semibold px-3 py-2 rounded-xl disabled:opacity-60"
+                  style={{ backgroundColor: "#fff", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
+                  title="Staat dezelfde gast er twee keer in? Dan worden het één regel, met de laatste antwoorden."
+                >
+                  {voegtSamen ? "Samenvoegen..." : "Samenvoegen"}
+                </button>
+              )}
               <button
                 onClick={verwijderGekozen}
                 className="text-sm font-semibold px-3 py-2 rounded-xl"
@@ -616,6 +798,45 @@ export default function RsvpSection({
             {berichtUitslag && (
               <p className="text-sm font-semibold" style={{ color: CHARCOAL }}>{berichtUitslag}</p>
             )}
+          </div>
+        )}
+
+        {/* ── Lijken op dezelfde gast ──
+            Wij voegen niet uit onszelf samen; we vragen het. */}
+        {verdacht.length > 0 && (
+          <div className="rounded-2xl p-4 flex flex-col gap-2.5" style={{ backgroundColor: "#FFFBEB", border: "1px solid #FDE68A" }}>
+            <p className="m-0 text-sm font-semibold" style={{ color: "#92400E" }}>
+              {verdacht.length === 1 ? "Deze twee lijken dezelfde gast" : `${verdacht.length} keer lijken twee regels dezelfde gast`}
+            </p>
+            {verdacht.slice(0, 3).map(({ a, b, waarom }) => (
+              <div key={paarSleutel(a.id, b.id)} className="flex flex-wrap items-center gap-2 text-sm">
+                <span className="flex-1 min-w-[220px]" style={{ color: CHARCOAL }}>
+                  <b>{a.name}</b> en <b>{b.name}</b> <span style={{ color: BODY }}>({waarom})</span>
+                </span>
+                <button
+                  onClick={() => void voegSamen(a, b)}
+                  disabled={voegtSamen}
+                  className="text-sm font-semibold px-3 py-1.5 rounded-xl disabled:opacity-60"
+                  style={{ backgroundColor: CHARCOAL, color: IVORY, border: 0, cursor: "pointer" }}
+                >
+                  Samenvoegen
+                </button>
+                <button
+                  onClick={() => tweeMensen(a.id, b.id)}
+                  className="text-sm font-semibold px-3 py-1.5 rounded-xl"
+                  style={{ backgroundColor: "#fff", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
+                >
+                  Nee, twee mensen
+                </button>
+              </div>
+            ))}
+            {verdacht.length > 3 && (
+              <p className="m-0 text-xs" style={{ color: BODY }}>En nog {verdacht.length - 3}; die komen vanzelf in beeld als je deze afhandelt.</p>
+            )}
+            {samenvoegFout && <p className="m-0 text-sm font-semibold" style={{ color: "#DC2626" }}>{samenvoegFout}</p>}
+            <p className="m-0 text-xs" style={{ color: BODY }}>
+              Samenvoegen houdt de oudste regel, met de laatste antwoorden en aangevuld met wat er bij de andere stond.
+            </p>
           </div>
         )}
 
@@ -796,6 +1017,19 @@ export default function RsvpSection({
                           </div>
                         ) : (
                           <div className="flex items-center gap-1 justify-end">
+                            {werkendeKaarten.length > 0 && !row.is_kind && (
+                              <button
+                                onClick={() => kiesWhatsApp(row)}
+                                title={`Stuur ${row.voornaam || row.name} een persoonlijke link via WhatsApp`}
+                                aria-label={`Stuur ${row.name} een persoonlijke link via WhatsApp`}
+                                className="p-1.5 rounded-lg transition-colors"
+                                style={{ color: "#25D366", background: "none", border: 0, cursor: "pointer" }}
+                              >
+                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                  <path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.28-.1-.48-.15-.68.15-.2.3-.78.97-.95 1.17-.18.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.38-.02-.53-.08-.15-.68-1.62-.93-2.22-.24-.58-.49-.5-.68-.5h-.58c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.49s1.07 2.89 1.22 3.09c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.7.63.71.22 1.36.19 1.87.12.57-.09 1.76-.72 2-1.41.25-.7.25-1.29.18-1.41-.07-.13-.27-.2-.57-.35zM12.04 21.5h-.01a9.45 9.45 0 01-4.82-1.32l-.35-.2-3.58.94.96-3.49-.23-.36a9.43 9.43 0 01-1.45-5.03c0-5.22 4.25-9.47 9.48-9.47 2.53 0 4.9.99 6.7 2.78a9.4 9.4 0 012.77 6.7c0 5.22-4.25 9.46-9.47 9.46zm8.06-17.53A11.33 11.33 0 0012.04.63C5.76.63.65 5.74.65 12.02c0 2 .52 3.96 1.52 5.69L.55 23.62l6.04-1.58a11.36 11.36 0 005.44 1.39h.01c6.28 0 11.39-5.11 11.39-11.39 0-3.04-1.18-5.9-3.33-8.05z" />
+                                </svg>
+                              </button>
+                            )}
                             <button
                               onClick={() => openEdit(row)}
                               title="Bewerken"
@@ -978,6 +1212,60 @@ export default function RsvpSection({
 }
 
 /* ── Sub-components ───────────────────────────────────────────────── */
+
+function WhatsAppKeuze({
+  gast,
+  kaarten,
+  kies,
+  sluit,
+}: {
+  gast: RsvpRow
+  kaarten: KaartRef[]
+  kies: (k: KaartRef) => void
+  sluit: () => void
+}) {
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ backgroundColor: "rgba(26,26,26,0.5)", backdropFilter: "blur(4px)" }}
+      onClick={sluit}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Welke kaart stuur je?"
+    >
+      <div
+        className="w-full max-w-sm rounded-3xl p-6 flex flex-col gap-3"
+        style={{ backgroundColor: "#fff", border: `1px solid ${GOLD_LIGHT}` }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <p className="m-0 text-xs font-bold uppercase tracking-[0.18em]" style={{ color: GOLD }}>Via WhatsApp</p>
+        <h3 className="m-0" style={{ fontFamily: "var(--font-cormorant)", fontSize: 24, fontWeight: 600, color: CHARCOAL }}>
+          Welke kaart stuur je {gast.voornaam || gast.name}?
+        </h3>
+        <p className="m-0 text-sm" style={{ color: BODY }}>
+          WhatsApp opent met {whatsappNummer(gast.telefoon) ? "het gesprek met deze gast" : "de keuze aan wie je het stuurt"} en
+          het bericht klaar. Jij drukt op versturen. De link is persoonlijk, dus zijn naam staat er al en je ziet precies
+          wanneer hij reageert.
+        </p>
+        {kaarten.map((k) => (
+          <button
+            key={k.id}
+            onClick={() => kies(k)}
+            className="w-full text-left text-sm font-semibold px-4 py-3 rounded-xl"
+            style={{ backgroundColor: GOLD_BG, color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
+          >
+            {k.type === "save_the_date" ? "Save the Date" : "Trouwkaart"}
+            <span className="font-normal" style={{ color: BODY }}> · {k.naam}</span>
+          </button>
+        ))}
+        <button onClick={sluit} className="text-sm underline self-center mt-1" style={{ color: SOFT, background: "none", border: 0, cursor: "pointer" }}>
+          Laat maar
+        </button>
+      </div>
+    </div>,
+    document.body,
+  )
+}
 
 function Th({ children, className }: { children?: React.ReactNode; className?: string }) {
   return (

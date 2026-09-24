@@ -206,7 +206,7 @@ export async function laadBruiloft(email: string, gekozenId?: string | null): Pr
       service
         .from("rsvp")
         .select(
-          "id, event_id, submission_id, name, voornaam, achternaam, email, telefoon, guest_type, dietary, allergie, is_primary, attending, message, song, overnachting, custom_answer, custom_answer_2, is_kind, leeftijd, status, std_status, inv_status, bron_token, huishouden_naam, created_at"
+          "id, event_id, submission_id, name, voornaam, achternaam, email, telefoon, guest_type, dietary, allergie, is_primary, attending, message, song, overnachting, custom_answer, custom_answer_2, is_kind, leeftijd, status, std_status, inv_status, bron_token, huishouden_id, huishouden_naam, created_at"
         )
         .in("event_id", groepIds)
         .order("created_at", { ascending: false }),

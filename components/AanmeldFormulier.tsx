@@ -36,6 +36,34 @@ function apparaatKenmerk(): string | null {
   }
 }
 
+/** Het kenmerk als het er al is; maakt er geen aan. */
+function bestaandKenmerk(): string | null {
+  try {
+    return localStorage.getItem(LS_APPARAAT)
+  } catch {
+    return null
+  }
+}
+
+/** Wie er eerder is aangemeld, zoals de aanmeldroute het teruggeeft. */
+interface EerderePersoon {
+  voornaam: string
+  achternaam: string
+  is_kind: boolean
+  leeftijd: number | null
+}
+interface EerdereGroep {
+  id: string | null
+  personen: EerderePersoon[]
+}
+
+/** "Lindsey", "Lindsey en Michiel", "Lindsey, Michiel en Sam" */
+function namenlijst(personen: EerderePersoon[]): string {
+  const n = personen.map((p) => p.voornaam).filter(Boolean)
+  if (n.length <= 1) return n[0] ?? ""
+  return `${n.slice(0, -1).join(", ")} en ${n[n.length - 1]}`
+}
+
 interface Persoon {
   voornaam: string
   achternaam: string
@@ -118,6 +146,81 @@ export default function AanmeldFormulier({
   const [fout, setFout] = useState<string | null>(null)
   const [bijgewerkt, setBijgewerkt] = useState(false)
 
+  // ── Eerder aangemeld? ────────────────────────────────────────────────────
+  // Op een telefoon die al eens antwoordde vragen we wat je wilt: je eerdere
+  // aanmelding aanpassen, of iemand anders aanmelden. Zonder die vraag zette
+  // een tweede aanmelding op hetzelfde toestel de eerste terug op "niets
+  // gehoord", en een typfout tussen de Save the Date en de trouwkaart gaf een
+  // tweede regel voor dezelfde gast (Michiel, 24 september 2026).
+  // Via een persoonlijke link uit de gastenlijst weten we wie je bent; dan
+  // staan je namen er meteen.
+  const [eerder, setEerder] = useState<EerdereGroep[]>([])
+  const [persoonlijk, setPersoonlijk] = useState(false)
+  const [keuze, setKeuze] = useState<"open" | "aanpassen" | "nieuw" | null>(null)
+  const [groepId, setGroepId] = useState<string | null>(null)
+  const [gastId, setGastId] = useState<string | null>(null)
+
+  /** Het formulier vullen met een eerdere aanmelding. */
+  function vulIn(groep: EerdereGroep) {
+    const volwassenen = groep.personen.filter((p) => !p.is_kind)
+    const kids = groep.personen.filter((p) => p.is_kind)
+    const rijen = (volwassenen.length > 0 ? volwassenen : [groep.personen[0]]).map((p) => ({
+      ...leegPersoon(),
+      voornaam: p.voornaam,
+      achternaam: p.achternaam,
+    }))
+    setPersonen(rijen)
+    setAantal(rijen.length)
+    setMetKinderen(kids.length > 0)
+    setKinderen(kids.length > 0 ? kids.map((k) => ({ voornaam: k.voornaam, leeftijd: k.leeftijd != null ? String(k.leeftijd) : "" })) : [leegKind()])
+  }
+
+  function kiesAanpassen(groep: EerdereGroep) {
+    setGroepId(groep.id)
+    vulIn(groep)
+    setKeuze("aanpassen")
+  }
+
+  function kiesNieuw() {
+    setGroepId(null)
+    setPersonen([leegPersoon()])
+    setAantal(1)
+    setMetKinderen(false)
+    setKinderen([leegKind()])
+    setKeuze("nieuw")
+  }
+
+  useEffect(() => {
+    if (voorbeeld || !bronToken) return
+    let gast: string | null = null
+    try {
+      gast = new URLSearchParams(window.location.search).get("gast")
+    } catch {}
+    const kenmerk = bestaandKenmerk()
+    if (!gast && !kenmerk) return
+    const q = new URLSearchParams({ bron: bronToken })
+    if (gast) q.set("gast", gast)
+    if (kenmerk) q.set("apparaat", kenmerk)
+    fetch(`/api/rsvp?${q.toString()}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { persoonlijk?: boolean; groepen?: EerdereGroep[] } | null) => {
+        const groepen = (d?.groepen ?? []).filter((g) => g.personen.length > 0)
+        if (groepen.length === 0) return
+        if (d?.persoonlijk) {
+          setGastId(gast)
+          setPersoonlijk(true)
+          vulIn(groepen[0])
+          setKeuze("aanpassen")
+          return
+        }
+        setEerder(groepen)
+        setKeuze("open")
+      })
+      .catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bronToken, voorbeeld])
+
+
   const naDeadline = deadline ? new Date() > new Date(deadline) : false
   const heeftVraag1 = typeof customQuestion === "string" && customQuestion.trim().length > 0
   const heeftVraag2 = typeof customQuestion2 === "string" && customQuestion2.trim().length > 0
@@ -199,6 +302,15 @@ export default function AanmeldFormulier({
         body: JSON.stringify({
           ...(bronToken ? { bron_token: bronToken } : { event_id: eventId }),
           apparaat: apparaatKenmerk(),
+          // Alleen als we het gevraagd hebben; anders werkt de route als
+          // voorheen. Wie niets eerder aanmeldde, meldt per definitie nieuw aan.
+          ...(bronToken
+            ? {
+                modus: keuze === "aanpassen" ? "aanpassen" : "nieuw",
+                ...(keuze === "aanpassen" && groepId ? { groep: groepId } : {}),
+                ...(gastId ? { gast: gastId } : {}),
+              }
+            : {}),
           status: volledig ? "definitief" : "voorlopig",
           guests: gasten,
         }),
@@ -259,8 +371,58 @@ export default function AanmeldFormulier({
   const veldStijl: React.CSSProperties = { borderColor: `${accentColor}55`, color: "#1A1A1A" }
   const labelKlassen = `block font-semibold mb-2 ${compact ? "text-xs" : "text-sm"}`
 
+  if (keuze === "open" && eerder.length > 0) {
+    const knop = "w-full py-3 px-4 rounded-xl font-semibold text-sm text-left transition-all"
+    return (
+      <div className="flex flex-col gap-3">
+        <p className="text-sm m-0" style={{ color: labelColor }}>
+          Op dit toestel {eerder.length === 1 ? "meldde je eerder aan" : "zijn eerder aangemeld"}:
+        </p>
+        {eerder.map((g) => (
+          <button
+            key={g.id ?? "groep"}
+            type="button"
+            onClick={() => kiesAanpassen(g)}
+            className={knop}
+            style={{ backgroundColor: "#fff", border: `2px solid ${accentColor}66`, color: "#1A1A1A", cursor: "pointer" }}
+          >
+            <span className="block">{namenlijst(g.personen)}</span>
+            <span className="block text-xs font-normal mt-0.5" style={{ color: "#6B6259" }}>Dat aanpassen</span>
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={kiesNieuw}
+          className={knop}
+          style={{ backgroundColor: "transparent", border: `2px dashed ${accentColor}55`, color: labelColor, cursor: "pointer" }}
+        >
+          <span className="block">Iemand anders aanmelden</span>
+          <span className="block text-xs font-normal mt-0.5" style={{ opacity: 0.75 }}>Wat eerder is ingevuld blijft staan</span>
+        </button>
+      </div>
+    )
+  }
+
   return (
     <form onSubmit={verstuur} className={`flex flex-col ${compact ? "gap-4" : "gap-6"}`}>
+      {(keuze === "aanpassen" || persoonlijk) && (
+        <p className="text-xs m-0" style={{ color: labelColor, opacity: 0.8 }}>
+          {persoonlijk ? "Fijn dat je er bent. Je namen staan er al; kies of je erbij bent." : "Je past je eerdere aanmelding aan."}
+          {!persoonlijk && eerder.length > 0 && (
+            <>
+              {" "}
+              <button
+                type="button"
+                onClick={() => setKeuze("open")}
+                className="underline"
+                style={{ color: labelColor, background: "none", border: 0, padding: 0, cursor: "pointer", font: "inherit" }}
+              >
+                Toch iemand anders?
+              </button>
+            </>
+          )}
+        </p>
+      )}
       {/* ── Ben je erbij? ── */}
       <div>
         {/* In de kaart staat de vraag al als kop boven het formulier; dan

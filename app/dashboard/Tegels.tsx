@@ -228,6 +228,14 @@ export interface KaartRegel extends Antwoorden {
   card: CardRow
 }
 
+/** Eén antwoord, voor het lijstje "Bekijk reacties" in de tegel. */
+export interface Reactie {
+  id: string
+  naam: string
+  komt: boolean
+  kind: boolean
+}
+
 export interface TegelStand extends Antwoorden {
   /** Hoe groot je gastenlijst is, als je hem gebruikt. Alleen dan weten we
    *  wie nog stil is; anders is dit null. */
@@ -244,6 +252,7 @@ export function KaartTegel({
   eventId,
   regels,
   stand,
+  reacties = [],
 }: {
   soort: "save_the_date" | "trouwkaart"
   titel: string
@@ -256,6 +265,8 @@ export function KaartTegel({
   eventId: string | null
   regels: KaartRegel[]
   stand: TegelStand
+  /** Wie op dit soort kaart antwoordde, op alle kaarten van dat soort samen. */
+  reacties?: Reactie[]
 }) {
   const bouwer = eventId ? `/kaart-maken?event_id=${eventId}&type=${soort}` : `/kaart-maken?type=${soort}`
 
@@ -306,7 +317,54 @@ export function KaartTegel({
         </p>
       )}
       <KaartLijst regels={regels} eventId={eventId} soort={soort} live={werkt} prijs={prijs} />
+      {reacties.length > 0 && <ReactieLijst reacties={reacties} />}
     </Tegel>
+  )
+}
+
+// Wie er op dit soort kaart antwoordde, alle kaarten samen. Een uitklapper,
+// zodat de tegel rustig blijft tot je kijkt. Het is een weergave van de
+// gastenlijst, geen tweede lijst: een dubbele gast zie je hier dus ook
+// (Michiels wens van 24 september 2026).
+function ReactieLijst({ reacties }: { reacties: Reactie[] }) {
+  const komen = reacties.filter((r) => r.komt).length
+  return (
+    <details className="group rounded-xl" style={{ border: `1px solid ${KLEUR.zand}` }}>
+      <summary
+        className="flex items-center justify-between gap-3 px-3 py-2 text-[13px] font-semibold cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden"
+        style={{ color: KLEUR.inkt }}
+      >
+        <span>
+          Bekijk reacties{" "}
+          <span className="font-normal" style={{ color: KLEUR.zacht }}>
+            ({komen} {komen === 1 ? "komt" : "komen"}, {reacties.length - komen} niet)
+          </span>
+        </span>
+        <span aria-hidden className="transition-transform group-open:rotate-180" style={{ color: KLEUR.zacht }}>▾</span>
+      </summary>
+      <ul className="m-0 p-0 list-none max-h-72 overflow-y-auto" style={{ borderTop: `1px solid ${KLEUR.zand}` }}>
+        {reacties.map((r, i) => (
+          <li
+            key={r.id}
+            className="flex items-center justify-between gap-3 px-3 py-1.5 text-[13px]"
+            style={{ borderTop: i === 0 ? undefined : `1px solid ${KLEUR.zand}66` }}
+          >
+            <span style={{ color: KLEUR.inkt }}>
+              {r.naam}
+              {r.kind && <span className="ml-1.5 text-[11px]" style={{ color: KLEUR.zacht }}>kind</span>}
+            </span>
+            <span className="text-[12px] font-semibold" style={{ color: r.komt ? KLEUR.groen : "#92400E" }}>
+              {r.komt ? "Komt" : "Komt niet"}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <div className="px-3 py-2 text-right" style={{ borderTop: `1px solid ${KLEUR.zand}` }}>
+        <Link href="/dashboard#gasten" className="text-[12px] font-semibold" style={{ color: KLEUR.goud, textDecoration: "none" }}>
+          Naar de gastenlijst {"›"}
+        </Link>
+      </div>
+    </details>
   )
 }
 
