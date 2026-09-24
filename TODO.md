@@ -4,6 +4,7 @@ Persoonlijke actielijst van Michiel. Claude houdt deze bij; afgeronde punten gaa
 
 ## Open
 
+- [ ] **Per gast een WhatsApp-knop in de gastenlijst**: één tik opent WhatsApp met de persoonlijke link van die gast en de tekst al ingevuld, en de lijst zet hem vanzelf op verstuurd. Dan weet je precies wie de kaart kreeg en wie nog stil is, zonder tachtig links met de hand te maken. Kosten zijn verwaarloosbaar (een code per gast in de database, dezelfde kaartpagina). De algemene link blijft de standaard. Besproken 24 sep 2026; nu nog niet bouwen.
 - [ ] **Websitebouwer in stukken knippen**: `/bouwen` laadt één script van 494 kB (ongecomprimeerd; de kaartbouwer 200 kB, het dashboard 70 kB). Sinds 22 sep 2026 worden de andere tabbladen alvast opgehaald, dus wisselen voelt snel, maar de eerste keer openen blijft zwaar op een telefoon. De acht pagina-editors en de Sophie-tutorial pas laden als ze open gaan (`next/dynamic`). Hoort bij stap 5, want dan gaan die editors toch onder handen.
 - [ ] **Teksten op /start nog een ronde doorlopen**: de opbouw en stijl staan goed (11 sep 2026), maar de teksten in de drie kaarten en de regel eronder wil Michiel nog aanscherpen. Kies een moment waarop we er met een frisse blik naar kijken.
 - [ ] **Kaartbouwer testen** nu de drie ontwerpen live staan: Strak, Sierlijk en Bohemian, watermerk, envelopsimulatie, downloadvoorbeeld en activeren voor 15 euro. Meld wat er niet lekker voelt.

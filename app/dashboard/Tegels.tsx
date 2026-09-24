@@ -213,14 +213,25 @@ export function TegelKnop({
 // andere taal. Hier zie je ze allemaal en klik je er één open; in de bouwer
 // staat alleen nog een keuzelijst.
 
-export interface KaartRegel {
+// Wat een kaart en een tegel tellen. Alleen wat we echt weten: wie ja zei en
+// wie nee, in personen. "Verstuurd" en "bekeken" zijn weg: bij een algemene
+// link weten we niet hoeveel je er stuurde, en een link die drie keer geopend
+// wordt is geen drie gasten (Michiels afweging van 24 september 2026).
+export interface Antwoorden {
+  komen: number
+  komenNiet: number
+  /** Kinderen onder wie komen. */
+  kinderen: number
+}
+
+export interface KaartRegel extends Antwoorden {
   card: CardRow
-  /** Naar hoeveel gasten deze kaart is gestuurd, voor zover we dat weten:
-   *  wat het bruidspaar aangaf bij verstuurd zetten, plus wie via de link
-   *  antwoordde. */
-  verstuurd: number
-  /** Hoeveel gasten via deze kaart hebben gereageerd. */
-  gereageerd: number
+}
+
+export interface TegelStand extends Antwoorden {
+  /** Hoe groot je gastenlijst is, als je hem gebruikt. Alleen dan weten we
+   *  wie nog stil is; anders is dit null. */
+  opLijst: number | null
 }
 
 export function KaartTegel({
@@ -232,8 +243,7 @@ export function KaartTegel({
   live,
   eventId,
   regels,
-  verstuurd,
-  gereageerd,
+  stand,
 }: {
   soort: "save_the_date" | "trouwkaart"
   titel: string
@@ -245,15 +255,14 @@ export function KaartTegel({
   live: boolean
   eventId: string | null
   regels: KaartRegel[]
-  verstuurd: number
-  gereageerd: number
+  stand: TegelStand
 }) {
   const bouwer = eventId ? `/kaart-maken?event_id=${eventId}&type=${soort}` : `/kaart-maken?type=${soort}`
 
   // Niets gemaakt en niet gekocht: grijs, één zin, een prijs.
   if (regels.length === 0 && !mag) {
     return (
-      <Tegel titel={titel} grijs rechts={<span className="text-xs font-semibold" style={{ color: KLEUR.goud, letterSpacing: "0.03em" }}>{prijs}</span>}>
+      <Tegel titel={titel} grijs breed rechts={<span className="text-xs font-semibold" style={{ color: KLEUR.goud, letterSpacing: "0.03em" }}>{prijs}</span>}>
         <p className="m-0 text-sm" style={{ color: KLEUR.zacht }}>{uitleg}</p>
         <div className="flex gap-2 mt-auto">
           <TegelKnop href={bouwer} soort="stil">Ontwerpen</TegelKnop>
@@ -265,7 +274,7 @@ export function KaartTegel({
   // Betaald, maar nog niets ontworpen.
   if (regels.length === 0) {
     return (
-      <Tegel titel={titel} rechts={<Chip soort="stil">Nog geen kaart</Chip>}>
+      <Tegel titel={titel} breed rechts={<Chip soort="stil">Nog geen kaart</Chip>}>
         <p className="m-0 text-sm" style={{ color: KLEUR.tekst }}>{uitleg}</p>
         <div className="flex gap-2 mt-auto">
           <TegelKnop href={bouwer} soort="primair">Ontwerpen</TegelKnop>
@@ -278,22 +287,46 @@ export function KaartTegel({
   // die weet of de link al werkt (betaald) en toont anders het venster met
   // wat activeren kost en oplevert.
   const werkt = live && mag
+  const antwoorden = stand.komen + stand.komenNiet
   const chip = !werkt
     ? <Chip soort="stil">Concept</Chip>
-    : verstuurd > 0
-      ? <Chip soort="goed">{verstuurd} verstuurd</Chip>
+    : antwoorden > 0
+      ? <Chip soort="goed">{stand.komen} {stand.komen === 1 ? "komt" : "komen"}</Chip>
       : <Chip soort="stil">Klaar om te delen</Chip>
   return (
-    <Tegel titel={titel} rechts={chip}>
-      <p className="m-0 text-sm" style={{ color: KLEUR.tekst }}>
-        {werkt
-          ? gereageerd > 0
-            ? `${gereageerd} ${gereageerd === 1 ? "gast heeft" : "gasten hebben"} via deze kaart gereageerd.`
-            : "Je kaart is geactiveerd. Deel de link, dan vult je gastenlijst zich met wie antwoordt."
-          : "Je ontwerp staat klaar. Kies een kaart, bekijk hem als gast, of vraag de link voor je gasten op."}
-      </p>
+    <Tegel titel={titel} breed rechts={chip}>
+      {antwoorden > 0 ? (
+        <TegelTeller stand={stand} />
+      ) : (
+        <p className="m-0 text-sm" style={{ color: KLEUR.tekst }}>
+          {werkt
+            ? "Je kaart is geactiveerd. Deel de link, dan zie je hier wie komt en wie niet."
+            : "Je ontwerp staat klaar. Kies een kaart, bekijk hem als gast, of vraag de link voor je gasten op."}
+        </p>
+      )}
       <KaartLijst regels={regels} eventId={eventId} soort={soort} live={werkt} prijs={prijs} />
     </Tegel>
+  )
+}
+
+// De teller van één tegel: wie komt en wie niet, in personen. Met een
+// gastenlijst erbij ook wie nog stil is; zonder weten we dat niet, en dan
+// laten we het weg in plaats van te gokken.
+function TegelTeller({ stand }: { stand: TegelStand }) {
+  const stil = stand.opLijst !== null ? Math.max(stand.opLijst - stand.komen - stand.komenNiet, 0) : null
+  const cijfer = (label: string, waarde: number, kleur: string, onder?: string) => (
+    <div className="flex flex-col">
+      <span className="text-[11px] font-semibold uppercase tracking-[0.12em]" style={{ color: KLEUR.zacht }}>{label}</span>
+      <span style={{ fontFamily: FONT_KOP, fontSize: 30, fontWeight: 600, lineHeight: 1.1, color: kleur }}>{waarde}</span>
+      {onder && <span className="text-[11px]" style={{ color: KLEUR.zacht }}>{onder}</span>}
+    </div>
+  )
+  return (
+    <div className="flex flex-wrap items-start gap-x-8 gap-y-2">
+      {cijfer("Komen", stand.komen, KLEUR.groen, stand.kinderen > 0 ? `waarvan ${stand.kinderen} ${stand.kinderen === 1 ? "kind" : "kinderen"}` : undefined)}
+      {cijfer("Komen niet", stand.komenNiet, KLEUR.inkt)}
+      {stil !== null && cijfer("Nog stil", stil, stil > 0 ? "#B45309" : KLEUR.inkt, `van je ${stand.opLijst} gasten`)}
+    </div>
   )
 }
 

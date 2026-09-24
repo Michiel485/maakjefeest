@@ -237,7 +237,12 @@ export default function KaartLijst({
                 </span>
               )}
               <span className="tabular-nums" style={{ color: KLEUR.zacht }}>
-                {r.verstuurd} verstuurd {"·"} {r.gereageerd} gereageerd {"·"} {r.card.view_count}{"×"} bekeken
+                {r.komen + r.komenNiet === 0
+                  ? "nog geen antwoorden"
+                  : <>
+                      <b style={{ color: KLEUR.groen, fontWeight: 600 }}>{r.komen} {r.komen === 1 ? "komt" : "komen"}</b>
+                      {" · "}{r.komenNiet} {r.komenNiet === 1 ? "komt" : "komen"} niet
+                    </>}
               </span>
             </div>
           )

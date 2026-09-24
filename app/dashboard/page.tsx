@@ -8,12 +8,12 @@ import GuestPhotosSection from "./GuestPhotosSection"
 import { SectionLabel } from "./Beheer"
 import { SignOutButton } from "./SignOutButton"
 import BruiloftInfo from "./BruiloftInfo"
-import { Aftellen, KaartTegel, Tegel, TegelKnop, Teller, WebsiteTegel, type KaartRegel } from "./Tegels"
+import { Aftellen, KaartTegel, Tegel, TegelKnop, Teller, WebsiteTegel, type KaartRegel, type TegelStand } from "./Tegels"
 import { maxPhotosPerEvent } from "@/lib/guest-photos"
 import { planAllows, planMagVersturen, PLANS, formatEur, upgradePrice } from "@/lib/plans"
 import { afstandInWoorden } from "@/lib/fasen"
 import { leesStand, voortgang } from "@/lib/checklist"
-import { komtGast, reis } from "@/lib/gasten"
+import { reis } from "@/lib/gasten"
 import { kaartLabel } from "@/lib/cards"
 import { eventSiteLabel } from "@/lib/site-url"
 import { KLEUR } from "@/lib/ontwerp"
@@ -66,24 +66,38 @@ export default async function DashboardPage({
   // link waarop ze antwoordden. Hoeveel er per kaart verstuurd is weten we pas
   // als de klant dat per kaart aangeeft; tot die tijd staat het totaal per
   // soort in het chipje.
+  // Wie ja en wie nee zei op dit soort kaart, in personen. Alleen de
+  // antwoorden tellen: verstuurd en bekeken zeggen bij een algemene link niets.
+  function antwoorden(lijst: typeof rsvps, type: "save_the_date" | "trouwkaart") {
+    const kolom = type === "save_the_date" ? "std_status" : "inv_status"
+    const ja = lijst.filter((r) => reis(r[kolom]) === "ja")
+    return {
+      komen: ja.length,
+      komenNiet: lijst.filter((r) => reis(r[kolom]) === "nee").length,
+      kinderen: ja.filter((r) => r.is_kind === true).length,
+    }
+  }
+
   function regels(type: "save_the_date" | "trouwkaart"): KaartRegel[] {
     const kaartKolom = type === "save_the_date" ? "std_kaart_id" : "inv_kaart_id"
-    const statusKolom = type === "save_the_date" ? "std_status" : "inv_status"
     return cards
       .filter((c) => c.type === type)
       .map((card) => ({
         card,
-        // Verstuurd: wat het bruidspaar bij "verstuurd zetten" aangaf, plus wie
-        // via deze link antwoordde (die heeft hem per definitie gekregen).
-        verstuurd: rsvps.filter(
-          (r) =>
-            (r[kaartKolom] === card.id && reis(r[statusKolom]) !== "niet_verstuurd") ||
-            (r.bron_token === card.share_token && r[kaartKolom] == null)
-        ).length,
-        gereageerd: rsvps.filter(
-          (r) => r.bron_token === card.share_token && komtGast(reis(r.std_status), reis(r.inv_status)) !== null
-        ).length,
+        // Op deze kaart: wie via deze link antwoordde, of wie je zelf bij
+        // deze kaart zette.
+        ...antwoorden(
+          rsvps.filter((r) => r.bron_token === card.share_token || r[kaartKolom] === card.id),
+          type,
+        ),
       }))
+  }
+
+  // Gebruik je de gastenlijst? Dan staan er gasten op die niet via een link
+  // binnenkwamen, en weten we wie nog stil is. Anders niet.
+  const lijstGebruikt = rsvps.some((r) => !r.bron_token)
+  function tegelStand(type: "save_the_date" | "trouwkaart"): TegelStand {
+    return { ...antwoorden(rsvps, type), opLijst: lijstGebruikt ? rsvps.length : null }
   }
 
   // Voor de gastenlijst: welke kaarten er zijn, met een korte naam.
@@ -208,8 +222,11 @@ export default async function DashboardPage({
           live={stand.live}
         />
 
-        {/* ── De tegels ── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* ── De tegels ──
+            Onder elkaar, in de volgorde van de bruiloft: eerst de Save the
+            Date, dan de trouwkaart, dan de website. Naast elkaar was er te
+            weinig ruimte voor de kaartlijst (Michiel, 24 september 2026). */}
+        <div className="grid grid-cols-1 gap-4">
           <KaartTegel
             soort="save_the_date"
             titel="Save the Date"
@@ -219,8 +236,7 @@ export default async function DashboardPage({
             live={stand.live}
             eventId={bruiloft?.id ?? null}
             regels={stdRegels}
-            verstuurd={stand.stdVerstuurd}
-            gereageerd={stand.stdGereageerd}
+            stand={tegelStand("save_the_date")}
           />
           <KaartTegel
             soort="trouwkaart"
@@ -233,8 +249,7 @@ export default async function DashboardPage({
             live={stand.live}
             eventId={bruiloft?.id ?? null}
             regels={invRegels}
-            verstuurd={stand.invVerstuurd}
-            gereageerd={stand.invGereageerd}
+            stand={tegelStand("trouwkaart")}
           />
           <WebsiteTegel
             mag={stand.magSite}
