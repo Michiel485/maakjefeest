@@ -295,12 +295,13 @@ export function KaartTegel({
       : <Chip soort="stil">Klaar om te delen</Chip>
   return (
     <Tegel titel={titel} breed rechts={chip}>
-      {antwoorden > 0 ? (
-        <TegelTeller stand={stand} />
-      ) : (
+      {/* Geen eigen teller: de stand staat bovenaan het dashboard, en per
+          kaart op de regel zelf. Twee tellers onder elkaar was dubbel
+          (Michiel, 24 september 2026). */}
+      {antwoorden === 0 && (
         <p className="m-0 text-sm" style={{ color: KLEUR.tekst }}>
           {werkt
-            ? "Je kaart is geactiveerd. Deel de link, dan zie je hier wie komt en wie niet."
+            ? "Je kaart is geactiveerd. Deel de link, dan zie je per kaart wie komt en wie niet."
             : "Je ontwerp staat klaar. Kies een kaart, bekijk hem als gast, of vraag de link voor je gasten op."}
         </p>
       )}
@@ -309,26 +310,6 @@ export function KaartTegel({
   )
 }
 
-// De teller van één tegel: wie komt en wie niet, in personen. Met een
-// gastenlijst erbij ook wie nog stil is; zonder weten we dat niet, en dan
-// laten we het weg in plaats van te gokken.
-function TegelTeller({ stand }: { stand: TegelStand }) {
-  const stil = stand.opLijst !== null ? Math.max(stand.opLijst - stand.komen - stand.komenNiet, 0) : null
-  const cijfer = (label: string, waarde: number, kleur: string, onder?: string) => (
-    <div className="flex flex-col">
-      <span className="text-[11px] font-semibold uppercase tracking-[0.12em]" style={{ color: KLEUR.zacht }}>{label}</span>
-      <span style={{ fontFamily: FONT_KOP, fontSize: 30, fontWeight: 600, lineHeight: 1.1, color: kleur }}>{waarde}</span>
-      {onder && <span className="text-[11px]" style={{ color: KLEUR.zacht }}>{onder}</span>}
-    </div>
-  )
-  return (
-    <div className="flex flex-wrap items-start gap-x-8 gap-y-2">
-      {cijfer("Komen", stand.komen, KLEUR.groen, stand.kinderen > 0 ? `waarvan ${stand.kinderen} ${stand.kinderen === 1 ? "kind" : "kinderen"}` : undefined)}
-      {cijfer("Komen niet", stand.komenNiet, KLEUR.inkt)}
-      {stil !== null && cijfer("Nog stil", stil, stil > 0 ? "#B45309" : KLEUR.inkt, `van je ${stand.opLijst} gasten`)}
-    </div>
-  )
-}
 
 
 // ── De website ──────────────────────────────────────────────────────────────

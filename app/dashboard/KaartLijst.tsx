@@ -241,6 +241,7 @@ export default function KaartLijst({
                   ? "nog geen antwoorden"
                   : <>
                       <b style={{ color: KLEUR.groen, fontWeight: 600 }}>{r.komen} {r.komen === 1 ? "komt" : "komen"}</b>
+                      {r.kinderen > 0 && ` (waarvan ${r.kinderen} ${r.kinderen === 1 ? "kind" : "kinderen"})`}
                       {" · "}{r.komenNiet} {r.komenNiet === 1 ? "komt" : "komen"} niet
                     </>}
               </span>
