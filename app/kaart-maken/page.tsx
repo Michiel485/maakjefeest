@@ -320,7 +320,13 @@ export default function KaartMakenPage() {
       const bewaard = localStorage.getItem(LS_ONTWERP)
       if (bewaard) basis = { ...LEEG, ...(JSON.parse(bewaard) as Partial<KaartOntwerp>) }
       const locatieBewaard = localStorage.getItem(LS_BRUILOFT_LOCATIE)
-      if (locatieBewaard) setEventLocatie(locatieBewaard)
+      if (locatieBewaard) {
+        setEventLocatie(locatieBewaard)
+        // De locatie uit het dashboard als voorzet op de kaart. Het is een
+        // suggestie: wat je hier typt wint, en alleen een afwijkende locatie
+        // wordt bij de kaart bewaard (Michiels wens van 24 september 2026).
+        if (!basis.location) basis = { ...basis, location: locatieBewaard }
+      }
       const ids = localStorage.getItem(LS_IDS)
       if (ids) {
         const { eventId: e, cardId: c } = JSON.parse(ids) as { eventId?: string; cardId?: string }
@@ -469,7 +475,9 @@ export default function KaartMakenPage() {
   // Namen en datum staan bewust niet in de inhoud van de kaart: die horen bij
   // de bruiloft. buildCardDisplay haalt ze uit het event hieronder.
   const content: CardContent = {
-    location: ontwerp.location.trim() || undefined,
+    // Alleen bewaren als hij afwijkt van de bruiloft: dan blijft een kaart
+    // zonder eigen locatie de locatie van de bruiloft volgen.
+    location: ontwerp.location.trim() && ontwerp.location.trim() !== eventLocatie.trim() ? ontwerp.location.trim() : undefined,
     message: ontwerp.message || undefined,
     guestType: ontwerp.guestType || undefined,
     inviteText: ontwerp.inviteText || undefined,
@@ -493,7 +501,7 @@ export default function KaartMakenPage() {
     title: ontwerp.names || "Jullie namen",
     frame_names: ontwerp.names || null,
     datum: ontwerp.datum || null,
-    locatie: ontwerp.location || null,
+    locatie: ontwerp.location || eventLocatie || null,
     hero_image_url: null,
   })
   const initialen = initialenVan(ontwerp.names) || "♥"
