@@ -9,8 +9,19 @@ import { browserLetters } from "@/lib/kaart-ontwerpen"
 import KaartVoorkant from "./KaartVoorkant"
 import KlassiekeVoorkant from "./KlassiekeVoorkant"
 
-export default function Voorkant({ display, sc, breedte }: { display: CardDisplay; sc: SC; breedte: number }) {
-  if (isKlassiekOntwerp(display.design)) return <KlassiekeVoorkant display={display} sc={sc} />
+export default function Voorkant({
+  display,
+  sc,
+  breedte,
+  vullen,
+}: {
+  display: CardDisplay
+  sc: SC
+  breedte: number
+  /** Galerij: de eerste drie ontwerpen minstens zo hoog, zie KlassiekeVoorkant */
+  vullen?: number
+}) {
+  if (isKlassiekOntwerp(display.design)) return <KlassiekeVoorkant display={display} sc={sc} vullen={vullen} />
   return (
     <div style={{ display: "flex", justifyContent: "center" }}>
       <KaartVoorkant

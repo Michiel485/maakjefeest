@@ -142,13 +142,27 @@ export default function CardReveal({
   const envelopKlepRef = useRef<HTMLDivElement>(null)
   const envelopVoorRef = useRef<HTMLDivElement>(null)
   const kaartRef = useRef<HTMLDivElement>(null)
+  // Alleen de kaart zelf, zonder wat eronder komt (aanmelden, agenda). De
+  // envelop hoort over de kaart te liggen. Stond hij gecentreerd over alles
+  // samen, dan zakte hij bij een lang aanmeldformulier naar de onderkant van
+  // het scherm (Michiels bevinding van 25 september 2026).
+  const gezichtRef = useRef<HTMLDivElement>(null)
+  const [gezichtHoogte, setGezichtHoogte] = useState<number | null>(null)
   useEffect(() => {
     const el = kaartRef.current
+    const gezicht = gezichtRef.current
     if (!el) return
-    // Een ResizeObserver meldt zich ook meteen bij het begin
-    const ro = new ResizeObserver(() => setKaartBreedte(Math.max(240, Math.round(el.clientWidth))))
+    const meet = () => {
+      setKaartBreedte(Math.max(240, Math.round(el.clientWidth)))
+      if (gezicht) setGezichtHoogte(Math.round(gezicht.offsetHeight))
+    }
+    // Een ResizeObserver meldt zich ook meteen bij het begin; de timeout is
+    // voor als hij dat niet doet, bijvoorbeeld in een tabblad op de achtergrond
+    const ro = new ResizeObserver(meet)
     ro.observe(el)
-    return () => ro.disconnect()
+    if (gezicht) ro.observe(gezicht)
+    const t = setTimeout(meet, 0)
+    return () => { ro.disconnect(); clearTimeout(t) }
   }, [])
   const reduceMotion = useSyncExternalStore(
     subscribeReducedMotion,
@@ -212,6 +226,8 @@ export default function CardReveal({
       const kr = kaart!.getBoundingClientRect()
       const er = achter!.getBoundingClientRect()
       const H = kr.height
+      // De hoogte van de kaart zelf, zonder het formulier eronder
+      const F = gezichtRef.current?.offsetHeight || H
       // Bovenrand en onderrand van de envelop, gemeten vanaf de kaartbovenkant
       const boven = er.top - kr.top
       const onder = er.bottom - kr.top
@@ -227,7 +243,7 @@ export default function CardReveal({
         kaartStart: boven + er.height * KAART_IN_ENVELOP,
         // De envelop zakt tot zijn bovenrand onder de onderkant van de kaart
         // ligt. Pas dan dekt hij niets meer af en is de kaart helemaal vrij.
-        zakt: Math.max(160, Math.min(1000, H - boven)),
+        zakt: Math.max(160, Math.min(1000, F - boven)),
       }
     }
 
@@ -459,8 +475,9 @@ export default function CardReveal({
             weggaat, precies op het moment dat de kaart moet landen. */}
         {stage !== "open" && (
           <div
-            className="absolute inset-0 flex flex-col items-center justify-center"
-            style={{ pointerEvents: "none" }}
+            className="absolute left-0 right-0 top-0 flex flex-col items-center justify-center"
+            // Over de kaart zelf, niet over de kaart plus wat eronder staat
+            style={{ pointerEvents: "none", height: gezichtHoogte ?? "100%" }}
           >
             <div
               className="relative"
@@ -715,7 +732,9 @@ export default function CardReveal({
                   { opacity: 0 }),
           }}
         >
-            <Voorkant display={display} sc={sc} breedte={kaartBreedte} />
+            <div ref={gezichtRef}>
+              <Voorkant display={display} sc={sc} breedte={kaartBreedte} />
+            </div>
 
             {/* Wie het maakte, direct onder de kaart. Stond helemaal onderaan,
                 onder de knoppen; Michiel wil de volgorde kaart, gemaakt met,

@@ -8,12 +8,26 @@
 import { CARD_DESIGN_STYLE, type CardDisplay, type KlassiekOntwerp } from "@/lib/cards"
 import type { SC } from "@/lib/event-styles"
 
-export default function KlassiekeVoorkant({ display, sc }: { display: CardDisplay; sc: SC }) {
+export default function KlassiekeVoorkant({
+  display,
+  sc,
+  vullen,
+}: {
+  display: CardDisplay
+  sc: SC
+  /**
+   * Alleen voor de galerij: minstens deze hoogte, met de inhoud in het
+   * midden, zodat elke miniatuur zijn vakje vult. De echte kaart laat dit weg
+   * en blijft precies zoals hij was.
+   */
+  vullen?: number
+}) {
   const ds = CARD_DESIGN_STYLE[display.design as KlassiekOntwerp] ?? CARD_DESIGN_STYLE.klassiek
   return (
     <div
       className="overflow-hidden"
       style={{
+        ...(vullen ? { minHeight: vullen, display: "flex", flexDirection: "column", justifyContent: "center" } : {}),
         backgroundColor: sc.cardBg ?? "#FFFEFB",
         border: sc.goldBorder ? `2px solid ${sc.accent}` : `1px solid ${sc.accent}45`,
         borderRadius: ds.hoekRadius,

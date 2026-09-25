@@ -150,28 +150,24 @@ type Actie = "bewaar" | "activeer"
  */
 function Miniatuur({ display, sc }: { display: CardDisplay; sc: SC }) {
   const vak = useRef<HTMLDivElement>(null)
-  const kaart = useRef<HTMLDivElement>(null)
-  // De hele kaart past in het vakje en staat in het midden. Eerst schaalden we
-  // alleen op de breedte; een kaart die lager is dan het vakje (Strak,
-  // Bohemian) stond dan bovenin, met een lege strook eronder (Michiels
-  // bevinding van 25 september 2026).
-  const [maat, setMaat] = useState({ schaal: 0.33, links: 0, boven: 0 })
+  // Elke miniatuur vult zijn vakje, allemaal even groot (Michiel, 25
+  // september 2026). De kaart wordt op de breedte geschaald en de eerste drie
+  // ontwerpen krijgen de hoogte van het vakje, met de inhoud in het midden.
+  // Is een kaart toch hoger, bijvoorbeeld met een foto en een lange tekst,
+  // dan valt de onderkant weg; in het klein zie je genoeg.
+  const [schaal, setSchaal] = useState(0.28)
   useEffect(() => {
     const v = vak.current
-    const k = kaart.current
-    if (!v || !k) return
-    const meet = () => {
-      const kh = k.offsetHeight || 560
-      const schaal = Math.min(v.clientWidth / 400, v.clientHeight / kh)
-      setMaat({ schaal, links: (v.clientWidth - 400 * schaal) / 2, boven: (v.clientHeight - kh * schaal) / 2 })
-    }
+    if (!v) return
+    const meet = () => setSchaal(v.clientWidth / 400)
     const ro = new ResizeObserver(meet)
     ro.observe(v)
-    ro.observe(k)
     // Ook meteen een keer, niet pas bij de eerste melding van de observer
     const t = setTimeout(meet, 0)
     return () => { ro.disconnect(); clearTimeout(t) }
   }, [])
+  // Een eigen ontwerp in de verhouding van het vakje
+  const d = display.design === "eigen" ? { ...display, ontwerpVerhouding: 1.4 } : display
   return (
     <div
       ref={vak}
@@ -179,12 +175,8 @@ function Miniatuur({ display, sc }: { display: CardDisplay; sc: SC }) {
       className="relative w-full overflow-hidden rounded-lg"
       style={{ aspectRatio: "5 / 7", backgroundColor: sc.bodyBg, pointerEvents: "none" }}
     >
-      <div
-        ref={kaart}
-        className="absolute left-0 top-0"
-        style={{ width: 400, transform: `translate(${maat.links}px, ${maat.boven}px) scale(${maat.schaal})`, transformOrigin: "top left" }}
-      >
-        <Voorkant display={display} sc={sc} breedte={400} />
+      <div className="absolute left-0 top-0" style={{ width: 400, transform: `scale(${schaal})`, transformOrigin: "top left" }}>
+        <Voorkant display={d} sc={sc} breedte={400} vullen={560} />
       </div>
     </div>
   )
