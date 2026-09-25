@@ -158,5 +158,5 @@ export const ONDER_DE_KAART: Partial<Record<CardDesign, OnderDeKaart>> = {
   magnolia: { locatie: false, bericht: true, details: true },
   // Een eigen ontwerp heeft alles al in de afbeelding; alleen wat je er zelf
   // bij schrijft komt eronder
-  eigen: { locatie: false, bericht: true, details: false },
+  eigen: { locatie: false, bericht: true, details: true },
 }

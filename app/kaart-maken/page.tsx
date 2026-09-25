@@ -10,6 +10,7 @@ import {
   cardAnimatie,
   cardDesign,
   CARD_DESIGNS,
+  FOTO_ONTWERPEN,
   CARD_TAAL_LABEL,
   CARD_TALEN,
   cardTaal,
@@ -137,6 +138,23 @@ function BladIcoon({ blad }: { blad: Exclude<Blad, "kaart"> }) {
   )
 }
 type Actie = "bewaar" | "activeer"
+
+/** Een labeltje achter een tekstveld: komt het op de kaart of eronder? */
+function Plek({ waar }: { waar: "op" | "onder" | "niet" }) {
+  const tekst = waar === "op" ? "op de kaart" : waar === "onder" ? "onder de kaart" : "niet op de kaart"
+  return (
+    <span
+      className="text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap"
+      style={
+        waar === "op"
+          ? { backgroundColor: "#FBF5E8", color: "#9A7B3F", border: "1px solid #E8D5A3" }
+          : { backgroundColor: "#F3F1EE", color: "#7A7068", border: "1px solid #E4E0DA" }
+      }
+    >
+      {tekst}
+    </span>
+  )
+}
 
 /**
  * Een kaart in het klein, voor de galerij met ontwerpen: jullie eigen namen
@@ -734,7 +752,6 @@ export default function KaartMakenPage() {
     location: ontwerp.location.trim() && ontwerp.location.trim() !== eventLocatie.trim() ? ontwerp.location.trim() : undefined,
     message: ontwerp.message || undefined,
     guestType: ontwerp.guestType || undefined,
-    inviteText: ontwerp.inviteText || undefined,
     timeText: ontwerp.timeText || undefined,
     naam: ontwerp.naam.trim() || undefined,
     toonGastType: ontwerp.toonGastType || undefined,
@@ -1221,6 +1238,19 @@ export default function KaartMakenPage() {
     } finally {
       setBusy(null)
     }
+  }
+
+  // Waar een tekst terechtkomt: op de kaart, eronder, of bij een eigen
+  // ontwerp nergens (Michiel, 25 september 2026: het moet duidelijk zijn wat
+  // op en wat onder de kaart komt)
+  function tekstPlek(veld: "namen" | "datum" | "locatie" | "bericht" | "details"): "op" | "onder" | "niet" {
+    const d = cardDesign(ontwerp.template)
+    const onder = ONDER_DE_KAART[d]
+    if (d === "eigen") return veld === "bericht" || veld === "details" ? "onder" : "niet"
+    if (veld === "locatie") return onder?.locatie ? "onder" : "op"
+    if (veld === "bericht") return onder?.bericht ? "onder" : "op"
+    if (veld === "details") return onder?.details ? "onder" : "op"
+    return "op"
   }
 
   // Eigen ontwerp: scherper dan een foto, want er staat tekst op, en de
@@ -1812,9 +1842,14 @@ export default function KaartMakenPage() {
             )}
           </div>
 
-          <Sectie className={telefoon("tekst")} vast={inPaneel("tekst")} open={isOpen("tekst")} onToggle={() => setStap(stap === "tekst" ? null : "tekst")} titel="Tekst op de kaart">
+          <Sectie className={telefoon("tekst")} vast={inPaneel("tekst")} open={isOpen("tekst")} onToggle={() => setStap(stap === "tekst" ? null : "tekst")} titel="Tekst">
+            {cardDesign(ontwerp.template) === "eigen" && (
+              <p className="m-0 text-[12px] leading-relaxed rounded-xl px-3 py-2.5" style={{ color: BODY, backgroundColor: GOLD_BG, border: `1px solid ${GOLD_LIGHT}` }}>
+                <b style={{ color: CHARCOAL }}>Jullie eigen ontwerp is de kaart.</b> Er komt geen tekst overheen. De namen en de datum gebruiken we alleen voor het zegel, de voorvertoning in WhatsApp en de agenda. Een boodschap komt onder de kaart.
+              </p>
+            )}
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Jullie namen</span>
+              <span className="text-xs font-semibold flex items-center justify-between gap-2" style={{ color: CHARCOAL }}>Jullie namen <Plek waar={tekstPlek("namen")} /></span>
               {/* Een tekstvak en geen invoerregel, zodat een enter werkt: veel
                   paren zetten de tweede naam graag op een eigen regel. */}
               <textarea
@@ -1829,11 +1864,11 @@ export default function KaartMakenPage() {
               />
             </label>
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Trouwdatum</span>
+              <span className="text-xs font-semibold flex items-center justify-between gap-2" style={{ color: CHARCOAL }}>Trouwdatum <Plek waar={tekstPlek("datum")} /></span>
               <input id="kaart-datum" type="date" className={inputCls} style={inputStyle} value={ontwerp.datum} onChange={(e) => update({ datum: e.target.value })} />
             </label>
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Locatie</span>
+              <span className="text-xs font-semibold flex items-center justify-between gap-2" style={{ color: CHARCOAL }}>Locatie <Plek waar={tekstPlek("locatie")} /></span>
               <textarea
                 className={`${inputCls} resize-none`}
                 style={{ ...inputStyle, minHeight: 48 }}
@@ -1850,8 +1885,8 @@ export default function KaartMakenPage() {
             </label>
 
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>
-                {ONDER_DE_KAART[cardDesign(ontwerp.template)]?.bericht ? "Tekst onder de kaart (optioneel)" : "Boodschap"}
+              <span className="text-xs font-semibold flex items-center justify-between gap-2" style={{ color: CHARCOAL }}>
+                {tekstPlek("bericht") === "onder" ? "Boodschap (optioneel)" : "Boodschap"} <Plek waar={tekstPlek("bericht")} />
               </span>
               <textarea
                 id="kaart-boodschap"
@@ -1862,9 +1897,9 @@ export default function KaartMakenPage() {
                 onChange={(e) => update({ message: e.target.value })}
                 maxLength={400}
               />
-              {ONDER_DE_KAART[cardDesign(ontwerp.template)] && (
+              {ONDER_DE_KAART[cardDesign(ontwerp.template)] && cardDesign(ontwerp.template) !== "eigen" && (
                 <span className="text-[11px] leading-snug" style={{ color: SUBTLE }}>
-                  Dit ontwerp is strak en heeft weinig tekst. Wat niet op de kaart past, zoals de locatie en deze tekst, staat er netjes onder.
+                  Dit ontwerp is strak en heeft weinig tekst. Wat niet op de kaart past, staat er netjes onder.
                 </span>
               )}
             </label>
@@ -1919,7 +1954,16 @@ export default function KaartMakenPage() {
                     style={{ border: `2px solid ${actief ? GOLD : "transparent"}`, backgroundColor: actief ? "#fff" : "transparent", cursor: "pointer" }}
                   >
                     <Miniatuur display={{ ...display, design: t }} sc={sc} />
-                    <span className="px-0.5 text-[13px] font-semibold" style={{ color: CHARCOAL }}>{CARD_TEMPLATE_LABEL[t]}</span>
+                    <span className="px-0.5 text-[13px] font-semibold flex items-center justify-between gap-1" style={{ color: CHARCOAL }}>
+                      {CARD_TEMPLATE_LABEL[t]}
+                      {FOTO_ONTWERPEN.includes(t) && (
+                        <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke={SUBTLE} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-label="met foto">
+                          <title>Met foto</title>
+                          <path d="M4 8h3l2-3h6l2 3h3v11H4z" />
+                          <circle cx="12" cy="13" r="3.5" />
+                        </svg>
+                      )}
+                    </span>
                   </button>
                 )
               })}
@@ -1993,6 +2037,28 @@ export default function KaartMakenPage() {
 
           {/* Een foto kan bij elk ontwerp */}
           <Sectie className={telefoon("foto")} vast={inPaneel("foto")} open={isOpen("foto")} onToggle={() => setStap(stap === "foto" ? null : "foto")} titel="Foto (optioneel)">
+            {!FOTO_ONTWERPEN.includes(cardDesign(ontwerp.template)) && (
+              <div className="rounded-xl px-3 py-2.5 flex flex-col gap-2" style={{ backgroundColor: GOLD_BG, border: `1px solid ${GOLD_LIGHT}` }}>
+                <p className="m-0 text-[12px] leading-relaxed" style={{ color: BODY }}>
+                  <b style={{ color: CHARCOAL }}>{CARD_TEMPLATE_LABEL[cardDesign(ontwerp.template)]} heeft geen plek voor een foto.</b>{" "}
+                  {ontwerp.photoUrl || ontwerp.photoDataUrl ? "Je foto blijft bewaard, voor als je een ontwerp met foto kiest. " : ""}
+                  Een foto kan bij:
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {FOTO_ONTWERPEN.map((f) => (
+                    <button
+                      key={f}
+                      type="button"
+                      onClick={() => update({ template: f })}
+                      className="text-[12px] font-semibold px-2.5 py-1 rounded-lg"
+                      style={{ backgroundColor: "#fff", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
+                    >
+                      {CARD_TEMPLATE_LABEL[f]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
               <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void kiesFoto(f) }} />
               {(ontwerp.photoDataUrl || ontwerp.photoUrl) && (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -2083,34 +2149,17 @@ export default function KaartMakenPage() {
               volgorde als op de kaart: eerst de uitnodigingsregel, dan de
               tijden en de dresscode, elk op een eigen regel in de accentkleur.
               Wat leeg is, staat er niet. */}
+          {/* Alleen bij een trouwkaart: tijden en dresscode. De eigen
+              uitnodigingsregel is weg, de boodschap is genoeg (Michiel,
+              25 september 2026). */}
+          {isTrouwkaart && (
           <Sectie className={telefoon("details")} vast={inPaneel("details")} open={isOpen("details")} onToggle={() => setStap(stap === "details" ? null : "details")} titel="Details op de kaart">
-            <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Eigen uitnodigingsregel</span>
-              <textarea
-                className={`${inputCls} resize-none`}
-                style={{ ...inputStyle, minHeight: 56 }}
-                rows={2}
-                placeholder={
-                  isTrouwkaart && ontwerp.guestType
-                    ? KAART_TEKST[ontwerp.taal].uitnodiging[ontwerp.guestType]
-                    : "Bijvoorbeeld: Wij vieren het graag met jou"
-                }
-                value={ontwerp.inviteText}
-                onChange={(e) => update({ inviteText: e.target.value })}
-                maxLength={160}
-              />
-              <span className="text-[11px] leading-snug" style={{ color: SUBTLE }}>
-                {isTrouwkaart && ontwerp.guestType
-                  ? "Leeg betekent: de standaardregel voor deze gastengroep."
-                  : "Leeg betekent: geen extra regel."}
-              </span>
-            </label>
             {/* Tijden en dresscode alleen op een trouwkaart; op een Save the
                 Date zijn ze overbodig (Michiel, 25 september 2026) */}
             {isTrouwkaart && (
               <>
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Tijden</span>
+              <span className="text-xs font-semibold flex items-center justify-between gap-2" style={{ color: CHARCOAL }}>Tijden <Plek waar={tekstPlek("details")} /></span>
               <input
                 className={inputCls}
                 style={inputStyle}
@@ -2121,7 +2170,7 @@ export default function KaartMakenPage() {
               />
             </label>
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Dresscode</span>
+              <span className="text-xs font-semibold flex items-center justify-between gap-2" style={{ color: CHARCOAL }}>Dresscode <Plek waar={tekstPlek("details")} /></span>
               <input
                 className={inputCls}
                 style={inputStyle}
@@ -2134,6 +2183,7 @@ export default function KaartMakenPage() {
               </>
             )}
           </Sectie>
+          )}
 
           <Sectie
             className={telefoon("aanmelden")}
@@ -2305,14 +2355,19 @@ export default function KaartMakenPage() {
           {/* Rechtsboven in het voorbeeld, in dezelfde stijl als "Terug naar
               ontwerpen" in de simulatie. Michiels punt: die knop hoort bij
               het voorbeeld, niet ergens in een sectie. */}
+          {/* Blijft staan als je in het voorbeeld naar beneden scrolt (Michiel,
+              25 september 2026). Een lege rij met de knop erin, zodat hij de
+              kaart niet naar beneden duwt. */}
+          <div className="hidden md:flex sticky top-0 z-10 h-0 justify-end">
           <button
             type="button"
             onClick={() => setSimulatie(true)}
-            className="hidden md:inline-flex absolute top-4 right-4 z-10 text-sm font-semibold px-4 py-2 rounded-xl shadow-lg"
+            className="inline-flex text-sm font-semibold px-4 py-2 rounded-xl shadow-lg"
             style={{ backgroundColor: "#fff", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
           >
             {"💌"} Bekijk hoe het opengaat
           </button>
+          </div>
           <div className={`mx-auto max-w-md transition-transform duration-200 origin-top ${blad && blad !== "kaart" && !bladKlein ? "max-md:scale-[0.45]" : ""}`}>
             <div className="flex items-center justify-center gap-3 mb-1">
               <p className="m-0 text-center text-xs font-semibold uppercase tracking-widest" style={{ color: sc.headingColor, opacity: 0.75 }}>
@@ -2329,7 +2384,9 @@ export default function KaartMakenPage() {
               </button>
             </div>
             <p className="m-0 mb-4 text-center text-[11px]" style={{ color: sc.headingColor, opacity: 0.55 }}>
-              Tik op een tekst op de kaart om hem te wijzigen
+              {cardDesign(ontwerp.template) === "eigen"
+                ? "Jullie eigen ontwerp, zonder tekst eroverheen"
+                : "Tik op een tekst op de kaart om hem te wijzigen"}
             </p>
             {kaartenVanDitSoort.length > 1 && (
               <div className="md:hidden -mt-2 mb-3 flex items-center justify-center gap-1.5" aria-label="Veeg voor je andere kaarten">

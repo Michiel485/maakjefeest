@@ -209,6 +209,12 @@ export const CARD_TEMPLATE_LABEL: Record<CardDesign, string> = {
   magnolia: "Magnolia",
 }
 
+/**
+ * De ontwerpen waar een foto op kan. Bij de rest doet een foto niets; de
+ * bouwer zegt dat er dan bij (Michiel, 25 september 2026).
+ */
+export const FOTO_ONTWERPEN: CardDesign[] = ["klassiek", "sierlijk", "bohemian", "boog", "fotovol", "fotoschrift"]
+
 // Oude waarden en rommel vallen terug op het strakke ontwerp
 export function cardDesign(template: unknown): CardDesign {
   return typeof template === "string" && template !== "foto" && (CARD_TEMPLATE_WAARDEN as string[]).includes(template)
@@ -587,9 +593,9 @@ export function buildCardDisplay(
     // Een eigen uitnodigingsregel mag op elke kaart; de standaardregel per
     // gastengroep alleen op een trouwkaart, want op een Save the Date nodig je
     // nog niet uit.
-    inviteLine:
-      content.inviteText?.trim() ||
-      (type === "trouwkaart" && content.guestType ? tk.uitnodiging[content.guestType] : null),
+    // Een eigen uitnodigingsregel is weg (Michiel, 25 september 2026: de
+    // boodschap is genoeg). Wat er ooit getypt is, komt niet meer op de kaart.
+    inviteLine: type === "trouwkaart" && content.guestType ? tk.uitnodiging[content.guestType] : null,
     // In de accentkleur onder de tekst wat er verder te weten is: voor wie,
     // hoe laat, welke kleding. Alleen wat is ingevuld, elk op een eigen regel.
     // Eerst stond het naast elkaar met een puntje ertussen; Michiel wil het

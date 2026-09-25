@@ -149,6 +149,11 @@ export default function CardReveal({
   // het scherm (Michiels bevinding van 25 september 2026).
   const gezichtRef = useRef<HTMLDivElement>(null)
   const [gezichtHoogte, setGezichtHoogte] = useState<number | null>(null)
+  // Hoe hoog de envelop is: 17 bij 12, en zo breed als hieronder staat. Een
+  // liggende kaart is lager dan de envelop; dan moet de ruimte voor de
+  // envelop groter zijn dan de kaart, anders stak hij er bovenuit (Michiel,
+  // 25 september 2026, bij Magnolia en Gouden blad).
+  const [envelopHoogte, setEnvelopHoogte] = useState(0)
   useEffect(() => {
     const el = kaartRef.current
     const gezicht = gezichtRef.current
@@ -156,6 +161,7 @@ export default function CardReveal({
     const meet = () => {
       setKaartBreedte(Math.max(240, Math.round(el.clientWidth)))
       if (gezicht) setGezichtHoogte(Math.round(gezicht.offsetHeight))
+      setEnvelopHoogte(Math.round((Math.min(460, window.innerWidth - 12) * 12) / 17))
     }
     // Een ResizeObserver meldt zich ook meteen bij het begin; de timeout is
     // voor als hij dat niet doet, bijvoorbeeld in een tabblad op de achtergrond
@@ -323,7 +329,7 @@ export default function CardReveal({
     // gezichtHoogte: de envelop ligt over de kaart zelf, dus verschuift als die
     // hoogte bekend wordt of verandert (een foto die laadt). Dan de kaart
     // opnieuw in de envelop leggen; anders stak hij er onderuit.
-  }, [stage, klassiekeAnimatie, reduceMotion, gezichtHoogte])
+  }, [stage, klassiekeAnimatie, reduceMotion, gezichtHoogte, envelopHoogte])
   const cardVisible = stage === "card" || stage === "open"
   const envelopeGone = stage === "card" || stage === "open"
   // Het zegel breekt zodra er getikt is; de klep wacht tot dat gebeurd is
@@ -487,7 +493,7 @@ export default function CardReveal({
           <div
             className="absolute left-0 right-0 top-0 flex flex-col items-center justify-center"
             // Over de kaart zelf, niet over de kaart plus wat eronder staat
-            style={{ pointerEvents: "none", height: gezichtHoogte ?? "100%" }}
+            style={{ pointerEvents: "none", height: gezichtHoogte ? Math.max(gezichtHoogte, envelopHoogte + 24) : "100%" }}
           >
             <div
               className="relative"
