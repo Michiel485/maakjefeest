@@ -820,6 +820,9 @@ export default function KaartMakenPage() {
       // we hem leeg mee, dan wiste het bewaren van een kaart die naam.
       ...(eventId ? { event_id: eventId } : {}),
       ...(!eventId && hoortBij ? { hoort_bij: hoortBij } : {}),
+      // Van een bestaande bruiloft alleen namen, datum en locatie bijwerken,
+      // nooit de website zelf (zie app/api/drafts)
+      vanKaart: true,
     }
     const er = await fetch("/api/drafts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(eventBody) })
     if (!er.ok) throw new Error("Opslaan van het event mislukt")

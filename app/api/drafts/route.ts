@@ -148,6 +148,11 @@ export async function POST(request: Request) {
     // 21 september 2026: een tweede concept was een tweede bruiloft, en
     // daardoor kreeg het dashboard een losse kolom per concept.
     hoort_bij?: string | null
+    /**
+     * Opgeslagen vanuit de kaartbouwer. Die mag van een bestaande bruiloft
+     * alleen de namen, de datum en de locatie bijwerken, nooit de website.
+     */
+    vanKaart?: boolean
   }
 
   try {
@@ -210,6 +215,28 @@ export async function POST(request: Request) {
       .select("id, slug, status")
       .eq("id", event_id)
       .single()
+
+    // ── Vanuit de kaartbouwer: alleen wat de kaart deelt met de bruiloft ──
+    // Eerst ging een kaart hier door de volledige update van de website: de
+    // kaartbouwer stuurt geen lettertypes, kader, wachtwoord of pagina's mee,
+    // dus die gingen terug naar de standaard en de pagina's werden vervangen
+    // door één lege Home. Bij elke keer automatisch bewaren van een kaart.
+    // Gevonden op 25 september 2026.
+    if (existing && body.vanKaart) {
+      const kaartVelden: Record<string, unknown> = { last_active_at: new Date().toISOString() }
+      if (naam?.trim()) kaartVelden.title = naam
+      if (datum) kaartVelden.datum = datum
+      if (locatie?.trim()) kaartVelden.locatie = locatie
+      if (frame_names?.trim()) kaartVelden.frame_names = frame_names
+      if (initials?.trim()) kaartVelden.initials = initials
+      const { error: kaartErr } = await db.from("events").update(kaartVelden).eq("id", event_id)
+      if (kaartErr) {
+        console.error("[drafts] kaartvelden fout:", kaartErr)
+        return Response.json({ error: kaartErr.message }, { status: 500 })
+      }
+      if (existing.status === "published") await verversEvent(existing.slug as string | null)
+      return Response.json({ id: event_id, slug: existing.slug })
+    }
 
     if (existing) {
       const velden = { type, title: naam, datum, locatie, style, font_hero, font_initials, font_frame_names, font_page_titles, hero_image_url, hero_image_pos_x: Math.round(hero_image_pos_x), hero_image_pos_y: Math.round(hero_image_pos_y), hero_overlay: heroOverlay, nav_layout, nav_title: nav_title ?? naam, use_frame, frame_style, initials, frame_names, frame_location, frame_initials_size: frameInitialsSize, frame_names_size: frameNamesSize, frame_date_size: frameDateSize, frame_location_size: frameLocationSize, homepage_settings, pw_enabled, pw_type, pw_value, pw_question, pw_answer, ...(body.concept_naam !== undefined ? { concept_naam } : {}), last_active_at: new Date().toISOString() }
