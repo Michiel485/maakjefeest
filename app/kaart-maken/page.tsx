@@ -4,7 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase"
-import { STYLE_CONFIG, getStyleConfig, formatDate, type Style } from "@/lib/event-styles"
+import { STYLE_CONFIG, getStyleConfig, formatDate, type SC, type Style } from "@/lib/event-styles"
 import {
   buildCardDisplay,
   cardAnimatie,
@@ -13,6 +13,7 @@ import {
   CARD_ANIMATIE_LABEL,
   CARD_ANIMATIE_UITLEG,
   CARD_DESIGNS,
+  CARD_DESIGN_SFEER,
   CARD_TAAL_LABEL,
   CARD_TALEN,
   cardTaal,
@@ -26,6 +27,7 @@ import {
   MAX_KAARTEN_PER_EVENT,
   type CardAnimatie,
   type CardContent,
+  type CardDisplay,
   type CardGuestType,
   type CardRow,
   type CardTaal,
@@ -35,6 +37,8 @@ import {
 import { hoogstePlan, planMagVersturen, PLANS, formatEur, isPlan, upgradePrice, type Plan, planAllows} from "@/lib/plans"
 import { compressImage } from "@/lib/client-image"
 import CardReveal from "@/app/kaart/[token]/card-reveal"
+import Voorkant from "@/components/kaart/Voorkant"
+import { KAART_PALETTEN, kaartKleuren } from "@/lib/kaart-paletten"
 import { KLEUR } from "@/lib/ontwerp"
 import {
   AANMELD_LABEL,
@@ -139,9 +143,40 @@ function BladIcoon({ blad }: { blad: Exclude<Blad, "kaart"> }) {
 }
 type Actie = "bewaar" | "activeer"
 
+/**
+ * Een kaart in het klein, voor de galerij met ontwerpen: jullie eigen namen
+ * en datum in dat ontwerp. Getekend op 400 pixels breed en verkleind tot de
+ * breedte van het vakje, zodat hij er precies zo uitziet als de echte kaart.
+ */
+function Miniatuur({ display, sc }: { display: CardDisplay; sc: SC }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [schaal, setSchaal] = useState(0.33)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const ro = new ResizeObserver(() => setSchaal(el.clientWidth / 400))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+  return (
+    <div
+      ref={ref}
+      aria-hidden
+      className="relative w-full overflow-hidden rounded-lg"
+      style={{ aspectRatio: "5 / 7", backgroundColor: sc.bodyBg, pointerEvents: "none" }}
+    >
+      <div className="absolute left-0 top-0" style={{ width: 400, transform: `scale(${schaal})`, transformOrigin: "top left" }}>
+        <Voorkant display={display} sc={sc} breedte={400} />
+      </div>
+    </div>
+  )
+}
+
 interface KaartOntwerp {
   type: CardType
   style: Style
+  /** Een eigen palet voor deze kaart; leeg is de kleuren van de website */
+  kleur: string
   template: CardTemplate
   names: string
   datum: string
@@ -166,6 +201,7 @@ interface KaartOntwerp {
 const LEEG: KaartOntwerp = {
   type: "save_the_date",
   style: "zand",
+  kleur: "",
   template: "klassiek",
   names: "",
   datum: "",
@@ -569,6 +605,7 @@ export default function KaartMakenPage() {
             setOntwerp({
               type: kaart?.type ?? gewenstType,
               style: isStyle(event.style) ? event.style : "zand",
+              kleur: kaart?.content.kleur ?? "",
               template: kaart?.template ?? "klassiek",
               names: kaart?.content.names ?? (event.frame_names as string) ?? (event.title as string) ?? "",
               datum: (event.datum as string) ?? "",
@@ -658,7 +695,8 @@ export default function KaartMakenPage() {
   }, [ontwerp, eventLocatie, geladen])
 
   // ── Weergave ──────────────────────────────────────────────────────────────
-  const sc = getStyleConfig(ontwerp.style)
+  // De kleuren van de website, of een eigen palet voor deze kaart
+  const sc = kaartKleuren(getStyleConfig(ontwerp.style), ontwerp.kleur)
   // Namen en datum staan bewust niet in de inhoud van de kaart: die horen bij
   // de bruiloft. buildCardDisplay haalt ze uit het event hieronder.
   const content: CardContent = {
@@ -674,6 +712,7 @@ export default function KaartMakenPage() {
     dresscode: ontwerp.dresscode || undefined,
     photoUrl: ontwerp.photoUrl ?? ontwerp.photoDataUrl ?? undefined,
     animatie: ontwerp.animatie,
+    kleur: ontwerp.kleur || undefined,
     taal: ontwerp.taal,
     aanmelden: ontwerp.aanmelden,
   }
@@ -943,6 +982,7 @@ export default function KaartMakenPage() {
       ...o,
       type: k.type,
       template: k.template,
+      kleur: k.content.kleur ?? "",
       location: k.content.location ?? o.location,
       message: k.content.message ?? "",
       guestType: k.content.guestType ?? "",
@@ -1185,6 +1225,7 @@ export default function KaartMakenPage() {
           location: ontwerp.location, message: ontwerp.message,
           guestType: ontwerp.guestType, inviteText: ontwerp.inviteText, timeText: ontwerp.timeText,
           photoUrl: ontwerp.photoUrl, taal: ontwerp.taal,
+          kleur: ontwerp.kleur || undefined, datum: ontwerp.datum || undefined,
         }),
       })
       if (!r.ok) throw new Error("Voorbeeld maken mislukte, probeer het zo opnieuw.")
@@ -1726,15 +1767,19 @@ export default function KaartMakenPage() {
             </label>
           </Sectie>
 
-          <Sectie className={telefoon("stijl")} vast={inPaneel("stijl")} open={isOpen("stijl")} onToggle={() => setStap(stap === "stijl" ? null : "stijl")} titel="Stijl">
+          <Sectie className={telefoon("stijl")} vast={inPaneel("stijl")} open={isOpen("stijl")} onToggle={() => setStap(stap === "stijl" ? null : "stijl")} titel="Kleuren">
+            {/* Standaard de kleuren van de website, want kaart en website die
+                bij elkaar passen is een sterk punt. Daaronder eigen paletten
+                voor alleen deze kaart (Michiel, 25 september 2026). */}
+            <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: SUBTLE }}>Zelfde als je website</span>
             <div className="grid grid-cols-5 gap-2">
               {STYLE_KEYS.map((s) => {
                 const cfg = STYLE_CONFIG[s]
-                const actief = ontwerp.style === s
+                const actief = !ontwerp.kleur && ontwerp.style === s
                 return (
                   <button
                     key={s}
-                    onClick={() => update({ style: s })}
+                    onClick={() => update({ style: s, kleur: "" })}
                     title={STYLE_LABEL[s]}
                     className="flex flex-col items-center gap-1.5"
                     style={{ cursor: "pointer", background: "none", border: "none", padding: 0 }}
@@ -1751,22 +1796,77 @@ export default function KaartMakenPage() {
                 )
               })}
             </div>
+            <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: SUBTLE }}>Of alleen voor deze kaart</span>
+            <div className="grid grid-cols-4 gap-2">
+              {KAART_PALETTEN.map((pl) => {
+                const actief = ontwerp.kleur === pl.id
+                return (
+                  <button
+                    key={pl.id}
+                    onClick={() => update({ kleur: pl.id })}
+                    title={pl.naam}
+                    className="flex flex-col items-center gap-1.5"
+                    style={{ cursor: "pointer", background: "none", border: "none", padding: 0 }}
+                  >
+                    <span
+                      className="w-10 h-10 rounded-full"
+                      style={{
+                        background: `linear-gradient(135deg, ${pl.kaart} 50%, ${pl.accent} 50%)`,
+                        boxShadow: actief ? `0 0 0 2px #fff, 0 0 0 4px ${GOLD}` : "0 0 0 1px rgba(0,0,0,0.12)",
+                      }}
+                    />
+                    <span className="text-[10px] text-center leading-tight" style={{ color: actief ? CHARCOAL : BODY, fontWeight: actief ? 700 : 500 }}>{pl.naam}</span>
+                  </button>
+                )
+              })}
+            </div>
+            <p className="m-0 text-[11px] leading-relaxed" style={{ color: BODY }}>
+              Een eigen palet verandert alleen deze kaart. Je website houdt zijn eigen kleuren.
+            </p>
           </Sectie>
 
           <Sectie className={telefoon("template")} vast={inPaneel("template")} open={isOpen("template")} onToggle={() => setStap(stap === "template" ? null : "template")} titel="Ontwerp">
-            <div className="flex flex-col gap-2">
-              {CARD_DESIGNS.map((t) => (
-                <button
-                  key={t}
-                  onClick={() => update({ template: t })}
-                  className="text-left px-3 py-2.5 rounded-xl text-sm font-semibold"
-                  style={{ border: `2px solid ${cardDesign(ontwerp.template) === t ? GOLD : GOLD_LIGHT}`, backgroundColor: cardDesign(ontwerp.template) === t ? "#fff" : "transparent", color: CHARCOAL, cursor: "pointer" }}
-                >
-                  {CARD_TEMPLATE_LABEL[t]}
-                  <span className="block text-[11px] font-normal" style={{ color: BODY }}>{CARD_TEMPLATE_UITLEG[t]}</span>
-                </button>
-              ))}
+            {/* Een galerij met jullie eigen kaart in elk ontwerp. Was een
+                rijtje knoppen; bij acht ontwerpen zie je zo pas echt wat je
+                kiest (Michiel, 25 september 2026). */}
+            <div className="grid grid-cols-2 gap-2.5">
+              {CARD_DESIGNS.map((t) => {
+                const actief = cardDesign(ontwerp.template) === t
+                return (
+                  <button
+                    key={t}
+                    onClick={() => update({ template: t })}
+                    aria-pressed={actief}
+                    className="text-left p-1.5 rounded-xl flex flex-col gap-1.5"
+                    style={{ border: `2px solid ${actief ? GOLD : "transparent"}`, backgroundColor: actief ? "#fff" : "transparent", cursor: "pointer" }}
+                  >
+                    <Miniatuur display={{ ...display, design: t }} sc={sc} />
+                    <span className="px-0.5 flex items-baseline justify-between gap-1">
+                      <span className="text-[13px] font-semibold" style={{ color: CHARCOAL }}>{CARD_TEMPLATE_LABEL[t]}</span>
+                      <span className="text-[10px] uppercase tracking-wider" style={{ color: SUBTLE }}>{CARD_DESIGN_SFEER[t]}</span>
+                    </span>
+                    <span className="px-0.5 text-[11px] leading-snug" style={{ color: BODY }}>{CARD_TEMPLATE_UITLEG[t]}</span>
+                  </button>
+                )
+              })}
             </div>
+            {cardDesign(ontwerp.template) === "deco" && !ontwerp.kleur && (
+              <button
+                type="button"
+                onClick={() => update({ kleur: "zwartgoud" })}
+                className="text-left text-[12px] rounded-xl px-3 py-2.5"
+                style={{ backgroundColor: GOLD_BG, border: `1px solid ${GOLD_LIGHT}`, color: CHARCOAL, cursor: "pointer" }}
+              >
+                Art deco is op zijn mooist in <b>zwart en goud</b>. Probeer het {"›"}
+              </button>
+            )}
+            {(cardDesign(ontwerp.template) === "fotovol" || cardDesign(ontwerp.template) === "boog") && !ontwerp.photoDataUrl && !ontwerp.photoUrl && (
+              <p className="m-0 text-[12px] leading-relaxed rounded-xl px-3 py-2.5" style={{ color: BODY, backgroundColor: GOLD_BG, border: `1px solid ${GOLD_LIGHT}` }}>
+                {cardDesign(ontwerp.template) === "fotovol"
+                  ? "Kies hieronder een foto, dan vult die de hele kaart."
+                  : "Kies hieronder een foto voor in de boog. Zonder foto staan jullie initialen erin."}
+              </p>
+            )}
           </Sectie>
 
           {/* Een foto kan bij elk ontwerp */}

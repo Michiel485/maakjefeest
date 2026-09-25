@@ -1,3 +1,4 @@
+import { kaartKleuren } from "@/lib/kaart-paletten"
 import { buildCardDisplay } from "@/lib/cards"
 import { fetchCardByToken, isOpenbaar } from "@/lib/cards-server"
 import { getStyleConfig } from "@/lib/event-styles"
@@ -20,7 +21,8 @@ export async function GET(
   const betaald = isOpenbaar(data)
 
   const display = buildCardDisplay(data.card.type, data.card.template, data.card.content, data.event)
-  const sc = getStyleConfig(data.event.style)
+  // De kleuren van de kaart: die van de website, of een eigen palet
+  const sc = kaartKleuren(getStyleConfig(data.event.style), data.card.content.kleur)
 
   const image = await renderCardImage(display, sc, "download", !betaald)
 

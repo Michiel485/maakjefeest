@@ -2,7 +2,8 @@
 // og-preview (WhatsApp) en de PNG-download van de kaart.
 
 import { ImageResponse } from "next/og"
-import { CARD_DESIGN_STYLE, type CardDisplay } from "./cards"
+import { CARD_DESIGN_STYLE, isKlassiekOntwerp, type CardDisplay } from "./cards"
+import { renderNieuweKaartAfbeelding } from "./card-image-nieuw"
 import type { SC } from "./event-styles"
 
 // Google Fonts levert TTF/woff (dat satori kan lezen) alleen aan oude user agents
@@ -54,6 +55,21 @@ export async function renderCardImage(
     watermerk ? WATERMERK_TEKST : "",
   ].join(" ")
 
+  // De nieuwe ontwerpen hebben hun eigen afbeelding, met dezelfde voorkant
+  // als in de browser. Deze code hieronder blijft voor de eerste drie.
+  if (!isKlassiekOntwerp(display.design)) {
+    return renderNieuweKaartAfbeelding({
+      display,
+      ontwerp: display.design,
+      sc,
+      mode,
+      watermerk,
+      watermerkTekst: WATERMERK_TEKST,
+      voettekst,
+      allText,
+      laadFont: loadGoogleFont,
+    })
+  }
   const ds = CARD_DESIGN_STYLE[display.design]
 
   const fonts: { name: string; data: ArrayBuffer; weight: 400 | 500 | 600; style: "normal" }[] = []

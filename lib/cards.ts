@@ -3,11 +3,29 @@
 import { formatDate } from "./event-styles"
 
 export type CardType = "save_the_date" | "trouwkaart"
-// De drie ontwerprichtingen. "foto" is de oude waarde uit de tijd dat een foto
-// een apart template was; die telt nu als "klassiek" en de foto hangt alleen
-// nog aan content.photoUrl.
-export type CardTemplate = "klassiek" | "sierlijk" | "bohemian" | "foto"
-export type CardDesign = "klassiek" | "sierlijk" | "bohemian"
+// De ontwerpen. "foto" is de oude waarde uit de tijd dat een foto een apart
+// template was; die telt nu als "klassiek" en de foto hangt alleen nog aan
+// content.photoUrl.
+//
+// De eerste drie (klassiek, sierlijk, bohemian) hebben dezelfde opbouw en een
+// eigen stuk code in de kaartpagina en de afbeelding. De nieuwe van
+// 25 september 2026 hebben elk een eigen opbouw en één renderer voor browser
+// en afbeelding samen: components/kaart/KaartVoorkant.tsx. Zie
+// docs/PLAN-kaartontwerpen.md. Oudere code kent de nieuwe waarden niet en
+// valt dan terug op klassiek; terugdraaien breekt dus geen kaart.
+export type KlassiekOntwerp = "klassiek" | "sierlijk" | "bohemian"
+export type NieuwOntwerp = "minimaal" | "fotovol" | "boog" | "deco" | "datum"
+export type CardDesign = KlassiekOntwerp | NieuwOntwerp
+export type CardTemplate = CardDesign | "foto"
+
+/** Alle waarden die in cards.template mogen staan. */
+export const CARD_TEMPLATE_WAARDEN: CardTemplate[] = [
+  "klassiek", "sierlijk", "bohemian", "foto", "minimaal", "fotovol", "boog", "deco", "datum",
+]
+
+export function isKlassiekOntwerp(d: CardDesign): d is KlassiekOntwerp {
+  return d === "klassiek" || d === "sierlijk" || d === "bohemian"
+}
 export type CardGuestType = "daggast" | "avondgast" | "receptiegast"
 
 // Hoe de envelop opengaat. "klassiek" is de eerste versie (klep klapt om, kaart
@@ -58,6 +76,11 @@ export interface CardContent {
   timeText?: string
   // Hoe de envelop opengaat bij de gast
   animatie?: CardAnimatie
+  /**
+   * De kleuren van deze kaart: een palet uit lib/kaart-paletten.ts. Leeg of
+   * "website" betekent de kleuren van de website, zoals het altijd was.
+   */
+  kleur?: string
   // In welke taal de vaste teksten op de kaart staan
   taal?: CardTaal
   // Of er onder de kaart om een aanmelding wordt gevraagd, en hoeveel. Zie
@@ -132,23 +155,48 @@ export const CARD_TYPE_PLAN: Record<CardType, "save_the_date" | "uitnodiging"> =
   trouwkaart: "uitnodiging",
 }
 
-export const CARD_DESIGNS: CardDesign[] = ["klassiek", "sierlijk", "bohemian"]
+// De volgorde in de galerij van de bouwer
+export const CARD_DESIGNS: CardDesign[] = ["klassiek", "sierlijk", "bohemian", "minimaal", "fotovol", "boog", "deco", "datum"]
 
 export const CARD_TEMPLATE_LABEL: Record<CardDesign, string> = {
   klassiek: "Strak",
   sierlijk: "Sierlijk",
   bohemian: "Bohemian",
+  minimaal: "Minimaal",
+  fotovol: "Foto",
+  boog: "Boog",
+  deco: "Art deco",
+  datum: "De datum",
 }
 
 export const CARD_TEMPLATE_UITLEG: Record<CardDesign, string> = {
   klassiek: "rustig en tijdloos",
   sierlijk: "handschrift en krullen",
   bohemian: "warm en natuurlijk",
+  minimaal: "veel wit, grote letters",
+  fotovol: "jullie foto over de hele kaart",
+  boog: "een boogvenster met foto of initialen",
+  deco: "geometrisch goud, jaren twintig",
+  datum: "de datum groot als beeld",
+}
+
+/** De sfeer, als label in de galerij. */
+export const CARD_DESIGN_SFEER: Record<CardDesign, string> = {
+  klassiek: "Klassiek",
+  sierlijk: "Romantisch",
+  bohemian: "Natuurlijk",
+  minimaal: "Modern",
+  fotovol: "Persoonlijk",
+  boog: "Romantisch",
+  deco: "Feestelijk",
+  datum: "Modern",
 }
 
 // Oude waarden en rommel vallen terug op het strakke ontwerp
 export function cardDesign(template: unknown): CardDesign {
-  return template === "sierlijk" || template === "bohemian" ? template : "klassiek"
+  return typeof template === "string" && template !== "foto" && (CARD_TEMPLATE_WAARDEN as string[]).includes(template)
+    ? (template as CardDesign)
+    : "klassiek"
 }
 
 // Typografie en ornament per ontwerp. De kleuren komen uit het thema, de vorm
@@ -175,7 +223,7 @@ export interface CardDesignStyle {
   namenCursief: boolean
 }
 
-export const CARD_DESIGN_STYLE: Record<CardDesign, CardDesignStyle> = {
+export const CARD_DESIGN_STYLE: Record<KlassiekOntwerp, CardDesignStyle> = {
   klassiek: {
     namenFont: "var(--font-cormorant), Georgia, serif",
     kopFont: "var(--font-montserrat), Helvetica, sans-serif",
@@ -470,6 +518,8 @@ export interface CardDisplay extends CardVasteTeksten {
   photoUrl: string | null
   design: CardDesign
   animatie: CardAnimatie
+  /** De trouwdatum als 2027-08-15, voor ontwerpen die met de cijfers spelen. */
+  datumIso?: string | null
 }
 
 export function buildCardDisplay(
@@ -512,6 +562,8 @@ export function buildCardDisplay(
     photoUrl: content.photoUrl?.trim() || (template === "foto" ? event.hero_image_url?.trim() || null : null),
     design: cardDesign(template),
     animatie: cardAnimatie(content.animatie),
+    // Een eigen datumtekst (van oude kaarten) wint van de cijfers
+    datumIso: content.dateText?.trim() ? null : event.datum || null,
     ...displayTeksten(taal),
   }
 }

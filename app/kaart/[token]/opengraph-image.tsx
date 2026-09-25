@@ -1,3 +1,4 @@
+import { kaartKleuren } from "@/lib/kaart-paletten"
 import { notFound } from "next/navigation"
 import { buildCardDisplay } from "@/lib/cards"
 import { fetchCardByToken, isOpenbaar } from "@/lib/cards-server"
@@ -19,7 +20,8 @@ export default async function Image({
   if (!data) notFound()
 
   const display = buildCardDisplay(data.card.type, data.card.template, data.card.content, data.event)
-  const sc = getStyleConfig(data.event.style)
+  // De kleuren van de kaart: die van de website, of een eigen palet
+  const sc = kaartKleuren(getStyleConfig(data.event.style), data.card.content.kleur)
 
   // Nog niet geactiveerd: watermerk, ook in de voorvertoning die WhatsApp maakt
   // Dezelfde regel als de kaartpagina: geactiveerd en in het pakket

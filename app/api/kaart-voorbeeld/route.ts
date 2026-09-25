@@ -1,11 +1,12 @@
-import { buildCardDisplay, cardTaal, type CardContent, type CardGuestType, type CardTemplate, type CardType } from "@/lib/cards"
+import { kaartKleuren } from "@/lib/kaart-paletten"
+import { buildCardDisplay, CARD_TEMPLATE_WAARDEN, cardTaal, type CardContent, type CardGuestType, type CardTemplate, type CardType } from "@/lib/cards"
 import { getStyleConfig } from "@/lib/event-styles"
 import { renderCardImage } from "@/lib/card-image"
 
 export const dynamic = "force-dynamic"
 
 const TYPES: CardType[] = ["save_the_date", "trouwkaart"]
-const TEMPLATES: CardTemplate[] = ["klassiek", "sierlijk", "bohemian", "foto"]
+const TEMPLATES: CardTemplate[] = CARD_TEMPLATE_WAARDEN
 const GUEST_TYPES: CardGuestType[] = ["daggast", "avondgast", "receptiegast"]
 
 // Eenvoudige rem per IP: het renderen van een afbeelding is relatief zwaar
@@ -54,14 +55,18 @@ export async function POST(request: Request) {
     taal: cardTaal(body.taal),
   }
 
+  // Met een echte datum maken we de tekst zelf, in de taal van de kaart, en
+  // kunnen ontwerpen met de cijfers spelen
+  const datum = typeof body.datum === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.datum) ? body.datum : null
+  if (datum) content.dateText = undefined
   const display = buildCardDisplay(type, template, content, {
     title: content.names ?? "Jullie namen",
     frame_names: content.names ?? null,
-    datum: null,
+    datum,
     locatie: content.location ?? null,
     hero_image_url: null,
   })
-  const sc = getStyleConfig(style)
+  const sc = kaartKleuren(getStyleConfig(style), body.kleur)
 
   const image = await renderCardImage(display, sc, "download", true)
   const headers = new Headers(image.headers)

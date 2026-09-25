@@ -1,10 +1,11 @@
+import { kaartPalet } from "@/lib/kaart-paletten"
 import { createServiceClient } from "@/lib/supabase"
 import { createClient } from "@/lib/supabase-server"
 import { aanmeldStand } from "@/lib/gasten"
-import { cardAnimatie, cardTaal, type CardContent, type CardGuestType, type CardTemplate, type CardType } from "@/lib/cards"
+import { CARD_TEMPLATE_WAARDEN, cardAnimatie, cardTaal, type CardContent, type CardGuestType, type CardTemplate, type CardType } from "@/lib/cards"
 import { verversKaart } from "@/lib/db"
 
-const CARD_TEMPLATES: CardTemplate[] = ["klassiek", "sierlijk", "bohemian", "foto"]
+const CARD_TEMPLATES: CardTemplate[] = CARD_TEMPLATE_WAARDEN
 const CARD_TYPES: CardType[] = ["save_the_date", "trouwkaart"]
 const GUEST_TYPES: CardGuestType[] = ["daggast", "avondgast", "receptiegast"]
 const MAX_FIELD = 120
@@ -39,6 +40,8 @@ function sanitizeContent(raw: unknown): CardContent {
     toonGastType: input.toonGastType === true ? true : undefined,
     dresscode: text(input.dresscode, 40),
     animatie: cardAnimatie(input.animatie),
+    // Een eigen palet voor deze kaart; alleen bekende, anders de website
+    kleur: kaartPalet(input.kleur)?.id,
     taal: cardTaal(input.taal),
     aanmelden: aanmeldStand(input.aanmelden),
   }

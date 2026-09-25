@@ -1,9 +1,9 @@
 import { createServiceClient } from "@/lib/supabase"
 import { createClient } from "@/lib/supabase-server"
-import { generateShareToken, MAX_KAARTEN_PER_EVENT, type CardGuestType, type CardTemplate, type CardType } from "@/lib/cards"
+import { CARD_TEMPLATE_WAARDEN, generateShareToken, MAX_KAARTEN_PER_EVENT, type CardGuestType, type CardTemplate, type CardType } from "@/lib/cards"
 
 const CARD_TYPES: CardType[] = ["save_the_date", "trouwkaart"]
-const CARD_TEMPLATES: CardTemplate[] = ["klassiek", "sierlijk", "bohemian", "foto"]
+const CARD_TEMPLATES: CardTemplate[] = CARD_TEMPLATE_WAARDEN
 const GUEST_TYPES: CardGuestType[] = ["daggast", "avondgast", "receptiegast"]
 
 // GET /api/cards?event_id=...: kaarten van een eigen event (voor de kaartbouwer)

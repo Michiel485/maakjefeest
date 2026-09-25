@@ -9,6 +9,7 @@
 
 import Link from "next/link"
 import { getStyleConfig } from "@/lib/event-styles"
+import { kaartKleuren } from "@/lib/kaart-paletten"
 import { buildCardDisplay } from "@/lib/cards"
 import type { CardWithEvent } from "@/lib/cards-server"
 import { eventSiteUrl } from "@/lib/site-url"
@@ -57,12 +58,13 @@ export function KaartWeergave({
 }) {
   const { card, event } = data
   const display = buildCardDisplay(card.type, card.template, card.content, event)
-  const sc = getStyleConfig(event.style, {
+  // De kleuren van de kaart: die van de website, of een eigen palet
+  const sc = kaartKleuren(getStyleConfig(event.style, {
     fontHero:       event.font_hero,
     fontInitials:   event.font_initials,
     fontFrameNames: event.font_frame_names,
     fontPageTitles: event.font_page_titles,
-  })
+  }), card.content.kleur)
 
   // Knoppen onder de kaart volgen het pakket: Save the Date toont geen knoppen,
   // Uitnodiging & RSVP alleen de RSVP-knop, Compleet ook de site zelf.
