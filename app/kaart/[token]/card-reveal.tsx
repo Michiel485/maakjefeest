@@ -319,7 +319,10 @@ export default function CardReveal({
       kaart.style.clipPath = ""
       kaart.style.opacity = ""
     }
-  }, [stage, klassiekeAnimatie, reduceMotion])
+    // gezichtHoogte: de envelop ligt over de kaart zelf, dus verschuift als die
+    // hoogte bekend wordt of verandert (een foto die laadt). Dan de kaart
+    // opnieuw in de envelop leggen; anders stak hij er onderuit.
+  }, [stage, klassiekeAnimatie, reduceMotion, gezichtHoogte])
   const cardVisible = stage === "card" || stage === "open"
   const envelopeGone = stage === "card" || stage === "open"
   // Het zegel breekt zodra er getikt is; de klep wacht tot dat gebeurd is

@@ -131,7 +131,9 @@ export default function BouwerSchakelaar({
         {open && (
           <div
             role="menu"
-            className="absolute left-0 mt-2 w-60 rounded-2xl overflow-hidden z-50"
+            // Rechts uitgelijnd: de knop staat rechts in de kop, en links
+            // uitgelijnd liep het menu rechts van het scherm af
+            className="absolute right-0 mt-2 w-60 max-w-[calc(100vw-32px)] rounded-2xl overflow-hidden z-50"
             style={{ backgroundColor: "#fff", border: `1px solid ${KLEUR.zand}`, boxShadow: "0 18px 40px -22px rgba(26,18,4,0.35)" }}
           >
             {VOLGORDE.map((o) => {
