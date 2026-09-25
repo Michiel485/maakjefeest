@@ -21,6 +21,9 @@ export type NieuwOntwerp =
   | "titel" | "palm" | "ibiza" | "fotoschrift"
   // Het olijfkader uit de websitebouwer als vierkante kaart
   | "olijf"
+  // De andere kaders uit de websitebouwer: kransen met een cirkel of ruit,
+  // en twee liggende kaarten
+  | "pampas" | "pampasruit" | "terra" | "terraruit" | "herfst" | "herfstruit" | "goudblad" | "magnolia"
 export type CardDesign = KlassiekOntwerp | NieuwOntwerp
 export type CardTemplate = CardDesign | "foto"
 
@@ -28,6 +31,7 @@ export type CardTemplate = CardDesign | "foto"
 export const CARD_TEMPLATE_WAARDEN: CardTemplate[] = [
   "klassiek", "sierlijk", "bohemian", "foto", "minimaal", "fotovol", "boog", "deco", "datum", "eigen",
   "titel", "palm", "ibiza", "fotoschrift", "olijf",
+  "pampas", "pampasruit", "terra", "terraruit", "herfst", "herfstruit", "goudblad", "magnolia",
 ]
 
 export function isKlassiekOntwerp(d: CardDesign): d is KlassiekOntwerp {
@@ -172,7 +176,8 @@ export const CARD_TYPE_PLAN: Record<CardType, "save_the_date" | "uitnodiging"> =
 
 // De volgorde in de galerij van de bouwer
 export const CARD_DESIGNS: CardDesign[] = [
-  "klassiek", "sierlijk", "bohemian", "olijf", "minimaal", "datum", "titel", "palm", "ibiza", "deco", "boog", "fotovol", "fotoschrift", "eigen",
+  "klassiek", "sierlijk", "bohemian", "olijf", "pampas", "pampasruit", "terra", "terraruit", "herfst", "herfstruit", "goudblad", "magnolia",
+  "minimaal", "datum", "titel", "palm", "ibiza", "deco", "boog", "fotovol", "fotoschrift", "eigen",
 ]
 
 export const CARD_TEMPLATE_LABEL: Record<CardDesign, string> = {
@@ -190,41 +195,14 @@ export const CARD_TEMPLATE_LABEL: Record<CardDesign, string> = {
   ibiza: "Ibiza",
   fotoschrift: "Foto met handschrift",
   olijf: "Olijf",
-}
-
-export const CARD_TEMPLATE_UITLEG: Record<CardDesign, string> = {
-  klassiek: "rustig en tijdloos",
-  sierlijk: "handschrift en krullen",
-  bohemian: "warm en natuurlijk",
-  minimaal: "veel wit, grote letters",
-  fotovol: "jullie foto over de hele kaart",
-  boog: "een boogvenster met foto of initialen",
-  deco: "geometrisch goud, jaren twintig",
-  datum: "de datum groot als beeld",
-  eigen: "upload jullie eigen kaart",
-  titel: "Save the Date groot in beeld",
-  palm: "één palm, namen in twee letters",
-  ibiza: "palmen en golven in een ovaal",
-  fotoschrift: "jullie foto met een titel in handschrift",
-  olijf: "waterverf eucalyptus in een gouden kader",
-}
-
-/** De sfeer, als label in de galerij. */
-export const CARD_DESIGN_SFEER: Record<CardDesign, string> = {
-  klassiek: "Klassiek",
-  sierlijk: "Romantisch",
-  bohemian: "Natuurlijk",
-  minimaal: "Modern",
-  fotovol: "Persoonlijk",
-  boog: "Romantisch",
-  deco: "Feestelijk",
-  datum: "Modern",
-  eigen: "Van jullie",
-  titel: "Modern",
-  palm: "Zomer",
-  ibiza: "Zomer",
-  fotoschrift: "Persoonlijk",
-  olijf: "Natuurlijk",
+  pampas: "Pampas",
+  pampasruit: "Pampas ruit",
+  terra: "Terracotta",
+  terraruit: "Terracotta ruit",
+  herfst: "Herfst",
+  herfstruit: "Herfst ruit",
+  goudblad: "Gouden blad",
+  magnolia: "Magnolia",
 }
 
 // Oude waarden en rommel vallen terug op het strakke ontwerp

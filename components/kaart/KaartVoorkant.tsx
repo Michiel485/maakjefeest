@@ -15,7 +15,7 @@
 import type { CSSProperties, ReactNode } from "react"
 import type { CardDisplay, NieuwOntwerp } from "@/lib/cards"
 import type { SC } from "@/lib/event-styles"
-import { illustratie, type VoorkantLetters } from "@/lib/kaart-ontwerpen"
+import { illustratie, KADERS, type VoorkantLetters } from "@/lib/kaart-ontwerpen"
 
 /** Een flexbox, want satori wil dat bij elke div met meer dan één kind. */
 function D({ style, children }: { style?: CSSProperties; children?: ReactNode }) {
@@ -608,6 +608,98 @@ export default function KaartVoorkant({
           )}
           <D style={{ marginTop: px(8) }}>{slot({ tekst, kop, accent })}</D>
         </D>
+      </D>
+    )
+  }
+
+  // ── De kaders uit de websitebouwer: een krans, of een liggende kaart ───────
+  const kader = KADERS[ontwerp]
+  if (kader) {
+    const src = voorAfbeelding ? illustratie(kader.afbeelding, true) : kader.web
+    const datum = datumKort(d.datumIso, "\u00a0·\u00a0") ?? d.dateText
+
+    if (kader.vorm === "liggend") {
+      // De tekening vult de kaart; de tekst staat in het midden, in de
+      // kleuren van de tekening
+      const h = Math.round(breedte * (kader.verhouding ?? 0.666))
+      const bw = breedte * kader.ruimte[0]
+      const bh = h * kader.ruimte[1]
+      return (
+        <D style={{ ...basis, minHeight: h, height: h, borderRadius: px(6), backgroundColor: "#F8F6F1" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={src} alt="" width={breedte} height={h} style={{ position: "absolute", top: 0, left: 0, width: breedte, height: h, objectFit: "cover", borderRadius: px(6) }} />
+          <D
+            style={{
+              position: "absolute",
+              left: breedte * kader.midden[0] - bw / 2,
+              top: h * kader.midden[1] - bh / 2,
+              width: bw,
+              height: bh,
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: px(6),
+            }}
+          >
+            <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(9.5), letterSpacing: "0.32em", textTransform: "uppercase", color: kader.kleur.accent }}>
+              {d.heading}
+            </div>
+            <Regels tekst={d.names} style={{ fontFamily: letters.namen, fontSize: px(34), lineHeight: 1.1, color: kader.kleur.namen }} />
+            {datum && (
+              <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(11), letterSpacing: "0.2em", color: kader.kleur.accent }}>{datum}</div>
+            )}
+            {d.location && (
+              <Regels tekst={d.location} style={{ fontFamily: letters.tekst, fontSize: px(10), lineHeight: 1.4, letterSpacing: "0.06em", color: kader.kleur.namen, opacity: 0.8 }} />
+            )}
+          </D>
+        </D>
+      )
+    }
+
+    // Een krans: de kop erboven, de namen en de datum in de vorm, de locatie
+    // en de boodschap eronder
+    const kw = px(372)
+    const bw = kw * kader.ruimte[0]
+    const bh = kw * kader.ruimte[1]
+    return (
+      <D style={{ ...basis, alignItems: "center", justifyContent: "center", padding: `${px(28)}px ${px(14)}px ${px(30)}px`, borderRadius: px(12) }}>
+        {/* De kop in de kleur van de tekening: in de bleke kleur van sommige
+            websitestijlen viel hij weg naast de bloemen */}
+        <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(12.5), letterSpacing: "0.3em", textTransform: "uppercase", color: kader.kleur.accent }}>
+          {d.heading}
+        </div>
+        <D style={{ position: "relative", width: kw, height: kw, marginTop: px(2) }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={src} alt="" width={kw} height={kw} style={{ position: "absolute", top: 0, left: 0, width: kw, height: kw }} />
+          <D
+            style={{
+              position: "absolute",
+              left: kw * kader.midden[0] - bw / 2,
+              top: kw * kader.midden[1] - bh / 2,
+              width: bw,
+              height: bh,
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: px(7),
+            }}
+          >
+            <Regels tekst={namenRegels(d.names)} style={{ fontFamily: letters.namen, fontSize: px(ontwerp === "herfst" || ontwerp === "herfstruit" ? 21 : 30), lineHeight: 1.12, color: kader.kleur.namen }} />
+            {datum && (
+              <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(10.5), letterSpacing: "0.14em", color: kader.kleur.accent }}>{datum}</div>
+            )}
+          </D>
+        </D>
+        {d.location && (
+          <Regels
+            tekst={d.location}
+            style={{ fontFamily: letters.tekst, fontSize: px(12.5), lineHeight: 1.5, letterSpacing: "0.08em", color: kop, marginTop: px(4) }}
+          />
+        )}
+        <div style={{ display: "flex", width: px(30), height: lijn, backgroundColor: `${accent}80`, marginTop: px(10), marginBottom: px(10) }} />
+        {d.message && (
+          <Regels tekst={d.message} style={{ fontFamily: letters.tekst, fontSize: px(12), lineHeight: 1.55, color: tekst, maxWidth: px(310) }} />
+        )}
       </D>
     )
   }

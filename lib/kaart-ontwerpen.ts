@@ -56,11 +56,50 @@ export const ONTWERP_LETTERS: Record<NieuwOntwerp, OntwerpLetters> = {
   ibiza: { namen: L.allison, kop: L.jost, tekst: L.jost, extra: L.allison },
   fotoschrift: { namen: L.jost, kop: L.allison, tekst: L.jost, extra: L.allison },
   olijf: { namen: L.pinyon, kop: L.jost, tekst: L.jost, extra: L.pinyon },
+  pampas: { namen: L.pinyon, kop: L.jost, tekst: L.jost },
+  pampasruit: { namen: L.pinyon, kop: L.jost, tekst: L.jost },
+  terra: { namen: L.allison, kop: L.jost, tekst: L.jost },
+  terraruit: { namen: L.allison, kop: L.jost, tekst: L.jost },
+  herfst: { namen: L.prata, kop: L.jost, tekst: L.jost },
+  herfstruit: { namen: L.prata, kop: L.jost, tekst: L.jost },
+  goudblad: { namen: L.allison, kop: L.jost, tekst: L.jost },
+  magnolia: { namen: L.pinyon, kop: L.jost, tekst: L.jost },
+}
+
+// ── De kaders uit de websitebouwer ─────────────────────────────────────────
+// Michiels wens van 25 september 2026: de kaders die de websitebouwer al
+// heeft, ook als kaartontwerp. De browser gebruikt dezelfde bestanden als de
+// website; de afbeelding (satori) een PNG of JPG, want WebP kan die niet lezen.
+// Midden en ruimte: waar de tekst komt, als deel van de breedte en de hoogte
+// van de tekening. Opgemeten aan de witte vorm in elk kader.
+export interface KaderOntwerp {
+  web: string
+  afbeelding: string
+  vorm: "krans" | "liggend"
+  midden: [number, number]
+  ruimte: [number, number]
+  /** Alleen bij een liggende kaart: hoogte gedeeld door breedte */
+  verhouding?: number
+  /** De kleuren horen bij de tekening */
+  kleur: { namen: string; accent: string }
+}
+
+export const KADERS: Partial<Record<NieuwOntwerp, KaderOntwerp>> = {
+  pampas: { web: "/frames/gold-circle.webp", afbeelding: "/kaart-illustraties/pampas.png", vorm: "krans", midden: [0.506, 0.491], ruimte: [0.4, 0.36], kleur: { namen: "#5E5040", accent: "#A8844C" } },
+  pampasruit: { web: "/frames/gold-diamond.webp", afbeelding: "/kaart-illustraties/pampas-ruit.png", vorm: "krans", midden: [0.5, 0.5], ruimte: [0.4, 0.3], kleur: { namen: "#5E5040", accent: "#A8844C" } },
+  terra: { web: "/frames/terra-circle.webp", afbeelding: "/kaart-illustraties/terracotta.png", vorm: "krans", midden: [0.5, 0.5], ruimte: [0.37, 0.34], kleur: { namen: "#6B4234", accent: "#B0603F" } },
+  terraruit: { web: "/frames/terra-diamond.webp", afbeelding: "/kaart-illustraties/terracotta-ruit.png", vorm: "krans", midden: [0.5, 0.5], ruimte: [0.4, 0.3], kleur: { namen: "#6B4234", accent: "#B0603F" } },
+  herfst: { web: "/frames/earthy-circle.webp", afbeelding: "/kaart-illustraties/herfst.png", vorm: "krans", midden: [0.506, 0.492], ruimte: [0.4, 0.36], kleur: { namen: "#5A463C", accent: "#94574A" } },
+  herfstruit: { web: "/frames/earthy-diamond.webp", afbeelding: "/kaart-illustraties/herfst-ruit.png", vorm: "krans", midden: [0.5025, 0.486], ruimte: [0.37, 0.28], kleur: { namen: "#5A463C", accent: "#94574A" } },
+  goudblad: { web: "/frames/Bloem2-breed.webp", afbeelding: "/kaart-illustraties/gouden-blad.jpg", vorm: "liggend", verhouding: 0.666, midden: [0.5, 0.5], ruimte: [0.56, 0.64], kleur: { namen: "#7A5A45", accent: "#B98B5E" } },
+  magnolia: { web: "/frames/Bloem-rechthoek.webp", afbeelding: "/kaart-illustraties/magnolia.jpg", vorm: "liggend", verhouding: 0.56, midden: [0.5, 0.5], ruimte: [0.58, 0.66], kleur: { namen: "#44503F", accent: "#A08249" } },
 }
 
 // Ontwerpen die niet staand maar vierkant zijn: hoogte gedeeld door breedte
 export const ONTWERP_VERHOUDING: Partial<Record<NieuwOntwerp, number>> = {
   olijf: 1,
+  goudblad: 0.666,
+  magnolia: 0.56,
 }
 
 /**
@@ -108,6 +147,15 @@ export const ONDER_DE_KAART: Partial<Record<CardDesign, OnderDeKaart>> = {
   ibiza: { locatie: true, bericht: true, details: true },
   fotoschrift: { locatie: true, bericht: true, details: true },
   olijf: { locatie: false, bericht: true, details: true },
+  // De kransen hebben onder de krans plek voor de locatie en de boodschap
+  pampas: { locatie: false, bericht: false, details: true },
+  pampasruit: { locatie: false, bericht: false, details: true },
+  terra: { locatie: false, bericht: false, details: true },
+  terraruit: { locatie: false, bericht: false, details: true },
+  herfst: { locatie: false, bericht: false, details: true },
+  herfstruit: { locatie: false, bericht: false, details: true },
+  goudblad: { locatie: false, bericht: true, details: true },
+  magnolia: { locatie: false, bericht: true, details: true },
   // Een eigen ontwerp heeft alles al in de afbeelding; alleen wat je er zelf
   // bij schrijft komt eronder
   eigen: { locatie: false, bericht: true, details: false },

@@ -13,12 +13,10 @@ import {
   CARD_ANIMATIE_LABEL,
   CARD_ANIMATIE_UITLEG,
   CARD_DESIGNS,
-  CARD_DESIGN_SFEER,
   CARD_TAAL_LABEL,
   CARD_TALEN,
   cardTaal,
   CARD_TEMPLATE_LABEL,
-  CARD_TEMPLATE_UITLEG,
   CARD_TYPE_PLAN,
   KAART_TEKST,
   CARD_GUEST_TYPES,
@@ -1950,11 +1948,7 @@ export default function KaartMakenPage() {
                     style={{ border: `2px solid ${actief ? GOLD : "transparent"}`, backgroundColor: actief ? "#fff" : "transparent", cursor: "pointer" }}
                   >
                     <Miniatuur display={{ ...display, design: t }} sc={sc} />
-                    <span className="px-0.5 flex items-baseline justify-between gap-1">
-                      <span className="text-[13px] font-semibold" style={{ color: CHARCOAL }}>{CARD_TEMPLATE_LABEL[t]}</span>
-                      <span className="text-[10px] uppercase tracking-wider" style={{ color: SUBTLE }}>{CARD_DESIGN_SFEER[t]}</span>
-                    </span>
-                    <span className="px-0.5 text-[11px] leading-snug" style={{ color: BODY }}>{CARD_TEMPLATE_UITLEG[t]}</span>
+                    <span className="px-0.5 text-[13px] font-semibold" style={{ color: CHARCOAL }}>{CARD_TEMPLATE_LABEL[t]}</span>
                   </button>
                 )
               })}
