@@ -36,7 +36,7 @@ import { hoogstePlan, planMagVersturen, PLANS, formatEur, isPlan, upgradePrice, 
 import { compressImage } from "@/lib/client-image"
 import CardReveal from "@/app/kaart/[token]/card-reveal"
 import Voorkant from "@/components/kaart/Voorkant"
-import { KAART_PALETTEN, kaartKleuren } from "@/lib/kaart-paletten"
+import { kaartKleuren } from "@/lib/kaart-paletten"
 import { ONDER_DE_KAART, ONTWERP_VERHOUDING } from "@/lib/kaart-ontwerpen"
 import { KLEUR } from "@/lib/ontwerp"
 import {
@@ -77,6 +77,7 @@ const LS_IDS     = "sayingyes_kaart_ids"
 
 const STYLE_LABEL: Record<Style, string> = {
   roze: "Roze", ivoor: "Ivoor", zand: "Zand", earthy: "Earthy", emerald: "Emerald",
+  zwartgoud: "Zwart & goud", zwartwit: "Zwart-wit", terracotta: "Terracotta", bordeaux: "Bordeaux", poederroze: "Poederroze",
 }
 const STYLE_KEYS = Object.keys(STYLE_CONFIG) as Style[]
 
@@ -1875,10 +1876,13 @@ export default function KaartMakenPage() {
           </Sectie>
 
           <Sectie className={telefoon("stijl")} vast={inPaneel("stijl")} open={isOpen("stijl")} onToggle={() => setStap(stap === "stijl" ? null : "stijl")} titel="Kleuren">
-            {/* Standaard de kleuren van de website, want kaart en website die
-                bij elkaar passen is een sterk punt. Daaronder eigen paletten
-                voor alleen deze kaart (Michiel, 25 september 2026). */}
-            <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: SUBTLE }}>Zelfde als je website</span>
+            {/* Eén lijst voor de kaart en de website samen. Eerst waren het
+                twee lijstjes, "zelfde als je website" en "alleen voor deze
+                kaart"; dat was vaag, want bij een kaart weet je niet wat er
+                voor de website bestaat (Michiel, 25 september 2026). */}
+            <p className="m-0 text-[12px] leading-relaxed" style={{ color: BODY }}>
+              Deze kleuren gelden ook voor jullie website, zodat alles bij elkaar past.
+            </p>
             <div className="grid grid-cols-5 gap-2">
               {STYLE_KEYS.map((s) => {
                 const cfg = STYLE_CONFIG[s]
@@ -1903,33 +1907,6 @@ export default function KaartMakenPage() {
                 )
               })}
             </div>
-            <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: SUBTLE }}>Of alleen voor deze kaart</span>
-            <div className="grid grid-cols-4 gap-2">
-              {KAART_PALETTEN.map((pl) => {
-                const actief = ontwerp.kleur === pl.id
-                return (
-                  <button
-                    key={pl.id}
-                    onClick={() => update({ kleur: pl.id })}
-                    title={pl.naam}
-                    className="flex flex-col items-center gap-1.5"
-                    style={{ cursor: "pointer", background: "none", border: "none", padding: 0 }}
-                  >
-                    <span
-                      className="w-10 h-10 rounded-full"
-                      style={{
-                        background: `linear-gradient(135deg, ${pl.kaart} 50%, ${pl.accent} 50%)`,
-                        boxShadow: actief ? `0 0 0 2px #fff, 0 0 0 4px ${GOLD}` : "0 0 0 1px rgba(0,0,0,0.12)",
-                      }}
-                    />
-                    <span className="text-[10px] text-center leading-tight" style={{ color: actief ? CHARCOAL : BODY, fontWeight: actief ? 700 : 500 }}>{pl.naam}</span>
-                  </button>
-                )
-              })}
-            </div>
-            <p className="m-0 text-[11px] leading-relaxed" style={{ color: BODY }}>
-              Een eigen palet verandert alleen deze kaart. Je website houdt zijn eigen kleuren.
-            </p>
           </Sectie>
 
           <Sectie className={telefoon("template")} vast={inPaneel("template")} open={isOpen("template")} onToggle={() => setStap(stap === "template" ? null : "template")} titel="Ontwerp">
@@ -1991,20 +1968,20 @@ export default function KaartMakenPage() {
                 </p>
               </div>
             )}
-            {(["palm", "ibiza", "titel"] as string[]).includes(cardDesign(ontwerp.template)) && !ontwerp.kleur && (
+            {(["palm", "ibiza", "titel"] as string[]).includes(cardDesign(ontwerp.template)) && ontwerp.style !== "poederroze" && (
               <button
                 type="button"
-                onClick={() => update({ kleur: "blush" })}
+                onClick={() => update({ style: "poederroze", kleur: "" })}
                 className="text-left text-[12px] rounded-xl px-3 py-2.5"
                 style={{ backgroundColor: GOLD_BG, border: `1px solid ${GOLD_LIGHT}`, color: CHARCOAL, cursor: "pointer" }}
               >
-                Dit ontwerp is op zijn mooist in <b>blush</b>, zacht roze met terracotta. Probeer het {"›"}
+                Dit ontwerp is op zijn mooist in <b>poederroze</b>. Probeer het {"›"}
               </button>
             )}
-            {cardDesign(ontwerp.template) === "deco" && !ontwerp.kleur && (
+            {cardDesign(ontwerp.template) === "deco" && ontwerp.style !== "zwartgoud" && (
               <button
                 type="button"
-                onClick={() => update({ kleur: "zwartgoud" })}
+                onClick={() => update({ style: "zwartgoud", kleur: "" })}
                 className="text-left text-[12px] rounded-xl px-3 py-2.5"
                 style={{ backgroundColor: GOLD_BG, border: `1px solid ${GOLD_LIGHT}`, color: CHARCOAL, cursor: "pointer" }}
               >

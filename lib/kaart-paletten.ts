@@ -1,5 +1,10 @@
 // Kleuren voor een kaart, los van de website.
 //
+// Niet meer te kiezen sinds 25 september 2026 (later die dag): Michiel vond
+// twee lijstjes vaag. Vijf ervan zijn nu gewone stijlen voor kaart en website
+// samen (lib/event-styles.ts). Dit bestand blijft alleen voor kaarten die die
+// dag een eigen palet kregen, zodat die er hetzelfde uit blijven zien.
+//
 // Tot 25 september 2026 was de kleur van een kaart altijd de stijl van de
 // bruiloft: veranderde je hem in de kaartbouwer, dan veranderde de website
 // mee. Dat blijft de standaard, want kaart en website die bij elkaar passen is

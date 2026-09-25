@@ -11,7 +11,7 @@ import EventMastersPreview from "@/components/EventMastersPreview"
 import EventProgramPreview, { PROGRAM_ICONS, ProgramIcon, DEFAULT_PROGRAM_ITEMS } from "@/components/EventProgramPreview"
 import StoryPreview from "@/components/StoryPreview"
 import FotosPreview from "@/components/FotosPreview"
-import { formatDate } from "@/lib/event-styles"
+import { formatDate, STYLE_CONFIG, type Style } from "@/lib/event-styles"
 import { TITLE_FONT_OPTIONS, getTitleFont } from "@/lib/title-fonts"
 import { createClient } from "@/lib/supabase"
 import { eventSiteUrl } from "@/lib/site-url"
@@ -32,7 +32,8 @@ import {
 
 type EventType = "bruiloft" | "verjaardag" | "evenement"
 type PageId = "Home" | "Programma" | "RSVP" | "Informatie" | "Cadeautips" | "Fotos" | "Ceremoniemeesters" | "OnsVerhaal"
-type Style = "roze" | "ivoor" | "zand" | "earthy" | "emerald"
+// De stijlen komen uit lib/event-styles.ts, dezelfde als de kaarten en de
+// echte website. Hier stond een kopie; die liep al een kleur achter.
 type Viewport = "desktop" | "mobiel"
 type Align = "left" | "center" | "right"
 
@@ -221,130 +222,13 @@ const STYLES: { id: Style; label: string; sub: string; dot: string; border: stri
   { id: "roze",   label: "Terracotta & Gold", sub: "Mediterraans, rijk & gedurfd", dot: "bg-[#D07C60]", border: "border-[#C5A059]/50",   active: "ring-[#C5A059]"     },
   { id: "earthy",   label: "Earthy & Warm",     sub: "Modern rustiek & betoverend",  dot: "bg-[#5A6B5D]",   border: "border-[#5A6B5D]/50",   active: "ring-[#5A6B5D]"   },
   { id: "emerald",  label: "Emerald Luxury",    sub: "Donker, diep & luxueus",       dot: "bg-[#07353A]",   border: "border-[#D59C76]/50",   active: "ring-[#D59C76]"   },
+  { id: "zwartgoud",  label: "Black & Gold",    sub: "Chic, avond & glamour",        dot: "bg-[#161513]",   border: "border-[#C9A45C]/50",   active: "ring-[#C9A45C]"   },
+  { id: "zwartwit",   label: "Black & White",   sub: "Strak, grafisch & tijdloos",   dot: "bg-[#141414]",   border: "border-[#141414]/40",   active: "ring-[#141414]"   },
+  { id: "terracotta", label: "Terracotta Sun",  sub: "Warm, zonnig & zuidelijk",     dot: "bg-[#B2603F]",   border: "border-[#B2603F]/50",   active: "ring-[#B2603F]"   },
+  { id: "bordeaux",   label: "Bordeaux Velvet", sub: "Diep, romantisch & warm",      dot: "bg-[#7A2B34]",   border: "border-[#7A2B34]/50",   active: "ring-[#7A2B34]"   },
+  { id: "poederroze", label: "Powder Rose",     sub: "Zacht, lief & romantisch",     dot: "bg-[#BE8A89]",   border: "border-[#BE8A89]/50",   active: "ring-[#BE8A89]"   },
 ]
 
-const STYLE_CONFIG = {
-  roze: {
-    accent: "#C5A059",
-    heroGradient: "linear-gradient(135deg, #C87A68, #B86050, #A85040)",
-    fontFamily: "var(--font-lora), serif",
-    nameFont: null as string | null,
-    navBg: "#F0D8CB",
-    navText: "#3A1E0D",
-    headingColor: "#3A1E0D",
-    bodyText: "#5A2E1E",
-    buttonBg: "#C5A059",
-    buttonText: "#ffffff",
-    labelColor: "#C5A059",
-    bodyBg: "#E8C8B5",
-    bodyBackground: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E\") repeat, #F0D8CB" as string | null,
-    cardBg: "#B5705F" as string | null,
-    cardText: "#FDFBF7" as string | null,
-    goldBorder: true as boolean,
-    floral: false as boolean,
-    floralFilter: null as string | null,
-    bodyLetterSpacing: "0.02em",
-    bodyFontWeight: "400",
-    fontImport: null as string | null,
-    frameBodyText: null as string | null,
-  },
-  ivoor: {
-    accent: "#9CA996",
-    heroGradient: "linear-gradient(160deg, #FDFAF6 0%, #F4F0E8 60%, #EBE6DF 100%)",
-    fontFamily: "var(--font-montserrat), sans-serif",
-    nameFont: null as string | null,
-    navBg: "#FDFAF6",
-    navText: "#4A4440",
-    headingColor: "#3D3530",
-    bodyText: "#6B6257",
-    buttonBg: "#9CA996",
-    buttonText: "#ffffff",
-    labelColor: "#B5A898",
-    bodyBg: "#EBE6DF",
-    bodyBackground: null as string | null,
-    cardBg: null as string | null,
-    cardText: null as string | null,
-    goldBorder: false as boolean,
-    floral: false as boolean,
-    floralFilter: null as string | null,
-    bodyLetterSpacing: "normal",
-    bodyFontWeight: "400",
-    fontImport: null as string | null,
-    frameBodyText: null as string | null,
-  },
-  zand: {
-    accent: "#C5A059",
-    heroGradient: "linear-gradient(135deg, #FAF8F5, #F3EFEA, #EDE8DF)",
-    fontFamily: "'Cormorant Garamond', serif",
-    nameFont: "'Pinyon Script', cursive" as string | null,
-    navBg: "#FAF8F5",
-    navText: "#3A352F",
-    headingColor: "#3A352F",
-    bodyText: "#3A352F",
-    buttonBg: "#C5A059",
-    buttonText: "#ffffff",
-    labelColor: "#C5A059",
-    bodyBg: "#F3EFEA",
-    bodyBackground: null as string | null,
-    cardBg: null as string | null,
-    cardText: null as string | null,
-    goldBorder: false as boolean,
-    floral: false as boolean,
-    floralFilter: null as string | null,
-    bodyLetterSpacing: "normal",
-    bodyFontWeight: "400",
-    fontImport: "@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Pinyon+Script&display=swap');",
-    frameBodyText: null as string | null,
-  },
-  earthy: {
-    accent: "#5A6B5D",
-    heroGradient: "linear-gradient(135deg, #D8D0C0, #C6BA9E, #B3A285)",
-    fontFamily: "var(--font-lora), serif",
-    nameFont: null as string | null,
-    navBg: "#E5DDD0",
-    navText: "#2A1A10",
-    headingColor: "#2A1A10",
-    bodyText: "#4A3728",
-    buttonBg: "#5A6B5D",
-    buttonText: "#ffffff",
-    labelColor: "#8A4B53",
-    bodyBg: "#DDD7CA",
-    bodyBackground: null as string | null,
-    cardBg: null as string | null,
-    cardText: null as string | null,
-    goldBorder: false as boolean,
-    floral: false as boolean,
-    floralFilter: null as string | null,
-    bodyLetterSpacing: "normal",
-    bodyFontWeight: "500",
-    fontImport: null as string | null,
-    frameBodyText: null as string | null,
-  },
-  emerald: {
-    accent: "#D59C76",
-    heroGradient: "linear-gradient(160deg, #07353A 0%, #0A4550 60%, #0D5058 100%)",
-    fontFamily: "var(--font-montserrat), sans-serif",
-    nameFont: "var(--font-cinzel), serif" as string | null,
-    navBg: "#0D5058",
-    navText: "#FFFFFF",
-    headingColor: "#D59C76",
-    bodyText: "#E8DDD0",
-    buttonBg: "#D59C76",
-    buttonText: "#07353A",
-    labelColor: "#D59C76",
-    bodyBg: "#0D5058",
-    bodyBackground: null as string | null,
-    cardBg: "#0D4A52" as string | null,
-    cardText: "#FFFFFF" as string | null,
-    goldBorder: true as boolean,
-    floral: false as boolean,
-    floralFilter: null as string | null,
-    bodyLetterSpacing: "0.08em",
-    bodyFontWeight: "500",
-    fontImport: null as string | null,
-    frameBodyText: "#2A1A10" as string | null,
-  },
-} as const
 
 const PAGES: PageConfig[] = [
   { id: "Home",               label: "Home",               toggleable: false },
