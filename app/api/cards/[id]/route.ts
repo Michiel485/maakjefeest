@@ -1,3 +1,4 @@
+import { schoonEnvelop } from "@/lib/kaart-envelop"
 import { kaartPalet } from "@/lib/kaart-paletten"
 import { createServiceClient } from "@/lib/supabase"
 import { createClient } from "@/lib/supabase-server"
@@ -42,6 +43,7 @@ function sanitizeContent(raw: unknown): CardContent {
     animatie: cardAnimatie(input.animatie),
     // Een eigen palet voor deze kaart; alleen bekende, anders de website
     kleur: kaartPalet(input.kleur)?.id,
+    envelop: schoonEnvelop(input.envelop),
     taal: cardTaal(input.taal),
     aanmelden: aanmeldStand(input.aanmelden),
   }

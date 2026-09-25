@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react"
 import type { SC } from "@/lib/event-styles"
 import type { CardDisplay } from "@/lib/cards"
 import Voorkant from "@/components/kaart/Voorkant"
+import { envelopStijl } from "@/lib/kaart-envelop"
 import AanmeldFormulier from "@/components/AanmeldFormulier"
 import type { AanmeldStand } from "@/lib/gasten"
 import { formulierTekst } from "@/lib/formulier-teksten"
@@ -308,6 +309,10 @@ export default function CardReveal({
   // Het zegel breekt zodra er getikt is; de klep wacht tot dat gebeurd is
   const zegelHeel = stage === "closed"
   const klepDicht = stage === "closed" || (!klassiekeAnimatie && stage === "zegel")
+  // Kleur, voering en zegel van de envelop. De voering zie je aan de binnenkant
+  // van de klep, vanaf het moment dat die halverwege is, en achter de kaart.
+  const env = envelopStijl(sc, display.envelop)
+  const klepBinnen = klassiekeAnimatie ? !klepDicht : !klepVoorKaart
   // De dichte envelop zweeft. Loopt door tot de kaart gaat bewegen, want de
   // envelop staat tot dan toch stil; daarna neemt het rekenwerk de transform
   // over en zou een lopende animatie ertegenin werken.
@@ -493,7 +498,7 @@ export default function CardReveal({
                 <span
                   className="absolute inset-0 rounded-2xl"
                   style={{
-                    backgroundColor: sc.cardBg ?? sc.navBg,
+                    background: env.voering ?? env.lichaam,
                     border: `1.5px solid ${sc.accent}50`,
                     filter: "brightness(0.97)",
                     boxShadow: "0 18px 50px rgba(0,0,0,0.18)",
@@ -533,11 +538,11 @@ export default function CardReveal({
                   style={{
                     height: `${ENVELOP_V_PUNT}%`,
                     clipPath: "polygon(0 0, 100% 0, 50% 100%)",
-                    backgroundColor: sc.cardBg ?? sc.navBg,
+                    background: klepBinnen && env.voering ? env.voering : env.lichaam,
                     // Dicht zie je de buitenkant, open de binnenkant, en die
                     // ligt in de schaduw. Dat maakt hem ook zichtbaar tegen de
                     // achtergrond, want die heeft bijna dezelfde kleur.
-                    filter: klepDicht ? "brightness(0.99)" : "brightness(0.78)",
+                    filter: klepDicht ? "brightness(0.99)" : env.voering ? "brightness(0.94)" : "brightness(0.78)",
                     borderRadius: "16px 16px 0 0",
                     transition: klassiekeAnimatie
                       ? "transform 0.55s ease, filter 0.55s ease"
@@ -585,7 +590,7 @@ export default function CardReveal({
                   className="absolute inset-0 rounded-2xl"
                   style={{
                     clipPath: `polygon(0 0, 50% ${ENVELOP_V_PUNT}%, 100% 0, 100% 100%, 0 100%)`,
-                    backgroundColor: sc.cardBg ?? sc.navBg,
+                    backgroundColor: env.lichaam,
                     // De vouwlijnen van de zijkanten naar het midden onderin
                     backgroundImage: `linear-gradient(to top right, transparent 49.7%, ${sc.accent}1F 50%, transparent 50.3%), linear-gradient(to top left, transparent 49.7%, ${sc.accent}1F 50%, transparent 50.3%)`,
                     // Een drop-shadow volgt de geklipte vorm, een box-shadow niet:
@@ -636,8 +641,8 @@ export default function CardReveal({
                       width: 62,
                       height: 62,
                       marginLeft: -31,
-                      backgroundColor: sc.accent,
-                      color: sc.buttonText,
+                      backgroundColor: env.zegel,
+                      color: env.zegelTekst,
                       fontFamily: sc.fontInitials ?? sc.fontPageTitles,
                       fontSize: "1.35rem",
                       clipPath: klassiekeAnimatie
