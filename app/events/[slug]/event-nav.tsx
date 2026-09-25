@@ -97,6 +97,11 @@ export default function EventNav({
 
     const ro = new ResizeObserver(checkOverflow)
     if (navRef.current) ro.observe(navRef.current)
+    // Ook de links zelf: met een breed lettertype worden ze pas breder als
+    // dat lettertype binnen is. Eerst werd alleen daarvoor gemeten, en dan
+    // vielen de pagina's over de taalkeuze.
+    for (const el of Array.from(linksRef.current?.children ?? [])) ro.observe(el)
+    document.fonts?.ready.then(checkOverflow).catch(() => {})
 
     // Re-check when Google Translate rewrites link text
     const mo = new MutationObserver(checkOverflow)
@@ -193,7 +198,10 @@ export default function EventNav({
             <div className="absolute right-0 top-1/2 -translate-y-1/2">
               <LanguageSwitcher accent={sc.accent} textColor={sc.navText} bgColor={sc.navBg} />
             </div>
-            <div className="flex items-center flex-wrap justify-center gap-1">{pageLinks}</div>
+            {/* Links en rechts evenveel ruimte als de taalkeuze breed is, zodat
+                de pagina's in het midden blijven en er nooit onder vallen. Bij
+                een breed lettertype lopen ze dan door naar een tweede regel. */}
+            <div className="flex items-center flex-wrap justify-center gap-1 px-24">{pageLinks}</div>
           </div>
         </nav>
         {menuOpen && (
