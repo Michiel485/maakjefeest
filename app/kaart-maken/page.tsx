@@ -94,33 +94,41 @@ type Stap = "stijl" | "template" | "tekst" | "groep" | "details" | "aanmelden" |
 // verandert live mee. Michiels wens van 24 september 2026: de lange lijst
 // onder een half afgesneden kaart was rommelig. Op een groot scherm blijft
 // alles zoals het was.
-type Blad = "kaart" | "tekst" | "stijl" | "foto" | "gasten" | "meer"
+// Vier categorieën, en elk onderdeel hoort bij precies één. Michiels wens van
+// 25 september 2026: geen "Meer" als restbak. Op de laptop staan ze als
+// kopjes in de zijbalk, in dezelfde volgorde.
+type Blad = "kaart" | "tekst" | "uiterlijk" | "gasten" | "bekijken"
 const BLAD_SECTIES: Record<Exclude<Blad, "kaart">, Stap[]> = {
-  tekst: ["tekst", "details"],
-  stijl: ["stijl", "template"],
-  foto: ["foto"],
+  tekst: ["tekst", "details", "taal"],
+  uiterlijk: ["stijl", "template", "foto", "animatie"],
   gasten: ["groep", "aanmelden"],
-  meer: ["taal", "animatie", "bekijken"],
+  bekijken: ["bekijken"],
 }
 const BLAD_TITEL: Record<Blad, string> = {
   kaart: "Je kaarten",
   tekst: "Tekst",
-  stijl: "Stijl en ontwerp",
-  foto: "Foto",
+  uiterlijk: "Uiterlijk",
   gasten: "Gasten",
-  meer: "Meer",
+  bekijken: "Bekijken",
+}
+// De volgorde in de zijbalk. Letterlijk uitgeschreven, zodat Tailwind de
+// klassen vindt.
+const VOLGORDE: Record<Stap, string> = {
+  tekst: "order-[11]", details: "order-[12]", taal: "order-[13]",
+  stijl: "order-[21]", template: "order-[22]", foto: "order-[23]", animatie: "order-[24]",
+  groep: "order-[31]", aanmelden: "order-[32]",
+  bekijken: "order-[41]",
 }
 
 function BladIcoon({ blad }: { blad: Exclude<Blad, "kaart"> }) {
   const pad = {
     tekst: "M4 7V5h16v2M9 19h6M12 5v14",
-    stijl: "M12 21a9 9 0 1 1 0-18c4.97 0 9 3.58 9 8 0 2.76-2.24 4-5 4h-1.5a1.5 1.5 0 0 0-1.06 2.56A1.5 1.5 0 0 1 12 21zM7.5 11a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM12 7.5a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM16.5 11a1 1 0 1 0 0-2 1 1 0 0 0 0 2z",
-    foto: "M4 7h3l2-2h6l2 2h3v12H4zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z",
+    uiterlijk: "M12 21a9 9 0 1 1 0-18c4.97 0 9 3.58 9 8 0 2.76-2.24 4-5 4h-1.5a1.5 1.5 0 0 0-1.06 2.56A1.5 1.5 0 0 1 12 21zM7.5 11a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM12 7.5a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM16.5 11a1 1 0 1 0 0-2 1 1 0 0 0 0 2z",
     gasten: "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21v-1a6 6 0 0 1 12 0v1M16 3.13a4 4 0 0 1 0 7.75M22 21v-1a6 6 0 0 0-4-5.65",
-    meer: "M5 12h.01M12 12h.01M19 12h.01",
+    bekijken: "M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z",
   }[blad]
   return (
-    <svg className="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={blad === "meer" ? 3 : 1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg className="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d={pad} />
     </svg>
   )
@@ -260,9 +268,24 @@ export default function KaartMakenPage() {
     setBlad(b)
     if (b && b !== "kaart") setStap(BLAD_SECTIES[b][0])
   }
-  /** Op de telefoon: laat deze sectie alleen zien in het paneel waar hij bij hoort. */
+  /** Hoort deze sectie bij het paneel dat nu op de telefoon open is? */
+  function inPaneel(s: Stap): boolean {
+    return !!blad && blad !== "kaart" && BLAD_SECTIES[blad].includes(s)
+  }
+  /**
+   * De klassen van een sectie: zijn plek in de zijbalk, en op de telefoon
+   * alleen zichtbaar in zijn eigen paneel.
+   */
   function telefoon(s: Stap): string {
-    return blad && blad !== "kaart" && BLAD_SECTIES[blad].includes(s) ? "" : "max-md:hidden"
+    return `${VOLGORDE[s]} ${inPaneel(s) ? "" : "max-md:hidden"}`
+  }
+  /**
+   * Open of dicht. In een paneel op de telefoon staat alles open: dan mis je
+   * niets, zoals eerst Ontwerp onder Stijl (Michiel, 25 september 2026). Op
+   * de laptop blijft het één tegelijk.
+   */
+  function isOpen(s: Stap): boolean {
+    return stap === s || inPaneel(s)
   }
   /**
    * Tik op de kaart en je bewerkt wat je aanraakt: de namen, de datum, de
@@ -272,7 +295,12 @@ export default function KaartMakenPage() {
   function tikOpKaart(e: React.MouseEvent) {
     const aangeraakt = ((e.target as HTMLElement).innerText ?? "").trim().toLowerCase()
     if (!aangeraakt) return
-    const bevat = (s: string) => !!s.trim() && aangeraakt.includes(s.trim().toLowerCase().slice(0, 12))
+    // In beide richtingen: tik je op "Michiel" en de namen staan over drie
+    // regels, dan is "michiel" een stuk van de namen, niet andersom.
+    const bevat = (s: string) => {
+      const w = s.trim().toLowerCase()
+      return !!w && (aangeraakt.includes(w.slice(0, 12)) || w.includes(aangeraakt))
+    }
     // Vergelijken met wat er op de kaart staat, niet met wat er is ingevuld:
     // zonder namen toont de kaart "Jullie namen", en daar tik je dan op.
     const veld = bevat(display.names) ? "kaart-namen"
@@ -1053,7 +1081,7 @@ export default function KaartMakenPage() {
       }
       onderbalk={
         <nav className="flex justify-around px-1 pt-1.5 pb-2" aria-label="Onderdelen van de kaart">
-          {(["tekst", "stijl", "foto", "gasten", "meer"] as const).map((b) => {
+          {(["tekst", "uiterlijk", "gasten", "bekijken"] as const).map((b) => {
             const aan = blad === b
             return (
               <button
@@ -1061,11 +1089,11 @@ export default function KaartMakenPage() {
                 type="button"
                 onClick={() => openBlad(aan ? null : b)}
                 aria-pressed={aan}
-                className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl text-[11px] font-semibold min-w-[56px]"
+                className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl text-[11px] font-semibold min-w-[68px]"
                 style={{ color: aan ? GOLD : SUBTLE, backgroundColor: aan ? GOLD_BG : "transparent", border: 0, cursor: "pointer" }}
               >
                 <BladIcoon blad={b} />
-                {BLAD_TITEL[b] === "Stijl en ontwerp" ? "Stijl" : BLAD_TITEL[b]}
+                {BLAD_TITEL[b]}
               </button>
             )
           })}
@@ -1222,12 +1250,23 @@ export default function KaartMakenPage() {
       <div className="flex flex-col-reverse md:flex-row flex-1 min-h-0">
         {/* ── Stappen ── */}
         <aside
-          className={`w-full md:w-80 md:flex-shrink-0 bg-white border-r border-gray-100 md:overflow-y-auto ${
+          className={`flex flex-col w-full md:w-80 md:flex-shrink-0 bg-white border-r border-gray-100 md:overflow-y-auto ${
             blad
               ? "max-md:fixed max-md:inset-x-0 max-md:bottom-[64px] max-md:z-40 max-md:max-h-[58vh] max-md:overflow-y-auto max-md:rounded-t-2xl max-md:border-t max-md:shadow-[0_-16px_40px_-16px_rgba(26,18,4,0.35)]"
               : "max-md:hidden"
           }`}
         >
+          {/* De vier categorieën als kopjes, alleen op de laptop: op de
+              telefoon is de categorie het paneel zelf. */}
+          {(["tekst", "uiterlijk", "gasten", "bekijken"] as const).map((c, i) => (
+            <div
+              key={c}
+              className={`max-md:hidden ${["order-[10]", "order-[20]", "order-[30]", "order-[40]"][i]} px-5 pt-4 pb-1.5 text-[10px] font-bold uppercase tracking-[0.2em]`}
+              style={{ color: GOLD, borderTop: i === 0 ? undefined : `1px solid ${GOLD_LIGHT}66` }}
+            >
+              {BLAD_TITEL[c]}
+            </div>
+          ))}
           {/* De kop van het paneel, alleen op de telefoon */}
           {blad && (
             <div className="md:hidden sticky top-0 z-10 bg-white flex items-center justify-between px-5 pt-2 pb-2 border-b border-gray-100">
@@ -1346,7 +1385,7 @@ export default function KaartMakenPage() {
             )}
           </div>
 
-          <Sectie className={telefoon("tekst")} open={stap === "tekst"} onToggle={() => setStap(stap === "tekst" ? null : "tekst")} titel="Tekst op de kaart">
+          <Sectie className={telefoon("tekst")} open={isOpen("tekst")} onToggle={() => setStap(stap === "tekst" ? null : "tekst")} titel="Tekst op de kaart">
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Jullie namen</span>
               {/* Een tekstvak en geen invoerregel, zodat een enter werkt: veel
@@ -1389,7 +1428,7 @@ export default function KaartMakenPage() {
             </label>
           </Sectie>
 
-          <Sectie className={telefoon("stijl")} open={stap === "stijl"} onToggle={() => setStap(stap === "stijl" ? null : "stijl")} titel="Stijl">
+          <Sectie className={telefoon("stijl")} open={isOpen("stijl")} onToggle={() => setStap(stap === "stijl" ? null : "stijl")} titel="Stijl">
             <div className="grid grid-cols-5 gap-2">
               {STYLE_KEYS.map((s) => {
                 const cfg = STYLE_CONFIG[s]
@@ -1416,7 +1455,7 @@ export default function KaartMakenPage() {
             </div>
           </Sectie>
 
-          <Sectie className={telefoon("template")} open={stap === "template"} onToggle={() => setStap(stap === "template" ? null : "template")} titel="Ontwerp">
+          <Sectie className={telefoon("template")} open={isOpen("template")} onToggle={() => setStap(stap === "template" ? null : "template")} titel="Ontwerp">
             <div className="flex flex-col gap-2">
               {CARD_DESIGNS.map((t) => (
                 <button
@@ -1433,7 +1472,7 @@ export default function KaartMakenPage() {
           </Sectie>
 
           {/* Een foto kan bij elk ontwerp */}
-          <Sectie className={telefoon("foto")} open={stap === "foto"} onToggle={() => setStap(stap === "foto" ? null : "foto")} titel="Foto (optioneel)">
+          <Sectie className={telefoon("foto")} open={isOpen("foto")} onToggle={() => setStap(stap === "foto" ? null : "foto")} titel="Foto (optioneel)">
               <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void kiesFoto(f) }} />
               {(ontwerp.photoDataUrl || ontwerp.photoUrl) && (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -1463,7 +1502,7 @@ export default function KaartMakenPage() {
 
               Ook bij een Save the Date, want wie zijn indeling al weet kan
               meteen twee losse kaarten maken. */}
-          <Sectie className={telefoon("groep")} open={stap === "groep"} onToggle={() => setStap(stap === "groep" ? null : "groep")} titel="Voor wie is deze kaart">
+          <Sectie className={telefoon("groep")} open={isOpen("groep")} onToggle={() => setStap(stap === "groep" ? null : "groep")} titel="Voor wie is deze kaart">
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => update({ guestType: "" })}
@@ -1524,7 +1563,7 @@ export default function KaartMakenPage() {
               hier aanstaat komt samen in één regel in de accentkleur onder de
               tekst, in dezelfde letter als de datum. Wat leeg is, staat er
               niet. */}
-          <Sectie className={telefoon("details")} open={stap === "details"} onToggle={() => setStap(stap === "details" ? null : "details")} titel="Details op de kaart">
+          <Sectie className={telefoon("details")} open={isOpen("details")} onToggle={() => setStap(stap === "details" ? null : "details")} titel="Details op de kaart">
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Tijden</span>
               <input
@@ -1572,7 +1611,7 @@ export default function KaartMakenPage() {
 
           <Sectie
             className={telefoon("aanmelden")}
-            open={stap === "aanmelden"}
+            open={isOpen("aanmelden")}
             onToggle={() => setStap(stap === "aanmelden" ? null : "aanmelden")}
             titel={`Aanmelden · ${AANMELD_KORT[ontwerp.aanmelden]}`}
           >
@@ -1637,7 +1676,7 @@ export default function KaartMakenPage() {
 
           </Sectie>
 
-          <Sectie className={telefoon("taal")} open={stap === "taal"} onToggle={() => setStap(stap === "taal" ? null : "taal")} titel="Taal van de kaart">
+          <Sectie className={telefoon("taal")} open={isOpen("taal")} onToggle={() => setStap(stap === "taal" ? null : "taal")} titel="Taal van de kaart">
             <div className="grid grid-cols-2 gap-2">
               {CARD_TALEN.map((tl) => (
                 <button
@@ -1657,7 +1696,7 @@ export default function KaartMakenPage() {
             </div>
           </Sectie>
 
-          <Sectie className={telefoon("animatie")} open={stap === "animatie"} onToggle={() => setStap(stap === "animatie" ? null : "animatie")} titel="Openen">
+          <Sectie className={telefoon("animatie")} open={isOpen("animatie")} onToggle={() => setStap(stap === "animatie" ? null : "animatie")} titel="Openen">
             <div className="flex flex-col gap-2">
               {CARD_ANIMATIE_KEUZES.map((a) => (
                 <button
@@ -1682,7 +1721,7 @@ export default function KaartMakenPage() {
             </button>
           </Sectie>
 
-          <Sectie className={telefoon("bekijken")} open={stap === "bekijken"} onToggle={() => setStap(stap === "bekijken" ? null : "bekijken")} titel="Bekijken">
+          <Sectie className={telefoon("bekijken")} open={isOpen("bekijken")} onToggle={() => setStap(stap === "bekijken" ? null : "bekijken")} titel="Voorbeeld en proefkaart">
             <button
               onClick={() => setSimulatie(true)}
               className="w-full text-sm font-semibold px-3 py-3 rounded-xl transition-all hover:-translate-y-0.5"
@@ -1726,7 +1765,7 @@ export default function KaartMakenPage() {
             {"💌"} Bekijk hoe het opengaat
           </button>
           <div className={`mx-auto max-w-md transition-transform duration-200 origin-top ${blad && blad !== "kaart" ? "max-md:scale-[0.5]" : ""}`}>
-            <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="flex items-center justify-center gap-3 mb-1">
               <p className="m-0 text-center text-xs font-semibold uppercase tracking-widest" style={{ color: sc.headingColor, opacity: 0.75 }}>
                 Zo ziet jullie kaart eruit
               </p>
@@ -1740,6 +1779,9 @@ export default function KaartMakenPage() {
                 {"▶"} Demo
               </button>
             </div>
+            <p className="m-0 mb-4 text-center text-[11px]" style={{ color: sc.headingColor, opacity: 0.55 }}>
+              Tik op een tekst op de kaart om hem te wijzigen
+            </p>
             {/* Geen overflow-clip en geen eigen schaduw om de kaart heen: de
                 kaart tekent zijn eigen schaduw, en een klippende doos eromheen
                 sneed die af tot een vierkant. */}
