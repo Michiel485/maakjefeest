@@ -49,6 +49,8 @@ Elk ontwerp wordt getest in zes talen (Duitse zinnen zijn lang), met en zonder f
 
 ## Fase 3: de envelop
 
+**Teruggedraaid op 25 september 2026.** Michiel vond de keuzes te veel en het oogde goedkoop. De envelop volgt weer automatisch de stijl van de kaart; alleen Minimaal (zegel in de kleur van de namen) en Art deco (een fijne waaier aan de binnenkant van de klep) hebben iets eigens. Geen keuzes in de bouwer. Wat hieronder staat was het oorspronkelijke plan.
+
 - **Kleur** van de envelop: volgt de kaart, of een eigen keuze (crème, kraft, zwart, salie, oudroze)
 - **Voering**, te zien als de klep opengaat: effen, streepjes, stippen, takjes, art deco, marmer
 - **Zegel**: kleur (goud, bordeaux, groen, zwart, wit) en de initialen of een hartje

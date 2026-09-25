@@ -1,7 +1,6 @@
 // Gedeelde types en helpers voor digitale kaarten (Save the Date / trouwkaart)
 
 import { formatDate } from "./event-styles"
-import type { CardEnvelop } from "./kaart-envelop"
 
 export type CardType = "save_the_date" | "trouwkaart"
 // De ontwerpen. "foto" is de oude waarde uit de tijd dat een foto een apart
@@ -82,8 +81,6 @@ export interface CardContent {
    * "website" betekent de kleuren van de website, zoals het altijd was.
    */
   kleur?: string
-  /** Kleur, voering en zegel van de envelop; leeg is zoals het altijd was */
-  envelop?: CardEnvelop
   /**
    * Eigen ontwerp: de afbeelding die de kaart is, en hoe hoog hij is ten
    * opzichte van zijn breedte. Wij doen de envelop, het aanmelden en de rest.
@@ -532,7 +529,6 @@ export interface CardDisplay extends CardVasteTeksten {
   animatie: CardAnimatie
   /** De trouwdatum als 2027-08-15, voor ontwerpen die met de cijfers spelen. */
   datumIso?: string | null
-  envelop?: CardEnvelop
   ontwerpUrl?: string | null
   ontwerpVerhouding?: number | null
 }
@@ -579,7 +575,6 @@ export function buildCardDisplay(
     animatie: cardAnimatie(content.animatie),
     // Een eigen datumtekst (van oude kaarten) wint van de cijfers
     datumIso: content.dateText?.trim() ? null : event.datum || null,
-    envelop: content.envelop,
     ontwerpUrl: content.ontwerpUrl || null,
     ontwerpVerhouding: content.ontwerpVerhouding || null,
     ...displayTeksten(taal),

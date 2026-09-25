@@ -318,21 +318,45 @@ export default function KaartLijst({
       </div>
 
 
-      {verwijderVraag && gekozen && (
-        <div className="rounded-xl p-3 flex flex-wrap items-center gap-2 text-[13px]" style={{ backgroundColor: "#FEF2F2", border: "1px solid #FECACA" }}>
-          <span style={{ color: "#991B1B" }} className="flex-1 min-w-[200px]">
-            <b>{kaartNaam(gekozen.card)}</b> weggooien? De link werkt daarna niet meer, ook niet voor wie hem al heeft.
-            {gekozen.komen + gekozen.komenNiet > 0 && (
-              <> De antwoorden van de {gekozen.komen + gekozen.komenNiet} gasten die reageerden blijven gewoon in je gastenlijst staan.</>
-            )}
-          </span>
-          <button type="button" onClick={() => void verwijder()} disabled={bezig} className={knop} style={{ backgroundColor: "#991B1B", color: "#fff", border: 0, cursor: "pointer" }}>
-            {bezig ? "Bezig…" : "Ja, weggooien"}
-          </button>
-          <button type="button" onClick={() => setVerwijderVraag(false)} className={knop} style={{ background: "none", color: KLEUR.zacht, border: 0, cursor: "pointer" }}>
-            Laat maar
-          </button>
-        </div>
+      {/* Weggooien vraagt om bevestiging in een venster, niet in een regel
+          die eronder openklapt (Michiel, 25 september 2026). Via een portal,
+          om dezelfde reden als het venster hieronder. */}
+      {verwijderVraag && gekozen && createPortal(
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: "rgba(26,26,26,0.5)", backdropFilter: "blur(4px)" }}
+          onClick={() => { if (!bezig) setVerwijderVraag(false) }}
+          role="alertdialog"
+          aria-modal="true"
+          aria-label="Kaart weggooien"
+        >
+          <div
+            className="w-full max-w-sm rounded-3xl p-6 flex flex-col gap-4"
+            style={{ backgroundColor: "#fff", border: `1px solid ${KLEUR.goudLicht}` }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div>
+              <h3 className="m-0" style={{ fontFamily: "var(--font-cormorant)", fontSize: 24, fontWeight: 600, color: KLEUR.inkt }}>
+                {kaartNaam(gekozen.card)} weggooien?
+              </h3>
+              <p className="m-0 mt-2 text-sm leading-relaxed" style={{ color: KLEUR.tekst }}>
+                De link werkt daarna niet meer, ook niet voor wie hem al heeft.
+                {gekozen.komen + gekozen.komenNiet > 0 && (
+                  <> De antwoorden van de {gekozen.komen + gekozen.komenNiet} gasten die reageerden blijven gewoon in je gastenlijst staan.</>
+                )}
+              </p>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button type="button" onClick={() => setVerwijderVraag(false)} disabled={bezig} className={knop} style={{ backgroundColor: "#fff", color: KLEUR.inkt, border: `1px solid ${KLEUR.goudLicht}`, cursor: "pointer" }}>
+                Laat maar
+              </button>
+              <button type="button" onClick={() => void verwijder()} disabled={bezig} autoFocus className={knop} style={{ backgroundColor: "#991B1B", color: "#fff", border: 0, cursor: "pointer" }}>
+                {bezig ? "Bezig…" : "Ja, weggooien"}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
 
       {fout && (

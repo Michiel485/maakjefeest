@@ -1,4 +1,3 @@
-import { schoonEnvelop } from "@/lib/kaart-envelop"
 import { kaartPalet } from "@/lib/kaart-paletten"
 import { createServiceClient } from "@/lib/supabase"
 import { createClient } from "@/lib/supabase-server"
@@ -43,7 +42,6 @@ function sanitizeContent(raw: unknown): CardContent {
     animatie: cardAnimatie(input.animatie),
     // Een eigen palet voor deze kaart; alleen bekende, anders de website
     kleur: kaartPalet(input.kleur)?.id,
-    envelop: schoonEnvelop(input.envelop),
     // Eigen ontwerp: alleen een echte link naar een geüploade afbeelding
     ontwerpUrl: typeof input.ontwerpUrl === "string" && /^https:\/\//.test(input.ontwerpUrl) ? input.ontwerpUrl.slice(0, 500) : undefined,
     ontwerpVerhouding:

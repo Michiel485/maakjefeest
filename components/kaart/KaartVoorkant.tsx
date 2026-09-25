@@ -50,13 +50,13 @@ function namenRegels(namen: string): string {
   return m ? `${m[1]}\n${m[2]} ${m[3]}` : namen
 }
 
-/** "M & L", voor in de boog als er geen foto is. */
+/** "M | L", voor in de boog als er geen foto is (Michiel: een streep, geen &). */
 function initialenVan(namen: string): string {
   const delen = namen
     .split(/\s*(?:&|\+|\n|\ben\b|\band\b|\bet\b|\bund\b|\by\b|\be\b)\s*/i)
     .map((d) => d.trim())
     .filter(Boolean)
-  if (delen.length >= 2) return `${delen[0][0]} & ${delen[1][0]}`.toUpperCase()
+  if (delen.length >= 2) return `${delen[0][0]} | ${delen[1][0]}`.toUpperCase()
   return (delen[0]?.[0] ?? "♥").toUpperCase()
 }
 

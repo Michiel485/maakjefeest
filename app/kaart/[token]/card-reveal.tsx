@@ -309,9 +309,9 @@ export default function CardReveal({
   // Het zegel breekt zodra er getikt is; de klep wacht tot dat gebeurd is
   const zegelHeel = stage === "closed"
   const klepDicht = stage === "closed" || (!klassiekeAnimatie && stage === "zegel")
-  // Kleur, voering en zegel van de envelop. De voering zie je aan de binnenkant
-  // van de klep, vanaf het moment dat die halverwege is, en achter de kaart.
-  const env = envelopStijl(sc, display.envelop)
+  // De envelop past bij het ontwerp. Heeft hij een voering, dan zie je die aan
+  // de binnenkant van de klep, vanaf het moment dat die halverwege is.
+  const env = envelopStijl(sc, display.design)
   const klepBinnen = klassiekeAnimatie ? !klepDicht : !klepVoorKaart
   // De dichte envelop zweeft. Loopt door tot de kaart gaat bewegen, want de
   // envelop staat tot dan toch stil; daarna neemt het rekenwerk de transform

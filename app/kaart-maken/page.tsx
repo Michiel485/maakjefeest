@@ -39,15 +39,6 @@ import { compressImage } from "@/lib/client-image"
 import CardReveal from "@/app/kaart/[token]/card-reveal"
 import Voorkant from "@/components/kaart/Voorkant"
 import { KAART_PALETTEN, kaartKleuren } from "@/lib/kaart-paletten"
-import {
-  ENVELOP_KLEUREN,
-  ENVELOP_VOERINGEN,
-  envelopStijl,
-  schoonEnvelop,
-  ZEGEL_KLEUREN,
-  type CardEnvelop,
-  type EnvelopStijl,
-} from "@/lib/kaart-envelop"
 import { KLEUR } from "@/lib/ontwerp"
 import {
   AANMELD_LABEL,
@@ -152,55 +143,47 @@ function BladIcoon({ blad }: { blad: Exclude<Blad, "kaart"> }) {
 }
 type Actie = "bewaar" | "activeer"
 
-/** De envelop in het klein, met de klep open zodat je de voering ziet. */
-function EnvelopVoorbeeld({ env, initialen, accent }: { env: EnvelopStijl; initialen: string; accent: string }) {
-  return (
-    <div className="relative mx-auto" style={{ width: 176, height: 124, marginTop: 58 }} aria-hidden>
-      {/* De klep, opengeklapt boven de envelop */}
-      <span
-        className="absolute left-0 right-0"
-        style={{ bottom: "100%", height: 58, clipPath: "polygon(0 100%, 50% 0, 100% 100%)", background: env.voering ?? env.lichaam, filter: env.voering ? "none" : "brightness(0.85)" }}
-      />
-      {/* De achterkant, met de voering */}
-      <span className="absolute inset-0 rounded-md" style={{ background: env.voering ?? env.lichaam, border: `1px solid ${accent}50` }} />
-      {/* De voorkant met de V */}
-      <span
-        className="absolute inset-0 rounded-md"
-        style={{ clipPath: "polygon(0 0, 50% 50%, 100% 0, 100% 100%, 0 100%)", backgroundColor: env.lichaam, boxShadow: "0 8px 20px rgba(0,0,0,0.15)" }}
-      />
-      <span
-        className="absolute left-1/2 flex items-center justify-center rounded-full text-[11px] font-semibold"
-        style={{ top: "50%", width: 30, height: 30, marginLeft: -15, marginTop: -15, backgroundColor: env.zegel, color: env.zegelTekst, boxShadow: "0 2px 6px rgba(0,0,0,0.2)" }}
-      >
-        {initialen}
-      </span>
-    </div>
-  )
-}
-
 /**
  * Een kaart in het klein, voor de galerij met ontwerpen: jullie eigen namen
  * en datum in dat ontwerp. Getekend op 400 pixels breed en verkleind tot de
  * breedte van het vakje, zodat hij er precies zo uitziet als de echte kaart.
  */
 function Miniatuur({ display, sc }: { display: CardDisplay; sc: SC }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const [schaal, setSchaal] = useState(0.33)
+  const vak = useRef<HTMLDivElement>(null)
+  const kaart = useRef<HTMLDivElement>(null)
+  // De hele kaart past in het vakje en staat in het midden. Eerst schaalden we
+  // alleen op de breedte; een kaart die lager is dan het vakje (Strak,
+  // Bohemian) stond dan bovenin, met een lege strook eronder (Michiels
+  // bevinding van 25 september 2026).
+  const [maat, setMaat] = useState({ schaal: 0.33, links: 0, boven: 0 })
   useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const ro = new ResizeObserver(() => setSchaal(el.clientWidth / 400))
-    ro.observe(el)
-    return () => ro.disconnect()
+    const v = vak.current
+    const k = kaart.current
+    if (!v || !k) return
+    const meet = () => {
+      const kh = k.offsetHeight || 560
+      const schaal = Math.min(v.clientWidth / 400, v.clientHeight / kh)
+      setMaat({ schaal, links: (v.clientWidth - 400 * schaal) / 2, boven: (v.clientHeight - kh * schaal) / 2 })
+    }
+    const ro = new ResizeObserver(meet)
+    ro.observe(v)
+    ro.observe(k)
+    // Ook meteen een keer, niet pas bij de eerste melding van de observer
+    const t = setTimeout(meet, 0)
+    return () => { ro.disconnect(); clearTimeout(t) }
   }, [])
   return (
     <div
-      ref={ref}
+      ref={vak}
       aria-hidden
       className="relative w-full overflow-hidden rounded-lg"
       style={{ aspectRatio: "5 / 7", backgroundColor: sc.bodyBg, pointerEvents: "none" }}
     >
-      <div className="absolute left-0 top-0" style={{ width: 400, transform: `scale(${schaal})`, transformOrigin: "top left" }}>
+      <div
+        ref={kaart}
+        className="absolute left-0 top-0"
+        style={{ width: 400, transform: `translate(${maat.links}px, ${maat.boven}px) scale(${maat.schaal})`, transformOrigin: "top left" }}
+      >
         <Voorkant display={display} sc={sc} breedte={400} />
       </div>
     </div>
@@ -212,7 +195,6 @@ interface KaartOntwerp {
   style: Style
   /** Een eigen palet voor deze kaart; leeg is de kleuren van de website */
   kleur: string
-  envelop: CardEnvelop
   /** Eigen ontwerp: geüpload, of nog alleen in de browser */
   ontwerpUrl: string | null
   ontwerpDataUrl: string | null
@@ -242,7 +224,6 @@ const LEEG: KaartOntwerp = {
   type: "save_the_date",
   style: "zand",
   kleur: "",
-  envelop: {},
   ontwerpUrl: null,
   ontwerpDataUrl: null,
   ontwerpVerhouding: null,
@@ -650,7 +631,6 @@ export default function KaartMakenPage() {
               type: kaart?.type ?? gewenstType,
               style: isStyle(event.style) ? event.style : "zand",
               kleur: kaart?.content.kleur ?? "",
-              envelop: kaart?.content.envelop ?? {},
               ontwerpUrl: kaart?.content.ontwerpUrl ?? null,
               ontwerpDataUrl: null,
               ontwerpVerhouding: kaart?.content.ontwerpVerhouding ?? null,
@@ -761,7 +741,6 @@ export default function KaartMakenPage() {
     photoUrl: ontwerp.photoUrl ?? ontwerp.photoDataUrl ?? undefined,
     animatie: ontwerp.animatie,
     kleur: ontwerp.kleur || undefined,
-    envelop: schoonEnvelop(ontwerp.envelop),
     ontwerpUrl: ontwerp.ontwerpUrl ?? ontwerp.ontwerpDataUrl ?? undefined,
     ontwerpVerhouding: ontwerp.ontwerpVerhouding ?? undefined,
     taal: ontwerp.taal,
@@ -1050,7 +1029,6 @@ export default function KaartMakenPage() {
       type: k.type,
       template: k.template,
       kleur: k.content.kleur ?? "",
-      envelop: k.content.envelop ?? {},
       ontwerpUrl: k.content.ontwerpUrl ?? null,
       ontwerpDataUrl: null,
       ontwerpVerhouding: k.content.ontwerpVerhouding ?? null,
@@ -2244,75 +2222,7 @@ export default function KaartMakenPage() {
             </div>
           </Sectie>
 
-          <Sectie className={telefoon("animatie")} vast={inPaneel("animatie")} open={isOpen("animatie")} onToggle={() => setStap(stap === "animatie" ? null : "animatie")} titel="Envelop">
-            {/* De envelop is het eerste wat je gast ziet. Kleur, voering en
-                zegel, voor elk ontwerp (Michiel, 25 september 2026). */}
-            <EnvelopVoorbeeld env={envelopStijl(sc, ontwerp.envelop)} initialen={initialen} accent={sc.accent} />
-            <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: SUBTLE }}>Kleur</span>
-            <div className="flex flex-wrap gap-2">
-              {ENVELOP_KLEUREN.map((k) => {
-                const actief = (ontwerp.envelop.kleur ?? "kaart") === k.id
-                return (
-                  <button
-                    key={k.id}
-                    type="button"
-                    title={k.naam}
-                    aria-label={k.naam}
-                    aria-pressed={actief}
-                    onClick={() => update({ envelop: { ...ontwerp.envelop, kleur: k.id } })}
-                    className="w-8 h-8 rounded-full"
-                    style={{
-                      background: k.kleur ?? `linear-gradient(135deg, ${sc.cardBg ?? sc.navBg} 50%, ${sc.accent} 50%)`,
-                      boxShadow: actief ? `0 0 0 2px #fff, 0 0 0 4px ${GOLD}` : "0 0 0 1px rgba(0,0,0,0.12)",
-                      border: 0,
-                      cursor: "pointer",
-                    }}
-                  />
-                )
-              })}
-            </div>
-            <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: SUBTLE }}>Voering</span>
-            <div className="flex flex-wrap gap-1.5">
-              {ENVELOP_VOERINGEN.map((v) => {
-                const actief = (ontwerp.envelop.voering ?? "geen") === v.id
-                return (
-                  <button
-                    key={v.id}
-                    type="button"
-                    aria-pressed={actief}
-                    onClick={() => update({ envelop: { ...ontwerp.envelop, voering: v.id } })}
-                    className="text-[12px] font-semibold px-2.5 py-1.5 rounded-lg"
-                    style={{ backgroundColor: actief ? "#fff" : GOLD_BG, color: CHARCOAL, border: `1.5px solid ${actief ? GOLD : GOLD_LIGHT}`, cursor: "pointer" }}
-                  >
-                    {v.naam}
-                  </button>
-                )
-              })}
-            </div>
-            <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: SUBTLE }}>Zegel</span>
-            <div className="flex flex-wrap gap-2">
-              {ZEGEL_KLEUREN.map((z) => {
-                const actief = (ontwerp.envelop.zegel ?? "accent") === z.id
-                return (
-                  <button
-                    key={z.id}
-                    type="button"
-                    title={z.naam}
-                    aria-label={`Zegel: ${z.naam}`}
-                    aria-pressed={actief}
-                    onClick={() => update({ envelop: { ...ontwerp.envelop, zegel: z.id } })}
-                    className="w-8 h-8 rounded-full"
-                    style={{
-                      backgroundColor: z.kleur ?? sc.accent,
-                      boxShadow: actief ? `0 0 0 2px #fff, 0 0 0 4px ${GOLD}` : "0 0 0 1px rgba(0,0,0,0.12)",
-                      border: 0,
-                      cursor: "pointer",
-                    }}
-                  />
-                )
-              })}
-            </div>
-            <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: SUBTLE }}>Openen</span>
+          <Sectie className={telefoon("animatie")} vast={inPaneel("animatie")} open={isOpen("animatie")} onToggle={() => setStap(stap === "animatie" ? null : "animatie")} titel="Openen">
             <div className="flex flex-col gap-2">
               {CARD_ANIMATIE_KEUZES.map((a) => (
                 <button
