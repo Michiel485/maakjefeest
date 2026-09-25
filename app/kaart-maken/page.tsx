@@ -255,6 +255,13 @@ export default function KaartMakenPage() {
   // in update(), want alleen dat is een wijziging van jou: het laden en het
   // wisselen van kaart gaan buiten update() om.
   const [wijzigingen, setWijzigingen] = useState(0)
+  // De teller loopt alleen op; "bewaardTot" is waar hij stond bij het laatste
+  // bewaren. Zo gaat een wijziging die je tijdens het bewaren typt niet
+  // verloren: die telt gewoon als nog niet bewaard.
+  const wijzigingRef = useRef(0)
+  const [bewaardTot, setBewaardTot] = useState(0)
+  const [autoBezig, setAutoBezig] = useState(false)
+  const [autoFout, setAutoFout] = useState(false)
   // null betekent: alles dichtgeklapt. Zonder die stand kon een blok alleen
   // wisselen naar een ander blok, en was Tekst dus nooit dicht te krijgen.
   // Standaard alles dicht. Alleen een nieuw ontwerp opent bij de tekst, en dat
@@ -264,10 +271,41 @@ export default function KaartMakenPage() {
   const [stap, setStap] = useState<Stap | null>(null)
   // Welk paneel op de telefoon open is; op een groot scherm doet dit niets.
   const [blad, setBlad] = useState<Blad | null>(null)
+  // Heb je Gasten al eens bekeken? Dan heb je bewust gekozen of je gasten iets
+  // moeten laten weten, en verdwijnt het stipje.
+  const [gastenGezien, setGastenGezien] = useState(false)
+  const [sleep, setSleep] = useState(0)
+  const sleepStart = useRef<number | null>(null)
   function openBlad(b: Blad | null) {
     setBlad(b)
+    setSleep(0)
     if (b && b !== "kaart") setStap(BLAD_SECTIES[b][0])
+    if (b === "gasten") setGastenGezien(true)
   }
+  // Waar nog iets te doen is: een stipje op de werkbalk en bij het kopje in de
+  // zijbalk. Tekst zonder namen of datum, en Gasten zolang je nog niet hebt
+  // gekozen of je gasten iets moeten laten weten.
+  const stip: Partial<Record<Blad, boolean>> = {
+    tekst: !ontwerp.names.trim() || !ontwerp.datum,
+    gasten: ontwerp.aanmelden === "geen" && !gastenGezien && stap !== "aanmelden",
+  }
+
+  // Vegen over de kaart gaat naar je vorige of volgende kaart van dit soort,
+  // bijvoorbeeld van daggasten naar avondgasten. Wat nog niet bewaard is,
+  // bewaren we eerst.
+  const veegStart = useRef<{ x: number; y: number } | null>(null)
+  async function veeg(richting: 1 | -1) {
+    const lijst = kaarten.filter((k) => k.type === ontwerp.type)
+    if (lijst.length < 2) return
+    const nu = lijst.findIndex((k) => k.id === cardId)
+    const volgende = lijst[nu + richting]
+    if (!volgende) return
+    if (onbewaard && userEmail && ontwerp.names.trim() && ontwerp.datum) {
+      try { await slaOp() } catch { return }
+    }
+    kiesKaart(volgende.id)
+  }
+
   /** Hoort deze sectie bij het paneel dat nu op de telefoon open is? */
   function inPaneel(s: Stap): boolean {
     return !!blad && blad !== "kaart" && BLAD_SECTIES[blad].includes(s)
@@ -416,7 +454,8 @@ export default function KaartMakenPage() {
 
   function update(patch: Partial<KaartOntwerp>) {
     setOntwerp((o) => ({ ...o, ...patch }))
-    setWijzigingen((n) => n + 1)
+    wijzigingRef.current += 1
+    setWijzigingen(wijzigingRef.current)
   }
 
   // ── Laden: URL, bestaand event, of ontwerp uit de browser ─────────────────
@@ -570,7 +609,7 @@ export default function KaartMakenPage() {
 
   // Alleen een kaart die al op de server staat kan "onbewaard" zijn: een
   // nieuw ontwerp staat gewoon in je browser.
-  const onbewaard = geladen && !!eventId && !!cardId && wijzigingen > 0
+  const onbewaard = geladen && !!eventId && !!cardId && wijzigingen > bewaardTot
 
   useEffect(() => {
     if (!onbewaard) return
@@ -628,6 +667,7 @@ export default function KaartMakenPage() {
 
   // ── Opslaan op de server (event + kaart) ──────────────────────────────────
   const slaOp = useCallback(async (): Promise<{ eventId: string; cardId: string }> => {
+    const tot = wijzigingRef.current
     let fotoUrl = ontwerp.photoUrl
     if (ontwerp.photoDataUrl && !fotoUrl) {
       const blob = await (await fetch(ontwerp.photoDataUrl)).blob()
@@ -711,7 +751,7 @@ export default function KaartMakenPage() {
 
     setEventId(nieuwEventId)
     setCardId(nieuwCardId)
-    setWijzigingen(0)
+    setBewaardTot(tot)
     try { localStorage.setItem(LS_IDS, JSON.stringify({ eventId: nieuwEventId, cardId: nieuwCardId })) } catch {}
 
     // De keuzelijsten bijwerken: de net bewaarde kaart, en het concept zelf
@@ -728,6 +768,58 @@ export default function KaartMakenPage() {
     return { eventId: nieuwEventId, cardId: nieuwCardId }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ontwerp, eventId, cardId, plan, isTrouwkaart, eventLocatie])
+
+  // Automatisch bewaren, zoals de websitebouwer: een paar tellen na je laatste
+  // wijziging, voor een kaart die al eens bewaard is en als je bent ingelogd.
+  // Een nieuwe kaart bewaar je de eerste keer zelf; tot dan staat hij in je
+  // browser. Michiels keuze van 25 september 2026.
+  useEffect(() => {
+    if (!onbewaard || !userEmail || busy !== null || autoBezig) return
+    if (!ontwerp.names.trim() || !ontwerp.datum) return
+    const klok = setTimeout(() => {
+      setAutoBezig(true)
+      slaOp()
+        .then(() => setAutoFout(false))
+        .catch(() => setAutoFout(true))
+        .finally(() => setAutoBezig(false))
+    }, 2500)
+    return () => clearTimeout(klok)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wijzigingen, onbewaard, userEmail, busy, autoBezig])
+
+  // Delen via het deelmenu van de telefoon: WhatsApp, Signal, mail, of
+  // kopiëren, allemaal in één keer. Zonder deelmenu (de meeste laptops)
+  // kopiëren we de link.
+  async function deelKaart() {
+    if (!huidigeKaart) return
+    const url = `${window.location.origin}/kaart/${huidigeKaart.share_token}`
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({ title: kaartLabel(huidigeKaart), text: "Er is post voor je 💌", url })
+        return
+      } catch {
+        return // weggetikt; niets aan de hand
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url)
+      setMelding({ tekst: "Link gekopieerd. Plak hem in WhatsApp of een mail." })
+    } catch {
+      setMelding({ tekst: `De link: ${url}` })
+    }
+  }
+
+  /** Hoe het met bewaren staat, in een paar woorden. */
+  const bewaarStatus = !cardId
+    ? "nog niet bewaard"
+    : autoBezig
+      ? "bewaren..."
+      : autoFout
+        ? "bewaren lukte niet, druk op bewaren"
+        : onbewaard
+          ? userEmail ? "wordt zo bewaard" : "wijzigingen niet bewaard"
+          : "automatisch bewaard"
+  const bewaarLetOp = !cardId || autoFout || (onbewaard && !userEmail)
 
   // Overstappen naar de websitebouwer zonder dat er al iets bewaard is. Wat
   // hier al ingevuld staat gaat mee, inclusief de stijl, zodat de website
@@ -777,7 +869,7 @@ export default function KaartMakenPage() {
     const k = kaarten.find((c) => c.id === id)
     if (!k) return
     setCardId(k.id)
-    setWijzigingen(0)
+    setBewaardTot(wijzigingRef.current)
     setMelding(null)
     setOntwerp((o) => ({
       ...o,
@@ -814,7 +906,7 @@ export default function KaartMakenPage() {
       return
     }
     setCardId(null)
-    setWijzigingen(0)
+    setBewaardTot(wijzigingRef.current)
     setMelding(null)
     setOntwerp((o) => ({
       ...o,
@@ -847,7 +939,7 @@ export default function KaartMakenPage() {
       const rest = kaarten.filter((k) => k.id !== cardId)
       setKaarten(rest)
       setVerwijderVraag(false)
-      setWijzigingen(0)
+      setBewaardTot(wijzigingRef.current)
       if (rest[0]) {
         kiesKaart(rest[0].id)
         // kiesKaart kijkt in de oude lijst; het id zelf zetten we hier.
@@ -1046,8 +1138,8 @@ export default function KaartMakenPage() {
               <span className="truncate">{ontwerp.naam.trim() || automatischeNaam}</span>
               <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" /></svg>
             </span>
-            <span className="block text-[11px]" style={{ color: onbewaard || !cardId ? "#B45309" : SUBTLE }}>
-              {!cardId ? "nog niet bewaard" : onbewaard ? "wijzigingen niet bewaard" : "bewaard"}
+            <span className="block text-[11px]" style={{ color: bewaarLetOp ? "#B45309" : SUBTLE }}>
+              {bewaarStatus}
             </span>
           </button>
           <IconKnop title="Bewaren" onClick={() => voerUit("bewaar")} disabled={busy !== null} bezig={busy === "bewaar"}>
@@ -1057,15 +1149,14 @@ export default function KaartMakenPage() {
             </svg>
           </IconKnop>
           {alAfgenomen && huidigeKaart ? (
-            <a
-              href={`/kaart/${huidigeKaart.share_token}/voorbeeld`}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={() => void deelKaart()}
               className="text-[13px] font-semibold px-3.5 py-2 rounded-full whitespace-nowrap"
-              style={{ backgroundColor: KLEUR.groen, color: "#fff", textDecoration: "none" }}
+              style={{ backgroundColor: KLEUR.groen, color: "#fff", border: 0, cursor: "pointer" }}
             >
-              Bekijk
-            </a>
+              Delen
+            </button>
           ) : (
             <button
               type="button"
@@ -1092,7 +1183,12 @@ export default function KaartMakenPage() {
                 className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl text-[11px] font-semibold min-w-[68px]"
                 style={{ color: aan ? GOLD : SUBTLE, backgroundColor: aan ? GOLD_BG : "transparent", border: 0, cursor: "pointer" }}
               >
-                <BladIcoon blad={b} />
+                <span className="relative">
+                  <BladIcoon blad={b} />
+                  {stip[b] && (
+                    <span aria-label="hier staat nog iets open" className="absolute -top-0.5 -right-1.5 w-2 h-2 rounded-full" style={{ backgroundColor: "#D97706" }} />
+                  )}
+                </span>
                 {BLAD_TITEL[b]}
               </button>
             )
@@ -1255,6 +1351,7 @@ export default function KaartMakenPage() {
               ? "max-md:fixed max-md:inset-x-0 max-md:bottom-[64px] max-md:z-40 max-md:max-h-[58vh] max-md:overflow-y-auto max-md:rounded-t-2xl max-md:border-t max-md:shadow-[0_-16px_40px_-16px_rgba(26,18,4,0.35)]"
               : "max-md:hidden"
           }`}
+          style={sleep > 0 ? { transform: `translateY(${sleep}px)`, transition: "none" } : { transition: "transform 180ms ease" }}
         >
           {/* De vier categorieën als kopjes, alleen op de laptop: op de
               telefoon is de categorie het paneel zelf. */}
@@ -1265,11 +1362,25 @@ export default function KaartMakenPage() {
               style={{ color: GOLD, borderTop: i === 0 ? undefined : `1px solid ${GOLD_LIGHT}66` }}
             >
               {BLAD_TITEL[c]}
+              {stip[c] && <span aria-label="hier staat nog iets open" className="inline-block w-1.5 h-1.5 rounded-full ml-1.5 align-middle" style={{ backgroundColor: "#D97706" }} />}
             </div>
           ))}
           {/* De kop van het paneel, alleen op de telefoon */}
           {blad && (
-            <div className="md:hidden sticky top-0 z-10 bg-white flex items-center justify-between px-5 pt-2 pb-2 border-b border-gray-100">
+            <div
+              className="md:hidden sticky top-0 z-10 bg-white flex items-center justify-between px-5 pt-2 pb-2 border-b border-gray-100"
+              style={{ touchAction: "none" }}
+              onTouchStart={(e) => { sleepStart.current = e.touches[0].clientY }}
+              onTouchMove={(e) => {
+                if (sleepStart.current === null) return
+                setSleep(Math.max(0, e.touches[0].clientY - sleepStart.current))
+              }}
+              onTouchEnd={() => {
+                sleepStart.current = null
+                if (sleep > 70) openBlad(null)
+                else setSleep(0)
+              }}
+            >
               <span aria-hidden className="absolute left-1/2 -translate-x-1/2 top-1.5 w-9 h-1 rounded-full" style={{ backgroundColor: GOLD_LIGHT }} />
               <span className="text-sm font-semibold mt-2" style={{ color: CHARCOAL }}>{BLAD_TITEL[blad]}</span>
               <button
@@ -1366,6 +1477,7 @@ export default function KaartMakenPage() {
               </div>
             )}
 
+            <p className="m-0 text-[11px] -mt-0.5" style={{ color: bewaarLetOp ? "#B45309" : SUBTLE }}>{bewaarStatus}</p>
             {/* Altijd zichtbaar, ook zonder bewaarde kaarten van dit soort: dan
                 staat er "Nieuwe kaart, nog niet bewaard", zodat je ziet waar je
                 aan werkt. Michiels wens van 23 september 2026. */}
@@ -1748,6 +1860,15 @@ export default function KaartMakenPage() {
         <main
           ref={voorbeeldRef}
           className={`flex-1 p-4 sm:p-5 md:overflow-y-auto md:relative ${blad && blad !== "kaart" ? "max-md:max-h-[34vh] max-md:overflow-hidden" : ""}`}
+          onTouchStart={(e) => { veegStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY } }}
+          onTouchEnd={(e) => {
+            const s = veegStart.current
+            veegStart.current = null
+            if (!s) return
+            const dx = e.changedTouches[0].clientX - s.x
+            const dy = e.changedTouches[0].clientY - s.y
+            if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) void veeg(dx < 0 ? 1 : -1)
+          }}
           /* Dezelfde achtergrond als je gast straks ziet, zodat het voorbeeld
              in de bouwer klopt met de kaart die aankomt. Michiels wens van
              23 september 2026. */
@@ -1782,6 +1903,18 @@ export default function KaartMakenPage() {
             <p className="m-0 mb-4 text-center text-[11px]" style={{ color: sc.headingColor, opacity: 0.55 }}>
               Tik op een tekst op de kaart om hem te wijzigen
             </p>
+            {kaartenVanDitSoort.length > 1 && (
+              <div className="md:hidden -mt-2 mb-3 flex items-center justify-center gap-1.5" aria-label="Veeg voor je andere kaarten">
+                {kaartenVanDitSoort.map((k) => (
+                  <span
+                    key={k.id}
+                    className="w-1.5 h-1.5 rounded-full"
+                    style={{ backgroundColor: k.id === cardId ? sc.headingColor : `${sc.headingColor}44` }}
+                  />
+                ))}
+                <span className="ml-1.5 text-[10px]" style={{ color: sc.headingColor, opacity: 0.55 }}>veeg voor je andere kaarten</span>
+              </div>
+            )}
             {/* Geen overflow-clip en geen eigen schaduw om de kaart heen: de
                 kaart tekent zijn eigen schaduw, en een klippende doos eromheen
                 sneed die af tot een vierkant. */}

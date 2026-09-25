@@ -164,6 +164,21 @@ export default function KaartLijst({
     }
   }
 
+  // Op een telefoon het eigen deelmenu (WhatsApp, Signal, mail, kopiëren);
+  // op een laptop het venster met de link, WhatsApp en de QR-code.
+  async function linkVoorGasten() {
+    if (!gekozen) return
+    if (!live) { setVenster("activeren"); return }
+    const opTelefoon = typeof navigator.share === "function" && window.matchMedia("(pointer: coarse)").matches
+    if (opTelefoon) {
+      try {
+        await navigator.share({ title: kaartNaam(gekozen.card), text: "Er is post voor je 💌", url: kaartUrl(gekozen.card) })
+      } catch {}
+      return
+    }
+    setVenster("delen")
+  }
+
   function kopieer(c: CardRow) {
     navigator.clipboard.writeText(kaartUrl(c)).then(
       () => {
@@ -254,7 +269,7 @@ export default function KaartLijst({
       <div className="flex flex-wrap items-center gap-2 mt-auto">
         <button
           type="button"
-          onClick={() => setVenster(live ? "delen" : "activeren")}
+          onClick={() => void linkVoorGasten()}
           className={knop}
           style={{ backgroundColor: KLEUR.groen, color: "#fff", border: `1px solid ${KLEUR.groen}`, cursor: "pointer", ...(gekozen ? {} : uit) }}
           aria-disabled={!gekozen}
@@ -265,6 +280,16 @@ export default function KaartLijst({
           </svg>
           Link voor je gasten
         </button>
+        {live && gekozen && (
+          <button
+            type="button"
+            onClick={() => kopieer(gekozen.card)}
+            className={`${knop} md:hidden`}
+            style={{ backgroundColor: "#fff", color: KLEUR.inkt, border: `1px solid ${KLEUR.goudLicht}`, cursor: "pointer" }}
+          >
+            {gekopieerd ? "Gekopieerd" : "Link kopiëren"}
+          </button>
+        )}
         <Link
           href={gekozen ? bouwerVoor(gekozen.card) : bouwerNieuw}
           className={knop}
