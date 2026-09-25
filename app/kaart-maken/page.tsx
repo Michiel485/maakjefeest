@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase"
@@ -285,6 +285,13 @@ export default function KaartMakenPage() {
   // klein, verder vegen sluit hem, omhoog vegen of op de kop tikken maakt
   // hem weer vol (Michiel, 25 september 2026).
   const [bladKlein, setBladKlein] = useState(false)
+  const bladRef = useRef<HTMLElement>(null)
+  // Een nieuw paneel begint bovenaan. Anders bleef de scrollstand van het
+  // vorige staan en kwam je met Volgende onderaan het volgende onderdeel uit
+  // (Michiel, 25 september 2026).
+  useLayoutEffect(() => {
+    if (bladRef.current) bladRef.current.scrollTop = 0
+  }, [blad])
   function openBlad(b: Blad | null) {
     setBlad(b)
     setSleep(0)
@@ -1428,6 +1435,7 @@ export default function KaartMakenPage() {
       <div className="flex flex-col md:flex-row flex-1 min-h-0">
         {/* ── Stappen ── */}
         <aside
+          ref={bladRef}
           className={`flex flex-col w-full md:w-80 md:flex-shrink-0 bg-white border-r border-gray-100 md:overflow-y-auto ${
             blad
               ? `max-md:fixed max-md:inset-x-0 max-md:bottom-[64px] max-md:z-40 max-md:rounded-t-2xl max-md:border-t max-md:shadow-[0_-16px_40px_-16px_rgba(26,18,4,0.35)] ${
