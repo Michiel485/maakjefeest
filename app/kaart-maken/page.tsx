@@ -2106,11 +2106,32 @@ export default function KaartMakenPage() {
 
           {/* ── Details op de kaart ──
               Michiels wens: voor wie de kaart is, hoe laat het is en wat de
-              dresscode is, subtiel en zonder de kaart te verpesten. Alles wat
-              hier aanstaat komt samen in één regel in de accentkleur onder de
-              tekst, in dezelfde letter als de datum. Wat leeg is, staat er
-              niet. */}
+              dresscode is, subtiel en zonder de kaart te verpesten. In dezelfde
+              volgorde als op de kaart: eerst de uitnodigingsregel, dan de
+              tijden en de dresscode, elk op een eigen regel in de accentkleur.
+              Wat leeg is, staat er niet. */}
           <Sectie className={telefoon("details")} vast={inPaneel("details")} open={isOpen("details")} onToggle={() => setStap(stap === "details" ? null : "details")} titel="Details op de kaart">
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Eigen uitnodigingsregel</span>
+              <textarea
+                className={`${inputCls} resize-none`}
+                style={{ ...inputStyle, minHeight: 56 }}
+                rows={2}
+                placeholder={
+                  isTrouwkaart && ontwerp.guestType
+                    ? KAART_TEKST[ontwerp.taal].uitnodiging[ontwerp.guestType]
+                    : "Bijvoorbeeld: Wij vieren het graag met jou"
+                }
+                value={ontwerp.inviteText}
+                onChange={(e) => update({ inviteText: e.target.value })}
+                maxLength={160}
+              />
+              <span className="text-[11px] leading-snug" style={{ color: SUBTLE }}>
+                {isTrouwkaart && ontwerp.guestType
+                  ? "Leeg betekent: de standaardregel voor deze gastengroep."
+                  : "Leeg betekent: geen extra regel."}
+              </span>
+            </label>
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Tijden</span>
               <input
@@ -2132,27 +2153,6 @@ export default function KaartMakenPage() {
                 onChange={(e) => update({ dresscode: e.target.value })}
                 maxLength={40}
               />
-            </label>
-            <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Eigen uitnodigingsregel</span>
-              <textarea
-                className={`${inputCls} resize-none`}
-                style={{ ...inputStyle, minHeight: 56 }}
-                rows={2}
-                placeholder={
-                  isTrouwkaart && ontwerp.guestType
-                    ? KAART_TEKST[ontwerp.taal].uitnodiging[ontwerp.guestType]
-                    : "Bijvoorbeeld: Wij vieren het graag met jou"
-                }
-                value={ontwerp.inviteText}
-                onChange={(e) => update({ inviteText: e.target.value })}
-                maxLength={160}
-              />
-              <span className="text-[11px] leading-snug" style={{ color: SUBTLE }}>
-                {isTrouwkaart && ontwerp.guestType
-                  ? "Leeg betekent: de standaardregel voor deze gastengroep."
-                  : "Leeg betekent: geen extra regel."}
-              </span>
             </label>
           </Sectie>
 

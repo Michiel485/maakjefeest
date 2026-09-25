@@ -313,8 +313,8 @@ export async function renderCardImage(
       )}
 
       {mode === "download" && display.timeText && (
-        <div style={{ fontFamily: sans, fontSize: 32, color: sc.accent, letterSpacing: "0.03em" }}>
-          {display.timeText}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", fontFamily: sans, fontSize: 32, lineHeight: 1.45, color: sc.accent, letterSpacing: "0.03em" }}>
+          {regels(display.timeText)}
         </div>
       )}
 

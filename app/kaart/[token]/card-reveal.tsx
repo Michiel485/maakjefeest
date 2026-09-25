@@ -815,7 +815,7 @@ export default function CardReveal({
                   </p>
                 )}
                 {onderTijd && (
-                  <p className="m-0 text-sm font-semibold" style={{ color: sc.accent, letterSpacing: "0.03em" }}>
+                  <p className="m-0 text-sm font-semibold leading-relaxed" style={{ color: sc.accent, letterSpacing: "0.03em", whiteSpace: "pre-line" }}>
                     {onderTijd}
                   </p>
                 )}

@@ -604,9 +604,10 @@ export function buildCardDisplay(
     inviteLine:
       content.inviteText?.trim() ||
       (type === "trouwkaart" && content.guestType ? tk.uitnodiging[content.guestType] : null),
-    // Eén regel in de accentkleur onder de tekst met wat er verder te weten
-    // is: voor wie, hoe laat, welke kleding. Alleen wat is ingevuld, met een
-    // puntje ertussen, zodat het één rustige regel blijft.
+    // In de accentkleur onder de tekst wat er verder te weten is: voor wie,
+    // hoe laat, welke kleding. Alleen wat is ingevuld, elk op een eigen regel.
+    // Eerst stond het naast elkaar met een puntje ertussen; Michiel wil het
+    // onder elkaar (25 september 2026).
     timeText:
       [
         content.toonGastType && content.guestType ? tk.gasten[content.guestType] : null,
@@ -614,7 +615,7 @@ export function buildCardDisplay(
         content.dresscode?.trim() ? `${tk.dresscode}: ${content.dresscode.trim()}` : null,
       ]
         .filter((d): d is string => !!d)
-        .join(" · ") || null,
+        .join("\n") || null,
     message: content.message?.trim() || tk.bericht[type],
     // Een foto hoort bij de kaart zodra er één gekozen is, los van het ontwerp
     photoUrl: content.photoUrl?.trim() || (template === "foto" ? event.hero_image_url?.trim() || null : null),

@@ -169,7 +169,7 @@ export default function KlassiekeVoorkant({
         {display.timeText && (
           <p
             className="text-sm font-semibold"
-            style={{ color: sc.accent, margin: 0, letterSpacing: "0.03em" }}
+            style={{ color: sc.accent, margin: 0, letterSpacing: "0.03em", whiteSpace: "pre-line" }}
           >
             {display.timeText}
           </p>

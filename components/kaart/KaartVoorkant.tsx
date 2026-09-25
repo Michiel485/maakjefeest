@@ -305,9 +305,11 @@ export default function KaartVoorkant({
         </div>
       )}
       {d.timeText && (
-        <div style={{ display: "flex", fontFamily: font, fontSize: px(11), fontWeight: 600, letterSpacing: "0.06em", color: kleur.accent, textAlign: uitlijnen === "center" ? "center" : "left" }}>
-          {d.timeText}
-        </div>
+        <Regels
+          tekst={d.timeText}
+          uitlijnen={uitlijnen}
+          style={{ fontFamily: font, fontSize: px(11), fontWeight: 600, lineHeight: 1.6, letterSpacing: "0.06em", color: kleur.accent }}
+        />
       )}
     </D>
   )
