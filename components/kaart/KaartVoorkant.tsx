@@ -179,19 +179,29 @@ function boogLetters({
   })
 }
 
-/** Een palm in lijnstijl: een gebogen stam en zeven bladeren. */
+// De kroon van de palm: gebogen bladeren die omhoog en naar buiten gaan en
+// aan het eind doorhangen, links en rechts gespiegeld. Eerst waren het rechte
+// wiggen en was het bovenste blad een smal reepje (Michiel, 25 september 2026).
+const PALM_BLADEREN = [
+  "M52 60 C 66 42, 88 44, 98 76 C 88 57, 70 54, 52 62 Z",
+  "M52 60 C 60 32, 84 28, 93 50 C 80 39, 64 44, 52 62 Z",
+  "M52 60 C 50 38, 58 20, 73 19 C 64 28, 56 44, 53 61 Z",
+  "M52 61 C 64 64, 76 76, 80 98 C 70 81, 62 70, 52 64 Z",
+  "M52 60 C 38 42, 16 44, 6 76 C 16 57, 34 54, 52 62 Z",
+  "M52 60 C 44 32, 20 28, 11 50 C 24 39, 40 44, 52 62 Z",
+  "M52 60 C 54 38, 46 20, 31 19 C 40 28, 48 44, 51 61 Z",
+  "M52 61 C 40 64, 28 76, 24 98 C 34 81, 42 70, 52 64 Z",
+]
+
+/** Een palm in lijnstijl: een gebogen stam en een kroon van gebogen bladeren. */
 function Palm({ breedte, kleur }: { breedte: number; kleur: string }) {
   return (
-    <svg width={breedte} height={breedte * 1.7} viewBox="0 0 100 170" fill="none">
-      <path d="M50 170 C 53 130, 46 100, 52 62" stroke={kleur} strokeWidth="3" strokeLinecap="round" />
+    <svg width={breedte} height={breedte * 1.7} viewBox="0 0 104 170" fill="none">
+      <path d="M52 170 C 55 130, 48 100, 52 62" stroke={kleur} strokeWidth="3" strokeLinecap="round" />
       <g fill={kleur}>
-        <path d="M52 60 C 40 44, 22 42, 6 52 C 22 50, 36 54, 52 62 Z" />
-        <path d="M52 60 C 42 38, 28 26, 12 26 C 26 32, 38 44, 52 62 Z" opacity="0.9" />
-        <path d="M52 60 C 50 38, 44 20, 34 8 C 44 22, 50 40, 53 61 Z" />
-        <path d="M52 60 C 60 40, 72 26, 90 24 C 76 32, 64 44, 53 62 Z" opacity="0.9" />
-        <path d="M52 60 C 66 46, 84 44, 98 56 C 82 52, 68 56, 53 62 Z" />
-        <path d="M52 60 C 40 62, 28 72, 22 88 C 32 76, 42 68, 52 63 Z" opacity="0.85" />
-        <path d="M53 60 C 66 62, 78 72, 82 90 C 72 78, 62 68, 53 63 Z" opacity="0.85" />
+        {PALM_BLADEREN.map((d, i) => (
+          <path key={i} d={d} opacity={i % 4 === 3 ? 0.85 : 1} />
+        ))}
       </g>
     </svg>
   )
