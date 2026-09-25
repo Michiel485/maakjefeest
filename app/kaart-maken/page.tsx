@@ -166,8 +166,11 @@ function Miniatuur({ display, sc }: { display: CardDisplay; sc: SC }) {
     const t = setTimeout(meet, 0)
     return () => { ro.disconnect(); clearTimeout(t) }
   }, [])
-  // Een eigen ontwerp in de verhouding van het vakje
-  const d = display.design === "eigen" ? { ...display, ontwerpVerhouding: 1.4 } : display
+  // De miniatuur laat het idee van het ontwerp zien, zonder de gekozen foto:
+  // met foto zag je vooral de foto en nauwelijks nog het ontwerp (Michiel,
+  // 25 september 2026). Het grote voorbeeld laat de echte kaart zien. Een
+  // eigen ontwerp in de verhouding van het vakje.
+  const d = { ...display, photoUrl: null, ...(display.design === "eigen" ? { ontwerpVerhouding: 1.4 } : {}) }
   return (
     <div
       ref={vak}
