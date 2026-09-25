@@ -190,7 +190,8 @@ export default function SophieTutorial({ onNavigate, kaartPakket = false }: Prop
     onNavigate(stappen[0].nav)
   }
 
-  const cardClass = "fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[9999] w-72 rounded-2xl shadow-2xl overflow-hidden"
+  // Op de telefoon boven de balk met de vier onderdelen, niet eroverheen
+  const cardClass = "fixed bottom-[84px] right-4 md:bottom-6 md:right-6 z-[9999] w-72 rounded-2xl shadow-2xl overflow-hidden"
   const cardStyle = { backgroundColor: "#fff", border: `1px solid ${GOLD_LIGHT}` }
 
   if (!mounted || phase === 'loading') return null
@@ -200,7 +201,7 @@ export default function SophieTutorial({ onNavigate, kaartPakket = false }: Prop
     return createPortal(
       <button
         onClick={restart}
-        className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[9999] flex items-center gap-2 px-3 py-2 rounded-xl shadow-lg text-xs font-semibold transition-all hover:-translate-y-0.5 hover:shadow-xl"
+        className="fixed bottom-[84px] right-4 md:bottom-6 md:right-6 z-[9999] flex items-center gap-2 px-3 py-2 rounded-xl shadow-lg text-xs font-semibold transition-all hover:-translate-y-0.5 hover:shadow-xl"
         style={{ backgroundColor: "#fff", border: `1px solid ${GOLD_LIGHT}`, color: BODY }}
         title="Sophie opnieuw starten"
       >

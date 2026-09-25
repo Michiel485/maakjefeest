@@ -1,6 +1,6 @@
 ﻿"use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import EventHomePreview from "@/components/EventHomePreview"
@@ -357,6 +357,48 @@ const PAGES: PageConfig[] = [
   { id: "Fotos",              label: "Foto's",             toggleable: true  },
 ]
 
+// ── Op de telefoon: vier onderdelen ──────────────────────────────────────────
+// Hetzelfde principe als de kaartbouwer (Michiel, 25 september 2026): het
+// voorbeeld vult het scherm, onderaan een balk met vier onderdelen, en elk
+// onderdeel schuift als paneel omhoog. Op de laptop zijn het de kopjes in de
+// zijbalk, in dezelfde volgorde.
+type Sectie = 'algemeen' | 'paginas' | 'url' | 'bekijken'
+type Blad = "uiterlijk" | "paginas" | "adres" | "bekijken"
+const BLAD_VOLGORDE: Blad[] = ["uiterlijk", "paginas", "adres", "bekijken"]
+const BLAD_TITEL: Record<Blad, string> = {
+  uiterlijk: "Uiterlijk",
+  paginas: "Pagina's",
+  adres: "Webadres",
+  bekijken: "Bekijken",
+}
+const BLAD_SECTIE: Record<Blad, Sectie> = {
+  uiterlijk: "algemeen",
+  paginas: "paginas",
+  adres: "url",
+  bekijken: "bekijken",
+}
+// De plek in de zijbalk. Letterlijk uitgeschreven, zodat Tailwind de klassen vindt.
+const SECTIE_ORDE: Record<Sectie, string> = {
+  algemeen: "order-[10]",
+  paginas: "order-[20]",
+  url: "order-[30]",
+  bekijken: "order-[40]",
+}
+
+function BladIcoon({ blad }: { blad: Blad }) {
+  const pad = {
+    uiterlijk: "M12 21a9 9 0 1 1 0-18c4.97 0 9 3.58 9 8 0 2.76-2.24 4-5 4h-1.5a1.5 1.5 0 0 0-1.06 2.56A1.5 1.5 0 0 1 12 21zM7.5 11a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM12 7.5a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM16.5 11a1 1 0 1 0 0-2 1 1 0 0 0 0 2z",
+    paginas: "M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8l-5-5zM14 3v5h5M8 13h8M8 17h5",
+    adres: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z",
+    bekijken: "M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z",
+  }[blad]
+  return (
+    <svg className="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={pad} />
+    </svg>
+  )
+}
+
 const CONTROLS_PAGES = new Set<PageId>(["Home", "Ceremoniemeesters", "Programma", "RSVP", "OnsVerhaal", "Informatie", "Cadeautips", "Fotos"])
 const MAX_FOTOS = 60
 
@@ -415,7 +457,7 @@ export default function BouwenPage() {
   // publiceren alleen het verschil.
   const [betaaldPlan, setBetaaldPlan] = useState<Plan | null>(null)
   const [previewPage, setPreviewPage] = useState<PageId>("Home")
-  const [activeSection, setActiveSection] = useState<'algemeen' | 'paginas' | 'url' | null>(null)
+  const [activeSection, setActiveSection] = useState<Sectie | null>(null)
   const [activeSubPage, setActiveSubPage] = useState<PageId | null>(null)
   const [content, setContent] = useState<ContentMap>({})
   const [style, setStyle] = useState<Style>("zand")
@@ -499,6 +541,30 @@ export default function BouwenPage() {
   const [pwValue, setPwValue] = useState('')
   const [pwQuestion, setPwQuestion] = useState('')
   const [pwAnswer, setPwAnswer] = useState('')
+
+  // Welk paneel op de telefoon open is; op een groot scherm blijft dit leeg.
+  const [blad, setBlad] = useState<Blad | null>(null)
+  const bladRef = useRef<HTMLElement>(null)
+  function openBlad(b: Blad | null) {
+    setBlad(b)
+    if (b) setActiveSection(BLAD_SECTIE[b])
+    // Pagina's begint bij de lijst, zodat je ziet wat er aan staat
+    if (b === "paginas") setActiveSubPage(null)
+  }
+  // Een nieuw paneel, of een andere pagina erin, begint bovenaan. Anders
+  // kwam je met Volgende onderaan het volgende onderdeel uit.
+  useLayoutEffect(() => {
+    if (blad && bladRef.current) bladRef.current.scrollTop = 0
+  }, [blad, activeSubPage])
+  /** Hoort deze sectie bij het paneel dat nu op de telefoon open is? */
+  const inPaneel = (s: Sectie) => !!blad && BLAD_SECTIE[blad] === s
+  /** Zijn plek in de zijbalk, en op de telefoon alleen zichtbaar in zijn eigen paneel. */
+  const sectieKlassen = (s: Sectie) => `${SECTIE_ORDE[s]} ${inPaneel(s) ? "" : "max-md:hidden"}`
+  // In een paneel op de telefoon staat alles open, dan mis je niets. Op de
+  // laptop blijft het één tegelijk.
+  const algOpen = (s: 'stijl' | 'layout' | 'lettertype') => openAlgSection === s || blad === "uiterlijk"
+  const urlOpen = (s: 'url' | 'beveiliging') => openUrlSection === s || blad === "adres"
+  const homeOpen = (s: 'layout' | 'headerfoto' | 'kaders' | 'tekstvelden' | 'welkomst') => openHomeSection === s || blad === "paginas"
 
   function handlePreviewFieldClick(field: string) {
     // Map field name to the accordion section it lives in
@@ -928,27 +994,26 @@ export default function BouwenPage() {
     })
   }, [router])
 
+  // Het voorbeeld past in de breedte die er is. Een ResizeObserver, omdat het
+  // vlak er bij het laden nog niet is: eerst staat er "We zetten jullie
+  // website klaar". Toen dit alleen bij het openen werd gemeten, bleef het
+  // voorbeeld op de telefoon op volle grootte en viel het rechts van het
+  // scherm af.
+  const heeftDraft = !!draft
   useEffect(() => {
+    const el = canvasContainerRef.current
+    if (!el) return
     function measure() {
-      const el = canvasContainerRef.current
       if (!el) return
       const cw = viewport === "mobiel" ? 390 : 1024
-      setCanvasScale(Math.min(1, Math.max(0.4, (el.clientWidth - 48) / cw)))
+      const rand = window.innerWidth < 768 ? 32 : 48
+      setCanvasScale(Math.min(1, Math.max(0.4, (el.clientWidth - rand) / cw)))
     }
     measure()
-    window.addEventListener("resize", measure)
-    return () => window.removeEventListener("resize", measure)
-  }, [viewport])
-
-  useEffect(() => {
-    const id = requestAnimationFrame(() => {
-      const el = canvasContainerRef.current
-      if (!el) return
-      const cw = viewport === "mobiel" ? 390 : 1024
-      setCanvasScale(Math.min(1, Math.max(0.4, (el.clientWidth - 48) / cw)))
-    })
-    return () => cancelAnimationFrame(id)
-  }, [viewport])
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [viewport, heeftDraft])
 
   // Mark pending whenever the user makes a change; cleared after save.
   useEffect(() => { if (changeKey > 0 && ladenKlaar) setHasPendingChanges(true) }, [changeKey, ladenKlaar])
@@ -1018,7 +1083,7 @@ export default function BouwenPage() {
     if (!file) return
     const supported = ["image/jpeg", "image/png", "image/webp", "image/gif"]
     if (!supported.includes(file.type)) {
-      setHeroImageError("Gebruik een JPEG, PNG of WebP afbeelding. HEIC (iPhone) werkt niet in de browser — converteer het eerst.")
+      setHeroImageError("Gebruik een JPEG, PNG of WebP afbeelding. HEIC (iPhone) werkt niet in de browser, zet de foto eerst om.")
       return
     }
     setHeroImageError(null)
@@ -1037,7 +1102,7 @@ export default function BouwenPage() {
       setChangeKey(k => k + 1)
     } catch (err) {
       console.error("[hero] upload mislukt:", err)
-      setHeroImageError("Upload mislukt — controleer je verbinding en probeer opnieuw.")
+      setHeroImageError("Upload mislukt. Controleer je verbinding en probeer het opnieuw.")
       URL.revokeObjectURL(blobUrl)
       setHeroImageUrl(null)
     } finally {
@@ -1065,7 +1130,7 @@ export default function BouwenPage() {
       updateContent("OnsVerhaal", { ...(content.OnsVerhaal ?? {}), image_url: url })
     } catch (err) {
       console.error("[story] upload mislukt:", err)
-      setStoryImageError("Upload mislukt — probeer opnieuw.")
+      setStoryImageError("Upload mislukt. Probeer het opnieuw.")
       URL.revokeObjectURL(blobUrl)
       setStoryImageBlob(null)
     } finally {
@@ -1095,7 +1160,7 @@ export default function BouwenPage() {
         updateContent("Fotos", { ...(content.Fotos ?? {}), urls: [...accumulated] })
       }
     } catch {
-      setFotosUploadError("Upload mislukt — controleer je verbinding en probeer opnieuw.")
+      setFotosUploadError("Upload mislukt. Controleer je verbinding en probeer het opnieuw.")
     } finally {
       setFotosUploading(false)
     }
@@ -1346,6 +1411,9 @@ export default function BouwenPage() {
     fontPageTitles: fpF,  fontPageTitlesWeight: fpW,
   }
   const canvasWidth = viewport === "mobiel" ? 390 : 1024
+  // Met een paneel open op de telefoon wat kleiner, zodat je boven het paneel
+  // nog een flink stuk van de pagina ziet.
+  const voorbeeldSchaal = canvasScale * zoomMultiplier * (blad ? 0.6 : 1)
 
   const activePagesOrdered = PAGES.filter((p) => active[p.id])
   const eventName = draft?.naam || "Jullie bruiloft"
@@ -1407,6 +1475,17 @@ export default function BouwenPage() {
   const RSVP_GUEST_LABELS: Record<string, string> = { daggast: "Daggast", avondgast: "Avondgast", receptiegast: "Receptiegast" }
 
   const isSinglePagePreview = hpSettings.pageMode === 'single'
+
+  // Onderaan het paneel: door naar de volgende. Binnen Pagina's loop je eerst
+  // alle pagina's langs die aan staan, dan pas door naar Webadres.
+  const volgendeBlad = blad ? BLAD_VOLGORDE[BLAD_VOLGORDE.indexOf(blad) + 1] : undefined
+  const volgendePagina = blad === "paginas"
+    ? activePagesOrdered[(activeSubPage ? activePagesOrdered.findIndex((pg) => pg.id === activeSubPage) : -1) + 1]
+    : undefined
+  function gaNaarPagina(id: PageId) {
+    setPreviewPage(id)
+    setActiveSubPage(id)
+  }
   const activePageIds = new Set<string>(activePagesOrdered.map(p => p.id))
   const showSection = (id: string) => isSinglePagePreview ? activePageIds.has(id) : previewPage === id
 
@@ -1461,16 +1540,112 @@ export default function BouwenPage() {
     )
   }
 
+  const publiceerPrijs = formatEur((betaaldPlan && upgradePrice(betaaldPlan, "compleet")) || PLANS.compleet.price)
+  const publiceerKnop = isPublished ? (
+    <Knop soort="actie" href={eventSiteUrl(slugPreview)} nieuwTabblad className="flex-1 md:flex-none">
+      Bekijk live site
+    </Knop>
+  ) : (
+    <Knop
+      soort="actie"
+      onClick={handlePublish}
+      disabled={publishing || anyUploading}
+      bezig={publishing}
+      bezigTekst="Naar de kassa"
+      className="flex-1 md:flex-none"
+    >
+      Publiceren voor&nbsp;{publiceerPrijs}
+    </Knop>
+  )
+
   return (
     <BouwerSchil
       actief="website"
       eventId={savedEventId}
       voorVerlaten={voorVerlaten}
-      className="md:h-screen md:overflow-hidden"
-      /* Fouten onder de kop, zodat de kop zelf niet van hoogte verspringt
-         terwijl je aan het werk bent. */
+      /* Altijd de hoogte van het venster: op de laptop scrollen zijbalk en
+         voorbeeld elk apart, op de telefoon scrolt alleen het voorbeeld en
+         schuiven de panelen eroverheen. */
+      className="h-[100dvh] overflow-hidden"
+      /* Op de telefoon onder de kop: de naam, bewaren en publiceren, net als
+         in de kaartbouwer. Fouten daaronder, zodat de kop zelf niet van
+         hoogte verspringt terwijl je aan het werk bent. */
       onderKop={
-        (publishError || saveError) ? <Melding soort="fout">{publishError || saveError}</Melding> : null
+        <>
+          <div className="md:hidden flex items-center gap-2 px-3 py-2 border-b flex-shrink-0" style={{ backgroundColor: "#fff", borderColor: `${KLEUR.goudLicht}80` }}>
+            <input
+              value={conceptNaam}
+              onChange={(e) => { setConceptNaam(e.target.value); setChangeKey((k) => k + 1) }}
+              placeholder="Onze trouwwebsite"
+              maxLength={60}
+              aria-label="Naam van deze website"
+              className="flex-1 min-w-0 rounded-xl border bg-white px-3 py-2 text-sm font-semibold placeholder-gray-400 focus:outline-none"
+              style={{ color: KLEUR.inkt, borderColor: KLEUR.goudLicht }}
+            />
+            <button
+              type="button"
+              title={justSaved ? "Opgeslagen" : "Bewaren"}
+              aria-label={justSaved ? "Opgeslagen" : "Bewaren"}
+              onClick={handleSave}
+              disabled={saving || anyUploading}
+              className="w-9 h-9 flex-shrink-0 inline-flex items-center justify-center rounded-xl disabled:opacity-40"
+              style={{ backgroundColor: justSaved ? KLEUR.groenVlak : "#fff", color: justSaved ? KLEUR.groenTekst : KLEUR.inkt, border: `1px solid ${KLEUR.goudLicht}`, cursor: "pointer" }}
+            >
+              {justSaved ? (
+                <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                  <path d="M17 21v-8H7v8M7 3v5h8" />
+                </svg>
+              )}
+            </button>
+            {isPublished ? (
+              <a
+                href={eventSiteUrl(slugPreview)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[13px] font-semibold px-3.5 py-2 rounded-full whitespace-nowrap"
+                style={{ backgroundColor: KLEUR.groen, color: "#fff", textDecoration: "none" }}
+              >
+                Bekijk live
+              </a>
+            ) : (
+              <button
+                type="button"
+                onClick={handlePublish}
+                disabled={publishing || anyUploading}
+                className="text-[13px] font-semibold px-3.5 py-2 rounded-full whitespace-nowrap disabled:opacity-60"
+                style={{ backgroundColor: KLEUR.groen, color: "#fff", border: 0, cursor: "pointer" }}
+              >
+                {publishing ? "Even..." : "Publiceren"}
+              </button>
+            )}
+          </div>
+          {(publishError || saveError) ? <Melding soort="fout">{publishError || saveError}</Melding> : null}
+        </>
+      }
+      onderbalk={
+        <nav className="flex justify-around px-1 pt-1.5 pb-2" aria-label="Onderdelen van de website">
+          {BLAD_VOLGORDE.map((b) => {
+            const aan = blad === b
+            return (
+              <button
+                key={b}
+                type="button"
+                onClick={() => openBlad(aan ? null : b)}
+                aria-pressed={aan}
+                className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl text-[11px] font-semibold min-w-[68px]"
+                style={{ color: aan ? KLEUR.goud : KLEUR.zacht, backgroundColor: aan ? KLEUR.goudVlak : "transparent", border: 0, cursor: "pointer" }}
+              >
+                <BladIcoon blad={b} />
+                {BLAD_TITEL[b]}
+              </button>
+            )
+          })}
+        </nav>
       }
       acties={
         <>
@@ -1504,37 +1679,110 @@ export default function BouwenPage() {
             </span>
           )}
 
-          {isPublished ? (
-            <Knop soort="actie" href={eventSiteUrl(slugPreview)} nieuwTabblad className="flex-1 md:flex-none">
-              Bekijk live site
-            </Knop>
-          ) : (
-            <Knop
-              soort="actie"
-              onClick={handlePublish}
-              disabled={publishing || anyUploading}
-              bezig={publishing}
-              bezigTekst="Naar de kassa"
-              className="flex-1 md:flex-none"
-            >
-              Publiceren voor&nbsp;{formatEur((betaaldPlan && upgradePrice(betaaldPlan, "compleet")) || PLANS.compleet.price)}
-            </Knop>
-          )}
+          {publiceerKnop}
         </>
       }
     >
 
       {/* ── Body ── */}
-      <div className="flex flex-col md:flex-row flex-1 md:min-h-0">
+      <div className="flex flex-col md:flex-row flex-1 min-h-0">
 
-        {/* ── Sidebar ── */}
-        <aside className="w-full md:w-80 md:flex-shrink-0 bg-white border-r border-gray-100 flex flex-col md:overflow-y-auto">
+        {/* ── Sidebar ──
+            Op de telefoon het paneel dat over het voorbeeld schuift. */}
+        <aside
+          ref={bladRef}
+          className={`w-full md:w-80 md:flex-shrink-0 bg-white border-r border-gray-100 flex flex-col md:overflow-y-auto ${
+            blad
+              ? "max-md:fixed max-md:inset-x-0 max-md:bottom-[64px] max-md:z-40 max-md:max-h-[50vh] max-md:overflow-y-auto max-md:rounded-t-2xl max-md:border-t max-md:shadow-[0_-16px_40px_-16px_rgba(26,18,4,0.35)]"
+              : "max-md:hidden"
+          }`}
+        >
+          {/* De kop van het paneel, alleen op de telefoon. In een pagina een
+              pijltje terug naar de lijst. */}
+          {blad && (
+            <div className="md:hidden sticky top-0 z-10 bg-white flex items-center justify-between gap-2 px-5 pt-2 pb-2 border-b border-gray-100">
+              <span aria-hidden className="absolute left-1/2 -translate-x-1/2 top-1.5 w-9 h-1 rounded-full" style={{ backgroundColor: KLEUR.goudLicht }} />
+              {blad === "paginas" && activeSubPage ? (
+                <button
+                  type="button"
+                  onClick={() => setActiveSubPage(null)}
+                  className="mt-2 flex items-center gap-1 text-sm font-semibold min-w-0"
+                  style={{ color: KLEUR.inkt, background: "none", border: 0, padding: 0, cursor: "pointer" }}
+                >
+                  <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                  <span style={{ color: KLEUR.zacht, fontWeight: 500 }}>Pagina&apos;s</span>
+                  <span className="truncate">/ {PAGES.find((pg) => pg.id === activeSubPage)?.label}</span>
+                </button>
+              ) : (
+                <span className="text-sm font-semibold mt-2" style={{ color: KLEUR.inkt }}>{BLAD_TITEL[blad]}</span>
+              )}
+              <button
+                type="button"
+                onClick={() => openBlad(null)}
+                aria-label="Sluiten"
+                className="mt-2 w-8 h-8 flex-shrink-0 inline-flex items-center justify-center rounded-full"
+                style={{ backgroundColor: KLEUR.goudVlak, color: KLEUR.inkt, border: 0, cursor: "pointer" }}
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round"><path d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+          )}
+
+          {/* Onderaan elk paneel: door naar de volgende, zodat je er vanzelf
+              doorheen loopt. */}
+          {blad && (
+            <div className="md:hidden order-[100] px-5 py-4">
+              <button
+                type="button"
+                onClick={() => {
+                  if (volgendePagina) gaNaarPagina(volgendePagina.id)
+                  else if (volgendeBlad) openBlad(volgendeBlad)
+                  else { openBlad(null); void handleSave() }
+                }}
+                className="w-full text-sm font-semibold px-4 py-3 rounded-xl"
+                style={{ backgroundColor: KLEUR.inkt, color: KLEUR.ivoor, border: 0, cursor: "pointer" }}
+              >
+                {volgendePagina
+                  ? activeSubPage ? `Volgende pagina: ${volgendePagina.label} →` : `Begin bij ${volgendePagina.label} →`
+                  : volgendeBlad ? `Volgende: ${BLAD_TITEL[volgendeBlad]} →` : "Klaar, bewaar mijn website"}
+              </button>
+            </div>
+          )}
+
+          {/* ── BEKIJKEN ── */}
+          <div className={`${sectieKlassen('bekijken')} border-b border-gray-100`}>
+            <div className="max-md:hidden">
+              <SectieKop
+                titel="Bekijken"
+                open={activeSection === 'bekijken'}
+                onToggle={() => setActiveSection(prev => prev === 'bekijken' ? null : 'bekijken')}
+              />
+            </div>
+            {activeSection === 'bekijken' && (
+              <div className="px-5 pt-4 md:pt-0 pb-5 flex flex-col gap-3">
+                <p className="m-0 text-[13px] leading-relaxed" style={{ color: KLEUR.tekst }}>
+                  {isPublished ? (
+                    <>Jullie website staat live op <b style={{ color: KLEUR.inkt }}>{slugPreview}.sayingyes.nl</b>. Wat je bewaart zien je gasten.</>
+                  ) : (
+                    <>Nog niet gepubliceerd. Ontwerpen is gratis; pas als je publiceert gaat je website live op <b style={{ color: KLEUR.inkt }}>{slugPreview}.sayingyes.nl</b>.</>
+                  )}
+                </p>
+                <div className="flex flex-col gap-2">
+                  {publiceerKnop}
+                  <Knop soort="rustig" onClick={handleSave} disabled={saving || anyUploading} bezig={saving} bezigTekst="Opslaan">
+                    {justSaved ? "Opgeslagen" : "Opslaan"}
+                  </Knop>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* ── De naam van dit ontwerp, en bewaren ──
               Bovenaan de zijbalk, op dezelfde plek en in dezelfde vorm als in
               de kaartbouwer. Alleen voor jullie: je gasten zien de naam
               nergens. Michiels wens van 23 september 2026; eerst stond dit
               als balk over de volle breedte onder de kop. */}
-          <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-1.5" style={{ backgroundColor: "#FBF5E8" }}>
+          <div className="max-md:hidden px-4 py-3 border-b border-gray-100 flex items-center gap-1.5" style={{ backgroundColor: "#FBF5E8" }}>
             <input
               value={conceptNaam}
               onChange={(e) => { setConceptNaam(e.target.value); setChangeKey((k) => k + 1) }}
@@ -1562,12 +1810,14 @@ export default function BouwenPage() {
           </div>
 
           {/* ── 3. URL & BEVEILIGING (alleen bij een pakket met publieke site) ── */}
-          <div>
-            <SectieKop
-              titel="URL & Beveiliging"
-              open={activeSection === 'url'}
-              onToggle={() => setActiveSection(prev => prev === 'url' ? null : 'url')}
-            />
+          <div className={`${sectieKlassen('url')} border-b border-gray-100`}>
+            <div className="max-md:hidden">
+              <SectieKop
+                titel="Webadres"
+                open={activeSection === 'url'}
+                onToggle={() => setActiveSection(prev => prev === 'url' ? null : 'url')}
+              />
+            </div>
             {activeSection === 'url' && (
               <div className="flex flex-col">
 
@@ -1577,14 +1827,14 @@ export default function BouwenPage() {
                     onClick={() => setOpenUrlSection(prev => prev === 'url' ? null : 'url')}
                     className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                   >
-                    <span className={`transition-transform duration-200 flex-shrink-0 ${openUrlSection === 'url' ? 'rotate-90' : ''}`}>
+                    <span className={`transition-transform duration-200 flex-shrink-0 ${urlOpen('url') ? 'rotate-90' : ''}`}>
                       <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                       </svg>
                     </span>
                     <span className="text-sm font-medium text-gray-800">Jouw URL</span>
                   </button>
-                  {openUrlSection === 'url' && (
+                  {urlOpen('url') && (
                     <div className="px-5 pb-4">
                       {!slugEditOpen ? (
                         <div className="flex items-center justify-between gap-2">
@@ -1639,14 +1889,14 @@ export default function BouwenPage() {
                     onClick={() => setOpenUrlSection(prev => prev === 'beveiliging' ? null : 'beveiliging')}
                     className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                   >
-                    <span className={`transition-transform duration-200 flex-shrink-0 ${openUrlSection === 'beveiliging' ? 'rotate-90' : ''}`}>
+                    <span className={`transition-transform duration-200 flex-shrink-0 ${urlOpen('beveiliging') ? 'rotate-90' : ''}`}>
                       <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                       </svg>
                     </span>
                     <span className="text-sm font-medium text-gray-800">Beveiliging</span>
                   </button>
-                  {openUrlSection === 'beveiliging' && (
+                  {urlOpen('beveiliging') && (
                     <div className="px-5 pb-4 flex flex-col gap-4">
                       <div className="flex items-center justify-between gap-3">
                         <div>
@@ -1735,12 +1985,14 @@ export default function BouwenPage() {
             )}
           </div>
           {/* ── 1. ALGEMEEN ── */}
-          <div className="border-b border-gray-100">
-            <SectieKop
-              titel="Algemeen"
-              open={activeSection === 'algemeen'}
-              onToggle={() => setActiveSection(prev => prev === 'algemeen' ? null : 'algemeen')}
-            />
+          <div className={`${sectieKlassen('algemeen')} border-b border-gray-100`}>
+            <div className="max-md:hidden">
+              <SectieKop
+                titel="Uiterlijk"
+                open={activeSection === 'algemeen'}
+                onToggle={() => setActiveSection(prev => prev === 'algemeen' ? null : 'algemeen')}
+              />
+            </div>
             {activeSection === 'algemeen' && (
               <div className="flex flex-col">
 
@@ -1750,14 +2002,14 @@ export default function BouwenPage() {
                     onClick={() => setOpenAlgSection(prev => prev === 'stijl' ? null : 'stijl')}
                     className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                   >
-                    <span className={`transition-transform duration-200 flex-shrink-0 ${openAlgSection === 'stijl' ? 'rotate-90' : ''}`}>
+                    <span className={`transition-transform duration-200 flex-shrink-0 ${algOpen('stijl') ? 'rotate-90' : ''}`}>
                       <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                       </svg>
                     </span>
                     <span className="text-sm font-medium text-gray-800">Stijl</span>
                   </button>
-                  {openAlgSection === 'stijl' && (
+                  {algOpen('stijl') && (
                     <div className="px-5 pb-4 flex flex-col gap-2">
                       {STYLES.map((s) => (
                         <button
@@ -1792,14 +2044,14 @@ export default function BouwenPage() {
                     onClick={() => setOpenAlgSection(prev => prev === 'layout' ? null : 'layout')}
                     className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                   >
-                    <span className={`transition-transform duration-200 flex-shrink-0 ${openAlgSection === 'layout' ? 'rotate-90' : ''}`}>
+                    <span className={`transition-transform duration-200 flex-shrink-0 ${algOpen('layout') ? 'rotate-90' : ''}`}>
                       <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                       </svg>
                     </span>
                     <span className="text-sm font-medium text-gray-800">Lay-out</span>
                   </button>
-                  {openAlgSection === 'layout' && (
+                  {algOpen('layout') && (
                     <div className="px-5 pb-5 flex flex-col gap-5">
 
                       {/* Paginaweergave */}
@@ -1837,14 +2089,14 @@ export default function BouwenPage() {
                     onClick={() => setOpenAlgSection(prev => prev === 'lettertype' ? null : 'lettertype')}
                     className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                   >
-                    <span className={`transition-transform duration-200 flex-shrink-0 ${openAlgSection === 'lettertype' ? 'rotate-90' : ''}`}>
+                    <span className={`transition-transform duration-200 flex-shrink-0 ${algOpen('lettertype') ? 'rotate-90' : ''}`}>
                       <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                       </svg>
                     </span>
                     <span className="text-sm font-medium text-gray-800">Basislettertype</span>
                   </button>
-                  {openAlgSection === 'lettertype' && (
+                  {algOpen('lettertype') && (
                     <div className="px-5 pb-4 flex flex-col gap-2">
                       <FontSelect value={fontPageTitles} onChange={saveFontPageTitles} />
                       <p className="text-xs text-gray-400 leading-relaxed">
@@ -1859,21 +2111,24 @@ export default function BouwenPage() {
           </div>
 
           {/* ── 2. PAGINA'S ── */}
-          <div className="border-b border-gray-100 flex-1">
-            <SectieKop
-              titel="Pagina's"
-              open={activeSection === 'paginas'}
-              onToggle={() => setActiveSection(prev => prev === 'paginas' ? null : 'paginas')}
-            />
+          <div className={`${sectieKlassen('paginas')} border-b border-gray-100`}>
+            <div className="max-md:hidden">
+              <SectieKop
+                titel="Pagina's"
+                open={activeSection === 'paginas'}
+                onToggle={() => setActiveSection(prev => prev === 'paginas' ? null : 'paginas')}
+              />
+            </div>
             {activeSection === 'paginas' && (
               <div>
                 {PAGES.map((page) => {
                   const isOn = active[page.id]
                   const isExpanded = activeSubPage === page.id && isOn
                   return (
-                    <div key={page.id} className="border-t border-gray-100">
-                      {/* Page row */}
-                      <div className="flex items-center justify-between px-4 py-2.5">
+                    <div key={page.id} className={`border-t border-gray-100 ${blad === "paginas" && activeSubPage && activeSubPage !== page.id ? "max-md:hidden" : ""}`}>
+                      {/* Page row. In een paneel op de telefoon staat de naam
+                          van de pagina in de kop, met een pijltje terug. */}
+                      <div className={`flex items-center justify-between px-4 py-2.5 ${blad === "paginas" && activeSubPage ? "max-md:hidden" : ""}`}>
                         <button
                           onClick={() => {
                             if (!isOn) return
@@ -1921,14 +2176,14 @@ export default function BouwenPage() {
                                 onClick={() => setOpenHomeSection(prev => prev === 'layout' ? null : 'layout')}
                                 className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                               >
-                                <span className={`transition-transform duration-200 flex-shrink-0 ${openHomeSection === 'layout' ? 'rotate-90' : ''}`}>
+                                <span className={`transition-transform duration-200 flex-shrink-0 ${homeOpen('layout') ? 'rotate-90' : ''}`}>
                                   <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                                   </svg>
                                 </span>
                                 <span className="text-sm font-medium text-gray-800">Lay-out</span>
                               </button>
-                              {openHomeSection === 'layout' && (
+                              {homeOpen('layout') && (
                                 <div className="px-5 pb-4 flex flex-col gap-3">
                                   <div className="flex gap-2">
                                     {([
@@ -1950,8 +2205,8 @@ export default function BouwenPage() {
                                     ))}
                                   </div>
                                   <div className="text-xs leading-relaxed space-y-1.5" style={{ color: "#9A8E82" }}>
-                                    <p><span className="font-semibold" style={{ color: "#5C5248" }}>Flexibel</span> — Volledig aanpasbaar naar jullie smaak. Kies voor een grote foto bovenaan, voeg een mooi trouwkaart-kader toe, of zet ze allebei uit voor een rustige, minimalistische look met direct tekst.</p>
-                                    <p><span className="font-semibold" style={{ color: "#5C5248" }}>Vaste indeling</span> — Een stijlvolle, vaste indeling met links de headerfoto en rechts jullie tekstvelden strak naast elkaar.</p>
+                                    <p><span className="font-semibold" style={{ color: "#5C5248" }}>Flexibel</span>: volledig aanpasbaar naar jullie smaak. Kies voor een grote foto bovenaan, voeg een mooi trouwkaart-kader toe, of zet ze allebei uit voor een rustige, minimalistische look met direct tekst.</p>
+                                    <p><span className="font-semibold" style={{ color: "#5C5248" }}>Vaste indeling</span>: een stijlvolle, vaste indeling met links de headerfoto en rechts jullie tekstvelden strak naast elkaar.</p>
                                     <p className="pt-0.5" style={{ color: "#C5A059" }}>Speel met beide stijlen en ontdek wat het beste bij jullie past!</p>
                                   </div>
                                 </div>
@@ -1964,14 +2219,14 @@ export default function BouwenPage() {
                                 onClick={() => setOpenHomeSection(prev => prev === 'headerfoto' ? null : 'headerfoto')}
                                 className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                               >
-                                <span className={`transition-transform duration-200 flex-shrink-0 ${openHomeSection === 'headerfoto' ? 'rotate-90' : ''}`}>
+                                <span className={`transition-transform duration-200 flex-shrink-0 ${homeOpen('headerfoto') ? 'rotate-90' : ''}`}>
                                   <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                                   </svg>
                                 </span>
                                 <span className="text-sm font-medium text-gray-800">Headerfoto</span>
                               </button>
-                              {openHomeSection === 'headerfoto' && (
+                              {homeOpen('headerfoto') && (
                                 <div id="hp-field-headerfoto" className="px-5 pb-4">
                                   {heroImageUrl ? (
                                     <div className="flex flex-col gap-3">
@@ -2021,14 +2276,14 @@ export default function BouwenPage() {
                                 onClick={() => setOpenHomeSection(prev => prev === 'kaders' ? null : 'kaders')}
                                 className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                               >
-                                <span className={`transition-transform duration-200 flex-shrink-0 ${openHomeSection === 'kaders' ? 'rotate-90' : ''}`}>
+                                <span className={`transition-transform duration-200 flex-shrink-0 ${homeOpen('kaders') ? 'rotate-90' : ''}`}>
                                   <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                                   </svg>
                                 </span>
                                 <span className="text-sm font-medium text-gray-800">Kaders</span>
                               </button>
-                              {openHomeSection === 'kaders' && (
+                              {homeOpen('kaders') && (
                                 <div className="px-5 pb-4 flex flex-col gap-4">
                                   {hpSettings.layout === 'editorial' ? (
                                     <div className="flex flex-col gap-3">
@@ -2089,14 +2344,14 @@ export default function BouwenPage() {
                                 onClick={() => setOpenHomeSection(prev => prev === 'tekstvelden' ? null : 'tekstvelden')}
                                 className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                               >
-                                <span className={`transition-transform duration-200 flex-shrink-0 ${openHomeSection === 'tekstvelden' ? 'rotate-90' : ''}`}>
+                                <span className={`transition-transform duration-200 flex-shrink-0 ${homeOpen('tekstvelden') ? 'rotate-90' : ''}`}>
                                   <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                                   </svg>
                                 </span>
                                 <span className="text-sm font-medium text-gray-800">Tekstvelden</span>
                               </button>
-                              {openHomeSection === 'tekstvelden' && (
+                              {homeOpen('tekstvelden') && (
                                 <div className="px-5 pb-4 flex flex-col gap-4">
 
                                   {/* Hoofdtitel */}
@@ -2375,14 +2630,14 @@ export default function BouwenPage() {
                                 onClick={() => setOpenHomeSection(prev => prev === 'welkomst' ? null : 'welkomst')}
                                 className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                               >
-                                <span className={`transition-transform duration-200 flex-shrink-0 ${openHomeSection === 'welkomst' ? 'rotate-90' : ''}`}>
+                                <span className={`transition-transform duration-200 flex-shrink-0 ${homeOpen('welkomst') ? 'rotate-90' : ''}`}>
                                   <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                                   </svg>
                                 </span>
                                 <span className="text-sm font-medium text-gray-800">Welkomstbericht</span>
                               </button>
-                              {openHomeSection === 'welkomst' && (
+                              {homeOpen('welkomst') && (
                                 <div className="px-5 pb-4 flex flex-col gap-3">
                                   <div id="hp-field-welkomst-titel" className="flex flex-col gap-1.5">
                                     <span className="text-xs font-semibold text-gray-600">Titel</span>
@@ -2633,7 +2888,7 @@ export default function BouwenPage() {
                                     rows={3}
                                     value={(content.RSVP?.text as string) ?? ""}
                                     onChange={(e) => updateContent("RSVP", { ...(content.RSVP ?? {}), text: e.target.value })}
-                                    placeholder="Laat weten of je erbij bent — vul het formulier in."
+                                    placeholder="Laat weten of je erbij bent via het formulier."
                                     className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] resize-none transition-all"
                                   />
                                 </label>
@@ -2940,7 +3195,7 @@ export default function BouwenPage() {
 
         {/* ── Main panel ── */}
         <main className="relative flex flex-1 flex-col overflow-hidden bg-gray-100 border-t md:border-t-0 border-[var(--goud-licht)]">
-          <div className="flex items-center justify-between px-4 py-2 bg-gray-100 border-b border-[var(--goud-licht)] flex-shrink-0">
+          <div className={`flex items-center justify-between px-4 py-2 bg-gray-100 border-b border-[var(--goud-licht)] flex-shrink-0 ${blad ? "max-md:hidden" : ""}`}>
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Live preview</p>
             <div className="flex items-center gap-2">
                 {/* Zoom controls — desktop only */}
@@ -2999,12 +3254,12 @@ export default function BouwenPage() {
           </div>
 
           {/* ── Canvas ── */}
-          <div className="flex flex-1 min-h-0 overflow-hidden" style={{ minHeight: "420px" }}>
+          <div className="flex flex-1 min-h-0 overflow-hidden">
 
             {/* Canvas */}
-              <div ref={canvasContainerRef} className="flex-1 overflow-y-auto bg-gray-100 p-4 md:p-6">
-                <div className="mx-auto" style={{ width: `${Math.round(canvasWidth * canvasScale * zoomMultiplier)}px` }}>
-                  <div style={{ width: canvasWidth, transform: `scale(${canvasScale * zoomMultiplier})`, transformOrigin: "top left" }}>
+              <div ref={canvasContainerRef} className={`flex-1 overflow-y-auto bg-gray-100 p-4 md:p-6 ${blad ? "max-md:pb-[55vh]" : ""}`}>
+                <div className="mx-auto" style={{ width: `${Math.round(canvasWidth * voorbeeldSchaal)}px` }}>
+                  <div style={{ width: canvasWidth, transform: `scale(${voorbeeldSchaal})`, transformOrigin: "top left" }}>
                     <div className="rounded-2xl shadow-xl overflow-clip" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily, letterSpacing: sc.bodyLetterSpacing, fontWeight: sc.bodyFontWeight }}>
                       {sc.fontImport && <style>{sc.fontImport}</style>}
                       <div className="bg-gray-50 border-b border-[var(--goud-licht)] px-4 py-2 flex items-center gap-2">
@@ -3126,7 +3381,7 @@ export default function BouwenPage() {
                                 </div>
                               ) : (
                                 <div className="flex flex-col gap-6" style={{ textAlign: "left" }}>
-                                  <p style={{ fontSize: "0.9375rem", marginBottom: 0, color: rsvpLabelColor }}>{(content.RSVP?.text as string) || "Laat weten of je erbij bent — vul het formulier in."}</p>
+                                  <p style={{ fontSize: "0.9375rem", marginBottom: 0, color: rsvpLabelColor }}>{(content.RSVP?.text as string) || "Laat weten of je erbij bent via het formulier."}</p>
                                   {/* Ben je erbij? */}
                                   <div>
                                     <div className="text-sm font-semibold mb-3" style={{ color: rsvpLabelColor }}>Ben je erbij?</div>
@@ -3202,7 +3457,7 @@ export default function BouwenPage() {
                                         <span style={{ color: "#9ca3af", fontWeight: 400 }}>(optioneel)</span>
                                       </div>
                                       <div className="w-full h-10 rounded-xl border border-[var(--goud-licht)] bg-white px-4 flex items-center shadow-sm">
-                                        <span className="text-sm text-gray-400">Artiest — Nummertitel</span>
+                                        <span className="text-sm text-gray-400">Artiest, nummertitel</span>
                                       </div>
                                     </div>
                                   )}
@@ -3319,7 +3574,7 @@ export default function BouwenPage() {
                 </h3>
                 <p className="text-sm text-center mb-5 leading-relaxed" style={{ color: "#5C5248" }}>
                   We hebben een inloglink gestuurd naar <strong style={{ color: "#1A1A1A" }}>{authEmail}</strong>.
-                  Klik op de link in de e-mail — je website wordt dan automatisch opgeslagen.
+                  Klik op de link in de e-mail, dan wordt je website automatisch opgeslagen.
                 </p>
                 <button
                   onClick={() => { setShowAuthModal(false); setAuthSent(false); setAuthEmail("") }}
@@ -3353,7 +3608,7 @@ export default function BouwenPage() {
                   Inloggen om op te slaan
                 </h3>
                 <p className="text-sm text-center mb-6 leading-relaxed" style={{ color: "#5C5248" }}>
-                  Vul je e-mailadres in — je ontvangt een magische inloglink. Geen wachtwoord nodig.
+                  Vul je e-mailadres in, dan ontvang je een magische inloglink. Geen wachtwoord nodig.
                 </p>
                 <form onSubmit={handleAuthSubmit} className="space-y-3">
                   <input
@@ -3390,6 +3645,10 @@ export default function BouwenPage() {
       {/* ── Sophie tutorial ── */}
       <SophieTutorial
         onNavigate={(nav: SophieNav) => {
+          // Op de telefoon staat de zijbalk in een paneel; open het goede
+          if (window.matchMedia("(max-width: 767px)").matches && nav.activeSection) {
+            openBlad(({ algemeen: "uiterlijk", paginas: "paginas", url: "adres" } as const)[nav.activeSection])
+          }
           if ('activeSection' in nav) setActiveSection(nav.activeSection ?? null)
           if ('openAlgSection' in nav) setOpenAlgSection(nav.openAlgSection ?? null)
           if ('activeSubPage' in nav) setActiveSubPage((nav.activeSubPage as PageId) ?? null)

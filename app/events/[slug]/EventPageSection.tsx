@@ -69,7 +69,7 @@ export default function EventPageSection({ page, sc, eventId }: { page: PageData
     const c = page.content ?? {}
     const introText = (typeof c.text === "string" && c.text)
       ? c.text
-      : "Laat weten of je erbij bent — vul het formulier in."
+      : "Laat weten of je erbij bent via het formulier."
     const rsvpGuestTypes = Array.isArray(c.guestTypes) ? (c.guestTypes as string[]) : ["daggast", "avondgast"]
     const rsvpShowSong = typeof c.showSongRequest === "boolean" ? c.showSongRequest : false
     const rsvpDeadline = typeof c.deadline === "string" && c.deadline ? c.deadline : null
