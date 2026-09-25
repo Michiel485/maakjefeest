@@ -14,9 +14,6 @@ import {
   CARD_ANIMATIE_UITLEG,
   CARD_DESIGNS,
   CARD_DESIGN_SFEER,
-  CARD_DESIGN_GROEPEN,
-  CARD_DESIGN_IN_GROEP,
-  type CardDesignGroep,
   CARD_TAAL_LABEL,
   CARD_TALEN,
   cardTaal,
@@ -1227,7 +1224,6 @@ export default function KaartMakenPage() {
   // Eigen ontwerp: scherper dan een foto, want er staat tekst op, en de
   // verhouding onthouden zodat de kaart precies zo hoog wordt als het ontwerp
   const ontwerpRef = useRef<HTMLInputElement>(null)
-  const [ontwerpFilter, setOntwerpFilter] = useState<"Alles" | CardDesignGroep>("Alles")
   const [ontwerpMag, setOntwerpMag] = useState(false)
   async function kiesOntwerp(file: File) {
     setBusy("foto")
@@ -1934,25 +1930,8 @@ export default function KaartMakenPage() {
             {/* Een galerij met jullie eigen kaart in elk ontwerp. Was een
                 rijtje knoppen; bij acht ontwerpen zie je zo pas echt wat je
                 kiest (Michiel, 25 september 2026). */}
-            {/* Filters: bij dertien ontwerpen zoek je op sfeer */}
-            <div className="flex flex-wrap gap-1.5">
-              {(["Alles", ...CARD_DESIGN_GROEPEN] as const).map((g) => {
-                const aan = ontwerpFilter === g
-                return (
-                  <button
-                    key={g}
-                    type="button"
-                    onClick={() => setOntwerpFilter(g)}
-                    className="text-[12px] font-semibold px-2.5 py-1 rounded-full"
-                    style={{ backgroundColor: aan ? CHARCOAL : "#fff", color: aan ? IVORY : CHARCOAL, border: `1px solid ${aan ? CHARCOAL : GOLD_LIGHT}`, cursor: "pointer" }}
-                  >
-                    {g}
-                  </button>
-                )
-              })}
-            </div>
             <div className="grid grid-cols-2 gap-2.5">
-              {CARD_DESIGNS.filter((d) => ontwerpFilter === "Alles" || CARD_DESIGN_IN_GROEP[d].includes(ontwerpFilter) || cardDesign(ontwerp.template) === d).map((t) => {
+              {CARD_DESIGNS.map((t) => {
                 const actief = cardDesign(ontwerp.template) === t
                 return (
                   <button

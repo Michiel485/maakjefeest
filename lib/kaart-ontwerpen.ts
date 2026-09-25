@@ -82,7 +82,8 @@ export interface OnderDeKaart {
 }
 
 export const ONDER_DE_KAART: Partial<Record<CardDesign, OnderDeKaart>> = {
-  titel: { locatie: true, bericht: true, details: true },
+  // De locatie past wel op de kaart (Michiel, 25 september 2026)
+  titel: { locatie: false, bericht: true, details: true },
   palm: { locatie: true, bericht: false, details: true },
   ibiza: { locatie: true, bericht: true, details: true },
   fotoschrift: { locatie: true, bericht: true, details: true },

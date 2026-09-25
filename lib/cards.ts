@@ -222,28 +222,6 @@ export const CARD_DESIGN_SFEER: Record<CardDesign, string> = {
   fotoschrift: "Persoonlijk",
 }
 
-/**
- * De filters boven de galerij. Een ontwerp kan in meer dan één groep staan.
- * Winter, herfst en bloemen komen erbij zodra er beeldmateriaal is.
- */
-export const CARD_DESIGN_GROEPEN = ["Klassiek", "Romantisch", "Modern", "Zomer", "Foto", "Feestelijk"] as const
-export type CardDesignGroep = (typeof CARD_DESIGN_GROEPEN)[number]
-export const CARD_DESIGN_IN_GROEP: Record<CardDesign, CardDesignGroep[]> = {
-  klassiek: ["Klassiek"],
-  sierlijk: ["Klassiek", "Romantisch"],
-  bohemian: ["Romantisch"],
-  minimaal: ["Modern"],
-  datum: ["Modern"],
-  titel: ["Modern"],
-  palm: ["Zomer", "Modern"],
-  ibiza: ["Zomer"],
-  deco: ["Feestelijk", "Klassiek"],
-  boog: ["Romantisch", "Foto"],
-  fotovol: ["Foto"],
-  fotoschrift: ["Foto", "Zomer"],
-  eigen: [],
-}
-
 // Oude waarden en rommel vallen terug op het strakke ontwerp
 export function cardDesign(template: unknown): CardDesign {
   return typeof template === "string" && template !== "foto" && (CARD_TEMPLATE_WAARDEN as string[]).includes(template)

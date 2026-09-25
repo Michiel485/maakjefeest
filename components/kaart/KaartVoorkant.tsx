@@ -218,17 +218,6 @@ function Golven({ breedte, kleur }: { breedte: number; kleur: string }) {
   )
 }
 
-/** Een takje met twee blaadjes */
-function Takje({ breedte, kleur }: { breedte: number; kleur: string }) {
-  return (
-    <svg width={breedte} height={breedte} viewBox="0 0 40 40" fill="none">
-      <path d="M8 36 C 16 27, 24 18, 34 6" stroke={kleur} strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M22 20 C 19 12, 23 6, 32 3 C 32 12, 28 18, 22 20 Z" fill={kleur} />
-      <path d="M15 28 C 8 25, 6 18, 9 11 C 15 15, 17 22, 15 28 Z" fill={kleur} />
-    </svg>
-  )
-}
-
 // Art deco: een getrapte hoek. Punten voor linksboven in een vak van 40 bij
 // 40; de andere hoeken zijn gespiegeld, zonder transform (satori).
 const DECO_HOEK: [number, number][][] = [
@@ -375,15 +364,17 @@ export default function KaartVoorkant({
         style={{
           ...basis,
           justifyContent: "space-between",
-          padding: `${px(46)}px ${px(40)}px ${px(40)}px`,
+          // Iets meer rand boven en onder, dan wordt de ruimte tussen de
+          // blokken net wat kleiner (Michiel, 25 september 2026)
+          padding: `${px(60)}px ${px(40)}px ${px(54)}px`,
           borderRadius: px(4),
         }}
       >
         <D style={{ flexDirection: "column", gap: px(12) }}>
-          <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(10), letterSpacing: "0.34em", textTransform: "uppercase", color: label }}>
+          <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(14), letterSpacing: "0.3em", textTransform: "uppercase", color: label }}>
             {d.heading}
           </div>
-          <div style={{ display: "flex", width: px(30), height: lijn, backgroundColor: accent }} />
+          <div style={{ display: "flex", width: px(36), height: lijn, backgroundColor: accent }} />
         </D>
 
         <D style={{ flexDirection: "column", gap: px(18), marginTop: px(30), marginBottom: px(30) }}>
@@ -636,14 +627,13 @@ export default function KaartVoorkant({
           }}
         >
           {woorden.map((w, i) => {
-            // Een kort tussenwoord ("the") klein, met een takje ernaast
+            // Een kort tussenwoord ("the") klein
             const klein = i > 0 && i < woorden.length - 1 && w.length <= 3
             // Een lang woord moet in het ovaal passen
             const grootte = klein ? 34 : Math.min(76, 290 / Math.max(3, w.length * 0.62))
             return (
-              <D key={i} style={{ alignItems: "center", gap: px(8), marginTop: klein ? px(-6) : 0, marginBottom: klein ? px(-6) : 0 }}>
+              <D key={i} style={{ alignItems: "center", marginTop: klein ? px(-6) : 0, marginBottom: klein ? px(-6) : 0 }}>
                 <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(grootte), lineHeight: 1, color: kop }}>{w}</div>
-                {klein && <Takje breedte={px(34)} kleur={accent} />}
               </D>
             )
           })}
@@ -656,6 +646,12 @@ export default function KaartVoorkant({
             tekst={d.names}
             style={{ fontFamily: letters.tekst, fontSize: px(14), letterSpacing: "0.16em", color: kop, opacity: 0.8, marginTop: px(10) }}
           />
+          {d.location && (
+            <Regels
+              tekst={d.location}
+              style={{ fontFamily: letters.tekst, fontSize: px(12), lineHeight: 1.5, letterSpacing: "0.08em", color: kop, opacity: 0.7, marginTop: px(4), maxWidth: px(260) }}
+            />
+          )}
         </D>
       </D>
     )
