@@ -545,8 +545,17 @@ export default function BouwenPage() {
   // Welk paneel op de telefoon open is; op een groot scherm blijft dit leeg.
   const [blad, setBlad] = useState<Blad | null>(null)
   const bladRef = useRef<HTMLElement>(null)
+  // Twee standen, net als in de kaartbouwer: vol, of klein met alleen de kop
+  // zichtbaar zodat je de hele pagina ziet. Half omlaag vegen maakt hem
+  // klein, verder vegen sluit hem, omhoog vegen of op de kop tikken maakt hem
+  // weer vol.
+  const [bladKlein, setBladKlein] = useState(false)
+  const [sleep, setSleep] = useState(0)
+  const sleepStart = useRef<number | null>(null)
   function openBlad(b: Blad | null) {
     setBlad(b)
+    setBladKlein(false)
+    setSleep(0)
     if (b) setActiveSection(BLAD_SECTIE[b])
     // Pagina's begint bij de lijst, zodat je ziet wat er aan staat
     if (b === "paginas") setActiveSubPage(null)
@@ -565,6 +574,20 @@ export default function BouwenPage() {
   const algOpen = (s: 'stijl' | 'layout' | 'lettertype') => openAlgSection === s || blad === "uiterlijk"
   const urlOpen = (s: 'url' | 'beveiliging') => openUrlSection === s || blad === "adres"
   const homeOpen = (s: 'layout' | 'headerfoto' | 'kaders' | 'tekstvelden' | 'welkomst') => openHomeSection === s || blad === "paginas"
+  // Tik je in het voorbeeld op iets, dan open je de pagina waar het bij
+  // hoort. Op de telefoon schuift daarvoor het paneel Pagina's omhoog.
+  function toonPaginas() {
+    setActiveSection('paginas')
+    if (window.matchMedia("(max-width: 767px)").matches) {
+      setBlad("paginas")
+      setBladKlein(false)
+    }
+  }
+  /** Naar een onderdeel: op de telefoon het paneel, op de laptop het kopje. */
+  function gaNaarBlad(b: Blad) {
+    if (window.matchMedia("(max-width: 767px)").matches) openBlad(b)
+    else setActiveSection(BLAD_SECTIE[b])
+  }
 
   function handlePreviewFieldClick(field: string) {
     // Map field name to the accordion section it lives in
@@ -582,7 +605,7 @@ export default function BouwenPage() {
     const section = sectionForField[field] ?? 'tekstvelden'
 
     setPreviewPage("Home")
-    setActiveSection('paginas')
+    toonPaginas()
     setActiveSubPage('Home')
     setOpenHomeSection(section)
     setHpOpenGear(field)
@@ -603,7 +626,7 @@ export default function BouwenPage() {
   }
 
   function handleStoryFieldClick(field: 'title' | 'text') {
-    setActiveSection('paginas')
+    toonPaginas()
     setActiveSubPage('OnsVerhaal')
     setTimeout(() => {
       const el = document.getElementById(field === 'title' ? 'onsverhaal-title' : 'onsverhaal-text')
@@ -616,7 +639,7 @@ export default function BouwenPage() {
   }
 
   function handleProgramItemClick(itemId: string, field?: 'title' | 'description') {
-    setActiveSection('paginas')
+    toonPaginas()
     setActiveSubPage('Programma')
     setTimeout(() => {
       const id = field === 'description' ? `programma-description-${itemId}` : `programma-title-${itemId}`
@@ -630,7 +653,7 @@ export default function BouwenPage() {
   }
 
   function handleInfoTileClick(tileId: string, field: 'title' | 'text') {
-    setActiveSection('paginas')
+    toonPaginas()
     setActiveSubPage('Informatie')
     setTimeout(() => {
       const el = document.getElementById(`informatie-${field}-${tileId}`)
@@ -643,7 +666,7 @@ export default function BouwenPage() {
   }
 
   function handleWishlistItemClick(itemId: string, field: 'title' | 'text') {
-    setActiveSection('paginas')
+    toonPaginas()
     setActiveSubPage('Cadeautips')
     setTimeout(() => {
       const el = document.getElementById(`cadeau-${field}-${itemId}`)
@@ -656,7 +679,7 @@ export default function BouwenPage() {
   }
 
   function handleMasterClick(masterId: string) {
-    setActiveSection('paginas')
+    toonPaginas()
     setActiveSubPage('Ceremoniemeesters')
     setTimeout(() => {
       const el = document.getElementById(`master-naam-${masterId}`)
@@ -669,7 +692,7 @@ export default function BouwenPage() {
   }
 
   function handleMastersTextClick() {
-    setActiveSection('paginas')
+    toonPaginas()
     setActiveSubPage('Ceremoniemeesters')
     setTimeout(() => {
       const el = document.getElementById('ceremoniemeesters-vrije-tekst')
@@ -680,7 +703,7 @@ export default function BouwenPage() {
   }
 
   function handleMasterContactClick(masterId: string, field: 'telefoon' | 'email') {
-    setActiveSection('paginas')
+    toonPaginas()
     setActiveSubPage('Ceremoniemeesters')
     setTimeout(() => {
       const el = document.getElementById(`master-${field}-${masterId}`)
@@ -1413,7 +1436,7 @@ export default function BouwenPage() {
   const canvasWidth = viewport === "mobiel" ? 390 : 1024
   // Met een paneel open op de telefoon wat kleiner, zodat je boven het paneel
   // nog een flink stuk van de pagina ziet.
-  const voorbeeldSchaal = canvasScale * zoomMultiplier * (blad ? 0.6 : 1)
+  const voorbeeldSchaal = canvasScale * zoomMultiplier * (blad && !bladKlein ? 0.6 : 1)
 
   const activePagesOrdered = PAGES.filter((p) => active[p.id])
   const eventName = draft?.naam || "Jullie bruiloft"
@@ -1465,6 +1488,16 @@ export default function BouwenPage() {
   const praktischTiles = content.Informatie?.items as PraktischTile[] | undefined
   const wishlistItems = content.Cadeautips?.items as WishlistItem[] | undefined
   const fotosUrls  = (content.Fotos?.urls as string[] | undefined) ?? []
+  // Pagina's die aan staan maar nog niets hebben om te laten zien. Informatie
+  // en Cadeautips beginnen altijd met voorbeelden, Home en RSVP vullen zich
+  // zelf; die tellen dus niet mee.
+  const paginaLeeg: Partial<Record<PageId, boolean>> = {
+    OnsVerhaal: !((content.OnsVerhaal?.text as string | undefined) ?? "").trim(),
+    Programma: programmaItems.length === 0,
+    Ceremoniemeesters: mastersForPreview.length === 0 && !((content.Ceremoniemeesters?.text as string | undefined) ?? "").trim(),
+    Fotos: fotosUrls.length === 0,
+  }
+  const legePaginas = PAGES.filter((pg) => active[pg.id] && paginaLeeg[pg.id])
   const rsvpGuestTypes        = (content.RSVP?.guestTypes as string[] | undefined) ?? ["daggast", "avondgast"]
   const rsvpShowSong          = (content.RSVP?.showSongRequest as boolean) ?? false
   const rsvpShowOvernachting  = (content.RSVP?.showOvernachting as boolean) ?? false
@@ -1558,6 +1591,39 @@ export default function BouwenPage() {
     </Knop>
   )
 
+  // De check onder Bekijken. Wat nog open staat is aanklikbaar en brengt je
+  // naar de plek waar het hoort. Publiceren telt apart: dat is de laatste stap.
+  const controles: { label: string; klaar: boolean; actie?: string; doe?: () => void }[] = [
+    {
+      label: "Jullie namen",
+      klaar: !!(draft?.frame_names?.trim() || draft?.naam?.trim()),
+      actie: "Invullen",
+      doe: () => handlePreviewFieldClick("namen"),
+    },
+    { label: "Trouwdatum", klaar: !!draft?.datum, actie: "Invullen", doe: () => handlePreviewFieldClick("datum") },
+    ...(legePaginas.length
+      ? legePaginas.map((pg) => ({
+          label: `${pg.label} is nog leeg`,
+          klaar: false,
+          actie: "Invullen",
+          doe: () => { toonPaginas(); gaNaarPagina(pg.id) },
+        }))
+      : [{ label: "Elke pagina heeft inhoud", klaar: true }]),
+    {
+      label: draft?.slug ? `Webadres: ${draft.slug}.sayingyes.nl` : "Webadres",
+      klaar: !!draft?.slug,
+      actie: "Kiezen",
+      doe: () => gaNaarBlad("adres"),
+    },
+    { label: "Bewaard", klaar: !!savedEventId && !hasPendingChanges && !saving, actie: "Bewaren", doe: () => void handleSave() },
+  ]
+  const allesKlaar = controles.every((c) => c.klaar)
+  // Het stipje: waar nog iets te doen is
+  const stip: Partial<Record<Blad, boolean>> = {
+    paginas: legePaginas.length > 0,
+    adres: !draft?.slug,
+  }
+
   return (
     <BouwerSchil
       actief="website"
@@ -1640,7 +1706,12 @@ export default function BouwenPage() {
                 className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl text-[11px] font-semibold min-w-[68px]"
                 style={{ color: aan ? KLEUR.goud : KLEUR.zacht, backgroundColor: aan ? KLEUR.goudVlak : "transparent", border: 0, cursor: "pointer" }}
               >
-                <BladIcoon blad={b} />
+                <span className="relative">
+                  <BladIcoon blad={b} />
+                  {stip[b] && (
+                    <span aria-label="hier staat nog iets open" className="absolute -top-0.5 -right-1.5 w-2 h-2 rounded-full" style={{ backgroundColor: "#D97706" }} />
+                  )}
+                </span>
                 {BLAD_TITEL[b]}
               </button>
             )
@@ -1693,19 +1764,47 @@ export default function BouwenPage() {
           ref={bladRef}
           className={`w-full md:w-80 md:flex-shrink-0 bg-white border-r border-gray-100 flex flex-col md:overflow-y-auto ${
             blad
-              ? "max-md:fixed max-md:inset-x-0 max-md:bottom-[64px] max-md:z-40 max-md:max-h-[50vh] max-md:overflow-y-auto max-md:rounded-t-2xl max-md:border-t max-md:shadow-[0_-16px_40px_-16px_rgba(26,18,4,0.35)]"
+              ? `max-md:fixed max-md:inset-x-0 max-md:bottom-[64px] max-md:z-40 max-md:rounded-t-2xl max-md:border-t max-md:shadow-[0_-16px_40px_-16px_rgba(26,18,4,0.35)] ${
+                  bladKlein ? "max-md:max-h-[56px] max-md:overflow-hidden" : "max-md:max-h-[50vh] max-md:overflow-y-auto"
+                }`
               : "max-md:hidden"
           }`}
+          style={sleep !== 0 ? { transform: `translateY(${sleep}px)`, transition: "none" } : { transition: "transform 180ms ease, max-height 200ms ease" }}
         >
           {/* De kop van het paneel, alleen op de telefoon. In een pagina een
               pijltje terug naar de lijst. */}
           {blad && (
-            <div className="md:hidden sticky top-0 z-10 bg-white flex items-center justify-between gap-2 px-5 pt-2 pb-2 border-b border-gray-100">
+            <div
+              className="md:hidden sticky top-0 z-10 bg-white flex items-center justify-between gap-2 px-5 pt-2 pb-2 border-b border-gray-100"
+              style={{ touchAction: "none" }}
+              onClick={() => { if (bladKlein) setBladKlein(false) }}
+              onTouchStart={(e) => { sleepStart.current = e.touches[0].clientY }}
+              onTouchMove={(e) => {
+                if (sleepStart.current === null) return
+                // Omlaag volgt het paneel je vinger; omhoog alleen als hij klein is
+                const dy = e.touches[0].clientY - sleepStart.current
+                setSleep(bladKlein ? Math.min(0, dy) : Math.max(0, dy))
+              }}
+              onTouchEnd={(e) => {
+                const begin = sleepStart.current
+                sleepStart.current = null
+                const dy = begin === null ? 0 : e.changedTouches[0].clientY - begin
+                setSleep(0)
+                if (bladKlein) {
+                  if (dy < -30) setBladKlein(false)
+                  else if (dy > 40) openBlad(null)
+                } else if (dy > 220) {
+                  openBlad(null)
+                } else if (dy > 60) {
+                  setBladKlein(true)
+                }
+              }}
+            >
               <span aria-hidden className="absolute left-1/2 -translate-x-1/2 top-1.5 w-9 h-1 rounded-full" style={{ backgroundColor: KLEUR.goudLicht }} />
               {blad === "paginas" && activeSubPage ? (
                 <button
                   type="button"
-                  onClick={() => setActiveSubPage(null)}
+                  onClick={(e) => { e.stopPropagation(); setBladKlein(false); setActiveSubPage(null) }}
                   className="mt-2 flex items-center gap-1 text-sm font-semibold min-w-0"
                   style={{ color: KLEUR.inkt, background: "none", border: 0, padding: 0, cursor: "pointer" }}
                 >
@@ -1760,6 +1859,32 @@ export default function BouwenPage() {
             </div>
             {activeSection === 'bekijken' && (
               <div className="px-5 pt-4 md:pt-0 pb-5 flex flex-col gap-3">
+                {/* Klaar om te publiceren? Wat nog ontbreekt is aanklikbaar,
+                    net als in de kaartbouwer. */}
+                <div className="rounded-xl p-3 flex flex-col gap-1" style={{ backgroundColor: KLEUR.goudVlak, border: `1px solid ${KLEUR.goudLicht}` }}>
+                  <span className="text-xs font-semibold mb-1" style={{ color: KLEUR.inkt }}>
+                    {allesKlaar ? (isPublished ? "Alles staat live" : "Klaar om te publiceren") : "Nog even nalopen"}
+                  </span>
+                  {controles.map((c) => (
+                    <button
+                      key={c.label}
+                      type="button"
+                      onClick={c.klaar ? undefined : c.doe}
+                      className="flex items-center gap-2 text-left text-[12px] py-1"
+                      style={{ background: "none", border: 0, padding: 0, cursor: c.klaar ? "default" : "pointer", color: c.klaar ? KLEUR.tekst : KLEUR.inkt }}
+                    >
+                      <span
+                        aria-hidden
+                        className="w-4 h-4 flex-shrink-0 rounded-full inline-flex items-center justify-center text-[10px] font-bold"
+                        style={c.klaar ? { backgroundColor: KLEUR.groen, color: "#fff" } : { border: "1.5px solid #D97706" }}
+                      >
+                        {c.klaar ? "✓" : ""}
+                      </span>
+                      <span className="flex-1 min-w-0 truncate">{c.label}</span>
+                      {!c.klaar && c.actie && <span className="font-semibold flex-shrink-0" style={{ color: KLEUR.goud }}>{c.actie} {"›"}</span>}
+                    </button>
+                  ))}
+                </div>
                 <p className="m-0 text-[13px] leading-relaxed" style={{ color: KLEUR.tekst }}>
                   {isPublished ? (
                     <>Jullie website staat live op <b style={{ color: KLEUR.inkt }}>{slugPreview}.sayingyes.nl</b>. Wat je bewaart zien je gasten.</>
@@ -2149,6 +2274,12 @@ export default function BouwenPage() {
                           <span className={`text-sm font-medium truncate ${isOn ? "text-gray-800" : "text-gray-400"}`}>
                             {page.label}
                           </span>
+                          {isOn && paginaLeeg[page.id] && (
+                            <span className="flex-shrink-0 text-[11px] font-semibold inline-flex items-center gap-1" style={{ color: "#B45309" }}>
+                              <span aria-hidden className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#D97706" }} />
+                              nog leeg
+                            </span>
+                          )}
                         </button>
                         {page.toggleable ? (
                           <button
@@ -3195,7 +3326,7 @@ export default function BouwenPage() {
 
         {/* ── Main panel ── */}
         <main className="relative flex flex-1 flex-col overflow-hidden bg-gray-100 border-t md:border-t-0 border-[var(--goud-licht)]">
-          <div className={`flex items-center justify-between px-4 py-2 bg-gray-100 border-b border-[var(--goud-licht)] flex-shrink-0 ${blad ? "max-md:hidden" : ""}`}>
+          <div className={`flex items-center justify-between px-4 py-2 bg-gray-100 border-b border-[var(--goud-licht)] flex-shrink-0 ${blad && !bladKlein ? "max-md:hidden" : ""}`}>
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Live preview</p>
             <div className="flex items-center gap-2">
                 {/* Zoom controls — desktop only */}
@@ -3257,7 +3388,7 @@ export default function BouwenPage() {
           <div className="flex flex-1 min-h-0 overflow-hidden">
 
             {/* Canvas */}
-              <div ref={canvasContainerRef} className={`flex-1 overflow-y-auto bg-gray-100 p-4 md:p-6 ${blad ? "max-md:pb-[55vh]" : ""}`}>
+              <div ref={canvasContainerRef} className={`flex-1 overflow-y-auto bg-gray-100 p-4 md:p-6 ${blad && !bladKlein ? "max-md:pb-[55vh]" : "max-md:pb-16"}`}>
                 <div className="mx-auto" style={{ width: `${Math.round(canvasWidth * voorbeeldSchaal)}px` }}>
                   <div style={{ width: canvasWidth, transform: `scale(${voorbeeldSchaal})`, transformOrigin: "top left" }}>
                     <div className="rounded-2xl shadow-xl overflow-clip" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily, letterSpacing: sc.bodyLetterSpacing, fontWeight: sc.bodyFontWeight }}>
@@ -3368,7 +3499,10 @@ export default function BouwenPage() {
                         </div>
                       )}
                       {showSection("RSVP") && (
-                        <div style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "RSVP") } : undefined}>
+                        <div
+                          style={{ cursor: "pointer", ...(isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "RSVP") } : {}) }}
+                          onClick={() => { toonPaginas(); gaNaarPagina("RSVP") }}
+                        >
                         <div style={{ padding: "36px 32px 64px", textAlign: "center", backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
                           <h1 style={{ fontSize: "1.75rem", fontWeight: sc.fontPageTitlesWeight, color: sc.headingColor, fontFamily: sc.fontPageTitles, margin: "0 0 28px" }}>RSVP</h1>
                           <div style={{ maxWidth: 480, marginLeft: "auto", marginRight: "auto" }}>
@@ -3505,7 +3639,10 @@ export default function BouwenPage() {
                         </div>
                       )}
                       {showSection("Fotos") && (
-                        <div style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "Fotos") } : undefined}>
+                        <div
+                          style={{ cursor: "pointer", ...(isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "Fotos") } : {}) }}
+                          onClick={() => { toonPaginas(); gaNaarPagina("Fotos") }}
+                        >
                         <FotosPreview
                           title={(content.Fotos?.title as string) || "Foto's"}
                           intro={(content.Fotos?.intro as string) || null}
