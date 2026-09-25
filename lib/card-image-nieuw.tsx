@@ -6,7 +6,7 @@
 import { ImageResponse } from "next/og"
 import type { CardDisplay, NieuwOntwerp } from "./cards"
 import type { SC } from "./event-styles"
-import { ONTWERP_LETTERS, type KaartLetter } from "./kaart-ontwerpen"
+import { ONTWERP_LETTERS, ONTWERP_VERHOUDING, type KaartLetter } from "./kaart-ontwerpen"
 import KaartVoorkant from "@/components/kaart/KaartVoorkant"
 
 type LaadFont = (family: string, weight: number, text: string) => Promise<ArrayBuffer | null>
@@ -98,7 +98,7 @@ export async function renderNieuweKaartAfbeelding({
   // In de voorvertoning past de kaart in de hoogte, in de download in de breedte
   // Een eigen ontwerp heeft zijn eigen verhouding; een hoge kaart wordt
   // smaller, zodat hij er helemaal op past
-  const verhouding = ontwerp === "eigen" && display.ontwerpVerhouding ? display.ontwerpVerhouding : 1.4
+  const verhouding = ontwerp === "eigen" && display.ontwerpVerhouding ? display.ontwerpVerhouding : ONTWERP_VERHOUDING[ontwerp] ?? 1.4
   const kaartBreedte = mode === "og"
     ? Math.min(420, Math.round(590 / verhouding))
     : Math.min(840, Math.round(1230 / verhouding))
@@ -115,10 +115,11 @@ export async function renderNieuweKaartAfbeelding({
           width: "100%",
           height: "100%",
           backgroundColor: sc.bodyBg,
-          paddingTop: mode === "og" ? 0 : 48,
+          // Een lage (vierkante) kaart in het midden van de download, niet bovenin
+          paddingTop: mode === "og" ? 0 : Math.max(48, Math.round((height - kaartBreedte * verhouding - 90) / 2)),
         }}
       >
-        <KaartVoorkant d={display} ontwerp={ontwerp} sc={sc} breedte={kaartBreedte} letters={letters} schaduw="0 24px 70px rgba(0,0,0,0.25)" />
+        <KaartVoorkant d={display} ontwerp={ontwerp} sc={sc} breedte={kaartBreedte} letters={letters} schaduw="0 24px 70px rgba(0,0,0,0.25)" voorAfbeelding />
         {mode === "download" && (
           <div
             style={{

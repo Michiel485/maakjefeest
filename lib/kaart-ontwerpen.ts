@@ -55,6 +55,26 @@ export const ONTWERP_LETTERS: Record<NieuwOntwerp, OntwerpLetters> = {
   palm: { namen: L.jostDun, kop: L.jost, tekst: L.jost, extra: L.allison },
   ibiza: { namen: L.allison, kop: L.jost, tekst: L.jost, extra: L.allison },
   fotoschrift: { namen: L.jost, kop: L.allison, tekst: L.jost, extra: L.allison },
+  olijf: { namen: L.pinyon, kop: L.jost, tekst: L.jost, extra: L.pinyon },
+}
+
+// Ontwerpen die niet staand maar vierkant zijn: hoogte gedeeld door breedte
+export const ONTWERP_VERHOUDING: Partial<Record<NieuwOntwerp, number>> = {
+  olijf: 1,
+}
+
+/**
+ * Waar een illustratie vandaan komt. In de browser een gewoon pad; de
+ * afbeelding (satori) haalt hem op via de volledige link. Lokaal is dat de
+ * ontwikkelserver, anders de echte site.
+ */
+export function illustratie(pad: string, voorAfbeelding: boolean): string {
+  if (!voorAfbeelding) return pad
+  const basis =
+    process.env.NODE_ENV === "development"
+      ? "http://localhost:3000"
+      : process.env.NEXT_PUBLIC_BASE_URL || "https://www.sayingyes.nl"
+  return `${basis.replace(/\/$/, "")}${pad}`
 }
 
 /** Dezelfde rollen, als font-family voor in een style. */
@@ -87,6 +107,7 @@ export const ONDER_DE_KAART: Partial<Record<CardDesign, OnderDeKaart>> = {
   palm: { locatie: true, bericht: false, details: true },
   ibiza: { locatie: true, bericht: true, details: true },
   fotoschrift: { locatie: true, bericht: true, details: true },
+  olijf: { locatie: false, bericht: true, details: true },
   // Een eigen ontwerp heeft alles al in de afbeelding; alleen wat je er zelf
   // bij schrijft komt eronder
   eigen: { locatie: false, bericht: true, details: false },

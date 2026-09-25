@@ -39,7 +39,7 @@ import { compressImage } from "@/lib/client-image"
 import CardReveal from "@/app/kaart/[token]/card-reveal"
 import Voorkant from "@/components/kaart/Voorkant"
 import { KAART_PALETTEN, kaartKleuren } from "@/lib/kaart-paletten"
-import { ONDER_DE_KAART } from "@/lib/kaart-ontwerpen"
+import { ONDER_DE_KAART, ONTWERP_VERHOUDING } from "@/lib/kaart-ontwerpen"
 import { KLEUR } from "@/lib/ontwerp"
 import {
   AANMELD_LABEL,
@@ -184,7 +184,15 @@ function Miniatuur({ display, sc }: { display: CardDisplay; sc: SC }) {
       className="relative w-full overflow-hidden rounded-lg"
       style={{ aspectRatio: "5 / 7", backgroundColor: sc.bodyBg, pointerEvents: "none" }}
     >
-      <div className="absolute left-0 top-0" style={{ width: 400, transform: `scale(${schaal})`, transformOrigin: "top left" }}>
+      <div
+        className="absolute left-0 top-0"
+        style={{
+          width: 400,
+          // Een vierkante kaart staat in het midden van het staande vakje
+          transform: `translateY(${((560 - 400 * (ONTWERP_VERHOUDING[display.design as keyof typeof ONTWERP_VERHOUDING] ?? 1.4)) / 2) * schaal}px) scale(${schaal})`,
+          transformOrigin: "top left",
+        }}
+      >
         <Voorkant display={d} sc={sc} breedte={400} vullen={560} />
       </div>
     </div>

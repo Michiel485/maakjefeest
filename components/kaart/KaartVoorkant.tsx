@@ -15,7 +15,7 @@
 import type { CSSProperties, ReactNode } from "react"
 import type { CardDisplay, NieuwOntwerp } from "@/lib/cards"
 import type { SC } from "@/lib/event-styles"
-import type { VoorkantLetters } from "@/lib/kaart-ontwerpen"
+import { illustratie, type VoorkantLetters } from "@/lib/kaart-ontwerpen"
 
 /** Een flexbox, want satori wil dat bij elke div met meer dan één kind. */
 function D({ style, children }: { style?: CSSProperties; children?: ReactNode }) {
@@ -255,6 +255,7 @@ export default function KaartVoorkant({
   breedte,
   letters,
   schaduw,
+  voorAfbeelding = false,
 }: {
   d: CardDisplay
   ontwerp: NieuwOntwerp
@@ -267,6 +268,8 @@ export default function KaartVoorkant({
    * zie je in de afbeelding de hoeken naast de afronding.
    */
   schaduw?: string
+  /** Getekend door satori: illustraties dan via de volledige link */
+  voorAfbeelding?: boolean
 }) {
   const s = breedte / 400
   const px = (n: number) => Math.round(n * s * 10) / 10
@@ -604,6 +607,54 @@ export default function KaartVoorkant({
             <Regels tekst={d.location} style={{ fontFamily: letters.tekst, fontSize: px(10.5), lineHeight: 1.6, letterSpacing: "0.12em", textTransform: "uppercase", color: tekst, opacity: 0.85 }} />
           )}
           <D style={{ marginTop: px(8) }}>{slot({ tekst, kop, accent })}</D>
+        </D>
+      </D>
+    )
+  }
+
+  // ── Olijf: het waterverfkader uit de websitebouwer, vierkant ──────────────
+  // De kleuren horen bij de tekening (groen blad, goud kader), dus die liggen
+  // vast en volgen niet de stijl van de website.
+  if (ontwerp === "olijf") {
+    const goud = "#A8894F"
+    const groen = "#4A5747"
+    return (
+      <D style={{ ...basis, minHeight: breedte, height: breedte, borderRadius: px(6), backgroundColor: "#F8F8F3" }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={illustratie("/kaart-illustraties/olijf-vierkant.jpg", voorAfbeelding)}
+          alt=""
+          width={breedte}
+          height={breedte}
+          style={{ position: "absolute", top: 0, left: 0, width: breedte, height: breedte, borderRadius: px(6) }}
+        />
+        {/* Binnen het gouden kader: dat loopt van 9 tot 91 procent */}
+        <D
+          style={{
+            position: "absolute",
+            top: breedte * 0.1,
+            left: breedte * 0.09,
+            width: breedte * 0.82,
+            height: breedte * 0.815,
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: px(10),
+            padding: `${px(20)}px ${px(40)}px`,
+          }}
+        >
+          <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(11), letterSpacing: "0.32em", textTransform: "uppercase", color: goud }}>
+            {d.heading}
+          </div>
+          <Regels tekst={d.names} style={{ fontFamily: letters.namen, fontSize: px(40), lineHeight: 1.15, color: groen }} />
+          {d.dateText && (
+            <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(12), letterSpacing: "0.22em", textTransform: "uppercase", color: goud, textAlign: "center" }}>
+              {d.dateText}
+            </div>
+          )}
+          {d.location && (
+            <Regels tekst={d.location} style={{ fontFamily: letters.tekst, fontSize: px(11), lineHeight: 1.5, letterSpacing: "0.06em", color: groen, opacity: 0.8 }} />
+          )}
         </D>
       </D>
     )

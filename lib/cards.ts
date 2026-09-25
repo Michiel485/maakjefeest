@@ -19,13 +19,15 @@ export type NieuwOntwerp =
   // De themakaarten van 25 september 2026: minder tekst, een vaste titel,
   // namen met een verbindingswoord in een andere letter
   | "titel" | "palm" | "ibiza" | "fotoschrift"
+  // Het olijfkader uit de websitebouwer als vierkante kaart
+  | "olijf"
 export type CardDesign = KlassiekOntwerp | NieuwOntwerp
 export type CardTemplate = CardDesign | "foto"
 
 /** Alle waarden die in cards.template mogen staan. */
 export const CARD_TEMPLATE_WAARDEN: CardTemplate[] = [
   "klassiek", "sierlijk", "bohemian", "foto", "minimaal", "fotovol", "boog", "deco", "datum", "eigen",
-  "titel", "palm", "ibiza", "fotoschrift",
+  "titel", "palm", "ibiza", "fotoschrift", "olijf",
 ]
 
 export function isKlassiekOntwerp(d: CardDesign): d is KlassiekOntwerp {
@@ -170,7 +172,7 @@ export const CARD_TYPE_PLAN: Record<CardType, "save_the_date" | "uitnodiging"> =
 
 // De volgorde in de galerij van de bouwer
 export const CARD_DESIGNS: CardDesign[] = [
-  "klassiek", "sierlijk", "bohemian", "minimaal", "datum", "titel", "palm", "ibiza", "deco", "boog", "fotovol", "fotoschrift", "eigen",
+  "klassiek", "sierlijk", "bohemian", "olijf", "minimaal", "datum", "titel", "palm", "ibiza", "deco", "boog", "fotovol", "fotoschrift", "eigen",
 ]
 
 export const CARD_TEMPLATE_LABEL: Record<CardDesign, string> = {
@@ -187,6 +189,7 @@ export const CARD_TEMPLATE_LABEL: Record<CardDesign, string> = {
   palm: "Palm",
   ibiza: "Ibiza",
   fotoschrift: "Foto met handschrift",
+  olijf: "Olijf",
 }
 
 export const CARD_TEMPLATE_UITLEG: Record<CardDesign, string> = {
@@ -203,6 +206,7 @@ export const CARD_TEMPLATE_UITLEG: Record<CardDesign, string> = {
   palm: "één palm, namen in twee letters",
   ibiza: "palmen en golven in een ovaal",
   fotoschrift: "jullie foto met een titel in handschrift",
+  olijf: "waterverf eucalyptus in een gouden kader",
 }
 
 /** De sfeer, als label in de galerij. */
@@ -220,6 +224,7 @@ export const CARD_DESIGN_SFEER: Record<CardDesign, string> = {
   palm: "Zomer",
   ibiza: "Zomer",
   fotoschrift: "Persoonlijk",
+  olijf: "Natuurlijk",
 }
 
 // Oude waarden en rommel vallen terug op het strakke ontwerp
