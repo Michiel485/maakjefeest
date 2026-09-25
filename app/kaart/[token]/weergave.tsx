@@ -8,7 +8,7 @@
 // link, het bruidspaar kijkt een keer.
 
 import Link from "next/link"
-import { getStyleConfig } from "@/lib/event-styles"
+import { getStyleConfig, isStyle } from "@/lib/event-styles"
 import { kaartKleuren } from "@/lib/kaart-paletten"
 import { buildCardDisplay } from "@/lib/cards"
 import type { CardWithEvent } from "@/lib/cards-server"
@@ -59,7 +59,7 @@ export function KaartWeergave({
   const { card, event } = data
   const display = buildCardDisplay(card.type, card.template, card.content, event)
   // De kleuren van de kaart: die van de website, of een eigen palet
-  const sc = kaartKleuren(getStyleConfig(event.style, {
+  const sc = kaartKleuren(getStyleConfig(isStyle(card.content.stijl) ? card.content.stijl : event.style, {
     fontHero:       event.font_hero,
     fontInitials:   event.font_initials,
     fontFrameNames: event.font_frame_names,

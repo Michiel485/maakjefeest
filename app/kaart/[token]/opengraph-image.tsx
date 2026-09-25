@@ -2,7 +2,7 @@ import { kaartKleuren } from "@/lib/kaart-paletten"
 import { notFound } from "next/navigation"
 import { buildCardDisplay } from "@/lib/cards"
 import { fetchCardByToken, isOpenbaar } from "@/lib/cards-server"
-import { getStyleConfig } from "@/lib/event-styles"
+import { getStyleConfig, isStyle } from "@/lib/event-styles"
 import { renderCardImage } from "@/lib/card-image"
 
 export const alt = "Digitale kaart"
@@ -21,7 +21,7 @@ export default async function Image({
 
   const display = buildCardDisplay(data.card.type, data.card.template, data.card.content, data.event)
   // De kleuren van de kaart: die van de website, of een eigen palet
-  const sc = kaartKleuren(getStyleConfig(data.event.style), data.card.content.kleur)
+  const sc = kaartKleuren(getStyleConfig(isStyle(data.card.content.stijl) ? data.card.content.stijl : data.event.style), data.card.content.kleur)
 
   // Nog niet geactiveerd: watermerk, ook in de voorvertoning die WhatsApp maakt
   // Dezelfde regel als de kaartpagina: geactiveerd en in het pakket

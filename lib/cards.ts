@@ -98,8 +98,12 @@ export interface CardContent {
    */
   ontwerpUrl?: string
   ontwerpVerhouding?: number
-  /** Een vouwkaart: eerst een kaft, tik en hij klapt open */
-  vouwkaart?: boolean
+  /**
+   * De stijl van deze kaart (een van de stijlen uit lib/event-styles.ts), los
+   * van die van de website (Michiel, 25 september 2026). Leeg bij oudere
+   * kaarten: die volgen de stijl van de bruiloft.
+   */
+  stijl?: string
   // In welke taal de vaste teksten op de kaart staan
   taal?: CardTaal
   // Of er onder de kaart om een aanmelding wordt gevraagd, en hoeveel. Zie
@@ -555,7 +559,6 @@ export interface CardDisplay extends CardVasteTeksten {
   datumIso?: string | null
   ontwerpUrl?: string | null
   ontwerpVerhouding?: number | null
-  vouwkaart?: boolean
   /**
    * Heeft het bruidspaar de boodschap zelf geschreven? Een strak ontwerp zet
    * alleen een eigen boodschap onder de kaart, niet onze standaardtekst.
@@ -591,11 +594,13 @@ export function buildCardDisplay(
     // hoe laat, welke kleding. Alleen wat is ingevuld, elk op een eigen regel.
     // Eerst stond het naast elkaar met een puntje ertussen; Michiel wil het
     // onder elkaar (25 september 2026).
+    // Tijden en dresscode alleen op een trouwkaart: op een Save the Date zijn
+    // ze overbodig (Michiel, 25 september 2026)
     timeText:
       [
         content.toonGastType && content.guestType ? tk.gasten[content.guestType] : null,
-        content.timeText?.trim() || null,
-        content.dresscode?.trim() ? `${tk.dresscode}: ${content.dresscode.trim()}` : null,
+        type === "trouwkaart" ? content.timeText?.trim() || null : null,
+        type === "trouwkaart" && content.dresscode?.trim() ? `${tk.dresscode}: ${content.dresscode.trim()}` : null,
       ]
         .filter((d): d is string => !!d)
         .join("\n") || null,
@@ -603,12 +608,13 @@ export function buildCardDisplay(
     // Een foto hoort bij de kaart zodra er één gekozen is, los van het ontwerp
     photoUrl: content.photoUrl?.trim() || (template === "foto" ? event.hero_image_url?.trim() || null : null),
     design: cardDesign(template),
-    animatie: cardAnimatie(content.animatie),
+    // Elke kaart opent rustig; kiezen hoeft niet meer (Michiel, 25 september
+    // 2026). Wat er ooit bewaard is, maakt niet uit.
+    animatie: "rustig",
     // Een eigen datumtekst (van oude kaarten) wint van de cijfers
     datumIso: content.dateText?.trim() ? null : event.datum || null,
     ontwerpUrl: content.ontwerpUrl || null,
     ontwerpVerhouding: content.ontwerpVerhouding || null,
-    vouwkaart: content.vouwkaart === true,
     eigenBericht: !!content.message?.trim(),
     ...displayTeksten(taal),
   }

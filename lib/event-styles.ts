@@ -251,6 +251,31 @@ export const STYLE_CONFIG = {
 
 export type Style = keyof typeof STYLE_CONFIG
 
+// Korte namen, dezelfde in de kaartbouwer en de websitebouwer (Michiel,
+// 25 september 2026). Eerst had elke bouwer eigen namen, en "Roze" in de
+// ene heette "Terracotta & Gold" in de andere.
+export const STYLE_NAAM: Record<Style, string> = {
+  zand: "Zand",
+  ivoor: "Parel",
+  earthy: "Mos",
+  emerald: "Smaragd",
+  roze: "Koper",
+  terracotta: "Terra",
+  poederroze: "Roos",
+  bordeaux: "Bordeaux",
+  zwartgoud: "Noir",
+  zwartwit: "Inkt",
+}
+
+/** De volgorde in beide bouwers: van licht naar donker, van zacht naar stevig. */
+export const STYLE_VOLGORDE: Style[] = [
+  "zand", "ivoor", "earthy", "emerald", "roze", "terracotta", "poederroze", "bordeaux", "zwartgoud", "zwartwit",
+]
+
+export function isStyle(v: unknown): v is Style {
+  return typeof v === "string" && v in STYLE_CONFIG
+}
+
 export interface SC {
   accent: string
   heroGradient: string

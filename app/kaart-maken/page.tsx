@@ -4,14 +4,11 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase"
-import { STYLE_CONFIG, getStyleConfig, formatDate, type SC, type Style } from "@/lib/event-styles"
+import { STYLE_CONFIG, STYLE_NAAM, STYLE_VOLGORDE, getStyleConfig, formatDate, isStyle, type SC, type Style } from "@/lib/event-styles"
 import {
   buildCardDisplay,
   cardAnimatie,
   cardDesign,
-  CARD_ANIMATIE_KEUZES,
-  CARD_ANIMATIE_LABEL,
-  CARD_ANIMATIE_UITLEG,
   CARD_DESIGNS,
   CARD_TAAL_LABEL,
   CARD_TALEN,
@@ -75,11 +72,9 @@ const LS_BRUILOFT_LOCATIE = "sayingyes_bruiloft_locatie"
 const LS_ACTIE   = "sayingyes_kaart_actie"
 const LS_IDS     = "sayingyes_kaart_ids"
 
-const STYLE_LABEL: Record<Style, string> = {
-  roze: "Roze", ivoor: "Ivoor", zand: "Zand", earthy: "Earthy", emerald: "Emerald",
-  zwartgoud: "Zwart & goud", zwartwit: "Zwart-wit", terracotta: "Terracotta", bordeaux: "Bordeaux", poederroze: "Poederroze",
-}
-const STYLE_KEYS = Object.keys(STYLE_CONFIG) as Style[]
+// Dezelfde namen en volgorde als in de websitebouwer
+const STYLE_LABEL = STYLE_NAAM
+const STYLE_KEYS = STYLE_VOLGORDE
 
 interface ConceptRij {
   id: string
@@ -104,7 +99,7 @@ type Stap = "stijl" | "template" | "tekst" | "groep" | "details" | "aanmelden" |
 type Blad = "kaart" | "tekst" | "uiterlijk" | "gasten" | "bekijken"
 const BLAD_SECTIES: Record<Exclude<Blad, "kaart">, Stap[]> = {
   tekst: ["tekst", "details", "taal"],
-  uiterlijk: ["stijl", "template", "foto", "animatie"],
+  uiterlijk: ["stijl", "template", "foto"],
   gasten: ["groep", "aanmelden"],
   bekijken: ["bekijken"],
 }
@@ -207,7 +202,6 @@ interface KaartOntwerp {
   ontwerpUrl: string | null
   ontwerpDataUrl: string | null
   ontwerpVerhouding: number | null
-  vouwkaart: boolean
   template: CardTemplate
   names: string
   datum: string
@@ -236,7 +230,6 @@ const LEEG: KaartOntwerp = {
   ontwerpUrl: null,
   ontwerpDataUrl: null,
   ontwerpVerhouding: null,
-  vouwkaart: false,
   template: "klassiek",
   names: "",
   datum: "",
@@ -258,9 +251,6 @@ const LEEG: KaartOntwerp = {
 
 function isCardType(v: unknown): v is CardType {
   return v === "save_the_date" || v === "trouwkaart"
-}
-function isStyle(v: unknown): v is Style {
-  return typeof v === "string" && v in STYLE_CONFIG
 }
 
 /** Wat er bij Aanmelden gekozen is, kort genoeg voor de kop van de sectie. */
@@ -639,12 +629,12 @@ export default function KaartMakenPage() {
             setStap(null)
             setOntwerp({
               type: kaart?.type ?? gewenstType,
-              style: isStyle(event.style) ? event.style : "zand",
+              // De stijl van de kaart; oudere kaarten volgen die van de bruiloft
+              style: isStyle(kaart?.content.stijl) ? kaart.content.stijl : isStyle(event.style) ? event.style : "zand",
               kleur: kaart?.content.kleur ?? "",
               ontwerpUrl: kaart?.content.ontwerpUrl ?? null,
               ontwerpDataUrl: null,
               ontwerpVerhouding: kaart?.content.ontwerpVerhouding ?? null,
-              vouwkaart: kaart?.content.vouwkaart === true,
               template: kaart?.template ?? "klassiek",
               names: kaart?.content.names ?? (event.frame_names as string) ?? (event.title as string) ?? "",
               datum: (event.datum as string) ?? "",
@@ -750,11 +740,11 @@ export default function KaartMakenPage() {
     toonGastType: ontwerp.toonGastType || undefined,
     dresscode: ontwerp.dresscode || undefined,
     photoUrl: ontwerp.photoUrl ?? ontwerp.photoDataUrl ?? undefined,
-    animatie: ontwerp.animatie,
+    animatie: "rustig",
     kleur: ontwerp.kleur || undefined,
+    stijl: ontwerp.style,
     ontwerpUrl: ontwerp.ontwerpUrl ?? ontwerp.ontwerpDataUrl ?? undefined,
     ontwerpVerhouding: ontwerp.ontwerpVerhouding ?? undefined,
-    vouwkaart: ontwerp.vouwkaart || undefined,
     taal: ontwerp.taal,
     aanmelden: ontwerp.aanmelden,
   }
@@ -809,7 +799,9 @@ export default function KaartMakenPage() {
       // de eerste kaart, want daarna is hij van de website en kan elke kaart
       // een andere hebben.
       locatie: eventLocatie || ontwerp.location,
-      style: ontwerp.style,
+      // Alleen een nieuwe bruiloft begint met de stijl van de kaart; daarna
+      // kiest de website zijn eigen kleuren
+      ...(eventId ? {} : { style: ontwerp.style }),
       frame_names: ontwerp.names,
       initials: initialenVan(ontwerp.names),
       pages: ["Home"],
@@ -1043,11 +1035,11 @@ export default function KaartMakenPage() {
       ...o,
       type: k.type,
       template: k.template,
+      style: isStyle(k.content.stijl) ? k.content.stijl : o.style,
       kleur: k.content.kleur ?? "",
       ontwerpUrl: k.content.ontwerpUrl ?? null,
       ontwerpDataUrl: null,
       ontwerpVerhouding: k.content.ontwerpVerhouding ?? null,
-      vouwkaart: k.content.vouwkaart === true,
       location: k.content.location ?? o.location,
       message: k.content.message ?? "",
       guestType: k.content.guestType ?? "",
@@ -1879,12 +1871,11 @@ export default function KaartMakenPage() {
           </Sectie>
 
           <Sectie className={telefoon("stijl")} vast={inPaneel("stijl")} open={isOpen("stijl")} onToggle={() => setStap(stap === "stijl" ? null : "stijl")} titel="Kleuren">
-            {/* Eén lijst voor de kaart en de website samen. Eerst waren het
-                twee lijstjes, "zelfde als je website" en "alleen voor deze
-                kaart"; dat was vaag, want bij een kaart weet je niet wat er
-                voor de website bestaat (Michiel, 25 september 2026). */}
+            {/* Dezelfde tien stijlen als de website, maar per kaart te kiezen:
+                een kleur hier verandert de website niet (Michiel, 25 september
+                2026). */}
             <p className="m-0 text-[12px] leading-relaxed" style={{ color: BODY }}>
-              Deze kleuren gelden ook voor jullie website, zodat alles bij elkaar past.
+              Alleen voor deze kaart. De kleuren van jullie website kies je apart in de websitebouwer.
             </p>
             <div className="grid grid-cols-5 gap-2">
               {STYLE_KEYS.map((s) => {
@@ -2114,6 +2105,10 @@ export default function KaartMakenPage() {
                   : "Leeg betekent: geen extra regel."}
               </span>
             </label>
+            {/* Tijden en dresscode alleen op een trouwkaart; op een Save the
+                Date zijn ze overbodig (Michiel, 25 september 2026) */}
+            {isTrouwkaart && (
+              <>
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Tijden</span>
               <input
@@ -2136,6 +2131,8 @@ export default function KaartMakenPage() {
                 maxLength={40}
               />
             </label>
+              </>
+            )}
           </Sectie>
 
           <Sectie
@@ -2233,42 +2230,6 @@ export default function KaartMakenPage() {
                 </button>
               ))}
             </div>
-          </Sectie>
-
-          <Sectie className={telefoon("animatie")} vast={inPaneel("animatie")} open={isOpen("animatie")} onToggle={() => setStap(stap === "animatie" ? null : "animatie")} titel="Openen">
-            <div className="flex flex-col gap-2">
-              {CARD_ANIMATIE_KEUZES.map((a) => (
-                <button
-                  key={a}
-                  onClick={() => update({ animatie: a })}
-                  className="text-left px-3 py-2.5 rounded-xl text-sm font-semibold"
-                  style={{ border: `2px solid ${ontwerp.animatie === a ? GOLD : GOLD_LIGHT}`, backgroundColor: ontwerp.animatie === a ? "#fff" : "transparent", color: CHARCOAL, cursor: "pointer" }}
-                >
-                  {CARD_ANIMATIE_LABEL[a]}
-                  <span className="block text-[11px] font-normal" style={{ color: BODY }}>{CARD_ANIMATIE_UITLEG[a]}</span>
-                </button>
-              ))}
-            </div>
-            {/* Een vouwkaart: werkt met elk ontwerp. Te zien in de demo, niet in
-                het voorbeeld hierboven. */}
-            <label className="flex items-start gap-2.5 rounded-xl px-3 py-2.5" style={{ border: `2px solid ${ontwerp.vouwkaart ? GOLD : GOLD_LIGHT}`, backgroundColor: ontwerp.vouwkaart ? "#fff" : "transparent", cursor: "pointer" }}>
-              <input type="checkbox" checked={ontwerp.vouwkaart} onChange={(e) => update({ vouwkaart: e.target.checked })} className="mt-1" />
-              <span className="text-sm font-semibold" style={{ color: CHARCOAL }}>
-                Als vouwkaart
-                <span className="block text-[11px] font-normal" style={{ color: BODY }}>
-                  eerst een kaft met jullie initialen, tik en hij klapt open. Bekijk het in de demo.
-                </span>
-              </span>
-            </label>
-            {/* Op een telefoon is er geen ruimte voor de knop rechtsboven in
-                het voorbeeld, dus daar staat hij hier. */}
-            <button
-              onClick={() => setSimulatie(true)}
-              className="md:hidden text-sm font-semibold px-3 py-2.5 rounded-xl"
-              style={{ backgroundColor: "#fff", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
-            >
-              Bekijk hoe het opengaat
-            </button>
           </Sectie>
 
           <Sectie className={telefoon("bekijken")} vast={inPaneel("bekijken")} open={isOpen("bekijken")} onToggle={() => setStap(stap === "bekijken" ? null : "bekijken")} titel="Voorbeeld en proefkaart">

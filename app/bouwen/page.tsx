@@ -11,7 +11,7 @@ import EventMastersPreview from "@/components/EventMastersPreview"
 import EventProgramPreview, { PROGRAM_ICONS, ProgramIcon, DEFAULT_PROGRAM_ITEMS } from "@/components/EventProgramPreview"
 import StoryPreview from "@/components/StoryPreview"
 import FotosPreview from "@/components/FotosPreview"
-import { formatDate, STYLE_CONFIG, type Style } from "@/lib/event-styles"
+import { formatDate, STYLE_CONFIG, STYLE_NAAM, STYLE_VOLGORDE, type Style } from "@/lib/event-styles"
 import { TITLE_FONT_OPTIONS, getTitleFont } from "@/lib/title-fonts"
 import { createClient } from "@/lib/supabase"
 import { eventSiteUrl } from "@/lib/site-url"
@@ -216,18 +216,6 @@ async function uploadToStorage(file: File, bucket: string): Promise<string> {
   return urlData.publicUrl
 }
 
-const STYLES: { id: Style; label: string; sub: string; dot: string; border: string; active: string }[] = [
-  { id: "zand",   label: "Gold & Ivory",      sub: "Clean, licht & tijdloos",   dot: "bg-[#E6D5B8]",    border: "border-[#E6D5B8]/60",    active: "ring-[#E6D5B8]"     },
-  { id: "ivoor",  label: "Pampas & Pearl",    sub: "Luchtig, wild & vrij",      dot: "bg-[#C8D4C0]",    border: "border-[#C8D4C0]/60",    active: "ring-[#9CA996]"     },
-  { id: "roze",   label: "Terracotta & Gold", sub: "Mediterraans, rijk & gedurfd", dot: "bg-[#D07C60]", border: "border-[#C5A059]/50",   active: "ring-[#C5A059]"     },
-  { id: "earthy",   label: "Earthy & Warm",     sub: "Modern rustiek & betoverend",  dot: "bg-[#5A6B5D]",   border: "border-[#5A6B5D]/50",   active: "ring-[#5A6B5D]"   },
-  { id: "emerald",  label: "Emerald Luxury",    sub: "Donker, diep & luxueus",       dot: "bg-[#07353A]",   border: "border-[#D59C76]/50",   active: "ring-[#D59C76]"   },
-  { id: "zwartgoud",  label: "Black & Gold",    sub: "Chic, avond & glamour",        dot: "bg-[#161513]",   border: "border-[#C9A45C]/50",   active: "ring-[#C9A45C]"   },
-  { id: "zwartwit",   label: "Black & White",   sub: "Strak, grafisch & tijdloos",   dot: "bg-[#141414]",   border: "border-[#141414]/40",   active: "ring-[#141414]"   },
-  { id: "terracotta", label: "Terracotta Sun",  sub: "Warm, zonnig & zuidelijk",     dot: "bg-[#B2603F]",   border: "border-[#B2603F]/50",   active: "ring-[#B2603F]"   },
-  { id: "bordeaux",   label: "Bordeaux Velvet", sub: "Diep, romantisch & warm",      dot: "bg-[#7A2B34]",   border: "border-[#7A2B34]/50",   active: "ring-[#7A2B34]"   },
-  { id: "poederroze", label: "Powder Rose",     sub: "Zacht, lief & romantisch",     dot: "bg-[#BE8A89]",   border: "border-[#BE8A89]/50",   active: "ring-[#BE8A89]"   },
-]
 
 
 const PAGES: PageConfig[] = [
@@ -2020,28 +2008,32 @@ export default function BouwenPage() {
                   </button>
                   {algOpen('stijl') && (
                     <div className="px-5 pb-4 flex flex-col gap-2">
-                      {STYLES.map((s) => (
-                        <button
-                          key={s.id}
-                          onClick={() => saveStyle(s.id)}
-                          className={`flex items-center gap-3 w-full rounded-xl border px-3 py-2.5 text-left transition-all ${
-                            style === s.id
-                              ? `${s.border} bg-gray-50 ring-2 ${s.active} ring-offset-1`
-                              : `border-gray-100 hover:border-[var(--goud-licht)] hover:bg-gray-50`
-                          }`}
-                        >
-                          <span className={`w-5 h-5 rounded-full flex-shrink-0 ${s.dot}`} />
-                          <div className="min-w-0">
-                            <p className="text-xs font-semibold text-gray-800 leading-tight">{s.label}</p>
-                            <p className="text-[10px] text-gray-400 truncate">{s.sub}</p>
-                          </div>
-                          {style === s.id && (
-                            <svg className="w-3.5 h-3.5 text-rose-500 flex-shrink-0 ml-auto" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
-                          )}
-                        </button>
-                      ))}
+                      {/* Dezelfde rondjes en namen als in de kaartbouwer
+                          (Michiel, 25 september 2026) */}
+                      <div className="grid grid-cols-5 gap-2">
+                        {STYLE_VOLGORDE.map((s) => {
+                          const cfg = STYLE_CONFIG[s]
+                          const actief = style === s
+                          return (
+                            <button
+                              key={s}
+                              onClick={() => saveStyle(s)}
+                              title={STYLE_NAAM[s]}
+                              className="flex flex-col items-center gap-1.5"
+                              style={{ cursor: "pointer", background: "none", border: "none", padding: 0 }}
+                            >
+                              <span
+                                className="w-10 h-10 rounded-full"
+                                style={{
+                                  background: `linear-gradient(135deg, ${cfg.bodyBg} 50%, ${cfg.accent} 50%)`,
+                                  boxShadow: actief ? "0 0 0 2px #fff, 0 0 0 4px #C5A059" : "0 0 0 1px rgba(0,0,0,0.08)",
+                                }}
+                              />
+                              <span className="text-[10px]" style={{ color: actief ? "#1A1A1A" : "#5C5248", fontWeight: actief ? 700 : 500 }}>{STYLE_NAAM[s]}</span>
+                            </button>
+                          )
+                        })}
+                      </div>
 
                     </div>
                   )}

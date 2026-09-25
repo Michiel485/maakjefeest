@@ -1,3 +1,4 @@
+import { isStyle } from "@/lib/event-styles"
 import { kaartPalet } from "@/lib/kaart-paletten"
 import { createServiceClient } from "@/lib/supabase"
 import { createClient } from "@/lib/supabase-server"
@@ -40,7 +41,7 @@ function sanitizeContent(raw: unknown): CardContent {
     toonGastType: input.toonGastType === true ? true : undefined,
     dresscode: text(input.dresscode, 40),
     animatie: cardAnimatie(input.animatie),
-    vouwkaart: input.vouwkaart === true ? true : undefined,
+    stijl: isStyle(input.stijl) ? input.stijl : undefined,
     // Een eigen palet voor deze kaart; alleen bekende, anders de website
     kleur: kaartPalet(input.kleur)?.id,
     // Eigen ontwerp: alleen een echte link naar een geüploade afbeelding

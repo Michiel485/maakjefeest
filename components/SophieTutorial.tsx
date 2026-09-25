@@ -27,7 +27,7 @@ const STEPS: { label: string; title: string; text: string; nav: SophieNav }[] = 
   {
     label: "Stap 1 · Stijl",
     title: "Laten we beginnen met de sfeer 🎨",
-    text: "Kies een kleurthema dat past bij jullie dag. Van warm ivoor tot stoer emerald: elk thema heeft zijn eigen kleurpalet en sfeer. Je ziet de verandering direct in de preview. Geen zorgen, dit kun je later altijd nog aanpassen!",
+    text: "Kies een kleurthema dat past bij jullie dag. Van zacht Zand tot diep Smaragd: elk thema heeft zijn eigen kleurpalet en sfeer. Je ziet de verandering direct in de preview. Geen zorgen, dit kun je later altijd nog aanpassen!",
     nav: { activeSection: 'algemeen', openAlgSection: 'stijl' },
   },
   {
@@ -67,7 +67,7 @@ const CARD_STEPS: { label: string; title: string; text: string; nav: SophieNav }
   {
     label: "Stap 1 · Stijl",
     title: "Laten we beginnen met de sfeer 🎨",
-    text: "Kies een kleurthema dat past bij jullie dag. Van warm ivoor tot stoer emerald: het thema bepaalt de kleuren van jullie kaart en van de envelop die jullie gasten openen. Je ziet de verandering direct in het voorbeeld.",
+    text: "Kies een kleurthema dat past bij jullie dag. Van zacht Zand tot diep Smaragd: het thema bepaalt de kleuren van jullie kaart en van de envelop die jullie gasten openen. Je ziet de verandering direct in het voorbeeld.",
     nav: { activeSection: 'algemeen', openAlgSection: 'stijl' },
   },
   {

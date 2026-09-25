@@ -1,7 +1,7 @@
 import { kaartKleuren } from "@/lib/kaart-paletten"
 import { buildCardDisplay } from "@/lib/cards"
 import { fetchCardByToken, isOpenbaar } from "@/lib/cards-server"
-import { getStyleConfig } from "@/lib/event-styles"
+import { getStyleConfig, isStyle } from "@/lib/event-styles"
 import { renderCardImage } from "@/lib/card-image"
 
 export const dynamic = "force-dynamic"
@@ -22,7 +22,7 @@ export async function GET(
 
   const display = buildCardDisplay(data.card.type, data.card.template, data.card.content, data.event)
   // De kleuren van de kaart: die van de website, of een eigen palet
-  const sc = kaartKleuren(getStyleConfig(data.event.style), data.card.content.kleur)
+  const sc = kaartKleuren(getStyleConfig(isStyle(data.card.content.stijl) ? data.card.content.stijl : data.event.style), data.card.content.kleur)
 
   const image = await renderCardImage(display, sc, "download", !betaald)
 

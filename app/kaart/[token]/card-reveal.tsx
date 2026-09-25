@@ -342,19 +342,7 @@ export default function CardReveal({
   // De blokken onder de kaart (knoppen, CTA, afzender) nemen hun plek al in
   // voordat ze zichtbaar zijn. Anders herschikt de pagina zich precies op het
   // moment dat de kaart landt, en verspringt hij daar nog een stukje van.
-  // Een vouwkaart komt dicht uit de envelop: eerst een kaft, tik en hij klapt
-  // open (Michiel, 25 september 2026). Niet in het voorbeeld in de bouwer, en
-  // niet voor wie bewegingen heeft uitgezet: die ziet meteen de binnenkant.
-  // De kaft verdwijnt na de draai altijd, ook als de browser niet draait.
-  const vouw = !!display.vouwkaart && !compact && !startOpen && !reduceMotion
-  const [kaftOpen, setKaftOpen] = useState(false)
-  const [kaftWeg, setKaftWeg] = useState(false)
-  function openKaft() {
-    if (stage !== "open" || kaftOpen) return
-    setKaftOpen(true)
-    setTimeout(() => setKaftWeg(true), 1000)
-  }
-  const eindBlok = stage === "open" && (!vouw || kaftOpen)
+  const eindBlok = stage === "open"
     ? { animation: reduceMotion ? "none" : "knoppen-fadein 0.5s ease 0.5s both" }
     : { visibility: "hidden" as const, pointerEvents: "none" as const }
   // Wat bij een strak ontwerp niet op de kaart staat, komt eronder
@@ -754,45 +742,8 @@ export default function CardReveal({
                   { opacity: 0 }),
           }}
         >
-            <div ref={gezichtRef} style={vouw ? { position: "relative", perspective: 1600 } : undefined}>
+            <div ref={gezichtRef}>
               <Voorkant display={display} sc={sc} breedte={kaartBreedte} />
-              {vouw && !kaftWeg && (
-                <button
-                  type="button"
-                  onClick={openKaft}
-                  aria-label={display.tikOpen}
-                  className="absolute inset-0 flex flex-col items-center justify-center gap-4"
-                  style={{
-                    backgroundColor: sc.cardBg ?? "#FFFEFB",
-                    border: `1px solid ${sc.accent}55`,
-                    borderRadius: 14,
-                    boxShadow: "0 26px 50px -26px rgba(0,0,0,0.5)",
-                    transformOrigin: "left center",
-                    transform: kaftOpen ? "rotateY(-178deg)" : "none",
-                    transition: "transform 900ms cubic-bezier(0.45, 0, 0.2, 1), opacity 250ms ease 750ms",
-                    opacity: kaftOpen ? 0 : 1,
-                    backfaceVisibility: "hidden",
-                    cursor: stage === "open" ? "pointer" : "default",
-                    padding: 0,
-                  }}
-                >
-                  {/* Een rustige kaft: een dubbel lijntje, de kop en de initialen */}
-                  <span aria-hidden className="absolute rounded-[10px]" style={{ inset: 12, border: `1px solid ${sc.accent}70` }} />
-                  <span className="text-[11px] font-semibold uppercase tracking-[0.3em]" style={{ color: sc.labelColor }}>
-                    {display.heading}
-                  </span>
-                  <span style={{ fontFamily: sc.fontInitials ?? sc.fontPageTitles, fontSize: "3.2rem", lineHeight: 1, color: sc.cardText ?? sc.headingColor }}>
-                    {initials || "♥"}
-                  </span>
-                  <span className="w-10 h-px" style={{ backgroundColor: `${sc.accent}80` }} />
-                  <span
-                    className="text-xs"
-                    style={{ color: sc.cardText ?? sc.bodyText, opacity: stage === "open" ? 0.7 : 0, transition: "opacity 0.4s ease" }}
-                  >
-                    {display.tikOpen}
-                  </span>
-                </button>
-              )}
             </div>
 
             {/* Wat een strak ontwerp niet op de kaart zet, staat eronder, rustig
