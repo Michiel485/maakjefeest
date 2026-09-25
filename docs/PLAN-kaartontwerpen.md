@@ -66,7 +66,13 @@ Opgeslagen in `content.envelop`. In de bouwer onder Uiterlijk, met een voorbeeld
 - Een vinkje bij het uploaden: "Wij mogen dit ontwerp gebruiken", want wie een ontwerp van een ander uploadt, maakt ons medeplichtig.
 - Zelfde prijs als een gewone kaart.
 
+## Themakaarten (25 september 2026)
+
+Na Michiels voorbeelden: kaarten met minder tekst, een vaste titel en namen met een verbindingswoord in een andere letter. Gebouwd, zonder ingekocht beeldmateriaal: **Grote titel** (Save the Date als beeld in een ovaal), **Palm** (namen dun, "en" in handschrift, kop in een boog), **Ibiza** (palmen en golven in een ovaal, tekst rond het ovaal) en **Foto met handschrift**. Wat een strak ontwerp niet op de kaart zet (locatie, een eigen tekst, de details) staat onder de kaart op de pagina (`ONDER_DE_KAART` in lib/kaart-ontwerpen.ts). Nieuwe lettertypes: Allison, Abril Fatface en Jost. Een nieuw palet Blush. De **vouwkaart** is een keuze bij Openen en werkt met elk ontwerp: eerst een kaft, tik en hij klapt open; wie bewegingen heeft uitgezet ziet meteen de binnenkant. Filters boven de galerij. Herstelpunt: git-tag `stabiel-2026-09-25b`.
+
 ## Fase 5: botanisch, met beeldmateriaal
+
+Michiel koos op 25 september 2026 voor AI-illustraties; zie docs/PROMPTS-illustraties.md.
 
 Waterverf met bloemen en bladeren kan ik niet tekenen. Dat komt pas als er beeldmateriaal is met een licentie voor commercieel gebruik, van Michiel of ingekocht. Voorbeeldkaarten die Michiel mooi vindt helpen bij alle ontwerpen: als inspiratie, nooit om één op één na te maken.
 

@@ -40,7 +40,7 @@ export async function renderNieuweKaartAfbeelding({
   // ontwerpen uit de datum of de initialen, niet uit de tekst zelf.
   const l = ONTWERP_LETTERS[ontwerp]
   const tekens = `${allText} ${allText.toUpperCase()} 0123456789 & · ♥`
-  const fonts: { name: string; data: ArrayBuffer; weight: 400 | 500 | 600; style: "normal" }[] = []
+  const fonts: { name: string; data: ArrayBuffer; weight: 300 | 400 | 500 | 600; style: "normal" }[] = []
   const geladen = new Map<string, string>()
   async function laad(letter: KaartLetter, fallback: string): Promise<string> {
     const sleutel = `${letter.google}:${letter.gewicht}`
@@ -57,6 +57,7 @@ export async function renderNieuweKaartAfbeelding({
     namen: await laad(l.namen, "serif"),
     kop: await laad(l.kop, "serif"),
     tekst: await laad(l.tekst, "sans-serif"),
+    extra: await laad(l.extra ?? l.namen, "serif"),
   }
 
   // Diagonale banen over de hele afbeelding, net als bij de eerste ontwerpen

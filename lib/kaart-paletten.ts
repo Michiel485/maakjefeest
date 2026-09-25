@@ -104,6 +104,18 @@ export const KAART_PALETTEN: KaartPalet[] = [
     knopTekst: "#FFFFFF",
   },
   {
+    // Bij Palm, Ibiza en Grote titel: zacht roze met terracotta
+    id: "blush",
+    naam: "Blush",
+    pagina: "#F6ECE7",
+    kaart: "#FBF3EF",
+    kop: "#A9644F",
+    tekst: "#946455",
+    accent: "#C98E78",
+    label: "#A9644F",
+    knopTekst: "#FFFFFF",
+  },
+  {
     id: "bordeaux",
     naam: "Bordeaux",
     pagina: "#EFE3E1",

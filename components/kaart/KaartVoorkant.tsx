@@ -66,6 +66,159 @@ function datumCijfers(iso: string | null | undefined): string[] | null {
   return m ? [m[3], m[2], m[1].slice(2)] : null
 }
 
+/** 2027-08-15 wordt "15.08.2027", of met een ander teken ertussen. */
+function datumKort(iso: string | null | undefined, teken: string): string | null {
+  const m = iso?.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  return m ? [m[3], m[2], m[1]].join(teken) : null
+}
+
+/**
+ * De twee namen los, zodat het woord ertussen een andere letter kan krijgen:
+ * "Eline", "and", "Manuel". Lukt dat niet (één naam, of iets heel anders),
+ * dan null en staan de namen er gewoon zoals ze getypt zijn.
+ */
+function naamDelen(namen: string): [string, string] | null {
+  const verbinders = /^(&|\+|en|and|et|und|y|e)$/i
+  const regels = namen.split(/\r?\n/).map((r) => r.trim()).filter((r) => r && !verbinders.test(r))
+  if (regels.length === 2) return [regels[0], regels[1]]
+  const m = namen.replace(/\s+/g, " ").trim().match(/^(.+?)\s+(?:&|\+|en|and|et|und|y|e)\s+(.+)$/i)
+  return m ? [m[1], m[2]] : null
+}
+
+/**
+ * Tekst langs een boog of ovaal, letter voor letter. Geen SVG-tekst, want
+ * die tekent satori niet; losse, gedraaide letters wel.
+ */
+function boogLetters({
+  tekst,
+  cx,
+  cy,
+  rx,
+  ry,
+  graden,
+  onder = false,
+  grootte,
+  spatie = 0.12,
+  stijl,
+}: {
+  tekst: string
+  cx: number
+  cy: number
+  rx: number
+  ry: number
+  /** Hoeveel graden van de boog er ruimte is; de tekst staat in het midden */
+  graden: number
+  /** Onderaan de boog, dan leest hij nog steeds van links naar rechts */
+  onder?: boolean
+  grootte: number
+  /** Extra ruimte tussen de letters, als deel van de lettergrootte */
+  spatie?: number
+  stijl: CSSProperties
+}) {
+  // De boog in kleine stukjes, met de afstand langs de boog tot elk punt. Op
+  // een ovaal is de boog aan de uiteinden steiler; gelijke hoeken gaven daar
+  // te veel ruimte tussen de letters.
+  const midden = onder ? 90 : -90
+  const van = onder ? midden + graden / 2 : midden - graden / 2
+  const tot = onder ? midden - graden / 2 : midden + graden / 2
+  const STAPPEN = 240
+  const punten: { hoek: number; afstand: number }[] = []
+  let afstand = 0
+  for (let i = 0; i <= STAPPEN; i++) {
+    const h = ((van + ((tot - van) * i) / STAPPEN) * Math.PI) / 180
+    if (i > 0) {
+      const v = punten[i - 1].hoek
+      afstand += Math.hypot(rx * (Math.cos(h) - Math.cos(v)), ry * (Math.sin(h) - Math.sin(v)))
+    }
+    punten.push({ hoek: h, afstand })
+  }
+  const lengte = afstand
+  // Hoe breed een letter ongeveer is: smalle tekens smal, een spatie iets breder
+  const breedteVan = (ch: string) =>
+    grootte * (/[\s]/.test(ch) ? 0.34 : /[iIl1!|.,:;'’]/.test(ch) ? 0.3 : /[tfrjJ]/.test(ch) ? 0.38 : /[mwMW]/.test(ch) ? 0.82 : /[A-Z]/.test(ch) ? 0.64 : 0.5) + grootte * spatie
+  const letters = [...tekst]
+  const breedtes = letters.map(breedteVan)
+  const totaal = breedtes.reduce((a, b) => a + b, 0)
+  // Past het niet, dan krimpt de ruimte; anders staat de tekst in het midden
+  const schaal = totaal > lengte ? lengte / totaal : 1
+  let plek = (lengte - totaal * schaal) / 2
+  const vak = grootte * 1.3
+  return letters.map((ch, i) => {
+    const doel = plek + (breedtes[i] * schaal) / 2
+    plek += breedtes[i] * schaal
+    let j = 1
+    while (j < punten.length - 1 && punten[j].afstand < doel) j++
+    const a = punten[j - 1]
+    const b = punten[j]
+    const f = b.afstand > a.afstand ? (doel - a.afstand) / (b.afstand - a.afstand) : 0
+    const r = a.hoek + (b.hoek - a.hoek) * f
+    const x = cx + rx * Math.cos(r)
+    const y = cy + ry * Math.sin(r)
+    let hoek = (Math.atan2(ry * Math.cos(r), -rx * Math.sin(r)) * 180) / Math.PI
+    if (onder) hoek += 180
+    return (
+      <div
+        key={i}
+        style={{
+          display: "flex",
+          position: "absolute",
+          left: Math.round((x - vak / 2) * 10) / 10,
+          top: Math.round((y - vak / 2) * 10) / 10,
+          width: vak,
+          height: vak,
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: grootte,
+          transform: `rotate(${Math.round(hoek * 10) / 10}deg)`,
+          ...stijl,
+        }}
+      >
+        {ch === " " ? " " : ch}
+      </div>
+    )
+  })
+}
+
+/** Een palm in lijnstijl: een gebogen stam en zeven bladeren. */
+function Palm({ breedte, kleur }: { breedte: number; kleur: string }) {
+  return (
+    <svg width={breedte} height={breedte * 1.7} viewBox="0 0 100 170" fill="none">
+      <path d="M50 170 C 53 130, 46 100, 52 62" stroke={kleur} strokeWidth="3" strokeLinecap="round" />
+      <g fill={kleur}>
+        <path d="M52 60 C 40 44, 22 42, 6 52 C 22 50, 36 54, 52 62 Z" />
+        <path d="M52 60 C 42 38, 28 26, 12 26 C 26 32, 38 44, 52 62 Z" opacity="0.9" />
+        <path d="M52 60 C 50 38, 44 20, 34 8 C 44 22, 50 40, 53 61 Z" />
+        <path d="M52 60 C 60 40, 72 26, 90 24 C 76 32, 64 44, 53 62 Z" opacity="0.9" />
+        <path d="M52 60 C 66 46, 84 44, 98 56 C 82 52, 68 56, 53 62 Z" />
+        <path d="M52 60 C 40 62, 28 72, 22 88 C 32 76, 42 68, 52 63 Z" opacity="0.85" />
+        <path d="M53 60 C 66 62, 78 72, 82 90 C 72 78, 62 68, 53 63 Z" opacity="0.85" />
+      </g>
+    </svg>
+  )
+}
+
+/** Drie golfjes */
+function Golven({ breedte, kleur }: { breedte: number; kleur: string }) {
+  return (
+    <svg width={breedte} height={breedte * 0.3} viewBox="0 0 120 36" fill="none" stroke={kleur} strokeWidth="1.6" strokeLinecap="round">
+      <path d="M14 8 q 10 -6 20 0 t 20 0" />
+      <path d="M40 20 q 10 -6 20 0 t 20 0 t 20 0" />
+      <path d="M22 32 q 10 -6 20 0 t 20 0" />
+    </svg>
+  )
+}
+
+/** Een takje met twee blaadjes */
+function Takje({ breedte, kleur }: { breedte: number; kleur: string }) {
+  return (
+    <svg width={breedte} height={breedte} viewBox="0 0 40 40" fill="none">
+      <path d="M8 36 C 16 27, 24 18, 34 6" stroke={kleur} strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M22 20 C 19 12, 23 6, 32 3 C 32 12, 28 18, 22 20 Z" fill={kleur} />
+      <path d="M15 28 C 8 25, 6 18, 9 11 C 15 15, 17 22, 15 28 Z" fill={kleur} />
+    </svg>
+  )
+}
+
 // Art deco: een getrapte hoek. Punten voor linksboven in een vak van 40 bij
 // 40; de andere hoeken zijn gespiegeld, zonder transform (satori).
 const DECO_HOEK: [number, number][][] = [
@@ -448,6 +601,218 @@ export default function KaartVoorkant({
             <Regels tekst={d.location} style={{ fontFamily: letters.tekst, fontSize: px(10.5), lineHeight: 1.6, letterSpacing: "0.12em", textTransform: "uppercase", color: tekst, opacity: 0.85 }} />
           )}
           <D style={{ marginTop: px(8) }}>{slot({ tekst, kop, accent })}</D>
+        </D>
+      </D>
+    )
+  }
+
+  // ── Grote titel: "Save the Date" als beeld, in een zacht ovaal ────────────
+  if (ontwerp === "titel") {
+    const woorden = d.heading.split(/\s+/).filter(Boolean)
+    const datum = datumKort(d.datumIso, ".") ?? d.dateText
+    return (
+      <D style={{ ...basis, alignItems: "center", justifyContent: "center", padding: px(26), borderRadius: px(12) }}>
+        <D
+          style={{
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            width: px(334),
+            minHeight: px(490),
+            borderRadius: px(167),
+            backgroundColor: `${accent}26`,
+            padding: `${px(40)}px ${px(24)}px`,
+            gap: px(4),
+          }}
+        >
+          {woorden.map((w, i) => {
+            // Een kort tussenwoord ("the") klein, met een takje ernaast
+            const klein = i > 0 && i < woorden.length - 1 && w.length <= 3
+            // Een lang woord moet in het ovaal passen
+            const grootte = klein ? 34 : Math.min(76, 290 / Math.max(3, w.length * 0.62))
+            return (
+              <D key={i} style={{ alignItems: "center", gap: px(8), marginTop: klein ? px(-6) : 0, marginBottom: klein ? px(-6) : 0 }}>
+                <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(grootte), lineHeight: 1, color: kop }}>{w}</div>
+                {klein && <Takje breedte={px(34)} kleur={accent} />}
+              </D>
+            )
+          })}
+          {datum && (
+            <div style={{ display: "flex", fontFamily: letters.tekst, fontSize: px(15), fontWeight: 500, letterSpacing: "0.14em", color: kop, marginTop: px(26) }}>
+              {datum}
+            </div>
+          )}
+          <Regels
+            tekst={d.names}
+            style={{ fontFamily: letters.tekst, fontSize: px(14), letterSpacing: "0.16em", color: kop, opacity: 0.8, marginTop: px(10) }}
+          />
+        </D>
+      </D>
+    )
+  }
+
+  // ── Palm: één palm, de namen dun met een "en" in handschrift ──────────────
+  if (ontwerp === "palm") {
+    const delen = naamDelen(d.names)
+    const datum = datumKort(d.datumIso, "  |  ") ?? d.dateText
+    const boogB = px(250)
+    return (
+      <D style={{ ...basis, alignItems: "center", justifyContent: "center", padding: `${px(34)}px ${px(30)}px`, borderRadius: px(22) }}>
+        {/* De kop in een boog boven de palm */}
+        <D style={{ position: "relative", width: boogB, height: px(215), justifyContent: "center", alignItems: "flex-end" }}>
+          {boogLetters({
+            tekst: d.heading,
+            cx: boogB / 2,
+            cy: px(118),
+            rx: px(92),
+            ry: px(84),
+            graden: 150,
+            grootte: px(17),
+            spatie: 0.08,
+            stijl: { fontFamily: letters.kop, color: kop },
+          })}
+          <D style={{ marginBottom: px(-4) }}>
+            <Palm breedte={px(82)} kleur={accent} />
+          </D>
+        </D>
+        {delen ? (
+          <D style={{ flexDirection: "column", alignItems: "center", marginTop: px(14) }}>
+            <div style={{ display: "flex", fontFamily: letters.namen, fontSize: px(54), lineHeight: 1, color: kop }}>{delen[0]}</div>
+            <div style={{ display: "flex", fontFamily: letters.extra, fontSize: px(44), lineHeight: 0.9, color: accent, marginTop: px(-2), marginBottom: px(-2) }}>
+              {d.verbinder}
+            </div>
+            <div style={{ display: "flex", fontFamily: letters.namen, fontSize: px(54), lineHeight: 1, color: kop }}>{delen[1]}</div>
+          </D>
+        ) : (
+          <Regels tekst={d.names} style={{ fontFamily: letters.namen, fontSize: px(46), lineHeight: 1.05, color: kop, marginTop: px(14) }} />
+        )}
+        {datum && (
+          <div style={{ display: "flex", fontFamily: letters.namen, fontSize: px(20), letterSpacing: "0.04em", color: kop, marginTop: px(22) }}>
+            {datum}
+          </div>
+        )}
+        {d.message && (
+          <Regels
+            tekst={d.message}
+            style={{ fontFamily: letters.tekst, fontSize: px(12), lineHeight: 1.55, color: tekst, maxWidth: px(270), marginTop: px(12), opacity: 0.9 }}
+          />
+        )}
+      </D>
+    )
+  }
+
+  // ── Ibiza: palmen en golven in een ovaal, tekst rond het ovaal ────────────
+  if (ontwerp === "ibiza") {
+    const ow = px(300)
+    const oh = px(412)
+    const datum = datumKort(d.datumIso, " · ") ?? d.dateText
+    return (
+      <D style={{ ...basis, alignItems: "center", justifyContent: "center", padding: `${px(30)}px ${px(28)}px`, borderRadius: px(14), gap: px(20) }}>
+        <D
+          style={{
+            position: "relative",
+            width: ow,
+            height: oh,
+            border: `${Math.max(1, px(1.6))}px solid ${accent}`,
+            borderRadius: ow / 2,
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "column",
+          }}
+        >
+          {boogLetters({
+            tekst: "I DO, ME TOO!",
+            cx: ow / 2,
+            cy: oh / 2,
+            rx: ow / 2 - px(30),
+            ry: oh / 2 - px(30),
+            graden: 120,
+            grootte: px(16),
+            spatie: 0.3,
+            stijl: { fontFamily: letters.kop, color: accent, letterSpacing: "0.02em" },
+          })}
+          {boogLetters({
+            tekst: "LET'S CELEBRATE",
+            cx: ow / 2,
+            cy: oh / 2,
+            rx: ow / 2 - px(30),
+            ry: oh / 2 - px(30),
+            graden: 120,
+            onder: true,
+            grootte: px(16),
+            spatie: 0.3,
+            stijl: { fontFamily: letters.kop, color: accent, letterSpacing: "0.02em" },
+          })}
+          <D style={{ alignItems: "flex-end", gap: px(2), marginTop: px(10) }}>
+            <Palm breedte={px(46)} kleur={`${accent}B3`} />
+            <Palm breedte={px(78)} kleur={`${accent}CC`} />
+            <Palm breedte={px(54)} kleur={`${accent}B3`} />
+          </D>
+          <D style={{ marginTop: px(4) }}>
+            <Golven breedte={px(130)} kleur={`${accent}B3`} />
+          </D>
+        </D>
+        <D style={{ flexDirection: "column", alignItems: "center", gap: px(6) }}>
+          <Regels tekst={d.names} style={{ fontFamily: letters.namen, fontSize: px(46), lineHeight: 1, color: kop }} />
+          {datum && (
+            <div style={{ display: "flex", fontFamily: letters.tekst, fontSize: px(12), letterSpacing: "0.22em", color: kop, opacity: 0.85 }}>
+              {datum}
+            </div>
+          )}
+        </D>
+      </D>
+    )
+  }
+
+  // ── Foto met handschrift: de foto vol, een titel in handschrift ───────────
+  if (ontwerp === "fotoschrift") {
+    const wit = "#FFFDF8"
+    const datum = datumKort(d.datumIso, "  |  ") ?? d.dateText
+    return (
+      <D
+        style={{
+          ...basis,
+          justifyContent: "flex-end",
+          borderRadius: px(14),
+          backgroundColor: accent,
+          ...(d.photoUrl ? {} : { backgroundImage: `linear-gradient(170deg, ${accent} 0%, ${kop} 100%)` }),
+        }}
+      >
+        {d.photoUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={d.photoUrl}
+            alt=""
+            width={breedte}
+            height={hoogte}
+            style={{ position: "absolute", top: 0, left: 0, width: breedte, height: "100%", minHeight: hoogte, objectFit: "cover", borderRadius: px(14) }}
+          />
+        )}
+        <div
+          style={{
+            display: "flex",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: breedte,
+            height: "100%",
+            borderRadius: px(14),
+            backgroundImage: "linear-gradient(to bottom, rgba(0,0,0,0) 45%, rgba(0,0,0,0.25) 65%, rgba(0,0,0,0.6) 100%)",
+          }}
+        />
+        <D style={{ position: "relative", flexDirection: "column", alignItems: "center", padding: `${px(30)}px ${px(26)}px ${px(34)}px`, gap: px(6) }}>
+          <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(76), lineHeight: 0.9, color: wit, textAlign: "center" }}>
+            {d.heading}
+          </div>
+          {datum && (
+            <div style={{ display: "flex", fontFamily: letters.tekst, fontSize: px(15), letterSpacing: "0.12em", color: wit, marginTop: px(8) }}>
+              {datum}
+            </div>
+          )}
+          <Regels
+            tekst={d.names.replace(/\s*\n\s*/g, " ")}
+            style={{ fontFamily: letters.tekst, fontSize: px(11), letterSpacing: "0.3em", textTransform: "uppercase", color: wit, opacity: 0.9, marginTop: px(4) }}
+          />
         </D>
       </D>
     )

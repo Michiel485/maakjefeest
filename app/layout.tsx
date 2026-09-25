@@ -17,6 +17,9 @@ import {
   Italiana,
   GFS_Didot,
   Prata,
+  Allison,
+  Abril_Fatface,
+  Jost,
 } from "next/font/google";
 import Analytics from "@/components/Analytics";
 import CookieBanner from "@/components/CookieBanner";
@@ -138,6 +141,31 @@ const prata = Prata({
   weight: "400",
 });
 
+// Voor de themakaarten (25 september 2026): een losse handschriftletter
+// voor namen als "Annemiek", een vette titelletter voor "Save the Date" en
+// een dunne schreefloze voor namen als "Eline and Manuel". Niet vooraf
+// laden: alleen een kaart in zo'n ontwerp heeft ze nodig.
+const allison = Allison({
+  variable: "--font-allison",
+  preload: false,
+  subsets: ["latin"],
+  weight: "400",
+});
+
+const abrilFatface = Abril_Fatface({
+  variable: "--font-abril",
+  preload: false,
+  subsets: ["latin"],
+  weight: "400",
+});
+
+const jost = Jost({
+  variable: "--font-jost",
+  preload: false,
+  subsets: ["latin"],
+  weight: ["300", "400", "500"],
+});
+
 export const viewport: Viewport = {
   colorScheme: "only light",
 }
@@ -189,7 +217,7 @@ export default function RootLayout({
     <html
       lang="nl"
       data-color-scheme="light"
-      className={`${geistSans.variable} ${geistMono.variable} ${playfairDisplay.variable} ${greatVibes.variable} ${cormorantGaramond.variable} ${pinyonScript.variable} ${cinzel.variable} ${dancingScript.variable} ${montserrat.variable} ${marcellus.variable} ${lora.variable} ${windSong.variable} ${allura.variable} ${bodoniModa.variable} ${italiana.variable} ${gfsDidot.variable} ${prata.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${playfairDisplay.variable} ${greatVibes.variable} ${cormorantGaramond.variable} ${pinyonScript.variable} ${cinzel.variable} ${dancingScript.variable} ${montserrat.variable} ${marcellus.variable} ${lora.variable} ${windSong.variable} ${allura.variable} ${bodoniModa.variable} ${italiana.variable} ${gfsDidot.variable} ${prata.variable} ${allison.variable} ${abrilFatface.variable} ${jost.variable} h-full antialiased`}
       style={{ colorScheme: "only light" }}
     >
       <body className="min-h-full flex flex-col">

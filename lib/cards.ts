@@ -14,13 +14,18 @@ export type CardType = "save_the_date" | "trouwkaart"
 // docs/PLAN-kaartontwerpen.md. Oudere code kent de nieuwe waarden niet en
 // valt dan terug op klassiek; terugdraaien breekt dus geen kaart.
 export type KlassiekOntwerp = "klassiek" | "sierlijk" | "bohemian"
-export type NieuwOntwerp = "minimaal" | "fotovol" | "boog" | "deco" | "datum" | "eigen"
+export type NieuwOntwerp =
+  | "minimaal" | "fotovol" | "boog" | "deco" | "datum" | "eigen"
+  // De themakaarten van 25 september 2026: minder tekst, een vaste titel,
+  // namen met een verbindingswoord in een andere letter
+  | "titel" | "palm" | "ibiza" | "fotoschrift"
 export type CardDesign = KlassiekOntwerp | NieuwOntwerp
 export type CardTemplate = CardDesign | "foto"
 
 /** Alle waarden die in cards.template mogen staan. */
 export const CARD_TEMPLATE_WAARDEN: CardTemplate[] = [
   "klassiek", "sierlijk", "bohemian", "foto", "minimaal", "fotovol", "boog", "deco", "datum", "eigen",
+  "titel", "palm", "ibiza", "fotoschrift",
 ]
 
 export function isKlassiekOntwerp(d: CardDesign): d is KlassiekOntwerp {
@@ -87,6 +92,8 @@ export interface CardContent {
    */
   ontwerpUrl?: string
   ontwerpVerhouding?: number
+  /** Een vouwkaart: eerst een kaft, tik en hij klapt open */
+  vouwkaart?: boolean
   // In welke taal de vaste teksten op de kaart staan
   taal?: CardTaal
   // Of er onder de kaart om een aanmelding wordt gevraagd, en hoeveel. Zie
@@ -162,7 +169,9 @@ export const CARD_TYPE_PLAN: Record<CardType, "save_the_date" | "uitnodiging"> =
 }
 
 // De volgorde in de galerij van de bouwer
-export const CARD_DESIGNS: CardDesign[] = ["klassiek", "sierlijk", "bohemian", "minimaal", "fotovol", "boog", "deco", "datum", "eigen"]
+export const CARD_DESIGNS: CardDesign[] = [
+  "klassiek", "sierlijk", "bohemian", "minimaal", "datum", "titel", "palm", "ibiza", "deco", "boog", "fotovol", "fotoschrift", "eigen",
+]
 
 export const CARD_TEMPLATE_LABEL: Record<CardDesign, string> = {
   klassiek: "Strak",
@@ -174,6 +183,10 @@ export const CARD_TEMPLATE_LABEL: Record<CardDesign, string> = {
   deco: "Art deco",
   datum: "De datum",
   eigen: "Eigen ontwerp",
+  titel: "Grote titel",
+  palm: "Palm",
+  ibiza: "Ibiza",
+  fotoschrift: "Foto met handschrift",
 }
 
 export const CARD_TEMPLATE_UITLEG: Record<CardDesign, string> = {
@@ -186,6 +199,10 @@ export const CARD_TEMPLATE_UITLEG: Record<CardDesign, string> = {
   deco: "geometrisch goud, jaren twintig",
   datum: "de datum groot als beeld",
   eigen: "upload jullie eigen kaart",
+  titel: "Save the Date groot in beeld",
+  palm: "één palm, namen in twee letters",
+  ibiza: "palmen en golven in een ovaal",
+  fotoschrift: "jullie foto met een titel in handschrift",
 }
 
 /** De sfeer, als label in de galerij. */
@@ -199,6 +216,32 @@ export const CARD_DESIGN_SFEER: Record<CardDesign, string> = {
   deco: "Feestelijk",
   datum: "Modern",
   eigen: "Van jullie",
+  titel: "Modern",
+  palm: "Zomer",
+  ibiza: "Zomer",
+  fotoschrift: "Persoonlijk",
+}
+
+/**
+ * De filters boven de galerij. Een ontwerp kan in meer dan één groep staan.
+ * Winter, herfst en bloemen komen erbij zodra er beeldmateriaal is.
+ */
+export const CARD_DESIGN_GROEPEN = ["Klassiek", "Romantisch", "Modern", "Zomer", "Foto", "Feestelijk"] as const
+export type CardDesignGroep = (typeof CARD_DESIGN_GROEPEN)[number]
+export const CARD_DESIGN_IN_GROEP: Record<CardDesign, CardDesignGroep[]> = {
+  klassiek: ["Klassiek"],
+  sierlijk: ["Klassiek", "Romantisch"],
+  bohemian: ["Romantisch"],
+  minimaal: ["Modern"],
+  datum: ["Modern"],
+  titel: ["Modern"],
+  palm: ["Zomer", "Modern"],
+  ibiza: ["Zomer"],
+  deco: ["Feestelijk", "Klassiek"],
+  boog: ["Romantisch", "Foto"],
+  fotovol: ["Foto"],
+  fotoschrift: ["Foto", "Zomer"],
+  eigen: [],
 }
 
 // Oude waarden en rommel vallen terug op het strakke ontwerp
@@ -332,6 +375,10 @@ interface KaartTeksten {
   siteVolgt: string
   openEnvelop: string
   gemaaktMet: string
+  /** Tussen de twee namen, in een andere letter: "Eline en Manuel". */
+  verbinder: string
+  /** Op de kaft van een vouwkaart. */
+  tikOpen: string
   /** Waarmee de datum wordt opgemaakt. */
   locale: string
 }
@@ -357,6 +404,8 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
     siteVolgt: "Meer informatie volgt binnenkort 🤍",
     openEnvelop: "Open de envelop",
     gemaaktMet: "Gemaakt met",
+    verbinder: "en",
+    tikOpen: "Tik om te openen",
     dresscode: "Dresscode",
     gasten: { daggast: "Daggast", avondgast: "Avondgast", receptiegast: "Receptiegast" },
     locale: "nl-NL",
@@ -378,6 +427,8 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
     siteVolgt: "More details coming soon 🤍",
     openEnvelop: "Open the envelope",
     gemaaktMet: "Made with",
+    verbinder: "and",
+    tikOpen: "Tap to open",
     dresscode: "Dress code",
     gasten: { daggast: "Day guest", avondgast: "Evening guest", receptiegast: "Reception guest" },
     // en-GB geeft "14 August 2027"; en-US zou "August 14, 2027" geven en dat
@@ -401,6 +452,8 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
     siteVolgt: "Plus d'informations bientôt 🤍",
     openEnvelop: "Ouvrir l'enveloppe",
     gemaaktMet: "Créé avec",
+    verbinder: "et",
+    tikOpen: "Touchez pour ouvrir",
     dresscode: "Tenue",
     gasten: { daggast: "Invité de la journée", avondgast: "Invité de la soirée", receptiegast: "Invité de la réception" },
     locale: "fr-FR",
@@ -422,6 +475,8 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
     siteVolgt: "Weitere Infos folgen bald 🤍",
     openEnvelop: "Umschlag öffnen",
     gemaaktMet: "Erstellt mit",
+    verbinder: "und",
+    tikOpen: "Zum Öffnen tippen",
     dresscode: "Dresscode",
     gasten: { daggast: "Tagesgast", avondgast: "Abendgast", receptiegast: "Empfangsgast" },
     locale: "de-DE",
@@ -443,6 +498,8 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
     siteVolgt: "Pronto más información 🤍",
     openEnvelop: "Abre el sobre",
     gemaaktMet: "Hecho con",
+    verbinder: "y",
+    tikOpen: "Toca para abrir",
     dresscode: "Código de vestimenta",
     gasten: { daggast: "Invitado de día", avondgast: "Invitado de noche", receptiegast: "Invitado a la recepción" },
     locale: "es-ES",
@@ -464,6 +521,8 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
     siteVolgt: "Presto altre informazioni 🤍",
     openEnvelop: "Apri la busta",
     gemaaktMet: "Creato con",
+    verbinder: "e",
+    tikOpen: "Tocca per aprire",
     dresscode: "Dress code",
     gasten: { daggast: "Invitato al giorno", avondgast: "Invitato alla sera", receptiegast: "Invitato al ricevimento" },
     locale: "it-IT",
@@ -492,6 +551,8 @@ export const GUEST_TYPE_LABEL: Record<CardGuestType, string> = {
  */
 export interface CardVasteTeksten {
   taal: CardTaal
+  verbinder: string
+  tikOpen: string
   rsvpKnop: string
   siteKnop: string
   agendaKnop: string
@@ -510,6 +571,8 @@ export function displayTeksten(taal: CardTaal = "nl"): CardVasteTeksten {
     siteVolgtTekst: tk.siteVolgt,
     openEnvelopLabel: tk.openEnvelop,
     gemaaktMet: tk.gemaaktMet,
+    verbinder: tk.verbinder,
+    tikOpen: tk.tikOpen,
   }
 }
 
@@ -531,6 +594,12 @@ export interface CardDisplay extends CardVasteTeksten {
   datumIso?: string | null
   ontwerpUrl?: string | null
   ontwerpVerhouding?: number | null
+  vouwkaart?: boolean
+  /**
+   * Heeft het bruidspaar de boodschap zelf geschreven? Een strak ontwerp zet
+   * alleen een eigen boodschap onder de kaart, niet onze standaardtekst.
+   */
+  eigenBericht?: boolean
 }
 
 export function buildCardDisplay(
@@ -577,6 +646,8 @@ export function buildCardDisplay(
     datumIso: content.dateText?.trim() ? null : event.datum || null,
     ontwerpUrl: content.ontwerpUrl || null,
     ontwerpVerhouding: content.ontwerpVerhouding || null,
+    vouwkaart: content.vouwkaart === true,
+    eigenBericht: !!content.message?.trim(),
     ...displayTeksten(taal),
   }
 }

@@ -14,6 +14,9 @@ import {
   CARD_ANIMATIE_UITLEG,
   CARD_DESIGNS,
   CARD_DESIGN_SFEER,
+  CARD_DESIGN_GROEPEN,
+  CARD_DESIGN_IN_GROEP,
+  type CardDesignGroep,
   CARD_TAAL_LABEL,
   CARD_TALEN,
   cardTaal,
@@ -39,6 +42,7 @@ import { compressImage } from "@/lib/client-image"
 import CardReveal from "@/app/kaart/[token]/card-reveal"
 import Voorkant from "@/components/kaart/Voorkant"
 import { KAART_PALETTEN, kaartKleuren } from "@/lib/kaart-paletten"
+import { ONDER_DE_KAART } from "@/lib/kaart-ontwerpen"
 import { KLEUR } from "@/lib/ontwerp"
 import {
   AANMELD_LABEL,
@@ -199,6 +203,7 @@ interface KaartOntwerp {
   ontwerpUrl: string | null
   ontwerpDataUrl: string | null
   ontwerpVerhouding: number | null
+  vouwkaart: boolean
   template: CardTemplate
   names: string
   datum: string
@@ -227,6 +232,7 @@ const LEEG: KaartOntwerp = {
   ontwerpUrl: null,
   ontwerpDataUrl: null,
   ontwerpVerhouding: null,
+  vouwkaart: false,
   template: "klassiek",
   names: "",
   datum: "",
@@ -634,6 +640,7 @@ export default function KaartMakenPage() {
               ontwerpUrl: kaart?.content.ontwerpUrl ?? null,
               ontwerpDataUrl: null,
               ontwerpVerhouding: kaart?.content.ontwerpVerhouding ?? null,
+              vouwkaart: kaart?.content.vouwkaart === true,
               template: kaart?.template ?? "klassiek",
               names: kaart?.content.names ?? (event.frame_names as string) ?? (event.title as string) ?? "",
               datum: (event.datum as string) ?? "",
@@ -743,6 +750,7 @@ export default function KaartMakenPage() {
     kleur: ontwerp.kleur || undefined,
     ontwerpUrl: ontwerp.ontwerpUrl ?? ontwerp.ontwerpDataUrl ?? undefined,
     ontwerpVerhouding: ontwerp.ontwerpVerhouding ?? undefined,
+    vouwkaart: ontwerp.vouwkaart || undefined,
     taal: ontwerp.taal,
     aanmelden: ontwerp.aanmelden,
   }
@@ -1032,6 +1040,7 @@ export default function KaartMakenPage() {
       ontwerpUrl: k.content.ontwerpUrl ?? null,
       ontwerpDataUrl: null,
       ontwerpVerhouding: k.content.ontwerpVerhouding ?? null,
+      vouwkaart: k.content.vouwkaart === true,
       location: k.content.location ?? o.location,
       message: k.content.message ?? "",
       guestType: k.content.guestType ?? "",
@@ -1218,6 +1227,7 @@ export default function KaartMakenPage() {
   // Eigen ontwerp: scherper dan een foto, want er staat tekst op, en de
   // verhouding onthouden zodat de kaart precies zo hoog wordt als het ontwerp
   const ontwerpRef = useRef<HTMLInputElement>(null)
+  const [ontwerpFilter, setOntwerpFilter] = useState<"Alles" | CardDesignGroep>("Alles")
   const [ontwerpMag, setOntwerpMag] = useState(false)
   async function kiesOntwerp(file: File) {
     setBusy("foto")
@@ -1842,8 +1852,23 @@ export default function KaartMakenPage() {
             </label>
 
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Boodschap</span>
-              <textarea id="kaart-boodschap" className={inputCls} style={{ ...inputStyle, minHeight: 84 }} placeholder={display.message} value={ontwerp.message} onChange={(e) => update({ message: e.target.value })} maxLength={400} />
+              <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>
+                {ONDER_DE_KAART[cardDesign(ontwerp.template)]?.bericht ? "Tekst onder de kaart (optioneel)" : "Boodschap"}
+              </span>
+              <textarea
+                id="kaart-boodschap"
+                className={inputCls}
+                style={{ ...inputStyle, minHeight: 84 }}
+                placeholder={ONDER_DE_KAART[cardDesign(ontwerp.template)]?.bericht ? "Bijvoorbeeld: we zouden het heel leuk vinden als je erbij bent." : display.message}
+                value={ontwerp.message}
+                onChange={(e) => update({ message: e.target.value })}
+                maxLength={400}
+              />
+              {ONDER_DE_KAART[cardDesign(ontwerp.template)] && (
+                <span className="text-[11px] leading-snug" style={{ color: SUBTLE }}>
+                  Dit ontwerp is strak en heeft weinig tekst. Wat niet op de kaart past, zoals de locatie en deze tekst, staat er netjes onder.
+                </span>
+              )}
             </label>
           </Sectie>
 
@@ -1909,8 +1934,25 @@ export default function KaartMakenPage() {
             {/* Een galerij met jullie eigen kaart in elk ontwerp. Was een
                 rijtje knoppen; bij acht ontwerpen zie je zo pas echt wat je
                 kiest (Michiel, 25 september 2026). */}
+            {/* Filters: bij dertien ontwerpen zoek je op sfeer */}
+            <div className="flex flex-wrap gap-1.5">
+              {(["Alles", ...CARD_DESIGN_GROEPEN] as const).map((g) => {
+                const aan = ontwerpFilter === g
+                return (
+                  <button
+                    key={g}
+                    type="button"
+                    onClick={() => setOntwerpFilter(g)}
+                    className="text-[12px] font-semibold px-2.5 py-1 rounded-full"
+                    style={{ backgroundColor: aan ? CHARCOAL : "#fff", color: aan ? IVORY : CHARCOAL, border: `1px solid ${aan ? CHARCOAL : GOLD_LIGHT}`, cursor: "pointer" }}
+                  >
+                    {g}
+                  </button>
+                )
+              })}
+            </div>
             <div className="grid grid-cols-2 gap-2.5">
-              {CARD_DESIGNS.map((t) => {
+              {CARD_DESIGNS.filter((d) => ontwerpFilter === "Alles" || CARD_DESIGN_IN_GROEP[d].includes(ontwerpFilter) || cardDesign(ontwerp.template) === d).map((t) => {
                 const actief = cardDesign(ontwerp.template) === t
                 return (
                   <button
@@ -1968,6 +2010,16 @@ export default function KaartMakenPage() {
                 </p>
               </div>
             )}
+            {(["palm", "ibiza", "titel"] as string[]).includes(cardDesign(ontwerp.template)) && !ontwerp.kleur && (
+              <button
+                type="button"
+                onClick={() => update({ kleur: "blush" })}
+                className="text-left text-[12px] rounded-xl px-3 py-2.5"
+                style={{ backgroundColor: GOLD_BG, border: `1px solid ${GOLD_LIGHT}`, color: CHARCOAL, cursor: "pointer" }}
+              >
+                Dit ontwerp is op zijn mooist in <b>blush</b>, zacht roze met terracotta. Probeer het {"›"}
+              </button>
+            )}
             {cardDesign(ontwerp.template) === "deco" && !ontwerp.kleur && (
               <button
                 type="button"
@@ -1978,9 +2030,9 @@ export default function KaartMakenPage() {
                 Art deco is op zijn mooist in <b>zwart en goud</b>. Probeer het {"›"}
               </button>
             )}
-            {(cardDesign(ontwerp.template) === "fotovol" || cardDesign(ontwerp.template) === "boog") && !ontwerp.photoDataUrl && !ontwerp.photoUrl && (
+            {(cardDesign(ontwerp.template) === "fotovol" || cardDesign(ontwerp.template) === "fotoschrift" || cardDesign(ontwerp.template) === "boog") && !ontwerp.photoDataUrl && !ontwerp.photoUrl && (
               <p className="m-0 text-[12px] leading-relaxed rounded-xl px-3 py-2.5" style={{ color: BODY, backgroundColor: GOLD_BG, border: `1px solid ${GOLD_LIGHT}` }}>
-                {cardDesign(ontwerp.template) === "fotovol"
+                {cardDesign(ontwerp.template) !== "boog"
                   ? "Kies hieronder een foto, dan vult die de hele kaart."
                   : "Kies hieronder een foto voor in de boog. Zonder foto staan jullie initialen erin."}
               </p>
@@ -2236,6 +2288,17 @@ export default function KaartMakenPage() {
                 </button>
               ))}
             </div>
+            {/* Een vouwkaart: werkt met elk ontwerp. Te zien in de demo, niet in
+                het voorbeeld hierboven. */}
+            <label className="flex items-start gap-2.5 rounded-xl px-3 py-2.5" style={{ border: `2px solid ${ontwerp.vouwkaart ? GOLD : GOLD_LIGHT}`, backgroundColor: ontwerp.vouwkaart ? "#fff" : "transparent", cursor: "pointer" }}>
+              <input type="checkbox" checked={ontwerp.vouwkaart} onChange={(e) => update({ vouwkaart: e.target.checked })} className="mt-1" />
+              <span className="text-sm font-semibold" style={{ color: CHARCOAL }}>
+                Als vouwkaart
+                <span className="block text-[11px] font-normal" style={{ color: BODY }}>
+                  eerst een kaft met jullie initialen, tik en hij klapt open. Bekijk het in de demo.
+                </span>
+              </span>
+            </label>
             {/* Op een telefoon is er geen ruimte voor de knop rechtsboven in
                 het voorbeeld, dus daar staat hij hier. */}
             <button

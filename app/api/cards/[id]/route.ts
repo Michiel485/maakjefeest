@@ -40,6 +40,7 @@ function sanitizeContent(raw: unknown): CardContent {
     toonGastType: input.toonGastType === true ? true : undefined,
     dresscode: text(input.dresscode, 40),
     animatie: cardAnimatie(input.animatie),
+    vouwkaart: input.vouwkaart === true ? true : undefined,
     // Een eigen palet voor deze kaart; alleen bekende, anders de website
     kleur: kaartPalet(input.kleur)?.id,
     // Eigen ontwerp: alleen een echte link naar een geüploade afbeelding
