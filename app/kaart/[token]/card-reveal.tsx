@@ -5,6 +5,7 @@ import type { SC } from "@/lib/event-styles"
 import { CARD_DESIGN_STYLE, type CardDisplay } from "@/lib/cards"
 import AanmeldFormulier from "@/components/AanmeldFormulier"
 import type { AanmeldStand } from "@/lib/gasten"
+import { formulierTekst } from "@/lib/formulier-teksten"
 
 // "zegel" is de stap waarin het lakzegel breekt; die bestaat alleen in de
 // nieuwe animatie. De klassieke animatie slaat hem over.
@@ -961,11 +962,12 @@ export default function CardReveal({
                   className="text-center text-xs font-semibold uppercase tracking-[0.18em] mb-4"
                   style={{ color: sc.accent }}
                 >
-                  {aanmeldStand === "janee" ? "Ben je erbij?" : "Aanmelden"}
+                  {aanmeldStand === "janee" ? formulierTekst(display.taal).benJeErbij : formulierTekst(display.taal).aanmelden}
                 </p>
                 <AanmeldFormulier
                   bronToken={bronToken}
                   stand={aanmeldStand}
+                  taal={display.taal}
                   accentColor={sc.accent}
                   labelColor={sc.cardText ?? sc.bodyText}
                   knopTekstKleur={sc.buttonText}
@@ -987,7 +989,7 @@ export default function CardReveal({
                   className="text-center text-xs font-semibold uppercase tracking-[0.18em] mb-4"
                   style={{ color: sc.accent }}
                 >
-                  {aanmeldStand === "janee" ? "Ben je erbij?" : "Aanmelden"}
+                  {aanmeldStand === "janee" ? formulierTekst(display.taal).benJeErbij : formulierTekst(display.taal).aanmelden}
                 </p>
                 {aanmeldVoorbeeld}
               </div>

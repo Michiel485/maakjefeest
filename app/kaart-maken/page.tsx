@@ -830,6 +830,46 @@ export default function KaartMakenPage() {
     }
   }
 
+  // Naar een onderdeel springen: op de telefoon het paneel openen, op de
+  // laptop de sectie, en als er een veld bij hoort de cursor erin.
+  function gaNaar(s: Stap, veld?: string) {
+    const cat = (Object.keys(BLAD_SECTIES) as Exclude<Blad, "kaart">[]).find((k) => BLAD_SECTIES[k].includes(s))
+    if (window.matchMedia("(max-width: 767px)").matches && cat) openBlad(cat)
+    setStap(s)
+    if (veld) {
+      setTimeout(() => {
+        const el = document.getElementById(veld) as HTMLInputElement | HTMLTextAreaElement | null
+        el?.focus()
+        el?.scrollIntoView({ block: "center", behavior: "smooth" })
+      }, 80)
+    }
+  }
+
+  // De check onder Bekijken. "mag" betekent: hoeft niet, maar is wel aan te
+  // raden; dan geen oranje rondje.
+  type Controle = "namen" | "datum" | "locatie" | "aanmelden" | "bewaard" | "actief"
+  const controles: { id: Controle; label: string; klaar: boolean; mag?: boolean; actie: string }[] = [
+    { id: "namen", label: "Jullie namen", klaar: !!ontwerp.names.trim(), actie: "Invullen" },
+    { id: "datum", label: "Trouwdatum", klaar: !!ontwerp.datum, actie: "Invullen" },
+    { id: "locatie", label: "Locatie", klaar: !!(ontwerp.location.trim() || eventLocatie.trim()), mag: true, actie: "Invullen" },
+    {
+      id: "aanmelden",
+      label: ontwerp.aanmelden === "geen" ? "Aanmelden staat uit" : `Aanmelden: ${AANMELD_KORT[ontwerp.aanmelden]}`,
+      klaar: ontwerp.aanmelden !== "geen" || gastenGezien,
+      actie: "Kiezen",
+    },
+    { id: "bewaard", label: "Bewaard", klaar: !!cardId && !onbewaard, actie: "Bewaren" },
+    { id: "actief", label: alAfgenomen ? "Geactiveerd, de link werkt" : "Geactiveerd", klaar: alAfgenomen, actie: `Activeer ${prijs}` },
+  ]
+  function doeControle(id: Controle) {
+    if (id === "namen") gaNaar("tekst", "kaart-namen")
+    else if (id === "datum") gaNaar("tekst", "kaart-datum")
+    else if (id === "locatie") gaNaar("tekst", "kaart-locatie")
+    else if (id === "aanmelden") gaNaar("aanmelden")
+    else if (id === "bewaard") void voerUit("bewaar")
+    else void voerUit("activeer")
+  }
+
   /** Hoe het met bewaren staat, in een paar woorden. */
   const bewaarStatus = !cardId
     ? "nog niet bewaard"
@@ -982,15 +1022,33 @@ export default function KaartMakenPage() {
   // opslag wordt een nieuwe kaart. Dat is de snelste weg naar dezelfde kaart
   // in een andere taal of voor een andere gastengroep. Er was ook een "lege"
   // variant; voor een Save the Date deed die hetzelfde, dus die is weg.
-  function dupliceerKaart() {
+  function dupliceerKaart(voor?: { guestType?: CardGuestType; taal?: CardTaal }) {
     setCardId(null)
+    setNieuwVraag(false)
     // De naam gaat niet mee: twee kaarten die hetzelfde heten is precies wat
-    // we willen voorkomen. Leeg betekent weer de automatische naam. En
+    // we willen voorkomen. Leeg betekent weer de automatische naam, en die
+    // zegt meteen voor wie hij is ("Save the Date, avondgast (EN)"). En
     // aanmelden begint weer bij de standaard, zodat je bij elke kaart zelf
     // kiest of je gasten iets moeten laten weten.
-    setOntwerp((o) => ({ ...o, naam: "", aanmelden: standaardAanmeldStand(o.type) }))
-    setMelding({ tekst: "Nieuwe kaart, op basis van de vorige. Pas aan wat anders moet en bewaar; je vorige kaart blijft bestaan." })
+    setOntwerp((o) => ({
+      ...o,
+      naam: "",
+      aanmelden: standaardAanmeldStand(o.type),
+      ...(voor?.guestType ? { guestType: voor.guestType } : {}),
+      ...(voor?.taal ? { taal: voor.taal } : {}),
+    }))
+    const voorWie = voor?.guestType
+      ? `voor je ${GUEST_TYPE_LABEL[voor.guestType].toLowerCase()}`
+      : voor?.taal
+        ? `in het ${CARD_TAAL_LABEL[voor.taal]}`
+        : "op basis van de vorige"
+    setMelding({ tekst: `Nieuwe kaart ${voorWie}. Pas aan wat anders moet; je vorige kaart blijft bestaan.` })
+    // Op de telefoon het paneel dicht, zodat je de nieuwe kaart ziet
+    setBlad(null)
   }
+  // Het plusje vraagt eerst voor wie de nieuwe kaart is: een andere
+  // gastengroep of een andere taal. Dan staat hij in één tik goed ingesteld.
+  const [nieuwVraag, setNieuwVraag] = useState(false)
 
   function controleer(): string | null {
     if (!ontwerp.names.trim()) return "Vul eerst jullie namen in."
@@ -1492,7 +1550,7 @@ export default function KaartMakenPage() {
                 title={cardId
                   ? "Nieuwe kaart op basis van deze. Alles blijft staan; pas aan wat anders moet, bijvoorbeeld de gastengroep of de taal. Meerdere kaarten zitten in de prijs."
                   : "Bewaar de kaart eerst, dan kun je er een tweede naast maken"}
-                onClick={dupliceerKaart}
+                onClick={() => setNieuwVraag((v) => !v)}
                 disabled={busy !== null || !cardId || kaarten.length >= MAX_KAARTEN_PER_EVENT}
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true">
@@ -1512,6 +1570,62 @@ export default function KaartMakenPage() {
                 </svg>
               </IconKnop>
             </div>
+
+            {nieuwVraag && cardId && (
+              <div className="rounded-xl p-3 flex flex-col gap-2.5 text-[13px]" style={{ backgroundColor: "#fff", border: `1px solid ${GOLD_LIGHT}` }}>
+                <span className="font-semibold" style={{ color: CHARCOAL }}>Voor wie is de nieuwe kaart?</span>
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: SUBTLE }}>Andere gastengroep</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {CARD_GUEST_TYPES.filter((g) => g !== ontwerp.guestType).map((g) => (
+                      <button
+                        key={g}
+                        type="button"
+                        onClick={() => dupliceerKaart({ guestType: g })}
+                        className="text-[12px] font-semibold px-2.5 py-1.5 rounded-lg"
+                        style={{ backgroundColor: GOLD_BG, color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
+                      >
+                        {GUEST_TYPE_LABEL[g]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: SUBTLE }}>Andere taal</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {CARD_TALEN.filter((tl) => tl !== ontwerp.taal).map((tl) => (
+                      <button
+                        key={tl}
+                        type="button"
+                        onClick={() => dupliceerKaart({ taal: tl })}
+                        className="text-[12px] font-semibold px-2.5 py-1.5 rounded-lg"
+                        style={{ backgroundColor: GOLD_BG, color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
+                      >
+                        {CARD_TAAL_LABEL[tl]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex gap-3 items-center">
+                  <button
+                    type="button"
+                    onClick={() => dupliceerKaart()}
+                    className="text-[12px] font-semibold underline"
+                    style={{ color: CHARCOAL, background: "none", border: 0, padding: 0, cursor: "pointer" }}
+                  >
+                    Gewoon een kopie, ik pas het zelf aan
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNieuwVraag(false)}
+                    className="text-[12px] ml-auto"
+                    style={{ color: SUBTLE, background: "none", border: 0, padding: 0, cursor: "pointer" }}
+                  >
+                    Laat maar
+                  </button>
+                </div>
+              </div>
+            )}
 
             {verwijderVraag && cardId && (
               <div className="rounded-xl p-3 flex flex-col gap-2 text-[13px]" style={{ backgroundColor: "#FEF2F2", border: "1px solid #FECACA" }}>
@@ -1908,6 +2022,35 @@ export default function KaartMakenPage() {
           </Sectie>
 
           <Sectie className={telefoon("bekijken")} vast={inPaneel("bekijken")} open={isOpen("bekijken")} onToggle={() => setStap(stap === "bekijken" ? null : "bekijken")} titel="Voorbeeld en proefkaart">
+            {/* Klaar om te versturen? Wat nog ontbreekt is aanklikbaar en brengt
+                je naar de plek waar het hoort. Michiels keuze van 25 september
+                2026. */}
+            <div className="rounded-xl p-3 flex flex-col gap-1" style={{ backgroundColor: GOLD_BG, border: `1px solid ${GOLD_LIGHT}` }}>
+              <span className="text-xs font-semibold mb-1" style={{ color: CHARCOAL }}>
+                {controles.every((c) => c.klaar || c.mag) ? "Klaar om te versturen" : "Nog even nalopen"}
+              </span>
+              {controles.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => { if (!c.klaar) doeControle(c.id) }}
+                  className="flex items-center gap-2 text-left text-[12px] py-1"
+                  style={{ background: "none", border: 0, padding: 0, cursor: c.klaar ? "default" : "pointer", color: c.klaar ? BODY : CHARCOAL }}
+                >
+                  <span
+                    aria-hidden
+                    className="w-4 h-4 flex-shrink-0 rounded-full inline-flex items-center justify-center text-[10px] font-bold"
+                    style={c.klaar
+                      ? { backgroundColor: KLEUR.groen, color: "#fff" }
+                      : { border: `1.5px solid ${c.mag ? GOLD_LIGHT : "#D97706"}` }}
+                  >
+                    {c.klaar ? "✓" : ""}
+                  </span>
+                  <span className="flex-1">{c.label}</span>
+                  {!c.klaar && <span className="font-semibold" style={{ color: GOLD }}>{c.actie} {"›"}</span>}
+                </button>
+              ))}
+            </div>
             <button
               onClick={() => setSimulatie(true)}
               className="w-full text-sm font-semibold px-3 py-3 rounded-xl transition-all hover:-translate-y-0.5"
@@ -2023,6 +2166,7 @@ export default function KaartMakenPage() {
                 >
                   <AanmeldFormulier
                     stand={ontwerp.aanmelden}
+                    taal={ontwerp.taal}
                     voorbeeld
                     compact
                     accentColor={sc.accent ?? GOLD}
@@ -2075,6 +2219,7 @@ export default function KaartMakenPage() {
             aanmeldVoorbeeld={
               <AanmeldFormulier
                 stand={ontwerp.aanmelden}
+                taal={ontwerp.taal}
                 voorbeeld
                 compact
                 accentColor={sc.accent ?? GOLD}

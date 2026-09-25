@@ -6,6 +6,8 @@ import {
   MAX_KIND_LEEFTIJD,
   type AanmeldStand,
 } from "@/lib/gasten"
+import type { CardTaal } from "@/lib/cards"
+import { formulierTekst } from "@/lib/formulier-teksten"
 
 // Het aanmeldformulier, één keer geschreven voor de kaart én de trouwsite.
 //
@@ -58,10 +60,10 @@ interface EerdereGroep {
 }
 
 /** "Lindsey", "Lindsey en Michiel", "Lindsey, Michiel en Sam" */
-function namenlijst(personen: EerderePersoon[]): string {
+function namenlijst(personen: EerderePersoon[], en = "en"): string {
   const n = personen.map((p) => p.voornaam).filter(Boolean)
   if (n.length <= 1) return n[0] ?? ""
-  return `${n.slice(0, -1).join(", ")} en ${n[n.length - 1]}`
+  return `${n.slice(0, -1).join(", ")} ${en} ${n[n.length - 1]}`
 }
 
 interface Persoon {
@@ -108,6 +110,8 @@ export interface AanmeldFormulierProps {
    * zijn, en niet pas als de kaart al de deur uit is.
    */
   voorbeeld?: boolean
+  /** De taal van de kaart; het formulier volgt hem. Standaard Nederlands. */
+  taal?: CardTaal
 }
 
 export default function AanmeldFormulier({
@@ -125,7 +129,9 @@ export default function AanmeldFormulier({
   customQuestion = null,
   customQuestion2 = null,
   voorbeeld = false,
+  taal = "nl",
 }: AanmeldFormulierProps) {
+  const T = formulierTekst(taal)
   const stand = aanmeldStand(standIn)
   const volledig = stand === "volledig"
 
@@ -250,8 +256,8 @@ export default function AanmeldFormulier({
     // krijgen. Er hoort niets naar de database te gaan.
     if (voorbeeld) return
 
-    if (!komt) { setFout("Laat even weten of je erbij bent."); return }
-    if (!personen[0].voornaam.trim()) { setFout("Vul je voornaam in."); return }
+    if (!komt) { setFout(T.foutKomt); return }
+    if (!personen[0].voornaam.trim()) { setFout(T.foutVoornaam); return }
 
     setStatus("bezig")
     try {
@@ -319,11 +325,11 @@ export default function AanmeldFormulier({
         }),
       })
       const j = (await res.json().catch(() => ({}))) as { error?: string; bijgewerkt?: boolean }
-      if (!res.ok) throw new Error(j.error || "Versturen mislukte, probeer het zo nog eens.")
+      if (!res.ok) throw new Error(j.error || T.foutVersturen)
       setBijgewerkt(Boolean(j.bijgewerkt))
       setStatus("klaar")
     } catch (err) {
-      setFout(err instanceof Error ? err.message : "Versturen mislukte")
+      setFout(err instanceof Error ? err.message : T.foutVersturen)
       setStatus("fout")
     }
   }
@@ -340,14 +346,14 @@ export default function AanmeldFormulier({
         }}
       >
         <p className="font-bold mb-1" style={{ color: gaatKomen ? "#065F46" : "#92400E" }}>
-          {bijgewerkt ? "Je antwoord is bijgewerkt" : gaatKomen ? "Leuk, tot dan!" : "Jammer, bedankt voor het laten weten"}
+          {bijgewerkt ? T.bijgewerkt : gaatKomen ? T.totDan : T.jammerBedankt}
         </p>
         <p className="text-sm" style={{ color: labelColor, opacity: 0.8 }}>
           {gaatKomen
             ? volledig
-              ? "We hebben alles genoteerd."
-              : "We houden er rekening mee. De officiële uitnodiging volgt nog."
-            : "We vinden het jammer, maar fijn dat je het laat weten."}
+              ? T.genoteerd
+              : T.rekening
+            : T.jammer}
         </p>
         <button
           type="button"
@@ -355,7 +361,7 @@ export default function AanmeldFormulier({
           className="mt-3 text-xs font-semibold underline"
           style={{ color: labelColor, opacity: 0.7 }}
         >
-          Toch iets aanpassen
+          {T.tochAanpassen}
         </button>
       </div>
     )
@@ -364,7 +370,7 @@ export default function AanmeldFormulier({
   if (naDeadline) {
     return (
       <p className="text-sm text-center" style={{ color: labelColor, opacity: 0.8 }}>
-        De aanmeldtermijn is verstreken. Neem even contact op met het bruidspaar.
+        {T.deadline}
       </p>
     )
   }
@@ -379,7 +385,7 @@ export default function AanmeldFormulier({
     return (
       <div className="flex flex-col gap-3">
         <p className="text-sm m-0" style={{ color: labelColor }}>
-          Op dit toestel {eerder.length === 1 ? "meldde je eerder aan" : "zijn eerder aangemeld"}:
+          {eerder.length === 1 ? T.eerderEen : T.eerderMeer}
         </p>
         {eerder.map((g) => (
           <button
@@ -389,8 +395,8 @@ export default function AanmeldFormulier({
             className={knop}
             style={{ backgroundColor: "#fff", border: `2px solid ${accentColor}66`, color: "#1A1A1A", cursor: "pointer" }}
           >
-            <span className="block">{namenlijst(g.personen)}</span>
-            <span className="block text-xs font-normal mt-0.5" style={{ color: "#6B6259" }}>Dat aanpassen</span>
+            <span className="block">{namenlijst(g.personen, T.en)}</span>
+            <span className="block text-xs font-normal mt-0.5" style={{ color: "#6B6259" }}>{T.datAanpassen}</span>
           </button>
         ))}
         <button
@@ -399,8 +405,8 @@ export default function AanmeldFormulier({
           className={knop}
           style={{ backgroundColor: "transparent", border: `2px dashed ${accentColor}55`, color: labelColor, cursor: "pointer" }}
         >
-          <span className="block">Iemand anders aanmelden</span>
-          <span className="block text-xs font-normal mt-0.5" style={{ opacity: 0.75 }}>Wat eerder is ingevuld blijft staan</span>
+          <span className="block">{T.iemandAnders}</span>
+          <span className="block text-xs font-normal mt-0.5" style={{ opacity: 0.75 }}>{T.blijftStaan}</span>
         </button>
       </div>
     )
@@ -410,7 +416,7 @@ export default function AanmeldFormulier({
     <form onSubmit={verstuur} className={`flex flex-col ${compact ? "gap-4" : "gap-6"}`}>
       {(keuze === "aanpassen" || persoonlijk) && (
         <p className="text-xs m-0" style={{ color: labelColor, opacity: 0.8 }}>
-          {persoonlijk ? "Fijn dat je er bent. Je namen staan er al; kies of je erbij bent." : "Je past je eerdere aanmelding aan."}
+          {persoonlijk ? T.persoonlijk : T.jePast}
           {!persoonlijk && eerder.length > 0 && (
             <>
               {" "}
@@ -420,7 +426,7 @@ export default function AanmeldFormulier({
                 className="underline"
                 style={{ color: labelColor, background: "none", border: 0, padding: 0, cursor: "pointer", font: "inherit" }}
               >
-                Toch iemand anders?
+                {T.tochAnders}
               </button>
             </>
           )}
@@ -431,7 +437,7 @@ export default function AanmeldFormulier({
         {/* In de kaart staat de vraag al als kop boven het formulier; dan
             niet nog eens als label eronder. */}
         {!compact && (
-          <label className={labelKlassen} style={{ color: labelColor }}>Ben je erbij?</label>
+          <label className={labelKlassen} style={{ color: labelColor }}>{T.benJeErbij}</label>
         )}
         <div className="flex flex-col sm:flex-row gap-2">
           {(["yes", "no"] as const).map((v) => {
@@ -452,7 +458,7 @@ export default function AanmeldFormulier({
                 }}
               >
                 <span>{v === "yes" ? "✓" : "✕"}</span>
-                {v === "yes" ? "Ja, ik ben erbij" : "Nee, ik kan niet"}
+                {v === "yes" ? T.jaErbij : T.neeNiet}
               </button>
             )
           })}
@@ -465,7 +471,7 @@ export default function AanmeldFormulier({
           {komt === "yes" && (
             <div>
               <label className={labelKlassen} style={{ color: labelColor }}>
-                Met hoeveel volwassenen kom je?
+                {T.hoeveel}
               </label>
               <div className="flex gap-2 flex-wrap">
                 {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
@@ -494,14 +500,14 @@ export default function AanmeldFormulier({
               <div key={i} className="flex flex-col gap-2">
                 {komt === "yes" && personen.length > 1 && (
                   <span className="text-xs font-semibold" style={{ color: labelColor, opacity: 0.7 }}>
-                    {i === 0 ? "Jij" : `Persoon ${i + 1}`}
+                    {i === 0 ? T.jij : T.persoon(i + 1)}
                   </span>
                 )}
                 <div className="flex gap-2">
                   <input
                     className={veldKlassen}
                     style={veldStijl}
-                    placeholder="Voornaam"
+                    placeholder={T.voornaam}
                     value={p.voornaam}
                     onChange={(e) => zetPersoon(i, "voornaam", e.target.value)}
                     maxLength={80}
@@ -510,7 +516,7 @@ export default function AanmeldFormulier({
                   <input
                     className={veldKlassen}
                     style={veldStijl}
-                    placeholder="Achternaam"
+                    placeholder={T.achternaam}
                     value={p.achternaam}
                     onChange={(e) => zetPersoon(i, "achternaam", e.target.value)}
                     maxLength={80}
@@ -522,7 +528,7 @@ export default function AanmeldFormulier({
                       type="email"
                       className={veldKlassen}
                       style={veldStijl}
-                      placeholder="E-mailadres"
+                      placeholder={T.email}
                       value={p.email}
                       onChange={(e) => zetPersoon(i, "email", e.target.value)}
                       maxLength={160}
@@ -531,7 +537,7 @@ export default function AanmeldFormulier({
                       type="tel"
                       className={veldKlassen}
                       style={veldStijl}
-                      placeholder="Telefoon (niet verplicht)"
+                      placeholder={T.telefoon}
                       value={p.telefoon}
                       onChange={(e) => zetPersoon(i, "telefoon", e.target.value)}
                       maxLength={32}
@@ -543,7 +549,7 @@ export default function AanmeldFormulier({
                     className={`${veldKlassen} resize-none`}
                     style={{ ...veldStijl, minHeight: 60 }}
                     rows={2}
-                    placeholder={"Adres voor de trouwkaart\nStraat 12, 1234 AB Plaats"}
+                    placeholder={T.adres}
                     value={adres}
                     onChange={(e) => setAdres(e.target.value)}
                     maxLength={200}
@@ -554,7 +560,7 @@ export default function AanmeldFormulier({
                     <input
                       className={veldKlassen}
                       style={veldStijl}
-                      placeholder="Dieetwens, bijv. vegetarisch"
+                      placeholder={T.dieet}
                       value={p.dietary}
                       onChange={(e) => zetPersoon(i, "dietary", e.target.value)}
                       maxLength={120}
@@ -562,7 +568,7 @@ export default function AanmeldFormulier({
                     <input
                       className={veldKlassen}
                       style={veldStijl}
-                      placeholder="Allergie, bijv. noten"
+                      placeholder={T.allergie}
                       value={p.allergie}
                       onChange={(e) => zetPersoon(i, "allergie", e.target.value)}
                       maxLength={120}
@@ -586,7 +592,7 @@ export default function AanmeldFormulier({
                   style={{ accentColor }}
                 />
                 <span className="text-sm font-semibold" style={{ color: labelColor }}>
-                  Komen er kinderen mee?
+                  {T.kinderenMee}
                 </span>
               </label>
               {metKinderen && (
@@ -597,7 +603,7 @@ export default function AanmeldFormulier({
                         <input
                           className={veldKlassen}
                           style={veldStijl}
-                          placeholder="Naam van het kind"
+                          placeholder={T.naamKind}
                           value={k.voornaam}
                           onChange={(e) => zetKind(i, "voornaam", e.target.value)}
                           maxLength={80}
@@ -608,7 +614,7 @@ export default function AanmeldFormulier({
                           max={MAX_KIND_LEEFTIJD}
                           className={`${veldKlassen} w-24`}
                           style={veldStijl}
-                          placeholder="Leeftijd"
+                          placeholder={T.leeftijd}
                           value={k.leeftijd}
                           onChange={(e) => zetKind(i, "leeftijd", e.target.value)}
                         />
@@ -619,7 +625,7 @@ export default function AanmeldFormulier({
                         <input
                           className={veldKlassen}
                           style={veldStijl}
-                          placeholder={`Dieetwensen of allergie van ${k.voornaam.trim()} (optioneel)`}
+                          placeholder={T.kindDieet(k.voornaam.trim())}
                           value={k.dietary}
                           onChange={(e) => zetKind(i, "dietary", e.target.value)}
                           maxLength={120}
@@ -634,11 +640,11 @@ export default function AanmeldFormulier({
                       className="text-xs font-semibold self-start underline"
                       style={{ color: accentColor }}
                     >
-                      Nog een kind
+                      {T.nogEenKind}
                     </button>
                   )}
                   <p className="text-[11px] leading-snug" style={{ color: labelColor, opacity: 0.65 }}>
-                    De leeftijd helpt bij de catering: voor kinderen geldt vaak een ander tarief.
+                    {T.leeftijdUitleg}
                   </p>
                 </div>
               )}
@@ -648,20 +654,20 @@ export default function AanmeldFormulier({
           {/* ── Alleen bij het volledige formulier ── */}
           {volledig && komt === "yes" && showSongRequest && (
             <div>
-              <label className={labelKlassen} style={{ color: labelColor }}>Welk nummer mag er niet ontbreken?</label>
+              <label className={labelKlassen} style={{ color: labelColor }}>{T.nummer}</label>
               <input className={veldKlassen} style={veldStijl} value={liedje} onChange={(e) => setLiedje(e.target.value)} maxLength={120} />
             </div>
           )}
 
           {volledig && komt === "yes" && showOvernachting && (
-            <JaNee label="Blijf je slapen?" waarde={overnachting} zet={setOvernachting} accentColor={accentColor} labelColor={labelColor} knopTekstKleur={knopTekstKleur} labelKlassen={labelKlassen} />
+            <JaNee label={T.slapen} waarde={overnachting} zet={setOvernachting} accentColor={accentColor} labelColor={labelColor} knopTekstKleur={knopTekstKleur} labelKlassen={labelKlassen} ja={T.ja} nee={T.nee} />
           )}
 
           {volledig && komt === "yes" && heeftVraag1 && (
-            <JaNee label={customQuestion!} waarde={eigen1} zet={setEigen1} accentColor={accentColor} labelColor={labelColor} knopTekstKleur={knopTekstKleur} labelKlassen={labelKlassen} />
+            <JaNee label={customQuestion!} waarde={eigen1} zet={setEigen1} accentColor={accentColor} labelColor={labelColor} knopTekstKleur={knopTekstKleur} labelKlassen={labelKlassen} ja={T.ja} nee={T.nee} />
           )}
           {volledig && komt === "yes" && heeftVraag2 && (
-            <JaNee label={customQuestion2!} waarde={eigen2} zet={setEigen2} accentColor={accentColor} labelColor={labelColor} knopTekstKleur={knopTekstKleur} labelKlassen={labelKlassen} />
+            <JaNee label={customQuestion2!} waarde={eigen2} zet={setEigen2} accentColor={accentColor} labelColor={labelColor} knopTekstKleur={knopTekstKleur} labelKlassen={labelKlassen} ja={T.ja} nee={T.nee} />
           )}
 
           {/* Een berichtje hoort bij de uitnodiging, niet bij een Save the
@@ -671,7 +677,7 @@ export default function AanmeldFormulier({
           {(volledig || komt === "no") && (
           <div>
             <label className={labelKlassen} style={{ color: labelColor }}>
-              {komt === "no" ? "Wil je nog iets meegeven?" : "Een berichtje voor het bruidspaar?"}
+              {komt === "no" ? T.berichtNee : T.berichtJa}
             </label>
             <textarea
               className={`${veldKlassen} resize-none`}
@@ -699,12 +705,12 @@ export default function AanmeldFormulier({
               cursor: voorbeeld ? "default" : "pointer",
             }}
           >
-            {status === "bezig" ? "Versturen..." : "Versturen"}
+            {status === "bezig" ? T.versturenBezig : T.versturen}
           </button>
 
           {!voorbeeld && (
             <p className="text-[11px] leading-snug text-center" style={{ color: labelColor, opacity: 0.6 }}>
-              Je gegevens gaan naar het bruidspaar.
+              {T.privacy}
             </p>
           )}
         </>
@@ -715,8 +721,10 @@ export default function AanmeldFormulier({
 
 /** Een ja-of-nee-vraag, zoals "blijf je slapen". */
 function JaNee({
-  label, waarde, zet, accentColor, labelColor, knopTekstKleur, labelKlassen,
+  label, waarde, zet, accentColor, labelColor, knopTekstKleur, labelKlassen, ja = "Ja", nee = "Nee",
 }: {
+  ja?: string
+  nee?: string
   label: string
   waarde: boolean | null
   zet: (v: boolean) => void
@@ -742,7 +750,7 @@ function JaNee({
               cursor: "pointer",
             }}
           >
-            {v ? "Ja" : "Nee"}
+            {v ? ja : nee}
           </button>
         ))}
       </div>
