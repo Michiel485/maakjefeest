@@ -39,6 +39,8 @@ export const ONTWERP_LETTERS: Record<NieuwOntwerp, OntwerpLetters> = {
   boog: { namen: L.prata, kop: L.cormorant, tekst: L.montserrat },
   deco: { namen: L.cinzel, kop: L.cinzel, tekst: L.montserrat },
   datum: { namen: L.allura, kop: L.bodoni, tekst: L.montserrat },
+  // Een eigen ontwerp is een afbeelding; alleen de lege plek heeft tekst
+  eigen: { namen: L.montserrat, kop: L.montserrat, tekst: L.montserrat },
 }
 
 /** Dezelfde rollen, als font-family voor in een style. */

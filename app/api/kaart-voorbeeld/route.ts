@@ -53,6 +53,14 @@ export async function POST(request: Request) {
     // Alleen echte URL's; een lokale data-URL uit de browser kan satori niet altijd aan
     photoUrl: typeof body.photoUrl === "string" && /^https?:\/\//.test(body.photoUrl) ? body.photoUrl.slice(0, 500) : undefined,
     taal: cardTaal(body.taal),
+    // Een eigen ontwerp staat voor het bewaren nog als data-URL in de browser;
+    // satori kan die tekenen. Met een grens, want dit is een open route.
+    ontwerpUrl:
+      typeof body.ontwerpUrl === "string" &&
+      (/^https:\/\//.test(body.ontwerpUrl) || (/^data:image\/(jpeg|png|webp);base64,/.test(body.ontwerpUrl) && body.ontwerpUrl.length < 4_000_000))
+        ? body.ontwerpUrl
+        : undefined,
+    ontwerpVerhouding: typeof body.ontwerpVerhouding === "number" && body.ontwerpVerhouding >= 0.4 && body.ontwerpVerhouding <= 2.5 ? body.ontwerpVerhouding : undefined,
   }
 
   // Met een echte datum maken we de tekst zelf, in de taal van de kaart, en

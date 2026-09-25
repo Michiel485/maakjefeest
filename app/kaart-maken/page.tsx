@@ -213,6 +213,10 @@ interface KaartOntwerp {
   /** Een eigen palet voor deze kaart; leeg is de kleuren van de website */
   kleur: string
   envelop: CardEnvelop
+  /** Eigen ontwerp: geüpload, of nog alleen in de browser */
+  ontwerpUrl: string | null
+  ontwerpDataUrl: string | null
+  ontwerpVerhouding: number | null
   template: CardTemplate
   names: string
   datum: string
@@ -239,6 +243,9 @@ const LEEG: KaartOntwerp = {
   style: "zand",
   kleur: "",
   envelop: {},
+  ontwerpUrl: null,
+  ontwerpDataUrl: null,
+  ontwerpVerhouding: null,
   template: "klassiek",
   names: "",
   datum: "",
@@ -644,6 +651,9 @@ export default function KaartMakenPage() {
               style: isStyle(event.style) ? event.style : "zand",
               kleur: kaart?.content.kleur ?? "",
               envelop: kaart?.content.envelop ?? {},
+              ontwerpUrl: kaart?.content.ontwerpUrl ?? null,
+              ontwerpDataUrl: null,
+              ontwerpVerhouding: kaart?.content.ontwerpVerhouding ?? null,
               template: kaart?.template ?? "klassiek",
               names: kaart?.content.names ?? (event.frame_names as string) ?? (event.title as string) ?? "",
               datum: (event.datum as string) ?? "",
@@ -752,6 +762,8 @@ export default function KaartMakenPage() {
     animatie: ontwerp.animatie,
     kleur: ontwerp.kleur || undefined,
     envelop: schoonEnvelop(ontwerp.envelop),
+    ontwerpUrl: ontwerp.ontwerpUrl ?? ontwerp.ontwerpDataUrl ?? undefined,
+    ontwerpVerhouding: ontwerp.ontwerpVerhouding ?? undefined,
     taal: ontwerp.taal,
     aanmelden: ontwerp.aanmelden,
   }
@@ -786,6 +798,18 @@ export default function KaartMakenPage() {
       }
     }
 
+    // Het eigen ontwerp op dezelfde manier: pas bij het bewaren naar de server
+    let ontwerpUrl = ontwerp.ontwerpUrl
+    if (ontwerp.ontwerpDataUrl && !ontwerpUrl) {
+      const blob = await (await fetch(ontwerp.ontwerpDataUrl)).blob()
+      const fd = new FormData()
+      fd.append("file", new File([blob], "eigen-ontwerp.jpg", { type: "image/jpeg" }))
+      const up = await fetch("/api/cards/upload", { method: "POST", body: fd })
+      if (!up.ok) throw new Error("Jullie ontwerp uploaden lukte niet. Probeer het zo nog eens.")
+      ontwerpUrl = ((await up.json()) as { url: string }).url
+      update({ ontwerpUrl, ontwerpDataUrl: null })
+    }
+
     const eventBody = {
       type: "bruiloft",
       naam: ontwerp.names || "Onze bruiloft",
@@ -813,7 +837,7 @@ export default function KaartMakenPage() {
     // Alleen wat echt van deze kaart is. Namen en datum komen van de bruiloft
     // en de locatie alleen als hij afwijkt; anders zou een wijziging aan de
     // bruiloft de kaarten niet meer bereiken.
-    const kaartContent: CardContent = { ...content, photoUrl: fotoUrl ?? undefined }
+    const kaartContent: CardContent = { ...content, photoUrl: fotoUrl ?? undefined, ontwerpUrl: ontwerpUrl ?? undefined }
 
     // Hoort dit kaart-id echt bij deze bruiloft? Je browser onthoudt het, en
     // dat id kan verouderd zijn: bijvoorbeeld nadat je opnieuw begonnen bent
@@ -932,8 +956,11 @@ export default function KaartMakenPage() {
 
   // De check onder Bekijken. "mag" betekent: hoeft niet, maar is wel aan te
   // raden; dan geen oranje rondje.
-  type Controle = "namen" | "datum" | "locatie" | "aanmelden" | "bewaard" | "actief"
+  type Controle = "ontwerp" | "namen" | "datum" | "locatie" | "aanmelden" | "bewaard" | "actief"
   const controles: { id: Controle; label: string; klaar: boolean; mag?: boolean; actie: string }[] = [
+    ...(cardDesign(ontwerp.template) === "eigen"
+      ? [{ id: "ontwerp" as const, label: "Jullie ontwerp", klaar: !!(ontwerp.ontwerpUrl || ontwerp.ontwerpDataUrl), actie: "Uploaden" }]
+      : []),
     { id: "namen", label: "Jullie namen", klaar: !!ontwerp.names.trim(), actie: "Invullen" },
     { id: "datum", label: "Trouwdatum", klaar: !!ontwerp.datum, actie: "Invullen" },
     { id: "locatie", label: "Locatie", klaar: !!(ontwerp.location.trim() || eventLocatie.trim()), mag: true, actie: "Invullen" },
@@ -947,7 +974,8 @@ export default function KaartMakenPage() {
     { id: "actief", label: alAfgenomen ? "Geactiveerd, de link werkt" : "Geactiveerd", klaar: alAfgenomen, actie: `Activeer ${prijs}` },
   ]
   function doeControle(id: Controle) {
-    if (id === "namen") gaNaar("tekst", "kaart-namen")
+    if (id === "ontwerp") gaNaar("template")
+    else if (id === "namen") gaNaar("tekst", "kaart-namen")
     else if (id === "datum") gaNaar("tekst", "kaart-datum")
     else if (id === "locatie") gaNaar("tekst", "kaart-locatie")
     else if (id === "aanmelden") gaNaar("aanmelden")
@@ -1023,6 +1051,9 @@ export default function KaartMakenPage() {
       template: k.template,
       kleur: k.content.kleur ?? "",
       envelop: k.content.envelop ?? {},
+      ontwerpUrl: k.content.ontwerpUrl ?? null,
+      ontwerpDataUrl: null,
+      ontwerpVerhouding: k.content.ontwerpVerhouding ?? null,
       location: k.content.location ?? o.location,
       message: k.content.message ?? "",
       guestType: k.content.guestType ?? "",
@@ -1206,6 +1237,35 @@ export default function KaartMakenPage() {
     }
   }
 
+  // Eigen ontwerp: scherper dan een foto, want er staat tekst op, en de
+  // verhouding onthouden zodat de kaart precies zo hoog wordt als het ontwerp
+  const ontwerpRef = useRef<HTMLInputElement>(null)
+  const [ontwerpMag, setOntwerpMag] = useState(false)
+  async function kiesOntwerp(file: File) {
+    setBusy("foto")
+    try {
+      const blob = await compressImage(file, 1800, 0.9, "#FFFFFF")
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const r = new FileReader()
+        r.onload = () => resolve(r.result as string)
+        r.onerror = () => reject(new Error("Kon het ontwerp niet lezen"))
+        r.readAsDataURL(blob)
+      })
+      const verhouding = await new Promise<number>((resolve) => {
+        const img = new Image()
+        img.onload = () => resolve(img.naturalHeight / Math.max(1, img.naturalWidth))
+        img.onerror = () => resolve(1.4)
+        img.src = dataUrl
+      })
+      if (verhouding < 0.4 || verhouding > 2.5) throw new Error("Dit ontwerp is te breed of te smal voor een kaart. Een staande kaart werkt het best.")
+      update({ ontwerpDataUrl: dataUrl, ontwerpUrl: null, ontwerpVerhouding: Math.round(verhouding * 1000) / 1000, template: "eigen" })
+    } catch (e) {
+      setMelding({ tekst: e instanceof Error ? e.message : "Ontwerp laden mislukt", fout: true })
+    } finally {
+      setBusy(null)
+    }
+  }
+
   async function kiesFoto(file: File) {
     setBusy("foto")
     try {
@@ -1266,6 +1326,8 @@ export default function KaartMakenPage() {
           guestType: ontwerp.guestType, inviteText: ontwerp.inviteText, timeText: ontwerp.timeText,
           photoUrl: ontwerp.photoUrl, taal: ontwerp.taal,
           kleur: ontwerp.kleur || undefined, datum: ontwerp.datum || undefined,
+          ontwerpUrl: ontwerp.ontwerpUrl ?? ontwerp.ontwerpDataUrl ?? undefined,
+          ontwerpVerhouding: ontwerp.ontwerpVerhouding ?? undefined,
         }),
       })
       if (!r.ok) throw new Error("Voorbeeld maken mislukte, probeer het zo opnieuw.")
@@ -1890,6 +1952,44 @@ export default function KaartMakenPage() {
                 )
               })}
             </div>
+            {cardDesign(ontwerp.template) === "eigen" && (
+              <div className="rounded-xl p-3 flex flex-col gap-2.5" style={{ backgroundColor: GOLD_BG, border: `1px solid ${GOLD_LIGHT}` }}>
+                <input ref={ontwerpRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void kiesOntwerp(f); e.target.value = "" }} />
+                <p className="m-0 text-[12px] leading-relaxed" style={{ color: BODY }}>
+                  Een afbeelding van jullie kaart, bijvoorbeeld uit Canva. Staand werkt het best, minstens 1000 pixels breed. Wij doen de envelop, het aanmelden en de rest.
+                </p>
+                {!(ontwerp.ontwerpUrl || ontwerp.ontwerpDataUrl) && (
+                  <label className="flex items-start gap-2 text-[12px] leading-snug" style={{ color: CHARCOAL, cursor: "pointer" }}>
+                    <input type="checkbox" checked={ontwerpMag} onChange={(e) => setOntwerpMag(e.target.checked)} className="mt-0.5" />
+                    <span>Wij mogen dit ontwerp gebruiken: we hebben het zelf gemaakt of er toestemming voor.</span>
+                  </label>
+                )}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => ontwerpRef.current?.click()}
+                    disabled={busy === "foto" || (!ontwerpMag && !(ontwerp.ontwerpUrl || ontwerp.ontwerpDataUrl))}
+                    className="flex-1 text-sm font-semibold px-3 py-2.5 rounded-xl disabled:opacity-50"
+                    style={{ backgroundColor: CHARCOAL, color: IVORY, border: "none", cursor: "pointer" }}
+                  >
+                    {busy === "foto" ? "Bezig..." : ontwerp.ontwerpUrl || ontwerp.ontwerpDataUrl ? "Ander ontwerp" : "Upload jullie ontwerp"}
+                  </button>
+                  {(ontwerp.ontwerpUrl || ontwerp.ontwerpDataUrl) && (
+                    <button
+                      type="button"
+                      onClick={() => update({ ontwerpUrl: null, ontwerpDataUrl: null, ontwerpVerhouding: null })}
+                      className="text-sm font-semibold px-3 py-2.5 rounded-xl"
+                      style={{ backgroundColor: "#fff", color: BODY, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
+                    >
+                      Weghalen
+                    </button>
+                  )}
+                </div>
+                <p className="m-0 text-[11px] leading-relaxed" style={{ color: SUBTLE }}>
+                  Jullie namen en datum zetten we niet op de kaart, die staan in het ontwerp. We gebruiken ze wel voor het zegel, de voorvertoning in WhatsApp en de agenda.
+                </p>
+              </div>
+            )}
             {cardDesign(ontwerp.template) === "deco" && !ontwerp.kleur && (
               <button
                 type="button"

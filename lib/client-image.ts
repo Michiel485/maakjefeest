@@ -5,7 +5,9 @@
 export async function compressImage(
   file: File,
   maxLongSide = 1600,
-  quality = 0.85
+  quality = 0.85,
+  // Een doorzichtige PNG wordt als JPEG anders zwart waar hij doorzichtig was
+  ondergrond?: string
 ): Promise<Blob> {
   const url = URL.createObjectURL(file)
   try {
@@ -24,6 +26,10 @@ export async function compressImage(
     canvas.height = height
     const ctx = canvas.getContext("2d")
     if (!ctx) throw new Error("Kon deze foto niet verwerken")
+    if (ondergrond) {
+      ctx.fillStyle = ondergrond
+      ctx.fillRect(0, 0, width, height)
+    }
     ctx.drawImage(img, 0, 0, width, height)
 
     const blob = await new Promise<Blob | null>((resolve) =>

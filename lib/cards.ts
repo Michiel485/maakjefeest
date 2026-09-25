@@ -15,13 +15,13 @@ export type CardType = "save_the_date" | "trouwkaart"
 // docs/PLAN-kaartontwerpen.md. Oudere code kent de nieuwe waarden niet en
 // valt dan terug op klassiek; terugdraaien breekt dus geen kaart.
 export type KlassiekOntwerp = "klassiek" | "sierlijk" | "bohemian"
-export type NieuwOntwerp = "minimaal" | "fotovol" | "boog" | "deco" | "datum"
+export type NieuwOntwerp = "minimaal" | "fotovol" | "boog" | "deco" | "datum" | "eigen"
 export type CardDesign = KlassiekOntwerp | NieuwOntwerp
 export type CardTemplate = CardDesign | "foto"
 
 /** Alle waarden die in cards.template mogen staan. */
 export const CARD_TEMPLATE_WAARDEN: CardTemplate[] = [
-  "klassiek", "sierlijk", "bohemian", "foto", "minimaal", "fotovol", "boog", "deco", "datum",
+  "klassiek", "sierlijk", "bohemian", "foto", "minimaal", "fotovol", "boog", "deco", "datum", "eigen",
 ]
 
 export function isKlassiekOntwerp(d: CardDesign): d is KlassiekOntwerp {
@@ -84,6 +84,12 @@ export interface CardContent {
   kleur?: string
   /** Kleur, voering en zegel van de envelop; leeg is zoals het altijd was */
   envelop?: CardEnvelop
+  /**
+   * Eigen ontwerp: de afbeelding die de kaart is, en hoe hoog hij is ten
+   * opzichte van zijn breedte. Wij doen de envelop, het aanmelden en de rest.
+   */
+  ontwerpUrl?: string
+  ontwerpVerhouding?: number
   // In welke taal de vaste teksten op de kaart staan
   taal?: CardTaal
   // Of er onder de kaart om een aanmelding wordt gevraagd, en hoeveel. Zie
@@ -159,7 +165,7 @@ export const CARD_TYPE_PLAN: Record<CardType, "save_the_date" | "uitnodiging"> =
 }
 
 // De volgorde in de galerij van de bouwer
-export const CARD_DESIGNS: CardDesign[] = ["klassiek", "sierlijk", "bohemian", "minimaal", "fotovol", "boog", "deco", "datum"]
+export const CARD_DESIGNS: CardDesign[] = ["klassiek", "sierlijk", "bohemian", "minimaal", "fotovol", "boog", "deco", "datum", "eigen"]
 
 export const CARD_TEMPLATE_LABEL: Record<CardDesign, string> = {
   klassiek: "Strak",
@@ -170,6 +176,7 @@ export const CARD_TEMPLATE_LABEL: Record<CardDesign, string> = {
   boog: "Boog",
   deco: "Art deco",
   datum: "De datum",
+  eigen: "Eigen ontwerp",
 }
 
 export const CARD_TEMPLATE_UITLEG: Record<CardDesign, string> = {
@@ -181,6 +188,7 @@ export const CARD_TEMPLATE_UITLEG: Record<CardDesign, string> = {
   boog: "een boogvenster met foto of initialen",
   deco: "geometrisch goud, jaren twintig",
   datum: "de datum groot als beeld",
+  eigen: "upload jullie eigen kaart",
 }
 
 /** De sfeer, als label in de galerij. */
@@ -193,6 +201,7 @@ export const CARD_DESIGN_SFEER: Record<CardDesign, string> = {
   boog: "Romantisch",
   deco: "Feestelijk",
   datum: "Modern",
+  eigen: "Van jullie",
 }
 
 // Oude waarden en rommel vallen terug op het strakke ontwerp
@@ -524,6 +533,8 @@ export interface CardDisplay extends CardVasteTeksten {
   /** De trouwdatum als 2027-08-15, voor ontwerpen die met de cijfers spelen. */
   datumIso?: string | null
   envelop?: CardEnvelop
+  ontwerpUrl?: string | null
+  ontwerpVerhouding?: number | null
 }
 
 export function buildCardDisplay(
@@ -569,6 +580,8 @@ export function buildCardDisplay(
     // Een eigen datumtekst (van oude kaarten) wint van de cijfers
     datumIso: content.dateText?.trim() ? null : event.datum || null,
     envelop: content.envelop,
+    ontwerpUrl: content.ontwerpUrl || null,
+    ontwerpVerhouding: content.ontwerpVerhouding || null,
     ...displayTeksten(taal),
   }
 }

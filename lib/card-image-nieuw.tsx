@@ -95,7 +95,12 @@ export async function renderNieuweKaartAfbeelding({
   ) : null
 
   // In de voorvertoning past de kaart in de hoogte, in de download in de breedte
-  const kaartBreedte = mode === "og" ? 420 : 840
+  // Een eigen ontwerp heeft zijn eigen verhouding; een hoge kaart wordt
+  // smaller, zodat hij er helemaal op past
+  const verhouding = ontwerp === "eigen" && display.ontwerpVerhouding ? display.ontwerpVerhouding : 1.4
+  const kaartBreedte = mode === "og"
+    ? Math.min(420, Math.round(590 / verhouding))
+    : Math.min(840, Math.round(1230 / verhouding))
 
   return new ImageResponse(
     (

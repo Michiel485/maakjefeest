@@ -44,6 +44,12 @@ function sanitizeContent(raw: unknown): CardContent {
     // Een eigen palet voor deze kaart; alleen bekende, anders de website
     kleur: kaartPalet(input.kleur)?.id,
     envelop: schoonEnvelop(input.envelop),
+    // Eigen ontwerp: alleen een echte link naar een geüploade afbeelding
+    ontwerpUrl: typeof input.ontwerpUrl === "string" && /^https:\/\//.test(input.ontwerpUrl) ? input.ontwerpUrl.slice(0, 500) : undefined,
+    ontwerpVerhouding:
+      typeof input.ontwerpVerhouding === "number" && input.ontwerpVerhouding >= 0.4 && input.ontwerpVerhouding <= 2.5
+        ? Math.round(input.ontwerpVerhouding * 1000) / 1000
+        : undefined,
     taal: cardTaal(input.taal),
     aanmelden: aanmeldStand(input.aanmelden),
   }

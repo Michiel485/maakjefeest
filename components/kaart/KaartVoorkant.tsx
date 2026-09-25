@@ -160,6 +160,51 @@ export default function KaartVoorkant({
     </D>
   )
 
+  // ── Eigen ontwerp: de afbeelding is de kaart ──────────────────────────────
+  if (ontwerp === "eigen") {
+    const verhouding = d.ontwerpVerhouding && d.ontwerpVerhouding > 0 ? d.ontwerpVerhouding : 1.4
+    const h = Math.round(breedte * verhouding)
+    if (!d.ontwerpUrl) {
+      // Nog niets geüpload: een lege plek, alleen in de bouwer te zien
+      return (
+        <D
+          style={{
+            ...basis,
+            alignItems: "center",
+            justifyContent: "center",
+            gap: px(10),
+            padding: px(40),
+            borderRadius: px(10),
+            border: `${Math.max(1, px(1.5))}px dashed ${accent}90`,
+          }}
+        >
+          <svg width={px(44)} height={px(44)} viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" />
+          </svg>
+          <div style={{ display: "flex", fontFamily: letters.tekst, fontSize: px(15), fontWeight: 600, color: kop, textAlign: "center" }}>
+            Jullie eigen ontwerp
+          </div>
+          <div style={{ display: "flex", fontFamily: letters.tekst, fontSize: px(12), lineHeight: 1.5, color: tekst, textAlign: "center", maxWidth: px(260) }}>
+            Upload een afbeelding van jullie kaart. Wij doen de envelop, het aanmelden en de rest.
+          </div>
+        </D>
+      )
+    }
+    return (
+      <D style={{ ...basis, minHeight: h, height: h, borderRadius: px(10) }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={d.ontwerpUrl}
+          // Wie de kaart niet kan zien, hoort in elk geval voor wie hij is
+          alt={[d.heading, d.names, d.dateText].filter(Boolean).join(", ")}
+          width={breedte}
+          height={h}
+          style={{ width: breedte, height: h, objectFit: "cover", borderRadius: px(10) }}
+        />
+      </D>
+    )
+  }
+
   // ── Minimaal: veel wit, grote letters, links uitgelijnd ───────────────────
   if (ontwerp === "minimaal") {
     return (
