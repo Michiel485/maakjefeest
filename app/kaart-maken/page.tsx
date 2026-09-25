@@ -276,9 +276,15 @@ export default function KaartMakenPage() {
   const [gastenGezien, setGastenGezien] = useState(false)
   const [sleep, setSleep] = useState(0)
   const sleepStart = useRef<number | null>(null)
+  // Twee standen, zoals elk paneel op een telefoon: vol, of klein met alleen
+  // de kop zichtbaar zodat je de hele kaart ziet. Half omlaag vegen maakt hem
+  // klein, verder vegen sluit hem, omhoog vegen of op de kop tikken maakt
+  // hem weer vol (Michiel, 25 september 2026).
+  const [bladKlein, setBladKlein] = useState(false)
   function openBlad(b: Blad | null) {
     setBlad(b)
     setSleep(0)
+    setBladKlein(false)
     if (b && b !== "kaart") setStap(BLAD_SECTIES[b][0])
     if (b === "gasten") setGastenGezien(true)
   }
@@ -331,18 +337,21 @@ export default function KaartMakenPage() {
    * groot scherm de sectie in de zijbalk.
    */
   function tikOpKaart(e: React.MouseEvent) {
-    const aangeraakt = ((e.target as HTMLElement).innerText ?? "").trim().toLowerCase()
+    // Witruimte gelijk trekken: namen over drie regels komen binnen als
+    // "michiel↵&↵lindsey" en staan in het ontwerp als "michiel & lindsey".
+    const schoon = (s: string) => s.replace(/\s+/g, " ").trim().toLowerCase()
+    const aangeraakt = schoon((e.target as HTMLElement).innerText ?? "")
     if (!aangeraakt) return
     // In beide richtingen: tik je op "Michiel" en de namen staan over drie
     // regels, dan is "michiel" een stuk van de namen, niet andersom.
     const bevat = (s: string) => {
-      const w = s.trim().toLowerCase()
+      const w = schoon(s)
       return !!w && (aangeraakt.includes(w.slice(0, 12)) || w.includes(aangeraakt))
     }
     // Vergelijken met wat er op de kaart staat, niet met wat er is ingevuld:
     // zonder namen toont de kaart "Jullie namen", en daar tik je dan op.
     const veld = bevat(display.names) ? "kaart-namen"
-      : bevat(display.dateText) || /\d{4}/.test(aangeraakt) ? "kaart-datum"
+      : bevat(display.dateText) || (aangeraakt.length < 40 && /\d{4}/.test(aangeraakt)) ? "kaart-datum"
       : bevat(display.location) ? "kaart-locatie"
       : "kaart-boodschap"
     if (window.matchMedia("(max-width: 767px)").matches) openBlad("tekst")
@@ -1343,15 +1352,20 @@ export default function KaartMakenPage() {
       {/* Op een telefoon staat het voorbeeld boven de secties: dat is waarom
           iemand blijft, dus dat zie je eerst. Op een groot scherm links de
           stappen, rechts de kaart. */}
-      <div className="flex flex-col-reverse md:flex-row flex-1 min-h-0">
+      {/* Op de telefoon gewoon van boven naar onder: de zijbalk is daar een
+          paneel dat eroverheen schuift. Eerst stond hier de omgekeerde
+          volgorde, en dan zakte het voorbeeld naar onderen, achter het paneel. */}
+      <div className="flex flex-col md:flex-row flex-1 min-h-0">
         {/* ── Stappen ── */}
         <aside
           className={`flex flex-col w-full md:w-80 md:flex-shrink-0 bg-white border-r border-gray-100 md:overflow-y-auto ${
             blad
-              ? "max-md:fixed max-md:inset-x-0 max-md:bottom-[64px] max-md:z-40 max-md:max-h-[58vh] max-md:overflow-y-auto max-md:rounded-t-2xl max-md:border-t max-md:shadow-[0_-16px_40px_-16px_rgba(26,18,4,0.35)]"
+              ? `max-md:fixed max-md:inset-x-0 max-md:bottom-[64px] max-md:z-40 max-md:rounded-t-2xl max-md:border-t max-md:shadow-[0_-16px_40px_-16px_rgba(26,18,4,0.35)] ${
+                  bladKlein ? "max-md:max-h-[56px] max-md:overflow-hidden" : "max-md:max-h-[50vh] max-md:overflow-y-auto"
+                }`
               : "max-md:hidden"
           }`}
-          style={sleep > 0 ? { transform: `translateY(${sleep}px)`, transition: "none" } : { transition: "transform 180ms ease" }}
+          style={sleep !== 0 ? { transform: `translateY(${sleep}px)`, transition: "none" } : { transition: "transform 180ms ease, max-height 200ms ease" }}
         >
           {/* De vier categorieën als kopjes, alleen op de laptop: op de
               telefoon is de categorie het paneel zelf. */}
@@ -1370,15 +1384,27 @@ export default function KaartMakenPage() {
             <div
               className="md:hidden sticky top-0 z-10 bg-white flex items-center justify-between px-5 pt-2 pb-2 border-b border-gray-100"
               style={{ touchAction: "none" }}
+              onClick={() => { if (bladKlein) setBladKlein(false) }}
               onTouchStart={(e) => { sleepStart.current = e.touches[0].clientY }}
               onTouchMove={(e) => {
                 if (sleepStart.current === null) return
-                setSleep(Math.max(0, e.touches[0].clientY - sleepStart.current))
+                // Omlaag volgt het paneel je vinger; omhoog alleen als hij klein is
+                const dy = e.touches[0].clientY - sleepStart.current
+                setSleep(bladKlein ? Math.min(0, dy) : Math.max(0, dy))
               }}
-              onTouchEnd={() => {
+              onTouchEnd={(e) => {
+                const start = sleepStart.current
                 sleepStart.current = null
-                if (sleep > 70) openBlad(null)
-                else setSleep(0)
+                const dy = start === null ? 0 : e.changedTouches[0].clientY - start
+                setSleep(0)
+                if (bladKlein) {
+                  if (dy < -30) setBladKlein(false)
+                  else if (dy > 40) openBlad(null)
+                } else if (dy > 220) {
+                  openBlad(null)
+                } else if (dy > 60) {
+                  setBladKlein(true)
+                }
               }}
             >
               <span aria-hidden className="absolute left-1/2 -translate-x-1/2 top-1.5 w-9 h-1 rounded-full" style={{ backgroundColor: GOLD_LIGHT }} />
@@ -1859,7 +1885,7 @@ export default function KaartMakenPage() {
             Zo zie je je kaart veranderen terwijl je typt. */}
         <main
           ref={voorbeeldRef}
-          className={`flex-1 p-4 sm:p-5 md:overflow-y-auto md:relative ${blad && blad !== "kaart" ? "max-md:max-h-[34vh] max-md:overflow-hidden" : ""}`}
+          className={`flex-1 p-4 sm:p-5 md:overflow-y-auto md:relative md:order-2 ${blad && blad !== "kaart" && !bladKlein ? "max-md:max-h-[40vh] max-md:overflow-hidden" : ""}`}
           onTouchStart={(e) => { veegStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY } }}
           onTouchEnd={(e) => {
             const s = veegStart.current
@@ -1885,7 +1911,7 @@ export default function KaartMakenPage() {
           >
             {"💌"} Bekijk hoe het opengaat
           </button>
-          <div className={`mx-auto max-w-md transition-transform duration-200 origin-top ${blad && blad !== "kaart" ? "max-md:scale-[0.5]" : ""}`}>
+          <div className={`mx-auto max-w-md transition-transform duration-200 origin-top ${blad && blad !== "kaart" && !bladKlein ? "max-md:scale-[0.45]" : ""}`}>
             <div className="flex items-center justify-center gap-3 mb-1">
               <p className="m-0 text-center text-xs font-semibold uppercase tracking-widest" style={{ color: sc.headingColor, opacity: 0.75 }}>
                 Zo ziet jullie kaart eruit
