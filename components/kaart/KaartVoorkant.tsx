@@ -46,18 +46,25 @@ function Regels({ tekst, style, uitlijnen = "center" }: { tekst: string; style?:
  */
 function namenRegels(namen: string): string {
   if (/\n/.test(namen)) return namen
-  const m = namen.match(/^(.+?)\s+(&|\+|en|and|et|und|y|e)\s+(.+)$/i)
+  const m = namen.match(/^(.+?)\s+(&|\+|\||\/|en|and|et|und|y|e)\s+(.+)$/i)
   return m ? `${m[1]}\n${m[2]} ${m[3]}` : namen
 }
 
 /** "M | L", voor in de boog als er geen foto is (Michiel: een streep, geen &). */
 function initialenVan(namen: string): string {
+  // Scheiden op alles waarmee een bruidspaar twee namen kan scheiden: &, +,
+  // |, /, een komma, een enter of een woord als "en". Eerst ontbraken | en /,
+  // en dan stond er bij "Michiel | Lindsey" alleen een M (Michiel, 25
+  // september 2026).
   const delen = namen
-    .split(/\s*(?:&|\+|\n|\ben\b|\band\b|\bet\b|\bund\b|\by\b|\be\b)\s*/i)
+    .split(/\s*(?:&|\+|\||\/|,|·|\n|\ben\b|\band\b|\bet\b|\bund\b|\by\b|\be\b)\s*/i)
     .map((d) => d.trim())
     .filter(Boolean)
-  if (delen.length >= 2) return `${delen[0][0]} | ${delen[1][0]}`.toUpperCase()
-  return (delen[0]?.[0] ?? "♥").toUpperCase()
+  if (delen.length >= 2) return `${delen[0][0]} | ${delen[delen.length - 1][0]}`.toUpperCase()
+  // Twee woorden zonder iets ertussen: "Michiel Lindsey"
+  const woorden = (delen[0] ?? "").split(/\s+/).filter(Boolean)
+  if (woorden.length >= 2) return `${woorden[0][0]} | ${woorden[woorden.length - 1][0]}`.toUpperCase()
+  return (woorden[0]?.[0] ?? "♥").toUpperCase()
 }
 
 /** 2027-08-15 wordt ["15", "08", "27"] */
@@ -78,10 +85,10 @@ function datumKort(iso: string | null | undefined, teken: string): string | null
  * dan null en staan de namen er gewoon zoals ze getypt zijn.
  */
 function naamDelen(namen: string): [string, string] | null {
-  const verbinders = /^(&|\+|en|and|et|und|y|e)$/i
+  const verbinders = /^(&|\+|\||\/|en|and|et|und|y|e)$/i
   const regels = namen.split(/\r?\n/).map((r) => r.trim()).filter((r) => r && !verbinders.test(r))
   if (regels.length === 2) return [regels[0], regels[1]]
-  const m = namen.replace(/\s+/g, " ").trim().match(/^(.+?)\s+(?:&|\+|en|and|et|und|y|e)\s+(.+)$/i)
+  const m = namen.replace(/\s+/g, " ").trim().match(/^(.+?)\s+(?:&|\+|\||\/|en|and|et|und|y|e)\s+(.+)$/i)
   return m ? [m[1], m[2]] : null
 }
 

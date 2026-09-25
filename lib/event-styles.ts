@@ -257,7 +257,7 @@ export type Style = keyof typeof STYLE_CONFIG
 export const STYLE_NAAM: Record<Style, string> = {
   zand: "Zand",
   ivoor: "Parel",
-  earthy: "Mos",
+  earthy: "Salie",
   emerald: "Smaragd",
   roze: "Koper",
   terracotta: "Terra",
