@@ -114,11 +114,15 @@ const BLAD_TITEL: Record<Blad, string> = {
 // De volgorde in de zijbalk. Letterlijk uitgeschreven, zodat Tailwind de
 // klassen vindt.
 const VOLGORDE: Record<Stap, string> = {
-  tekst: "order-[11]", details: "order-[12]", taal: "order-[13]",
-  stijl: "order-[21]", template: "order-[22]", foto: "order-[23]", animatie: "order-[24]",
-  groep: "order-[31]", aanmelden: "order-[32]",
+  stijl: "order-[11]", template: "order-[12]", foto: "order-[13]", animatie: "order-[14]",
+  groep: "order-[21]", aanmelden: "order-[22]",
+  tekst: "order-[31]", details: "order-[32]", taal: "order-[33]",
   bekijken: "order-[41]",
 }
+// De volgorde waarin we je erdoorheen leiden: eerst hoe hij eruitziet, dan
+// voor wie hij is, dan wat erop staat, en dan kijken. Michiels keuze van
+// 25 september 2026.
+const CATEGORIE_VOLGORDE = ["uiterlijk", "gasten", "tekst", "bekijken"] as const
 
 function BladIcoon({ blad }: { blad: Exclude<Blad, "kaart"> }) {
   const pad = {
@@ -312,6 +316,9 @@ export default function KaartMakenPage() {
     kiesKaart(volgende.id)
   }
 
+  // Welke categorie na deze komt, voor de knop onderaan het paneel
+  const volgende = blad && blad !== "kaart" ? CATEGORIE_VOLGORDE[CATEGORIE_VOLGORDE.indexOf(blad) + 1] : undefined
+
   /** Hoort deze sectie bij het paneel dat nu op de telefoon open is? */
   function inPaneel(s: Stap): boolean {
     return !!blad && blad !== "kaart" && BLAD_SECTIES[blad].includes(s)
@@ -357,8 +364,13 @@ export default function KaartMakenPage() {
     if (window.matchMedia("(max-width: 767px)").matches) openBlad("tekst")
     setStap("tekst")
     setTimeout(() => {
-      const el = document.getElementById(veld)
+      const el = document.getElementById(veld) as HTMLInputElement | HTMLTextAreaElement | null
       el?.focus()
+      // De cursor achteraan, zodat je meteen kunt weghalen of aanvullen
+      if (el && el.type !== "date") {
+        const eind = el.value.length
+        try { el.setSelectionRange(eind, eind) } catch {}
+      }
       el?.scrollIntoView({ block: "center", behavior: "smooth" })
     }, 60)
   }
@@ -503,7 +515,7 @@ export default function KaartMakenPage() {
     }
     setOntwerp(basis)
     // Nieuw ontwerp, geen bruiloft in de link of in de browser: begin bij de tekst.
-    if (!eventUitUrl && !eventUitOpslag) setStap("tekst")
+    if (!eventUitUrl && !eventUitOpslag) setStap("stijl")
 
     createClient().auth.getUser().then(async ({ data }) => {
       const email = data.user?.email ?? null
@@ -1181,7 +1193,7 @@ export default function KaartMakenPage() {
       }
       onderbalk={
         <nav className="flex justify-around px-1 pt-1.5 pb-2" aria-label="Onderdelen van de kaart">
-          {(["tekst", "uiterlijk", "gasten", "bekijken"] as const).map((b) => {
+          {CATEGORIE_VOLGORDE.map((b) => {
             const aan = blad === b
             return (
               <button
@@ -1369,7 +1381,7 @@ export default function KaartMakenPage() {
         >
           {/* De vier categorieën als kopjes, alleen op de laptop: op de
               telefoon is de categorie het paneel zelf. */}
-          {(["tekst", "uiterlijk", "gasten", "bekijken"] as const).map((c, i) => (
+          {CATEGORIE_VOLGORDE.map((c, i) => (
             <div
               key={c}
               className={`max-md:hidden ${["order-[10]", "order-[20]", "order-[30]", "order-[40]"][i]} px-5 pt-4 pb-1.5 text-[10px] font-bold uppercase tracking-[0.2em]`}
@@ -1379,6 +1391,32 @@ export default function KaartMakenPage() {
               {stip[c] && <span aria-label="hier staat nog iets open" className="inline-block w-1.5 h-1.5 rounded-full ml-1.5 align-middle" style={{ backgroundColor: "#D97706" }} />}
             </div>
           ))}
+          {/* Onderaan elk paneel: door naar de volgende, zodat je er vanzelf
+              doorheen loopt. */}
+          {blad && blad !== "kaart" && (
+              <div className="md:hidden order-[100] px-5 py-4">
+                {volgende ? (
+                  <button
+                    type="button"
+                    onClick={() => openBlad(volgende)}
+                    className="w-full text-sm font-semibold px-4 py-3 rounded-xl"
+                    style={{ backgroundColor: CHARCOAL, color: IVORY, border: 0, cursor: "pointer" }}
+                  >
+                    Volgende: {BLAD_TITEL[volgende]} {"→"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => { openBlad(null); void voerUit("bewaar") }}
+                    className="w-full text-sm font-semibold px-4 py-3 rounded-xl"
+                    style={{ backgroundColor: CHARCOAL, color: IVORY, border: 0, cursor: "pointer" }}
+                  >
+                    Klaar, bewaar mijn kaart
+                  </button>
+                )}
+              </div>
+          )}
+
           {/* De kop van het paneel, alleen op de telefoon */}
           {blad && (
             <div
@@ -1523,7 +1561,7 @@ export default function KaartMakenPage() {
             )}
           </div>
 
-          <Sectie className={telefoon("tekst")} open={isOpen("tekst")} onToggle={() => setStap(stap === "tekst" ? null : "tekst")} titel="Tekst op de kaart">
+          <Sectie className={telefoon("tekst")} vast={inPaneel("tekst")} open={isOpen("tekst")} onToggle={() => setStap(stap === "tekst" ? null : "tekst")} titel="Tekst op de kaart">
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Jullie namen</span>
               {/* Een tekstvak en geen invoerregel, zodat een enter werkt: veel
@@ -1566,7 +1604,7 @@ export default function KaartMakenPage() {
             </label>
           </Sectie>
 
-          <Sectie className={telefoon("stijl")} open={isOpen("stijl")} onToggle={() => setStap(stap === "stijl" ? null : "stijl")} titel="Stijl">
+          <Sectie className={telefoon("stijl")} vast={inPaneel("stijl")} open={isOpen("stijl")} onToggle={() => setStap(stap === "stijl" ? null : "stijl")} titel="Stijl">
             <div className="grid grid-cols-5 gap-2">
               {STYLE_KEYS.map((s) => {
                 const cfg = STYLE_CONFIG[s]
@@ -1593,7 +1631,7 @@ export default function KaartMakenPage() {
             </div>
           </Sectie>
 
-          <Sectie className={telefoon("template")} open={isOpen("template")} onToggle={() => setStap(stap === "template" ? null : "template")} titel="Ontwerp">
+          <Sectie className={telefoon("template")} vast={inPaneel("template")} open={isOpen("template")} onToggle={() => setStap(stap === "template" ? null : "template")} titel="Ontwerp">
             <div className="flex flex-col gap-2">
               {CARD_DESIGNS.map((t) => (
                 <button
@@ -1610,7 +1648,7 @@ export default function KaartMakenPage() {
           </Sectie>
 
           {/* Een foto kan bij elk ontwerp */}
-          <Sectie className={telefoon("foto")} open={isOpen("foto")} onToggle={() => setStap(stap === "foto" ? null : "foto")} titel="Foto (optioneel)">
+          <Sectie className={telefoon("foto")} vast={inPaneel("foto")} open={isOpen("foto")} onToggle={() => setStap(stap === "foto" ? null : "foto")} titel="Foto (optioneel)">
               <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void kiesFoto(f) }} />
               {(ontwerp.photoDataUrl || ontwerp.photoUrl) && (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -1640,7 +1678,7 @@ export default function KaartMakenPage() {
 
               Ook bij een Save the Date, want wie zijn indeling al weet kan
               meteen twee losse kaarten maken. */}
-          <Sectie className={telefoon("groep")} open={isOpen("groep")} onToggle={() => setStap(stap === "groep" ? null : "groep")} titel="Voor wie is deze kaart">
+          <Sectie className={telefoon("groep")} vast={inPaneel("groep")} open={isOpen("groep")} onToggle={() => setStap(stap === "groep" ? null : "groep")} titel="Voor wie is deze kaart">
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => update({ guestType: "" })}
@@ -1701,7 +1739,7 @@ export default function KaartMakenPage() {
               hier aanstaat komt samen in één regel in de accentkleur onder de
               tekst, in dezelfde letter als de datum. Wat leeg is, staat er
               niet. */}
-          <Sectie className={telefoon("details")} open={isOpen("details")} onToggle={() => setStap(stap === "details" ? null : "details")} titel="Details op de kaart">
+          <Sectie className={telefoon("details")} vast={inPaneel("details")} open={isOpen("details")} onToggle={() => setStap(stap === "details" ? null : "details")} titel="Details op de kaart">
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Tijden</span>
               <input
@@ -1749,6 +1787,7 @@ export default function KaartMakenPage() {
 
           <Sectie
             className={telefoon("aanmelden")}
+            vast={inPaneel("aanmelden")}
             open={isOpen("aanmelden")}
             onToggle={() => setStap(stap === "aanmelden" ? null : "aanmelden")}
             titel={`Aanmelden · ${AANMELD_KORT[ontwerp.aanmelden]}`}
@@ -1814,7 +1853,16 @@ export default function KaartMakenPage() {
 
           </Sectie>
 
-          <Sectie className={telefoon("taal")} open={isOpen("taal")} onToggle={() => setStap(stap === "taal" ? null : "taal")} titel="Taal van de kaart">
+          <Sectie className={telefoon("taal")} vast={inPaneel("taal")} open={isOpen("taal")} onToggle={() => setStap(stap === "taal" ? null : "taal")} titel="Taal van de kaart">
+            <p className="m-0 text-[12px] leading-relaxed" style={{ color: BODY }}>
+              De vaste teksten op de kaart staan in deze taal, zoals &quot;Wij gaan trouwen&quot; en de knoppen.
+              Wat jullie zelf typen vertalen wij niet.
+            </p>
+            <p className="m-0 text-[12px] leading-relaxed rounded-xl px-3 py-2.5" style={{ color: BODY, backgroundColor: GOLD_BG, border: `1px solid ${GOLD_LIGHT}` }}>
+              <b style={{ color: CHARCOAL }}>Gasten die geen Nederlands spreken?</b> Maak dan een tweede kaart in hun taal:
+              druk bovenaan op het plusje, dan staat alles er al, en kies hier de taal. Elke kaart krijgt zijn eigen link,
+              en het zit in de prijs.
+            </p>
             <div className="grid grid-cols-2 gap-2">
               {CARD_TALEN.map((tl) => (
                 <button
@@ -1834,7 +1882,7 @@ export default function KaartMakenPage() {
             </div>
           </Sectie>
 
-          <Sectie className={telefoon("animatie")} open={isOpen("animatie")} onToggle={() => setStap(stap === "animatie" ? null : "animatie")} titel="Openen">
+          <Sectie className={telefoon("animatie")} vast={inPaneel("animatie")} open={isOpen("animatie")} onToggle={() => setStap(stap === "animatie" ? null : "animatie")} titel="Openen">
             <div className="flex flex-col gap-2">
               {CARD_ANIMATIE_KEUZES.map((a) => (
                 <button
@@ -1859,7 +1907,7 @@ export default function KaartMakenPage() {
             </button>
           </Sectie>
 
-          <Sectie className={telefoon("bekijken")} open={isOpen("bekijken")} onToggle={() => setStap(stap === "bekijken" ? null : "bekijken")} titel="Voorbeeld en proefkaart">
+          <Sectie className={telefoon("bekijken")} vast={inPaneel("bekijken")} open={isOpen("bekijken")} onToggle={() => setStap(stap === "bekijken" ? null : "bekijken")} titel="Voorbeeld en proefkaart">
             <button
               onClick={() => setSimulatie(true)}
               className="w-full text-sm font-semibold px-3 py-3 rounded-xl transition-all hover:-translate-y-0.5"

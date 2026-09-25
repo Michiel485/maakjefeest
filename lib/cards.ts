@@ -229,15 +229,17 @@ export const CARD_DESIGN_STYLE: Record<CardDesign, CardDesignStyle> = {
 // Dit gaat alleen over onze vaste teksten: de kop, de standaardboodschap, de
 // uitnodigingsregel per gastengroep, de knoppen en de opmaak van de datum. Wat
 // het bruidspaar zelf typt vertalen wij niet.
-export type CardTaal = "nl" | "en" | "fr" | "de"
+export type CardTaal = "nl" | "en" | "fr" | "de" | "es" | "it"
 
-export const CARD_TALEN: CardTaal[] = ["nl", "en", "fr", "de"]
+export const CARD_TALEN: CardTaal[] = ["nl", "en", "fr", "de", "es", "it"]
 
 export const CARD_TAAL_LABEL: Record<CardTaal, string> = {
   nl: "Nederlands",
   en: "English",
   fr: "Français",
   de: "Deutsch",
+  es: "Español",
+  it: "Italiano",
 }
 
 /** Korte aanduiding voor in een keuzelijst met kaarten. */
@@ -246,10 +248,12 @@ export const CARD_TAAL_KORT: Record<CardTaal, string> = {
   en: "EN",
   fr: "FR",
   de: "DE",
+  es: "ES",
+  it: "IT",
 }
 
 export function cardTaal(value: unknown): CardTaal {
-  return value === "en" || value === "fr" || value === "de" ? value : "nl"
+  return value === "en" || value === "fr" || value === "de" || value === "es" || value === "it" ? value : "nl"
 }
 
 interface KaartTeksten {
@@ -364,6 +368,48 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
     dresscode: "Dresscode",
     gasten: { daggast: "Tagesgast", avondgast: "Abendgast", receptiegast: "Empfangsgast" },
     locale: "de-DE",
+  },
+  es: {
+    kop: { save_the_date: "Save the Date", trouwkaart: "Nos casamos" },
+    bericht: {
+      save_the_date: "¡Nos casamos! Reserva la fecha, la invitación oficial llegará pronto.",
+      trouwkaart: "Nos casamos y nos encantaría celebrarlo contigo. ¿Vienes?",
+    },
+    uitnodiging: {
+      daggast: "Te invitamos con mucho cariño a todo nuestro día de boda",
+      avondgast: "Te invitamos con mucho cariño a la fiesta de la noche",
+      receptiegast: "Te invitamos con mucho cariño a la recepción",
+    },
+    rsvpKnop: "Dinos si podrás venir",
+    siteKnop: "Visita nuestra web de boda",
+    agendaKnop: "Añade la fecha a tu calendario",
+    siteVolgt: "Pronto más información 🤍",
+    openEnvelop: "Abre el sobre",
+    gemaaktMet: "Hecho con",
+    dresscode: "Código de vestimenta",
+    gasten: { daggast: "Invitado de día", avondgast: "Invitado de noche", receptiegast: "Invitado a la recepción" },
+    locale: "es-ES",
+  },
+  it: {
+    kop: { save_the_date: "Save the Date", trouwkaart: "Ci sposiamo" },
+    bericht: {
+      save_the_date: "Ci sposiamo! Segna la data, l'invito ufficiale arriverà presto.",
+      trouwkaart: "Ci sposiamo e ci farebbe molto piacere festeggiare con te. Ci sarai?",
+    },
+    uitnodiging: {
+      daggast: "Ti invitiamo con affetto a tutta la nostra giornata di nozze",
+      avondgast: "Ti invitiamo con affetto alla festa serale",
+      receptiegast: "Ti invitiamo con affetto al ricevimento",
+    },
+    rsvpKnop: "Facci sapere se ci sarai",
+    siteKnop: "Visita il nostro sito di nozze",
+    agendaKnop: "Aggiungi la data al calendario",
+    siteVolgt: "Presto altre informazioni 🤍",
+    openEnvelop: "Apri la busta",
+    gemaaktMet: "Creato con",
+    dresscode: "Dress code",
+    gasten: { daggast: "Invitato al giorno", avondgast: "Invitato alla sera", receptiegast: "Invitato al ricevimento" },
+    locale: "it-IT",
   },
 }
 

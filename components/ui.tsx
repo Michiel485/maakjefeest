@@ -267,12 +267,27 @@ export function SectieKop({
   open,
   onToggle,
   uitgelicht = false,
+  vast = false,
 }: {
   titel: string
   open: boolean
   onToggle: () => void
   uitgelicht?: boolean
+  /** Geen uitklapper maar een gewoon kopje, bijvoorbeeld in een paneel op de telefoon. */
+  vast?: boolean
 }) {
+  if (vast) {
+    return (
+      <div className="px-5 pt-4 pb-2">
+        <span
+          className={`text-left text-xs font-bold uppercase tracking-widest ${uitgelicht ? "" : "text-gray-500"}`}
+          style={uitgelicht ? { color: KLEUR.goud } : undefined}
+        >
+          {titel}
+        </span>
+      </div>
+    )
+  }
   return (
     <button
       type="button"
@@ -302,6 +317,7 @@ export function Sectie({
   uitgelicht = false,
   kaal = false,
   className,
+  vast = false,
 }: {
   titel: string
   open: boolean
@@ -316,11 +332,13 @@ export function Sectie({
    */
   kaal?: boolean
   className?: string
+  /** Altijd open, met een gewoon kopje in plaats van een uitklapper. */
+  vast?: boolean
 }) {
   return (
     <div className={`border-b border-gray-100 ${className ?? ""}`}>
-      <SectieKop titel={titel} open={open} onToggle={onToggle} uitgelicht={uitgelicht} />
-      {open && (kaal ? children : <div className="px-5 pb-5 flex flex-col gap-4">{children}</div>)}
+      <SectieKop titel={titel} open={open || vast} onToggle={onToggle} uitgelicht={uitgelicht} vast={vast} />
+      {(open || vast) && (kaal ? children : <div className="px-5 pb-5 flex flex-col gap-4">{children}</div>)}
     </div>
   )
 }
