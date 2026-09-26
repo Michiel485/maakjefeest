@@ -227,10 +227,27 @@ export async function POST(request: Request) {
       const names = (eventRow.frame_names || eventRow.title || "jullie") as string
       const email = (eventRow.user_email ?? "") as string
 
+      // Een upgrade met kortingscode: de code telt als gebruikt
+      if (discount_code) {
+        const { data: codeRow } = await supabase
+          .from("discount_codes")
+          .select("id, used_count")
+          .eq("code", discount_code)
+          .single()
+        if (codeRow) {
+          await supabase
+            .from("discount_codes")
+            .update({ used_count: codeRow.used_count + 1 })
+            .eq("id", codeRow.id)
+        }
+      }
+
       await verwerkFactuur(supabase, {
         event_id,
         payment,
-        description:   `Upgrade naar ${PLANS[target].label}`,
+        description:   discount_code
+          ? `Upgrade naar ${PLANS[target].label} (kortingscode: ${discount_code})`
+          : `Upgrade naar ${PLANS[target].label}`,
         customerName:  (eventRow.frame_names || eventRow.title || "") as string,
         customerEmail: email,
         now,

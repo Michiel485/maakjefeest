@@ -141,6 +141,50 @@ function PakketKeuze({ gekozen, onKies }: { gekozen: Plan; onKies: (p: Plan) => 
   )
 }
 
+/** Het veld voor een kortingscode, bij een eerste aankoop en bij een upgrade */
+function KortingscodeVeld({
+  waarde,
+  onWijzig,
+  bezig,
+  korting,
+  melding,
+}: {
+  waarde: string
+  onWijzig: (v: string) => void
+  bezig: boolean
+  korting: DiscountResult | null
+  melding: string | null
+}) {
+  return (
+    <div className="mb-5">
+      <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: GOLD }}>
+        Kortingscode
+      </label>
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="bijv. VRIEND2025"
+          value={waarde}
+          onChange={(e) => onWijzig(e.target.value)}
+          className="w-full rounded-xl border bg-white px-4 py-3 text-sm focus:outline-none uppercase tracking-wider"
+          style={{ borderColor: korting?.valid ? "#10b981" : korting?.valid === false ? "#ef4444" : GOLD_LIGHT, color: CHARCOAL }}
+        />
+        <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
+          {bezig && <span style={{ color: GOLD_LIGHT }}><Laadicoon /></span>}
+          {korting?.valid && <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+          {korting?.valid === false && <svg className="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>}
+        </div>
+      </div>
+      {korting?.valid && melding && (
+        <p className="text-xs mt-1.5 font-semibold text-emerald-600">{melding}</p>
+      )}
+      {korting?.valid === false && waarde && (
+        <p className="text-xs mt-1.5 text-red-500">{korting.reason ?? "Ongeldige kortingscode"}</p>
+      )}
+    </div>
+  )
+}
+
 function CheckoutContent() {
   const searchParams = useSearchParams()
   const event_id   = searchParams.get("event_id")
@@ -251,7 +295,9 @@ function CheckoutContent() {
     setCheckingCode(true)
     debounceRef.current = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/discount?code=${encodeURIComponent(val.trim())}&plan=${voorPlan}`)
+        // Bij een upgrade telt de korting over het verschil
+        const van = upgradeTo && event?.plan ? `&van=${normalizePlan(event.plan)}` : ""
+        const res = await fetch(`/api/discount?code=${encodeURIComponent(val.trim())}&plan=${voorPlan}${van}`)
         const data: DiscountResult = await res.json()
         setDiscount(data)
       } catch {
@@ -265,7 +311,7 @@ function CheckoutContent() {
   function handleCodeChange(val: string) {
     setCodeInput(val)
     setDiscount(null)
-    controleerCode(val, plan)
+    controleerCode(val, upgradeTo ?? plan)
   }
 
   function kiesPlan(p: Plan) {
@@ -286,15 +332,21 @@ function CheckoutContent() {
     setPaying(true)
     setPayError(false)
     try {
+      const metCode = discount?.valid && codeInput ? { discount_code: codeInput.trim() } : {}
       const body = upgradeTo
-        ? { event_id, upgrade_to: upgradeTo }
-        : { event_id, plan, ...(discount?.valid && codeInput ? { discount_code: codeInput.trim() } : {}) }
+        ? { event_id, upgrade_to: upgradeTo, ...metCode }
+        : { event_id, plan, ...metCode }
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       })
       const json = await res.json()
+      // Een upgrade met een 100%-code: geen betaling, meteen klaar
+      if (json.free && upgradeTo) {
+        window.location.assign(`/succes?event_id=${event_id}&upgrade=1`)
+        return
+      }
       if (json.url) {
         if (!upgradeTo) wisConcept()
         window.location.href = json.url
@@ -339,6 +391,9 @@ function CheckoutContent() {
   if (upgradeTo) {
     const huidig = normalizePlan(event?.plan)
     const verschil = upgradePrice(huidig, upgradeTo)
+    const upgradeGratis = !!(discount?.valid && discount.type === "free")
+    const teBetalen = verschil == null ? 0 : upgradeGratis ? 0 : discount?.valid && discount.finalAmount != null ? discount.finalAmount : verschil
+    const metKorting = verschil != null && discount?.valid && teBetalen < verschil
     return (
       <main className="relative z-10 max-w-md mx-auto px-6 pt-8 pb-24">
         <div className="mb-8">
@@ -380,18 +435,35 @@ function CheckoutContent() {
                 </ul>
                 <div className="pt-4 flex items-center justify-between" style={{ borderTop: `1px solid ${GOLD_LIGHT}` }}>
                   <p className="text-sm font-semibold" style={{ color: CHARCOAL }}>Bij te betalen incl. BTW</p>
-                  <p className="text-lg font-bold" style={{ color: CHARCOAL }}>{formatEur(verschil)}</p>
+                  <div className="text-right">
+                    {metKorting && <p className="text-xs line-through" style={{ color: "#9A8E82" }}>{formatEur(verschil)}</p>}
+                    <p className="text-lg font-bold" style={{ color: upgradeGratis ? "#15803D" : CHARCOAL }}>{formatEur(teBetalen)}</p>
+                  </div>
                 </div>
               </div>
             </div>
+
+            <KortingscodeVeld
+              waarde={codeInput}
+              onWijzig={handleCodeChange}
+              bezig={checkingCode}
+              korting={discount}
+              melding={upgradeGratis ? "Gratis upgrade toegepast!" : discount?.valid ? `${discount.label} toegepast, je betaalt ${formatEur(teBetalen)}` : null}
+            />
 
             <button
               onClick={handlePay}
               disabled={paying}
               className="w-full inline-flex items-center justify-center gap-2.5 font-semibold px-8 py-4 rounded-2xl transition-all hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0"
-              style={{ backgroundColor: CHARCOAL, color: IVORY, boxShadow: paying ? "none" : "0 8px 32px rgba(26,26,26,0.18)" }}
+              style={upgradeGratis
+                ? { backgroundColor: "#15803D", color: "#fff", boxShadow: paying ? "none" : "0 8px 32px rgba(21,128,61,0.25)" }
+                : { backgroundColor: CHARCOAL, color: IVORY, boxShadow: paying ? "none" : "0 8px 32px rgba(26,26,26,0.18)" }}
             >
-              {paying ? (<><Laadicoon /> Doorsturen naar Mollie...</>) : (<>Betaal {formatEur(verschil)} <Pijl /></>)}
+              {paying
+                ? (<><Laadicoon /> {upgradeGratis ? "Upgraden..." : "Doorsturen naar Mollie..."}</>)
+                : upgradeGratis
+                  ? (<>Gratis upgraden <Pijl /></>)
+                  : (<>Betaal {formatEur(teBetalen)} <Pijl /></>)}
             </button>
             {payError && (
               <p className="text-xs text-center mt-3 text-red-500">
@@ -486,34 +558,13 @@ function CheckoutContent() {
       )}
 
       {/* Discount code */}
-      <div className="mb-5">
-        <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: GOLD }}>
-          Kortingscode
-        </label>
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="bijv. VRIEND2025"
-            value={codeInput}
-            onChange={e => handleCodeChange(e.target.value)}
-            className="w-full rounded-xl border bg-white px-4 py-3 text-sm focus:outline-none uppercase tracking-wider"
-            style={{ borderColor: discount?.valid ? "#10b981" : discount?.valid === false ? "#ef4444" : GOLD_LIGHT, color: CHARCOAL }}
-          />
-          <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
-            {checkingCode && <span style={{ color: GOLD_LIGHT }}><Laadicoon /></span>}
-            {discount?.valid && <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
-            {discount?.valid === false && <svg className="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>}
-          </div>
-        </div>
-        {discount?.valid && (
-          <p className="text-xs mt-1.5 font-semibold text-emerald-600">
-            {isFree ? "Gratis activering toegepast!" : `${discount.label} toegepast, je betaalt ${formatEur(finalPrice)}`}
-          </p>
-        )}
-        {discount?.valid === false && codeInput && (
-          <p className="text-xs mt-1.5 text-red-500">{discount.reason ?? "Ongeldige kortingscode"}</p>
-        )}
-      </div>
+      <KortingscodeVeld
+        waarde={codeInput}
+        onWijzig={handleCodeChange}
+        bezig={checkingCode}
+        korting={discount}
+        melding={isFree ? "Gratis activering toegepast!" : discount?.valid ? `${discount.label} toegepast, je betaalt ${formatEur(finalPrice)}` : null}
+      />
 
       {isFree ? (
         <button

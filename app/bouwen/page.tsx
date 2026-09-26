@@ -3289,13 +3289,19 @@ export default function BouwenPage() {
                           if (!isSinglePagePreview) {
                             setPreviewPage(type as PageId)
                             setActiveSubPage(type as PageId)
+                            return
                           }
+                          // Eén pagina: naar dat onderdeel scrollen, zoals een gast
+                          // het op de echte site ziet (Michiel, 26 september 2026)
+                          document
+                            .querySelector(`[data-voorbeeld-sectie="${type}"]`)
+                            ?.scrollIntoView({ behavior: "smooth", block: "start" })
                         }}
                         singlePage={isSinglePagePreview}
                       />
                       <div style={isSinglePagePreview ? { display: "flex", flexDirection: "column" } : undefined}>
                       {showSection("Home") && (
-                        <div style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "Home") } : undefined}>
+                        <div data-voorbeeld-sectie="Home" style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "Home"), scrollMarginTop: 16 } : undefined}>
                         <EventHomePreview
                           title={draft?.naam ?? ""}
                           datum={draft?.datum || null}
@@ -3329,7 +3335,7 @@ export default function BouwenPage() {
                         </div>
                       )}
                       {showSection("Ceremoniemeesters") && (
-                        <div style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "Ceremoniemeesters") } : undefined}>
+                        <div data-voorbeeld-sectie="Ceremoniemeesters" style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "Ceremoniemeesters"), scrollMarginTop: 16 } : undefined}>
                         <EventMastersPreview
                           masters={mastersForPreview}
                           sc={sc}
@@ -3341,7 +3347,7 @@ export default function BouwenPage() {
                         </div>
                       )}
                       {showSection("OnsVerhaal") && (
-                        <div style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "OnsVerhaal") } : undefined}>
+                        <div data-voorbeeld-sectie="OnsVerhaal" style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "OnsVerhaal"), scrollMarginTop: 16 } : undefined}>
                         <StoryPreview
                           title={(content.OnsVerhaal?.title as string) ?? "Ons Verhaal"}
                           text={(content.OnsVerhaal?.text as string) ?? null}
@@ -3357,7 +3363,7 @@ export default function BouwenPage() {
                         </div>
                       )}
                       {showSection("Programma") && (
-                        <div style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "Programma") } : undefined}>
+                        <div data-voorbeeld-sectie="Programma" style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "Programma"), scrollMarginTop: 16 } : undefined}>
                         <EventProgramPreview
                           items={programmaItemsForPreview}
                           sc={sc}
@@ -3376,7 +3382,8 @@ export default function BouwenPage() {
                       )}
                       {showSection("RSVP") && (
                         <div
-                          style={{ cursor: "pointer", ...(isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "RSVP") } : {}) }}
+                          data-voorbeeld-sectie="RSVP"
+                          style={{ cursor: "pointer", ...(isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "RSVP"), scrollMarginTop: 16 } : {}) }}
                           onClick={() => { toonPaginas(); gaNaarPagina("RSVP") }}
                         >
                         <div style={{ padding: "36px 32px 64px", textAlign: "center", backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
@@ -3429,18 +3436,19 @@ export default function BouwenPage() {
                         </div>
                       )}
                       {showSection("Informatie") && (
-                        <div style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "Informatie") } : undefined}>
+                        <div data-voorbeeld-sectie="Informatie" style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "Informatie"), scrollMarginTop: 16 } : undefined}>
                         <PraktischPreview tiles={praktischTiles ?? DEFAULT_PRAKTISCH_TILES} sc={sc} onTileClick={handleInfoTileClick} />
                         </div>
                       )}
                       {showSection("Cadeautips") && (
-                        <div style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "Cadeautips") } : undefined}>
+                        <div data-voorbeeld-sectie="Cadeautips" style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "Cadeautips"), scrollMarginTop: 16 } : undefined}>
                         <WishlistPreview items={wishlistItems?.length ? wishlistItems : DEFAULT_WISHLIST_ITEMS} sc={sc} onItemClick={handleWishlistItemClick} />
                         </div>
                       )}
                       {showSection("Fotos") && (
                         <div
-                          style={{ cursor: "pointer", ...(isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "Fotos") } : {}) }}
+                          data-voorbeeld-sectie="Fotos"
+                          style={{ cursor: "pointer", ...(isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "Fotos"), scrollMarginTop: 16 } : {}) }}
                           onClick={() => { toonPaginas(); gaNaarPagina("Fotos") }}
                         >
                         <FotosPreview

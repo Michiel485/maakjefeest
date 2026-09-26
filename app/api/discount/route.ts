@@ -1,11 +1,13 @@
 import { createServiceClient } from "@/lib/supabase"
-import { PLANS, normalizePlan } from "@/lib/plans"
+import { PLANS, isPlan, normalizePlan, upgradePrice } from "@/lib/plans"
 import { bezoekerIp, teVeelPogingen } from "@/lib/rem"
 
 export const dynamic = "force-dynamic"
 
 // GET /api/discount?code=...&plan=...  Controleert een kortingscode en rekent
 // het eindbedrag uit voor het gekozen pakket (standaard: compleet).
+// Met &van=... is het een upgrade: dan telt de korting over het verschil
+// (Michiel, 26 september 2026: bij een upgrade kon je geen code opgeven).
 export async function GET(request: Request) {
   const url = new URL(request.url)
   const code = url.searchParams.get("code")?.trim().toUpperCase()
@@ -21,7 +23,11 @@ export async function GET(request: Request) {
     )
   }
 
-  const basePrice = PLANS[normalizePlan(url.searchParams.get("plan"))].price
+  const plan = normalizePlan(url.searchParams.get("plan"))
+  const van = url.searchParams.get("van")
+  const verschil = isPlan(van) ? upgradePrice(van, plan) : null
+  if (isPlan(van) && verschil == null) return Response.json({ valid: false, reason: "Dit pakket is geen upgrade" })
+  const basePrice = verschil ?? PLANS[plan].price
 
   const supabase = createServiceClient()
   const { data } = await supabase

@@ -2,14 +2,16 @@ import { createMollieClient } from "@mollie/api-client"
 import { createServerClient } from "@supabase/ssr"
 import { createServiceClient } from "@/lib/supabase"
 import { cookies } from "next/headers"
-import { PLANS, isPlan, normalizePlan, upgradePrice, type Plan } from "@/lib/plans"
+import { PLANS, isPlan, normalizePlan, planRank, upgradePrice, type Plan } from "@/lib/plans"
+import { verversEvent } from "@/lib/db"
+import { sendWebsiteLiveEmail, sendPlanActivatedEmail } from "@/lib/mail"
 
 export const dynamic = "force-dynamic"
 
 async function validateDiscount(
   code: string,
   basePrice: number
-): Promise<{ valid: boolean; type?: string; value?: number; finalAmount?: number }> {
+): Promise<{ valid: boolean; type?: string; value?: number; finalAmount?: number; id?: string; used_count?: number }> {
   const supabase = createServiceClient()
   const { data } = await supabase
     .from("discount_codes")
@@ -29,7 +31,60 @@ async function validateDiscount(
     finalAmount = Math.max(0.01, Math.round(basePrice * (1 - Number(data.value) / 100) * 100) / 100)
   }
 
-  return { valid: true, type: data.type, value: Number(data.value), finalAmount }
+  return { valid: true, type: data.type, value: Number(data.value), finalAmount, id: data.id as string, used_count: Number(data.used_count ?? 0) }
+}
+
+/**
+ * Een upgrade met een 100%-code: het hogere pakket zonder betaling, zoals
+ * /api/activate-free dat doet voor een eerste aankoop. Met een factuur van
+ * nul euro voor de boekhouding en dezelfde mail als na een betaalde upgrade.
+ */
+async function gratisUpgrade(
+  supabase: ReturnType<typeof createServiceClient>,
+  opts: { event_id: string; target: Plan; code: string; codeId: string; gebruikt: number }
+) {
+  const { event_id, target, code } = opts
+  const now = new Date()
+  const { data: eventRow } = await supabase
+    .from("events")
+    .select("plan, slug, user_email, title, frame_names")
+    .eq("id", event_id)
+    .single()
+  if (!eventRow) return
+  if (planRank(target) > planRank(eventRow.plan)) {
+    await supabase.from("events").update({ plan: target }).eq("id", event_id)
+  }
+  await supabase.from("discount_codes").update({ used_count: opts.gebruikt + 1 }).eq("id", opts.codeId)
+
+  const year = now.getFullYear()
+  const { count } = await supabase
+    .from("invoices")
+    .select("*", { count: "exact", head: true })
+    .gte("created_at", `${year}-01-01`)
+  await supabase.from("invoices").insert({
+    event_id,
+    invoice_number:    `SY-${year}-${String((count ?? 0) + 1).padStart(3, "0")}`,
+    customer_email:    eventRow.user_email ?? "",
+    customer_name:     eventRow.frame_names || eventRow.title || "",
+    description:       `Upgrade naar ${PLANS[target].label} (kortingscode: ${code})`,
+    amount_excl:       0,
+    btw_amount:        0,
+    amount_incl:       0,
+    btw_rate:          21,
+    date:              now.toISOString().split("T")[0],
+    mollie_payment_id: `free-upgrade:${code}:${event_id}`,
+  })
+
+  const names = (eventRow.frame_names || eventRow.title || "jullie") as string
+  const email = (eventRow.user_email ?? "") as string
+  if (email && eventRow.slug) {
+    if (target === "compleet") {
+      await sendWebsiteLiveEmail(email, names, `https://${eventRow.slug}.sayingyes.nl`)
+    } else {
+      await sendPlanActivatedEmail({ toEmail: email, names, plan: target, slug: eventRow.slug as string, isUpgrade: true })
+    }
+  }
+  await verversEvent(eventRow.slug as string | null)
 }
 
 async function ingelogdEmail(): Promise<string | undefined> {
@@ -58,7 +113,7 @@ async function ingelogdEmail(): Promise<string | undefined> {
 
 // POST: Mollie-betaling starten. Twee varianten:
 //   { event_id, plan, discount_code? }   eerste aankoop van een pakket
-//   { event_id, upgrade_to }             verschil bijbetalen naar een hoger pakket
+//   { event_id, upgrade_to, discount_code? }  verschil bijbetalen naar een hoger pakket
 export async function POST(request: Request) {
   let body: { event_id: string; plan?: string; upgrade_to?: string; discount_code?: string }
 
@@ -124,12 +179,34 @@ export async function POST(request: Request) {
       return Response.json({ error: "Dit pakket is geen upgrade ten opzichte van het huidige" }, { status: 400 })
     }
 
+    // Een kortingscode telt over het verschil (Michiel, 26 september 2026)
+    let teBetalen = bedrag
+    const upgradeMeta: Record<string, string> = { event_id, payment_type: "upgrade", plan: target }
+    const code = discount_code?.trim().toUpperCase()
+    if (code) {
+      const korting = await validateDiscount(code, bedrag)
+      if (korting.valid && korting.type === "free") {
+        // Gratis upgraden: geen betaling, meteen het hogere pakket. Alleen
+        // voor de eigenaar zelf, anders kan iedereen met een code en een
+        // event_id andermans pakket ophogen.
+        if (!customerEmail || event.user_email !== customerEmail) {
+          return Response.json({ error: "Log in om deze code te gebruiken" }, { status: 403 })
+        }
+        await gratisUpgrade(supabase, { event_id, target, code, codeId: korting.id!, gebruikt: korting.used_count ?? 0 })
+        return Response.json({ free: true }, { status: 200 })
+      }
+      if (korting.valid && korting.finalAmount != null) {
+        teBetalen = korting.finalAmount
+        upgradeMeta.discount_code = code
+      }
+    }
+
     const payment = await mollie.payments.create({
-      amount: { currency: "EUR", value: bedrag.toFixed(2) },
-      description: `SayingYes, upgrade naar ${PLANS[target].label}`,
+      amount: { currency: "EUR", value: teBetalen.toFixed(2) },
+      description: `SayingYes, upgrade naar ${PLANS[target].label}${upgradeMeta.discount_code ? ` | korting: ${upgradeMeta.discount_code}` : ""}`,
       redirectUrl: `${baseUrl}/betalen?event_id=${event_id}&from=mollie&upgrade=${target}`,
       webhookUrl,
-      metadata: { event_id, payment_type: "upgrade", plan: target },
+      metadata: upgradeMeta,
       ...(customerEmail ? { billingEmail: customerEmail } : {}),
     })
 
