@@ -35,7 +35,7 @@ import { compressImage } from "@/lib/client-image"
 import CardReveal from "@/app/kaart/[token]/card-reveal"
 import Voorkant from "@/components/kaart/Voorkant"
 import { kaartKleuren } from "@/lib/kaart-paletten"
-import { ONDER_DE_KAART, ONTWERP_VERHOUDING } from "@/lib/kaart-ontwerpen"
+import { ONDER_DE_KAART, ONTWERP_VERHOUDING, detailsKeuze, detailsOpKaart, detailsStand, type DetailsStand } from "@/lib/kaart-ontwerpen"
 import { KLEUR } from "@/lib/ontwerp"
 import { initialenLijst } from "@/lib/initialen"
 import { namenPlek, namenStand, namenStandVanzelf, type NamenStand } from "@/lib/namen-opmaak"
@@ -226,6 +226,8 @@ interface KaartOntwerp {
   names: string
   /** Naast elkaar of onder elkaar; leeg is de kaart kiest zelf */
   namen: NamenStand | ""
+  /** Tijden en dresscode op of onder de kaart; leeg is de standaard van het ontwerp */
+  details: DetailsStand | ""
   datum: string
   // De locatie van de bruiloft. Hoort bij het event, niet bij de kaart.
   location: string
@@ -255,6 +257,7 @@ const LEEG: KaartOntwerp = {
   template: "klassiek",
   names: "",
   namen: "",
+  details: "",
   datum: "",
   location: "",
   message: "",
@@ -666,6 +669,7 @@ export default function KaartMakenPage() {
               ontwerpDataUrl: null,
               ontwerpVerhouding: kaart?.content.ontwerpVerhouding ?? null,
               namen: namenStand(kaart?.content.namen) ?? "",
+              details: detailsStand(kaart?.content.details) ?? "",
               template: kaart?.template ?? "klassiek",
               names: kaart?.content.names ?? (event.frame_names as string) ?? (event.title as string) ?? "",
               datum: (event.datum as string) ?? "",
@@ -780,6 +784,7 @@ export default function KaartMakenPage() {
     ontwerpUrl: ontwerp.ontwerpUrl ?? ontwerp.ontwerpDataUrl ?? undefined,
     ontwerpVerhouding: ontwerp.ontwerpVerhouding ?? undefined,
     namen: ontwerp.namen || undefined,
+    details: ontwerp.details || undefined,
     taal: ontwerp.taal,
     aanmelden: ontwerp.aanmelden,
   }
@@ -1082,6 +1087,7 @@ export default function KaartMakenPage() {
       ontwerpDataUrl: null,
       ontwerpVerhouding: k.content.ontwerpVerhouding ?? null,
       namen: namenStand(k.content.namen) ?? "",
+      details: detailsStand(k.content.details) ?? "",
       location: k.content.location ?? o.location,
       message: k.content.message ?? "",
       guestType: k.content.guestType ?? "",
@@ -1274,7 +1280,7 @@ export default function KaartMakenPage() {
     if (d === "eigen") return veld === "bericht" || veld === "details" ? "onder" : "niet"
     if (veld === "locatie") return onder?.locatie ? "onder" : "op"
     if (veld === "bericht") return onder?.bericht ? "onder" : "op"
-    if (veld === "details") return onder?.details ? "onder" : "op"
+    if (veld === "details") return detailsOpKaart(d, ontwerp.details || null) ? "op" : "onder"
     return "op"
   }
 
@@ -1370,6 +1376,9 @@ export default function KaartMakenPage() {
           ontwerpUrl: ontwerp.ontwerpUrl ?? ontwerp.ontwerpDataUrl ?? undefined,
           ontwerpVerhouding: ontwerp.ontwerpVerhouding ?? undefined,
           namen: ontwerp.namen || undefined,
+          details: ontwerp.details || undefined,
+          dresscode: ontwerp.dresscode || undefined,
+          toonGastType: ontwerp.toonGastType || undefined,
         }),
       })
       if (!r.ok) throw new Error("Voorbeeld maken mislukte, probeer het zo opnieuw.")
@@ -2247,6 +2256,37 @@ export default function KaartMakenPage() {
                 Date zijn ze overbodig (Michiel, 25 september 2026) */}
             {isTrouwkaart && (
               <>
+            {/* Op de kaart of eronder (Michiel, 26 september 2026). Standaard
+                op de kaart; bij de krappe liggende kaarten eronder. */}
+            {detailsKeuze(cardDesign(ontwerp.template)) && (
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs" style={{ color: SUBTLE }}>Waar</span>
+                <div className="inline-flex rounded-xl p-0.5" style={{ backgroundColor: GOLD_BG, border: `1px solid ${GOLD_LIGHT}` }} role="radiogroup" aria-label="Tijden en dresscode op of onder de kaart">
+                  {(["op", "onder"] as const).map((s) => {
+                    const aan = tekstPlek("details") === s
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        role="radio"
+                        aria-checked={aan}
+                        onClick={() => update({ details: s })}
+                        className="text-xs font-semibold px-3 py-1.5 rounded-[10px]"
+                        style={{
+                          backgroundColor: aan ? "#fff" : "transparent",
+                          color: aan ? CHARCOAL : SUBTLE,
+                          boxShadow: aan ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                          border: 0,
+                          cursor: "pointer",
+                        }}
+                      >
+                        {s === "op" ? "Op de kaart" : "Onder de kaart"}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold flex items-center justify-between gap-2" style={{ color: CHARCOAL }}>Tijden <Plek waar={tekstPlek("details")} /></span>
               <input

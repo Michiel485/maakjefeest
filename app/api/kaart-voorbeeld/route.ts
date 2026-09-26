@@ -50,6 +50,10 @@ export async function POST(request: Request) {
     guestType: GUEST_TYPES.includes(body.guestType as CardGuestType) ? (body.guestType as CardGuestType) : undefined,
     inviteText: tekst(body.inviteText, 160),
     timeText: tekst(body.timeText, 80),
+    // Stonden er niet in, en dan miste de voorbeeldafbeelding de dresscode
+    // en de gastengroep (26 september 2026)
+    dresscode: tekst(body.dresscode, 40),
+    toonGastType: body.toonGastType === true ? true : undefined,
     // Alleen echte URL's; een lokale data-URL uit de browser kan satori niet altijd aan
     photoUrl: typeof body.photoUrl === "string" && /^https?:\/\//.test(body.photoUrl) ? body.photoUrl.slice(0, 500) : undefined,
     taal: cardTaal(body.taal),
@@ -62,6 +66,7 @@ export async function POST(request: Request) {
         : undefined,
     ontwerpVerhouding: typeof body.ontwerpVerhouding === "number" && body.ontwerpVerhouding >= 0.4 && body.ontwerpVerhouding <= 2.5 ? body.ontwerpVerhouding : undefined,
     namen: body.namen === "naast" || body.namen === "onder" ? body.namen : undefined,
+    details: body.details === "op" || body.details === "onder" ? body.details : undefined,
   }
 
   // Met een echte datum maken we de tekst zelf, in de taal van de kaart, en

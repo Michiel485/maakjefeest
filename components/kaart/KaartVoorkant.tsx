@@ -15,7 +15,7 @@
 import type { CSSProperties, ReactNode } from "react"
 import type { CardDisplay, NieuwOntwerp } from "@/lib/cards"
 import type { SC } from "@/lib/event-styles"
-import { illustratie, KADERS, ONTWERP_LETTERS, type VoorkantLetters } from "@/lib/kaart-ontwerpen"
+import { detailsKeuze, detailsOpKaart, illustratie, KADERS, ONTWERP_LETTERS, type VoorkantLetters } from "@/lib/kaart-ontwerpen"
 import { namenOpmaak, namenPlek, namenRegels, type NamenPlek, type NamenStand } from "@/lib/namen-opmaak"
 import { initialenLijst } from "@/lib/initialen"
 import { leesbaar } from "@/lib/contrast"
@@ -290,6 +290,32 @@ export default function KaartVoorkant({
   // deze achtergrond wegvalt
   const label = leesbaar(sc.labelColor, achtergrond, [kop])
   const lijn = Math.max(1, Math.round(s))
+  // Tijden, dresscode en voor wie, op de kaart zelf bij de ontwerpen die ze
+  // anders eronder zetten (lib/kaart-ontwerpen.ts). De ontwerpen met een slot
+  // hieronder hadden ze al op de kaart.
+  // max: hoe breed het blok mag zijn, in de maten van een kaart van 400 breed.
+  // Zonder liep een lange regel bij Olijf buiten het gouden kader.
+  const details = (kleur: string, opties: { grootte?: number; font?: string; marge?: number; uitlijnen?: "center" | "flex-start"; max?: number } = {}) => {
+    if (!detailsKeuze(ontwerp) || !detailsOpKaart(ontwerp, d.detailsStand)) return null
+    if (!d.inviteLine && !d.timeText) return null
+    const uitlijnen = opties.uitlijnen ?? "center"
+    const grootte = px(opties.grootte ?? 10.5)
+    const font = opties.font ?? letters.tekst
+    const max = px(opties.max ?? 300)
+    return (
+      <D style={{ flexDirection: "column", alignItems: uitlijnen, gap: px(3), marginTop: px(opties.marge ?? 6), maxWidth: max }}>
+        {d.inviteLine && (
+          <div style={{ display: "flex", fontFamily: font, fontSize: grootte, fontWeight: 600, lineHeight: 1.45, color: kleur, textAlign: uitlijnen === "center" ? "center" : "left", maxWidth: max }}>
+            {d.inviteLine}
+          </div>
+        )}
+        {d.timeText && (
+          <Regels tekst={d.timeText} uitlijnen={uitlijnen} style={{ fontFamily: font, fontSize: grootte, fontWeight: 600, lineHeight: 1.5, letterSpacing: "0.06em", color: kleur, maxWidth: max }} />
+        )}
+      </D>
+    )
+  }
+
   // Waar de namen staan en hoe groot, voor het passend maken. Palm heeft
   // geen vaste plek: die zet de namen onder elkaar, behalve bij één naam.
   const namenLetter = ONTWERP_LETTERS[ontwerp].namen
@@ -664,6 +690,7 @@ export default function KaartVoorkant({
             {d.location && (
               <Regels tekst={d.location} style={{ fontFamily: letters.tekst, fontSize: px(10), lineHeight: 1.4, letterSpacing: "0.06em", color: kader.kleur.namen, opacity: 0.8 }} />
             )}
+            {details(kader.kleur.accent, { grootte: 8.5, marge: 2, max: 400 * kader.ruimte[0] })}
           </D>
         </D>
       )
@@ -715,6 +742,7 @@ export default function KaartVoorkant({
         {d.message && (
           <Regels tekst={d.message} style={{ fontFamily: letters.tekst, fontSize: px(12), lineHeight: 1.55, color: tekst, maxWidth: px(310) }} />
         )}
+        {details(leesbaar(accent, achtergrond, [kop]), { grootte: 11, marge: 10 })}
       </D>
     )
   }
@@ -762,6 +790,7 @@ export default function KaartVoorkant({
           {d.location && (
             <Regels tekst={d.location} style={{ fontFamily: letters.tekst, fontSize: px(11), lineHeight: 1.5, letterSpacing: "0.06em", color: groen, opacity: 0.8 }} />
           )}
+          {details(goud, { grootte: 9.5, marge: 2, max: 200 })}
         </D>
       </D>
     )
@@ -811,6 +840,7 @@ export default function KaartVoorkant({
               style={{ fontFamily: letters.tekst, fontSize: px(12), lineHeight: 1.5, letterSpacing: "0.08em", color: kop, opacity: 0.7, marginTop: px(4), maxWidth: px(260) }}
             />
           )}
+          {details(kop, { grootte: 11, marge: 10, max: 334 - 48 })}
         </D>
       </D>
     )
@@ -862,6 +892,7 @@ export default function KaartVoorkant({
             style={{ fontFamily: letters.tekst, fontSize: px(12), lineHeight: 1.55, color: tekst, maxWidth: px(270), marginTop: px(12), opacity: 0.9 }}
           />
         )}
+        {details(leesbaar(accent, achtergrond, [kop]), { grootte: 11, marge: 12 })}
       </D>
     )
   }
@@ -924,6 +955,7 @@ export default function KaartVoorkant({
               {datum}
             </div>
           )}
+          {details(kop, { grootte: 11, marge: 4 })}
         </D>
       </D>
     )
@@ -978,6 +1010,7 @@ export default function KaartVoorkant({
             namen={d.names.replace(/\s*\n\s*/g, " ")}
             style={{ fontFamily: letters.tekst, letterSpacing: "0.3em", textTransform: "uppercase", color: wit, opacity: 0.9, marginTop: px(4) }}
           />
+          {details(wit, { grootte: 11, marge: 6 })}
         </D>
       </D>
     )

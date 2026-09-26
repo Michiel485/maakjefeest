@@ -51,6 +51,7 @@ function sanitizeContent(raw: unknown): CardContent {
         ? Math.round(input.ontwerpVerhouding * 1000) / 1000
         : undefined,
     namen: input.namen === "naast" || input.namen === "onder" ? input.namen : undefined,
+    details: input.details === "op" || input.details === "onder" ? input.details : undefined,
     taal: cardTaal(input.taal),
     aanmelden: aanmeldStand(input.aanmelden),
   }

@@ -5,7 +5,7 @@ import type { SC } from "@/lib/event-styles"
 import type { CardDisplay } from "@/lib/cards"
 import Voorkant from "@/components/kaart/Voorkant"
 import { envelopStijl, type EnvelopStijl } from "@/lib/kaart-envelop"
-import { ONDER_DE_KAART } from "@/lib/kaart-ontwerpen"
+import { ONDER_DE_KAART, detailsOpKaart } from "@/lib/kaart-ontwerpen"
 import AanmeldFormulier from "@/components/AanmeldFormulier"
 import type { AanmeldStand } from "@/lib/gasten"
 import { formulierTekst } from "@/lib/formulier-teksten"
@@ -477,8 +477,9 @@ export default function CardReveal({
   const onder = ONDER_DE_KAART[display.design]
   const onderLocatie = onder?.locatie && display.location ? display.location : null
   const onderBericht = onder?.bericht && display.eigenBericht ? display.message : null
-  const onderUitnodiging = onder?.details ? display.inviteLine : null
-  const onderTijd = onder?.details ? display.timeText : null
+  const detailsEronder = !!onder?.details && !detailsOpKaart(display.design, display.detailsStand)
+  const onderUitnodiging = detailsEronder ? display.inviteLine : null
+  const onderTijd = detailsEronder ? display.timeText : null
   const stofjesAan = stage === "open" && display.animatie === "feestelijk" && !reduceMotion
 
   return (

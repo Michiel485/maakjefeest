@@ -160,3 +160,30 @@ export const ONDER_DE_KAART: Partial<Record<CardDesign, OnderDeKaart>> = {
   // bij schrijft komt eronder
   eigen: { locatie: false, bericht: true, details: true },
 }
+
+// ── Details op of onder de kaart ────────────────────────────────────────────
+// Tijden, dresscode en voor wie de kaart is. Eerst kwamen die bij de strakke
+// ontwerpen altijd onder de kaart, ook waar ze er prima op pasten (Michiel,
+// 26 september 2026). Nu staan ze standaard op de kaart, en kiest het
+// bruidspaar zelf of ze eronder willen.
+export type DetailsStand = "op" | "onder"
+
+export function detailsStand(v: unknown): DetailsStand | undefined {
+  return v === "op" || v === "onder" ? v : undefined
+}
+
+// De liggende kaarten zijn krap: daar standaard eronder
+const DETAILS_STANDAARD_ONDER: Partial<Record<CardDesign, true>> = { goudblad: true, magnolia: true }
+
+/** Kunnen de details bij dit ontwerp kiezen tussen op en onder de kaart? */
+export function detailsKeuze(ontwerp: CardDesign): boolean {
+  return !!ONDER_DE_KAART[ontwerp]?.details && ontwerp !== "eigen"
+}
+
+/** Staan de details op de kaart zelf? */
+export function detailsOpKaart(ontwerp: CardDesign, stand?: DetailsStand | null): boolean {
+  if (ontwerp === "eigen") return false
+  if (!ONDER_DE_KAART[ontwerp]?.details) return true
+  if (stand) return stand === "op"
+  return !DETAILS_STANDAARD_ONDER[ontwerp]
+}
