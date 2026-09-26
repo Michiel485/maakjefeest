@@ -48,6 +48,12 @@ export default function EventNav({
   const [linksBelow, setLinksBelow] = useState(false)
   const safeTitle = title.replace(/\n/g, " ")
 
+  // Gestapelde indeling: hoe de pagina's naast de taalkeuze passen, zie meetStapel
+  const [stapel, setStapel] = useState<{ links: number; rechts: number; max?: number }>({ links: 96, rechts: 96 })
+  const stapelRijRef   = useRef<HTMLDivElement>(null)
+  const stapelLinksRef = useRef<HTMLDivElement>(null)
+  const stapelTaalRef  = useRef<HTMLDivElement>(null)
+
   const navRef    = useRef<HTMLElement>(null)
   const titleRef  = useRef<HTMLAnchorElement>(null)
   const linksRef  = useRef<HTMLDivElement>(null)
@@ -91,6 +97,43 @@ export default function EventNav({
     const needed = padding + titleW + gaps + linksW + ctrlW
     setLinksBelow(needed > nav.offsetWidth)
   }
+
+  // Gestapelde indeling. Eerst hield de rij links en rechts elk 96 pixels vrij
+  // voor de taalkeuze, en dan viel "Foto's" alleen op een tweede regel terwijl
+  // er links nog ruimte genoeg was (Michiel, 26 september 2026). Nu:
+  // 1. passen ze gecentreerd tussen twee keer de breedte van de taalkeuze: zo;
+  // 2. passen ze als alleen rechts ruimte vrijblijft: één regel, iets uit het midden;
+  // 3. anders twee (of meer) regels, even lang, in plaats van één losse eronder.
+  function meetStapel() {
+    const rij = stapelRijRef.current
+    const lnks = stapelLinksRef.current
+    const taal = stapelTaalRef.current
+    if (!rij || !lnks || !taal) return
+    const W = rij.offsetWidth
+    if (!W) return
+    const S = taal.offsetWidth + 16
+    const kinderen = Array.from(lnks.children) as HTMLElement[]
+    const breedtes = kinderen.map((el) => el.scrollWidth)
+    const L = breedtes.reduce((s, b) => s + b, 0) + Math.max(0, kinderen.length - 1) * 4
+    if (L <= W - 2 * S) return setStapel({ links: S, rechts: S })
+    if (L <= W - S) return setStapel({ links: 0, rechts: S })
+    const ruimte = W - 2 * S
+    const regels = Math.ceil(L / Math.max(1, ruimte))
+    const breedste = Math.max(0, ...breedtes)
+    setStapel({ links: S, rechts: S, max: Math.min(ruimte, Math.ceil(L / regels) + breedste) + 2 * S })
+  }
+
+  useEffect(() => {
+    if (navLayout !== "stacked") return
+    meetStapel()
+    const ro = new ResizeObserver(meetStapel)
+    if (stapelRijRef.current) ro.observe(stapelRijRef.current)
+    if (stapelTaalRef.current) ro.observe(stapelTaalRef.current)
+    for (const el of Array.from(stapelLinksRef.current?.children ?? [])) ro.observe(el)
+    document.fonts?.ready.then(meetStapel).catch(() => {})
+    return () => ro.disconnect()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pages, navLayout, locale])
 
   useEffect(() => {
     checkOverflow()
@@ -194,14 +237,18 @@ export default function EventNav({
             {hamburgerBtn}
           </div>
           {/* Desktop: column */}
-          <div className="hidden @md:flex flex-col items-center gap-2 py-5 relative">
-            <div className="absolute right-0 top-1/2 -translate-y-1/2">
+          <div ref={stapelRijRef} className="hidden @md:flex flex-col items-center gap-2 py-5 relative">
+            <div ref={stapelTaalRef} className="absolute right-0 top-1/2 -translate-y-1/2">
               <LanguageSwitcher accent={sc.accent} textColor={sc.navText} bgColor={sc.navBg} />
             </div>
-            {/* Links en rechts evenveel ruimte als de taalkeuze breed is, zodat
-                de pagina's in het midden blijven en er nooit onder vallen. Bij
-                een breed lettertype lopen ze dan door naar een tweede regel. */}
-            <div className="flex items-center flex-wrap justify-center gap-1 px-24">{pageLinks}</div>
+            {/* Nooit onder de taalkeuze: de ruimte ernaast komt uit meetStapel */}
+            <div
+              ref={stapelLinksRef}
+              className="flex items-center flex-wrap justify-center gap-1 w-full"
+              style={{ paddingLeft: stapel.links, paddingRight: stapel.rechts, ...(stapel.max ? { maxWidth: stapel.max } : {}) }}
+            >
+              {pageLinks}
+            </div>
           </div>
         </nav>
         {menuOpen && (

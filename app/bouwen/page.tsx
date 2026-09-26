@@ -1,6 +1,7 @@
 ﻿"use client"
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import AanmeldFormulier from "@/components/AanmeldFormulier"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import EventHomePreview from "@/components/EventHomePreview"
@@ -1376,7 +1377,6 @@ export default function BouwenPage() {
   const rsvpCustomQuestion    = (content.RSVP?.customQuestion as string) ?? ""
   const rsvpCustomQuestion2   = (content.RSVP?.customQuestion2 as string) ?? ""
   const rsvpDeadline          = (content.RSVP?.deadline as string | null) ?? null
-  const rsvpDeadlinePassed    = rsvpDeadline ? new Date() > new Date(rsvpDeadline) : false
   const RSVP_GUEST_LABELS: Record<string, string> = { daggast: "Daggast", avondgast: "Avondgast", receptiegast: "Receptiegast" }
 
   const isSinglePagePreview = hpSettings.pageMode === 'single'
@@ -3384,118 +3384,42 @@ export default function BouwenPage() {
                           <div style={{ maxWidth: 480, marginLeft: "auto", marginRight: "auto" }}>
                             {(() => {
                               const rsvpLabelColor = sc.goldBorder ? (sc.cardText ?? sc.bodyText) : sc.bodyText
-                              const cardInner = rsvpDeadlinePassed ? (
-                                <div className="rounded-2xl p-6 text-center" style={{ backgroundColor: "#f9fafb", border: "1px solid #e5e7eb" }}>
-                                  <div className="text-sm font-bold text-gray-700 mb-1">Aanmelden is gesloten</div>
-                                  <div className="text-xs text-gray-500">De uiterste RSVP-datum is verstreken.</div>
-                                </div>
-                              ) : (
-                                <div className="flex flex-col gap-6" style={{ textAlign: "left" }}>
-                                  <p style={{ fontSize: "0.9375rem", marginBottom: 0, color: rsvpLabelColor }}>{(content.RSVP?.text as string) || "Laat weten of je erbij bent via het formulier."}</p>
-                                  {/* Ben je erbij? */}
-                                  <div>
-                                    <div className="text-sm font-semibold mb-3" style={{ color: rsvpLabelColor }}>Ben je erbij?</div>
-                                    <div className="flex flex-col gap-2 sm:flex-row">
-                                      <div className="flex-1 py-3 px-4 rounded-xl font-semibold text-sm flex items-center gap-3"
-                                        style={{ backgroundColor: "#ecfdf5", border: "2px solid #10b981", color: "#065f46" }}>
-                                        <span>✓</span> Ja, ik ben erbij!
-                                      </div>
-                                      <div className="flex-1 py-3 px-4 rounded-xl font-semibold text-sm flex items-center gap-3"
-                                        style={{ backgroundColor: "#f9fafb", border: "2px solid #e5e7eb", color: "#6b7280" }}>
-                                        <span>✕</span> Nee, ik kan helaas niet komen.
-                                      </div>
-                                    </div>
+                              // Het echte formulier dat gasten zien, in de voorbeeldstand: je
+                              // kunt klikken en invullen, er wordt niets verstuurd. Eerst stond
+                              // hier een nagebouwd plaatje (Michiel, 26 september 2026).
+                              const cardInner = (
+                                <>
+                                  <p style={{ fontSize: "0.9375rem", marginBottom: 16, textAlign: "center", color: rsvpLabelColor }}>
+                                    {(content.RSVP?.text as string) || "Laat weten of je erbij bent via het formulier."}
+                                  </p>
+                                  <p style={{ textAlign: "center", fontSize: "0.8125rem", marginBottom: 24, padding: "10px 14px", borderRadius: 10, backgroundColor: `${sc.accent}12`, border: `1px solid ${sc.accent}30`, color: sc.bodyText, lineHeight: 1.55 }}>
+                                    📋 Check even je uitnodiging welk type gast je bent. Als daggast verschijnen aan de avondtafel? Wij zeggen er niets van, de catering wel. 😉
+                                  </p>
+                                  {/* Klikken in het formulier is het formulier proberen, niet
+                                      naar de instellingen springen */}
+                                  <div onClick={(e) => e.stopPropagation()} style={{ cursor: "auto" }}>
+                                    <AanmeldFormulier
+                                      voorbeeld
+                                      stand="volledig"
+                                      knopTekstKleur={sc.buttonText}
+                                      accentColor={sc.accent}
+                                      labelColor={rsvpLabelColor}
+                                      guestTypes={rsvpGuestTypes}
+                                      showSongRequest={rsvpShowSong}
+                                      deadline={rsvpDeadline}
+                                      showOvernachting={rsvpShowOvernachting}
+                                      customQuestion={rsvpCustomQuestion.trim() || null}
+                                      customQuestion2={rsvpCustomQuestion2.trim() || null}
+                                    />
                                   </div>
-                                  {/* Aantal personen */}
-                                  <div>
-                                    <div className="text-sm font-semibold mb-3" style={{ color: rsvpLabelColor }}>Met hoeveel personen komen jullie?</div>
-                                    <div className="flex gap-2 flex-wrap">
-                                      {[1,2,3,4,5,6,7,8].map((n) => (
-                                        <div key={n} className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold"
-                                          style={n === 1
-                                            ? { backgroundColor: sc.accent, color: "#fff", border: `2px solid ${sc.accent}` }
-                                            : { backgroundColor: "transparent", color: "#6b7280", border: "2px solid #e5e7eb" }
-                                          }>
-                                          {n}
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                  {/* Hoofdgast card */}
-                                  <div className="rounded-2xl p-5 flex flex-col gap-4" style={{ backgroundColor: "#f9fafb", border: "1px solid #f3f4f6" }}>
-                                    <div className="text-xs font-bold uppercase tracking-widest" style={{ color: "#9ca3af" }}>Hoofdgast</div>
-                                    <div>
-                                      <div className="text-sm font-semibold mb-1.5" style={{ color: "#374151" }}>Naam *</div>
-                                      <div className="w-full h-10 rounded-xl border border-[var(--goud-licht)] bg-white px-4 flex items-center shadow-sm">
-                                        <span className="text-sm text-gray-400">Voornaam</span>
-                                      </div>
-                                    </div>
-                                    {rsvpGuestTypes.length > 1 && (
-                                      <div>
-                                        <div className="text-sm font-semibold mb-1.5" style={{ color: "#374151" }}>Type gast</div>
-                                        <div className="flex gap-2 flex-wrap">
-                                          {rsvpGuestTypes.map((t, ti) => (
-                                            <div key={t} className="flex-1 h-9 rounded-xl flex items-center justify-center text-sm font-semibold"
-                                              style={ti === 0
-                                                ? { backgroundColor: sc.accent, color: "#fff", border: `2px solid ${sc.accent}` }
-                                                : { backgroundColor: "transparent", color: "#6b7280", border: "2px solid #e5e7eb" }
-                                              }>
-                                              {RSVP_GUEST_LABELS[t] ?? t}
-                                            </div>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    )}
-                                    <div>
-                                      <div className="text-sm font-semibold mb-1.5" style={{ color: "#374151" }}>Dieetwensen / Allergieën</div>
-                                      <div className="w-full h-10 rounded-xl border border-[var(--goud-licht)] bg-white px-4 flex items-center shadow-sm">
-                                        <span className="text-sm text-gray-400">Bijv. vegetarisch, notenallergie</span>
-                                      </div>
-                                    </div>
-                                    <div>
-                                      <div className="text-sm font-semibold mb-1.5" style={{ color: "#374151" }}>E-mailadres *</div>
-                                      <div className="w-full h-10 rounded-xl border border-[var(--goud-licht)] bg-white px-4 flex items-center shadow-sm">
-                                        <span className="text-sm text-gray-400">jouw@email.nl</span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  {/* Song request */}
-                                  {rsvpShowSong && (
-                                    <div>
-                                      <div className="text-sm font-semibold mb-1.5" style={{ color: rsvpLabelColor }}>
-                                        Welk nummer brengt jou gegarandeerd naar de dansvloer?{" "}
-                                        <span style={{ color: "#9ca3af", fontWeight: 400 }}>(optioneel)</span>
-                                      </div>
-                                      <div className="w-full h-10 rounded-xl border border-[var(--goud-licht)] bg-white px-4 flex items-center shadow-sm">
-                                        <span className="text-sm text-gray-400">Artiest, nummertitel</span>
-                                      </div>
-                                    </div>
-                                  )}
-                                  {/* Overnachting */}
-                                  {rsvpShowOvernachting && (
-                                    <PreviewYesNo label="Blijven jullie overnachten?" />
-                                  )}
-                                  {/* Eigen vraag 1 */}
-                                  {rsvpCustomQuestion.trim() && (
-                                    <PreviewYesNo label={rsvpCustomQuestion} />
-                                  )}
-                                  {/* Eigen vraag 2 */}
-                                  {rsvpCustomQuestion2.trim() && (
-                                    <PreviewYesNo label={rsvpCustomQuestion2} />
-                                  )}
-                                  {/* Aanmelden knop */}
-                                  <div className="w-full h-12 rounded-xl flex items-center justify-center text-sm font-bold shadow-md"
-                                    style={{ backgroundColor: sc.accent, color: "#fff" }}>
-                                    Aanmelden
-                                  </div>
-                                </div>
+                                </>
                               )
                               return sc.goldBorder && sc.cardBg ? (
-                                <div style={{ backgroundColor: sc.cardBg, border: `2px solid ${sc.accent}`, borderRadius: 16, padding: "28px 32px" }}>
+                                <div style={{ backgroundColor: sc.cardBg, border: `2px solid ${sc.accent}`, borderRadius: 16, padding: "28px 32px", textAlign: "left" }}>
                                   {cardInner}
                                 </div>
                               ) : (
-                                <div style={{ borderRadius: 16, border: `1px solid ${sc.accent}20`, backgroundColor: `${sc.accent}08`, padding: "28px 32px" }}>
+                                <div style={{ borderRadius: 16, border: `1px solid ${sc.accent}20`, backgroundColor: `${sc.accent}08`, padding: "28px 32px", textAlign: "left" }}>
                                   {cardInner}
                                 </div>
                               )
@@ -3669,22 +3593,6 @@ export default function BouwenPage() {
         }}
       />
     </BouwerSchil>
-  )
-}
-
-function PreviewYesNo({ label }: { label: string }) {
-  return (
-    <div>
-      <div className="text-sm font-semibold mb-3" style={{ color: "#374151" }}>{label}</div>
-      <div className="flex gap-2">
-        {["Ja", "Nee"].map((lbl) => (
-          <div key={lbl} className="flex-1 h-11 rounded-xl flex items-center justify-center text-sm font-semibold"
-            style={{ backgroundColor: "#f9fafb", border: "2px solid #e5e7eb", color: "#6b7280" }}>
-            {lbl}
-          </div>
-        ))}
-      </div>
-    </div>
   )
 }
 
