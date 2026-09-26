@@ -3,6 +3,8 @@
 import { useRef, useState, useCallback, useEffect } from "react"
 import type { SC } from "@/lib/event-styles"
 import { getTitleFont } from "@/lib/title-fonts"
+import HomeOntwerp from "@/components/HomeOntwerp"
+import { HOME_KOP_STANDAARD, homeOntwerp } from "@/lib/home-ontwerp"
 
 export interface HomepageSettings {
   layout: 'editorial' | 'modern'
@@ -25,6 +27,17 @@ export interface HomepageSettings {
   locatieSize: number
   siteLayout?: 'boxed' | 'fullwidth'
   pageMode?: 'multi' | 'single'
+  // De homepagina met een ontwerp (lib/home-ontwerp.ts, 26 september 2026)
+  ontwerp?: string
+  /** De kop op het ontwerp, zoals "Wij gaan trouwen" */
+  ontwerpKop?: string
+  /** Eigen lettertypes per soort tekst (id's uit lib/title-fonts.ts) */
+  ontwerpLetters?: { kop?: string; namen?: string; tekst?: string }
+  /** Eigen groottes per soort tekst; 1 is zoals ontworpen */
+  ontwerpSchaal?: { kop?: number; namen?: number; tekst?: number }
+  tijden?: string
+  dresscode?: string
+  details?: 'op' | 'onder'
 }
 
 function clamp(v: number, min: number, max: number) {
@@ -99,8 +112,6 @@ export default function EventHomePreview({
   frameLocation,
   frameInitialsSize = 8,
   frameNamesSize = 5.5,
-  frameDateSize = 1.8,
-  frameLocationSize = 1.8,
   onNavigate,
   rsvpHref = "/RSVP",
   homepageSettings,
@@ -185,16 +196,6 @@ export default function EventHomePreview({
     else                 countdownText = `JUST MARRIED • ${datumFormatted ?? ""}`
   }
 
-  const FRAME_FILE: Record<string, string> = {
-    "olive-rectangle":  "olive-square.webp",
-    "bloem-rechthoek":  "Bloem-rechthoek.webp",
-    "bloem2-breed":     "Bloem2-breed.webp",
-  }
-  const frameFile = (id: string) => FRAME_FILE[id] ?? `${id}.webp`
-  const isFullWidth = frameStyle === "bloem-rechthoek" || frameStyle === "bloem2-breed"
-  const isDiamond   = frameStyle?.includes("diamond")
-  const isRectangle = frameStyle?.includes("rectangle") || frameStyle?.includes("square")
-  const safeZoneClass = isDiamond ? "w-[80%] mx-auto" : isFullWidth ? "w-[50%] mx-auto" : isRectangle ? "w-[72%] mx-auto" : "w-[65%] mx-auto"
 
   // ── Resolve hp settings fonts ──────────────────────────────────────────────
   const hp = homepageSettings
@@ -417,8 +418,10 @@ export default function EventHomePreview({
   const showTitleUnderPhoto = (hp?.hoofdtitelVisible !== false) && (
     !hasPhoto || (hp?.titlePosition === 'under')
   )
-  // "Elegant Divider" mode: no frame, show subtitle/title/date as composition
-  const elegantMode = !useFrame
+  // Onder de headerfoto een ontwerp, net als een kaart. Dat vervangt het
+  // kader en de losse tekstregels van vroeger (Michiel, 26 september 2026).
+  // Een site met een kader krijgt vanzelf het ontwerp met dezelfde tekening.
+  const ontwerpNu = homeOntwerp({ ontwerp: hp?.ontwerp, useFrame, frameStyle })
 
   const heroSection = hasPhoto ? (
     <section
@@ -520,149 +523,39 @@ export default function EventHomePreview({
       {/* Title under photo (if applicable) */}
       {hasPhoto && showTitleUnderPhoto && titleUnderSection}
 
-      {/* Geen headerfoto: de titel boven het kader. Niet in de elegante
-          weergave, want die zet de titel zelf al onder de subtitel; samen
-          stond de titel er twee keer. */}
-      {!hasPhoto && showTitleUnderPhoto && !elegantMode && titleUnderSection}
+      {/* Geen headerfoto: de titel boven het ontwerp */}
+      {!hasPhoto && showTitleUnderPhoto && titleUnderSection}
 
-      {/* Card / Elegant Divider section */}
+      {/* Het ontwerp, vrij op de pagina */}
       <section
-        className={`w-full flex flex-col items-center ${isFullWidth ? "pt-0 pb-0 px-0" : `${showTitleUnderPhoto && title ? (hp?.subtitleVisible !== false && hp?.subtitleText ? "pt-1" : "pt-4 @md:pt-8") : "pt-6"} pb-8 px-6`}`}
+        className={`w-full flex flex-col items-center ${showTitleUnderPhoto && title ? "pt-4 @md:pt-8" : "pt-8 @md:pt-12"} pb-8 px-6`}
         style={{ backgroundColor: sc.bodyBg }}
       >
-        {elegantMode ? (
-          /* ── Elegant Divider composition ── */
-          <>
-          <div className={`w-full max-w-3xl flex flex-col items-center text-center gap-2 @md:gap-4 ${showTitleUnderPhoto && title ? "pt-1 pb-4 @md:pb-8" : "py-4 @md:py-8"}`}>
-            {/* Subtitle + Hoofdtitel gegroepeerd met halve ruimte ertussen */}
-            <div className="flex flex-col items-center gap-1 @md:gap-2 w-full">
-              {(hp?.subtitleVisible !== false) && hp?.subtitleText && (
-                <p {...fieldClick('subtitle')} className="hp-subtitle" style={{ ...subtitleStyle, fontSize: undefined }}>{hp.subtitleText}</p>
-              )}
-              {(hp?.hoofdtitelVisible !== false) && !hasPhoto && title && (
-                <h1 {...fieldClick('hoofdtitel')} className="hp-hoofdtitel" style={{ ...hoofdtitelStyle, fontSize: undefined }}>{title}</h1>
-              )}
-            </div>
-            {(hp?.initialsVisible !== false) && initials && (
-              <p {...fieldClick('initialen')} className="hp-initialen" style={{ fontFamily: sc.fontInitials, fontWeight: sc.fontInitialsWeight, color: sc.headingColor, letterSpacing: '0.2em', paddingLeft: '0.2em', whiteSpace: 'nowrap', textAlign: 'center', width: '100%' }}>
-                {initials}
-              </p>
-            )}
-            {(hp?.frameNamesVisible !== false) && frameNames && frameNames.trim() && (
-              <p {...fieldClick('namen')} className="hp-namen" style={{ fontFamily: sc.fontFrameNames, fontWeight: sc.fontFrameNamesWeight, color: sc.headingColor, whiteSpace: 'pre-wrap', lineHeight: 1.2, wordBreak: 'keep-all', textAlign: 'center', width: '100%' }}>
-                {frameNames}
-              </p>
-            )}
-            {(hp?.datumVisible !== false) && datumDisplay && (
-              <p {...fieldClick('datum')} className="hp-datum" style={{ ...datumStyleHp, fontSize: undefined }}>{datumDisplay}</p>
-            )}
-            {(hp?.locatieVisible !== false) && frameDisplayLocation && (
-              <p {...fieldClick('locatie')} className="hp-locatie" style={{ ...locatieStyleHp, fontSize: undefined }}>{frameDisplayLocation}</p>
-            )}
-            <div className="my-2 @md:my-4" />
-            <a
-              href={rsvpHref}
-              onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("RSVP") } : undefined}
-              className="inline-block text-sm font-bold px-7 py-3 rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
-              style={{
-                backgroundColor: sc.buttonBg,
-                color: sc.buttonText,
-                textDecoration: "none",
-                boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
-                fontFamily: sc.fontFamily,
-              }}
-            >
-              Meld je aan
-            </a>
-          </div>
-          </>
-        ) : useFrame && frameStyle ? (
-          /* ── Luxe Trouwkaart (frame) ── */
-          <>
-            {/* Subtitle above frame */}
-            {(hp?.subtitleVisible !== false) && hp?.subtitleText && (
-              <p {...fieldClick('subtitle')} className="text-center mb-4" style={subtitleStyle}>{hp.subtitleText}</p>
-            )}
-            <div
-              className={`relative w-full ${isFullWidth ? "" : "max-w-2xl"}`}
-              style={{ containerType: "inline-size" } as React.CSSProperties}
-            >
-              <style>{`
-                .fk-initials  { font-size: clamp(1.2rem, ${frameInitialsSize}cqi, 8rem);   line-height: 1.1; letter-spacing: 0.2em; padding-left: 0.2em; padding-top: 0.35em; padding-bottom: 0.08em; }
-                .fk-names     { font-size: clamp(1rem,   ${frameNamesSize}cqi,    6rem);   line-height: 1.2; }
-                .fk-date      { font-size: clamp(0.5rem, ${frameDateSize}cqi,     3rem);   letter-spacing: 0.18em; padding-left: 0.18em; }
-                .fk-location  { font-size: clamp(0.5rem, ${frameLocationSize}cqi, 3rem);   }
-              `}</style>
-
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`${process.env.NEXT_PUBLIC_ASSET_ORIGIN ?? ""}/frames/${frameFile(frameStyle!)}`} alt="" className="w-full h-auto block" />
-
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <div className={`flex flex-col items-center ${safeZoneClass}`} style={{ transform: "translateY(-9%)" }}>
-                  {(hp?.initialsVisible !== false) && initials && (
-                    <p {...fieldClick('initialen')} className="fk-initials text-center" style={{ fontFamily: sc.fontInitials, fontWeight: sc.fontInitialsWeight, color: sc.frameBodyText ?? sc.headingColor, whiteSpace: "nowrap", maxWidth: "100%" }}>
-                      {initials}
-                    </p>
-                  )}
-                  {(hp?.frameNamesVisible !== false) && (
-                    <p {...fieldClick('namen')} className={`fk-names text-center ${(hp?.initialsVisible !== false) && initials ? "mt-[0.25cqi]" : ""}`} style={{ fontFamily: sc.fontFrameNames, fontWeight: sc.fontFrameNamesWeight, color: sc.frameBodyText ?? sc.headingColor, whiteSpace: "pre-wrap", wordBreak: "break-word", maxWidth: "100%" }}>
-                      {frameDisplayNames}
-                    </p>
-                  )}
-                  {(hp?.datumVisible !== false) && datumDisplay && (
-                    <p {...fieldClick('datum')} className="fk-date uppercase text-center mt-[1.1cqi]" style={{ fontFamily: datumFontResult.family, fontWeight: datumFontResult.weight, color: sc.frameBodyText ?? sc.bodyText, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>
-                      {datumDisplay}
-                    </p>
-                  )}
-                  {(hp?.locatieVisible !== false) && frameDisplayLocation && (
-                    <p {...fieldClick('locatie')} className="fk-location text-center mt-[0.4cqi]" style={{ fontFamily: locatieFontResult.family, fontWeight: locatieFontResult.weight, color: sc.frameBodyText ?? sc.bodyText, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>
-                      {frameDisplayLocation}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {isFullWidth && (
-                <div className="absolute inset-x-0 flex justify-center" style={{ top: "82%" }}>
-                  <a
-                    href={rsvpHref}
-                    onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("RSVP") } : undefined}
-                    className="inline-block text-xs @md:text-sm font-bold px-3.5 py-1.5 @md:px-7 @md:py-3 rounded-lg @md:rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
-                    style={{ backgroundColor: sc.buttonBg, color: sc.buttonText, textDecoration: "none", boxShadow: "0 4px 14px rgba(0,0,0,0.15)", fontFamily: sc.fontFamily }}
-                  >
-                    Meld je aan
-                  </a>
-                </div>
-              )}
-            </div>
-          </>
-        ) : (
-          /* No frame: only date + location, minimal */
-          <div className="flex flex-col items-center gap-2 pt-4 pb-0 text-center">
-            {datumDisplay && (
-              <p className="uppercase tracking-[0.18em] font-medium text-center" style={{ color: sc.headingColor, fontFamily: sc.fontFamily, fontSize: `${(frameDateSize * 0.5).toFixed(2)}rem` }}>
-                {datumDisplay}
-              </p>
-            )}
-            {locatie && (
-              <p className="text-sm" style={{ color: sc.bodyText, fontFamily: sc.fontFamily }}>
-                {locatie}
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* CTA below frame — only for non-full-width frames */}
-        {useFrame && frameStyle && !isFullWidth && (
-          <a
-            href={rsvpHref}
-            onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("RSVP") } : undefined}
-            className="mt-6 inline-block text-sm font-bold px-7 py-3 rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
-            style={{ backgroundColor: sc.buttonBg, color: sc.buttonText, textDecoration: "none", boxShadow: "0 4px 14px rgba(0,0,0,0.15)", fontFamily: sc.fontFamily }}
-          >
-            Meld je aan
-          </a>
-        )}
+        <div {...fieldClick('ontwerp')} className="w-full flex justify-center">
+          <HomeOntwerp
+            ontwerp={ontwerpNu}
+            sc={sc}
+            tekst={{
+              kop: hp?.ontwerpKop ?? HOME_KOP_STANDAARD,
+              namen: frameDisplayNames,
+              datum: datum ?? null,
+              locatie: frameDisplayLocation || null,
+              tijden: hp?.tijden ?? null,
+              dresscode: hp?.dresscode ?? null,
+              details: hp?.details ?? null,
+            }}
+            letters={hp?.ontwerpLetters}
+            schaal={hp?.ontwerpSchaal}
+          />
+        </div>
+        <a
+          href={rsvpHref}
+          onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("RSVP") } : undefined}
+          className="mt-6 inline-block text-sm font-bold px-7 py-3 rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
+          style={{ backgroundColor: sc.buttonBg, color: sc.buttonText, textDecoration: "none", boxShadow: "0 4px 14px rgba(0,0,0,0.15)", fontFamily: sc.fontFamily }}
+        >
+          Meld je aan
+        </a>
       </section>
 
       {/* Countdown strip */}

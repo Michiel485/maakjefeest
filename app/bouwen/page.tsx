@@ -2,6 +2,8 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import AanmeldFormulier from "@/components/AanmeldFormulier"
+import HomeOntwerpPaneel from "@/components/HomeOntwerpPaneel"
+import { homeOntwerp } from "@/lib/home-ontwerp"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import EventHomePreview from "@/components/EventHomePreview"
@@ -67,6 +69,17 @@ interface HomepageSettings {
   locatieSize: number
   siteLayout: 'boxed' | 'fullwidth'
   pageMode: 'multi' | 'single'
+  // De homepagina met een ontwerp (lib/home-ontwerp.ts, 26 september 2026)
+  ontwerp?: string
+  /** De kop op het ontwerp, zoals "Wij gaan trouwen" */
+  ontwerpKop?: string
+  /** Eigen lettertypes per soort tekst (id's uit lib/title-fonts.ts) */
+  ontwerpLetters?: { kop?: string; namen?: string; tekst?: string }
+  /** Eigen groottes per soort tekst; 1 is zoals ontworpen */
+  ontwerpSchaal?: { kop?: number; namen?: number; tekst?: number }
+  tijden?: string
+  dresscode?: string
+  details?: 'op' | 'onder'
 }
 
 const DEFAULT_HOMEPAGE_SETTINGS: HomepageSettings = {
@@ -474,6 +487,8 @@ export default function BouwenPage() {
       'initialen': 'tekstvelden',
       'datum': 'tekstvelden',
       'locatie': 'tekstvelden',
+      // Het ontwerp op de homepagina, met zijn tekst
+      'ontwerp': 'kaders',
     }
     const section = sectionForField[field] ?? 'tekstvelden'
 
@@ -2288,54 +2303,26 @@ export default function BouwenPage() {
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                                   </svg>
                                 </span>
-                                <span className="text-sm font-medium text-gray-800">Kaders</span>
+                                <span className="text-sm font-medium text-gray-800">{hpSettings.layout === 'editorial' ? 'Ontwerp' : 'Kaders'}</span>
                               </button>
                               {homeOpen('kaders') && (
                                 <div className="px-5 pb-4 flex flex-col gap-4">
                                   {hpSettings.layout === 'editorial' ? (
-                                    <div className="flex flex-col gap-3">
-                                      <div className="flex items-center justify-between">
-                                        <span className="text-xs font-semibold text-gray-600">Kader activeren</span>
-                                        <button
-                                          onClick={() => updateDraft({ use_frame: !(draft?.use_frame ?? false) })}
-                                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${draft?.use_frame ? "bg-[#C5A059]" : "bg-gray-200"}`}
-                                        >
-                                          <span className={`absolute h-4 w-4 rounded-full bg-white transition-transform shadow-sm ${draft?.use_frame ? "translate-x-6" : "translate-x-1"}`} />
-                                        </button>
-                                      </div>
-                                      {draft?.use_frame && (
-                                        <div className="grid grid-cols-3 gap-2">
-                                          {([
-                                            { id: "gold-circle",     label: "Gold Cirkel",    file: "gold-circle.webp"    },
-                                            { id: "gold-diamond",    label: "Gold Ruit",      file: "gold-diamond.webp"   },
-                                            { id: "terra-circle",    label: "Terra Cirkel",   file: "terra-circle.webp"   },
-                                            { id: "terra-diamond",   label: "Terra Ruit",     file: "terra-diamond.webp"  },
-                                            { id: "earthy-circle",   label: "Earthy Cirkel",  file: "earthy-circle.webp"  },
-                                            { id: "earthy-diamond",  label: "Earthy Ruit",    file: "earthy-diamond.webp" },
-                                            { id: "bloem2-breed",    label: "Bloem 2 Breed",  file: "Bloem2-breed.webp"       },
-                                            { id: "olive-square",    label: "Olijf Vierkant", file: "olive-square.webp"   },
-                                            { id: "bloem-rechthoek", label: "Bloem Breed",    file: "Bloem-rechthoek.webp"    },
-                                          ]).map((frame) => {
-                                            const isActive = (draft?.frame_style ?? "gold-circle") === frame.id
-                                            return (
-                                              <button
-                                                key={frame.id}
-                                                onClick={() => updateDraft({ frame_style: frame.id })}
-                                                title={frame.label}
-                                                className={`relative rounded-xl overflow-hidden border-2 transition-all aspect-square ${isActive ? "border-rose-400 ring-2 ring-rose-300 ring-offset-1" : "border-gray-100 hover:border-gray-300"}`}
-                                              >
-                                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                <img src={`/frames/${frame.file}`} alt={frame.label} className="w-full h-full object-cover" />
-                                                {isActive && (
-                                                  <div className="absolute inset-0 bg-[#C5A059] bg-opacity-10 flex items-center justify-center">
-                                                    <svg className="w-4 h-4 text-rose-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                                                  </div>
-                                                )}
-                                              </button>
-                                            )
-                                          })}
-                                        </div>
-                                      )}
+                                    /* Onder de headerfoto een ontwerp, net als een kaart
+                                       (Michiel, 26 september 2026). Vervangt de kaders. */
+                                    <div id="hp-field-ontwerp">
+                                      <HomeOntwerpPaneel
+                                        instellingen={hpSettings}
+                                        onWijzig={(w) => updateHpSettings(w)}
+                                        ontwerp={homeOntwerp({ ontwerp: hpSettings.ontwerp, useFrame: draft?.use_frame, frameStyle: draft?.frame_style })}
+                                        sc={sc}
+                                        namen={draft?.frame_names ?? ""}
+                                        datum={draft?.datum ?? ""}
+                                        locatie={draft?.frame_location ?? ""}
+                                        onNamen={(v) => updateDraft({ frame_names: v })}
+                                        onDatum={(v) => updateDraft({ datum: v })}
+                                        onLocatie={(v) => updateDraft({ frame_location: v })}
+                                      />
                                     </div>
                                   ) : (
                                     <p className="text-xs text-gray-400 leading-relaxed">Kaders zijn beschikbaar bij Lay-out &ldquo;Flexibel&rdquo;.</p>
@@ -2414,6 +2401,8 @@ export default function BouwenPage() {
                                     )}
                                   </div>
 
+                                  {/* Bij Flexibel staan namen, datum en locatie bij het ontwerp */}
+                                  {hpSettings.layout !== 'editorial' && (<>
                                   {/* Subtitel */}
                                   <div id="hp-field-subtitle" className="flex flex-col gap-1.5">
                                     <div className="flex items-center justify-between">
@@ -2627,6 +2616,11 @@ export default function BouwenPage() {
                                     )}
                                   </div>
 
+                                  </>)}
+                                  {hpSettings.layout === 'editorial' && (
+                                    <p className="text-[11px] text-gray-400 leading-relaxed">Namen, datum en locatie staan bij Ontwerp, samen met de kop en de lettertypes.</p>
+                                  )}
+
                                 </div>
                               )}
                             </div>
@@ -2642,7 +2636,7 @@ export default function BouwenPage() {
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                                   </svg>
                                 </span>
-                                <span className="text-sm font-medium text-gray-800">Welkomstbericht</span>
+                                <span className="text-sm font-medium text-gray-800">{hpSettings.layout === 'editorial' ? 'Tekst onder het ontwerp' : 'Welkomstbericht'}</span>
                               </button>
                               {homeOpen('welkomst') && (
                                 <div className="px-5 pb-4 flex flex-col gap-3">

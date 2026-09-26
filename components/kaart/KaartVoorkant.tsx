@@ -12,11 +12,12 @@
 // De drie oudere ontwerpen (Strak, Sierlijk, Bohemian) staan hier bewust niet
 // in: die hebben hun eigen code en blijven precies zoals ze waren.
 
-import type { CSSProperties, ReactNode } from "react"
+import { cloneElement, isValidElement, type CSSProperties, type ReactNode } from "react"
 import type { CardDisplay, NieuwOntwerp } from "@/lib/cards"
 import type { SC } from "@/lib/event-styles"
 import { detailsKeuze, detailsOpKaart, illustratie, KADERS, ONTWERP_LETTERS, type VoorkantLetters } from "@/lib/kaart-ontwerpen"
 import { namenOpmaak, namenPlek, namenRegels, type NamenPlek, type NamenStand } from "@/lib/namen-opmaak"
+import type { GemetenLetter } from "@/lib/letterbreedtes"
 import { initialenLijst } from "@/lib/initialen"
 import { leesbaar } from "@/lib/contrast"
 
@@ -255,7 +256,7 @@ function decoWaaier(): string {
   return stralen.join(" ")
 }
 
-export default function KaartVoorkant({
+function Inhoud({
   d,
   ontwerp,
   sc,
@@ -263,6 +264,9 @@ export default function KaartVoorkant({
   letters,
   schaduw,
   voorAfbeelding = false,
+  vrij = false,
+  schaal,
+  namenMeting,
 }: {
   d: CardDisplay
   ontwerp: NieuwOntwerp
@@ -277,14 +281,26 @@ export default function KaartVoorkant({
   schaduw?: string
   /** Getekend door satori: illustraties dan via de volledige link */
   voorAfbeelding?: boolean
+  /** Op de homepagina: geen kaart, maar het ontwerp vrij op de pagina */
+  vrij?: boolean
+  /** Eigen lettergroottes, als deel van die van het ontwerp: 1 is zoals ontworpen */
+  schaal?: { kop?: number; namen?: number; tekst?: number }
+  /** Een eigen letter voor de namen: om ze passend te maken met de juiste breedtes */
+  namenMeting?: GemetenLetter | null
 }) {
   const s = breedte / 400
   const px = (n: number) => Math.round(n * s * 10) / 10
+  // Per soort tekst een eigen grootte, voor de homepagina. Op een kaart is
+  // de schaal er niet en is dit gewoon px.
+  const pxK = (n: number) => Math.round(n * s * (schaal?.kop ?? 1) * 10) / 10
+  const pxN = (n: number) => Math.round(n * s * (schaal?.namen ?? 1) * 10) / 10
+  const pxT = (n: number) => Math.round(n * s * (schaal?.tekst ?? 1) * 10) / 10
   const hoogte = Math.round(breedte * 1.4)
 
-  const achtergrond = sc.cardBg ?? "#FFFEFB"
-  const kop = sc.cardText ?? sc.headingColor
-  const tekst = sc.cardText ?? sc.bodyText
+  const achtergrond = vrij ? sc.bodyBg : sc.cardBg ?? "#FFFEFB"
+  const kop = vrij ? sc.headingColor : sc.cardText ?? sc.headingColor
+  const tekst = vrij ? sc.bodyText : sc.cardText ?? sc.bodyText
+
   const accent = sc.accent
   // De kleine kop ("Save the Date") in de kleur van de stijl, tenzij die op
   // deze achtergrond wegvalt
@@ -299,7 +315,7 @@ export default function KaartVoorkant({
     if (!detailsKeuze(ontwerp) || !detailsOpKaart(ontwerp, d.detailsStand)) return null
     if (!d.inviteLine && !d.timeText) return null
     const uitlijnen = opties.uitlijnen ?? "center"
-    const grootte = px(opties.grootte ?? 10.5)
+    const grootte = pxT(opties.grootte ?? 10.5)
     const font = opties.font ?? letters.tekst
     const max = px(opties.max ?? 300)
     return (
@@ -319,7 +335,12 @@ export default function KaartVoorkant({
   // Waar de namen staan en hoe groot, voor het passend maken. Palm heeft
   // geen vaste plek: die zet de namen onder elkaar, behalve bij één naam.
   const namenLetter = ONTWERP_LETTERS[ontwerp].namen
-  const plek: NamenPlek = namenPlek(ontwerp, { breedte, datumIso: d.datumIso }) ?? { letter: namenLetter, grootte: px(46), ruimte: px(340) }
+  const basisPlek: NamenPlek = namenPlek(ontwerp, { breedte, datumIso: d.datumIso }) ?? { letter: namenLetter, grootte: px(46), ruimte: px(340) }
+  const plek: NamenPlek = {
+    ...basisPlek,
+    grootte: basisPlek.grootte * (schaal?.namen ?? 1),
+    ...(namenMeting ? { letter: namenMeting } : {}),
+  }
 
   const basis: CSSProperties = {
     position: "relative",
@@ -338,11 +359,11 @@ export default function KaartVoorkant({
         <Regels
           tekst={d.message}
           uitlijnen={uitlijnen}
-          style={{ fontFamily: font, fontSize: px(12.5), lineHeight: 1.6, color: kleur.tekst, maxWidth: px(310) }}
+          style={{ fontFamily: font, fontSize: pxT(12.5), lineHeight: 1.6, color: kleur.tekst, maxWidth: px(310) }}
         />
       )}
       {d.inviteLine && (
-        <div style={{ display: "flex", fontFamily: font, fontSize: px(12.5), fontWeight: 600, lineHeight: 1.5, color: kleur.kop, maxWidth: px(310), textAlign: uitlijnen === "center" ? "center" : "left" }}>
+        <div style={{ display: "flex", fontFamily: font, fontSize: pxT(12.5), fontWeight: 600, lineHeight: 1.5, color: kleur.kop, maxWidth: px(310), textAlign: uitlijnen === "center" ? "center" : "left" }}>
           {d.inviteLine}
         </div>
       )}
@@ -350,7 +371,7 @@ export default function KaartVoorkant({
         <Regels
           tekst={d.timeText}
           uitlijnen={uitlijnen}
-          style={{ fontFamily: font, fontSize: px(11), fontWeight: 600, lineHeight: 1.6, letterSpacing: "0.06em", color: kleur.accent }}
+          style={{ fontFamily: font, fontSize: pxT(11), fontWeight: 600, lineHeight: 1.6, letterSpacing: "0.06em", color: kleur.accent }}
         />
       )}
     </D>
@@ -377,10 +398,10 @@ export default function KaartVoorkant({
           <svg width={px(44)} height={px(44)} viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" />
           </svg>
-          <div style={{ display: "flex", fontFamily: letters.tekst, fontSize: px(15), fontWeight: 600, color: kop, textAlign: "center" }}>
+          <div style={{ display: "flex", fontFamily: letters.tekst, fontSize: pxT(15), fontWeight: 600, color: kop, textAlign: "center" }}>
             Jullie eigen ontwerp
           </div>
-          <div style={{ display: "flex", fontFamily: letters.tekst, fontSize: px(12), lineHeight: 1.5, color: tekst, textAlign: "center", maxWidth: px(260) }}>
+          <div style={{ display: "flex", fontFamily: letters.tekst, fontSize: pxT(12), lineHeight: 1.5, color: tekst, textAlign: "center", maxWidth: px(260) }}>
             Upload een afbeelding van jullie kaart. Wij doen de envelop, het aanmelden en de rest.
           </div>
         </D>
@@ -415,7 +436,7 @@ export default function KaartVoorkant({
         }}
       >
         <D style={{ flexDirection: "column", gap: px(12) }}>
-          <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(14), letterSpacing: "0.3em", textTransform: "uppercase", color: label }}>
+          <div style={{ display: "flex", fontFamily: letters.kop, fontSize: pxK(14), letterSpacing: "0.3em", textTransform: "uppercase", color: label }}>
             {d.heading}
           </div>
           <div style={{ display: "flex", width: px(36), height: lijn, backgroundColor: accent }} />
@@ -425,15 +446,15 @@ export default function KaartVoorkant({
           <Regels
             tekst={namenRegels(d.names)}
             uitlijnen="flex-start"
-            style={{ fontFamily: letters.namen, fontSize: px(52), lineHeight: 1.04, color: kop }}
+            style={{ fontFamily: letters.namen, fontSize: pxN(52), lineHeight: 1.04, color: kop }}
           />
           {d.dateText && (
-            <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(12), letterSpacing: "0.22em", textTransform: "uppercase", color: kop }}>
+            <div style={{ display: "flex", fontFamily: letters.kop, fontSize: pxK(12), letterSpacing: "0.22em", textTransform: "uppercase", color: kop }}>
               {d.dateText}
             </div>
           )}
           {d.location && (
-            <Regels tekst={d.location} uitlijnen="flex-start" style={{ fontFamily: letters.tekst, fontSize: px(12), lineHeight: 1.5, color: tekst, opacity: 0.8 }} />
+            <Regels tekst={d.location} uitlijnen="flex-start" style={{ fontFamily: letters.tekst, fontSize: pxT(12), lineHeight: 1.5, color: tekst, opacity: 0.8 }} />
           )}
         </D>
 
@@ -482,18 +503,18 @@ export default function KaartVoorkant({
           }}
         />
         <D style={{ position: "relative", flexDirection: "column", alignItems: "center", gap: px(10), padding: `${px(40)}px ${px(32)}px ${px(36)}px`, color: wit }}>
-          <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(10), letterSpacing: "0.34em", textTransform: "uppercase", color: wit, opacity: 0.9 }}>
+          <div style={{ display: "flex", fontFamily: letters.kop, fontSize: pxK(10), letterSpacing: "0.34em", textTransform: "uppercase", color: wit, opacity: 0.9 }}>
             {d.heading}
           </div>
           <Namen plek={plek} stand={d.namenStand} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.12, color: wit }} />
           <div style={{ display: "flex", width: px(38), height: lijn, backgroundColor: wit, opacity: 0.6, marginTop: px(2), marginBottom: px(2) }} />
           {d.dateText && (
-            <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(12.5), letterSpacing: "0.24em", textTransform: "uppercase", color: wit }}>
+            <div style={{ display: "flex", fontFamily: letters.kop, fontSize: pxK(12.5), letterSpacing: "0.24em", textTransform: "uppercase", color: wit }}>
               {d.dateText}
             </div>
           )}
           {d.location && (
-            <Regels tekst={d.location} style={{ fontFamily: letters.tekst, fontSize: px(11.5), lineHeight: 1.5, color: wit, opacity: 0.88 }} />
+            <Regels tekst={d.location} style={{ fontFamily: letters.tekst, fontSize: pxT(11.5), lineHeight: 1.5, color: wit, opacity: 0.88 }} />
           )}
           <D style={{ marginTop: px(6) }}>{slot({ tekst: "rgba(255,253,248,0.9)", kop: wit, accent: wit })}</D>
         </D>
@@ -549,7 +570,7 @@ export default function KaartVoorkant({
               // eslint-disable-next-line @next/next/no-img-element
               <img src={d.photoUrl} alt="" width={bw} height={bh} style={{ width: bw, height: bh, objectFit: "cover", borderRadius: `${bw / 2}px ${bw / 2}px 0 0` }} />
             ) : (
-              <div style={{ display: "flex", fontFamily: letters.namen, fontSize: px(46), color: accent, marginTop: px(30), letterSpacing: "0.04em" }}>
+              <div style={{ display: "flex", fontFamily: letters.namen, fontSize: pxN(46), color: accent, marginTop: px(30), letterSpacing: "0.04em" }}>
                 {initialenVan(d.names)}
               </div>
             )}
@@ -557,17 +578,17 @@ export default function KaartVoorkant({
         </D>
 
         <D style={{ flexDirection: "column", alignItems: "center", gap: px(10) }}>
-          <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(11), letterSpacing: "0.3em", textTransform: "uppercase", color: label }}>
+          <div style={{ display: "flex", fontFamily: letters.kop, fontSize: pxK(11), letterSpacing: "0.3em", textTransform: "uppercase", color: label }}>
             {d.heading}
           </div>
           <Namen plek={plek} stand={d.namenStand} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.18, color: kop }} />
           {d.dateText && (
-            <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(15), letterSpacing: "0.14em", textTransform: "uppercase", color: accent }}>
+            <div style={{ display: "flex", fontFamily: letters.kop, fontSize: pxK(15), letterSpacing: "0.14em", textTransform: "uppercase", color: accent }}>
               {d.dateText}
             </div>
           )}
           {d.location && (
-            <Regels tekst={d.location} style={{ fontFamily: letters.tekst, fontSize: px(11.5), lineHeight: 1.5, color: tekst, opacity: 0.85 }} />
+            <Regels tekst={d.location} style={{ fontFamily: letters.tekst, fontSize: pxT(11.5), lineHeight: 1.5, color: tekst, opacity: 0.85 }} />
           )}
           <div style={{ display: "flex", width: px(34), height: lijn, backgroundColor: `${accent}70`, marginTop: px(4), marginBottom: px(4) }} />
           {slot({ tekst, kop, accent })}
@@ -625,12 +646,12 @@ export default function KaartVoorkant({
             <path d="M6 58 A54 54 0 0 1 114 58" stroke={accent} strokeWidth="1.3" />
             <path d="M0 58 L120 58" stroke={accent} strokeWidth="1.3" />
           </svg>
-          <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(10.5), letterSpacing: "0.38em", textTransform: "uppercase", color: label }}>
+          <div style={{ display: "flex", fontFamily: letters.kop, fontSize: pxK(10.5), letterSpacing: "0.38em", textTransform: "uppercase", color: label }}>
             {d.heading}
           </div>
           <Regels
             tekst={namenRegels(d.names)}
-            style={{ fontFamily: letters.namen, fontSize: px(29), lineHeight: 1.3, letterSpacing: "0.1em", textTransform: "uppercase", color: kop, marginTop: px(4), marginBottom: px(4) }}
+            style={{ fontFamily: letters.namen, fontSize: pxN(29), lineHeight: 1.3, letterSpacing: "0.1em", textTransform: "uppercase", color: kop, marginTop: px(4), marginBottom: px(4) }}
           />
           <D style={{ alignItems: "center", gap: px(8), width: px(210) }}>
             <div style={{ display: "flex", flexGrow: 1, height: lijn, backgroundColor: accent }} />
@@ -638,12 +659,12 @@ export default function KaartVoorkant({
             <div style={{ display: "flex", flexGrow: 1, height: lijn, backgroundColor: accent }} />
           </D>
           {d.dateText && (
-            <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(12.5), letterSpacing: "0.26em", textTransform: "uppercase", color: accent, textAlign: "center" }}>
+            <div style={{ display: "flex", fontFamily: letters.kop, fontSize: pxK(12.5), letterSpacing: "0.26em", textTransform: "uppercase", color: accent, textAlign: "center" }}>
               {d.dateText}
             </div>
           )}
           {d.location && (
-            <Regels tekst={d.location} style={{ fontFamily: letters.tekst, fontSize: px(10.5), lineHeight: 1.6, letterSpacing: "0.12em", textTransform: "uppercase", color: tekst, opacity: 0.85 }} />
+            <Regels tekst={d.location} style={{ fontFamily: letters.tekst, fontSize: pxT(10.5), lineHeight: 1.6, letterSpacing: "0.12em", textTransform: "uppercase", color: tekst, opacity: 0.85 }} />
           )}
           <D style={{ marginTop: px(8) }}>{slot({ tekst, kop, accent })}</D>
         </D>
@@ -680,15 +701,15 @@ export default function KaartVoorkant({
               gap: px(6),
             }}
           >
-            <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(9.5), letterSpacing: "0.32em", textTransform: "uppercase", color: kader.kleur.accent }}>
+            <div style={{ display: "flex", fontFamily: letters.kop, fontSize: pxK(9.5), letterSpacing: "0.32em", textTransform: "uppercase", color: kader.kleur.accent }}>
               {d.heading}
             </div>
             <Namen plek={plek} stand={d.namenStand} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.1, color: kader.kleur.namen }} />
             {datum && (
-              <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(11), letterSpacing: "0.2em", color: kader.kleur.accent }}>{datum}</div>
+              <div style={{ display: "flex", fontFamily: letters.kop, fontSize: pxK(11), letterSpacing: "0.2em", color: kader.kleur.accent }}>{datum}</div>
             )}
             {d.location && (
-              <Regels tekst={d.location} style={{ fontFamily: letters.tekst, fontSize: px(10), lineHeight: 1.4, letterSpacing: "0.06em", color: kader.kleur.namen, opacity: 0.8 }} />
+              <Regels tekst={d.location} style={{ fontFamily: letters.tekst, fontSize: pxT(10), lineHeight: 1.4, letterSpacing: "0.06em", color: kader.kleur.namen, opacity: 0.8 }} />
             )}
             {details(kader.kleur.accent, { grootte: 8.5, marge: 2, max: 400 * kader.ruimte[0] })}
           </D>
@@ -707,7 +728,7 @@ export default function KaartVoorkant({
             websitestijlen viel hij weg naast de bloemen. Maar de achtergrond
             komt van de stijl, en goud op terracotta viel ook weg; dan de
             tekstkleur van de stijl (Michiel, 26 september 2026). */}
-        <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(12.5), letterSpacing: "0.3em", textTransform: "uppercase", color: leesbaar(kader.kleur.accent, achtergrond, [kop]) }}>
+        <div style={{ display: "flex", fontFamily: letters.kop, fontSize: pxK(12.5), letterSpacing: "0.3em", textTransform: "uppercase", color: leesbaar(kader.kleur.accent, achtergrond, [kop]) }}>
           {d.heading}
         </div>
         <D style={{ position: "relative", width: kw, height: kw, marginTop: px(2) }}>
@@ -726,21 +747,21 @@ export default function KaartVoorkant({
               gap: px(7),
             }}
           >
-            <Regels tekst={namenRegels(d.names)} style={{ fontFamily: letters.namen, fontSize: px(ontwerp === "herfst" || ontwerp === "herfstruit" ? 21 : 30), lineHeight: 1.12, color: kader.kleur.namen }} />
+            <Regels tekst={namenRegels(d.names)} style={{ fontFamily: letters.namen, fontSize: pxN(ontwerp === "herfst" || ontwerp === "herfstruit" ? 21 : 30), lineHeight: 1.12, color: kader.kleur.namen }} />
             {datum && (
-              <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(10.5), letterSpacing: "0.14em", color: kader.kleur.accent }}>{datum}</div>
+              <div style={{ display: "flex", fontFamily: letters.kop, fontSize: pxK(10.5), letterSpacing: "0.14em", color: kader.kleur.accent }}>{datum}</div>
             )}
           </D>
         </D>
         {d.location && (
           <Regels
             tekst={d.location}
-            style={{ fontFamily: letters.tekst, fontSize: px(12.5), lineHeight: 1.5, letterSpacing: "0.08em", color: kop, marginTop: px(4) }}
+            style={{ fontFamily: letters.tekst, fontSize: pxT(12.5), lineHeight: 1.5, letterSpacing: "0.08em", color: kop, marginTop: px(4) }}
           />
         )}
         <div style={{ display: "flex", width: px(30), height: lijn, backgroundColor: `${accent}80`, marginTop: px(10), marginBottom: px(10) }} />
         {d.message && (
-          <Regels tekst={d.message} style={{ fontFamily: letters.tekst, fontSize: px(12), lineHeight: 1.55, color: tekst, maxWidth: px(310) }} />
+          <Regels tekst={d.message} style={{ fontFamily: letters.tekst, fontSize: pxT(12), lineHeight: 1.55, color: tekst, maxWidth: px(310) }} />
         )}
         {details(leesbaar(accent, achtergrond, [kop]), { grootte: 11, marge: 10 })}
       </D>
@@ -757,7 +778,7 @@ export default function KaartVoorkant({
       <D style={{ ...basis, minHeight: breedte, height: breedte, borderRadius: px(6), backgroundColor: "#F8F8F3" }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={illustratie("/kaart-illustraties/olijf-vierkant.jpg", voorAfbeelding)}
+          src={vrij ? "/frames/olive-square.webp" : illustratie("/kaart-illustraties/olijf-vierkant.jpg", voorAfbeelding)}
           alt=""
           width={breedte}
           height={breedte}
@@ -778,17 +799,17 @@ export default function KaartVoorkant({
             padding: `${px(20)}px ${px(40)}px`,
           }}
         >
-          <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(11), letterSpacing: "0.32em", textTransform: "uppercase", color: goud }}>
+          <div style={{ display: "flex", fontFamily: letters.kop, fontSize: pxK(11), letterSpacing: "0.32em", textTransform: "uppercase", color: goud }}>
             {d.heading}
           </div>
           <Namen plek={plek} stand={d.namenStand} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.15, color: groen }} />
           {d.dateText && (
-            <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(12), letterSpacing: "0.22em", textTransform: "uppercase", color: goud, textAlign: "center" }}>
+            <div style={{ display: "flex", fontFamily: letters.kop, fontSize: pxK(12), letterSpacing: "0.22em", textTransform: "uppercase", color: goud, textAlign: "center" }}>
               {d.dateText}
             </div>
           )}
           {d.location && (
-            <Regels tekst={d.location} style={{ fontFamily: letters.tekst, fontSize: px(11), lineHeight: 1.5, letterSpacing: "0.06em", color: groen, opacity: 0.8 }} />
+            <Regels tekst={d.location} style={{ fontFamily: letters.tekst, fontSize: pxT(11), lineHeight: 1.5, letterSpacing: "0.06em", color: groen, opacity: 0.8 }} />
           )}
           {details(goud, { grootte: 9.5, marge: 2, max: 200 })}
         </D>
@@ -822,12 +843,12 @@ export default function KaartVoorkant({
             const grootte = klein ? 34 : Math.min(76, 290 / Math.max(3, w.length * 0.62))
             return (
               <D key={i} style={{ alignItems: "center", marginTop: klein ? px(-6) : 0, marginBottom: klein ? px(-6) : 0 }}>
-                <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(grootte), lineHeight: 1, color: kop }}>{w}</div>
+                <div style={{ display: "flex", fontFamily: letters.kop, fontSize: pxK(grootte), lineHeight: 1, color: kop }}>{w}</div>
               </D>
             )
           })}
           {datum && (
-            <div style={{ display: "flex", fontFamily: letters.tekst, fontSize: px(15), fontWeight: 500, letterSpacing: "0.14em", color: kop, marginTop: px(26) }}>
+            <div style={{ display: "flex", fontFamily: letters.tekst, fontSize: pxT(15), fontWeight: 500, letterSpacing: "0.14em", color: kop, marginTop: px(26) }}>
               {datum}
             </div>
           )}
@@ -837,7 +858,7 @@ export default function KaartVoorkant({
           {d.location && (
             <Regels
               tekst={d.location}
-              style={{ fontFamily: letters.tekst, fontSize: px(12), lineHeight: 1.5, letterSpacing: "0.08em", color: kop, opacity: 0.7, marginTop: px(4), maxWidth: px(260) }}
+              style={{ fontFamily: letters.tekst, fontSize: pxT(12), lineHeight: 1.5, letterSpacing: "0.08em", color: kop, opacity: 0.7, marginTop: px(4), maxWidth: px(260) }}
             />
           )}
           {details(kop, { grootte: 11, marge: 10, max: 334 - 48 })}
@@ -862,7 +883,7 @@ export default function KaartVoorkant({
             rx: px(92),
             ry: px(84),
             graden: 150,
-            grootte: px(17),
+            grootte: pxK(17),
             spatie: 0.08,
             stijl: { fontFamily: letters.kop, color: kop },
           })}
@@ -872,24 +893,24 @@ export default function KaartVoorkant({
         </D>
         {delen ? (
           <D style={{ flexDirection: "column", alignItems: "center", marginTop: px(14) }}>
-            <div style={{ display: "flex", fontFamily: letters.namen, fontSize: px(54), lineHeight: 1, color: kop }}>{delen[0]}</div>
-            <div style={{ display: "flex", fontFamily: letters.extra, fontSize: px(44), lineHeight: 0.9, color: accent, marginTop: px(-2), marginBottom: px(-2) }}>
+            <div style={{ display: "flex", fontFamily: letters.namen, fontSize: pxN(54), lineHeight: 1, color: kop }}>{delen[0]}</div>
+            <div style={{ display: "flex", fontFamily: letters.extra, fontSize: pxN(44), lineHeight: 0.9, color: accent, marginTop: px(-2), marginBottom: px(-2) }}>
               {d.verbinder}
             </div>
-            <div style={{ display: "flex", fontFamily: letters.namen, fontSize: px(54), lineHeight: 1, color: kop }}>{delen[1]}</div>
+            <div style={{ display: "flex", fontFamily: letters.namen, fontSize: pxN(54), lineHeight: 1, color: kop }}>{delen[1]}</div>
           </D>
         ) : (
           <Namen plek={plek} stand={d.namenStand} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.05, color: kop, marginTop: px(14) }} />
         )}
         {datum && (
-          <div style={{ display: "flex", fontFamily: letters.namen, fontSize: px(20), letterSpacing: "0.04em", color: kop, marginTop: px(22) }}>
+          <div style={{ display: "flex", fontFamily: letters.namen, fontSize: pxN(20), letterSpacing: "0.04em", color: kop, marginTop: px(22) }}>
             {datum}
           </div>
         )}
         {d.message && (
           <Regels
             tekst={d.message}
-            style={{ fontFamily: letters.tekst, fontSize: px(12), lineHeight: 1.55, color: tekst, maxWidth: px(270), marginTop: px(12), opacity: 0.9 }}
+            style={{ fontFamily: letters.tekst, fontSize: pxT(12), lineHeight: 1.55, color: tekst, maxWidth: px(270), marginTop: px(12), opacity: 0.9 }}
           />
         )}
         {details(leesbaar(accent, achtergrond, [kop]), { grootte: 11, marge: 12 })}
@@ -923,7 +944,7 @@ export default function KaartVoorkant({
             rx: ow / 2 - px(30),
             ry: oh / 2 - px(30),
             graden: 120,
-            grootte: px(16),
+            grootte: pxK(16),
             spatie: 0.3,
             stijl: { fontFamily: letters.kop, color: accent, letterSpacing: "0.02em" },
           })}
@@ -935,7 +956,7 @@ export default function KaartVoorkant({
             ry: oh / 2 - px(30),
             graden: 120,
             onder: true,
-            grootte: px(16),
+            grootte: pxK(16),
             spatie: 0.3,
             stijl: { fontFamily: letters.kop, color: accent, letterSpacing: "0.02em" },
           })}
@@ -951,7 +972,7 @@ export default function KaartVoorkant({
         <D style={{ flexDirection: "column", alignItems: "center", gap: px(6) }}>
           <Namen plek={plek} stand={d.namenStand} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1, color: kop }} />
           {datum && (
-            <div style={{ display: "flex", fontFamily: letters.tekst, fontSize: px(12), letterSpacing: "0.22em", color: kop, opacity: 0.85 }}>
+            <div style={{ display: "flex", fontFamily: letters.tekst, fontSize: pxT(12), letterSpacing: "0.22em", color: kop, opacity: 0.85 }}>
               {datum}
             </div>
           )}
@@ -998,11 +1019,11 @@ export default function KaartVoorkant({
           }}
         />
         <D style={{ position: "relative", flexDirection: "column", alignItems: "center", padding: `${px(30)}px ${px(26)}px ${px(34)}px`, gap: px(6) }}>
-          <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(76), lineHeight: 0.9, color: wit, textAlign: "center" }}>
+          <div style={{ display: "flex", fontFamily: letters.kop, fontSize: pxK(76), lineHeight: 0.9, color: wit, textAlign: "center" }}>
             {d.heading}
           </div>
           {datum && (
-            <div style={{ display: "flex", fontFamily: letters.tekst, fontSize: px(15), letterSpacing: "0.12em", color: wit, marginTop: px(8) }}>
+            <div style={{ display: "flex", fontFamily: letters.tekst, fontSize: pxT(15), letterSpacing: "0.12em", color: wit, marginTop: px(8) }}>
               {datum}
             </div>
           )}
@@ -1029,7 +1050,7 @@ export default function KaartVoorkant({
         border: `${lijn}px solid ${accent}33`,
       }}
     >
-      <div style={{ display: "flex", fontFamily: letters.tekst, fontSize: px(10), letterSpacing: "0.34em", textTransform: "uppercase", color: label }}>
+      <div style={{ display: "flex", fontFamily: letters.tekst, fontSize: pxT(10), letterSpacing: "0.34em", textTransform: "uppercase", color: label }}>
         {d.heading}
       </div>
       {cijfers ? (
@@ -1040,7 +1061,7 @@ export default function KaartVoorkant({
               style={{
                 display: "flex",
                 fontFamily: letters.kop,
-                fontSize: px(86),
+                fontSize: pxK(86),
                 lineHeight: 0.94,
                 letterSpacing: "-0.01em",
                 color: i === 1 ? accent : kop,
@@ -1052,7 +1073,7 @@ export default function KaartVoorkant({
         </D>
       ) : (
         d.dateText && (
-          <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(30), color: kop, marginTop: px(20), marginBottom: px(10), textAlign: "center" }}>
+          <div style={{ display: "flex", fontFamily: letters.kop, fontSize: pxK(30), color: kop, marginTop: px(20), marginBottom: px(10), textAlign: "center" }}>
             {d.dateText}
           </div>
         )
@@ -1061,11 +1082,35 @@ export default function KaartVoorkant({
       {d.location && (
         <Regels
           tekst={d.location}
-          style={{ fontFamily: letters.tekst, fontSize: px(10.5), lineHeight: 1.6, letterSpacing: "0.14em", textTransform: "uppercase", color: tekst, opacity: 0.85, marginTop: px(8) }}
+          style={{ fontFamily: letters.tekst, fontSize: pxT(10.5), lineHeight: 1.6, letterSpacing: "0.14em", textTransform: "uppercase", color: tekst, opacity: 0.85, marginTop: px(8) }}
         />
       )}
       <div style={{ display: "flex", width: px(34), height: lijn, backgroundColor: `${accent}70`, marginTop: px(14), marginBottom: px(14) }} />
       {slot({ tekst, kop, accent })}
     </D>
   )
+}
+
+/**
+ * De voorkant van een kaart. Met vrij (de homepagina) hetzelfde ontwerp, maar
+ * zonder kaart eromheen: geen rand, geen afronding, geen schaduw en de kleur
+ * van de pagina (Michiel, 26 september 2026). Vaste hoogtes blijven, want daar
+ * hoort de tekening bij; een minimale hoogte niet, anders stond er lucht.
+ */
+export default function KaartVoorkant(props: Parameters<typeof Inhoud>[0]) {
+  const el = Inhoud(props)
+  if (!props.vrij || !isValidElement<{ style?: CSSProperties }>(el)) return el
+  const stijl = el.props.style ?? {}
+  return cloneElement(el, {
+    style: {
+      ...stijl,
+      borderRadius: 0,
+      border: "none",
+      boxShadow: "none",
+      backgroundColor: "transparent",
+      backgroundImage: "none",
+      overflow: "visible",
+      ...(stijl.height ? {} : { minHeight: undefined }),
+    },
+  })
 }
