@@ -1,5 +1,9 @@
 export const TITLE_FONT_OPTIONS = [
   { id: "allura",       label: "Allura",            cssVar: "--font-allura",      weight: 400 },
+  // Het eerste lettertype is ook wat een onbekende keuze wordt: Allura blijft vooraan
+  { id: "abril",        label: "Abril Fatface",      cssVar: "--font-abril",       weight: 400 },
+  // Het handschrift van "Wij gaan trouwen" op Foto met handschrift (Michiel, 26 september 2026)
+  { id: "allison",      label: "Allison",            cssVar: "--font-allison",     weight: 400 },
   { id: "bodonimoda",   label: "Bodoni Moda",        cssVar: "--font-bodonimoda",  weight: 400 },
   { id: "cinzel",       label: "Cinzel",             cssVar: "--font-cinzel",      weight: 400 },
   { id: "cormorant",    label: "Cormorant Garamond", cssVar: "--font-cormorant",   weight: 300 },
@@ -7,6 +11,7 @@ export const TITLE_FONT_OPTIONS = [
   { id: "gfsdidot",     label: "GFS Didot",          cssVar: "--font-gfsdidot",    weight: 400 },
   { id: "greatvibes",   label: "Great Vibes",        cssVar: "--font-greatvibes",  weight: 400 },
   { id: "italiana",     label: "Italiana",           cssVar: "--font-italiana",    weight: 400 },
+  { id: "jost",         label: "Jost",               cssVar: "--font-jost",        weight: 400 },
   { id: "lora",         label: "Lora",               cssVar: "--font-lora",        weight: 500 },
   { id: "marcellus",    label: "Marcellus",          cssVar: "--font-marcellus",   weight: 400 },
   { id: "montserrat",   label: "Montserrat",         cssVar: "--font-montserrat",  weight: 500 },
