@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react"
+import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react"
 import type { SC } from "@/lib/event-styles"
 import type { CardDisplay } from "@/lib/cards"
 import Voorkant from "@/components/kaart/Voorkant"
@@ -68,10 +68,12 @@ const ENVELOP_RONDING = 6
 const VOOR_VORM = `polygon(0 0, 50% ${ENVELOP_V_PUNT}%, 100% 0, 100% 100%, 0 100%)`
 // De klep: dezelfde driehoek, met een zachte punt in plaats van een scherpe
 const KLEP_VORM = "polygon(0 0, 100% 0, 53.35% 93.3%, 51.7% 95.8%, 50% 96.6%, 48.3% 95.8%, 46.65% 93.3%)"
-// De ondervouw loopt van de onderhoeken tot net onder het zegel
-const ONDER_VORM = "polygon(0 100%, 46.5% 60%, 50% 58.2%, 53.5% 60%, 100% 100%)"
+// De ondervouw loopt van de onderhoeken naar hetzelfde punt als de V, zodat
+// alle vouwen in het midden samenkomen. Eerst stopte hij net onder het zegel,
+// en open zag je dan twee punten boven elkaar (Michiel, 26 september 2026).
+const ONDER_VORM = `polygon(0 100%, 50% ${ENVELOP_V_PUNT}%, 100% 100%)`
 
-const ZEGEL_MAAT = 70
+const ZEGEL_MAAT = 80
 // De breuk door het zegel: niet recht, zoals was echt breekt. Beide helften
 // delen dezelfde lijn, dus ze passen precies op elkaar.
 const ZEGEL_BREUK = [
@@ -80,70 +82,102 @@ const ZEGEL_BREUK = [
 ]
 
 /**
- * Een lakzegel: een onregelmatige rand van uitgelopen was, een verhoogde ring
- * en in het midden de ingedrukte initialen, met een streep ertussen zoals in
- * de boog. Alles in CSS, in de tinten van de kaart.
+ * Een lakzegel, als SVG met lichtval. De rand is grillig zoals uitgelopen
+ * was, het midden is ingedrukt waar de stempel stond, en de initialen staan
+ * er verhoogd in, zoals een stempel ze in de was drukt. Alles in één kleur
+ * was; het reliëf komt van het licht, niet van andere kleuren.
+ *
+ * De eerste versie (26 september 2026) was in CSS: ringen met verlopen en
+ * letters met een streep ertussen. Michiel vond dat goedkoop ogen, en op een
+ * zegel wil hij alleen de twee beginletters, zonder & of |.
  */
-function Zegel({ env, initialen, lettertype }: { env: EnvelopStijl; initialen: string; lettertype?: string }) {
-  const letters = Array.from(initialen.replace(/[^\p{L}\p{N}]/gu, "")).slice(0, 2)
+function Zegel({ env, initialen }: { env: EnvelopStijl; initialen: string }) {
+  // Filters en verlopen hebben een id nodig, en er kunnen meerdere zegels op
+  // één pagina staan (het zegel en zijn twee helften). useId geeft dubbele
+  // punten, en die mogen niet in url(#...).
+  const id = useId().replace(/[^a-zA-Z0-9]/g, "")
+  // Alleen letters en cijfers: "M|L", "M & L" en "ML" worden allemaal ML
+  const letters = Array.from(initialen.replace(/[^\p{L}\p{N}]/gu, "")).slice(0, 2).join("")
   return (
-    <span className="absolute inset-0 block">
-      {/* De uitgelopen was: iets groter en niet helemaal rond */}
-      <span
-        className="absolute"
+    <svg viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true" style={{ display: "block", overflow: "visible" }}>
+      <defs>
+        <radialGradient id={`${id}w`} cx="40%" cy="36%" r="70%">
+          <stop offset="0" stopColor={env.zegelLicht} />
+          <stop offset="0.6" stopColor={env.zegel} />
+          <stop offset="1" stopColor={env.zegelDonker} />
+        </radialGradient>
+        {/* Uitgelopen was: een cirkel met een golvende, onregelmatige rand */}
+        <filter id={`${id}r`} x="-15%" y="-15%" width="130%" height="130%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed="4" />
+          <feDisplacementMap in="SourceGraphic" scale="8" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+        {/* Verhoogd: licht van linksboven, glans op de randen */}
+        <filter id={`${id}h`} x="-15%" y="-15%" width="130%" height="130%" colorInterpolationFilters="sRGB">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="1.8" result="hoogte" />
+          <feDiffuseLighting in="hoogte" surfaceScale="3" diffuseConstant="1.15" lightingColor="#ffffff" result="licht">
+            <feDistantLight azimuth="225" elevation="52" />
+          </feDiffuseLighting>
+          <feSpecularLighting in="hoogte" surfaceScale="3" specularConstant="0.55" specularExponent="16" lightingColor="#ffffff" result="glans">
+            <feDistantLight azimuth="225" elevation="48" />
+          </feSpecularLighting>
+          <feComposite in="glans" in2="SourceAlpha" operator="in" result="glansBinnen" />
+          <feComposite in="SourceGraphic" in2="licht" operator="arithmetic" k1="1" result="belicht" />
+          <feComposite in="belicht" in2="glansBinnen" operator="arithmetic" k2="1" k3="0.7" />
+        </filter>
+        {/* De letters: scherper dan de klodder, anders vervagen ze op ware grootte */}
+        <filter id={`${id}l`} x="-15%" y="-15%" width="130%" height="130%" colorInterpolationFilters="sRGB">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="0.8" result="hoogte" />
+          <feDiffuseLighting in="hoogte" surfaceScale="2.2" diffuseConstant="1.2" lightingColor="#ffffff" result="licht">
+            <feDistantLight azimuth="225" elevation="45" />
+          </feDiffuseLighting>
+          <feSpecularLighting in="hoogte" surfaceScale="2.2" specularConstant="0.8" specularExponent="12" lightingColor="#ffffff" result="glans">
+            <feDistantLight azimuth="225" elevation="45" />
+          </feSpecularLighting>
+          <feComposite in="glans" in2="SourceAlpha" operator="in" result="glansBinnen" />
+          <feComposite in="SourceGraphic" in2="licht" operator="arithmetic" k1="1" result="belicht" />
+          <feComposite in="belicht" in2="glansBinnen" operator="arithmetic" k2="1" k3="0.8" result="letter" />
+          {/* Een schaduwrandje rechtsonder, waar de letter boven de was uitsteekt */}
+          <feOffset in="SourceAlpha" dx="0.7" dy="0.9" result="verschoven" />
+          <feFlood floodColor="#000" floodOpacity="0.35" />
+          <feComposite in2="verschoven" operator="in" result="schaduw" />
+          <feMerge><feMergeNode in="schaduw" /><feMergeNode in="letter" /></feMerge>
+        </filter>
+        {/* Ingedrukt: hetzelfde licht, maar van de andere kant, dus de rand
+            valt in de schaduw aan de lichte kant en vangt licht aan de andere */}
+        <filter id={`${id}i`} x="-15%" y="-15%" width="130%" height="130%" colorInterpolationFilters="sRGB">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="1.4" result="hoogte" />
+          <feDiffuseLighting in="hoogte" surfaceScale="2.4" diffuseConstant="1.1" lightingColor="#ffffff" result="licht">
+            <feDistantLight azimuth="45" elevation="55" />
+          </feDiffuseLighting>
+          <feComposite in="SourceGraphic" in2="licht" operator="arithmetic" k1="1" result="belicht" />
+          <feComposite in="belicht" in2="SourceAlpha" operator="in" />
+        </filter>
+      </defs>
+
+      {/* De klodder was */}
+      <g filter={`url(#${id}h)`}>
+        <circle cx="50" cy="50" r="44" fill={`url(#${id}w)`} filter={`url(#${id}r)`} />
+      </g>
+      {/* Waar de stempel stond */}
+      <circle cx="50" cy="50" r="31" fill={env.zegel} filter={`url(#${id}i)`} />
+      {/* De initialen, verhoogd in het midden */}
+      <text
+        x="50"
+        y="51"
+        textAnchor="middle"
+        dominantBaseline="central"
+        fill={env.zegel}
+        filter={`url(#${id}l)`}
         style={{
-          inset: -3,
-          borderRadius: "47% 53% 44% 56% / 55% 46% 54% 45%",
-          background: `radial-gradient(circle at 38% 32%, ${env.zegel}, ${env.zegelDonker} 80%)`,
-        }}
-      />
-      {/* De verhoogde ring: licht van linksboven */}
-      <span
-        className="absolute rounded-full"
-        style={{
-          inset: 3,
-          background: `radial-gradient(circle at 32% 28%, ${env.zegelLicht}, ${env.zegel} 45%, ${env.zegelDonker} 100%)`,
-          boxShadow: `inset 0 1.5px 1px ${env.zegelGlans}, inset 0 -2px 3px rgba(0,0,0,0.22)`,
-        }}
-      />
-      {/* Het ingedrukte midden, waar de stempel in de was stond */}
-      <span
-        className="absolute rounded-full flex items-center justify-center"
-        style={{
-          inset: 11,
-          background: `radial-gradient(circle at 60% 70%, ${env.zegelLicht}, ${env.zegel} 70%)`,
-          boxShadow: `inset 0 2px 3px rgba(0,0,0,0.3), 0 1px 0 ${env.zegelGlans}`,
-          color: env.zegelLetter,
-          fontFamily: lettertype,
-          fontSize: letters.length > 1 ? "1.3rem" : "1.5rem",
-          lineHeight: 1,
-          // Ingedrukt: een donker randje boven de letter, een lichtje eronder
-          textShadow: `0 1px 0 ${env.zegelGlans}, 0 -1px 0 rgba(0,0,0,0.22)`,
+          fontFamily: "var(--font-cormorant), Georgia, serif",
+          fontWeight: 600,
+          fontSize: letters.length > 1 ? 32 : 40,
+          letterSpacing: letters.length > 1 ? 0.5 : 0,
         }}
       >
-        {letters.length === 0 ? (
-          "♥"
-        ) : letters.length === 1 ? (
-          letters[0]
-        ) : (
-          <>
-            <span>{letters[0]}</span>
-            <span
-              aria-hidden="true"
-              style={{
-                width: 1,
-                height: "0.95em",
-                margin: "0 0.26em",
-                backgroundColor: "currentColor",
-                opacity: 0.6,
-                boxShadow: `1px 0 0 ${env.zegelGlans}`,
-              }}
-            />
-            <span>{letters[1]}</span>
-          </>
-        )}
-      </span>
-    </span>
+        {letters || "♥"}
+      </text>
+    </svg>
   )
 }
 
@@ -803,7 +837,7 @@ export default function CardReveal({
                       : {}),
                   }}
                 >
-                  <Zegel env={env} initialen={initials} lettertype={sc.fontInitials ?? sc.fontPageTitles} />
+                  <Zegel env={env} initialen={initials} />
                 </span>
                 {!klassiekeAnimatie && !zegelHeel &&
                   ZEGEL_BREUK.map((vorm, helft) => (
@@ -823,7 +857,7 @@ export default function CardReveal({
                       }}
                     >
                       <span className="absolute inset-0" style={{ clipPath: vorm }}>
-                        <Zegel env={env} initialen={initials} lettertype={sc.fontInitials ?? sc.fontPageTitles} />
+                        <Zegel env={env} initialen={initials} />
                       </span>
                     </span>
                   ))}
