@@ -15,7 +15,8 @@
 import type { CSSProperties, ReactNode } from "react"
 import type { CardDisplay, NieuwOntwerp } from "@/lib/cards"
 import type { SC } from "@/lib/event-styles"
-import { illustratie, KADERS, type VoorkantLetters } from "@/lib/kaart-ontwerpen"
+import { illustratie, KADERS, ONTWERP_LETTERS, type KaartLetter, type VoorkantLetters } from "@/lib/kaart-ontwerpen"
+import { tekstBreedte } from "@/lib/letterbreedtes"
 import { initialenLijst } from "@/lib/initialen"
 
 /** Een flexbox, want satori wil dat bij elke div met meer dan één kind. */
@@ -24,13 +25,24 @@ function D({ style, children }: { style?: CSSProperties; children?: ReactNode })
 }
 
 /** Tekst met enters erin: elke regel een eigen blok. */
-function Regels({ tekst, style, uitlijnen = "center" }: { tekst: string; style?: CSSProperties; uitlijnen?: "center" | "flex-start" }) {
+function Regels({
+  tekst,
+  style,
+  uitlijnen = "center",
+  heel = false,
+}: {
+  tekst: string
+  style?: CSSProperties
+  uitlijnen?: "center" | "flex-start"
+  /** Elke regel blijft heel; alleen als vaststaat dat hij past */
+  heel?: boolean
+}) {
   const regels = tekst.split(/\r?\n/).map((r) => r.trim())
   return (
     <D style={{ flexDirection: "column", alignItems: uitlijnen, ...style }}>
       {regels.map((r, i) =>
         r ? (
-          <div key={i} style={{ display: "flex", textAlign: uitlijnen === "center" ? "center" : "left", justifyContent: uitlijnen }}>
+          <div key={i} style={{ display: "flex", textAlign: uitlijnen === "center" ? "center" : "left", justifyContent: uitlijnen, ...(heel ? { whiteSpace: "nowrap" } : {}) }}>
             {r}
           </div>
         ) : (
@@ -49,6 +61,70 @@ function namenRegels(namen: string): string {
   if (/\n/.test(namen)) return namen
   const m = namen.match(/^(.+?)\s+(&|\+|\||\/|en|and|et|und|y|e)\s+(.+)$/i)
   return m ? `${m[1]}\n${m[2]} ${m[3]}` : namen
+}
+
+// Hoeveel ruimer we de namen rekenen dan de tabel zegt. Bij twijfel liever de
+// nette breuk dan namen die buiten het kader lopen.
+const NAMEN_MARGE = 1.06
+// Hoeveel kleiner de namen mogen worden om op één regel te passen
+const NAMEN_KLEINSTE = 0.8
+
+/**
+ * Hoe de namen op de kaart komen. Eerst liepen ze gewoon terug als de regel
+ * vol was, en dan bleef de & achter de eerste naam hangen: "Michiel &" en
+ * daaronder "Lindsey" (Michiel, 26 september 2026). Nu:
+ * 1. past het op één regel, dan één regel;
+ * 2. past het met een iets kleinere letter (tot een vijfde kleiner), dan dat;
+ * 3. anders een nette breuk vóór het teken: "Michiel" en "& Lindsey".
+ * Een eigen enter wint altijd. Uitgerekend met de letterbreedtes in plaats
+ * van gemeten, zodat de afbeelding van de server hetzelfde uitkomt.
+ */
+function namenOpmaak(
+  namen: string,
+  letter: KaartLetter,
+  grootte: number,
+  ruimte: number,
+  opties: { letterafstand?: number; hoofdletters?: boolean } = {}
+): { tekst: string; grootte: number; heel: boolean } {
+  const meet = (tekst: string, g: number) =>
+    tekstBreedte(opties.hoofdletters ? tekst.toUpperCase() : tekst, letter, g, opties.letterafstand ?? 0) * NAMEN_MARGE
+  const afronden = (g: number) => Math.floor(g * 10) / 10
+  if (/\n/.test(namen)) return { tekst: namen, grootte, heel: false }
+  const enkel = namen.replace(/\s+/g, " ").trim()
+  const breed = meet(enkel, grootte)
+  if (breed <= ruimte) return { tekst: enkel, grootte, heel: true }
+  if (breed * NAMEN_KLEINSTE <= ruimte) return { tekst: enkel, grootte: afronden((grootte * ruimte) / breed), heel: true }
+  // Te lang voor één regel: breken vóór het teken, en is een van de twee
+  // regels dan nog te breed, die regel passend maken
+  const regels = namenRegels(enkel).split("\n")
+  const breedste = Math.max(...regels.map((r) => meet(r, grootte)))
+  if (breedste <= ruimte) return { tekst: regels.join("\n"), grootte, heel: true }
+  const schaal = ruimte / breedste
+  if (schaal >= 0.7) return { tekst: regels.join("\n"), grootte: afronden(grootte * schaal), heel: true }
+  // Eén heel lange naam: kleiner, en verder mag hij teruglopen
+  return { tekst: regels.join("\n"), grootte: afronden(grootte * 0.7), heel: false }
+}
+
+/** De namen, passend gemaakt voor de ruimte die het ontwerp ervoor heeft (in pixels). */
+function Namen({
+  namen,
+  letter,
+  grootte,
+  ruimte,
+  style,
+  letterafstand,
+  hoofdletters,
+}: {
+  namen: string
+  letter: KaartLetter
+  grootte: number
+  ruimte: number
+  style: CSSProperties
+  letterafstand?: number
+  hoofdletters?: boolean
+}) {
+  const o = namenOpmaak(namen, letter, grootte, ruimte, { letterafstand, hoofdletters })
+  return <Regels tekst={o.tekst} heel={o.heel} style={{ ...style, fontSize: o.grootte }} />
 }
 
 /** "M | L", voor in de boog als er geen foto is (Michiel: een streep, geen &). */
@@ -277,6 +353,8 @@ export default function KaartVoorkant({
   const accent = sc.accent
   const label = sc.labelColor
   const lijn = Math.max(1, Math.round(s))
+  // De letter van de namen in dit ontwerp, voor het passend maken
+  const namenLetter = ONTWERP_LETTERS[ontwerp].namen
 
   const basis: CSSProperties = {
     position: "relative",
@@ -442,7 +520,7 @@ export default function KaartVoorkant({
           <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(10), letterSpacing: "0.34em", textTransform: "uppercase", color: wit, opacity: 0.9 }}>
             {d.heading}
           </div>
-          <Regels tekst={d.names} style={{ fontFamily: letters.namen, fontSize: px(48), lineHeight: 1.12, color: wit }} />
+          <Namen letter={namenLetter} namen={d.names} grootte={px(48)} ruimte={px(336)} style={{ fontFamily: letters.namen, lineHeight: 1.12, color: wit }} />
           <div style={{ display: "flex", width: px(38), height: lijn, backgroundColor: wit, opacity: 0.6, marginTop: px(2), marginBottom: px(2) }} />
           {d.dateText && (
             <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(12.5), letterSpacing: "0.24em", textTransform: "uppercase", color: wit }}>
@@ -517,7 +595,7 @@ export default function KaartVoorkant({
           <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(11), letterSpacing: "0.3em", textTransform: "uppercase", color: label }}>
             {d.heading}
           </div>
-          <Regels tekst={d.names} style={{ fontFamily: letters.namen, fontSize: px(31), lineHeight: 1.18, color: kop }} />
+          <Namen letter={namenLetter} namen={d.names} grootte={px(31)} ruimte={px(340)} style={{ fontFamily: letters.namen, lineHeight: 1.18, color: kop }} />
           {d.dateText && (
             <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(15), letterSpacing: "0.14em", textTransform: "uppercase", color: accent }}>
               {d.dateText}
@@ -640,7 +718,7 @@ export default function KaartVoorkant({
             <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(9.5), letterSpacing: "0.32em", textTransform: "uppercase", color: kader.kleur.accent }}>
               {d.heading}
             </div>
-            <Regels tekst={d.names} style={{ fontFamily: letters.namen, fontSize: px(34), lineHeight: 1.1, color: kader.kleur.namen }} />
+            <Namen letter={namenLetter} namen={d.names} grootte={px(34)} ruimte={px(400 * kader.ruimte[0])} style={{ fontFamily: letters.namen, lineHeight: 1.1, color: kader.kleur.namen }} />
             {datum && (
               <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(11), letterSpacing: "0.2em", color: kader.kleur.accent }}>{datum}</div>
             )}
@@ -734,7 +812,7 @@ export default function KaartVoorkant({
           <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(11), letterSpacing: "0.32em", textTransform: "uppercase", color: goud }}>
             {d.heading}
           </div>
-          <Regels tekst={d.names} style={{ fontFamily: letters.namen, fontSize: px(40), lineHeight: 1.15, color: groen }} />
+          <Namen letter={namenLetter} namen={d.names} grootte={px(40)} ruimte={px(400 * 0.82 - 80)} style={{ fontFamily: letters.namen, lineHeight: 1.15, color: groen }} />
           {d.dateText && (
             <div style={{ display: "flex", fontFamily: letters.kop, fontSize: px(12), letterSpacing: "0.22em", textTransform: "uppercase", color: goud, textAlign: "center" }}>
               {d.dateText}
@@ -783,9 +861,12 @@ export default function KaartVoorkant({
               {datum}
             </div>
           )}
-          <Regels
-            tekst={d.names}
-            style={{ fontFamily: letters.tekst, fontSize: px(14), letterSpacing: "0.16em", color: kop, opacity: 0.8, marginTop: px(10) }}
+          <Namen namen={d.names}
+            grootte={px(14)}
+            ruimte={px(334 - 48)}
+            letter={ONTWERP_LETTERS.titel.tekst}
+            letterafstand={0.16}
+            style={{ fontFamily: letters.tekst, letterSpacing: "0.16em", color: kop, opacity: 0.8, marginTop: px(10) }}
           />
           {d.location && (
             <Regels
@@ -831,7 +912,7 @@ export default function KaartVoorkant({
             <div style={{ display: "flex", fontFamily: letters.namen, fontSize: px(54), lineHeight: 1, color: kop }}>{delen[1]}</div>
           </D>
         ) : (
-          <Regels tekst={d.names} style={{ fontFamily: letters.namen, fontSize: px(46), lineHeight: 1.05, color: kop, marginTop: px(14) }} />
+          <Namen letter={namenLetter} namen={d.names} grootte={px(46)} ruimte={px(340)} style={{ fontFamily: letters.namen, lineHeight: 1.05, color: kop, marginTop: px(14) }} />
         )}
         {datum && (
           <div style={{ display: "flex", fontFamily: letters.namen, fontSize: px(20), letterSpacing: "0.04em", color: kop, marginTop: px(22) }}>
@@ -900,7 +981,7 @@ export default function KaartVoorkant({
           </D>
         </D>
         <D style={{ flexDirection: "column", alignItems: "center", gap: px(6) }}>
-          <Regels tekst={d.names} style={{ fontFamily: letters.namen, fontSize: px(46), lineHeight: 1, color: kop }} />
+          <Namen letter={namenLetter} namen={d.names} grootte={px(46)} ruimte={px(344)} style={{ fontFamily: letters.namen, lineHeight: 1, color: kop }} />
           {datum && (
             <div style={{ display: "flex", fontFamily: letters.tekst, fontSize: px(12), letterSpacing: "0.22em", color: kop, opacity: 0.85 }}>
               {datum}
@@ -956,9 +1037,14 @@ export default function KaartVoorkant({
               {datum}
             </div>
           )}
-          <Regels
-            tekst={d.names.replace(/\s*\n\s*/g, " ")}
-            style={{ fontFamily: letters.tekst, fontSize: px(11), letterSpacing: "0.3em", textTransform: "uppercase", color: wit, opacity: 0.9, marginTop: px(4) }}
+          <Namen
+            namen={d.names.replace(/\s*\n\s*/g, " ")}
+            grootte={px(11)}
+            ruimte={px(400 - 52)}
+            letter={ONTWERP_LETTERS.fotoschrift.tekst}
+            letterafstand={0.3}
+            hoofdletters
+            style={{ fontFamily: letters.tekst, letterSpacing: "0.3em", textTransform: "uppercase", color: wit, opacity: 0.9, marginTop: px(4) }}
           />
         </D>
       </D>
@@ -1006,7 +1092,7 @@ export default function KaartVoorkant({
           </div>
         )
       )}
-      <Regels tekst={d.names} style={{ fontFamily: letters.namen, fontSize: px(cijfers ? 36 : 52), lineHeight: 1.1, color: accent }} />
+      <Namen letter={namenLetter} namen={d.names} grootte={px(cijfers ? 36 : 52)} ruimte={px(400 - 72)} style={{ fontFamily: letters.namen, lineHeight: 1.1, color: accent }} />
       {d.location && (
         <Regels
           tekst={d.location}

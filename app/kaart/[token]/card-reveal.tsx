@@ -109,36 +109,36 @@ function Zegel({ env, initialen }: { env: EnvelopStijl; initialen: string }) {
         {/* Uitgelopen was: een cirkel met een golvende, onregelmatige rand */}
         <filter id={`${id}r`} x="-15%" y="-15%" width="130%" height="130%">
           <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed="4" />
-          <feDisplacementMap in="SourceGraphic" scale="8" xChannelSelector="R" yChannelSelector="G" />
+          <feDisplacementMap in="SourceGraphic" scale="5" xChannelSelector="R" yChannelSelector="G" />
         </filter>
         {/* Verhoogd: licht van linksboven, glans op de randen */}
         <filter id={`${id}h`} x="-15%" y="-15%" width="130%" height="130%" colorInterpolationFilters="sRGB">
           <feGaussianBlur in="SourceAlpha" stdDeviation="1.8" result="hoogte" />
-          <feDiffuseLighting in="hoogte" surfaceScale="3" diffuseConstant="1.15" lightingColor="#ffffff" result="licht">
-            <feDistantLight azimuth="225" elevation="52" />
+          <feDiffuseLighting in="hoogte" surfaceScale="1.3" diffuseConstant="1.08" lightingColor="#ffffff" result="licht">
+            <feDistantLight azimuth="225" elevation="62" />
           </feDiffuseLighting>
-          <feSpecularLighting in="hoogte" surfaceScale="3" specularConstant="0.55" specularExponent="16" lightingColor="#ffffff" result="glans">
-            <feDistantLight azimuth="225" elevation="48" />
+          <feSpecularLighting in="hoogte" surfaceScale="1.3" specularConstant="0.22" specularExponent="18" lightingColor="#ffffff" result="glans">
+            <feDistantLight azimuth="225" elevation="55" />
           </feSpecularLighting>
           <feComposite in="glans" in2="SourceAlpha" operator="in" result="glansBinnen" />
           <feComposite in="SourceGraphic" in2="licht" operator="arithmetic" k1="1" result="belicht" />
-          <feComposite in="belicht" in2="glansBinnen" operator="arithmetic" k2="1" k3="0.7" />
+          <feComposite in="belicht" in2="glansBinnen" operator="arithmetic" k2="1" k3="0.5" />
         </filter>
         {/* De letters: scherper dan de klodder, anders vervagen ze op ware grootte */}
         <filter id={`${id}l`} x="-15%" y="-15%" width="130%" height="130%" colorInterpolationFilters="sRGB">
           <feGaussianBlur in="SourceAlpha" stdDeviation="0.8" result="hoogte" />
-          <feDiffuseLighting in="hoogte" surfaceScale="2.2" diffuseConstant="1.2" lightingColor="#ffffff" result="licht">
-            <feDistantLight azimuth="225" elevation="45" />
+          <feDiffuseLighting in="hoogte" surfaceScale="1.2" diffuseConstant="1.12" lightingColor="#ffffff" result="licht">
+            <feDistantLight azimuth="225" elevation="55" />
           </feDiffuseLighting>
-          <feSpecularLighting in="hoogte" surfaceScale="2.2" specularConstant="0.8" specularExponent="12" lightingColor="#ffffff" result="glans">
-            <feDistantLight azimuth="225" elevation="45" />
+          <feSpecularLighting in="hoogte" surfaceScale="1.2" specularConstant="0.3" specularExponent="14" lightingColor="#ffffff" result="glans">
+            <feDistantLight azimuth="225" elevation="55" />
           </feSpecularLighting>
           <feComposite in="glans" in2="SourceAlpha" operator="in" result="glansBinnen" />
           <feComposite in="SourceGraphic" in2="licht" operator="arithmetic" k1="1" result="belicht" />
           <feComposite in="belicht" in2="glansBinnen" operator="arithmetic" k2="1" k3="0.8" result="letter" />
           {/* Een schaduwrandje rechtsonder, waar de letter boven de was uitsteekt */}
-          <feOffset in="SourceAlpha" dx="0.7" dy="0.9" result="verschoven" />
-          <feFlood floodColor="#000" floodOpacity="0.35" />
+          <feOffset in="SourceAlpha" dx="0.4" dy="0.5" result="verschoven" />
+          <feFlood floodColor="#000" floodOpacity="0.14" />
           <feComposite in2="verschoven" operator="in" result="schaduw" />
           <feMerge><feMergeNode in="schaduw" /><feMergeNode in="letter" /></feMerge>
         </filter>
@@ -146,8 +146,8 @@ function Zegel({ env, initialen }: { env: EnvelopStijl; initialen: string }) {
             valt in de schaduw aan de lichte kant en vangt licht aan de andere */}
         <filter id={`${id}i`} x="-15%" y="-15%" width="130%" height="130%" colorInterpolationFilters="sRGB">
           <feGaussianBlur in="SourceAlpha" stdDeviation="1.4" result="hoogte" />
-          <feDiffuseLighting in="hoogte" surfaceScale="2.4" diffuseConstant="1.1" lightingColor="#ffffff" result="licht">
-            <feDistantLight azimuth="45" elevation="55" />
+          <feDiffuseLighting in="hoogte" surfaceScale="1.1" diffuseConstant="1.06" lightingColor="#ffffff" result="licht">
+            <feDistantLight azimuth="45" elevation="64" />
           </feDiffuseLighting>
           <feComposite in="SourceGraphic" in2="licht" operator="arithmetic" k1="1" result="belicht" />
           <feComposite in="belicht" in2="SourceAlpha" operator="in" />
@@ -830,7 +830,7 @@ export default function CardReveal({
                     height: ZEGEL_MAAT,
                     marginTop: -ZEGEL_MAAT / 2,
                     marginLeft: -ZEGEL_MAAT / 2,
-                    filter: "drop-shadow(0 3px 5px rgba(0,0,0,0.28))",
+                    filter: "drop-shadow(0 1px 1.5px rgba(0,0,0,0.16))",
                     opacity: zegelHeel ? 1 : 0,
                     ...(klassiekeAnimatie
                       ? { transform: zegelHeel ? "none" : "scale(0.6)", transition: "opacity 0.3s ease, transform 0.3s ease" }
@@ -850,7 +850,7 @@ export default function CardReveal({
                         height: ZEGEL_MAAT,
                         marginTop: -ZEGEL_MAAT / 2,
                         marginLeft: -ZEGEL_MAAT / 2,
-                        filter: "drop-shadow(0 3px 5px rgba(0,0,0,0.28))",
+                        filter: "drop-shadow(0 1px 1.5px rgba(0,0,0,0.16))",
                         // Het kraken en vallen zit in de keyframes, zodat het
                         // twee bewegingen zijn in plaats van één sprong
                         animation: `${helft === 0 ? "zegel-links" : "zegel-rechts"} 0.95s ease-in both`,
