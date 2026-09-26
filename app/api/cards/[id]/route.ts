@@ -50,6 +50,7 @@ function sanitizeContent(raw: unknown): CardContent {
       typeof input.ontwerpVerhouding === "number" && input.ontwerpVerhouding >= 0.4 && input.ontwerpVerhouding <= 2.5
         ? Math.round(input.ontwerpVerhouding * 1000) / 1000
         : undefined,
+    namen: input.namen === "naast" || input.namen === "onder" ? input.namen : undefined,
     taal: cardTaal(input.taal),
     aanmelden: aanmeldStand(input.aanmelden),
   }
@@ -107,6 +108,12 @@ export async function PATCH(
 
   if (error) {
     console.error("[cards] update:", error.message)
+    // De database kent dit ontwerp nog niet: de migratie met de nieuwe
+    // ontwerpen is nog niet gedraaid. Zonder dit zag je alleen "Opslaan
+    // mislukt" (26 september 2026).
+    if (error.code === "23514" && /template/.test(error.message)) {
+      return Response.json({ error: "Dit ontwerp kan nog niet bewaard worden. Kies even een ander ontwerp, we lossen het op." }, { status: 500 })
+    }
     return Response.json({ error: "Opslaan mislukt" }, { status: 500 })
   }
 

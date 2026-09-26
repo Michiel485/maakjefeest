@@ -38,6 +38,7 @@ import { kaartKleuren } from "@/lib/kaart-paletten"
 import { ONDER_DE_KAART, ONTWERP_VERHOUDING } from "@/lib/kaart-ontwerpen"
 import { KLEUR } from "@/lib/ontwerp"
 import { initialenLijst } from "@/lib/initialen"
+import { namenPlek, namenStand, namenStandVanzelf, type NamenStand } from "@/lib/namen-opmaak"
 import {
   AANMELD_LABEL,
   AANMELD_UITLEG,
@@ -223,6 +224,8 @@ interface KaartOntwerp {
   ontwerpVerhouding: number | null
   template: CardTemplate
   names: string
+  /** Naast elkaar of onder elkaar; leeg is de kaart kiest zelf */
+  namen: NamenStand | ""
   datum: string
   // De locatie van de bruiloft. Hoort bij het event, niet bij de kaart.
   location: string
@@ -251,6 +254,7 @@ const LEEG: KaartOntwerp = {
   ontwerpVerhouding: null,
   template: "klassiek",
   names: "",
+  namen: "",
   datum: "",
   location: "",
   message: "",
@@ -661,6 +665,7 @@ export default function KaartMakenPage() {
               ontwerpUrl: kaart?.content.ontwerpUrl ?? null,
               ontwerpDataUrl: null,
               ontwerpVerhouding: kaart?.content.ontwerpVerhouding ?? null,
+              namen: namenStand(kaart?.content.namen) ?? "",
               template: kaart?.template ?? "klassiek",
               names: kaart?.content.names ?? (event.frame_names as string) ?? (event.title as string) ?? "",
               datum: (event.datum as string) ?? "",
@@ -774,6 +779,7 @@ export default function KaartMakenPage() {
     stijl: ontwerp.style,
     ontwerpUrl: ontwerp.ontwerpUrl ?? ontwerp.ontwerpDataUrl ?? undefined,
     ontwerpVerhouding: ontwerp.ontwerpVerhouding ?? undefined,
+    namen: ontwerp.namen || undefined,
     taal: ontwerp.taal,
     aanmelden: ontwerp.aanmelden,
   }
@@ -791,6 +797,10 @@ export default function KaartMakenPage() {
     locatie: ontwerp.location || eventLocatie || null,
     hero_image_url: null,
   })
+  // De keuze naast of onder elkaar, alleen bij ontwerpen die hem kennen. Wat
+  // er geselecteerd staat zonder keuze: wat de kaart zelf doet.
+  const namenKeuzePlek = display.design === "eigen" ? null : namenPlek(display.design, { breedte: 400, datumIso: display.datumIso })
+  const namenGekozen: NamenStand | null = namenKeuzePlek ? ontwerp.namen || namenStandVanzelf(display.names, namenKeuzePlek) : null
   // Voor op het zegel
   const initialen = initialenLijst(ontwerp.names).join("") || "♥"
 
@@ -1071,6 +1081,7 @@ export default function KaartMakenPage() {
       ontwerpUrl: k.content.ontwerpUrl ?? null,
       ontwerpDataUrl: null,
       ontwerpVerhouding: k.content.ontwerpVerhouding ?? null,
+      namen: namenStand(k.content.namen) ?? "",
       location: k.content.location ?? o.location,
       message: k.content.message ?? "",
       guestType: k.content.guestType ?? "",
@@ -1358,6 +1369,7 @@ export default function KaartMakenPage() {
           kleur: ontwerp.kleur || undefined, datum: ontwerp.datum || undefined,
           ontwerpUrl: ontwerp.ontwerpUrl ?? ontwerp.ontwerpDataUrl ?? undefined,
           ontwerpVerhouding: ontwerp.ontwerpVerhouding ?? undefined,
+          namen: ontwerp.namen || undefined,
         }),
       })
       if (!r.ok) throw new Error("Voorbeeld maken mislukte, probeer het zo opnieuw.")
@@ -1907,6 +1919,39 @@ export default function KaartMakenPage() {
                 maxLength={80}
               />
             </label>
+            {namenKeuzePlek && (
+              /* Naast elkaar of onder elkaar (Michiel, 26 september 2026).
+                 Geselecteerd staat wat de kaart zelf kiest, tot je iets
+                 aanklikt. Niet bij ontwerpen die de namen bewust onder
+                 elkaar zetten. */
+              <div className="flex items-center justify-between gap-3 -mt-1">
+                <span className="text-xs" style={{ color: SUBTLE }}>Namen</span>
+                <div className="inline-flex rounded-xl p-0.5" style={{ backgroundColor: GOLD_BG, border: `1px solid ${GOLD_LIGHT}` }} role="radiogroup" aria-label="Namen naast of onder elkaar">
+                  {(["naast", "onder"] as const).map((s) => {
+                    const aan = namenGekozen === s
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        role="radio"
+                        aria-checked={aan}
+                        onClick={() => update({ namen: s })}
+                        className="text-xs font-semibold px-3 py-1.5 rounded-[10px]"
+                        style={{
+                          backgroundColor: aan ? "#fff" : "transparent",
+                          color: aan ? CHARCOAL : SUBTLE,
+                          boxShadow: aan ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                          border: 0,
+                          cursor: "pointer",
+                        }}
+                      >
+                        {s === "naast" ? "Naast elkaar" : "Onder elkaar"}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold flex items-center justify-between gap-2" style={{ color: CHARCOAL }}>Trouwdatum <Plek waar={tekstPlek("datum")} /></span>
               <input id="kaart-datum" type="date" className={inputCls} style={inputStyle} value={ontwerp.datum} onChange={(e) => update({ datum: e.target.value })} />

@@ -159,10 +159,13 @@ export async function renderCardImage(
   const namenRuimte = kaartB - 6 - 112 * s - (ds.dubbeleRand ? 44 * s + 4 : 0)
   const namen = namenOpmaak(
     display.names,
-    { google: ds.namenFontImage.family, gewicht: ds.namenFontImage.weight },
-    94 * s * ds.namenSchaal,
-    namenRuimte,
-    { letterafstand: ds.namenSpatiering ? parseFloat(ds.namenSpatiering) : 0 }
+    {
+      letter: { google: ds.namenFontImage.family, gewicht: ds.namenFontImage.weight },
+      grootte: 94 * s * ds.namenSchaal,
+      ruimte: namenRuimte,
+      letterafstand: ds.namenSpatiering ? parseFloat(ds.namenSpatiering) : 0,
+    },
+    display.namenStand
   )
 
   // Gedeelde kaartinhoud; witruimte valt bínnen de kaartrand

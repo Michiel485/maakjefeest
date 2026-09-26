@@ -7,7 +7,7 @@
 
 import { CARD_DESIGN_STYLE, type CardDisplay, type KlassiekOntwerp } from "@/lib/cards"
 import type { SC } from "@/lib/event-styles"
-import { namenOpmaak } from "@/lib/namen-opmaak"
+import { namenOpmaak, namenPlek } from "@/lib/namen-opmaak"
 
 export default function KlassiekeVoorkant({
   display,
@@ -32,18 +32,11 @@ export default function KlassiekeVoorkant({
   vullen?: number
 }) {
   const ds = CARD_DESIGN_STYLE[display.design as KlassiekOntwerp] ?? CARD_DESIGN_STYLE.klassiek
-  // De ruimte voor de namen: de kaart min de rand, de binnenrand (px-8) en
-  // bij Sierlijk het tweede lijntje
-  const namenGrootte = 2.4 * ds.namenSchaal * 16
-  const namen = breedte
-    ? namenOpmaak(
-        display.names,
-        { google: ds.namenFontImage.family, gewicht: ds.namenFontImage.weight },
-        namenGrootte,
-        breedte - 4 - 64 - (ds.dubbeleRand ? 22 : 0),
-        { letterafstand: ds.namenSpatiering ? parseFloat(ds.namenSpatiering) : 0 }
-      )
-    : { tekst: display.names, grootte: namenGrootte, heel: false }
+  // De namen passend voor de breedte van de kaart (lib/namen-opmaak.ts)
+  const plek = breedte ? namenPlek(display.design, { breedte }) : null
+  const namen = plek
+    ? namenOpmaak(display.names, plek, display.namenStand)
+    : { tekst: display.names, grootte: 2.4 * ds.namenSchaal * 16, heel: false }
   return (
     <div
       className="overflow-hidden"

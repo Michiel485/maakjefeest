@@ -99,6 +99,11 @@ export interface CardContent {
   ontwerpUrl?: string
   ontwerpVerhouding?: number
   /**
+   * De namen naast elkaar of onder elkaar, zoals gekozen in de bouwer. Leeg:
+   * de kaart kiest zelf (lib/namen-opmaak.ts).
+   */
+  namen?: "naast" | "onder"
+  /**
    * De stijl van deze kaart (een van de stijlen uit lib/event-styles.ts), los
    * van die van de website (Michiel, 25 september 2026). Leeg bij oudere
    * kaarten: die volgen de stijl van de bruiloft.
@@ -565,6 +570,8 @@ export interface CardDisplay extends CardVasteTeksten {
   datumIso?: string | null
   ontwerpUrl?: string | null
   ontwerpVerhouding?: number | null
+  /** Naast elkaar of onder elkaar; leeg is de kaart kiest zelf */
+  namenStand?: "naast" | "onder" | null
   /**
    * Heeft het bruidspaar de boodschap zelf geschreven? Een strak ontwerp zet
    * alleen een eigen boodschap onder de kaart, niet onze standaardtekst.
@@ -621,6 +628,7 @@ export function buildCardDisplay(
     datumIso: content.dateText?.trim() ? null : event.datum || null,
     ontwerpUrl: content.ontwerpUrl || null,
     ontwerpVerhouding: content.ontwerpVerhouding || null,
+    namenStand: content.namen === "naast" || content.namen === "onder" ? content.namen : null,
     eigenBericht: !!content.message?.trim(),
     ...displayTeksten(taal),
   }

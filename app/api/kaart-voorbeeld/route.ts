@@ -61,6 +61,7 @@ export async function POST(request: Request) {
         ? body.ontwerpUrl
         : undefined,
     ontwerpVerhouding: typeof body.ontwerpVerhouding === "number" && body.ontwerpVerhouding >= 0.4 && body.ontwerpVerhouding <= 2.5 ? body.ontwerpVerhouding : undefined,
+    namen: body.namen === "naast" || body.namen === "onder" ? body.namen : undefined,
   }
 
   // Met een echte datum maken we de tekst zelf, in de taal van de kaart, en
