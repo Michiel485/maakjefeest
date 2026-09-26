@@ -16,6 +16,7 @@ import { eventSiteUrl } from "@/lib/site-url"
 import { planAllows, PLANS, normalizePlan, formatEur } from "@/lib/plans"
 import { aanmeldStand } from "@/lib/gasten"
 import CardReveal from "./card-reveal"
+import { initialenLijst } from "@/lib/initialen"
 import KaartKijkTeller from "@/components/KaartKijkTeller"
 
 // Nog niet betaald en niet de eigenaar: de kaartlink is het product, dus die
@@ -77,15 +78,15 @@ export function KaartWeergave({
   const rsvpUrl = siteLive && planAllows(event.plan, "rsvp")
     ? heeftSite ? `${eventSiteUrl(event.slug)}/RSVP` : `${eventSiteUrl(event.slug)}#rsvp`
     : null
-  // Scheidingstekens (zoals de | uit "M|L" op de site) horen niet op het zegel
-  const initials =
-    (event.initials && event.initials.replace(/[|/\\\-·.]/g, "").trim()) ||
-    display.names
-      .split(/\s*&\s*|\s+en\s+|\r?\n/i)
-      .map((n) => n.trim().charAt(0).toUpperCase())
-      .filter(Boolean)
-      .slice(0, 2)
-      .join("")
+  // Het zegel volgt de namen op de kaart. De initialen van de website pas
+  // als de namen er geen twee opleveren: daar stond soms nog een losse M in,
+  // bewaard door een kaart met "Michiel | Lindsey" toen de | nog niet als
+  // scheiding telde. Scheidingstekens (zoals de | uit "M|L") horen niet op
+  // het zegel.
+  const uitNamen = initialenLijst(display.names)
+  const initials = uitNamen.length >= 2
+    ? uitNamen.join("")
+    : (event.initials && event.initials.replace(/[|/\\\-·.\s]/g, "").trim()) || uitNamen.join("")
 
   return (
     <>

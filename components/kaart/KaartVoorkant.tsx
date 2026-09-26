@@ -16,6 +16,7 @@ import type { CSSProperties, ReactNode } from "react"
 import type { CardDisplay, NieuwOntwerp } from "@/lib/cards"
 import type { SC } from "@/lib/event-styles"
 import { illustratie, KADERS, type VoorkantLetters } from "@/lib/kaart-ontwerpen"
+import { initialenLijst } from "@/lib/initialen"
 
 /** Een flexbox, want satori wil dat bij elke div met meer dan één kind. */
 function D({ style, children }: { style?: CSSProperties; children?: ReactNode }) {
@@ -52,19 +53,7 @@ function namenRegels(namen: string): string {
 
 /** "M | L", voor in de boog als er geen foto is (Michiel: een streep, geen &). */
 function initialenVan(namen: string): string {
-  // Scheiden op alles waarmee een bruidspaar twee namen kan scheiden: &, +,
-  // |, /, een komma, een enter of een woord als "en". Eerst ontbraken | en /,
-  // en dan stond er bij "Michiel | Lindsey" alleen een M (Michiel, 25
-  // september 2026).
-  const delen = namen
-    .split(/\s*(?:&|\+|\||\/|,|·|\n|\ben\b|\band\b|\bet\b|\bund\b|\by\b|\be\b)\s*/i)
-    .map((d) => d.trim())
-    .filter(Boolean)
-  if (delen.length >= 2) return `${delen[0][0]} | ${delen[delen.length - 1][0]}`.toUpperCase()
-  // Twee woorden zonder iets ertussen: "Michiel Lindsey"
-  const woorden = (delen[0] ?? "").split(/\s+/).filter(Boolean)
-  if (woorden.length >= 2) return `${woorden[0][0]} | ${woorden[woorden.length - 1][0]}`.toUpperCase()
-  return (woorden[0]?.[0] ?? "♥").toUpperCase()
+  return initialenLijst(namen).join(" | ") || "♥"
 }
 
 /** 2027-08-15 wordt ["15", "08", "27"] */

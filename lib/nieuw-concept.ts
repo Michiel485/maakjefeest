@@ -6,6 +6,8 @@
 // voorpagina omdat de kop, het kader en de initialen allemaal hetzelfde
 // invulden. Eén beginpunt voor beide wegen voorkomt dat.
 
+import { initialenLijst } from "./initialen"
+
 export const LS_WEBSITE_CONCEPT = "sayingyes_draft"
 export const LS_WEBSITE_INHOUD = "sayingyes_content"
 
@@ -46,10 +48,7 @@ export const DEFAULT_PRAKTISCH = {
 
 /** "Michiel & Jimi" wordt "M|J". Het streepje is de scheiding in het kader. */
 export function initialenMetStreep(namen: string): string {
-  const delen = namen
-    .split(/\s*&\s*|\s+en\s+|\r?\n/i)
-    .map((n) => n.trim()[0]?.toUpperCase())
-    .filter(Boolean)
+  const delen = initialenLijst(namen)
   return delen.length >= 2 ? `${delen[0]}|${delen[1]}` : delen[0] ?? "J|C"
 }
 

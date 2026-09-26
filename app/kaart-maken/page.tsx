@@ -37,6 +37,7 @@ import Voorkant from "@/components/kaart/Voorkant"
 import { kaartKleuren } from "@/lib/kaart-paletten"
 import { ONDER_DE_KAART, ONTWERP_VERHOUDING } from "@/lib/kaart-ontwerpen"
 import { KLEUR } from "@/lib/ontwerp"
+import { initialenLijst } from "@/lib/initialen"
 import {
   AANMELD_LABEL,
   AANMELD_UITLEG,
@@ -306,16 +307,6 @@ function IconKnop({
       {bezig ? <Draaier maat={16} /> : children}
     </button>
   )
-}
-
-function initialenVan(names: string): string {
-  return names
-    // Ook splitsen op een enter: die mag in het namenveld staan
-    .split(/\s*&\s*|\s+en\s+|\r?\n/i)
-    .map((n) => n.trim().charAt(0).toUpperCase())
-    .filter(Boolean)
-    .slice(0, 2)
-    .join("")
 }
 
 const inputCls = "w-full rounded-xl border bg-white px-3 py-2.5 text-sm placeholder-gray-400 focus:outline-none"
@@ -800,7 +791,8 @@ export default function KaartMakenPage() {
     locatie: ontwerp.location || eventLocatie || null,
     hero_image_url: null,
   })
-  const initialen = initialenVan(ontwerp.names) || "♥"
+  // Voor op het zegel
+  const initialen = initialenLijst(ontwerp.names).join("") || "♥"
 
   // ── Opslaan op de server (event + kaart) ──────────────────────────────────
   const slaOp = useCallback(async (): Promise<{ eventId: string; cardId: string }> => {
@@ -841,7 +833,8 @@ export default function KaartMakenPage() {
       // kiest de website zijn eigen kleuren
       ...(eventId ? {} : { style: ontwerp.style }),
       frame_names: ontwerp.names,
-      initials: initialenVan(ontwerp.names),
+      // Zoals de website ze schrijft: M|L
+      initials: initialenLijst(ontwerp.names).join("|"),
       pages: ["Home"],
       content: {},
       plan,
@@ -1429,13 +1422,21 @@ export default function KaartMakenPage() {
               <path d="M17 21v-8H7v8M7 3v5h8" />
             </svg>
           </IconKnop>
-          {/* De demo: zo ontvangt je gast hem */}
-          <IconKnop title="Bekijk hoe hij opengaat" onClick={() => setSimulatie(true)}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <rect x="3" y="5" width="18" height="14" rx="2" />
-              <path d="M3 7l9 6 9-6" />
+          {/* De demo: zo ontvangt je gast hem. Met het woord erbij, want
+              alleen een envelopje zei niet wat het deed (Michiel, 26
+              september 2026). */}
+          <button
+            type="button"
+            onClick={() => setSimulatie(true)}
+            aria-label="Demo: bekijk hoe hij opengaat"
+            className="h-9 flex-shrink-0 inline-flex items-center gap-1.5 pl-2.5 pr-3 rounded-xl text-[13px] font-semibold"
+            style={{ backgroundColor: "#fff", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
+          >
+            <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="currentColor" aria-hidden="true">
+              <path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5z" />
             </svg>
-          </IconKnop>
+            Demo
+          </button>
           {alAfgenomen && huidigeKaart ? (
             <button
               type="button"
