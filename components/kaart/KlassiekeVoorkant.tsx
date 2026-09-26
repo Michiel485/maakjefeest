@@ -7,14 +7,23 @@
 
 import { CARD_DESIGN_STYLE, type CardDisplay, type KlassiekOntwerp } from "@/lib/cards"
 import type { SC } from "@/lib/event-styles"
+import { namenOpmaak } from "@/lib/namen-opmaak"
 
 export default function KlassiekeVoorkant({
   display,
   sc,
   vullen,
+  breedte,
 }: {
   display: CardDisplay
   sc: SC
+  /**
+   * Hoe breed de kaart is, in pixels, zodat de namen op één regel kunnen
+   * als ze passen. Het enige dat hier sinds de verhuizing bij is gekomen
+   * (Michiel, 26 september 2026): eerst bleef de & achter de eerste naam
+   * hangen.
+   */
+  breedte?: number
   /**
    * Alleen voor de galerij: minstens deze hoogte, met de inhoud in het
    * midden, zodat elke miniatuur zijn vakje vult. De echte kaart laat dit weg
@@ -23,6 +32,18 @@ export default function KlassiekeVoorkant({
   vullen?: number
 }) {
   const ds = CARD_DESIGN_STYLE[display.design as KlassiekOntwerp] ?? CARD_DESIGN_STYLE.klassiek
+  // De ruimte voor de namen: de kaart min de rand, de binnenrand (px-8) en
+  // bij Sierlijk het tweede lijntje
+  const namenGrootte = 2.4 * ds.namenSchaal * 16
+  const namen = breedte
+    ? namenOpmaak(
+        display.names,
+        { google: ds.namenFontImage.family, gewicht: ds.namenFontImage.weight },
+        namenGrootte,
+        breedte - 4 - 64 - (ds.dubbeleRand ? 22 : 0),
+        { letterafstand: ds.namenSpatiering ? parseFloat(ds.namenSpatiering) : 0 }
+      )
+    : { tekst: display.names, grootte: namenGrootte, heel: false }
   return (
     <div
       className="overflow-hidden"
@@ -108,15 +129,17 @@ export default function KlassiekeVoorkant({
           style={{
             fontFamily: ds.namenFont,
             color: sc.cardText ?? sc.headingColor,
-            fontSize: `${2.4 * ds.namenSchaal}rem`,
+            fontSize: namen.grootte,
             letterSpacing: ds.namenSpatiering,
             margin: "6px 0",
             // Een bruidspaar mag de tweede naam op een eigen regel
             // zetten; dan hoort die enter ook op de kaart te staan.
-            whiteSpace: "pre-line",
+            // pre: de regels zoals uitgerekend, zonder dat de browser zelf
+            // nog eens afbreekt
+            whiteSpace: namen.heel ? "pre" : "pre-line",
           }}
         >
-          {display.names}
+          {namen.tekst}
         </p>
 
         {display.dateText && (

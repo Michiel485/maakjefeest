@@ -21,7 +21,7 @@ export default function Voorkant({
   /** Galerij: de eerste drie ontwerpen minstens zo hoog, zie KlassiekeVoorkant */
   vullen?: number
 }) {
-  if (isKlassiekOntwerp(display.design)) return <KlassiekeVoorkant display={display} sc={sc} vullen={vullen} />
+  if (isKlassiekOntwerp(display.design)) return <KlassiekeVoorkant display={display} sc={sc} vullen={vullen} breedte={breedte} />
   return (
     <div style={{ display: "flex", justifyContent: "center" }}>
       <KaartVoorkant

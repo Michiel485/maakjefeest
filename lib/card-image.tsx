@@ -5,6 +5,7 @@ import { ImageResponse } from "next/og"
 import { CARD_DESIGN_STYLE, isKlassiekOntwerp, type CardDisplay } from "./cards"
 import { renderNieuweKaartAfbeelding } from "./card-image-nieuw"
 import type { SC } from "./event-styles"
+import { namenOpmaak } from "./namen-opmaak"
 
 // Google Fonts levert TTF/woff (dat satori kan lezen) alleen aan oude user agents
 async function loadGoogleFont(family: string, weight: number, text: string): Promise<ArrayBuffer | null> {
@@ -151,6 +152,19 @@ export async function renderCardImage(
   const textColor = sc.cardText ?? sc.bodyText
   const headingColor = sc.cardText ?? sc.headingColor
 
+  // De namen op één regel als het past, anders een nette breuk voor de &.
+  // De ruimte: de kaart min de rand, de binnenrand en bij Sierlijk het
+  // tweede lijntje. Zelfde rekenregel als in de browser.
+  const kaartB = mode === "og" ? 560 : width - 88
+  const namenRuimte = kaartB - 6 - 112 * s - (ds.dubbeleRand ? 44 * s + 4 : 0)
+  const namen = namenOpmaak(
+    display.names,
+    { google: ds.namenFontImage.family, gewicht: ds.namenFontImage.weight },
+    94 * s * ds.namenSchaal,
+    namenRuimte,
+    { letterafstand: ds.namenSpatiering ? parseFloat(ds.namenSpatiering) : 0 }
+  )
+
   // Gedeelde kaartinhoud; witruimte valt bínnen de kaartrand
   const inner = (
     <div
@@ -234,7 +248,8 @@ export async function renderCardImage(
       <div
         style={{
           fontFamily: namesFont,
-          fontSize: 94 * s * ds.namenSchaal,
+          fontSize: namen.grootte,
+          ...(namen.heel ? { whiteSpace: "nowrap" as const } : {}),
           lineHeight: 1.15,
           color: headingColor,
           // Alleen meegeven als het ontwerp er een heeft: satori struikelt over
@@ -245,7 +260,7 @@ export async function renderCardImage(
           alignItems: "center",
         }}
       >
-        {regels(display.names)}
+        {regels(namen.tekst)}
       </div>
 
       {display.dateText && (
