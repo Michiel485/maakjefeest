@@ -332,6 +332,11 @@ export default function KaartMakenPage() {
 
   const [ontwerp, setOntwerp] = useState<KaartOntwerp>(LEEG)
   const [geladen, setGeladen] = useState(false)
+  // Een bestaande kaart openen: eerst ophalen, dan pas tonen. Eerst stond
+  // hier een paar tellen het ontwerp uit de browser, vaak een andere kaart,
+  // en mislukte het ophalen dan bleef dat staan tot je ververste (Michiel,
+  // 26 september 2026).
+  const [ophalen, setOphalen] = useState(false)
   // Hoeveel keer je zelf iets veranderd hebt sinds het laatste bewaren. Het
   // ontwerp staat altijd in je browser, maar open je de kaart later vanuit
   // het dashboard, dan wint de server; vandaar dat we het bijhouden. Geteld
@@ -574,6 +579,7 @@ export default function KaartMakenPage() {
 
     let basis: KaartOntwerp = LEEG
     let eventUitOpslag: string | null = null
+    let kaartUitOpslag: string | null = null
     try {
       const bewaard = localStorage.getItem(LS_ONTWERP)
       if (bewaard) basis = { ...LEEG, ...(JSON.parse(bewaard) as Partial<KaartOntwerp>) }
@@ -589,7 +595,7 @@ export default function KaartMakenPage() {
       if (ids) {
         const { eventId: e, cardId: c } = JSON.parse(ids) as { eventId?: string; cardId?: string }
         if (e) { setEventId(e); eventUitOpslag = e }
-        if (c) setCardId(c)
+        if (c) { setCardId(c); kaartUitOpslag = c }
       }
     } catch {}
     // Een ander soort kaart dan wat er in de browser stond? Dan ook de
@@ -599,7 +605,10 @@ export default function KaartMakenPage() {
         ? basis
         : { ...basis, type: typeUitUrl, aanmelden: standaardAanmeldStand(typeUitUrl) }
     }
-    setOntwerp(basis)
+    // Met een bruiloft in de link komt de kaart van de server; het ontwerp uit
+    // de browser alleen als dat niet lukt
+    if (eventUitUrl) setOphalen(true)
+    else setOntwerp(basis)
     // Nieuw ontwerp, geen bruiloft in de link of in de browser: begin bij de tekst.
     if (!eventUitUrl && !eventUitOpslag) setStap("stijl")
 
@@ -607,16 +616,21 @@ export default function KaartMakenPage() {
       const email = data.user?.email ?? null
       setUserEmail(email)
 
-      // De lijst met concepten voor de keuzelijst bovenin de zijbalk
+      // De lijst met concepten voor de keuzelijst bovenin de zijbalk. Niet
+      // wachten: de kaart zelf gaat voor.
       if (email) {
-        try {
-          const cr = await fetch("/api/drafts")
-          if (cr.ok) setConcepten(((await cr.json()) as ConceptRij[]) ?? [])
-        } catch {}
+        fetch("/api/drafts")
+          .then((cr) => (cr.ok ? cr.json() : []))
+          .then((rij) => setConcepten((rij as ConceptRij[]) ?? []))
+          .catch(() => {})
       }
 
-      // Bestaand event bewerken (vanuit het dashboard)
-      if (eventUitUrl && email) {
+      // Bestaand event bewerken (vanuit het dashboard). Niet afhankelijk van
+      // het e-mailadres hierboven: dat kwam op een telefoon soms net te laat
+      // binnen, en dan werd de kaart niet opgehaald. De server kijkt zelf of
+      // je ingelogd bent.
+      if (eventUitUrl) {
+        let gelukt = false
         try {
           const r = await fetch(`/api/drafts/${eventUitUrl}`)
           if (r.ok) {
@@ -635,8 +649,11 @@ export default function KaartMakenPage() {
             // kaart van dat soort: eerder viel hij hier terug op de eerste
             // kaart van de bruiloft, een Save the Date, terwijl je op
             // Trouwkaart had geklikt (Michiel, 23 september 2026).
+            // Zonder kaart in de link: de kaart van dit soort waar je het laatst
+            // aan werkte, niet zomaar de eerste
             const kaart =
               (kaartUitUrl ? cards.find((c) => c.id === kaartUitUrl) : undefined) ??
+              (kaartUitOpslag ? cards.find((c) => c.id === kaartUitOpslag && c.type === gewenstType) : undefined) ??
               cards.find((c) => c.type === gewenstType) ??
               (isCardType(typeUitUrl) ? undefined : cards[0])
             setEventId(eventUitUrl)
@@ -674,8 +691,12 @@ export default function KaartMakenPage() {
                 ? aanmeldStand(kaart.content.aanmelden)
                 : standaardAanmeldStand(kaart?.type ?? gewenstType),
             })
+            gelukt = true
           }
         } catch {}
+        // Lukte het niet, dan het ontwerp uit de browser, zoals vroeger
+        if (!gelukt) setOntwerp(basis)
+        setOphalen(false)
       } else if (eventUitOpslag && email) {
         // Verder werken aan een eerder bewaarde bruiloft: de lijst met kaarten
         // hoort er dan ook te zijn, anders lijkt het alsof er maar een is. En
@@ -1361,6 +1382,21 @@ export default function KaartMakenPage() {
     }
   }
 
+  if (ophalen) {
+    return (
+      <BouwerSchil actief={ontwerp.type} eventId={eventId}>
+        <div className="flex-1 flex items-center justify-center p-8">
+          <div className="text-center max-w-sm">
+            <p className="m-0 text-2xl" style={{ color: GOLD }}>{"♥"}</p>
+            <p className="m-0 mt-3 text-lg" style={{ fontFamily: "var(--font-cormorant)", fontWeight: 600, color: CHARCOAL }}>
+              We halen jullie kaart op
+            </p>
+          </div>
+        </div>
+      </BouwerSchil>
+    )
+  }
+
   return (
     <BouwerSchil
       actief={ontwerp.type}
@@ -1391,6 +1427,13 @@ export default function KaartMakenPage() {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
               <path d="M17 21v-8H7v8M7 3v5h8" />
+            </svg>
+          </IconKnop>
+          {/* De demo: zo ontvangt je gast hem */}
+          <IconKnop title="Bekijk hoe hij opengaat" onClick={() => setSimulatie(true)}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="14" rx="2" />
+              <path d="M3 7l9 6 9-6" />
             </svg>
           </IconKnop>
           {alAfgenomen && huidigeKaart ? (
@@ -2369,21 +2412,15 @@ export default function KaartMakenPage() {
           </button>
           </div>
           <div className={`mx-auto max-w-md transition-transform duration-200 origin-top ${blad && blad !== "kaart" && !bladKlein ? "max-md:scale-[0.45]" : ""}`}>
-            <div className="flex items-center justify-center gap-3 mb-1">
+            {/* Op de telefoon weg: daar was de bovenkant te druk met twee
+                balken, een kopje, een demoknop en een uitleg (Michiel, 26
+                september 2026). De demo staat daar in de balk bovenin. */}
+            <div className="hidden md:flex items-center justify-center gap-3 mb-1">
               <p className="m-0 text-center text-xs font-semibold uppercase tracking-widest" style={{ color: sc.headingColor, opacity: 0.75 }}>
                 Zo ziet jullie kaart eruit
               </p>
-              {/* Op de telefoon: de demo als een knopje naast het kopje */}
-              <button
-                type="button"
-                onClick={() => setSimulatie(true)}
-                className="md:hidden text-[11px] font-semibold px-2.5 py-1 rounded-full"
-                style={{ backgroundColor: "#fff", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
-              >
-                {"▶"} Demo
-              </button>
             </div>
-            <p className="m-0 mb-4 text-center text-[11px]" style={{ color: sc.headingColor, opacity: 0.55 }}>
+            <p className="hidden md:block m-0 mb-4 text-center text-[11px]" style={{ color: sc.headingColor, opacity: 0.55 }}>
               {cardDesign(ontwerp.template) === "eigen"
                 ? "Jullie eigen ontwerp, zonder tekst eroverheen"
                 : "Tik op een tekst op de kaart om hem te wijzigen"}
