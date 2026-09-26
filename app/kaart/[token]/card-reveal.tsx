@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react"
 import type { SC } from "@/lib/event-styles"
 import type { CardDisplay } from "@/lib/cards"
 import Voorkant from "@/components/kaart/Voorkant"
-import { envelopStijl } from "@/lib/kaart-envelop"
+import { envelopStijl, type EnvelopStijl } from "@/lib/kaart-envelop"
 import { ONDER_DE_KAART } from "@/lib/kaart-ontwerpen"
 import AanmeldFormulier from "@/components/AanmeldFormulier"
 import type { AanmeldStand } from "@/lib/gasten"
@@ -59,6 +59,92 @@ function versoepel(p: number): number {
   // Alleen vloeiend, zonder veer. Een veertje aan het eind schoot de kaart nog
   // een paar pixels omhoog en dat leest als een hapering, niet als een veer.
   return p * p * (3 - 2 * p)
+}
+
+// De vorm van de envelop. Een echte envelop heeft nauwelijks ronde hoeken;
+// met 16 pixels leek hij eerder een kaartje dan papier.
+const ENVELOP_RONDING = 6
+// De voorkant: alles behalve de V bovenin
+const VOOR_VORM = `polygon(0 0, 50% ${ENVELOP_V_PUNT}%, 100% 0, 100% 100%, 0 100%)`
+// De klep: dezelfde driehoek, met een zachte punt in plaats van een scherpe
+const KLEP_VORM = "polygon(0 0, 100% 0, 53.35% 93.3%, 51.7% 95.8%, 50% 96.6%, 48.3% 95.8%, 46.65% 93.3%)"
+// De ondervouw loopt van de onderhoeken tot net onder het zegel
+const ONDER_VORM = "polygon(0 100%, 46.5% 60%, 50% 58.2%, 53.5% 60%, 100% 100%)"
+
+const ZEGEL_MAAT = 70
+// De breuk door het zegel: niet recht, zoals was echt breekt. Beide helften
+// delen dezelfde lijn, dus ze passen precies op elkaar.
+const ZEGEL_BREUK = [
+  "polygon(-10% -10%, 53% -10%, 48% 18%, 55% 36%, 46% 55%, 54% 74%, 49% 110%, -10% 110%)",
+  "polygon(53% -10%, 110% -10%, 110% 110%, 49% 110%, 54% 74%, 46% 55%, 55% 36%, 48% 18%)",
+]
+
+/**
+ * Een lakzegel: een onregelmatige rand van uitgelopen was, een verhoogde ring
+ * en in het midden de ingedrukte initialen, met een streep ertussen zoals in
+ * de boog. Alles in CSS, in de tinten van de kaart.
+ */
+function Zegel({ env, initialen, lettertype }: { env: EnvelopStijl; initialen: string; lettertype?: string }) {
+  const letters = Array.from(initialen.replace(/[^\p{L}\p{N}]/gu, "")).slice(0, 2)
+  return (
+    <span className="absolute inset-0 block">
+      {/* De uitgelopen was: iets groter en niet helemaal rond */}
+      <span
+        className="absolute"
+        style={{
+          inset: -3,
+          borderRadius: "47% 53% 44% 56% / 55% 46% 54% 45%",
+          background: `radial-gradient(circle at 38% 32%, ${env.zegel}, ${env.zegelDonker} 80%)`,
+        }}
+      />
+      {/* De verhoogde ring: licht van linksboven */}
+      <span
+        className="absolute rounded-full"
+        style={{
+          inset: 3,
+          background: `radial-gradient(circle at 32% 28%, ${env.zegelLicht}, ${env.zegel} 45%, ${env.zegelDonker} 100%)`,
+          boxShadow: `inset 0 1.5px 1px ${env.zegelGlans}, inset 0 -2px 3px rgba(0,0,0,0.22)`,
+        }}
+      />
+      {/* Het ingedrukte midden, waar de stempel in de was stond */}
+      <span
+        className="absolute rounded-full flex items-center justify-center"
+        style={{
+          inset: 11,
+          background: `radial-gradient(circle at 60% 70%, ${env.zegelLicht}, ${env.zegel} 70%)`,
+          boxShadow: `inset 0 2px 3px rgba(0,0,0,0.3), 0 1px 0 ${env.zegelGlans}`,
+          color: env.zegelLetter,
+          fontFamily: lettertype,
+          fontSize: letters.length > 1 ? "1.3rem" : "1.5rem",
+          lineHeight: 1,
+          // Ingedrukt: een donker randje boven de letter, een lichtje eronder
+          textShadow: `0 1px 0 ${env.zegelGlans}, 0 -1px 0 rgba(0,0,0,0.22)`,
+        }}
+      >
+        {letters.length === 0 ? (
+          "♥"
+        ) : letters.length === 1 ? (
+          letters[0]
+        ) : (
+          <>
+            <span>{letters[0]}</span>
+            <span
+              aria-hidden="true"
+              style={{
+                width: 1,
+                height: "0.95em",
+                margin: "0 0.26em",
+                backgroundColor: "currentColor",
+                opacity: 0.6,
+                boxShadow: `1px 0 0 ${env.zegelGlans}`,
+              }}
+            />
+            <span>{letters[1]}</span>
+          </>
+        )}
+      </span>
+    </span>
+  )
 }
 
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)"
@@ -243,7 +329,9 @@ export default function CardReveal({
         H,
         // De onderrand van de envelop, met de zweefruimte eraf: anders piept er
         // bij de hoogste stand van het zweven een randje kaart onderuit.
-        onder: onder - ENVELOP_ZWEEF,
+        // Plus een paar pixels speling: precies op de rand piepte er bij het
+        // hoogste punt toch een streepje kaart onder de envelop uit.
+        onder: onder - ENVELOP_ZWEEF - 6,
         // De kaart zit in de envelop: bovenrand een stukje onder de
         // envelopbovenkant, zodat hij meteen in de V zichtbaar is als de klep
         // opengaat.
@@ -527,14 +615,18 @@ export default function CardReveal({
                     : {}),
                 }}
               >
-                {/* De achterkant: dit zie je door de open mond heen achter de kaart */}
+                {/* De achterkant: dit zie je door de open mond heen achter de
+                    kaart. De binnenkant van een envelop ligt in de schaduw. */}
                 <span
-                  className="absolute inset-0 rounded-2xl"
+                  className="absolute inset-0"
                   style={{
-                    background: env.voering ?? env.lichaam,
-                    border: `1.5px solid ${sc.accent}50`,
-                    filter: "brightness(0.97)",
-                    boxShadow: "0 18px 50px rgba(0,0,0,0.18)",
+                    borderRadius: ENVELOP_RONDING,
+                    background: env.voering ?? `${env.papier}, linear-gradient(rgba(0,0,0,0.07), rgba(0,0,0,0.13)), ${env.lichaam}`,
+                    // Een paar lagen schaduw, zoals papier op een tafel: dicht
+                    // bij de rand scherp, verder weg zacht
+                    boxShadow: env.donker
+                      ? "0 2px 4px rgba(0,0,0,0.35), 0 24px 56px rgba(0,0,0,0.5)"
+                      : "0 1px 2px rgba(0,0,0,0.06), 0 6px 14px rgba(0,0,0,0.07), 0 24px 52px rgba(0,0,0,0.14)",
                   }}
                 />
               </button>
@@ -564,22 +656,26 @@ export default function CardReveal({
                     : {}),
                 }}
               >
-                {/* Precies de driehoek die de voorkant openlaat, dus dicht
-                    sluit de envelop naadloos */}
+                {/* De driehoek die de voorkant openlaat, met een zachte punt.
+                    Die punt valt dicht onder het zegel, dus je ziet hem pas als
+                    de klep open staat. */}
                 <span
                   className="absolute left-0 right-0 top-0"
                   style={{
                     height: `${ENVELOP_V_PUNT}%`,
-                    clipPath: "polygon(0 0, 100% 0, 50% 100%)",
-                    background: klepBinnen && env.voering ? env.voering : env.lichaam,
-                    // Dicht zie je de buitenkant, open de binnenkant, en die
-                    // ligt in de schaduw. Dat maakt hem ook zichtbaar tegen de
-                    // achtergrond, want die heeft bijna dezelfde kleur.
-                    filter: klepDicht ? "brightness(0.99)" : env.voering ? "brightness(0.94)" : "brightness(0.78)",
-                    borderRadius: "16px 16px 0 0",
+                    clipPath: KLEP_VORM,
+                    // Dicht zie je de buitenkant, open de binnenkant. Die ligt in
+                    // de schaduw, en dat maakt hem ook zichtbaar tegen een
+                    // achtergrond in bijna dezelfde kleur. Het wisselen gebeurt
+                    // als de klep op zijn kant staat, dus je ziet het niet.
+                    background: klepBinnen
+                      ? env.voering ?? `${env.papier}, linear-gradient(${sc.accent}26, ${sc.accent}1A), linear-gradient(rgba(0,0,0,0.12), rgba(0,0,0,0.06)), ${env.lichaam}`
+                      : `${env.papier}, linear-gradient(rgba(255,255,255,0.06), rgba(0,0,0,0.03)), ${env.lichaam}`,
+                    filter: klepBinnen && env.voering ? "brightness(0.94)" : undefined,
+                    borderRadius: `${ENVELOP_RONDING}px ${ENVELOP_RONDING}px 0 0`,
                     transition: klassiekeAnimatie
-                      ? "transform 0.55s ease, filter 0.55s ease"
-                      : `transform ${DUUR_KLEP}ms cubic-bezier(0.35, 0, 0.3, 1), filter ${DUUR_KLEP}ms ease`,
+                      ? "transform 0.55s ease"
+                      : `transform ${DUUR_KLEP}ms cubic-bezier(0.35, 0, 0.3, 1)`,
                     transformOrigin: "top center",
                     transform: klepDicht ? "rotateX(0deg)" : "rotateX(180deg)",
                   }}
@@ -611,96 +707,126 @@ export default function CardReveal({
               >
                 {/* Omhulsel met dezelfde afronding als de envelop. Een clip-path
                     maakt scherpe hoeken en negeert de border-radius, dus liepen
-                    de vouwlijnen door tot buiten de ronding van de envelop. Door
-                    het omhulsel te laten afronden lopen de lijn en de rand
-                    precies op hetzelfde punt af. */}
-                <span className="absolute inset-0" style={{ borderRadius: 16, overflow: "hidden" }}>
-                {/* De voorkant: de zijvouwen en de ondervouw samen. Die dekken
-                    de hele envelop af behalve een V bovenin, en juist in die V
-                    zie je de kaart in de envelop zitten. De vorm sluit precies
-                    aan op de klep, dus dicht is de envelop naadloos. */}
-                <span
-                  className="absolute inset-0 rounded-2xl"
-                  style={{
-                    clipPath: `polygon(0 0, 50% ${ENVELOP_V_PUNT}%, 100% 0, 100% 100%, 0 100%)`,
-                    backgroundColor: env.lichaam,
-                    // De vouwlijnen van de zijkanten naar het midden onderin
-                    backgroundImage: `linear-gradient(to top right, transparent 49.7%, ${sc.accent}1F 50%, transparent 50.3%), linear-gradient(to top left, transparent 49.7%, ${sc.accent}1F 50%, transparent 50.3%)`,
-                    // Een drop-shadow volgt de geklipte vorm, een box-shadow niet:
-                    // zo krijgt de V-rand een echte kant waar de kaart achter gaat
-                    filter: `drop-shadow(0 -2px 3px rgba(0,0,0,0.16)) brightness(1.03)`,
-                  }}
-                />
-                {/* Randje langs de V, zodat de vouw ook zichtbaar is als de
-                    kleuren van kaart en envelop dicht bij elkaar liggen */}
-                <span
-                  className="absolute inset-0"
-                  style={{
-                    clipPath: `polygon(0 0, 50% ${ENVELOP_V_PUNT}%, 100% 0, 100% 1.5%, 50% ${ENVELOP_V_PUNT + 1.5}%, 0 1.5%)`,
-                    backgroundColor: `${sc.accent}55`,
-                  }}
-                />
+                    de vouwen door tot buiten de ronding van de envelop. */}
+                <span className="absolute inset-0" style={{ borderRadius: ENVELOP_RONDING, overflow: "hidden" }}>
+                  {/* De voorkant zelf: de hele envelop behalve de V bovenin */}
+                  <span
+                    className="absolute inset-0"
+                    style={{ clipPath: VOOR_VORM, background: `${env.papier}, ${env.lichaam}` }}
+                  />
+                  {/* De zijvouwen, naar het midden toe iets in de schaduw. Geen
+                      lijntjes meer: een vouw zie je aan het licht. */}
+                  <span
+                    className="absolute inset-0"
+                    style={{
+                      clipPath: `polygon(0 0, 50% ${ENVELOP_V_PUNT}%, 0 100%)`,
+                      background: `linear-gradient(to right, transparent 25%, ${env.donker ? "rgba(0,0,0,0.3)" : "rgba(0,0,0,0.045)"})`,
+                    }}
+                  />
+                  <span
+                    className="absolute inset-0"
+                    style={{
+                      clipPath: `polygon(100% 0, 50% ${ENVELOP_V_PUNT}%, 100% 100%)`,
+                      background: `linear-gradient(to left, transparent 25%, ${env.donker ? "rgba(0,0,0,0.3)" : "rgba(0,0,0,0.045)"})`,
+                    }}
+                  />
+                  {/* De ondervouw ligt over de zijvouwen heen. De schaduw zit
+                      op een omhulsel, want een clip-path knipt een schaduw op
+                      hetzelfde element weg. */}
+                  <span
+                    className="absolute inset-0"
+                    style={{ filter: env.donker ? "drop-shadow(0 -1px 2px rgba(0,0,0,0.7))" : "drop-shadow(0 -1px 2.5px rgba(0,0,0,0.13))" }}
+                  >
+                    <span
+                      className="absolute inset-0"
+                      style={{
+                        clipPath: ONDER_VORM,
+                        background: `${env.papier}, linear-gradient(rgba(255,255,255,${env.donker ? 0.035 : 0.12}), rgba(255,255,255,0) 55%), ${env.lichaam}`,
+                      }}
+                    />
+                  </span>
+                  {/* De dichte klep, hier nog een keer, maar dan boven de
+                      voorkant, zodat hij er echt overheen ligt en zijn schaduw
+                      erop valt. Zodra hij opengaat neemt de echte klep het over;
+                      die ligt precies hieronder. */}
+                  {klepDicht && (
+                    <span
+                      className="absolute inset-0"
+                      style={{ filter: env.donker ? "drop-shadow(0 2px 3px rgba(0,0,0,0.8))" : "drop-shadow(0 2px 3px rgba(0,0,0,0.15))" }}
+                    >
+                      <span
+                        className="absolute left-0 right-0 top-0"
+                        style={{
+                          height: `${ENVELOP_V_PUNT}%`,
+                          clipPath: KLEP_VORM,
+                          background: `${env.papier}, linear-gradient(rgba(255,255,255,0.06), rgba(0,0,0,0.03)), ${env.lichaam}`,
+                        }}
+                      />
+                    </span>
+                  )}
+                  {/* Op donker papier zie je geen schaduw. Daar een fijn randje
+                      in de accentkleur langs de klep, zoals goudopdruk. */}
+                  {env.donker && klepDicht && (
+                    <span
+                      className="absolute left-0 right-0 top-0"
+                      style={{
+                        height: `${ENVELOP_V_PUNT}%`,
+                        clipPath: `polygon(0 0, 50% 96.6%, 100% 0, 100% 1.2%, 50% 98.6%, 0 1.2%)`,
+                        backgroundColor: `${sc.accent}70`,
+                      }}
+                    />
+                  )}
+                  {/* De buitenrand, zodat de envelop los staat van een
+                      achtergrond in bijna dezelfde kleur */}
+                  <span
+                    className="absolute inset-0"
+                    style={{ borderRadius: ENVELOP_RONDING, boxShadow: `inset 0 0 0 1px ${env.rand}`, clipPath: klepDicht ? undefined : VOOR_VORM }}
+                  />
                 </span>
-                {/* Zegel met initialen. Bij de nieuwe animatie bestaat het uit
-                    twee helften die eerst kraken en dan wegvallen. Elke helft
-                    toont de volledige initialen en knipt de andere helft weg,
-                    zodat ze samen naadloos één zegel vormen. */}
-                {/* De schaduw van het zegel staat apart en zonder clip-path.
-                    Zat hij op de twee helften zelf, dan knipte hun clip-path
-                    ook de schaduw af tot precies het vierkant van 62 bij 62,
-                    en zag je de hoeken van die afgeknipte schaduw als een
-                    grijzig blokje om het zegel heen. */}
+
+                {/* Het lakzegel. Heel zolang de envelop dicht is. Bij de tik
+                    maakt het plaats voor twee helften die langs een grillige
+                    breuk uit elkaar kraken en vallen. Eerst waren dat altijd
+                    twee helften, en dan zag je een naad in het midden. */}
                 <span
-                  aria-hidden="true"
-                  className="absolute left-1/2 rounded-full"
+                  className="absolute left-1/2"
                   style={{
                     top: `${ENVELOP_V_PUNT}%`,
-                    marginTop: -31,
-                    marginLeft: -31,
-                    width: 62,
-                    height: 62,
-                    boxShadow: "0 3px 12px rgba(0,0,0,0.22)",
+                    width: ZEGEL_MAAT,
+                    height: ZEGEL_MAAT,
+                    marginTop: -ZEGEL_MAAT / 2,
+                    marginLeft: -ZEGEL_MAAT / 2,
+                    filter: "drop-shadow(0 3px 5px rgba(0,0,0,0.28))",
                     opacity: zegelHeel ? 1 : 0,
-                    transition: "opacity 0.25s ease",
+                    ...(klassiekeAnimatie
+                      ? { transform: zegelHeel ? "none" : "scale(0.6)", transition: "opacity 0.3s ease, transform 0.3s ease" }
+                      : {}),
                   }}
-                />
-                {(klassiekeAnimatie ? [0] : [0, 1]).map((helft) => (
-                  <span
-                    key={helft}
-                    className="absolute left-1/2 flex items-center justify-center rounded-full"
-                    style={{
-                      top: `${ENVELOP_V_PUNT}%`,
-                      marginTop: -31,
-                      width: 62,
-                      height: 62,
-                      marginLeft: -31,
-                      backgroundColor: env.zegel,
-                      color: env.zegelTekst,
-                      fontFamily: sc.fontInitials ?? sc.fontPageTitles,
-                      fontSize: "1.35rem",
-                      clipPath: klassiekeAnimatie
-                        ? undefined
-                        : helft === 0
-                          ? "inset(0 50% 0 0)"
-                          : "inset(0 0 0 50%)",
-                      ...(klassiekeAnimatie
-                        ? {
-                            opacity: zegelHeel ? 1 : 0,
-                            transform: zegelHeel ? "none" : "scale(0.6)",
-                            transition: "opacity 0.3s ease, transform 0.3s ease",
-                          }
-                        : {
-                            // Het kraken en vallen zit in de keyframes, zodat
-                            // het twee bewegingen zijn in plaats van één sprong
-                            animation: zegelHeel
-                              ? "none"
-                              : `${helft === 0 ? "zegel-links" : "zegel-rechts"} 0.95s ease-in both`,
-                          }),
-                    }}
-                  >
-                    {initials || "♥"}
-                  </span>
-                ))}
+                >
+                  <Zegel env={env} initialen={initials} lettertype={sc.fontInitials ?? sc.fontPageTitles} />
+                </span>
+                {!klassiekeAnimatie && !zegelHeel &&
+                  ZEGEL_BREUK.map((vorm, helft) => (
+                    <span
+                      key={helft}
+                      className="absolute left-1/2"
+                      style={{
+                        top: `${ENVELOP_V_PUNT}%`,
+                        width: ZEGEL_MAAT,
+                        height: ZEGEL_MAAT,
+                        marginTop: -ZEGEL_MAAT / 2,
+                        marginLeft: -ZEGEL_MAAT / 2,
+                        filter: "drop-shadow(0 3px 5px rgba(0,0,0,0.28))",
+                        // Het kraken en vallen zit in de keyframes, zodat het
+                        // twee bewegingen zijn in plaats van één sprong
+                        animation: `${helft === 0 ? "zegel-links" : "zegel-rechts"} 0.95s ease-in both`,
+                      }}
+                    >
+                      <span className="absolute inset-0" style={{ clipPath: vorm }}>
+                        <Zegel env={env} initialen={initials} lettertype={sc.fontInitials ?? sc.fontPageTitles} />
+                      </span>
+                    </span>
+                  ))}
               </div>
 
               {/* Absoluut onder de envelop, niet als tweede item in de

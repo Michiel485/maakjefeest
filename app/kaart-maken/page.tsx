@@ -2402,11 +2402,13 @@ export default function KaartMakenPage() {
           {/* Blijft staan als je in het voorbeeld naar beneden scrolt (Michiel,
               25 september 2026). Een lege rij met de knop erin, zodat hij de
               kaart niet naar beneden duwt. */}
-          <div className="hidden md:flex sticky top-0 z-10 h-0 justify-end">
+          {/* items-start: anders rekt de rij van nul hoog de knop mee tot nul,
+              en dan viel de tekst over een platgedrukte knop heen. */}
+          <div className="hidden md:flex sticky top-0 z-10 h-0 justify-end items-start">
           <button
             type="button"
             onClick={() => setSimulatie(true)}
-            className="inline-flex text-sm font-semibold px-4 py-2 rounded-xl shadow-lg"
+            className="inline-flex items-center gap-1.5 whitespace-nowrap text-sm font-semibold px-4 py-2 rounded-xl shadow-lg"
             style={{ backgroundColor: "#fff", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
           >
             {"💌"} Bekijk hoe het opengaat
@@ -2416,7 +2418,7 @@ export default function KaartMakenPage() {
             {/* Op de telefoon weg: daar was de bovenkant te druk met twee
                 balken, een kopje, een demoknop en een uitleg (Michiel, 26
                 september 2026). De demo staat daar in de balk bovenin. */}
-            <div className="hidden md:flex items-center justify-center gap-3 mb-1">
+            <div className="hidden md:flex items-center justify-center gap-3 mb-1 md:max-xl:mt-11">
               <p className="m-0 text-center text-xs font-semibold uppercase tracking-widest" style={{ color: sc.headingColor, opacity: 0.75 }}>
                 Zo ziet jullie kaart eruit
               </p>
