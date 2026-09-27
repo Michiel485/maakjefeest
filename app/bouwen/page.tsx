@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import AanmeldFormulier from "@/components/AanmeldFormulier"
 import HomeOntwerpGalerij, { HomeOntwerpTekstvelden } from "@/components/HomeOntwerpPaneel"
+import LetterKiezer from "@/components/LetterKiezer"
 import { homeOntwerp } from "@/lib/home-ontwerp"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -15,7 +16,7 @@ import EventProgramPreview, { PROGRAM_ICONS, ProgramIcon, DEFAULT_PROGRAM_ITEMS 
 import StoryPreview from "@/components/StoryPreview"
 import FotosPreview from "@/components/FotosPreview"
 import { formatDate, STYLE_CONFIG, STYLE_NAAM, STYLE_VOLGORDE, type Style } from "@/lib/event-styles"
-import { TITLE_FONT_OPTIONS, getTitleFont } from "@/lib/title-fonts"
+import { getTitleFont } from "@/lib/title-fonts"
 import { createClient } from "@/lib/supabase"
 import { eventSiteUrl } from "@/lib/site-url"
 import { DEFAULT_PLAN, hoogstePlan, PLANS, formatEur, isCardPlan, isPlan, planAllows, upgradePrice, type Plan } from "@/lib/plans"
@@ -297,24 +298,8 @@ const TYPE_LABEL: Record<EventType, string> = {
 // ── Compact font selector ─────────────────────────────────────────────────────
 
 function FontSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const cur = TITLE_FONT_OPTIONS.find(f => f.id === value) ?? TITLE_FONT_OPTIONS[0]
-  return (
-    <div className="flex items-center gap-1.5">
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="flex-1 rounded-lg border border-[var(--goud-licht)] bg-white px-2 py-1.5 text-[11px] text-gray-600 focus:outline-none focus:ring-1 focus:ring-[var(--goud-vlak)]"
-      >
-        {TITLE_FONT_OPTIONS.map(f => (
-          <option key={f.id} value={f.id}>{f.label}</option>
-        ))}
-      </select>
-      <span
-        className="text-sm flex-shrink-0 text-gray-600 leading-none"
-        style={{ fontFamily: `var(${cur.cssVar})`, fontWeight: cur.weight, minWidth: "1.5rem" }}
-      >Aa</span>
-    </div>
-  )
+  // Elk lettertype in zijn eigen letter (Michiel, 27 september 2026)
+  return <LetterKiezer waarde={value} onKies={(v) => { if (v) onChange(v) }} />
 }
 
 // ── Main component ────────────────────────────────────────────────────────────

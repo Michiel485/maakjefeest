@@ -15,7 +15,8 @@ import { CARD_TEMPLATE_LABEL, type NieuwOntwerp } from "@/lib/cards"
 import type { SC } from "@/lib/event-styles"
 import { HOME_ONTWERPEN, HOME_KOP_STANDAARD } from "@/lib/home-ontwerp"
 import { detailsKeuze, detailsOpKaart, type DetailsStand } from "@/lib/kaart-ontwerpen"
-import { TITLE_FONT_OPTIONS } from "@/lib/title-fonts"
+import LetterKiezer from "@/components/LetterKiezer"
+import { browserLetters } from "@/lib/kaart-ontwerpen"
 
 export interface HomeOntwerpInstellingen {
   ontwerp?: string
@@ -114,20 +115,11 @@ export default function HomeOntwerpGalerij({
 }
 
 /** Lettertype en grootte, direct onder een tekstveld */
-function LetterRegel({ waarde, schaal, onFont, onSchaal }: { waarde?: string; schaal: number; onFont: (v: string | undefined) => void; onSchaal: (v: number) => void }) {
+function LetterRegel({ waarde, ontwerpFont, schaal, onFont, onSchaal }: { waarde?: string; ontwerpFont: string; schaal: number; onFont: (v: string | undefined) => void; onSchaal: (v: number) => void }) {
   return (
     <div className="flex flex-col gap-1.5 rounded-xl px-3 py-2.5 bg-white border border-[var(--goud-licht)]">
-      <select
-        value={waarde ?? ""}
-        onChange={(e) => onFont(e.target.value || undefined)}
-        aria-label="Lettertype"
-        className="rounded-lg border border-[var(--goud-licht)] bg-white px-2 py-1.5 text-[11px] text-gray-600 focus:outline-none focus:ring-1 focus:ring-[var(--goud-vlak)]"
-      >
-        <option value="">Lettertype van het ontwerp</option>
-        {TITLE_FONT_OPTIONS.map((f) => (
-          <option key={f.id} value={f.id}>{f.label}</option>
-        ))}
-      </select>
+      {/* Elk lettertype in zijn eigen letter (Michiel, 27 september 2026) */}
+      <LetterKiezer waarde={waarde} onKies={onFont} leegLabel="Lettertype van het ontwerp" leegFont={ontwerpFont} />
       <div className="flex items-center gap-2">
         <span className="text-[11px] text-gray-500 w-12 flex-shrink-0">Grootte</span>
         <input
@@ -178,9 +170,13 @@ export function HomeOntwerpTekstvelden({
   onLocatie: (v: string) => void
 }) {
   const tekstInst = instellingen.ontwerpTekst ?? {}
+  // In welke letter elke tekst standaard staat, voor de eerste keuze in de lijst
+  const ol = browserLetters(ontwerp)
+  const ontwerpFont: Record<TekstRol, string> = { kop: ol.kop, namen: ol.namen, datum: ol.kop, locatie: ol.tekst, tijden: ol.tekst, dresscode: ol.tekst }
   const letter = (rol: TekstRol) => (
     <LetterRegel
       waarde={tekstInst[rol]?.font}
+      ontwerpFont={ontwerpFont[rol]}
       schaal={tekstInst[rol]?.schaal ?? 1}
       onFont={(v) => onWijzig({ ontwerpTekst: { ...tekstInst, [rol]: { ...tekstInst[rol], font: v } } })}
       onSchaal={(v) => onWijzig({ ontwerpTekst: { ...tekstInst, [rol]: { ...tekstInst[rol], schaal: v } } })}

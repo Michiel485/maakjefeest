@@ -1074,9 +1074,11 @@ function Inhoud({
     const datum = datumKort(d.datumIso, "  |  ") ?? d.dateText
     const boogB = px(250)
     return (
-      <D style={{ ...basis, alignItems: "center", justifyContent: "center", padding: `${px(34)}px ${px(30)}px`, borderRadius: px(22) }}>
+      // Op de homepagina bovenin veel minder lucht: de pagina heeft zelf al
+      // ruimte onder het menu (Michiel, 27 september 2026)
+      <D style={{ ...basis, alignItems: "center", justifyContent: "center", padding: `${px(vrij ? 4 : 34)}px ${px(30)}px ${px(34)}px`, borderRadius: px(22) }}>
         {/* De kop in een boog boven de palm */}
-        <D style={{ position: "relative", width: boogB, height: px(215), justifyContent: "center", alignItems: "flex-end" }}>
+        <D style={{ position: "relative", width: boogB, height: px(215), justifyContent: "center", alignItems: "flex-end", ...(vrij ? { marginTop: px(-22) } : {}) }}>
           {boogLetters({
             tekst: d.heading,
             cx: boogB / 2,
