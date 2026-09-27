@@ -127,6 +127,21 @@ export function namenPlek(ontwerp: CardDesign, opties: { breedte: number; datumI
       return maat(40, 400 - 120)
     case "datumband":
       return maat(52, 400 - 48)
+    // De themaontwerpen
+    case "winter":
+      return maat(40, 400 - 80)
+    case "lente":
+      return maat(46, 400 - 70)
+    case "zomer":
+      return maat(34, 400 - 70)
+    case "liefde":
+      return maat(38, 400 - 70)
+    case "strand":
+      return maat(56, 400 - 60)
+    case "boho":
+      return maat(38, 400 - 70)
+    case "festival":
+      return maat(36, 400 - 60)
     // Art deco: in hoofdletters, met ruimte tussen de letters
     case "deco":
       return maat(29, 400 - 88, { letterafstand: 0.1, hoofdletters: true })

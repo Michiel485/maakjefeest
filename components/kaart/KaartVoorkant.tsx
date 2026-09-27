@@ -57,6 +57,175 @@ function Regels({
 
 
 
+// ── Tekeningen voor de themaontwerpen (27 september 2026) ──────────────────
+// Lijnen en vormen in de kleur van de stijl, zodat elk thema bij elke
+// kleurstijl past. Geen tekst in SVG, want die tekent satori niet.
+
+const rond = (n: number) => Math.round(n * 100) / 100
+
+/** Een sneeuwkristal: zes armen met elk twee paar zijtakjes */
+function Sneeuwvlok({ maat, kleur, dikte = 0.9 }: { maat: number; kleur: string; dikte?: number }) {
+  let pad = ""
+  for (let k = 0; k < 6; k++) {
+    const a = (k * Math.PI) / 3
+    const c = Math.cos(a)
+    const s = Math.sin(a)
+    pad += `M0 0L${rond(9 * c)} ${rond(9 * s)}`
+    for (const [r, l] of [[5, 3], [7.6, 1.8]] as const) {
+      const px0 = r * c
+      const py0 = r * s
+      for (const draai of [Math.PI / 4, -Math.PI / 4]) {
+        pad += `M${rond(px0)} ${rond(py0)}L${rond(px0 + l * Math.cos(a + draai))} ${rond(py0 + l * Math.sin(a + draai))}`
+      }
+    }
+  }
+  return (
+    <svg width={maat} height={maat} viewBox="-10 -10 20 20" fill="none">
+      <path d={pad} stroke={kleur} strokeWidth={dikte} strokeLinecap="round" />
+      <circle cx="0" cy="0" r="1.1" fill={kleur} />
+    </svg>
+  )
+}
+
+/** Een bloesemtak die van links naar rechts groeit */
+function Bloesemtak({ breedte, kleur }: { breedte: number; kleur: string }) {
+  const bloem = (x: number, y: number, r: number, i: number) => (
+    <g key={i}>
+      {[0, 1, 2, 3, 4].map((k) => {
+        const a = (k * 2 * Math.PI) / 5 - Math.PI / 2
+        return <circle key={k} cx={rond(x + r * Math.cos(a))} cy={rond(y + r * Math.sin(a))} r={rond(r * 0.72)} fill={kleur} fillOpacity={0.35} />
+      })}
+      <circle cx={x} cy={y} r={rond(r * 0.38)} fill={kleur} />
+    </g>
+  )
+  return (
+    <svg width={breedte} height={rond((breedte * 70) / 220)} viewBox="0 0 220 70" fill="none">
+      <path d="M-4 22C40 10 82 30 126 24S196 36 224 30" stroke={kleur} strokeWidth="1.3" strokeLinecap="round" />
+      <path d="M58 16C66 6 76 2 88 4M140 26C150 38 162 44 176 44M100 28C104 40 112 48 122 52" stroke={kleur} strokeWidth="1" strokeLinecap="round" />
+      <path d="M30 17c4-8 12-10 18-8-4 7-11 10-18 8zM170 34c6-6 14-6 19-2-6 5-13 6-19 2zM78 28c-2 8 2 14 8 17 1-7-2-13-8-17z" fill={kleur} fillOpacity="0.45" />
+      {[
+        [44, 14, 6.5],
+        [92, 6, 5],
+        [118, 26, 7],
+        [178, 44, 5.5],
+        [156, 20, 4.5],
+        [122, 52, 4],
+      ].map(([x, y, r], i) => bloem(x, y, r, i))}
+      <circle cx="66" cy="22" r="2.2" fill={kleur} fillOpacity="0.6" />
+      <circle cx="202" cy="30" r="2.4" fill={kleur} fillOpacity="0.6" />
+    </svg>
+  )
+}
+
+/** Een opkomende zon boven de horizon */
+function Zonsopgang({ breedte, kleur }: { breedte: number; kleur: string }) {
+  let stralen = ""
+  for (let i = 0; i <= 12; i++) {
+    const a = Math.PI + (i * Math.PI) / 12
+    stralen += `M${rond(100 + 44 * Math.cos(a))} ${rond(80 + 44 * Math.sin(a))}L${rond(100 + (i % 2 ? 56 : 62) * Math.cos(a))} ${rond(80 + (i % 2 ? 56 : 62) * Math.sin(a))}`
+  }
+  return (
+    <svg width={breedte} height={rond((breedte * 86) / 200)} viewBox="0 0 200 86" fill="none">
+      <path d={stralen} stroke={kleur} strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M64 80A36 36 0 0 1 136 80Z" fill={kleur} />
+      <path d="M16 80H184" stroke={kleur} strokeWidth="1.2" strokeLinecap="round" />
+      <path d="M44 85H78M122 85H156" stroke={kleur} strokeWidth="0.9" strokeLinecap="round" strokeOpacity="0.6" />
+    </svg>
+  )
+}
+
+const HART = "M50 86C22 66 4 48 4 28 4 14 15 4 28 4c10 0 18 6 22 14 4-8 12-14 22-14 13 0 24 10 24 24 0 20-18 38-46 58z"
+
+/** Een hart uit een fijne lijn, of gevuld voor de kleine hartjes */
+function Hart({ breedte, kleur, vol = false, dikte = 1.4 }: { breedte: number; kleur: string; vol?: boolean; dikte?: number }) {
+  return (
+    <svg width={breedte} height={rond((breedte * 90) / 100)} viewBox="0 0 100 90" fill="none">
+      <path d={HART} {...(vol ? { fill: kleur } : { stroke: kleur, strokeWidth: dikte, strokeLinejoin: "round" as const })} />
+    </svg>
+  )
+}
+
+/** Zee met golven, een zon laag boven het water en een schelp */
+function Strandtafereel({ breedte, kleur }: { breedte: number; kleur: string }) {
+  const golf = (y: number) => {
+    let d = `M0 ${y}`
+    for (let x = 0; x < 300; x += 30) d += `Q${x + 15} ${y - 8} ${x + 30} ${y}`
+    return d
+  }
+  let ribben = ""
+  for (let i = 0; i <= 6; i++) {
+    const a = Math.PI + 0.35 + (i * (Math.PI - 0.7)) / 6
+    ribben += `M70 64L${rond(70 + 20 * Math.cos(a))} ${rond(64 + 20 * Math.sin(a))}`
+  }
+  return (
+    <svg width={breedte} height={rond((breedte * 110) / 300)} viewBox="0 0 300 110" fill="none">
+      <circle cx="212" cy="44" r="18" fill={kleur} fillOpacity="0.85" />
+      <path d={golf(72)} stroke={kleur} strokeWidth="1.5" strokeLinecap="round" />
+      <path d={golf(88)} stroke={kleur} strokeWidth="1.2" strokeLinecap="round" strokeOpacity="0.65" />
+      <path d={golf(104)} stroke={kleur} strokeWidth="1" strokeLinecap="round" strokeOpacity="0.4" />
+      <path d="M70 64L51 57A20 20 0 0 1 89 57Z" fill={kleur} fillOpacity="0.25" />
+      <path d={ribben} stroke={kleur} strokeWidth="1" strokeLinecap="round" />
+      <path d="M50 57A20 20 0 0 1 90 57" stroke={kleur} strokeWidth="1.2" />
+    </svg>
+  )
+}
+
+/** Boho: bogen als een regenboog met een zonnetje erin */
+function Regenboog({ breedte, kleur }: { breedte: number; kleur: string }) {
+  let stralen = ""
+  for (let i = 0; i < 9; i++) {
+    const a = Math.PI + ((i + 0.5) * Math.PI) / 9
+    stralen += `M${rond(100 + 19 * Math.cos(a))} ${rond(100 + 19 * Math.sin(a))}L${rond(100 + 26 * Math.cos(a))} ${rond(100 + 26 * Math.sin(a))}`
+  }
+  return (
+    <svg width={breedte} height={rond((breedte * 104) / 200)} viewBox="0 0 200 104" fill="none">
+      <path d="M10 100A90 90 0 0 1 190 100" stroke={kleur} strokeWidth="7" strokeOpacity="0.9" />
+      <path d="M28 100A72 72 0 0 1 172 100" stroke={kleur} strokeWidth="7" strokeOpacity="0.55" />
+      <path d="M46 100A54 54 0 0 1 154 100" stroke={kleur} strokeWidth="7" strokeOpacity="0.3" />
+      <path d="M86 100A14 14 0 0 1 114 100Z" fill={kleur} />
+      <path d={stralen} stroke={kleur} strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+/** Een slinger met vlaggetjes */
+function Vlaggetjes({ breedte, kleuren }: { breedte: number; kleuren: string[] }) {
+  // Punten langs de boog van de slinger: een kwadratische curve
+  const punt = (t: number) => ({ x: 300 * t, y: 6 + 2 * t * (1 - t) * 30 })
+  const aantal = 11
+  const vlaggen = Array.from({ length: aantal }, (_, i) => {
+    const a = punt((i + 0.15) / aantal)
+    const b = punt((i + 0.85) / aantal)
+    const m = punt((i + 0.5) / aantal)
+    return (
+      <path key={i} d={`M${rond(a.x)} ${rond(a.y)}L${rond(b.x)} ${rond(b.y)}L${rond(m.x)} ${rond(m.y + 22)}Z`} fill={kleuren[i % kleuren.length]} />
+    )
+  })
+  return (
+    <svg width={breedte} height={rond((breedte * 56) / 300)} viewBox="0 0 300 56" fill="none">
+      <path d="M0 6Q150 66 300 6" stroke={kleuren[0]} strokeWidth="1.1" />
+      {vlaggen}
+    </svg>
+  )
+}
+
+// Confetti op vaste plekken (geen Math.random: server en browser moeten
+// hetzelfde tekenen), als deel van de breedte en de hoogte
+const CONFETTI: { x: number; y: number; w: number; h: number; draai: number; rond?: boolean; kleur: number }[] = [
+  { x: 0.08, y: 0.2, w: 7, h: 3, draai: 25, kleur: 0 },
+  { x: 0.9, y: 0.22, w: 6, h: 6, draai: 0, rond: true, kleur: 1 },
+  { x: 0.16, y: 0.46, w: 5, h: 5, draai: 0, rond: true, kleur: 2 },
+  { x: 0.84, y: 0.5, w: 8, h: 3, draai: -30, kleur: 0 },
+  { x: 0.06, y: 0.72, w: 7, h: 3, draai: 60, kleur: 1 },
+  { x: 0.93, y: 0.78, w: 5, h: 5, draai: 0, rond: true, kleur: 0 },
+  { x: 0.24, y: 0.9, w: 8, h: 3, draai: -15, kleur: 2 },
+  { x: 0.74, y: 0.92, w: 6, h: 6, draai: 0, rond: true, kleur: 1 },
+  { x: 0.5, y: 0.97, w: 7, h: 3, draai: 40, kleur: 0 },
+]
+
+/** De themaontwerpen: allemaal dezelfde opbouw, met een eigen tekening */
+const THEMA_ONTWERPEN: NieuwOntwerp[] = ["winter", "lente", "zomer", "liefde", "strand", "boho", "festival"]
+
 /** De teksten op een ontwerp die op de homepagina een eigen letter en grootte kunnen krijgen */
 export type TekstRol = "kop" | "namen" | "datum" | "locatie" | "tijden" | "dresscode"
 export type EigenTekst = Partial<Record<TekstRol, { font?: string; schaal?: number }>>
@@ -714,6 +883,172 @@ function Inhoud({
         </D>
       </D>
     )
+  }
+
+  // ── De themaontwerpen (27 september 2026) ────────────────────────────────
+  // Winter, lente, zomer, liefde, strand, Ibiza boho en festival. Voor de kaart
+  // en de homepagina. De tekeningen staan in de kleur van de stijl.
+  if (THEMA_ONTWERPEN.includes(ontwerp)) {
+    const datum = datumKort(d.datumIso, " · ") ?? d.dateText
+    const kopRegel = (grootte = 11, kleur = label) => (
+      <div style={{ display: "flex", ...tt("kop", letters.kop, grootte), letterSpacing: "0.34em", textTransform: "uppercase", color: kleur, textAlign: "center" }}>
+        {d.heading}
+      </div>
+    )
+    const inhoud = (o: { naamRegel?: number; datumKleur?: string } = {}) => (
+      <D style={kolom}>
+        <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: o.naamRegel ?? 1.12, color: kop }} />
+        {datum && (
+          <div style={{ display: "flex", ...tt("datum", letters.kop, 12.5), letterSpacing: "0.24em", textTransform: "uppercase", color: o.datumKleur ?? accent }}>
+            {datum}
+          </div>
+        )}
+        {d.location && (
+          <Regels tekst={d.location} style={{ ...tt("locatie", letters.tekst, 11.5), lineHeight: 1.5, letterSpacing: "0.06em", color: tekst, opacity: 0.88 }} />
+        )}
+        {d.message && (
+          <Regels tekst={d.message} style={{ fontFamily: letters.tekst, fontSize: px(12), lineHeight: 1.55, color: tekst, maxWidth: px(290), marginTop: px(6), opacity: 0.9 }} />
+        )}
+        {details(accent, { grootte: 10.5, marge: 4, max: 300 })}
+      </D>
+    )
+    // Een echte kolom en geen fragment: satori maakte van een fragment een
+    // rij, en dan stond alles naast elkaar op de afbeelding
+    const kolom: CSSProperties = { flexDirection: "column", alignItems: "center", gap: px(10), width: "100%" }
+    // Versiering (losse tekeningen op de kaart) direct in de kaart zelf, niet
+    // in de kolom met tekst: satori plaatst iets absoluuts ten opzichte van
+    // zijn ouder, en dan stonden de takjes en vlaggetjes over de tekst
+    const wortel = (padding: string, kinderen: ReactNode, versiering?: ReactNode) => (
+      <D style={{ ...basis, alignItems: "center", justifyContent: "center", padding, borderRadius: px(14) }}>
+        {versiering}
+        {kinderen}
+      </D>
+    )
+    const los = (stijl: CSSProperties, kind: ReactNode, key?: number) => (
+      <div key={key} style={{ display: "flex", position: "absolute", ...stijl }}>{kind}</div>
+    )
+
+    if (ontwerp === "winter") {
+      const vlokken = [
+        { x: 0.06, y: 0.05, m: 36, o: 0.5 },
+        { x: 0.8, y: 0.04, m: 22, o: 0.38 },
+        { x: 0.87, y: 0.3, m: 14, o: 0.32 },
+        { x: 0.04, y: 0.6, m: 16, o: 0.3 },
+        { x: 0.8, y: 0.8, m: 32, o: 0.45 },
+        { x: 0.14, y: 0.87, m: 12, o: 0.32 },
+      ]
+      return wortel(`${px(40)}px ${px(30)}px`, (
+        <D style={kolom}>
+          {kopRegel()}
+          <D style={{ marginTop: px(4), marginBottom: px(2) }}><Sneeuwvlok maat={px(26)} kleur={accent} dikte={1} /></D>
+          {inhoud()}
+        </D>
+      ), vlokken.map((v, i) => los({ left: breedte * v.x, top: `${v.y * 100}%`, opacity: v.o }, <Sneeuwvlok maat={px(v.m)} kleur={accent} />, i)))
+    }
+
+    if (ontwerp === "lente") {
+      return wortel(`${px(78)}px ${px(30)}px ${px(74)}px`, (
+        <D style={kolom}>
+          {kopRegel()}
+          {inhoud()}
+        </D>
+      ), [
+        los({ left: 0, top: px(8) }, <Bloesemtak breedte={breedte * 0.66} kleur={accent} />, 0),
+        los({ right: 0, bottom: px(8), transform: "rotate(180deg)" }, <Bloesemtak breedte={breedte * 0.52} kleur={accent} />, 1),
+      ])
+    }
+
+    if (ontwerp === "zomer") {
+      return wortel(`${px(34)}px ${px(30)}px`, (
+        <D style={kolom}>
+          {kopRegel()}
+          <D style={{ marginTop: px(6), marginBottom: px(4) }}><Zonsopgang breedte={px(210)} kleur={accent} /></D>
+          {inhoud()}
+        </D>
+      ))
+    }
+
+    if (ontwerp === "liefde") {
+      const ini = initialenLijst(d.names)
+      const hb = px(150)
+      const hartjes = [
+        { x: 0.1, y: 0.1, m: 14, o: 0.55 },
+        { x: 0.82, y: 0.14, m: 10, o: 0.45 },
+        { x: 0.88, y: 0.62, m: 16, o: 0.5 },
+        { x: 0.06, y: 0.72, m: 11, o: 0.4 },
+      ]
+      return wortel(`${px(34)}px ${px(30)}px`, (
+        <D style={kolom}>
+          {kopRegel()}
+          <D style={{ position: "relative", width: hb, height: hb * 0.9, alignItems: "center", justifyContent: "center", marginTop: px(4), marginBottom: px(4) }}>
+            {los({ left: 0, top: 0 }, <Hart breedte={hb} kleur={accent} dikte={1.2} />)}
+            <D style={{ alignItems: "center", gap: px(8), marginTop: px(-10) }}>
+              <div style={{ display: "flex", fontFamily: letters.extra, fontSize: pxN(40), lineHeight: 1, color: kop }}>{ini[0] ?? ""}</div>
+              {ini[1] && <div style={{ display: "flex", fontFamily: letters.extra, fontSize: pxN(24), lineHeight: 1, color: accent }}>&amp;</div>}
+              {ini[1] && <div style={{ display: "flex", fontFamily: letters.extra, fontSize: pxN(40), lineHeight: 1, color: kop }}>{ini[1]}</div>}
+            </D>
+          </D>
+          {inhoud()}
+        </D>
+      ), hartjes.map((h, i) => los({ left: breedte * h.x, top: `${h.y * 100}%`, opacity: h.o }, <Hart breedte={px(h.m)} kleur={accent} vol />, i)))
+    }
+
+    if (ontwerp === "strand") {
+      return wortel(`${px(36)}px ${px(26)}px ${px(30)}px`, (
+        <D style={kolom}>
+          {kopRegel()}
+          <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.05, color: kop }} />
+          {datum && (
+            <div style={{ display: "flex", ...tt("datum", letters.kop, 12.5), letterSpacing: "0.24em", textTransform: "uppercase", color: accent }}>{datum}</div>
+          )}
+          {d.location && (
+            <Regels tekst={d.location} style={{ ...tt("locatie", letters.tekst, 11.5), lineHeight: 1.5, letterSpacing: "0.06em", color: tekst, opacity: 0.88 }} />
+          )}
+          <D style={{ marginTop: px(4) }}><Strandtafereel breedte={px(330)} kleur={accent} /></D>
+          {d.message && (
+            <Regels tekst={d.message} style={{ fontFamily: letters.tekst, fontSize: px(12), lineHeight: 1.55, color: tekst, maxWidth: px(290), opacity: 0.9 }} />
+          )}
+          {details(accent, { grootte: 10.5, marge: 2, max: 300 })}
+        </D>
+      ))
+    }
+
+    if (ontwerp === "boho") {
+      return wortel(`${px(34)}px ${px(30)}px`, (
+        <D style={kolom}>
+          <D style={{ marginBottom: px(6) }}><Regenboog breedte={px(220)} kleur={accent} /></D>
+          {kopRegel()}
+          {inhoud()}
+        </D>
+      ))
+    }
+
+    // Festival: vlaggetjes, confetti en de namen stoer en groot
+    const kleurtjes = [accent, label, kop]
+    return wortel(`${px(80)}px ${px(26)}px ${px(40)}px`, (
+      <D style={kolom}>
+        <div style={{ display: "flex", ...tt("kop", letters.extra, 46), lineHeight: 1, color: accent, textAlign: "center" }}>{d.heading}</div>
+        {inhoud({ naamRegel: 1.02, datumKleur: kop })}
+      </D>
+    ), [
+      los({ left: 0, top: 0 }, <Vlaggetjes breedte={breedte} kleuren={[accent, `${accent}99`, kop]} />, 99),
+      ...CONFETTI.map((c, i) =>
+        los(
+          {
+            left: breedte * c.x,
+            top: `${c.y * 100}%`,
+            width: px(c.w),
+            height: px(c.h),
+            backgroundColor: kleurtjes[c.kleur],
+            opacity: 0.7,
+            borderRadius: c.rond ? px(c.w) : px(1),
+            transform: `rotate(${c.draai}deg)`,
+          },
+          null,
+          i
+        )
+      ),
+    ])
   }
 
   // ── De ontwerpen van de homepagina (27 september 2026) ─────────────────────

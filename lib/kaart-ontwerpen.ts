@@ -69,6 +69,14 @@ export const ONTWERP_LETTERS: Record<NieuwOntwerp, OntwerpLetters> = {
   monogram: { namen: L.italiana, kop: L.montserrat, tekst: L.montserrat, extra: L.cormorant },
   lijnkader: { namen: L.pinyon, kop: L.cinzel, tekst: L.cormorant },
   datumband: { namen: L.allura, kop: L.jost, tekst: L.jost },
+  // De themaontwerpen
+  winter: { namen: L.pinyon, kop: L.cinzel, tekst: L.jost },
+  lente: { namen: L.allura, kop: L.jost, tekst: L.jost },
+  zomer: { namen: L.prata, kop: L.jost, tekst: L.jost },
+  liefde: { namen: L.pinyon, kop: L.cormorant, tekst: L.cormorant, extra: L.cormorant },
+  strand: { namen: L.allison, kop: L.jost, tekst: L.jost },
+  boho: { namen: L.italiana, kop: L.jost, tekst: L.jost },
+  festival: { namen: L.abril, kop: L.jost, tekst: L.jost, extra: L.allison },
 }
 
 // ── De kaders uit de websitebouwer ─────────────────────────────────────────
@@ -169,6 +177,14 @@ export const ONDER_DE_KAART: Partial<Record<CardDesign, OnderDeKaart>> = {
   monogram: { locatie: false, bericht: false, details: true },
   lijnkader: { locatie: false, bericht: false, details: true },
   datumband: { locatie: false, bericht: false, details: true },
+  // De themaontwerpen: alles op de kaart, tijden en dresscode op of eronder
+  winter: { locatie: false, bericht: false, details: true },
+  lente: { locatie: false, bericht: false, details: true },
+  zomer: { locatie: false, bericht: false, details: true },
+  liefde: { locatie: false, bericht: false, details: true },
+  strand: { locatie: false, bericht: false, details: true },
+  boho: { locatie: false, bericht: false, details: true },
+  festival: { locatie: false, bericht: false, details: true },
 }
 
 // ── Details op of onder de kaart ────────────────────────────────────────────

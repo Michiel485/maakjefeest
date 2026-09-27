@@ -247,6 +247,56 @@ export const STYLE_CONFIG = {
     fontImport: null as string | null,
     frameBodyText: null as string | null,
   },
+  // Voor de themaontwerpen (27 september 2026)
+  ijs: {
+    accent: "#6F93B5",
+    heroGradient: "linear-gradient(135deg, #F7FAFC, #EDF3F8, #E2EBF3)",
+    fontFamily: "var(--font-montserrat), sans-serif",
+    nameFont: null as string | null,
+    navBg: "#F7FAFC",
+    navText: "#2C3E52",
+    headingColor: "#2C3E52",
+    bodyText: "#4A5B6D",
+    buttonBg: "#6F93B5",
+    buttonText: "#FFFFFF",
+    labelColor: "#6F93B5",
+    bodyBg: "#E9F0F6",
+    bodyBackground: null as string | null,
+    cardBg: null as string | null,
+    cardText: null as string | null,
+    goldBorder: false as boolean,
+    floral: false as boolean,
+    floralFilter: null as string | null,
+    bodyLetterSpacing: "normal",
+    bodyFontWeight: "400",
+    fontImport: null as string | null,
+    frameBodyText: null as string | null,
+  },
+  // Voor de themaontwerpen (27 september 2026)
+  zee: {
+    accent: "#3A8794",
+    heroGradient: "linear-gradient(135deg, #F5FAFA, #E9F3F3, #DCECEC)",
+    fontFamily: "var(--font-montserrat), sans-serif",
+    nameFont: null as string | null,
+    navBg: "#F5FAFA",
+    navText: "#1E4650",
+    headingColor: "#1E4650",
+    bodyText: "#3E5C62",
+    buttonBg: "#3A8794",
+    buttonText: "#FFFFFF",
+    labelColor: "#3A8794",
+    bodyBg: "#E4F0F0",
+    bodyBackground: null as string | null,
+    cardBg: null as string | null,
+    cardText: null as string | null,
+    goldBorder: false as boolean,
+    floral: false as boolean,
+    floralFilter: null as string | null,
+    bodyLetterSpacing: "normal",
+    bodyFontWeight: "400",
+    fontImport: null as string | null,
+    frameBodyText: null as string | null,
+  },
 } as const
 
 export type Style = keyof typeof STYLE_CONFIG
@@ -265,11 +315,13 @@ export const STYLE_NAAM: Record<Style, string> = {
   bordeaux: "Bordeaux",
   zwartgoud: "Noir",
   zwartwit: "Inkt",
+  ijs: "IJs",
+  zee: "Zee",
 }
 
 /** De volgorde in beide bouwers: van licht naar donker, van zacht naar stevig. */
 export const STYLE_VOLGORDE: Style[] = [
-  "zand", "ivoor", "earthy", "emerald", "roze", "terracotta", "poederroze", "bordeaux", "zwartgoud", "zwartwit",
+  "zand", "ivoor", "earthy", "ijs", "zee", "emerald", "roze", "terracotta", "poederroze", "bordeaux", "zwartgoud", "zwartwit",
 ]
 
 export function isStyle(v: unknown): v is Style {
