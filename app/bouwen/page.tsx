@@ -2776,38 +2776,43 @@ export default function BouwenPage() {
                                         <ProgramIcon iconId={item.iconId ?? "heart"} size={14} strokeWidth={2} />
                                         <span>Icoon</span>
                                       </button>
-                                      {deleteConfirmIdx === i ? (
-                                        <div className="flex items-center gap-1.5 bg-red-50 border border-red-200 rounded-lg px-2 py-1">
-                                          <span className="text-xs font-medium text-red-700 whitespace-nowrap">Verwijderen?</span>
+                                      {/* Het prullenbakje staat altijd op deze regel; de vraag of het
+                                          echt weg moet komt eronder. Op deze regel paste hij niet, en
+                                          dan vielen Ja en Nee buiten beeld (Michiel, 27 september 2026). */}
+                                      <button
+                                        onClick={() => setDeleteConfirmIdx(deleteConfirmIdx === i ? null : i)}
+                                        className="ml-auto text-red-400 hover:text-red-600 transition-colors p-1 flex-shrink-0"
+                                        title="Onderdeel verwijderen"
+                                        aria-label="Onderdeel verwijderen"
+                                      >
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                      </button>
+                                    </div>
+                                    {deleteConfirmIdx === i && (
+                                      <div className="flex items-center justify-between gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                                        <span className="text-xs font-medium text-red-700">Dit onderdeel verwijderen?</span>
+                                        <div className="flex items-center gap-1.5 flex-shrink-0">
                                           <button
                                             onClick={() => {
                                               const updated = programmaItems.filter((_, j) => j !== i)
                                               updateContent("Programma", { items: updated, layout: programLayout })
                                               setDeleteConfirmIdx(null)
                                             }}
-                                            className="text-xs font-semibold px-2 py-0.5 bg-red-500 hover:bg-red-600 text-white rounded transition-colors"
+                                            className="text-xs font-semibold px-2.5 py-1 bg-red-500 hover:bg-red-600 text-white rounded transition-colors"
                                           >
                                             Ja
                                           </button>
                                           <button
                                             onClick={() => setDeleteConfirmIdx(null)}
-                                            className="text-xs font-semibold px-2 py-0.5 bg-white hover:bg-gray-100 text-gray-600 border border-[var(--goud-licht)] rounded transition-colors"
+                                            className="text-xs font-semibold px-2.5 py-1 bg-white hover:bg-gray-100 text-gray-600 border border-[var(--goud-licht)] rounded transition-colors"
                                           >
                                             Nee
                                           </button>
                                         </div>
-                                      ) : (
-                                        <button
-                                          onClick={() => setDeleteConfirmIdx(i)}
-                                          className="text-red-400 hover:text-red-600 transition-colors p-1"
-                                          title="Onderdeel verwijderen"
-                                        >
-                                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                          </svg>
-                                        </button>
-                                      )}
-                                    </div>
+                                      </div>
+                                    )}
                                     {openIconPickerIdx === i && (
                                       <div className="grid grid-cols-3 gap-1 p-2 bg-white rounded-xl border border-gray-100 shadow-sm">
                                         {PROGRAM_ICONS.map((icon) => (
@@ -3389,9 +3394,6 @@ export default function BouwenPage() {
                                 <>
                                   <p style={{ fontSize: "0.9375rem", marginBottom: 16, textAlign: "center", color: rsvpLabelColor }}>
                                     {(content.RSVP?.text as string) || "Laat weten of je erbij bent via het formulier."}
-                                  </p>
-                                  <p style={{ textAlign: "center", fontSize: "0.8125rem", marginBottom: 24, padding: "10px 14px", borderRadius: 10, backgroundColor: `${sc.accent}12`, border: `1px solid ${sc.accent}30`, color: sc.bodyText, lineHeight: 1.55 }}>
-                                    📋 Check even je uitnodiging welk type gast je bent. Als daggast verschijnen aan de avondtafel? Wij zeggen er niets van, de catering wel. 😉
                                   </p>
                                   {/* Klikken in het formulier is het formulier proberen, niet
                                       naar de instellingen springen */}

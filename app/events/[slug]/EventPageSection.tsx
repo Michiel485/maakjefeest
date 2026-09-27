@@ -84,19 +84,6 @@ export default function EventPageSection({ page, sc, eventId }: { page: PageData
       <>
         {/* Gecentreerd boven het formulier (Michiel, 26 september 2026) */}
         <p style={{ fontSize: "0.9375rem", marginBottom: 16, textAlign: "center", color: sc.goldBorder ? (sc.cardText ?? sc.bodyText) : sc.bodyText }}>{introText}</p>
-        <p style={{
-          textAlign: "center",
-          fontSize: "0.8125rem",
-          marginBottom: 24,
-          padding: "10px 14px",
-          borderRadius: 10,
-          backgroundColor: `${sc.accent}12`,
-          border: `1px solid ${sc.accent}30`,
-          color: sc.bodyText,
-          lineHeight: 1.55,
-        }}>
-          📋 Check even je uitnodiging welk type gast je bent. Als daggast verschijnen aan de avondtafel? Wij zeggen er niets van, de catering wel. 😉
-        </p>
         <AanmeldFormulier
           eventId={eventId}
           stand="volledig"
