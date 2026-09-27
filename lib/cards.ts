@@ -32,6 +32,8 @@ export type NieuwOntwerp =
   | "winter" | "zomer" | "liefde" | "boho"
   // Met een hart (27 september 2026)
   | "hartlijn" | "tweeharten" | "hartamp" | "hartkader"
+  // Met een hart zoals met de hand getekend (27 september 2026)
+  | "krijthart" | "kalligrafie" | "schaduwhart"
 export type CardDesign = KlassiekOntwerp | NieuwOntwerp
 export type CardTemplate = CardDesign | "foto"
 
@@ -40,7 +42,7 @@ export const CARD_TEMPLATE_WAARDEN: CardTemplate[] = [
   "klassiek", "sierlijk", "bohemian", "foto", "minimaal", "fotovol", "boog", "deco", "datum", "eigen",
   "titel", "palm", "ibiza", "fotoschrift", "olijf",
   "pampas", "pampasruit", "terra", "terraruit", "herfst", "herfstruit", "goudblad", "magnolia",
-  "winter", "zomer", "liefde", "boho", "hartlijn", "tweeharten", "hartamp", "hartkader",
+  "winter", "zomer", "liefde", "boho", "hartlijn", "tweeharten", "hartamp", "hartkader", "krijthart", "kalligrafie", "schaduwhart",
 ]
 
 export function isKlassiekOntwerp(d: CardDesign): d is KlassiekOntwerp {
@@ -196,7 +198,7 @@ export const CARD_TYPE_PLAN: Record<CardType, "save_the_date" | "uitnodiging"> =
 export const CARD_DESIGNS: CardDesign[] = [
   "klassiek", "sierlijk", "bohemian", "olijf", "pampas", "pampasruit", "terra", "terraruit", "herfst", "herfstruit", "goudblad", "magnolia",
   "minimaal", "datum", "titel", "palm", "ibiza", "deco", "boog", "fotovol", "fotoschrift",
-  "winter", "zomer", "liefde", "boho", "hartlijn", "tweeharten", "hartamp", "hartkader", "eigen",
+  "winter", "zomer", "liefde", "boho", "hartlijn", "tweeharten", "hartamp", "hartkader", "krijthart", "kalligrafie", "schaduwhart", "eigen",
 ]
 
 export const CARD_TEMPLATE_LABEL: Record<CardDesign, string> = {
@@ -234,6 +236,9 @@ export const CARD_TEMPLATE_LABEL: Record<CardDesign, string> = {
   tweeharten: "Twee harten",
   hartamp: "Hart in de &",
   hartkader: "Hart als kader",
+  krijthart: "Hand getekend hart",
+  kalligrafie: "Kalligrafie",
+  schaduwhart: "Hart met schaduw",
 }
 
 /**

@@ -78,6 +78,9 @@ export const ONTWERP_LETTERS: Record<NieuwOntwerp, OntwerpLetters> = {
   tweeharten: { namen: L.pinyon, kop: L.cormorant, tekst: L.cormorant },
   hartamp: { namen: L.bodoni, kop: L.montserrat, tekst: L.montserrat },
   hartkader: { namen: L.pinyon, kop: L.cinzel, tekst: L.cormorant },
+  krijthart: { namen: L.allura, kop: L.jost, tekst: L.jost },
+  kalligrafie: { namen: L.pinyon, kop: L.cormorant, tekst: L.cormorant },
+  schaduwhart: { namen: L.jostDun, kop: L.jost, tekst: L.jost },
 }
 
 // ── De kaders uit de websitebouwer ─────────────────────────────────────────
@@ -187,6 +190,9 @@ export const ONDER_DE_KAART: Partial<Record<CardDesign, OnderDeKaart>> = {
   tweeharten: { locatie: false, bericht: false, details: true },
   hartamp: { locatie: false, bericht: false, details: true },
   hartkader: { locatie: false, bericht: false, details: true },
+  krijthart: { locatie: false, bericht: false, details: true },
+  kalligrafie: { locatie: false, bericht: false, details: true },
+  schaduwhart: { locatie: false, bericht: false, details: true },
 }
 
 // ── Details op of onder de kaart ────────────────────────────────────────────

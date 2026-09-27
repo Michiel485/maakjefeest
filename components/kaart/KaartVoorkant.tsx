@@ -144,6 +144,55 @@ function TweeHarten({ breedte, kleur }: { breedte: number; kleur: string }) {
   )
 }
 
+/**
+ * Een hart als met krijt of een stift getekend: twee lange halen die elkaar
+ * onderaan kruisen (Michiel, 27 september 2026, naar een voorbeeld)
+ */
+function KrijtHart({ breedte, kleur }: { breedte: number; kleur: string }) {
+  const links = "M71 146C55 127 30 95 13 62C3 42 5 17 20 12C34 8 44 29 50 51"
+  const rechts = "M50 51C58 30 73 7 89 5C99 4 99 22 94 36C84 64 64 104 44 146"
+  return (
+    <svg width={breedte} height={rond((breedte * 150) / 100)} viewBox="0 0 100 150" fill="none">
+      <path d={links} stroke={kleur} strokeWidth="5.2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d={rechts} stroke={kleur} strokeWidth="5.2" strokeLinecap="round" strokeLinejoin="round" />
+      {/* Een droge rand, zoals krijt op papier */}
+      <path d={links} stroke={kleur} strokeWidth="7" strokeLinecap="round" strokeDasharray="1.2 5" strokeOpacity="0.35" />
+      <path d={rechts} stroke={kleur} strokeWidth="7" strokeLinecap="round" strokeDasharray="1.2 6" strokeOpacity="0.35" />
+    </svg>
+  )
+}
+
+/** Een open hart als een penseelstreek: dik en dun, met een lange uithaal */
+function KalligrafieHart({ breedte, kleur }: { breedte: number; kleur: string }) {
+  return (
+    <svg width={breedte} height={rond((breedte * 110) / 100)} viewBox="0 0 100 110" fill="none">
+      <path
+        d="M40 79C21 71 3 53 5 34C7 17 22 11 33 17C41 21 46 32 47.5 44L46.5 45C44 34 38 26 31 24C22 22 13.5 28 13.5 39C13.5 55 27 68 40 79Z"
+        fill={kleur}
+      />
+      <path
+        d="M47.5 44C52 26 66 9 80 9C95 9 101 24 95 41C89 59 73 80 60 102L58.5 101.5C68 80 80 60 84.5 42C88 28 84 18 76 18C64 18 54 30 48.5 45.5Z"
+        fill={kleur}
+      />
+    </svg>
+  )
+}
+
+/** Een zacht gevuld hart met een losse, verschoven lijn eroverheen */
+function SchaduwHart({ breedte, kleur, lijnKleur }: { breedte: number; kleur: string; lijnKleur: string }) {
+  return (
+    <svg width={breedte} height={breedte} viewBox="0 0 100 100" fill="none">
+      <path d="M54 94C32 75 16 58 16 37C16 22 27 14 38 17C46 19 51 28 53 36C57 24 67 16 79 18C92 20 96 35 90 49C82 67 67 82 54 94Z" fill={kleur} fillOpacity="0.4" />
+      <path
+        d="M45 91C27 69 9 47 11 24C12 10 24 4 34 8C42 11 46 25 48 33C54 21 66 14 80 16C93 18 97 32 89 46C79 64 60 79 45 91Z"
+        stroke={lijnKleur}
+        strokeWidth="0.9"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 /** Boho: bogen als een regenboog met een zonnetje erin */
 function Regenboog({ breedte, kleur }: { breedte: number; kleur: string }) {
   let stralen = ""
@@ -163,7 +212,7 @@ function Regenboog({ breedte, kleur }: { breedte: number; kleur: string }) {
 }
 
 /** De themaontwerpen: allemaal dezelfde opbouw, met een eigen tekening */
-const THEMA_ONTWERPEN: NieuwOntwerp[] = ["winter", "zomer", "liefde", "boho", "hartlijn", "tweeharten", "hartamp", "hartkader"]
+const THEMA_ONTWERPEN: NieuwOntwerp[] = ["winter", "zomer", "liefde", "boho", "hartlijn", "tweeharten", "hartamp", "hartkader", "krijthart", "kalligrafie", "schaduwhart"]
 
 /** De teksten op een ontwerp die op de homepagina een eigen letter en grootte kunnen krijgen */
 export type TekstRol = "kop" | "namen" | "datum" | "locatie" | "tijden" | "dresscode"
@@ -1005,6 +1054,42 @@ function Inhoud({
             <Regels tekst={d.message} style={{ fontFamily: letters.tekst, fontSize: px(12), lineHeight: 1.55, color: tekst, maxWidth: px(290), opacity: 0.9 }} />
           )}
           {details(accent, { grootte: 10.5, marge: 2, max: 300 })}
+        </D>
+      ))
+    }
+
+    // Hand getekend hart: lang en scheef, als met krijt
+    if (ontwerp === "krijthart") {
+      return wortel(`${px(36)}px ${px(30)}px`, (
+        <D style={kolom}>
+          {kopRegel()}
+          <D style={{ marginTop: px(4), marginBottom: px(6), transform: "rotate(-6deg)" }}><KrijtHart breedte={px(96)} kleur={accent} /></D>
+          {inhoud()}
+        </D>
+      ))
+    }
+
+    // Kalligrafie: een open hart als een penseelstreek
+    if (ontwerp === "kalligrafie") {
+      return wortel(`${px(36)}px ${px(30)}px`, (
+        <D style={kolom}>
+          {kopRegel()}
+          <D style={{ marginTop: px(4), marginBottom: px(6) }}><KalligrafieHart breedte={px(120)} kleur={kop} /></D>
+          {inhoud()}
+        </D>
+      ))
+    }
+
+    // Hart met schaduw: een zacht hart met een losse lijn, op een rondje
+    if (ontwerp === "schaduwhart") {
+      const r = px(170)
+      return wortel(`${px(36)}px ${px(30)}px`, (
+        <D style={kolom}>
+          {kopRegel()}
+          <D style={{ width: r, height: r, borderRadius: r / 2, backgroundColor: `${accent}22`, alignItems: "center", justifyContent: "center", marginTop: px(4), marginBottom: px(6) }}>
+            <SchaduwHart breedte={px(112)} kleur={accent} lijnKleur={kop} />
+          </D>
+          {inhoud()}
         </D>
       ))
     }
