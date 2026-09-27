@@ -64,6 +64,11 @@ export const ONTWERP_LETTERS: Record<NieuwOntwerp, OntwerpLetters> = {
   herfstruit: { namen: L.prata, kop: L.jost, tekst: L.jost },
   goudblad: { namen: L.allison, kop: L.jost, tekst: L.jost },
   magnolia: { namen: L.pinyon, kop: L.jost, tekst: L.jost },
+  // Alleen voor de homepagina
+  editoriaal: { namen: L.bodoni, kop: L.montserrat, tekst: L.montserrat },
+  monogram: { namen: L.italiana, kop: L.montserrat, tekst: L.montserrat, extra: L.cormorant },
+  lijnkader: { namen: L.pinyon, kop: L.cinzel, tekst: L.cormorant },
+  datumband: { namen: L.allura, kop: L.jost, tekst: L.jost },
 }
 
 // ── De kaders uit de websitebouwer ─────────────────────────────────────────
@@ -159,6 +164,11 @@ export const ONDER_DE_KAART: Partial<Record<CardDesign, OnderDeKaart>> = {
   // Een eigen ontwerp heeft alles al in de afbeelding; alleen wat je er zelf
   // bij schrijft komt eronder
   eigen: { locatie: false, bericht: true, details: true },
+  // De ontwerpen van de homepagina: tijden en dresscode op of eronder
+  editoriaal: { locatie: false, bericht: false, details: true },
+  monogram: { locatie: false, bericht: false, details: true },
+  lijnkader: { locatie: false, bericht: false, details: true },
+  datumband: { locatie: false, bericht: false, details: true },
 }
 
 // ── Details op of onder de kaart ────────────────────────────────────────────

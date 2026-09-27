@@ -716,6 +716,163 @@ function Inhoud({
     )
   }
 
+  // ── De ontwerpen van de homepagina (27 september 2026) ─────────────────────
+  // Breed, en getekend met lijnen en letters in de kleuren van de website.
+  // Alleen op de homepagina, nooit als kaart.
+  const isoDelen = d.datumIso?.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  const lijnStuk = (breed: number, kleur = accent) => (
+    <div style={{ display: "flex", width: px(breed), height: lijn, backgroundColor: kleur }} />
+  )
+
+  // Editoriaal: als de voorpagina van een tijdschrift
+  if (ontwerp === "editoriaal") {
+    return (
+      <D style={{ ...basis, alignItems: "center", padding: `${px(24)}px ${px(20)}px`, gap: px(10) }}>
+        <div style={{ display: "flex", ...tt("kop", letters.kop, 10), letterSpacing: "0.42em", textTransform: "uppercase", color: label }}>
+          {d.heading}
+        </div>
+        <div style={{ display: "flex", width: "100%", height: lijn, backgroundColor: kop, opacity: 0.45 }} />
+        <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.02, color: kop, marginTop: px(8), marginBottom: px(8) }} />
+        <div style={{ display: "flex", width: "100%", height: lijn, backgroundColor: kop, opacity: 0.45 }} />
+        <D style={{ width: "100%", justifyContent: d.location ? "space-between" : "center", alignItems: "center", gap: px(16) }}>
+          {d.dateText && (
+            <div style={{ display: "flex", ...tt("datum", letters.kop, 11), letterSpacing: "0.22em", textTransform: "uppercase", color: kop }}>
+              {d.dateText}
+            </div>
+          )}
+          {d.location && (
+            <div style={{ display: "flex", ...tt("locatie", letters.tekst, 11), letterSpacing: "0.22em", textTransform: "uppercase", color: kop, textAlign: "right" }}>
+              {d.location.replace(/\s*\n\s*/g, ", ")}
+            </div>
+          )}
+        </D>
+        {details(accent, { grootte: 10.5, marge: 8, max: 360 })}
+      </D>
+    )
+  }
+
+  // Monogram: de initialen groot in een dunne dubbele cirkel
+  if (ontwerp === "monogram") {
+    const ini = initialenLijst(d.names)
+    const c = px(156)
+    return (
+      <D style={{ ...basis, alignItems: "center", padding: `${px(24)}px ${px(24)}px`, gap: px(12) }}>
+        <div style={{ display: "flex", ...tt("kop", letters.kop, 10), letterSpacing: "0.4em", textTransform: "uppercase", color: label }}>
+          {d.heading}
+        </div>
+        <D style={{ position: "relative", width: c, height: c, alignItems: "center", justifyContent: "center", marginTop: px(4) }}>
+          <div style={{ display: "flex", position: "absolute", top: 0, left: 0, width: c, height: c, borderRadius: c / 2, border: `${lijn}px solid ${accent}` }} />
+          <div style={{ display: "flex", position: "absolute", top: px(6), left: px(6), width: c - px(12), height: c - px(12), borderRadius: (c - px(12)) / 2, border: `${lijn}px solid ${accent}80` }} />
+          <D style={{ alignItems: "center", gap: px(12) }}>
+            <div style={{ display: "flex", fontFamily: letters.extra, fontSize: pxN(58), lineHeight: 1, color: kop }}>{ini[0] ?? "♥"}</div>
+            {ini[1] && <div style={{ display: "flex", width: lijn, height: px(58), backgroundColor: accent }} />}
+            {ini[1] && <div style={{ display: "flex", fontFamily: letters.extra, fontSize: pxN(58), lineHeight: 1, color: kop }}>{ini[1]}</div>}
+          </D>
+        </D>
+        <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.15, color: kop, marginTop: px(6) }} />
+        {d.dateText && (
+          <D style={{ alignItems: "center", gap: px(12) }}>
+            {lijnStuk(36)}
+            <div style={{ display: "flex", ...tt("datum", letters.kop, 11), letterSpacing: "0.26em", textTransform: "uppercase", color: accent }}>{d.dateText}</div>
+            {lijnStuk(36)}
+          </D>
+        )}
+        {d.location && (
+          <Regels tekst={d.location} style={{ ...tt("locatie", letters.tekst, 11), lineHeight: 1.5, letterSpacing: "0.08em", color: tekst, opacity: 0.85 }} />
+        )}
+        {details(accent, { grootte: 10.5, marge: 4, max: 340 })}
+      </D>
+    )
+  }
+
+  // Klassiek kader: twee dunne lijnen met sierhoekjes, breed en liggend
+  if (ontwerp === "lijnkader") {
+    const hoekje = (stijl: CSSProperties) => (
+      <div style={{ display: "flex", position: "absolute", width: px(9), height: px(9), backgroundColor: accent, transform: "rotate(45deg)", ...stijl }} />
+    )
+    const buiten = px(4.5)
+    return (
+      <D style={{ ...basis, alignItems: "center", padding: px(10) }}>
+        <D
+          style={{
+            position: "relative",
+            width: "100%",
+            flexDirection: "column",
+            alignItems: "center",
+            padding: `${px(34)}px ${px(40)}px`,
+            border: `${lijn}px solid ${accent}`,
+            gap: px(10),
+          }}
+        >
+          {/* De binnenste lijn */}
+          <div style={{ display: "flex", position: "absolute", top: px(6), left: px(6), right: px(6), bottom: px(6), border: `${lijn}px solid ${accent}70` }} />
+          {hoekje({ top: -buiten, left: -buiten })}
+          {hoekje({ top: -buiten, right: -buiten })}
+          {hoekje({ bottom: -buiten, left: -buiten })}
+          {hoekje({ bottom: -buiten, right: -buiten })}
+          <div style={{ display: "flex", ...tt("kop", letters.kop, 11), letterSpacing: "0.34em", textTransform: "uppercase", color: accent }}>
+            {d.heading}
+          </div>
+          <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.15, color: kop }} />
+          <D style={{ alignItems: "center", gap: px(8) }}>
+            {lijnStuk(30)}
+            <div style={{ display: "flex", width: px(6), height: px(6), backgroundColor: accent, transform: "rotate(45deg)" }} />
+            {lijnStuk(30)}
+          </D>
+          {d.dateText && (
+            <div style={{ display: "flex", ...tt("datum", letters.tekst, 16), fontWeight: 600, letterSpacing: "0.2em", textTransform: "uppercase", color: kop }}>
+              {d.dateText}
+            </div>
+          )}
+          {d.location && (
+            <Regels tekst={d.location} style={{ ...tt("locatie", letters.tekst, 14), lineHeight: 1.45, color: tekst, opacity: 0.9 }} />
+          )}
+          {details(accent, { grootte: 11, marge: 4, max: 300 })}
+        </D>
+      </D>
+    )
+  }
+
+  // Datumband: de namen boven, de datum groot in een brede band
+  if (ontwerp === "datumband") {
+    const delen = isoDelen ? [isoDelen[3], isoDelen[2], isoDelen[1]] : null
+    return (
+      <D style={{ ...basis, alignItems: "center", padding: `${px(24)}px ${px(24)}px`, gap: px(12) }}>
+        <div style={{ display: "flex", ...tt("kop", letters.kop, 11), letterSpacing: "0.42em", textTransform: "uppercase", color: label }}>
+          {d.heading}
+        </div>
+        <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.1, color: kop }} />
+        <D
+          style={{
+            width: "100%",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: `${px(12)}px 0`,
+            borderTop: `${lijn}px solid ${accent}`,
+            borderBottom: `${lijn}px solid ${accent}`,
+            gap: px(22),
+            marginTop: px(4),
+          }}
+        >
+          {delen
+            ? delen.flatMap((x, i) => [
+                ...(i > 0 ? [<div key={`s${i}`} style={{ display: "flex", width: lijn, height: px(40), backgroundColor: accent }} />] : []),
+                <div key={`d${i}`} style={{ display: "flex", ...tt("datum", letters.kop, 40), fontWeight: 300, letterSpacing: "0.04em", lineHeight: 1, color: kop }}>
+                  {x}
+                </div>,
+              ])
+            : d.dateText && (
+                <div style={{ display: "flex", ...tt("datum", letters.kop, 20), fontWeight: 300, letterSpacing: "0.1em", color: kop }}>{d.dateText}</div>
+              )}
+        </D>
+        {d.location && (
+          <Regels tekst={d.location} style={{ ...tt("locatie", letters.tekst, 12), lineHeight: 1.5, letterSpacing: "0.16em", textTransform: "uppercase", color: tekst, opacity: 0.85 }} />
+        )}
+        {details(accent, { grootte: 10.5, marge: 2, max: 360 })}
+      </D>
+    )
+  }
+
   // ── De kaders uit de websitebouwer: een krans, of een liggende kaart ───────
   const kader = KADERS[ontwerp]
   if (kader) {

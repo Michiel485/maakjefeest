@@ -70,6 +70,9 @@ export default function HomeOntwerp({
       { title: tekst.namen, frame_names: tekst.namen, datum: tekst.datum, locatie: tekst.locatie }
     ),
     heading: tekst.kop,
+    // De ontwerpen van de homepagina zijn geen kaart; buildCardDisplay kent
+    // ze niet en zou er Strak van maken
+    design: ontwerp,
     // Op de homepagina geen boodschap op het ontwerp: daarvoor is de tekst
     // eronder
     message: "",

@@ -14,6 +14,8 @@ import { KADERS } from "./kaart-ontwerpen"
  * kaart, met een rand en een tweede lijntje.
  */
 export const HOME_ONTWERPEN: NieuwOntwerp[] = [
+  // Speciaal voor de homepagina, breed getekend (27 september 2026)
+  "editoriaal", "monogram", "lijnkader", "datumband",
   "olijf", "pampas", "pampasruit", "terra", "terraruit", "herfst", "herfstruit", "goudblad", "magnolia",
   "minimaal", "datum", "titel", "palm", "ibiza", "deco", "boog",
 ]
@@ -55,6 +57,9 @@ export function homeOntwerpMaxBreedte(ontwerp: NieuwOntwerp): number {
   if (ontwerp === "goudblad" || ontwerp === "magnolia") return 820
   if (KADERS[ontwerp]?.vorm === "krans") return 640
   if (ontwerp === "olijf") return 600
+  if (ontwerp === "editoriaal" || ontwerp === "lijnkader") return 760
+  if (ontwerp === "datumband") return 680
+  if (ontwerp === "monogram") return 540
   return 480
 }
 

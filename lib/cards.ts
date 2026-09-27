@@ -24,6 +24,10 @@ export type NieuwOntwerp =
   // De andere kaders uit de websitebouwer: kransen met een cirkel of ruit,
   // en twee liggende kaarten
   | "pampas" | "pampasruit" | "terra" | "terraruit" | "herfst" | "herfstruit" | "goudblad" | "magnolia"
+  // Alleen voor de homepagina (27 september 2026): breed, getekend met lijnen
+  // in de kleuren van de website. Niet in CARD_TEMPLATE_WAARDEN, dus nooit
+  // als kaart.
+  | "editoriaal" | "monogram" | "lijnkader" | "datumband"
 export type CardDesign = KlassiekOntwerp | NieuwOntwerp
 export type CardTemplate = CardDesign | "foto"
 
@@ -212,6 +216,10 @@ export const CARD_TEMPLATE_LABEL: Record<CardDesign, string> = {
   herfstruit: "Herfst ruit",
   goudblad: "Gouden blad",
   magnolia: "Magnolia",
+  editoriaal: "Editoriaal",
+  monogram: "Monogram",
+  lijnkader: "Klassiek kader",
+  datumband: "Datumband",
 }
 
 /**
