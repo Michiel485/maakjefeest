@@ -2211,8 +2211,9 @@ export default function BouwenPage() {
                                 <div className="px-5 pb-4 flex flex-col gap-3">
                                   <div className="flex gap-2">
                                     {([
-                                      { id: 'editorial', label: 'Flexibel',       sub: 'Layout 1' },
-                                      { id: 'modern',    label: 'Vaste indeling', sub: 'Layout 2' },
+                                      // Namen die zeggen wat je krijgt (Michiel, 27 september 2026)
+                                      { id: 'editorial', label: 'Met ontwerp',    sub: 'Zoals je trouwkaart' },
+                                      { id: 'modern',    label: 'Foto en tekst',  sub: 'Naast elkaar' },
                                     ] as const).map((opt) => (
                                       <button
                                         key={opt.id}
@@ -2229,9 +2230,9 @@ export default function BouwenPage() {
                                     ))}
                                   </div>
                                   <div className="text-xs leading-relaxed space-y-1.5" style={{ color: "#9A8E82" }}>
-                                    <p><span className="font-semibold" style={{ color: "#5C5248" }}>Flexibel</span>: volledig aanpasbaar naar jullie smaak. Kies voor een grote foto bovenaan, voeg een mooi trouwkaart-kader toe, of zet ze allebei uit voor een rustige, minimalistische look met direct tekst.</p>
-                                    <p><span className="font-semibold" style={{ color: "#5C5248" }}>Vaste indeling</span>: een stijlvolle, vaste indeling met links de headerfoto en rechts jullie tekstvelden strak naast elkaar.</p>
-                                    <p className="pt-0.5" style={{ color: "#C5A059" }}>Speel met beide stijlen en ontdek wat het beste bij jullie past!</p>
+                                    <p><span className="font-semibold" style={{ color: "#5C5248" }}>Met ontwerp</span>: bovenaan eventueel een grote foto, daaronder een ontwerp zoals op jullie trouwkaart. Kies uit de ontwerpen en pas de tekst, het lettertype en de grootte aan.</p>
+                                    <p><span className="font-semibold" style={{ color: "#5C5248" }}>Foto en tekst</span>: links jullie foto, rechts de namen, de datum en de locatie. Strak en rustig, zonder ontwerp.</p>
+                                    <p className="pt-0.5" style={{ color: "#C5A059" }}>Wissel gerust: jullie tekst blijft staan.</p>
                                   </div>
                                 </div>
                               )}
@@ -2324,7 +2325,7 @@ export default function BouwenPage() {
                                       />
                                     </div>
                                   ) : (
-                                    <p className="text-xs text-gray-400 leading-relaxed">Kaders zijn beschikbaar bij Lay-out &ldquo;Flexibel&rdquo;.</p>
+                                    <p className="text-xs text-gray-400 leading-relaxed">Een ontwerp kies je bij de lay-out &ldquo;Met ontwerp&rdquo;.</p>
                                   )}
 
                                 </div>

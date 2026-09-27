@@ -45,7 +45,7 @@ const STEPS: { label: string; title: string; text: string; nav: SophieNav }[] = 
   {
     label: "Stap 4 · Homepage",
     title: "De homepage, jullie visitekaartje 🏡",
-    text: "Dit is het meest uitgebreide onderdeel. Wat je hier kunt instellen, hangt samen met je lay-outkeuze. Kies je voor Vaste indeling, dan staat de opzet al direct vast met links de headerfoto en rechts jullie tekstvelden strak naast elkaar. Kies je voor Flexibel, dan bepaal je alles helemaal zelf: voeg een grote sfeerfoto bovenaan toe, kies een mooi trouwkaart-kader met jullie initialen, namen en datum, of zet ze juist allebei uit voor een rustige, minimalistische look!",
+    text: "Dit is het meest uitgebreide onderdeel. Wat je hier kunt instellen, hangt samen met je lay-outkeuze. Kies je Met ontwerp, dan zet je bovenaan eventueel een grote foto en daaronder een ontwerp zoals op jullie trouwkaart, met jullie eigen tekst, lettertype en grootte. Kies je Foto en tekst, dan staat links jullie foto en rechts de namen, de datum en de locatie.",
     nav: { activeSection: 'paginas', openAlgSection: null, activeSubPage: 'Home', openHomeSection: 'layout' },
   },
   {
