@@ -989,7 +989,7 @@ function Inhoud({
 
     // Hart in de &: puur letters, met een vol hartje op de plek van de &
     if (ontwerp === "hartamp") {
-      const streep = <div style={{ display: "flex", width: px(46), height: lijn, backgroundColor: accent }} />
+      const streep = <div style={{ display: "flex", width: px(110), height: lijn, backgroundColor: accent }} />
       const delen = naamDelen(d.names)
       let namenBlok: ReactNode
       if (delen) {
@@ -1016,11 +1016,9 @@ function Inhoud({
           {datum && (
             <div style={{ display: "flex", ...tt("datum", letters.kop, 12.5), letterSpacing: "0.26em", textTransform: "uppercase", color: kop }}>{datum}</div>
           )}
-          <D style={{ alignItems: "center", gap: px(8), marginTop: px(2), marginBottom: px(2) }}>
-            {streep}
-            <Hart breedte={px(9)} kleur={accent} vol />
-            {streep}
-          </D>
+          {/* Eén doorlopende streep: met nog een hartje erin stonden er twee
+              hartjes op de kaart (Michiel, 27 september 2026) */}
+          <D style={{ marginTop: px(4), marginBottom: px(4) }}>{streep}</D>
           {d.location && (
             <Regels tekst={d.location} style={{ ...tt("locatie", letters.tekst, 11.5), lineHeight: 1.5, letterSpacing: "0.06em", color: tekst, opacity: 0.88 }} />
           )}
