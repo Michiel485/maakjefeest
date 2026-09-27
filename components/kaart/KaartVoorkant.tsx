@@ -17,7 +17,7 @@ import type { CardDisplay, NieuwOntwerp } from "@/lib/cards"
 import type { SC } from "@/lib/event-styles"
 import { detailsKeuze, detailsOpKaart, illustratie, KADERS, ONTWERP_LETTERS, type VoorkantLetters } from "@/lib/kaart-ontwerpen"
 import { namenOpmaak, namenPlek, type NamenPlek } from "@/lib/namen-opmaak"
-import type { GemetenLetter } from "@/lib/letterbreedtes"
+import { tekstBreedte, type GemetenLetter } from "@/lib/letterbreedtes"
 import { initialenLijst } from "@/lib/initialen"
 import { leesbaar } from "@/lib/contrast"
 
@@ -193,6 +193,127 @@ function SchaduwHart({ breedte, kleur, lijnKleur }: { breedte: number; kleur: st
   )
 }
 
+/**
+ * Een kader met golvende randen, als met de hand getrokken: rond een
+ * afgeronde rechthoek, de golven loodrecht op de rand. In de maten van een
+ * kaart van 400 breed. golf: de lengte van één golf; hoogte: hoe ver hij
+ * uitslaat; grillig: hoeveel die uitslag varieert (Michiel, 27 september 2026)
+ */
+function golfKader(b: number, h: number, o: { inzet: number; hoek: number; golf: number; hoogte: number; grillig?: number }): string {
+  const x0 = o.inzet
+  const y0 = o.inzet
+  const x1 = b - o.inzet
+  const y1 = h - o.inzet
+  const r = Math.max(1, o.hoek)
+  const w = x1 - x0 - 2 * r
+  const hh = y1 - y0 - 2 * r
+  const boog = (Math.PI / 2) * r
+  const omtrek = 2 * w + 2 * hh + 4 * boog
+  const golven = Math.max(1, Math.round(omtrek / o.golf))
+  // Een punt op de rand en de richting naar buiten, rechtsom vanaf linksboven
+  const hoekPunt = (cx: number, cy: number, a: number): [number, number, number, number] => [cx + r * Math.cos(a), cy + r * Math.sin(a), Math.cos(a), Math.sin(a)]
+  const punt = (s: number): [number, number, number, number] => {
+    let rest = s
+    if (rest < w) return [x0 + r + rest, y0, 0, -1]
+    rest -= w
+    if (rest < boog) return hoekPunt(x1 - r, y0 + r, -Math.PI / 2 + rest / r)
+    rest -= boog
+    if (rest < hh) return [x1, y0 + r + rest, 1, 0]
+    rest -= hh
+    if (rest < boog) return hoekPunt(x1 - r, y1 - r, rest / r)
+    rest -= boog
+    if (rest < w) return [x1 - r - rest, y1, 0, 1]
+    rest -= w
+    if (rest < boog) return hoekPunt(x0 + r, y1 - r, Math.PI / 2 + rest / r)
+    rest -= boog
+    if (rest < hh) return [x0, y1 - r - rest, -1, 0]
+    rest -= hh
+    return hoekPunt(x0 + r, y0 + r, Math.PI + Math.min(rest, boog) / r)
+  }
+  const stappen = Math.round(omtrek / 2.5)
+  let pad = ""
+  for (let i = 0; i < stappen; i++) {
+    const s = (i / stappen) * omtrek
+    const [x, y, nx, ny] = punt(s)
+    const fase = (2 * Math.PI * golven * s) / omtrek
+    const uit = o.hoogte * (1 + (o.grillig ?? 0) * Math.sin(fase * 0.37 + 1)) * Math.sin(fase)
+    pad += `${i ? "L" : "M"}${rond(x + nx * uit)} ${rond(y + ny * uit)}`
+  }
+  return pad + "Z"
+}
+
+/** Twee champagneglazen die tegen elkaar tikken, met een paar sprankjes */
+function Glazen({ breedte, kleur }: { breedte: number; kleur: string }) {
+  // Een groep en geen fragment: satori tekent svg zelf, en daar hoort alles in een element
+  const glas = (
+    <g>
+      <path d="M-11 0C-12 26 -7 50 0 58C7 50 12 26 11 0Z" />
+      <path d="M-10.5 11H10.5" strokeOpacity="0.7" />
+      <path d="M0 58V98M-13 100C-6 96 6 96 13 100C6 103 -6 103 -13 100Z" />
+      {[[-3, 22], [3, 30], [-1, 39], [2, 17], [-2, 47]].map(([x, y], i) => (
+        <circle key={i} cx={x} cy={y} r="1.1" fill={kleur} stroke="none" />
+      ))}
+    </g>
+  )
+  return (
+    <svg width={breedte} height={rond((breedte * 132) / 112)} viewBox="44 12 112 132" fill="none" stroke={kleur} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <g transform="translate(89 40) rotate(14)">{glas}</g>
+      <g transform="translate(111 40) rotate(-14)">{glas}</g>
+      <path d="M100 31V20M92 33L86 25M108 33L114 25" />
+    </svg>
+  )
+}
+
+/** Een strik van een lint, met twee lussen en twee slierten */
+function Strikje({ breedte, kleur, achtergrond }: { breedte: number; kleur: string; achtergrond: string }) {
+  return (
+    <svg width={breedte} height={rond((breedte * 70) / 120)} viewBox="0 0 120 70" fill="none" stroke={kleur} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      {/* Het kader loopt niet door de strik heen */}
+      <rect x="24" y="14" width="72" height="16" fill={achtergrond} stroke="none" />
+      <path d="M60 22C50 8 31 2 27 12C23 22 44 27 60 22" />
+      <path d="M60 22C70 8 89 2 93 12C97 22 76 27 60 22" />
+      <path d="M57 24C52 36 46 48 38 62C41 60 44 60 46 63" />
+      <path d="M63 24C68 36 74 48 83 60C80 59 77 59 75 62" />
+      <ellipse cx="60" cy="22.5" rx="4.2" ry="3.6" fill={achtergrond} />
+    </svg>
+  )
+}
+
+/** Een krul van kant, voor op de jurk */
+function krul(x: number, y: number, m = 1, spiegel = false): string {
+  const k = spiegel ? -1 : 1
+  return `M${x} ${y}c${3 * m * k} ${-4 * m} ${9 * m * k} ${-3 * m} ${9 * m * k} ${2 * m}s${-5 * m * k} ${6 * m} ${-7 * m * k} ${3 * m}`
+}
+
+/** Twee harten naast elkaar: een in pak met strikje, een als jurk van kant */
+function PakEnJurk({ breedte, kop, accent, achtergrond }: { breedte: number; kop: string; accent: string; achtergrond: string }) {
+  const kant = [
+    krul(18, 24), krul(36, 34, 0.9, true), krul(60, 20), krul(76, 36, 0.9, true),
+    krul(26, 50, 0.9), krul(54, 50), krul(72, 58, 0.8, true), krul(42, 68, 0.8),
+  ]
+  return (
+    <svg width={breedte} height={rond((breedte * 104) / 206)} viewBox="0 0 206 104" fill="none">
+      <g transform="translate(6 8) rotate(-7 50 45)">
+        <path d={HART} fill={kop} />
+        {/* Het overhemd, van de inkeping bovenin naar beneden */}
+        <path d="M36 16C42 15 46 17 50 19C54 17 58 15 64 16L50 66Z" fill={achtergrond} />
+        <path d="M50 27L41 22V32ZM50 27L59 22V32Z" fill={kop} />
+        <circle cx="50" cy="27" r="2.4" fill={kop} />
+        {[38, 45, 52].map((y) => (
+          <circle key={y} cx="50" cy={y} r="1.6" fill={kop} />
+        ))}
+      </g>
+      <g transform="translate(98 10) rotate(7 50 45)">
+        <path d={HART} fill={achtergrond} stroke={kop} strokeWidth="1.6" strokeLinejoin="round" />
+        <path d="M14 32C26 42 38 30 50 44S70 52 86 36" stroke={accent} strokeWidth="0.8" strokeLinecap="round" />
+        {kant.map((d, i) => (
+          <path key={i} d={d} stroke={accent} strokeWidth="1" strokeLinecap="round" />
+        ))}
+      </g>
+    </svg>
+  )
+}
+
 /** Boho: bogen als een regenboog met een zonnetje erin */
 function Regenboog({ breedte, kleur }: { breedte: number; kleur: string }) {
   let stralen = ""
@@ -212,7 +333,10 @@ function Regenboog({ breedte, kleur }: { breedte: number; kleur: string }) {
 }
 
 /** De themaontwerpen: allemaal dezelfde opbouw, met een eigen tekening */
-const THEMA_ONTWERPEN: NieuwOntwerp[] = ["winter", "zomer", "liefde", "boho", "hartlijn", "tweeharten", "hartamp", "hartkader", "krijthart", "kalligrafie", "schaduwhart"]
+const THEMA_ONTWERPEN: NieuwOntwerp[] = [
+  "winter", "zomer", "liefde", "boho", "hartlijn", "tweeharten", "hartamp", "hartkader", "krijthart", "kalligrafie", "schaduwhart",
+  "krijtgroot", "hartrand", "harthoek", "pakjurk", "proost", "strik",
+]
 
 /** De teksten op een ontwerp die op de homepagina een eigen letter en grootte kunnen krijgen */
 export type TekstRol = "kop" | "namen" | "datum" | "locatie" | "tijden" | "dresscode"
@@ -1090,6 +1214,203 @@ function Inhoud({
           {inhoud()}
         </D>
       ))
+    }
+
+    // Groot krijthart: het hand getekende hart groot en zacht achter de namen
+    if (ontwerp === "krijtgroot") {
+      const hb = px(230)
+      const vak = px(330)
+      return wortel(`${px(30)}px ${px(30)}px`, (
+        <D style={kolom}>
+          {kopRegel()}
+          <D style={{ position: "relative", width: vak, height: hb * 1.5, alignItems: "center", justifyContent: "center" }}>
+            {los({ left: (vak - hb) / 2, top: 0, opacity: 0.45, transform: "rotate(-5deg)" }, <KrijtHart breedte={hb} kleur={accent} />)}
+            <D style={{ flexDirection: "column", alignItems: "center", gap: px(10), marginTop: px(-24) }}>
+              <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.1, color: kop }} />
+              {datum && (
+                <div style={{ display: "flex", ...tt("datum", letters.kop, 12.5), letterSpacing: "0.24em", textTransform: "uppercase", color: kop }}>{datum}</div>
+              )}
+            </D>
+          </D>
+          {d.location && (
+            <Regels tekst={d.location} style={{ ...tt("locatie", letters.tekst, 11.5), lineHeight: 1.5, letterSpacing: "0.06em", color: tekst, opacity: 0.88 }} />
+          )}
+          {d.message && (
+            <Regels tekst={d.message} style={{ fontFamily: letters.tekst, fontSize: px(12), lineHeight: 1.55, color: tekst, maxWidth: px(290), opacity: 0.9 }} />
+          )}
+          {details(accent, { grootte: 10.5, marge: 2, max: 300 })}
+        </D>
+      ))
+    }
+
+    // Hart op de rand: een fijne rand met het kalligrafiehart bovenop
+    if (ontwerp === "hartrand") {
+      const hw = px(58)
+      const rand = px(22)
+      return wortel(`${px(76)}px ${px(44)}px ${px(50)}px`, (
+        <D style={kolom}>
+          {kopRegel(10.5)}
+          <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.12, color: kop, marginTop: px(4) }} />
+          <div style={{ display: "flex", width: px(56), height: lijn, backgroundColor: accent }} />
+          {datum && (
+            <div style={{ display: "flex", ...tt("datum", letters.kop, 12.5), letterSpacing: "0.26em", textTransform: "uppercase", color: accent }}>{datum}</div>
+          )}
+          {d.location && (
+            <Regels tekst={d.location} style={{ ...tt("locatie", letters.tekst, 12), lineHeight: 1.5, letterSpacing: "0.06em", color: tekst, opacity: 0.88 }} />
+          )}
+          {d.message && (
+            <Regels tekst={d.message} style={{ fontFamily: letters.tekst, fontSize: px(12.5), lineHeight: 1.55, color: tekst, maxWidth: px(280), opacity: 0.9 }} />
+          )}
+          {details(accent, { grootte: 10.5, marge: 2, max: 290 })}
+        </D>
+      ), [
+        los({ left: rand, top: rand, right: rand, bottom: rand, border: `${lijn}px solid ${accent}`, borderRadius: px(6) }, null, 0),
+        // Het hart onderbreekt de rand: een stukje achtergrond erachter
+        los({ left: (breedte - hw) / 2 - px(10), top: rand - hw * 0.5, paddingLeft: px(10), paddingRight: px(10), backgroundColor: achtergrond }, <KalligrafieHart breedte={hw} kleur={accent} />, 1),
+      ])
+    }
+
+    // Hart in de hoek: alles links, groot en rustig, en het hart met schaduw
+    // rechtsonder
+    if (ontwerp === "harthoek") {
+      const delen = naamDelen(d.names)
+      const namen = delen ? `${delen[0]}\n& ${delen[1]}` : d.names
+      return (
+        <D style={{ ...basis, justifyContent: "space-between", padding: `${px(46)}px ${px(36)}px ${px(30)}px`, borderRadius: px(14) }}>
+          <D style={{ flexDirection: "column", alignItems: "flex-start", gap: px(10) }}>
+            <div style={{ display: "flex", ...tt("kop", letters.kop, 10.5), letterSpacing: "0.34em", textTransform: "uppercase", color: label }}>{d.heading}</div>
+            <Namen plek={plek} {...namenVrij} namen={namen} uitlijnen="flex-start" style={{ fontFamily: letters.namen, lineHeight: 1.08, color: kop, marginTop: px(8) }} />
+            <div style={{ display: "flex", width: px(46), height: lijn, backgroundColor: accent, marginTop: px(4) }} />
+            {datum && (
+              <div style={{ display: "flex", ...tt("datum", letters.kop, 12.5), letterSpacing: "0.24em", textTransform: "uppercase", color: accent }}>{datum}</div>
+            )}
+            {d.location && (
+              <Regels tekst={d.location} uitlijnen="flex-start" style={{ ...tt("locatie", letters.tekst, 11.5), lineHeight: 1.5, letterSpacing: "0.06em", color: tekst, opacity: 0.88 }} />
+            )}
+            {d.message && (
+              <Regels tekst={d.message} uitlijnen="flex-start" style={{ fontFamily: letters.tekst, fontSize: px(12), lineHeight: 1.55, color: tekst, maxWidth: px(280), opacity: 0.9 }} />
+            )}
+            {details(accent, { grootte: 10.5, marge: 2, max: 300, uitlijnen: "flex-start" })}
+          </D>
+          <D style={{ width: "100%", justifyContent: "flex-end", marginTop: px(14) }}>
+            <SchaduwHart breedte={px(150)} kleur={accent} lijnKleur={kop} />
+          </D>
+        </D>
+      )
+    }
+
+    // Pak en jurk: twee harten, een in pak en een van kant
+    if (ontwerp === "pakjurk") {
+      return wortel(`${px(40)}px ${px(30)}px`, (
+        <D style={kolom}>
+          {kopRegel()}
+          <D style={{ marginTop: px(8), marginBottom: px(8) }}>
+            <PakEnJurk breedte={px(250)} kop={kop} accent={accent} achtergrond={achtergrond} />
+          </D>
+          {inhoud({ datumKleur: kop })}
+        </D>
+      ))
+    }
+
+    // Proost: een golvend kader, Save the Date groot in handschrift en
+    // verspringend, en twee glazen die tegen elkaar tikken
+    if (ontwerp === "proost") {
+      const woorden = d.heading.trim().split(/\s+/)
+      const meting = ONTWERP_LETTERS.proost.extra ?? ONTWERP_LETTERS.proost.namen
+      // Zo groot als past, en nooit groter dan het ontwerp
+      const past = (w: string, max: number, ruimte: number) => Math.min(max, ruimte / Math.max(0.1, tekstBreedte(w, meting, 1)))
+      const woord = (w: string, n: number, style: CSSProperties = {}) => (
+        <div style={{ display: "flex", ...tt("kop", letters.extra ?? letters.namen, n), lineHeight: 0.95, color: kop, whiteSpace: "nowrap", ...style }}>{w}</div>
+      )
+      let titel: ReactNode
+      if (woorden.length === 3) {
+        titel = (
+          <D style={{ flexDirection: "column", width: "100%" }}>
+            {woord(woorden[0], past(woorden[0], 100, 250), { alignSelf: "flex-start", marginLeft: px(22) })}
+            <div style={{ display: "flex", alignSelf: "center", ...tt("kop", letters.kop, 19), lineHeight: 1, color: kop, marginTop: px(-10), marginBottom: px(-6) }}>{woorden[1]}</div>
+            {woord(woorden[2], past(woorden[2], 100, 250), { alignSelf: "flex-end", marginRight: px(22) })}
+          </D>
+        )
+      } else if (woorden.length === 2) {
+        titel = (
+          <D style={{ flexDirection: "column", width: "100%" }}>
+            {woord(woorden[0], past(woorden[0], 100, 250), { alignSelf: "flex-start", marginLeft: px(22) })}
+            {woord(woorden[1], past(woorden[1], 100, 250), { alignSelf: "flex-end", marginRight: px(22), marginTop: px(-8) })}
+          </D>
+        )
+      } else {
+        titel = woord(d.heading, past(d.heading, 80, 300), { alignSelf: "center" })
+      }
+      return (
+        <D style={{ ...basis, height: hoogte, alignItems: "center", justifyContent: "space-between", padding: `${px(52)}px ${px(44)}px ${px(40)}px`, borderRadius: px(10) }}>
+          <svg width={breedte} height={hoogte} viewBox="0 0 400 560" fill="none" style={{ position: "absolute", left: 0, top: 0 }}>
+            <path d={golfKader(400, 560, { inzet: 24, hoek: 10, golf: 30, hoogte: 3.2, grillig: 0.3 })} stroke={accent} strokeWidth="2.6" strokeLinejoin="round" />
+          </svg>
+          <D style={{ ...kolom, gap: px(8) }}>
+            {titel}
+            <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.3, letterSpacing: "0.22em", textTransform: "uppercase", color: kop, marginTop: px(14) }} />
+            {d.dateText && (
+              <div style={{ display: "flex", ...tt("datum", letters.tekst, 16), color: accent, textAlign: "center" }}>{d.dateText}</div>
+            )}
+            {d.location && (
+              <Regels tekst={d.location} style={{ ...tt("locatie", letters.tekst, 13), lineHeight: 1.4, color: tekst, opacity: 0.88 }} />
+            )}
+            {d.message && (
+              <Regels tekst={d.message} style={{ fontFamily: letters.tekst, fontSize: px(13), lineHeight: 1.45, color: tekst, maxWidth: px(280), opacity: 0.9 }} />
+            )}
+            {details(accent, { grootte: 11, marge: 2, max: 290 })}
+          </D>
+          <Glazen breedte={px(110)} kleur={accent} />
+        </D>
+      )
+    }
+
+    // Strik: een golvend kader met een strik bovenop, grote namen met een &
+    // in handschrift
+    if (ontwerp === "strik") {
+      const delen = naamDelen(d.names)
+      let namenBlok: ReactNode
+      if (delen) {
+        const g = Math.min(namenOpmaak(delen[0], plek, namenVrij).grootte, namenOpmaak(`& ${delen[1]}`, plek, namenVrij).grootte)
+        const naam = (n: string) => (
+          <div style={{ display: "flex", fontFamily: letters.namen, fontSize: g, lineHeight: 1, color: kop, whiteSpace: "nowrap" }}>{n}</div>
+        )
+        namenBlok = (
+          <D style={{ flexDirection: "column", alignItems: "center", gap: g * 0.06 }}>
+            {naam(delen[0])}
+            <D style={{ alignItems: "center", gap: g * 0.22 }}>
+              <div style={{ display: "flex", fontFamily: letters.extra ?? letters.namen, fontSize: g * 0.78, lineHeight: 1, color: kop }}>&amp;</div>
+              {naam(delen[1])}
+            </D>
+          </D>
+        )
+      } else {
+        namenBlok = <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.05, color: kop }} />
+      }
+      return (
+        <D style={{ ...basis, height: hoogte, alignItems: "center", justifyContent: "center", padding: `${px(70)}px ${px(50)}px ${px(56)}px`, borderRadius: px(10) }}>
+          <svg width={breedte} height={hoogte} viewBox="0 0 400 560" fill="none" style={{ position: "absolute", left: 0, top: 0 }}>
+            <path d={golfKader(400, 560, { inzet: 26, hoek: 38, golf: 120, hoogte: 5 })} stroke={kop} strokeWidth="2" strokeLinejoin="round" />
+          </svg>
+          <div style={{ display: "flex", position: "absolute", left: px(130), top: px(3) }}>
+            <Strikje breedte={px(140)} kleur={kop} achtergrond={achtergrond} />
+          </div>
+          <D style={{ ...kolom, gap: px(8) }}>
+            {namenBlok}
+            <div style={{ display: "flex", ...tt("kop", letters.extra ?? letters.namen, 26), lineHeight: 1.2, color: kop, marginTop: px(10) }}>{d.heading}</div>
+            {d.dateText && (
+              <div style={{ display: "flex", ...tt("datum", letters.tekst, 11.5), letterSpacing: "0.04em", color: tekst, textAlign: "center", marginTop: px(12) }}>{d.dateText}</div>
+            )}
+            {d.location && (
+              <Regels tekst={d.location} style={{ ...tt("locatie", letters.tekst, 11.5), lineHeight: 1.5, letterSpacing: "0.04em", color: tekst }} />
+            )}
+            {details(tekst, { grootte: 11, marge: 0, max: 290 })}
+            {d.message && (
+              <Regels tekst={d.message} style={{ fontFamily: letters.namen, fontSize: px(15), lineHeight: 1.4, color: kop, maxWidth: px(280), marginTop: px(14) }} />
+            )}
+          </D>
+        </D>
+      )
     }
 
     if (ontwerp === "boho") {

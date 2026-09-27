@@ -34,6 +34,9 @@ export type NieuwOntwerp =
   | "hartlijn" | "tweeharten" | "hartamp" | "hartkader"
   // Met een hart zoals met de hand getekend (27 september 2026)
   | "krijthart" | "kalligrafie" | "schaduwhart"
+  // Nog drie met die harten, en drie naar voorbeelden van Michiel
+  // (27 september 2026)
+  | "krijtgroot" | "hartrand" | "harthoek" | "pakjurk" | "proost" | "strik"
 export type CardDesign = KlassiekOntwerp | NieuwOntwerp
 export type CardTemplate = CardDesign | "foto"
 
@@ -43,6 +46,7 @@ export const CARD_TEMPLATE_WAARDEN: CardTemplate[] = [
   "titel", "palm", "ibiza", "fotoschrift", "olijf",
   "pampas", "pampasruit", "terra", "terraruit", "herfst", "herfstruit", "goudblad", "magnolia",
   "winter", "zomer", "liefde", "boho", "hartlijn", "tweeharten", "hartamp", "hartkader", "krijthart", "kalligrafie", "schaduwhart",
+  "krijtgroot", "hartrand", "harthoek", "pakjurk", "proost", "strik",
 ]
 
 export function isKlassiekOntwerp(d: CardDesign): d is KlassiekOntwerp {
@@ -200,12 +204,19 @@ export const CARD_TYPE_PLAN: Record<CardType, "save_the_date" | "uitnodiging"> =
   trouwkaart: "uitnodiging",
 }
 
-// De volgorde in de galerij van de bouwer
+// De volgorde in de galerij van de bouwer. De ontwerpen met een hart
+// bovenaan, Hart met schaduw eerst: dat is ook het ontwerp van een nieuwe
+// kaart (Michiel, 27 september 2026).
 export const CARD_DESIGNS: CardDesign[] = [
+  "schaduwhart", "harthoek", "krijthart", "krijtgroot", "kalligrafie", "hartrand", "hartamp", "hartlijn", "tweeharten", "hartkader", "pakjurk", "liefde",
+  "proost", "strik",
   "klassiek", "sierlijk", "bohemian", "olijf", "pampas", "pampasruit", "terra", "terraruit", "herfst", "herfstruit", "goudblad", "magnolia",
   "minimaal", "datum", "titel", "palm", "ibiza", "deco", "boog", "fotovol", "fotoschrift",
-  "winter", "zomer", "liefde", "boho", "hartlijn", "tweeharten", "hartamp", "hartkader", "krijthart", "kalligrafie", "schaduwhart", "eigen",
+  "winter", "zomer", "boho", "eigen",
 ]
+
+/** Het ontwerp van een nieuwe kaart */
+export const STANDAARD_ONTWERP: CardDesign = "schaduwhart"
 
 export const CARD_TEMPLATE_LABEL: Record<CardDesign, string> = {
   klassiek: "Strak",
@@ -245,6 +256,12 @@ export const CARD_TEMPLATE_LABEL: Record<CardDesign, string> = {
   krijthart: "Hand getekend hart",
   kalligrafie: "Kalligrafie",
   schaduwhart: "Hart met schaduw",
+  krijtgroot: "Groot krijthart",
+  hartrand: "Hart op de rand",
+  harthoek: "Hart in de hoek",
+  pakjurk: "Pak en jurk",
+  proost: "Proost",
+  strik: "Strik",
 }
 
 /**

@@ -151,6 +151,20 @@ export function namenPlek(ontwerp: CardDesign, opties: { breedte: number; datumI
       return maat(42, 400 - 70)
     case "schaduwhart":
       return maat(40, 400 - 70)
+    case "krijtgroot":
+      return maat(48, 290)
+    case "hartrand":
+      return maat(46, 400 - 100)
+    case "harthoek":
+      return maat(56, 400 - 72)
+    case "pakjurk":
+      return maat(44, 400 - 70)
+    // In hoofdletters, met ruimte tussen de letters
+    case "proost":
+      return maat(22, 400 - 100, { letterafstand: 0.22, hoofdletters: true })
+    // Elke naam op een eigen regel, dus veel ruimte per naam
+    case "strik":
+      return maat(66, 400 - 110)
     // Art deco: in hoofdletters, met ruimte tussen de letters
     case "deco":
       return maat(29, 400 - 88, { letterafstand: 0.1, hoofdletters: true })

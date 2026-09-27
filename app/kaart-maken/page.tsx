@@ -10,6 +10,7 @@ import {
   cardAnimatie,
   cardDesign,
   CARD_DESIGNS,
+  STANDAARD_ONTWERP,
   FOTO_ONTWERPEN,
   CARD_TAAL_LABEL,
   CARD_TALEN,
@@ -257,7 +258,8 @@ const LEEG: KaartOntwerp = {
   ontwerpUrl: null,
   ontwerpDataUrl: null,
   ontwerpVerhouding: null,
-  template: "klassiek",
+  // Een nieuwe kaart begint met Hart met schaduw (Michiel, 27 september 2026)
+  template: STANDAARD_ONTWERP,
   names: "",
   details: "",
   namenFont: "",

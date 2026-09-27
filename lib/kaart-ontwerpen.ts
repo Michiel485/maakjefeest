@@ -83,6 +83,12 @@ export const ONTWERP_LETTERS: Record<NieuwOntwerp, OntwerpLetters> = {
   krijthart: { namen: L.allura, kop: L.jost, tekst: L.jost },
   kalligrafie: { namen: L.greatvibes, kop: L.cormorant, tekst: L.cormorant },
   schaduwhart: { namen: L.jostDun, kop: L.jost, tekst: L.jost },
+  krijtgroot: { namen: L.allura, kop: L.jost, tekst: L.jost },
+  hartrand: { namen: L.greatvibes, kop: L.cormorant, tekst: L.cormorant },
+  harthoek: { namen: L.italiana, kop: L.jost, tekst: L.jost },
+  pakjurk: { namen: L.greatvibes, kop: L.montserrat, tekst: L.montserrat },
+  proost: { namen: L.cormorant, kop: L.cormorant, tekst: L.cormorant, extra: L.allison },
+  strik: { namen: L.bodoni, kop: L.montserrat, tekst: L.montserrat, extra: L.greatvibes },
 }
 
 // ── De kaders uit de websitebouwer ─────────────────────────────────────────
@@ -195,6 +201,12 @@ export const ONDER_DE_KAART: Partial<Record<CardDesign, OnderDeKaart>> = {
   krijthart: { locatie: false, bericht: false, details: true },
   kalligrafie: { locatie: false, bericht: false, details: true },
   schaduwhart: { locatie: false, bericht: false, details: true },
+  krijtgroot: { locatie: false, bericht: false, details: true },
+  hartrand: { locatie: false, bericht: false, details: true },
+  harthoek: { locatie: false, bericht: false, details: true },
+  pakjurk: { locatie: false, bericht: false, details: true },
+  proost: { locatie: false, bericht: false, details: true },
+  strik: { locatie: false, bericht: false, details: true },
 }
 
 // ── Details op of onder de kaart ────────────────────────────────────────────

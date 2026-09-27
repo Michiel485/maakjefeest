@@ -14,10 +14,14 @@ import { KADERS } from "./kaart-ontwerpen"
  * kaart, met een rand en een tweede lijntje.
  */
 export const HOME_ONTWERPEN: NieuwOntwerp[] = [
+  // De ontwerpen met een hart bovenaan, net als bij de kaart (Michiel,
+  // 27 september 2026)
+  "schaduwhart", "harthoek", "krijthart", "krijtgroot", "kalligrafie", "hartrand", "hartamp", "hartlijn", "tweeharten", "hartkader", "pakjurk", "liefde",
+  "proost", "strik",
   // Speciaal voor de homepagina, breed getekend (27 september 2026)
   "editoriaal", "monogram", "lijnkader", "datumband",
-  // De themaontwerpen, ook voor de kaart
-  "winter", "zomer", "liefde", "boho", "hartlijn", "tweeharten", "hartamp", "hartkader", "krijthart", "kalligrafie", "schaduwhart",
+  // De andere themaontwerpen, ook voor de kaart
+  "winter", "zomer", "boho",
   "olijf", "pampas", "pampasruit", "terra", "terraruit", "herfst", "herfstruit", "goudblad", "magnolia",
   "minimaal", "datum", "titel", "palm", "ibiza", "deco", "boog",
 ]
