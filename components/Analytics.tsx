@@ -26,6 +26,8 @@ export default function Analytics() {
 
   if (consent !== "accepted") return null
   if (!isMarketingHost(window.location.hostname)) return null
+  // De kaart van een bruidspaar is voor de gasten: daar geen Google Analytics
+  if (window.location.pathname.startsWith("/kaart/")) return null
 
   return <GoogleAnalytics gaId={GA_ID} />
 }

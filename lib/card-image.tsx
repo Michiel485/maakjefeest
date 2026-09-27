@@ -164,8 +164,7 @@ export async function renderCardImage(
       grootte: 94 * s * ds.namenSchaal,
       ruimte: namenRuimte,
       letterafstand: ds.namenSpatiering ? parseFloat(ds.namenSpatiering) : 0,
-    },
-    display.namenStand
+    }
   )
 
   // Gedeelde kaartinhoud; witruimte valt bínnen de kaartrand

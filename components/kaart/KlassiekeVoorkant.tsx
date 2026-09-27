@@ -35,7 +35,7 @@ export default function KlassiekeVoorkant({
   // De namen passend voor de breedte van de kaart (lib/namen-opmaak.ts)
   const plek = breedte ? namenPlek(display.design, { breedte }) : null
   const namen = plek
-    ? namenOpmaak(display.names, plek, display.namenStand)
+    ? namenOpmaak(display.names, plek)
     : { tekst: display.names, grootte: 2.4 * ds.namenSchaal * 16, heel: false }
   return (
     <div

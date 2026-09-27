@@ -6,8 +6,8 @@ import AanmeldFormulier from "@/components/AanmeldFormulier"
 import EventMastersPreview from "@/components/EventMastersPreview"
 import EventProgramPreview from "@/components/EventProgramPreview"
 import StoryPreview from "@/components/StoryPreview"
-import PraktischPreview, { type PraktischTile } from "@/components/PraktischPreview"
-import WishlistPreview, { type WishlistItem } from "@/components/WishlistPreview"
+import PraktischPreview, { DEFAULT_PRAKTISCH_TILES, type PraktischTile } from "@/components/PraktischPreview"
+import WishlistPreview, { DEFAULT_WISHLIST_ITEMS, type WishlistItem } from "@/components/WishlistPreview"
 import FotosPreview from "@/components/FotosPreview"
 
 export interface PageData {
@@ -43,12 +43,16 @@ export default function EventPageSection({ page, sc, eventId }: { page: PageData
   }
 
   if (page.type === "Informatie") {
-    const tiles = Array.isArray(page.content?.items) ? (page.content.items as PraktischTile[]) : []
+    // Nog niets aangepast: dezelfde voorbeelden als in de bouwer. Eerst stond
+    // hier dan niets, terwijl de bouwer de voorbeelden wel liet zien (Michiel,
+    // 27 september 2026, bij de cadeautips).
+    const tiles = Array.isArray(page.content?.items) ? (page.content.items as PraktischTile[]) : DEFAULT_PRAKTISCH_TILES
     return <PraktischPreview tiles={tiles} sc={sc} />
   }
 
   if (page.type === "Cadeautips") {
-    const items = Array.isArray(page.content?.items) ? (page.content.items as WishlistItem[]) : []
+    const eigen = Array.isArray(page.content?.items) ? (page.content.items as WishlistItem[]) : []
+    const items = eigen.length ? eigen : DEFAULT_WISHLIST_ITEMS
     return <WishlistPreview items={items} sc={sc} />
   }
 

@@ -15,8 +15,7 @@ import { CARD_TEMPLATE_LABEL, type NieuwOntwerp } from "@/lib/cards"
 import type { SC } from "@/lib/event-styles"
 import { HOME_ONTWERPEN, HOME_KOP_STANDAARD } from "@/lib/home-ontwerp"
 import { detailsKeuze, detailsOpKaart, type DetailsStand } from "@/lib/kaart-ontwerpen"
-import { TITLE_FONT_OPTIONS, gemetenLetter } from "@/lib/title-fonts"
-import { namenPlek, namenStandVanzelf } from "@/lib/namen-opmaak"
+import { TITLE_FONT_OPTIONS } from "@/lib/title-fonts"
 
 export interface HomeOntwerpInstellingen {
   ontwerp?: string
@@ -25,7 +24,6 @@ export interface HomeOntwerpInstellingen {
   tijden?: string
   dresscode?: string
   details?: DetailsStand
-  namen?: "naast" | "onder"
 }
 
 const invoer =
@@ -190,11 +188,6 @@ export function HomeOntwerpTekstvelden({
   )
   const aangepast = Object.values(tekstInst).some((w) => w && (w.font || (w.schaal != null && w.schaal !== 1)))
   const kanKiezen = detailsKeuze(ontwerp)
-  // Naast of onder elkaar: geselecteerd staat wat het ontwerp zelf doet
-  const plekBasis = namenPlek(ontwerp, { breedte: 400, datumIso: datum || null })
-  const meting = gemetenLetter(tekstInst.namen?.font)
-  const plek = plekBasis ? { ...plekBasis, grootte: plekBasis.grootte * (tekstInst.namen?.schaal ?? 1), ...(meting ? { letter: meting } : {}) } : null
-  const namenNu = plek ? instellingen.namen ?? namenStandVanzelf(namen || "Jullie namen", plek) : null
   const waar: DetailsStand = detailsOpKaart(ontwerp, instellingen.details) ? "op" : "onder"
 
   return (
@@ -205,26 +198,7 @@ export function HomeOntwerpTekstvelden({
       </Veld>
       <Veld id="hp-field-namen" label="Namen">
         <textarea rows={2} value={namen} onChange={(e) => onNamen(e.target.value)} placeholder="Michiel & Lindsey" className={`${invoer} resize-none`} />
-        {namenNu && (
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-[11px] text-gray-500">Namen</span>
-            <div className="inline-flex rounded-xl p-0.5 bg-[#FBF5E8] border border-[var(--goud-licht)]" role="radiogroup" aria-label="Namen naast of onder elkaar">
-              {(["naast", "onder"] as const).map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  role="radio"
-                  aria-checked={namenNu === s}
-                  onClick={() => onWijzig({ namen: s })}
-                  className="text-xs font-semibold px-3 py-1.5 rounded-[10px]"
-                  style={{ backgroundColor: namenNu === s ? "#fff" : "transparent", color: namenNu === s ? "#1A1A1A" : "#9A8E82", boxShadow: namenNu === s ? "0 1px 3px rgba(0,0,0,0.1)" : "none", border: 0, cursor: "pointer" }}
-                >
-                  {s === "naast" ? "Naast elkaar" : "Onder elkaar"}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        <p className="text-[10px] text-gray-400 leading-snug -mt-0.5">Op één regel getypt staat op één regel. Met een enter ertussen onder elkaar.</p>
         {letter("namen")}
       </Veld>
       <Veld id="hp-field-datum" label="Datum">

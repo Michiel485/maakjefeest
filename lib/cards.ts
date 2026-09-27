@@ -99,11 +99,6 @@ export interface CardContent {
   ontwerpUrl?: string
   ontwerpVerhouding?: number
   /**
-   * De namen naast elkaar of onder elkaar, zoals gekozen in de bouwer. Leeg:
-   * de kaart kiest zelf (lib/namen-opmaak.ts).
-   */
-  namen?: "naast" | "onder"
-  /**
    * Tijden, dresscode en voor wie: op de kaart of eronder. Leeg: standaard
    * (lib/kaart-ontwerpen.ts, detailsOpKaart).
    */
@@ -575,8 +570,6 @@ export interface CardDisplay extends CardVasteTeksten {
   datumIso?: string | null
   ontwerpUrl?: string | null
   ontwerpVerhouding?: number | null
-  /** Naast elkaar of onder elkaar; leeg is de kaart kiest zelf */
-  namenStand?: "naast" | "onder" | null
   /** Details op of onder de kaart; leeg is de standaard van het ontwerp */
   detailsStand?: "op" | "onder" | null
   /**
@@ -635,7 +628,6 @@ export function buildCardDisplay(
     datumIso: content.dateText?.trim() ? null : event.datum || null,
     ontwerpUrl: content.ontwerpUrl || null,
     ontwerpVerhouding: content.ontwerpVerhouding || null,
-    namenStand: content.namen === "naast" || content.namen === "onder" ? content.namen : null,
     detailsStand: content.details === "op" || content.details === "onder" ? content.details : null,
     eigenBericht: !!content.message?.trim(),
     ...displayTeksten(taal),

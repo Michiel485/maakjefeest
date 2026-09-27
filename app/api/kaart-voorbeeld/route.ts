@@ -65,7 +65,6 @@ export async function POST(request: Request) {
         ? body.ontwerpUrl
         : undefined,
     ontwerpVerhouding: typeof body.ontwerpVerhouding === "number" && body.ontwerpVerhouding >= 0.4 && body.ontwerpVerhouding <= 2.5 ? body.ontwerpVerhouding : undefined,
-    namen: body.namen === "naast" || body.namen === "onder" ? body.namen : undefined,
     details: body.details === "op" || body.details === "onder" ? body.details : undefined,
   }
 

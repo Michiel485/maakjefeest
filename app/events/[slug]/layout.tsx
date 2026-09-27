@@ -119,14 +119,18 @@ export default async function EventLayout({
         </div>
       )}
 
-      <footer className="py-6 text-center text-sm relative" style={{ zIndex: 1, color: sc.bodyText, borderTop: `1px solid ${sc.accent}15` }}>
-        Gemaakt met{" "}
-        <a href="https://www.sayingyes.nl" style={{ fontWeight: 600, color: sc.accent, textDecoration: "none", fontFamily: "var(--font-cormorant)", fontSize: "1.05rem", letterSpacing: "0.01em" }}>
-          SayingYes
-        </a>
-      </footer>
-
     </div>
+  )
+
+  // Los onder de site, niet als laatste strook in het kader: dan liep het
+  // kader nog een stuk door (Michiel, 27 september 2026)
+  const voettekst = (
+    <footer className="py-6 text-center text-sm" style={{ color: sc.bodyText, opacity: 0.75 }}>
+      Gemaakt met{" "}
+      <a href="https://www.sayingyes.nl" style={{ fontWeight: 600, color: sc.accent, textDecoration: "none", fontFamily: "var(--font-cormorant)", fontSize: "1.05rem", letterSpacing: "0.01em" }}>
+        SayingYes
+      </a>
+    </footer>
   )
 
   return (
@@ -157,8 +161,14 @@ export default async function EventLayout({
           eventTitle={(event.nav_title as string | null) || (event.title as string) || ""}
         >
           {siteContent}
+          {voettekst}
         </EventGatekeeper>
-      ) : siteContent}
+      ) : (
+        <>
+          {siteContent}
+          {voettekst}
+        </>
+      )}
     </div>
   )
 }

@@ -2,17 +2,25 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { isMarketingHost } from "@/lib/marketing-host"
 
 const STORAGE_KEY = "cookie_consent"
 
 export default function CookieBanner() {
   const [visible, setVisible] = useState(false)
+  const pathname = usePathname()
 
   useEffect(() => {
+    // Alleen op sayingyes.nl zelf. Op de site en de kaart van een bruidspaar
+    // laden we geen Google Analytics, dus hoeft daar ook niets gevraagd te
+    // worden; de gasten kregen hem wel te zien (Michiel, 27 september 2026).
+    if (!isMarketingHost(window.location.hostname, process.env.NODE_ENV !== "production")) return
+    if (pathname?.startsWith("/events") || pathname?.startsWith("/kaart/")) return
     if (localStorage.getItem(STORAGE_KEY)) return
     const t = setTimeout(() => setVisible(true), 2000)
     return () => clearTimeout(t)
-  }, [])
+  }, [pathname])
 
   function choose(value: "accepted" | "declined") {
     localStorage.setItem(STORAGE_KEY, value)

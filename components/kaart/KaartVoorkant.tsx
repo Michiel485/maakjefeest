@@ -16,7 +16,7 @@ import { cloneElement, isValidElement, type CSSProperties, type ReactNode } from
 import type { CardDisplay, NieuwOntwerp } from "@/lib/cards"
 import type { SC } from "@/lib/event-styles"
 import { detailsKeuze, detailsOpKaart, illustratie, KADERS, ONTWERP_LETTERS, type VoorkantLetters } from "@/lib/kaart-ontwerpen"
-import { namenOpmaak, namenPlek, namenRegels, type NamenPlek, type NamenStand } from "@/lib/namen-opmaak"
+import { namenOpmaak, namenPlek, type NamenPlek } from "@/lib/namen-opmaak"
 import type { GemetenLetter } from "@/lib/letterbreedtes"
 import { initialenLijst } from "@/lib/initialen"
 import { leesbaar } from "@/lib/contrast"
@@ -62,9 +62,23 @@ export type TekstRol = "kop" | "namen" | "datum" | "locatie" | "tijden" | "dress
 export type EigenTekst = Partial<Record<TekstRol, { font?: string; schaal?: number }>>
 
 /** De namen, passend gemaakt voor de ruimte die het ontwerp ervoor heeft. */
-function Namen({ namen, plek, stand, style }: { namen: string; plek: NamenPlek; stand?: NamenStand | null; style: CSSProperties }) {
-  const o = namenOpmaak(namen, plek, stand)
-  return <Regels tekst={o.tekst} heel={o.heel} style={{ ...style, fontSize: o.grootte }} />
+function Namen({
+  namen,
+  plek,
+  style,
+  uitlijnen,
+  vrijeSchaal,
+  max,
+}: {
+  namen: string
+  plek: NamenPlek
+  style: CSSProperties
+  uitlijnen?: "center" | "flex-start"
+  vrijeSchaal?: number
+  max?: number
+}) {
+  const o = namenOpmaak(namen, plek, { vrijeSchaal, max })
+  return <Regels tekst={o.tekst} heel={o.heel} uitlijnen={uitlijnen} style={{ ...style, fontSize: o.grootte }} />
 }
 
 /** "M | L", voor in de boog als er geen foto is (Michiel: een streep, geen &). */
@@ -371,9 +385,11 @@ function Inhoud({
   // geen vaste plek: die zet de namen onder elkaar, behalve bij één naam.
   const namenLetter = ONTWERP_LETTERS[ontwerp].namen
   const basisPlek: NamenPlek = namenPlek(ontwerp, { breedte, datumIso: d.datumIso }) ?? { letter: namenLetter, grootte: px(46), ruimte: px(340) }
+  // Op de homepagina: eerst passend in het ontwerp, dan de grootte die het
+  // bruidspaar koos, en nooit breder dan het ontwerp
+  const namenVrij = vrij ? { vrijeSchaal: eigen?.namen?.schaal ?? 1, max: breedte * 0.92 } : {}
   const plek: NamenPlek = {
     ...basisPlek,
-    grootte: basisPlek.grootte * (eigen?.namen?.schaal ?? 1),
     ...(namenMeting ? { letter: namenMeting } : {}),
   }
 
@@ -478,11 +494,7 @@ function Inhoud({
         </D>
 
         <D style={{ flexDirection: "column", gap: px(18), marginTop: px(30), marginBottom: px(30) }}>
-          <Regels
-            tekst={namenRegels(d.names)}
-            uitlijnen="flex-start"
-            style={{ fontFamily: letters.namen, fontSize: pxN(52), lineHeight: 1.04, color: kop }}
-          />
+          <Namen plek={plek} {...namenVrij} namen={d.names} uitlijnen="flex-start" style={{ fontFamily: letters.namen, lineHeight: 1.04, color: kop }} />
           {d.dateText && (
             <div style={{ display: "flex", ...tt("datum", letters.kop, 12), letterSpacing: "0.22em", textTransform: "uppercase", color: kop }}>
               {d.dateText}
@@ -541,7 +553,7 @@ function Inhoud({
           <div style={{ display: "flex", ...tt("kop", letters.kop, 10), letterSpacing: "0.34em", textTransform: "uppercase", color: wit, opacity: 0.9 }}>
             {d.heading}
           </div>
-          <Namen plek={plek} stand={d.namenStand} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.12, color: wit }} />
+          <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.12, color: wit }} />
           <div style={{ display: "flex", width: px(38), height: lijn, backgroundColor: wit, opacity: 0.6, marginTop: px(2), marginBottom: px(2) }} />
           {d.dateText && (
             <div style={{ display: "flex", ...tt("datum", letters.kop, 12.5), letterSpacing: "0.24em", textTransform: "uppercase", color: wit }}>
@@ -616,7 +628,7 @@ function Inhoud({
           <div style={{ display: "flex", ...tt("kop", letters.kop, 11), letterSpacing: "0.3em", textTransform: "uppercase", color: label }}>
             {d.heading}
           </div>
-          <Namen plek={plek} stand={d.namenStand} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.18, color: kop }} />
+          <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.18, color: kop }} />
           {d.dateText && (
             <div style={{ display: "flex", ...tt("datum", letters.kop, 15), letterSpacing: "0.14em", textTransform: "uppercase", color: accent }}>
               {d.dateText}
@@ -684,10 +696,7 @@ function Inhoud({
           <div style={{ display: "flex", ...tt("kop", letters.kop, 10.5), letterSpacing: "0.38em", textTransform: "uppercase", color: label }}>
             {d.heading}
           </div>
-          <Regels
-            tekst={namenRegels(d.names)}
-            style={{ fontFamily: letters.namen, fontSize: pxN(29), lineHeight: 1.3, letterSpacing: "0.1em", textTransform: "uppercase", color: kop, marginTop: px(4), marginBottom: px(4) }}
-          />
+          <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.3, letterSpacing: "0.1em", textTransform: "uppercase", color: kop, marginTop: px(4), marginBottom: px(4) }} />
           <D style={{ alignItems: "center", gap: px(8), width: px(210) }}>
             <div style={{ display: "flex", flexGrow: 1, height: lijn, backgroundColor: accent }} />
             <div style={{ display: "flex", width: px(6), height: px(6), backgroundColor: accent, transform: "rotate(45deg)" }} />
@@ -739,7 +748,7 @@ function Inhoud({
             <div style={{ display: "flex", ...tt("kop", letters.kop, 9.5), letterSpacing: "0.32em", textTransform: "uppercase", color: kader.kleur.accent }}>
               {d.heading}
             </div>
-            <Namen plek={plek} stand={d.namenStand} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.1, color: kader.kleur.namen }} />
+            <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.1, color: kader.kleur.namen }} />
             {datum && (
               <div style={{ display: "flex", ...tt("datum", letters.kop, 11), letterSpacing: "0.2em", color: kader.kleur.accent }}>{datum}</div>
             )}
@@ -782,11 +791,7 @@ function Inhoud({
               gap: px(7),
             }}
           >
-            {d.namenStand === "naast" ? (
-              <Namen plek={plek} stand="naast" namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.12, color: kader.kleur.namen }} />
-            ) : (
-              <Regels tekst={namenRegels(d.names)} style={{ fontFamily: letters.namen, fontSize: pxN(ontwerp === "herfst" || ontwerp === "herfstruit" ? 21 : 30), lineHeight: 1.12, color: kader.kleur.namen }} />
-            )}
+            <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.12, color: kader.kleur.namen }} />
             {datum && (
               <div style={{ display: "flex", ...tt("datum", letters.kop, 10.5), letterSpacing: "0.14em", color: kader.kleur.accent }}>{datum}</div>
             )}
@@ -841,7 +846,7 @@ function Inhoud({
           <div style={{ display: "flex", ...tt("kop", letters.kop, 11), letterSpacing: "0.32em", textTransform: "uppercase", color: goud }}>
             {d.heading}
           </div>
-          <Namen plek={plek} stand={d.namenStand} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.15, color: groen }} />
+          <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.15, color: groen }} />
           {d.dateText && (
             <div style={{ display: "flex", ...tt("datum", letters.kop, 12), letterSpacing: "0.22em", textTransform: "uppercase", color: goud, textAlign: "center" }}>
               {d.dateText}
@@ -891,7 +896,7 @@ function Inhoud({
               {datum}
             </div>
           )}
-          <Namen plek={plek} stand={d.namenStand} namen={d.names}
+          <Namen plek={plek} {...namenVrij} namen={d.names}
             style={{ fontFamily: letters.tekst, letterSpacing: "0.16em", color: kop, opacity: 0.8, marginTop: px(10) }}
           />
           {d.location && (
@@ -939,7 +944,7 @@ function Inhoud({
             <div style={{ display: "flex", fontFamily: letters.namen, fontSize: pxN(54), lineHeight: 1, color: kop }}>{delen[1]}</div>
           </D>
         ) : (
-          <Namen plek={plek} stand={d.namenStand} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.05, color: kop, marginTop: px(14) }} />
+          <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.05, color: kop, marginTop: px(14) }} />
         )}
         {datum && (
           <div style={{ display: "flex", ...tt("datum", letters.namen, 20), letterSpacing: "0.04em", color: kop, marginTop: px(22) }}>
@@ -1009,7 +1014,7 @@ function Inhoud({
           </D>
         </D>
         <D style={{ flexDirection: "column", alignItems: "center", gap: px(6) }}>
-          <Namen plek={plek} stand={d.namenStand} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1, color: kop }} />
+          <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1, color: kop }} />
           {datum && (
             <div style={{ display: "flex", ...tt("datum", letters.tekst, 12), letterSpacing: "0.22em", color: kop, opacity: 0.85 }}>
               {datum}
@@ -1066,7 +1071,7 @@ function Inhoud({
               {datum}
             </div>
           )}
-          <Namen plek={plek} stand={d.namenStand}
+          <Namen plek={plek} {...namenVrij}
             namen={d.names.replace(/\s*\n\s*/g, " ")}
             style={{ fontFamily: letters.tekst, letterSpacing: "0.3em", textTransform: "uppercase", color: wit, opacity: 0.9, marginTop: px(4) }}
           />
@@ -1116,7 +1121,7 @@ function Inhoud({
           </div>
         )
       )}
-      <Namen plek={plek} stand={d.namenStand} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.1, color: accent }} />
+      <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.1, color: accent }} />
       {d.location && (
         <Regels
           tekst={d.location}

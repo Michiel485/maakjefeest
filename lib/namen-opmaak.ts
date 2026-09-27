@@ -7,17 +7,6 @@ import { KADERS, ONTWERP_LETTERS } from "./kaart-ontwerpen"
 import { tekstBreedte, type GemetenLetter } from "./letterbreedtes"
 
 /**
- * Wat het bruidspaar kiest in de bouwer: de namen naast elkaar op één regel,
- * of onder elkaar (Michiel, 26 september 2026). Niets gekozen: de kaart
- * kiest zelf, zie namenOpmaak.
- */
-export type NamenStand = "naast" | "onder"
-
-export function namenStand(v: unknown): NamenStand | undefined {
-  return v === "naast" || v === "onder" ? v : undefined
-}
-
-/**
  * De namen, als ze op één regel staan, netjes over twee regels: "Michiel" en
  * "& Lindsey". Heeft het bruidspaar zelf een enter gezet, dan wint die.
  */
@@ -27,14 +16,12 @@ export function namenRegels(namen: string): string {
   return m ? `${m[1]}\n${m[2]} ${m[3]}` : namen
 }
 
-// Hoeveel ruimer we de namen rekenen dan de tabel zegt. Bij twijfel liever de
-// nette breuk dan namen die buiten het kader lopen.
+// Hoeveel ruimer we de namen rekenen dan de tabel zegt. Bij twijfel liever
+// iets kleiner dan namen die buiten het kader lopen.
 const NAMEN_MARGE = 1.06
-// Hoeveel kleiner de namen vanzelf mogen worden om op één regel te passen
-const NAMEN_KLEINSTE = 0.8
-// Gekozen voor naast elkaar: zo veel kleiner als nodig, maar niet kleiner dan
-// dit, anders worden lange namen onleesbaar
-const NAMEN_NAAST_KLEINSTE = 0.5
+// Zo veel kleiner mogen de namen worden om te passen; daaronder worden lange
+// namen onleesbaar
+const NAMEN_KLEINSTE = 0.5
 
 /** Waar de namen op een ontwerp staan: in welke letter, hoe groot en hoe breed ze mogen, in pixels */
 export interface NamenPlek {
@@ -43,23 +30,22 @@ export interface NamenPlek {
   ruimte: number
   letterafstand?: number
   hoofdletters?: boolean
-  /**
-   * Het ontwerp zet de namen uit zichzelf onder elkaar (de kransen). Naast
-   * elkaar alleen als het bruidspaar dat kiest.
-   */
-  standaardOnder?: boolean
 }
 
 /**
- * Hoe de namen op de kaart komen. Eerst liepen ze gewoon terug als de regel
- * vol was, en dan bleef de & achter de eerste naam hangen: "Michiel &" en
- * daaronder "Lindsey" (Michiel, 26 september 2026).
+ * Hoe de namen op de kaart komen: zoals het bruidspaar ze typt. Op één regel
+ * getypt is één regel, met een enter ertussen onder elkaar. Geen knop
+ * (Michiel, 27 september 2026). Eerst liepen ze vanzelf terug als de regel
+ * vol was, en dan bleef de & achter de eerste naam hangen.
  *
- * Zonder keuze:
- * 1. past het op één regel, dan één regel;
- * 2. past het met een iets kleinere letter (tot een vijfde kleiner), dan dat;
- * 3. anders een nette breuk vóór het teken: "Michiel" en "& Lindsey".
- * Een eigen enter wint dan. Met een keuze gaat die voor.
+ * Past een regel niet, dan wordt de letter kleiner, tot de helft. Past één
+ * regel ook dan niet, dan komt er een nette breuk vóór het teken: "Michiel"
+ * en "& Lindsey".
+ *
+ * Met vrijeSchaal (de homepagina): eerst passend, en dan die schaal eroverheen.
+ * Dan is 100% "past precies in het ontwerp" en werkt de schuif vanaf daar;
+ * eerst werd alles weer teruggeschaald naar passend en gebeurde er tussen 70
+ * en 140% niets. Nooit breder dan max.
  *
  * Uitgerekend met de letterbreedtes in plaats van gemeten, zodat de
  * afbeelding van de server hetzelfde uitkomt.
@@ -67,48 +53,43 @@ export interface NamenPlek {
 export function namenOpmaak(
   namen: string,
   plek: NamenPlek,
-  stand?: NamenStand | null
+  opties: { vrijeSchaal?: number; max?: number } = {}
 ): { tekst: string; grootte: number; heel: boolean } {
   const { letter, grootte, ruimte } = plek
   const meet = (tekst: string, g: number) =>
     tekstBreedte(plek.hoofdletters ? tekst.toUpperCase() : tekst, letter, g, plek.letterafstand ?? 0) * NAMEN_MARGE
   const afronden = (g: number) => Math.floor(g * 10) / 10
-  const enkel = namen.replace(/\s+/g, " ").trim()
 
-  // Onder elkaar: breken vóór het teken (of waar het paar zelf een enter
-  // zette), en is een regel dan nog te breed, die passend maken
-  const onder = (tekst: string) => {
-    const regels = tekst.split(/\r?\n/).map((r) => r.trim()).filter(Boolean)
+  const passend = (regels: string[]) => {
     const breedste = Math.max(...regels.map((r) => meet(r, grootte)))
-    if (breedste <= ruimte) return { tekst: regels.join("\n"), grootte, heel: true }
-    const schaal = ruimte / breedste
-    if (schaal >= 0.7) return { tekst: regels.join("\n"), grootte: afronden(grootte * schaal), heel: true }
-    // Eén heel lange naam: kleiner, en verder mag hij teruglopen
-    return { tekst: regels.join("\n"), grootte: afronden(grootte * 0.7), heel: false }
+    const schaal = Math.min(1, ruimte / breedste)
+    return { breedste, schaal }
   }
-
-  if (stand === "naast") {
-    const breed = meet(enkel, grootte)
-    if (breed <= ruimte) return { tekst: enkel, grootte, heel: true }
-    const schaal = ruimte / breed
-    if (schaal >= NAMEN_NAAST_KLEINSTE) return { tekst: enkel, grootte: afronden(grootte * schaal), heel: true }
-    // Zelfs op de helft past het niet. Teruglopen brak dan midden in een naam
-    // ("Annabelle-" en daaronder "Sophie"); de nette breuk staat beter.
-    return onder(namenRegels(enkel))
+  let regels = namen.split(/\r?\n/).map((r) => r.replace(/\s+/g, " ").trim()).filter(Boolean)
+  if (!regels.length) regels = [namen.trim()]
+  let { breedste, schaal } = passend(regels)
+  // Eén regel die ook op de helft niet past: de nette breuk
+  if (regels.length === 1 && schaal < NAMEN_KLEINSTE) {
+    const gebroken = namenRegels(regels[0]).split("\n")
+    if (gebroken.length > 1) {
+      regels = gebroken
+      ;({ breedste, schaal } = passend(regels))
+    }
   }
-  if (stand === "onder") return onder(/\n/.test(namen) ? namen : namenRegels(enkel))
-
-  if (/\n/.test(namen)) return { tekst: namen, grootte, heel: false }
-  const breed = meet(enkel, grootte)
-  if (breed <= ruimte) return { tekst: enkel, grootte, heel: true }
-  if (breed * NAMEN_KLEINSTE <= ruimte) return { tekst: enkel, grootte: afronden((grootte * ruimte) / breed), heel: true }
-  return onder(namenRegels(enkel))
+  const heel = schaal >= NAMEN_KLEINSTE
+  let g = grootte * Math.max(schaal, NAMEN_KLEINSTE)
+  if (opties.vrijeSchaal != null) {
+    g *= opties.vrijeSchaal
+    // Wel nooit breder dan het ontwerp zelf
+    if (opties.max) g = Math.min(g, (grootte * opties.max) / breedste)
+  }
+  return { tekst: regels.join("\n"), grootte: afronden(g), heel }
 }
 
 /**
  * Waar de namen staan op elk ontwerp dat de keuze kent, voor een kaart van
- * deze breedte. Null bij ontwerpen die de namen bewust onder elkaar zetten
- * (Minimaal, de kransen, Palm) en bij een eigen ontwerp.
+ * deze breedte. Null bij Palm (die zet de namen altijd onder elkaar, met het
+ * woord ertussen in handschrift) en bij een eigen ontwerp.
  *
  * De maten van de nieuwe ontwerpen gaan uit van een kaart van 400 breed,
  * zoals in KaartVoorkant. De eerste drie ontwerpen rekenen in echte pixels,
@@ -135,6 +116,11 @@ export function namenPlek(ontwerp: CardDesign, opties: { breedte: number; datumI
     ...extra,
   })
   switch (ontwerp) {
+    case "minimaal":
+      return maat(52, 400 - 80)
+    // Art deco: in hoofdletters, met ruimte tussen de letters
+    case "deco":
+      return maat(29, 400 - 88, { letterafstand: 0.1, hoofdletters: true })
     case "fotovol":
       return maat(48, 336)
     case "boog":
@@ -158,13 +144,7 @@ export function namenPlek(ontwerp: CardDesign, opties: { breedte: number; datumI
   // De kransen: in de witte vorm, die 372 breed is op een kaart van 400
   // (Michiel, 27 september 2026: naast elkaar moest ook kunnen)
   if (kader?.vorm === "krans") {
-    return maat(ontwerp === "herfst" || ontwerp === "herfstruit" ? 21 : 30, 372 * kader.ruimte[0], { standaardOnder: true })
+    return maat(ontwerp === "herfst" || ontwerp === "herfstruit" ? 21 : 30, 372 * kader.ruimte[0])
   }
   return null
-}
-
-/** Wat de kaart zelf zou kiezen, voor de bouwer: dat staat daar geselecteerd */
-export function namenStandVanzelf(namen: string, plek: NamenPlek): NamenStand {
-  if (plek.standaardOnder) return "onder"
-  return namenOpmaak(namen, plek).tekst.includes("\n") ? "onder" : "naast"
 }
