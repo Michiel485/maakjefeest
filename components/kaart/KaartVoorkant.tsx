@@ -598,13 +598,18 @@ function Inhoud({
   // Per soort tekst een eigen grootte, voor de homepagina. Op een kaart is
   // de schaal er niet en is dit gewoon px.
   const pxN = (n: number) => Math.round(n * s * (eigen?.namen?.schaal ?? 1) * 10) / 10
+  // Kleine tekst (de kop, de locatie, de boodschap, de details) groter dan
+  // ontworpen: op de telefoon was die lastig te lezen (Michiel, 27 september
+  // 2026). Grote tekst blijft zoals hij is.
+  const klein = (n: number) => (n >= 16 ? n : Math.min(16, n * 1.22))
+  const pxK = (n: number) => px(klein(n))
   // Een eigen letter voor de namen geldt overal waar de namen staan
   const letters: VoorkantLetters = { ...lettersIn, namen: eigen?.namen?.font ?? lettersIn.namen }
   // Letter en grootte van één tekst: die van het ontwerp, of wat het
   // bruidspaar zelf koos (Michiel, 27 september 2026: per tekst apart)
   const tt = (rol: TekstRol, standaard: string, n: number): CSSProperties => ({
     fontFamily: eigen?.[rol]?.font ?? standaard,
-    fontSize: Math.round(n * s * (eigen?.[rol]?.schaal ?? 1) * 10) / 10,
+    fontSize: Math.round((rol === "namen" ? n : klein(n)) * s * (eigen?.[rol]?.schaal ?? 1) * 10) / 10,
   })
   const hoogte = Math.round(breedte * 1.4)
 
@@ -626,7 +631,7 @@ function Inhoud({
     if (!detailsKeuze(ontwerp) || !detailsOpKaart(ontwerp, d.detailsStand)) return null
     if (!d.inviteLine && !d.timeText) return null
     const uitlijnen = opties.uitlijnen ?? "center"
-    const grootte = px(opties.grootte ?? 10.5)
+    const grootte = pxK(opties.grootte ?? 10.5)
     const font = opties.font ?? letters.tekst
     const max = px(opties.max ?? 300)
     return (
@@ -691,11 +696,11 @@ function Inhoud({
         <Regels
           tekst={d.message}
           uitlijnen={uitlijnen}
-          style={{ fontFamily: font, fontSize: px(12.5), lineHeight: 1.6, color: kleur.tekst, maxWidth: px(310) }}
+          style={{ fontFamily: font, fontSize: pxK(12.5), lineHeight: 1.6, color: kleur.tekst, maxWidth: px(310) }}
         />
       )}
       {d.inviteLine && (
-        <div style={{ display: "flex", fontFamily: font, fontSize: px(12.5), fontWeight: 600, lineHeight: 1.5, color: kleur.kop, maxWidth: px(310), textAlign: uitlijnen === "center" ? "center" : "left" }}>
+        <div style={{ display: "flex", fontFamily: font, fontSize: pxK(12.5), fontWeight: 600, lineHeight: 1.5, color: kleur.kop, maxWidth: px(310), textAlign: uitlijnen === "center" ? "center" : "left" }}>
           {d.inviteLine}
         </div>
       )}
@@ -703,7 +708,7 @@ function Inhoud({
         <Regels
           tekst={d.timeText}
           uitlijnen={uitlijnen}
-          style={{ fontFamily: font, fontSize: px(11), fontWeight: 600, lineHeight: 1.6, letterSpacing: "0.06em", color: kleur.accent }}
+          style={{ fontFamily: font, fontSize: pxK(11), fontWeight: 600, lineHeight: 1.6, letterSpacing: "0.06em", color: kleur.accent }}
         />
       )}
     </D>
@@ -733,7 +738,7 @@ function Inhoud({
           <div style={{ display: "flex", fontFamily: letters.tekst, fontSize: px(15), fontWeight: 600, color: kop, textAlign: "center" }}>
             Jullie eigen ontwerp
           </div>
-          <div style={{ display: "flex", fontFamily: letters.tekst, fontSize: px(12), lineHeight: 1.5, color: tekst, textAlign: "center", maxWidth: px(260) }}>
+          <div style={{ display: "flex", fontFamily: letters.tekst, fontSize: pxK(12), lineHeight: 1.5, color: tekst, textAlign: "center", maxWidth: px(260) }}>
             Upload een afbeelding van jullie kaart. Wij doen de envelop, het aanmelden en de rest.
           </div>
         </D>
@@ -1021,7 +1026,7 @@ function Inhoud({
           <Regels tekst={d.location} style={{ ...tt("locatie", letters.tekst, 11.5), lineHeight: 1.5, letterSpacing: "0.06em", color: tekst, opacity: 0.88 }} />
         )}
         {d.message && (
-          <Regels tekst={d.message} style={{ fontFamily: letters.tekst, fontSize: px(12), lineHeight: 1.55, color: tekst, maxWidth: px(290), marginTop: px(6), opacity: 0.9 }} />
+          <Regels tekst={d.message} style={{ fontFamily: letters.tekst, fontSize: pxK(12), lineHeight: 1.55, color: tekst, maxWidth: px(290), marginTop: px(6), opacity: 0.9 }} />
         )}
         {details(accent, { grootte: 10.5, marge: 4, max: 300 })}
       </D>
@@ -1147,7 +1152,7 @@ function Inhoud({
             <Regels tekst={d.location} style={{ ...tt("locatie", letters.tekst, 11.5), lineHeight: 1.5, letterSpacing: "0.06em", color: tekst, opacity: 0.88 }} />
           )}
           {d.message && (
-            <Regels tekst={d.message} style={{ fontFamily: letters.tekst, fontSize: px(12), lineHeight: 1.55, color: tekst, maxWidth: px(290), marginTop: px(4), opacity: 0.9 }} />
+            <Regels tekst={d.message} style={{ fontFamily: letters.tekst, fontSize: pxK(12), lineHeight: 1.55, color: tekst, maxWidth: px(290), marginTop: px(4), opacity: 0.9 }} />
           )}
           {details(accent, { grootte: 10.5, marge: 4, max: 300 })}
         </D>
@@ -1173,7 +1178,7 @@ function Inhoud({
             <Regels tekst={d.location} style={{ ...tt("locatie", letters.tekst, 12), lineHeight: 1.5, letterSpacing: "0.06em", color: tekst, opacity: 0.88 }} />
           )}
           {d.message && (
-            <Regels tekst={d.message} style={{ fontFamily: letters.tekst, fontSize: px(12), lineHeight: 1.55, color: tekst, maxWidth: px(290), opacity: 0.9 }} />
+            <Regels tekst={d.message} style={{ fontFamily: letters.tekst, fontSize: pxK(12), lineHeight: 1.55, color: tekst, maxWidth: px(290), opacity: 0.9 }} />
           )}
           {details(accent, { grootte: 10.5, marge: 2, max: 300 })}
         </D>
@@ -1236,7 +1241,7 @@ function Inhoud({
             <Regels tekst={d.location} style={{ ...tt("locatie", letters.tekst, 11.5), lineHeight: 1.5, letterSpacing: "0.06em", color: tekst, opacity: 0.88 }} />
           )}
           {d.message && (
-            <Regels tekst={d.message} style={{ fontFamily: letters.tekst, fontSize: px(12), lineHeight: 1.55, color: tekst, maxWidth: px(290), opacity: 0.9 }} />
+            <Regels tekst={d.message} style={{ fontFamily: letters.tekst, fontSize: pxK(12), lineHeight: 1.55, color: tekst, maxWidth: px(290), opacity: 0.9 }} />
           )}
           {details(accent, { grootte: 10.5, marge: 2, max: 300 })}
         </D>
@@ -1259,14 +1264,14 @@ function Inhoud({
             <Regels tekst={d.location} style={{ ...tt("locatie", letters.tekst, 12), lineHeight: 1.5, letterSpacing: "0.06em", color: tekst, opacity: 0.88 }} />
           )}
           {d.message && (
-            <Regels tekst={d.message} style={{ fontFamily: letters.tekst, fontSize: px(12.5), lineHeight: 1.55, color: tekst, maxWidth: px(280), opacity: 0.9 }} />
+            <Regels tekst={d.message} style={{ fontFamily: letters.tekst, fontSize: pxK(12.5), lineHeight: 1.55, color: tekst, maxWidth: px(280), opacity: 0.9 }} />
           )}
           {details(accent, { grootte: 10.5, marge: 2, max: 290 })}
         </D>
       ), [
         los({ left: rand, top: rand, right: rand, bottom: rand, border: `${lijn}px solid ${accent}`, borderRadius: px(6) }, null, 0),
         // Het hart onderbreekt de rand: een stukje achtergrond erachter
-        los({ left: (breedte - hw) / 2 - px(10), top: rand - hw * 0.5, paddingLeft: px(10), paddingRight: px(10), backgroundColor: achtergrond }, <KalligrafieHart breedte={hw} kleur={accent} />, 1),
+        los({ left: (breedte - hw) / 2 - px(10), top: rand - hw * 0.3, paddingLeft: px(10), paddingRight: px(10), backgroundColor: achtergrond }, <KalligrafieHart breedte={hw} kleur={accent} />, 1),
       ])
     }
 
@@ -1288,7 +1293,7 @@ function Inhoud({
               <Regels tekst={d.location} uitlijnen="flex-start" style={{ ...tt("locatie", letters.tekst, 11.5), lineHeight: 1.5, letterSpacing: "0.06em", color: tekst, opacity: 0.88 }} />
             )}
             {d.message && (
-              <Regels tekst={d.message} uitlijnen="flex-start" style={{ fontFamily: letters.tekst, fontSize: px(12), lineHeight: 1.55, color: tekst, maxWidth: px(280), opacity: 0.9 }} />
+              <Regels tekst={d.message} uitlijnen="flex-start" style={{ fontFamily: letters.tekst, fontSize: pxK(12), lineHeight: 1.55, color: tekst, maxWidth: px(280), opacity: 0.9 }} />
             )}
             {details(accent, { grootte: 10.5, marge: 2, max: 300, uitlijnen: "flex-start" })}
           </D>
@@ -1326,23 +1331,23 @@ function Inhoud({
       if (woorden.length === 3) {
         titel = (
           <D style={{ flexDirection: "column", width: "100%" }}>
-            {woord(woorden[0], past(woorden[0], 100, 250), { alignSelf: "flex-start", marginLeft: px(22) })}
+            {woord(woorden[0], past(woorden[0], 90, 250), { alignSelf: "flex-start", marginLeft: px(22) })}
             <div style={{ display: "flex", alignSelf: "center", ...tt("kop", letters.kop, 19), lineHeight: 1, color: kop, marginTop: px(-10), marginBottom: px(-6) }}>{woorden[1]}</div>
-            {woord(woorden[2], past(woorden[2], 100, 250), { alignSelf: "flex-end", marginRight: px(22) })}
+            {woord(woorden[2], past(woorden[2], 90, 250), { alignSelf: "flex-end", marginRight: px(22) })}
           </D>
         )
       } else if (woorden.length === 2) {
         titel = (
           <D style={{ flexDirection: "column", width: "100%" }}>
-            {woord(woorden[0], past(woorden[0], 100, 250), { alignSelf: "flex-start", marginLeft: px(22) })}
-            {woord(woorden[1], past(woorden[1], 100, 250), { alignSelf: "flex-end", marginRight: px(22), marginTop: px(-8) })}
+            {woord(woorden[0], past(woorden[0], 90, 250), { alignSelf: "flex-start", marginLeft: px(22) })}
+            {woord(woorden[1], past(woorden[1], 90, 250), { alignSelf: "flex-end", marginRight: px(22), marginTop: px(-8) })}
           </D>
         )
       } else {
         titel = woord(d.heading, past(d.heading, 80, 300), { alignSelf: "center" })
       }
       return (
-        <D style={{ ...basis, height: hoogte, alignItems: "center", justifyContent: "space-between", padding: `${px(52)}px ${px(44)}px ${px(40)}px`, borderRadius: px(10) }}>
+        <D style={{ ...basis, height: hoogte, alignItems: "center", justifyContent: "space-between", padding: `${px(48)}px ${px(44)}px ${px(46)}px`, borderRadius: px(10) }}>
           <svg width={breedte} height={hoogte} viewBox="0 0 400 560" fill="none" style={{ position: "absolute", left: 0, top: 0 }}>
             <path d={golfKader(400, 560, { inzet: 24, hoek: 10, golf: 30, hoogte: 3.2, grillig: 0.3 })} stroke={accent} strokeWidth="2.6" strokeLinejoin="round" />
           </svg>
@@ -1356,11 +1361,11 @@ function Inhoud({
               <Regels tekst={d.location} style={{ ...tt("locatie", letters.tekst, 13), lineHeight: 1.4, color: tekst, opacity: 0.88 }} />
             )}
             {d.message && (
-              <Regels tekst={d.message} style={{ fontFamily: letters.tekst, fontSize: px(13), lineHeight: 1.45, color: tekst, maxWidth: px(280), opacity: 0.9 }} />
+              <Regels tekst={d.message} style={{ fontFamily: letters.tekst, fontSize: pxK(13), lineHeight: 1.45, color: tekst, maxWidth: px(280), opacity: 0.9 }} />
             )}
             {details(accent, { grootte: 11, marge: 2, max: 290 })}
           </D>
-          <Glazen breedte={px(110)} kleur={accent} />
+          <Glazen breedte={px(92)} kleur={accent} />
         </D>
       )
     }
@@ -1671,7 +1676,7 @@ function Inhoud({
         )}
         <div style={{ display: "flex", width: px(30), height: lijn, backgroundColor: `${accent}80`, marginTop: px(10), marginBottom: px(10) }} />
         {d.message && (
-          <Regels tekst={d.message} style={{ fontFamily: letters.tekst, fontSize: px(12), lineHeight: 1.55, color: tekst, maxWidth: px(310) }} />
+          <Regels tekst={d.message} style={{ fontFamily: letters.tekst, fontSize: pxK(12), lineHeight: 1.55, color: tekst, maxWidth: px(310) }} />
         )}
         {details(leesbaar(accent, achtergrond, [kop]), { grootte: 11, marge: 10 })}
       </D>
@@ -1822,7 +1827,7 @@ function Inhoud({
         {d.message && (
           <Regels
             tekst={d.message}
-            style={{ fontFamily: letters.tekst, fontSize: px(12), lineHeight: 1.55, color: tekst, maxWidth: px(270), marginTop: px(12), opacity: 0.9 }}
+            style={{ fontFamily: letters.tekst, fontSize: pxK(12), lineHeight: 1.55, color: tekst, maxWidth: px(270), marginTop: px(12), opacity: 0.9 }}
           />
         )}
         {details(leesbaar(accent, achtergrond, [kop]), { grootte: 11, marge: 12 })}
@@ -1833,7 +1838,7 @@ function Inhoud({
   // ── Ibiza: palmen en golven in een ovaal, tekst rond het ovaal ────────────
   if (ontwerp === "ibiza") {
     const ow = px(300)
-    const oh = px(412)
+    const oh = px(398)
     const datum = datumKort(d.datumIso, " · ") ?? d.dateText
     return (
       <D style={{ ...basis, alignItems: "center", justifyContent: "center", padding: `${px(30)}px ${px(28)}px`, borderRadius: px(14), gap: px(20) }}>
