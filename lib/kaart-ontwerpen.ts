@@ -29,6 +29,8 @@ const L = {
   abril: { css: "var(--font-abril), Georgia, serif", google: "Abril Fatface", gewicht: 400 },
   jostDun: { css: "var(--font-jost), Helvetica, sans-serif", google: "Jost", gewicht: 300 },
   jost: { css: "var(--font-jost), Helvetica, sans-serif", google: "Jost", gewicht: 400 },
+  // In plaats van Pinyon Script voor de namen (Michiel, 27 september 2026)
+  greatvibes: { css: "var(--font-greatvibes), cursive", google: "Great Vibes", gewicht: 400 },
 } satisfies Record<string, KaartLetter>
 
 /**
@@ -45,7 +47,7 @@ export interface OntwerpLetters {
 
 export const ONTWERP_LETTERS: Record<NieuwOntwerp, OntwerpLetters> = {
   minimaal: { namen: L.italiana, kop: L.montserrat, tekst: L.montserrat },
-  fotovol: { namen: L.pinyon, kop: L.montserrat, tekst: L.montserrat },
+  fotovol: { namen: L.greatvibes, kop: L.montserrat, tekst: L.montserrat },
   boog: { namen: L.prata, kop: L.cormorant, tekst: L.montserrat },
   deco: { namen: L.cinzel, kop: L.cinzel, tekst: L.montserrat },
   datum: { namen: L.allura, kop: L.bodoni, tekst: L.montserrat },
@@ -56,30 +58,30 @@ export const ONTWERP_LETTERS: Record<NieuwOntwerp, OntwerpLetters> = {
   ibiza: { namen: L.allison, kop: L.jost, tekst: L.jost, extra: L.allison },
   fotoschrift: { namen: L.jost, kop: L.allison, tekst: L.jost, extra: L.allison },
   olijf: { namen: L.pinyon, kop: L.jost, tekst: L.jost, extra: L.pinyon },
-  pampas: { namen: L.pinyon, kop: L.jost, tekst: L.jost },
-  pampasruit: { namen: L.pinyon, kop: L.jost, tekst: L.jost },
+  pampas: { namen: L.allura, kop: L.jost, tekst: L.jost },
+  pampasruit: { namen: L.allura, kop: L.jost, tekst: L.jost },
   terra: { namen: L.allison, kop: L.jost, tekst: L.jost },
   terraruit: { namen: L.allison, kop: L.jost, tekst: L.jost },
   herfst: { namen: L.prata, kop: L.jost, tekst: L.jost },
   herfstruit: { namen: L.prata, kop: L.jost, tekst: L.jost },
   goudblad: { namen: L.allison, kop: L.jost, tekst: L.jost },
-  magnolia: { namen: L.pinyon, kop: L.jost, tekst: L.jost },
+  magnolia: { namen: L.greatvibes, kop: L.jost, tekst: L.jost },
   // Alleen voor de homepagina
   editoriaal: { namen: L.bodoni, kop: L.montserrat, tekst: L.montserrat },
   monogram: { namen: L.italiana, kop: L.montserrat, tekst: L.montserrat, extra: L.cormorant },
-  lijnkader: { namen: L.pinyon, kop: L.cinzel, tekst: L.cormorant },
+  lijnkader: { namen: L.greatvibes, kop: L.cinzel, tekst: L.cormorant },
   datumband: { namen: L.allura, kop: L.jost, tekst: L.jost },
   // De themaontwerpen
-  winter: { namen: L.pinyon, kop: L.cinzel, tekst: L.jost },
+  winter: { namen: L.italiana, kop: L.cinzel, tekst: L.jost },
   zomer: { namen: L.prata, kop: L.jost, tekst: L.jost },
-  liefde: { namen: L.pinyon, kop: L.cormorant, tekst: L.cormorant, extra: L.cormorant },
+  liefde: { namen: L.allura, kop: L.cormorant, tekst: L.cormorant, extra: L.cormorant },
   boho: { namen: L.italiana, kop: L.jost, tekst: L.jost },
   hartlijn: { namen: L.allura, kop: L.jost, tekst: L.jost },
-  tweeharten: { namen: L.pinyon, kop: L.cormorant, tekst: L.cormorant },
+  tweeharten: { namen: L.greatvibes, kop: L.cormorant, tekst: L.cormorant },
   hartamp: { namen: L.bodoni, kop: L.montserrat, tekst: L.montserrat },
-  hartkader: { namen: L.pinyon, kop: L.cinzel, tekst: L.cormorant },
+  hartkader: { namen: L.allura, kop: L.cinzel, tekst: L.cormorant },
   krijthart: { namen: L.allura, kop: L.jost, tekst: L.jost },
-  kalligrafie: { namen: L.pinyon, kop: L.cormorant, tekst: L.cormorant },
+  kalligrafie: { namen: L.greatvibes, kop: L.cormorant, tekst: L.cormorant },
   schaduwhart: { namen: L.jostDun, kop: L.jost, tekst: L.jost },
 }
 
