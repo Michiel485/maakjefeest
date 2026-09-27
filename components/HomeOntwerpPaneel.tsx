@@ -1,24 +1,26 @@
 "use client"
 
-// Het paneel in de websitebouwer voor het ontwerp op de homepagina: kiezen
-// uit de ontwerpen, de tekst erop, lettertypes en groottes, en tijden en
-// dresscode op of onder het ontwerp (Michiel, 26 september 2026).
+// De websitebouwer voor het ontwerp op de homepagina (Michiel, 26 en 27
+// september 2026). Twee delen, op hun eigen plek in de bouwer:
+// - de galerij, onder Ontwerp;
+// - de tekstvelden, onder Tekstvelden, in de volgorde van de pagina, met
+//   onder elk veld een eigen lettertype en grootte.
+// Kies je een ontwerp, dan gaan lettertypes en groottes terug naar die van
+// het ontwerp, zodat alles weer binnen de tekening valt, zoals in het tegeltje.
 
-import { useEffect, useRef, useState } from "react"
-import HomeOntwerp, { type HomeOntwerpTekst } from "@/components/HomeOntwerp"
+import { useEffect, useRef, useState, type ReactNode } from "react"
+import HomeOntwerp, { type HomeOntwerpTekst, type HomeTekstInstellingen } from "@/components/HomeOntwerp"
+import type { TekstRol } from "@/components/kaart/KaartVoorkant"
 import { CARD_TEMPLATE_LABEL, type NieuwOntwerp } from "@/lib/cards"
 import type { SC } from "@/lib/event-styles"
 import { HOME_ONTWERPEN, HOME_KOP_STANDAARD } from "@/lib/home-ontwerp"
-import { browserLetters, detailsKeuze, detailsOpKaart, type DetailsStand } from "@/lib/kaart-ontwerpen"
+import { detailsKeuze, detailsOpKaart, type DetailsStand } from "@/lib/kaart-ontwerpen"
 import { TITLE_FONT_OPTIONS } from "@/lib/title-fonts"
-
-type Rol = "kop" | "namen" | "tekst"
 
 export interface HomeOntwerpInstellingen {
   ontwerp?: string
   ontwerpKop?: string
-  ontwerpLetters?: { kop?: string; namen?: string; tekst?: string }
-  ontwerpSchaal?: { kop?: number; namen?: number; tekst?: number }
+  ontwerpTekst?: HomeTekstInstellingen
   tijden?: string
   dresscode?: string
   details?: DetailsStand
@@ -65,52 +67,8 @@ function Tegel({ ontwerp, sc, tekst, gekozen, onKies }: { ontwerp: NieuwOntwerp;
   )
 }
 
-/** Lettertype en grootte voor één soort tekst */
-function LetterKeuze({
-  label,
-  uitleg,
-  waarde,
-  ontwerpFont,
-  schaal,
-  onFont,
-  onSchaal,
-}: {
-  label: string
-  uitleg?: string
-  waarde?: string
-  ontwerpFont: string
-  schaal: number
-  onFont: (v: string | undefined) => void
-  onSchaal: (v: number) => void
-}) {
-  const cur = TITLE_FONT_OPTIONS.find((f) => f.id === waarde)
-  return (
-    <div className="flex flex-col gap-1.5 bg-white rounded-xl p-3 border border-[var(--goud-licht)]">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-gray-600">{label}</span>
-        <span className="text-sm text-gray-600 leading-none" style={{ fontFamily: cur ? `var(${cur.cssVar})` : ontwerpFont, fontWeight: cur?.weight }}>Aa</span>
-      </div>
-      {uitleg && <p className="text-[10px] text-gray-400 leading-snug -mt-1">{uitleg}</p>}
-      <select
-        value={waarde ?? ""}
-        onChange={(e) => onFont(e.target.value || undefined)}
-        className="rounded-lg border border-[var(--goud-licht)] bg-white px-2 py-1.5 text-[11px] text-gray-600 focus:outline-none focus:ring-1 focus:ring-[var(--goud-vlak)]"
-      >
-        <option value="">Zoals het ontwerp</option>
-        {TITLE_FONT_OPTIONS.map((f) => (
-          <option key={f.id} value={f.id}>{f.label}</option>
-        ))}
-      </select>
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-gray-500">Grootte</span>
-        <span className="text-xs text-gray-400">{Math.round(schaal * 100)}%</span>
-      </div>
-      <input type="range" min={0.6} max={1.6} step={0.05} value={schaal} onChange={(e) => onSchaal(Number(e.target.value))} className="w-full accent-[#C5A059]" />
-    </div>
-  )
-}
-
-export default function HomeOntwerpPaneel({
+/** De galerij met ontwerpen */
+export default function HomeOntwerpGalerij({
   instellingen,
   onWijzig,
   ontwerp,
@@ -118,9 +76,6 @@ export default function HomeOntwerpPaneel({
   namen,
   datum,
   locatie,
-  onNamen,
-  onDatum,
-  onLocatie,
 }: {
   instellingen: HomeOntwerpInstellingen
   onWijzig: (w: Partial<HomeOntwerpInstellingen>) => void
@@ -130,106 +85,167 @@ export default function HomeOntwerpPaneel({
   namen: string
   datum: string
   locatie: string
+}) {
+  const tekst: HomeOntwerpTekst = {
+    kop: instellingen.ontwerpKop ?? HOME_KOP_STANDAARD,
+    namen: namen || "Jullie namen",
+    datum: datum || null,
+    locatie: locatie || null,
+  }
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-[11px] text-gray-400 leading-snug">De tekst op het ontwerp pas je aan bij Tekstvelden.</p>
+      <div className="grid grid-cols-3 gap-2">
+        {HOME_ONTWERPEN.map((o) => (
+          <Tegel
+            key={o}
+            ontwerp={o}
+            sc={sc}
+            tekst={tekst}
+            gekozen={o === ontwerp}
+            // Een ander ontwerp: lettertypes en groottes weer zoals dat
+            // ontwerp ze heeft, zodat alles binnen de tekening valt
+            onKies={() => onWijzig({ ontwerp: o, ontwerpTekst: {} })}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/** Lettertype en grootte, direct onder een tekstveld */
+function LetterRegel({ waarde, schaal, onFont, onSchaal }: { waarde?: string; schaal: number; onFont: (v: string | undefined) => void; onSchaal: (v: number) => void }) {
+  return (
+    <div className="flex flex-col gap-1.5 rounded-xl px-3 py-2.5 bg-white border border-[var(--goud-licht)]">
+      <select
+        value={waarde ?? ""}
+        onChange={(e) => onFont(e.target.value || undefined)}
+        aria-label="Lettertype"
+        className="rounded-lg border border-[var(--goud-licht)] bg-white px-2 py-1.5 text-[11px] text-gray-600 focus:outline-none focus:ring-1 focus:ring-[var(--goud-vlak)]"
+      >
+        <option value="">Lettertype van het ontwerp</option>
+        {TITLE_FONT_OPTIONS.map((f) => (
+          <option key={f.id} value={f.id}>{f.label}</option>
+        ))}
+      </select>
+      <div className="flex items-center gap-2">
+        <span className="text-[11px] text-gray-500 w-12 flex-shrink-0">Grootte</span>
+        <input
+          type="range"
+          min={0.5}
+          max={1.8}
+          step={0.05}
+          value={schaal}
+          onChange={(e) => onSchaal(Number(e.target.value))}
+          aria-label="Grootte"
+          className="flex-1 accent-[#C5A059]"
+        />
+        <span className="text-[11px] text-gray-400 w-9 text-right flex-shrink-0">{Math.round(schaal * 100)}%</span>
+      </div>
+    </div>
+  )
+}
+
+function Veld({ id, label, children }: { id: string; label: ReactNode; children: ReactNode }) {
+  return (
+    <div id={id} className="flex flex-col gap-1.5">
+      <span className="text-xs font-semibold text-gray-600">{label}</span>
+      {children}
+    </div>
+  )
+}
+
+/** De tekstvelden op het ontwerp, in de volgorde van de pagina */
+export function HomeOntwerpTekstvelden({
+  instellingen,
+  onWijzig,
+  ontwerp,
+  namen,
+  datum,
+  locatie,
+  onNamen,
+  onDatum,
+  onLocatie,
+}: {
+  instellingen: HomeOntwerpInstellingen
+  onWijzig: (w: Partial<HomeOntwerpInstellingen>) => void
+  ontwerp: NieuwOntwerp
+  namen: string
+  datum: string
+  locatie: string
   onNamen: (v: string) => void
   onDatum: (v: string) => void
   onLocatie: (v: string) => void
 }) {
-  const kop = instellingen.ontwerpKop ?? HOME_KOP_STANDAARD
-  const tekst: HomeOntwerpTekst = { kop, namen: namen || "Jullie namen", datum: datum || null, locatie: locatie || null }
-  const letters = instellingen.ontwerpLetters ?? {}
-  const schaal = instellingen.ontwerpSchaal ?? {}
-  const ontwerpLetters = browserLetters(ontwerp)
-  const zetLetter = (rol: Rol, v: string | undefined) => onWijzig({ ontwerpLetters: { ...letters, [rol]: v } })
-  const zetSchaal = (rol: Rol, v: number) => onWijzig({ ontwerpSchaal: { ...schaal, [rol]: v } })
+  const tekstInst = instellingen.ontwerpTekst ?? {}
+  const letter = (rol: TekstRol) => (
+    <LetterRegel
+      waarde={tekstInst[rol]?.font}
+      schaal={tekstInst[rol]?.schaal ?? 1}
+      onFont={(v) => onWijzig({ ontwerpTekst: { ...tekstInst, [rol]: { ...tekstInst[rol], font: v } } })}
+      onSchaal={(v) => onWijzig({ ontwerpTekst: { ...tekstInst, [rol]: { ...tekstInst[rol], schaal: v } } })}
+    />
+  )
+  const aangepast = Object.values(tekstInst).some((w) => w && (w.font || (w.schaal != null && w.schaal !== 1)))
   const kanKiezen = detailsKeuze(ontwerp)
   const waar: DetailsStand = detailsOpKaart(ontwerp, instellingen.details) ? "op" : "onder"
 
   return (
-    <div className="flex flex-col gap-5">
-      {/* ── De ontwerpen ── */}
-      <div className="grid grid-cols-3 gap-2">
-        {HOME_ONTWERPEN.map((o) => (
-          <Tegel key={o} ontwerp={o} sc={sc} tekst={tekst} gekozen={o === ontwerp} onKies={() => onWijzig({ ontwerp: o })} />
-        ))}
-      </div>
-
-      {/* ── De tekst op het ontwerp ── */}
-      <div className="flex flex-col gap-3">
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold text-gray-600">Kop</span>
-          <input type="text" value={kop} onChange={(e) => onWijzig({ ontwerpKop: e.target.value })} placeholder={HOME_KOP_STANDAARD} className={invoer} />
-        </label>
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold text-gray-600">Namen</span>
-          <textarea rows={2} value={namen} onChange={(e) => onNamen(e.target.value)} placeholder="Michiel & Lindsey" className={`${invoer} resize-none`} />
-        </label>
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold text-gray-600">Datum</span>
-          <input type="date" value={datum} onChange={(e) => onDatum(e.target.value)} className={invoer} />
-        </label>
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold text-gray-600">Locatie</span>
-          <input type="text" value={locatie} onChange={(e) => onLocatie(e.target.value)} placeholder="Kasteel de Haar" className={invoer} />
-        </label>
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold text-gray-600">Tijden <span className="font-normal text-gray-400">(optioneel)</span></span>
-          <input type="text" value={instellingen.tijden ?? ""} onChange={(e) => onWijzig({ tijden: e.target.value })} placeholder="Van 14:00 tot 23:00 uur" maxLength={60} className={invoer} />
-        </label>
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold text-gray-600">Dresscode <span className="font-normal text-gray-400">(optioneel)</span></span>
-          <input type="text" value={instellingen.dresscode ?? ""} onChange={(e) => onWijzig({ dresscode: e.target.value })} placeholder="Feestelijk" maxLength={40} className={invoer} />
-        </label>
-        {kanKiezen && (instellingen.tijden || instellingen.dresscode) && (
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-xs text-gray-500">Tijden en dresscode</span>
-            <div className="inline-flex rounded-xl p-0.5 bg-[#FBF5E8] border border-[var(--goud-licht)]" role="radiogroup" aria-label="Tijden en dresscode op of onder het ontwerp">
-              {(["op", "onder"] as const).map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  role="radio"
-                  aria-checked={waar === s}
-                  onClick={() => onWijzig({ details: s })}
-                  className="text-xs font-semibold px-3 py-1.5 rounded-[10px]"
-                  style={{ backgroundColor: waar === s ? "#fff" : "transparent", color: waar === s ? "#1A1A1A" : "#9A8E82", boxShadow: waar === s ? "0 1px 3px rgba(0,0,0,0.1)" : "none", border: 0, cursor: "pointer" }}
-                >
-                  {s === "op" ? "Op het ontwerp" : "Eronder"}
-                </button>
-              ))}
-            </div>
+    <div className="flex flex-col gap-4">
+      <Veld id="hp-field-ontwerp-kop" label="Kop">
+        <input type="text" value={instellingen.ontwerpKop ?? HOME_KOP_STANDAARD} onChange={(e) => onWijzig({ ontwerpKop: e.target.value })} placeholder={HOME_KOP_STANDAARD} className={invoer} />
+        {letter("kop")}
+      </Veld>
+      <Veld id="hp-field-namen" label="Namen">
+        <textarea rows={2} value={namen} onChange={(e) => onNamen(e.target.value)} placeholder="Michiel & Lindsey" className={`${invoer} resize-none`} />
+        {letter("namen")}
+      </Veld>
+      <Veld id="hp-field-datum" label="Datum">
+        <input type="date" value={datum} onChange={(e) => onDatum(e.target.value)} className={invoer} />
+        {letter("datum")}
+      </Veld>
+      <Veld id="hp-field-locatie" label="Locatie">
+        <input type="text" value={locatie} onChange={(e) => onLocatie(e.target.value)} placeholder="Kasteel de Haar" className={invoer} />
+        {letter("locatie")}
+      </Veld>
+      <Veld id="hp-field-tijden" label={<>Tijden <span className="font-normal text-gray-400">(optioneel)</span></>}>
+        <input type="text" value={instellingen.tijden ?? ""} onChange={(e) => onWijzig({ tijden: e.target.value })} placeholder="Van 14:00 tot 23:00 uur" maxLength={60} className={invoer} />
+        {instellingen.tijden?.trim() && letter("tijden")}
+      </Veld>
+      <Veld id="hp-field-dresscode" label={<>Dresscode <span className="font-normal text-gray-400">(optioneel)</span></>}>
+        <input type="text" value={instellingen.dresscode ?? ""} onChange={(e) => onWijzig({ dresscode: e.target.value })} placeholder="Feestelijk" maxLength={40} className={invoer} />
+        {instellingen.dresscode?.trim() && letter("dresscode")}
+      </Veld>
+      {kanKiezen && (instellingen.tijden?.trim() || instellingen.dresscode?.trim()) && (
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-xs text-gray-500">Tijden en dresscode</span>
+          <div className="inline-flex rounded-xl p-0.5 bg-[#FBF5E8] border border-[var(--goud-licht)]" role="radiogroup" aria-label="Tijden en dresscode op of onder het ontwerp">
+            {(["op", "onder"] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                role="radio"
+                aria-checked={waar === s}
+                onClick={() => onWijzig({ details: s })}
+                className="text-xs font-semibold px-3 py-1.5 rounded-[10px]"
+                style={{ backgroundColor: waar === s ? "#fff" : "transparent", color: waar === s ? "#1A1A1A" : "#9A8E82", boxShadow: waar === s ? "0 1px 3px rgba(0,0,0,0.1)" : "none", border: 0, cursor: "pointer" }}
+              >
+                {s === "op" ? "Op het ontwerp" : "Eronder"}
+              </button>
+            ))}
           </div>
-        )}
-      </div>
-
-      {/* ── Lettertypes en groottes ── */}
-      <div className="flex flex-col gap-2">
-        <span className="text-xs font-semibold uppercase tracking-wider text-[#C5A059]">Lettertypes</span>
-        <LetterKeuze
-          label="Kop en datum"
-          waarde={letters.kop}
-          ontwerpFont={ontwerpLetters.kop}
-          schaal={schaal.kop ?? 1}
-          onFont={(v) => zetLetter("kop", v)}
-          onSchaal={(v) => zetSchaal("kop", v)}
-        />
-        <LetterKeuze
-          label="Namen"
-          waarde={letters.namen}
-          ontwerpFont={ontwerpLetters.namen}
-          schaal={schaal.namen ?? 1}
-          onFont={(v) => zetLetter("namen", v)}
-          onSchaal={(v) => zetSchaal("namen", v)}
-        />
-        <LetterKeuze
-          label="Overige tekst"
-          uitleg="De locatie, tijden en dresscode"
-          waarde={letters.tekst}
-          ontwerpFont={ontwerpLetters.tekst}
-          schaal={schaal.tekst ?? 1}
-          onFont={(v) => zetLetter("tekst", v)}
-          onSchaal={(v) => zetSchaal("tekst", v)}
-        />
-      </div>
+        </div>
+      )}
+      {aangepast && (
+        <button
+          type="button"
+          onClick={() => onWijzig({ ontwerpTekst: {} })}
+          className="self-start text-xs font-semibold text-[#C5A059] hover:underline"
+          style={{ background: "none", border: 0, padding: 0, cursor: "pointer" }}
+        >
+          Lettertypes en groottes terug zoals het ontwerp
+        </button>
+      )}
     </div>
   )
 }

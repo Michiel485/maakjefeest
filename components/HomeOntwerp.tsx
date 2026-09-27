@@ -2,10 +2,10 @@
 
 // Het ontwerp op de homepagina: hetzelfde als een kaart, maar vrij op de
 // pagina (lib/home-ontwerp.ts). De tekst komt uit de site, de kleuren van de
-// website, en lettertype en grootte kan het bruidspaar zelf kiezen.
+// website, en per tekst kan het bruidspaar een eigen letter en grootte kiezen.
 
 import { useEffect, useRef, useState } from "react"
-import KaartVoorkant from "@/components/kaart/KaartVoorkant"
+import KaartVoorkant, { type EigenTekst, type TekstRol } from "@/components/kaart/KaartVoorkant"
 import { buildCardDisplay, type NieuwOntwerp } from "@/lib/cards"
 import type { SC } from "@/lib/event-styles"
 import { browserLetters, detailsKeuze, detailsOpKaart, type DetailsStand } from "@/lib/kaart-ontwerpen"
@@ -22,20 +22,20 @@ export interface HomeOntwerpTekst {
   details?: DetailsStand | null
 }
 
+/** Per tekst een lettertype (een id uit lib/title-fonts.ts) en een grootte (1 is zoals ontworpen) */
+export type HomeTekstInstellingen = Partial<Record<TekstRol, { font?: string; schaal?: number }>>
+
 export default function HomeOntwerp({
   ontwerp,
   sc,
   tekst,
-  letters,
-  schaal,
+  instellingen,
   vasteBreedte,
 }: {
   ontwerp: NieuwOntwerp
   sc: SC
   tekst: HomeOntwerpTekst
-  /** Eigen lettertypes (een id uit lib/title-fonts.ts); leeg is die van het ontwerp */
-  letters?: { kop?: string; namen?: string; tekst?: string }
-  schaal?: { kop?: number; namen?: number; tekst?: number }
+  instellingen?: HomeTekstInstellingen
   /** Voor een tegeltje in de bouwer: altijd deze breedte, zonder te meten */
   vasteBreedte?: number
 }) {
@@ -54,6 +54,8 @@ export default function HomeOntwerp({
   }, [])
   const breedte = vasteBreedte ?? Math.min(ruimte, homeOntwerpMaxBreedte(ontwerp))
 
+  const tijden = tekst.tijden?.trim() || null
+  const dresscode = tekst.dresscode?.trim() || null
   const display = {
     ...buildCardDisplay(
       "trouwkaart",
@@ -61,8 +63,8 @@ export default function HomeOntwerp({
       {
         names: tekst.namen,
         location: tekst.locatie ?? undefined,
-        timeText: tekst.tijden ?? undefined,
-        dresscode: tekst.dresscode ?? undefined,
+        timeText: tijden ?? undefined,
+        dresscode: dresscode ?? undefined,
         details: tekst.details ?? undefined,
       },
       { title: tekst.namen, frame_names: tekst.namen, datum: tekst.datum, locatie: tekst.locatie }
@@ -74,17 +76,17 @@ export default function HomeOntwerp({
     eigenBericht: false,
     inviteLine: null,
   }
+  // Welke regel van de details wat is: eerst de tijden, dan de dresscode
+  const detailRollen: ("tijden" | "dresscode")[] = [...(tijden ? ["tijden" as const] : []), ...(dresscode ? ["dresscode" as const] : [])]
 
-  const ontwerpLetters = browserLetters(ontwerp)
-  const eigen = (id?: string) => (id ? getTitleFont(id).family : null)
-  const lettersNu = {
-    ...ontwerpLetters,
-    kop: eigen(letters?.kop) ?? ontwerpLetters.kop,
-    namen: eigen(letters?.namen) ?? ontwerpLetters.namen,
-    tekst: eigen(letters?.tekst) ?? ontwerpLetters.tekst,
+  // De gekozen lettertypes als font-family, de groottes zoals ze zijn
+  const eigen: EigenTekst = {}
+  for (const [rol, w] of Object.entries(instellingen ?? {}) as [TekstRol, { font?: string; schaal?: number }][]) {
+    eigen[rol] = { font: w?.font ? getTitleFont(w.font).family : undefined, schaal: w?.schaal }
   }
 
   const eronder = detailsKeuze(ontwerp) && !detailsOpKaart(ontwerp, tekst.details) && display.timeText
+  const tekstLetter = browserLetters(ontwerp).tekst
 
   return (
     <div ref={vak} className="w-full flex flex-col items-center">
@@ -93,18 +95,34 @@ export default function HomeOntwerp({
         ontwerp={ontwerp}
         sc={sc}
         breedte={breedte}
-        letters={lettersNu}
+        letters={browserLetters(ontwerp)}
         vrij
-        schaal={schaal}
-        namenMeting={gemetenLetter(letters?.namen)}
+        eigen={eigen}
+        detailRollen={detailRollen}
+        namenMeting={gemetenLetter(instellingen?.namen?.font)}
       />
       {eronder && (
-        <p
-          className="text-center mt-4"
-          style={{ color: sc.accent, fontFamily: lettersNu.tekst, fontSize: `${0.9 * (schaal?.tekst ?? 1)}rem`, fontWeight: 600, letterSpacing: "0.04em", whiteSpace: "pre-line", lineHeight: 1.6 }}
-        >
-          {display.timeText}
-        </p>
+        <div className="flex flex-col items-center mt-4 gap-0.5">
+          {display.timeText!.split("\n").map((regel, i) => {
+            const rol = detailRollen[i] ?? "tijden"
+            return (
+              <p
+                key={i}
+                className="text-center"
+                style={{
+                  color: sc.accent,
+                  fontFamily: eigen[rol]?.font ?? tekstLetter,
+                  fontSize: `${0.9 * (eigen[rol]?.schaal ?? 1)}rem`,
+                  fontWeight: 600,
+                  letterSpacing: "0.04em",
+                  lineHeight: 1.6,
+                }}
+              >
+                {regel}
+              </p>
+            )
+          })}
+        </div>
       )}
     </div>
   )

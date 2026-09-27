@@ -31,10 +31,12 @@ export interface HomepageSettings {
   ontwerp?: string
   /** De kop op het ontwerp, zoals "Wij gaan trouwen" */
   ontwerpKop?: string
-  /** Eigen lettertypes per soort tekst (id's uit lib/title-fonts.ts) */
-  ontwerpLetters?: { kop?: string; namen?: string; tekst?: string }
-  /** Eigen groottes per soort tekst; 1 is zoals ontworpen */
-  ontwerpSchaal?: { kop?: number; namen?: number; tekst?: number }
+  /**
+   * Per tekst op het ontwerp een eigen lettertype (id uit lib/title-fonts.ts)
+   * en grootte (1 is zoals ontworpen). Kop, namen, datum, locatie, tijden en
+   * dresscode elk apart (Michiel, 27 september 2026).
+   */
+  ontwerpTekst?: Partial<Record<'kop' | 'namen' | 'datum' | 'locatie' | 'tijden' | 'dresscode', { font?: string; schaal?: number }>>
   tijden?: string
   dresscode?: string
   details?: 'op' | 'onder'
@@ -293,7 +295,7 @@ export default function EventHomePreview({
                   />
                 )}
                 {/* Hoofdtitel overlay op foto wanneer "Over foto" gekozen */}
-                {(hp.hoofdtitelVisible !== false) && title && (hp.titlePosition ?? 'under') === 'over' && (
+                {(hp.hoofdtitelVisible === true) && title && (hp.titlePosition ?? 'under') === 'over' && (
                   <div className="absolute inset-0 flex items-end justify-center pb-6 @md:pb-10 px-6"
                     style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 55%)' }}
                   >
@@ -325,7 +327,7 @@ export default function EventHomePreview({
           >
             <div className="flex flex-col items-center text-center gap-5 max-w-sm w-full">
               {/* Hoofdtitel in tekstvlak wanneer "In tekstvlak" (under) gekozen — boven subtitel */}
-              {(hp.hoofdtitelVisible !== false) && title && (hp.titlePosition ?? 'under') !== 'over' && (
+              {(hp.hoofdtitelVisible === true) && title && (hp.titlePosition ?? 'under') !== 'over' && (
                 <h1 {...fieldClick('hoofdtitel')} style={{ ...hoofdtitelStyle, fontSize: `clamp(2rem, ${hp?.hoofdtitelSize ?? 5.5}rem, ${(hp?.hoofdtitelSize ?? 5.5) * 1.2}rem)` }}>
                   {title}
                 </h1>
@@ -414,8 +416,8 @@ export default function EventHomePreview({
 
   // ── Layout 1: Editorial (existing behavior + enhancements) ─────────────────
 
-  const showTitleOverPhoto = hasPhoto && (hp?.titlePosition ?? 'over') === 'over' && (hp?.hoofdtitelVisible !== false)
-  const showTitleUnderPhoto = (hp?.hoofdtitelVisible !== false) && (
+  const showTitleOverPhoto = hasPhoto && (hp?.titlePosition ?? 'over') === 'over' && (hp?.hoofdtitelVisible === true)
+  const showTitleUnderPhoto = (hp?.hoofdtitelVisible === true) && (
     !hasPhoto || (hp?.titlePosition === 'under')
   )
   // Onder de headerfoto een ontwerp, net als een kaart. Dat vervangt het
@@ -531,7 +533,7 @@ export default function EventHomePreview({
         className={`w-full flex flex-col items-center ${showTitleUnderPhoto && title ? "pt-4 @md:pt-8" : "pt-8 @md:pt-12"} pb-8 px-6`}
         style={{ backgroundColor: sc.bodyBg }}
       >
-        <div {...fieldClick('ontwerp')} className="w-full flex justify-center">
+        <div {...fieldClick('ontwerp-kop')} className="w-full flex justify-center">
           <HomeOntwerp
             ontwerp={ontwerpNu}
             sc={sc}
@@ -544,8 +546,7 @@ export default function EventHomePreview({
               dresscode: hp?.dresscode ?? null,
               details: hp?.details ?? null,
             }}
-            letters={hp?.ontwerpLetters}
-            schaal={hp?.ontwerpSchaal}
+            instellingen={hp?.ontwerpTekst}
           />
         </div>
         <a

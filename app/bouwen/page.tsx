@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import AanmeldFormulier from "@/components/AanmeldFormulier"
-import HomeOntwerpPaneel from "@/components/HomeOntwerpPaneel"
+import HomeOntwerpGalerij, { HomeOntwerpTekstvelden } from "@/components/HomeOntwerpPaneel"
 import { homeOntwerp } from "@/lib/home-ontwerp"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -73,10 +73,12 @@ interface HomepageSettings {
   ontwerp?: string
   /** De kop op het ontwerp, zoals "Wij gaan trouwen" */
   ontwerpKop?: string
-  /** Eigen lettertypes per soort tekst (id's uit lib/title-fonts.ts) */
-  ontwerpLetters?: { kop?: string; namen?: string; tekst?: string }
-  /** Eigen groottes per soort tekst; 1 is zoals ontworpen */
-  ontwerpSchaal?: { kop?: number; namen?: number; tekst?: number }
+  /**
+   * Per tekst op het ontwerp een eigen lettertype (id uit lib/title-fonts.ts)
+   * en grootte (1 is zoals ontworpen). Kop, namen, datum, locatie, tijden en
+   * dresscode elk apart (Michiel, 27 september 2026).
+   */
+  ontwerpTekst?: Partial<Record<'kop' | 'namen' | 'datum' | 'locatie' | 'tijden' | 'dresscode', { font?: string; schaal?: number }>>
   tijden?: string
   dresscode?: string
   details?: 'op' | 'onder'
@@ -487,8 +489,8 @@ export default function BouwenPage() {
       'initialen': 'tekstvelden',
       'datum': 'tekstvelden',
       'locatie': 'tekstvelden',
-      // Het ontwerp op de homepagina, met zijn tekst
-      'ontwerp': 'kaders',
+      // Het ontwerp op de homepagina: een klik erop opent de tekst erop
+      'ontwerp-kop': 'tekstvelden',
     }
     const section = sectionForField[field] ?? 'tekstvelden'
 
@@ -2311,7 +2313,7 @@ export default function BouwenPage() {
                                     /* Onder de headerfoto een ontwerp, net als een kaart
                                        (Michiel, 26 september 2026). Vervangt de kaders. */
                                     <div id="hp-field-ontwerp">
-                                      <HomeOntwerpPaneel
+                                      <HomeOntwerpGalerij
                                         instellingen={hpSettings}
                                         onWijzig={(w) => updateHpSettings(w)}
                                         ontwerp={homeOntwerp({ ontwerp: hpSettings.ontwerp, useFrame: draft?.use_frame, frameStyle: draft?.frame_style })}
@@ -2319,9 +2321,6 @@ export default function BouwenPage() {
                                         namen={draft?.frame_names ?? ""}
                                         datum={draft?.datum ?? ""}
                                         locatie={draft?.frame_location ?? ""}
-                                        onNamen={(v) => updateDraft({ frame_names: v })}
-                                        onDatum={(v) => updateDraft({ datum: v })}
-                                        onLocatie={(v) => updateDraft({ frame_location: v })}
                                       />
                                     </div>
                                   ) : (
@@ -2370,7 +2369,7 @@ export default function BouwenPage() {
                                       placeholder="Bijv. Bruiloft Michiel & Lisa"
                                       className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] resize-none transition-all"
                                     />
-                                    {hpOpenGear === 'hoofdtitel' && (
+                                    {(hpOpenGear === 'hoofdtitel' || hpSettings.layout === 'editorial') && (
                                       <div className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-[var(--goud-licht)]">
                                         <FontSelect value={hpSettings.hoofdtitelFont} onChange={(v) => updateHpSettings({ hoofdtitelFont: v })} />
                                         <div className="flex items-center justify-between">
@@ -2401,7 +2400,22 @@ export default function BouwenPage() {
                                     )}
                                   </div>
 
-                                  {/* Bij Flexibel staan namen, datum en locatie bij het ontwerp */}
+                                  {/* Bij Flexibel: de tekst op het ontwerp, in de volgorde van de
+                                      pagina, met onder elk veld een eigen lettertype en grootte
+                                      (Michiel, 27 september 2026) */}
+                                  {hpSettings.layout === 'editorial' && (
+                                    <HomeOntwerpTekstvelden
+                                      instellingen={hpSettings}
+                                      onWijzig={(w) => updateHpSettings(w)}
+                                      ontwerp={homeOntwerp({ ontwerp: hpSettings.ontwerp, useFrame: draft?.use_frame, frameStyle: draft?.frame_style })}
+                                      namen={draft?.frame_names ?? ""}
+                                      datum={draft?.datum ?? ""}
+                                      locatie={draft?.frame_location ?? ""}
+                                      onNamen={(v) => updateDraft({ frame_names: v })}
+                                      onDatum={(v) => updateDraft({ datum: v })}
+                                      onLocatie={(v) => updateDraft({ frame_location: v })}
+                                    />
+                                  )}
                                   {hpSettings.layout !== 'editorial' && (<>
                                   {/* Subtitel */}
                                   <div id="hp-field-subtitle" className="flex flex-col gap-1.5">
@@ -2617,9 +2631,6 @@ export default function BouwenPage() {
                                   </div>
 
                                   </>)}
-                                  {hpSettings.layout === 'editorial' && (
-                                    <p className="text-[11px] text-gray-400 leading-relaxed">Namen, datum en locatie staan bij Ontwerp, samen met de kop en de lettertypes.</p>
-                                  )}
 
                                 </div>
                               )}
