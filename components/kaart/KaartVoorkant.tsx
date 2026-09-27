@@ -115,6 +115,35 @@ function Hart({ breedte, kleur, vol = false, dikte = 1.4 }: { breedte: number; k
   )
 }
 
+/** Eén fijne lijn die van links komt, in het midden een hart vormt en rechts verder gaat */
+function Hartlijn({ breedte, kleur }: { breedte: number; kleur: string }) {
+  return (
+    <svg width={breedte} height={rond((breedte * 110) / 400)} viewBox="0 0 400 110" fill="none">
+      <path
+        d="M0 90C90 92 150 98 200 96C182 84 160 68 163 50C166 32 190 26 200 44C210 26 234 32 237 50C240 68 218 84 200 96C250 98 310 92 400 90"
+        stroke={kleur}
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+/** Twee dunne harten die elkaar overlappen, als twee ringen */
+function TweeHarten({ breedte, kleur }: { breedte: number; kleur: string }) {
+  return (
+    <svg width={breedte} height={rond((breedte * 100) / 160)} viewBox="0 0 160 100" fill="none">
+      <g transform="translate(14 6) rotate(-9 50 45)">
+        <path d={HART} stroke={kleur} strokeWidth="1.5" strokeLinejoin="round" />
+      </g>
+      <g transform="translate(46 8) rotate(9 50 45)">
+        <path d={HART} stroke={kleur} strokeWidth="1.5" strokeLinejoin="round" strokeOpacity="0.6" />
+      </g>
+    </svg>
+  )
+}
+
 /** Boho: bogen als een regenboog met een zonnetje erin */
 function Regenboog({ breedte, kleur }: { breedte: number; kleur: string }) {
   let stralen = ""
@@ -134,7 +163,7 @@ function Regenboog({ breedte, kleur }: { breedte: number; kleur: string }) {
 }
 
 /** De themaontwerpen: allemaal dezelfde opbouw, met een eigen tekening */
-const THEMA_ONTWERPEN: NieuwOntwerp[] = ["winter", "zomer", "liefde", "boho"]
+const THEMA_ONTWERPEN: NieuwOntwerp[] = ["winter", "zomer", "liefde", "boho", "hartlijn", "tweeharten", "hartamp", "hartkader"]
 
 /** De teksten op een ontwerp die op de homepagina een eigen letter en grootte kunnen krijgen */
 export type TekstRol = "kop" | "namen" | "datum" | "locatie" | "tijden" | "dresscode"
@@ -796,7 +825,8 @@ function Inhoud({
   }
 
   // ── De themaontwerpen (27 september 2026) ────────────────────────────────
-  // Winter, zomer, liefde en Ibiza boho. Voor de kaart en de homepagina. De
+  // Winter, zomer, liefde en Ibiza boho, en vier met een hart. Voor de kaart
+  // en de homepagina. De
   // tekeningen staan in de kleur van de stijl. Lente, strand en festival zijn
   // er de dag erna weer uit: te duidelijk gemaakt (Michiel, 27 september 2026).
   if (THEMA_ONTWERPEN.includes(ontwerp)) {
@@ -882,6 +912,99 @@ function Inhoud({
             </D>
           </D>
           {inhoud()}
+        </D>
+      ))
+    }
+
+    // Hartlijn: één fijne lijn die in het midden een hart vormt
+    if (ontwerp === "hartlijn") {
+      return wortel(`${px(40)}px ${px(26)}px`, (
+        <D style={kolom}>
+          {kopRegel()}
+          <D style={{ marginTop: px(2), marginBottom: px(2) }}><Hartlijn breedte={px(360)} kleur={accent} /></D>
+          {inhoud()}
+        </D>
+      ))
+    }
+
+    // Twee harten die elkaar overlappen, als twee ringen
+    if (ontwerp === "tweeharten") {
+      return wortel(`${px(40)}px ${px(30)}px`, (
+        <D style={kolom}>
+          {kopRegel()}
+          <D style={{ marginTop: px(4), marginBottom: px(6) }}><TweeHarten breedte={px(170)} kleur={accent} /></D>
+          {inhoud()}
+        </D>
+      ))
+    }
+
+    // Hart in de &: puur letters, met een vol hartje op de plek van de &
+    if (ontwerp === "hartamp") {
+      const streep = <div style={{ display: "flex", width: px(46), height: lijn, backgroundColor: accent }} />
+      const delen = naamDelen(d.names)
+      let namenBlok: ReactNode
+      if (delen) {
+        const o = namenOpmaak(`${delen[0]} & ${delen[1]}`, plek, namenVrij)
+        const naast = !/\n/.test(d.names) && !o.tekst.includes("\n")
+        const g = o.grootte
+        const naam = (n: string) => (
+          <div style={{ display: "flex", fontFamily: letters.namen, fontSize: g, lineHeight: 1.05, color: kop, whiteSpace: "nowrap" }}>{n}</div>
+        )
+        namenBlok = (
+          <D style={{ flexDirection: naast ? "row" : "column", alignItems: "center", gap: naast ? g * 0.24 : g * 0.12 }}>
+            {naam(delen[0])}
+            <Hart breedte={g * 0.56} kleur={accent} vol />
+            {naam(delen[1])}
+          </D>
+        )
+      } else {
+        namenBlok = <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.05, color: kop }} />
+      }
+      return wortel(`${px(40)}px ${px(26)}px`, (
+        <D style={kolom}>
+          {kopRegel()}
+          <D style={{ marginTop: px(6), marginBottom: px(4) }}>{namenBlok}</D>
+          {datum && (
+            <div style={{ display: "flex", ...tt("datum", letters.kop, 12.5), letterSpacing: "0.26em", textTransform: "uppercase", color: kop }}>{datum}</div>
+          )}
+          <D style={{ alignItems: "center", gap: px(8), marginTop: px(2), marginBottom: px(2) }}>
+            {streep}
+            <Hart breedte={px(9)} kleur={accent} vol />
+            {streep}
+          </D>
+          {d.location && (
+            <Regels tekst={d.location} style={{ ...tt("locatie", letters.tekst, 11.5), lineHeight: 1.5, letterSpacing: "0.06em", color: tekst, opacity: 0.88 }} />
+          )}
+          {d.message && (
+            <Regels tekst={d.message} style={{ fontFamily: letters.tekst, fontSize: px(12), lineHeight: 1.55, color: tekst, maxWidth: px(290), marginTop: px(4), opacity: 0.9 }} />
+          )}
+          {details(accent, { grootte: 10.5, marge: 4, max: 300 })}
+        </D>
+      ))
+    }
+
+    // Hart als kader: een groot hart van een fijne lijn met de namen erin
+    if (ontwerp === "hartkader") {
+      const hb = px(330)
+      return wortel(`${px(34)}px ${px(20)}px`, (
+        <D style={kolom}>
+          {kopRegel(11, accent)}
+          <D style={{ position: "relative", width: hb, height: hb * 0.9, alignItems: "center", justifyContent: "center" }}>
+            {los({ left: 0, top: 0 }, <Hart breedte={hb} kleur={accent} dikte={0.45} />)}
+            <D style={{ flexDirection: "column", alignItems: "center", gap: px(8), marginTop: px(-34) }}>
+              <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.12, color: kop }} />
+              {datum && (
+                <div style={{ display: "flex", ...tt("datum", letters.kop, 11), letterSpacing: "0.24em", textTransform: "uppercase", color: accent }}>{datum}</div>
+              )}
+            </D>
+          </D>
+          {d.location && (
+            <Regels tekst={d.location} style={{ ...tt("locatie", letters.tekst, 12), lineHeight: 1.5, letterSpacing: "0.06em", color: tekst, opacity: 0.88 }} />
+          )}
+          {d.message && (
+            <Regels tekst={d.message} style={{ fontFamily: letters.tekst, fontSize: px(12), lineHeight: 1.55, color: tekst, maxWidth: px(290), opacity: 0.9 }} />
+          )}
+          {details(accent, { grootte: 10.5, marge: 2, max: 300 })}
         </D>
       ))
     }

@@ -136,6 +136,15 @@ export function namenPlek(ontwerp: CardDesign, opties: { breedte: number; datumI
       return maat(38, 400 - 70)
     case "boho":
       return maat(38, 400 - 70)
+    case "hartlijn":
+      return maat(48, 400 - 70)
+    case "tweeharten":
+      return maat(40, 400 - 80)
+    case "hartamp":
+      return maat(44, 400 - 70)
+    // Binnen in het hart is minder ruimte
+    case "hartkader":
+      return maat(38, 210)
     // Art deco: in hoofdletters, met ruimte tussen de letters
     case "deco":
       return maat(29, 400 - 88, { letterafstand: 0.1, hoofdletters: true })

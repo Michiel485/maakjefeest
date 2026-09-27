@@ -30,6 +30,8 @@ export type NieuwOntwerp =
   | "editoriaal" | "monogram" | "lijnkader" | "datumband"
   // De themaontwerpen van 27 september 2026, voor kaart en homepagina
   | "winter" | "zomer" | "liefde" | "boho"
+  // Met een hart (27 september 2026)
+  | "hartlijn" | "tweeharten" | "hartamp" | "hartkader"
 export type CardDesign = KlassiekOntwerp | NieuwOntwerp
 export type CardTemplate = CardDesign | "foto"
 
@@ -38,7 +40,7 @@ export const CARD_TEMPLATE_WAARDEN: CardTemplate[] = [
   "klassiek", "sierlijk", "bohemian", "foto", "minimaal", "fotovol", "boog", "deco", "datum", "eigen",
   "titel", "palm", "ibiza", "fotoschrift", "olijf",
   "pampas", "pampasruit", "terra", "terraruit", "herfst", "herfstruit", "goudblad", "magnolia",
-  "winter", "zomer", "liefde", "boho",
+  "winter", "zomer", "liefde", "boho", "hartlijn", "tweeharten", "hartamp", "hartkader",
 ]
 
 export function isKlassiekOntwerp(d: CardDesign): d is KlassiekOntwerp {
@@ -194,7 +196,7 @@ export const CARD_TYPE_PLAN: Record<CardType, "save_the_date" | "uitnodiging"> =
 export const CARD_DESIGNS: CardDesign[] = [
   "klassiek", "sierlijk", "bohemian", "olijf", "pampas", "pampasruit", "terra", "terraruit", "herfst", "herfstruit", "goudblad", "magnolia",
   "minimaal", "datum", "titel", "palm", "ibiza", "deco", "boog", "fotovol", "fotoschrift",
-  "winter", "zomer", "liefde", "boho", "eigen",
+  "winter", "zomer", "liefde", "boho", "hartlijn", "tweeharten", "hartamp", "hartkader", "eigen",
 ]
 
 export const CARD_TEMPLATE_LABEL: Record<CardDesign, string> = {
@@ -228,6 +230,10 @@ export const CARD_TEMPLATE_LABEL: Record<CardDesign, string> = {
   zomer: "Zomer",
   liefde: "Liefde",
   boho: "Ibiza boho",
+  hartlijn: "Hartlijn",
+  tweeharten: "Twee harten",
+  hartamp: "Hart in de &",
+  hartkader: "Hart als kader",
 }
 
 /**

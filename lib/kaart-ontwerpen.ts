@@ -74,6 +74,10 @@ export const ONTWERP_LETTERS: Record<NieuwOntwerp, OntwerpLetters> = {
   zomer: { namen: L.prata, kop: L.jost, tekst: L.jost },
   liefde: { namen: L.pinyon, kop: L.cormorant, tekst: L.cormorant, extra: L.cormorant },
   boho: { namen: L.italiana, kop: L.jost, tekst: L.jost },
+  hartlijn: { namen: L.allura, kop: L.jost, tekst: L.jost },
+  tweeharten: { namen: L.pinyon, kop: L.cormorant, tekst: L.cormorant },
+  hartamp: { namen: L.bodoni, kop: L.montserrat, tekst: L.montserrat },
+  hartkader: { namen: L.pinyon, kop: L.cinzel, tekst: L.cormorant },
 }
 
 // ── De kaders uit de websitebouwer ─────────────────────────────────────────
@@ -179,6 +183,10 @@ export const ONDER_DE_KAART: Partial<Record<CardDesign, OnderDeKaart>> = {
   zomer: { locatie: false, bericht: false, details: true },
   liefde: { locatie: false, bericht: false, details: true },
   boho: { locatie: false, bericht: false, details: true },
+  hartlijn: { locatie: false, bericht: false, details: true },
+  tweeharten: { locatie: false, bericht: false, details: true },
+  hartamp: { locatie: false, bericht: false, details: true },
+  hartkader: { locatie: false, bericht: false, details: true },
 }
 
 // ── Details op of onder de kaart ────────────────────────────────────────────
