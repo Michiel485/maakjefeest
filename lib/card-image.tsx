@@ -6,6 +6,7 @@ import { CARD_DESIGN_STYLE, isKlassiekOntwerp, type CardDisplay } from "./cards"
 import { renderNieuweKaartAfbeelding } from "./card-image-nieuw"
 import type { SC } from "./event-styles"
 import { namenOpmaak } from "./namen-opmaak"
+import { TITLE_FONT_OPTIONS } from "./title-fonts"
 
 // Google Fonts levert TTF/woff (dat satori kan lezen) alleen aan oude user agents
 async function loadGoogleFont(family: string, weight: number, text: string): Promise<ArrayBuffer | null> {
@@ -84,14 +85,17 @@ export async function renderCardImage(
 
   // De namen krijgen het font van het gekozen ontwerp; bij een probleem valt
   // het terug op de schreefletter, zodat er nooit een lege kaart uitkomt.
+  // Een eigen lettertype voor de namen gaat voor dat van het ontwerp
+  const eigenNamen = TITLE_FONT_OPTIONS.find((f) => f.id === display.namenFont)
+  const namenLetter = eigenNamen ? { family: eigenNamen.google as string, weight: eigenNamen.weight as number } : ds.namenFontImage
   const namesData =
-    ds.namenFontImage.family === "Cormorant Garamond"
+    !eigenNamen && namenLetter.family === "Cormorant Garamond"
       ? null
       // De ampersand staat er los bij: Google Fonts levert alleen de tekens die
       // we opvragen, en bijna elk namenpaar heeft er een nodig.
-      : await loadGoogleFont(ds.namenFontImage.family, ds.namenFontImage.weight, `${display.names} &`)
+      : await loadGoogleFont(namenLetter.family, namenLetter.weight, `${display.names} &`)
   if (namesData) {
-    fonts.push({ name: "CardNames", data: namesData, weight: ds.namenFontImage.weight, style: "normal" })
+    fonts.push({ name: "CardNames", data: namesData, weight: namenLetter.weight as 400, style: "normal" })
   }
   const namesFont = namesData ? "CardNames" : serif
   const kopFont = ds.kopFontImage === "serif" ? serif : sans
@@ -160,7 +164,7 @@ export async function renderCardImage(
   const namen = namenOpmaak(
     display.names,
     {
-      letter: { google: ds.namenFontImage.family, gewicht: ds.namenFontImage.weight },
+      letter: { google: namenLetter.family, gewicht: namenLetter.weight },
       grootte: 94 * s * ds.namenSchaal,
       ruimte: namenRuimte,
       letterafstand: ds.namenSpatiering ? parseFloat(ds.namenSpatiering) : 0,

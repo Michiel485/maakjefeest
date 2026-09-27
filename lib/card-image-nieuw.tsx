@@ -7,6 +7,7 @@ import { ImageResponse } from "next/og"
 import type { CardDisplay, NieuwOntwerp } from "./cards"
 import type { SC } from "./event-styles"
 import { ONTWERP_LETTERS, ONTWERP_VERHOUDING, type KaartLetter } from "./kaart-ontwerpen"
+import { TITLE_FONT_OPTIONS, gemetenLetter } from "./title-fonts"
 import KaartVoorkant from "@/components/kaart/KaartVoorkant"
 
 type LaadFont = (family: string, weight: number, text: string) => Promise<ArrayBuffer | null>
@@ -40,9 +41,9 @@ export async function renderNieuweKaartAfbeelding({
   // ontwerpen uit de datum of de initialen, niet uit de tekst zelf.
   const l = ONTWERP_LETTERS[ontwerp]
   const tekens = `${allText} ${allText.toUpperCase()} 0123456789 & · ♥`
-  const fonts: { name: string; data: ArrayBuffer; weight: 300 | 400 | 500 | 600; style: "normal" }[] = []
+  const fonts: { name: string; data: ArrayBuffer; weight: 300 | 400 | 500 | 600 | 700; style: "normal" }[] = []
   const geladen = new Map<string, string>()
-  async function laad(letter: KaartLetter, fallback: string): Promise<string> {
+  async function laad(letter: { google: string; gewicht: KaartLetter["gewicht"] | 700 }, fallback: string): Promise<string> {
     const sleutel = `${letter.google}:${letter.gewicht}`
     const bestaand = geladen.get(sleutel)
     if (bestaand) return bestaand
@@ -53,8 +54,10 @@ export async function renderNieuweKaartAfbeelding({
     geladen.set(sleutel, naam)
     return naam
   }
+  // Een eigen lettertype voor de namen gaat voor dat van het ontwerp
+  const eigenNamen = TITLE_FONT_OPTIONS.find((f) => f.id === display.namenFont)
   const letters = {
-    namen: await laad(l.namen, "serif"),
+    namen: await laad(eigenNamen ? { google: eigenNamen.google, gewicht: eigenNamen.weight } : l.namen, "serif"),
     kop: await laad(l.kop, "serif"),
     tekst: await laad(l.tekst, "sans-serif"),
     extra: await laad(l.extra ?? l.namen, "serif"),
@@ -119,7 +122,7 @@ export async function renderNieuweKaartAfbeelding({
           paddingTop: mode === "og" ? 0 : Math.max(48, Math.round((height - kaartBreedte * verhouding - 90) / 2)),
         }}
       >
-        <KaartVoorkant d={display} ontwerp={ontwerp} sc={sc} breedte={kaartBreedte} letters={letters} schaduw="0 24px 70px rgba(0,0,0,0.25)" voorAfbeelding />
+        <KaartVoorkant d={display} ontwerp={ontwerp} sc={sc} breedte={kaartBreedte} letters={letters} namenMeting={gemetenLetter(display.namenFont)} schaduw="0 24px 70px rgba(0,0,0,0.25)" voorAfbeelding />
         {mode === "download" && (
           <div
             style={{

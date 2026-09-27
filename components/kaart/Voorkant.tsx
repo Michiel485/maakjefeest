@@ -6,6 +6,7 @@
 import { isKlassiekOntwerp, type CardDisplay } from "@/lib/cards"
 import type { SC } from "@/lib/event-styles"
 import { browserLetters } from "@/lib/kaart-ontwerpen"
+import { gemetenLetter, getTitleFont } from "@/lib/title-fonts"
 import KaartVoorkant from "./KaartVoorkant"
 import KlassiekeVoorkant from "./KlassiekeVoorkant"
 
@@ -29,7 +30,9 @@ export default function Voorkant({
         ontwerp={display.design}
         sc={sc}
         breedte={breedte}
-        letters={browserLetters(display.design)}
+        // Een eigen lettertype voor de namen gaat voor dat van het ontwerp
+        letters={display.namenFont ? { ...browserLetters(display.design), namen: getTitleFont(display.namenFont).family } : browserLetters(display.design)}
+        namenMeting={gemetenLetter(display.namenFont)}
         // Dezelfde schaduw als de eerste ontwerpen: alleen onder de kaart
         schaduw="0 26px 50px -26px rgba(0,0,0,0.5)"
       />

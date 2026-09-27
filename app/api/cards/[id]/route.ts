@@ -1,3 +1,4 @@
+import { titelFontId } from "@/lib/title-fonts"
 import { isStyle } from "@/lib/event-styles"
 import { kaartPalet } from "@/lib/kaart-paletten"
 import { createServiceClient } from "@/lib/supabase"
@@ -51,6 +52,7 @@ function sanitizeContent(raw: unknown): CardContent {
         ? Math.round(input.ontwerpVerhouding * 1000) / 1000
         : undefined,
     details: input.details === "op" || input.details === "onder" ? input.details : undefined,
+    namenFont: titelFontId(input.namenFont),
     taal: cardTaal(input.taal),
     aanmelden: aanmeldStand(input.aanmelden),
   }

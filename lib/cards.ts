@@ -115,6 +115,12 @@ export interface CardContent {
    */
   details?: "op" | "onder"
   /**
+   * Een eigen lettertype voor de namen (een id uit lib/title-fonts.ts). Leeg:
+   * dat van het ontwerp. Gaat terug naar leeg bij een ander ontwerp (Michiel,
+   * 27 september 2026).
+   */
+  namenFont?: string
+  /**
    * De stijl van deze kaart (een van de stijlen uit lib/event-styles.ts), los
    * van die van de website (Michiel, 25 september 2026). Leeg bij oudere
    * kaarten: die volgen de stijl van de bruiloft.
@@ -599,6 +605,8 @@ export interface CardDisplay extends CardVasteTeksten {
   ontwerpVerhouding?: number | null
   /** Details op of onder de kaart; leeg is de standaard van het ontwerp */
   detailsStand?: "op" | "onder" | null
+  /** Een eigen lettertype voor de namen (id uit lib/title-fonts.ts) */
+  namenFont?: string | null
   /**
    * Heeft het bruidspaar de boodschap zelf geschreven? Een strak ontwerp zet
    * alleen een eigen boodschap onder de kaart, niet onze standaardtekst.
@@ -656,6 +664,7 @@ export function buildCardDisplay(
     ontwerpUrl: content.ontwerpUrl || null,
     ontwerpVerhouding: content.ontwerpVerhouding || null,
     detailsStand: content.details === "op" || content.details === "onder" ? content.details : null,
+    namenFont: content.namenFont || null,
     eigenBericht: !!content.message?.trim(),
     ...displayTeksten(taal),
   }

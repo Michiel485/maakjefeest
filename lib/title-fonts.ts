@@ -32,3 +32,8 @@ export function gemetenLetter(id?: string | null): { google: string; gewicht: nu
   const opt = TITLE_FONT_OPTIONS.find(f => f.id === id)
   return opt ? { google: opt.google, gewicht: opt.weight } : null
 }
+
+/** Een bekend lettertype-id, of niets */
+export function titelFontId(v: unknown): string | undefined {
+  return typeof v === "string" && TITLE_FONT_OPTIONS.some((f) => f.id === v) ? v : undefined
+}

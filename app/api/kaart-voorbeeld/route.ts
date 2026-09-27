@@ -1,3 +1,4 @@
+import { titelFontId } from "@/lib/title-fonts"
 import { kaartKleuren } from "@/lib/kaart-paletten"
 import { buildCardDisplay, CARD_TEMPLATE_WAARDEN, cardTaal, type CardContent, type CardGuestType, type CardTemplate, type CardType } from "@/lib/cards"
 import { getStyleConfig } from "@/lib/event-styles"
@@ -66,6 +67,7 @@ export async function POST(request: Request) {
         : undefined,
     ontwerpVerhouding: typeof body.ontwerpVerhouding === "number" && body.ontwerpVerhouding >= 0.4 && body.ontwerpVerhouding <= 2.5 ? body.ontwerpVerhouding : undefined,
     details: body.details === "op" || body.details === "onder" ? body.details : undefined,
+    namenFont: titelFontId(body.namenFont),
   }
 
   // Met een echte datum maken we de tekst zelf, in de taal van de kaart, en

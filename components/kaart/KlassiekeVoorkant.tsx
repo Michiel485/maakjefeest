@@ -8,6 +8,7 @@
 import { CARD_DESIGN_STYLE, type CardDisplay, type KlassiekOntwerp } from "@/lib/cards"
 import type { SC } from "@/lib/event-styles"
 import { namenOpmaak, namenPlek } from "@/lib/namen-opmaak"
+import { gemetenLetter, getTitleFont } from "@/lib/title-fonts"
 
 export default function KlassiekeVoorkant({
   display,
@@ -33,7 +34,10 @@ export default function KlassiekeVoorkant({
 }) {
   const ds = CARD_DESIGN_STYLE[display.design as KlassiekOntwerp] ?? CARD_DESIGN_STYLE.klassiek
   // De namen passend voor de breedte van de kaart (lib/namen-opmaak.ts)
-  const plek = breedte ? namenPlek(display.design, { breedte }) : null
+  // Een eigen lettertype voor de namen gaat voor dat van het ontwerp
+  const eigenMeting = gemetenLetter(display.namenFont)
+  const basisPlek = breedte ? namenPlek(display.design, { breedte }) : null
+  const plek = basisPlek && eigenMeting ? { ...basisPlek, letter: eigenMeting } : basisPlek
   const namen = plek
     ? namenOpmaak(display.names, plek)
     : { tekst: display.names, grootte: 2.4 * ds.namenSchaal * 16, heel: false }
@@ -120,7 +124,7 @@ export default function KlassiekeVoorkant({
         <p
           className="notranslate leading-tight"
           style={{
-            fontFamily: ds.namenFont,
+            fontFamily: display.namenFont ? getTitleFont(display.namenFont).family : ds.namenFont,
             color: sc.cardText ?? sc.headingColor,
             fontSize: namen.grootte,
             letterSpacing: ds.namenSpatiering,

@@ -38,6 +38,10 @@ import { kaartKleuren } from "@/lib/kaart-paletten"
 import { ONDER_DE_KAART, ONTWERP_VERHOUDING, detailsKeuze, detailsOpKaart, detailsStand, type DetailsStand } from "@/lib/kaart-ontwerpen"
 import { KLEUR } from "@/lib/ontwerp"
 import { initialenLijst } from "@/lib/initialen"
+import LetterKiezer from "@/components/LetterKiezer"
+import { titelFontId } from "@/lib/title-fonts"
+import { browserLetters } from "@/lib/kaart-ontwerpen"
+import { isKlassiekOntwerp, CARD_DESIGN_STYLE } from "@/lib/cards"
 import {
   AANMELD_LABEL,
   AANMELD_UITLEG,
@@ -225,6 +229,8 @@ interface KaartOntwerp {
   names: string
   /** Tijden en dresscode op of onder de kaart; leeg is de standaard van het ontwerp */
   details: DetailsStand | ""
+  /** Een eigen lettertype voor de namen; leeg is dat van het ontwerp */
+  namenFont: string
   datum: string
   // De locatie van de bruiloft. Hoort bij het event, niet bij de kaart.
   location: string
@@ -254,6 +260,7 @@ const LEEG: KaartOntwerp = {
   template: "klassiek",
   names: "",
   details: "",
+  namenFont: "",
   datum: "",
   location: "",
   message: "",
@@ -665,6 +672,7 @@ export default function KaartMakenPage() {
               ontwerpDataUrl: null,
               ontwerpVerhouding: kaart?.content.ontwerpVerhouding ?? null,
               details: detailsStand(kaart?.content.details) ?? "",
+              namenFont: titelFontId(kaart?.content.namenFont) ?? "",
               template: kaart?.template ?? "klassiek",
               names: kaart?.content.names ?? (event.frame_names as string) ?? (event.title as string) ?? "",
               datum: (event.datum as string) ?? "",
@@ -779,6 +787,7 @@ export default function KaartMakenPage() {
     ontwerpUrl: ontwerp.ontwerpUrl ?? ontwerp.ontwerpDataUrl ?? undefined,
     ontwerpVerhouding: ontwerp.ontwerpVerhouding ?? undefined,
     details: ontwerp.details || undefined,
+    namenFont: ontwerp.namenFont || undefined,
     taal: ontwerp.taal,
     aanmelden: ontwerp.aanmelden,
   }
@@ -1077,6 +1086,7 @@ export default function KaartMakenPage() {
       ontwerpDataUrl: null,
       ontwerpVerhouding: k.content.ontwerpVerhouding ?? null,
       details: detailsStand(k.content.details) ?? "",
+      namenFont: titelFontId(k.content.namenFont) ?? "",
       location: k.content.location ?? o.location,
       message: k.content.message ?? "",
       guestType: k.content.guestType ?? "",
@@ -1365,6 +1375,7 @@ export default function KaartMakenPage() {
           ontwerpUrl: ontwerp.ontwerpUrl ?? ontwerp.ontwerpDataUrl ?? undefined,
           ontwerpVerhouding: ontwerp.ontwerpVerhouding ?? undefined,
           details: ontwerp.details || undefined,
+          namenFont: ontwerp.namenFont || undefined,
           dresscode: ontwerp.dresscode || undefined,
           toonGastType: ontwerp.toonGastType || undefined,
         }),
@@ -1916,6 +1927,22 @@ export default function KaartMakenPage() {
                 maxLength={80}
               />
             </label>
+            {/* Een eigen lettertype voor de namen. Niet bij een eigen ontwerp:
+                daar staat geen tekst op. */}
+            {cardDesign(ontwerp.template) !== "eigen" && (
+              <div className="flex flex-col gap-1.5 -mt-1">
+                <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Lettertype van de namen</span>
+                <LetterKiezer
+                  waarde={ontwerp.namenFont || undefined}
+                  onKies={(v) => update({ namenFont: v ?? "" })}
+                  leegLabel="Lettertype van het ontwerp"
+                  leegFont={(() => {
+                    const d = cardDesign(ontwerp.template)
+                    return isKlassiekOntwerp(d) ? CARD_DESIGN_STYLE[d].namenFont : browserLetters(d).namen
+                  })()}
+                />
+              </div>
+            )}
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold flex items-center justify-between gap-2" style={{ color: CHARCOAL }}>Trouwdatum <Plek waar={tekstPlek("datum")} /></span>
               <input id="kaart-datum" type="date" className={inputCls} style={inputStyle} value={ontwerp.datum} onChange={(e) => update({ datum: e.target.value })} />
@@ -2001,7 +2028,9 @@ export default function KaartMakenPage() {
                 return (
                   <button
                     key={t}
-                    onClick={() => update({ template: t })}
+                    // Een ander ontwerp: de namen weer in de letter van dat
+                    // ontwerp, zoals in het tegeltje (Michiel, 27 september 2026)
+                    onClick={() => update({ template: t, namenFont: "" })}
                     aria-pressed={actief}
                     className="text-left p-1.5 rounded-xl flex flex-col gap-1.5"
                     style={{ border: `2px solid ${actief ? GOLD : "transparent"}`, backgroundColor: actief ? "#fff" : "transparent", cursor: "pointer" }}
