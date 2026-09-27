@@ -17,7 +17,7 @@ export const HOME_ONTWERPEN: NieuwOntwerp[] = [
   // Speciaal voor de homepagina, breed getekend (27 september 2026)
   "editoriaal", "monogram", "lijnkader", "datumband",
   // De themaontwerpen, ook voor de kaart
-  "winter", "lente", "zomer", "liefde", "strand", "boho", "festival",
+  "winter", "zomer", "liefde", "boho",
   "olijf", "pampas", "pampasruit", "terra", "terraruit", "herfst", "herfstruit", "goudblad", "magnolia",
   "minimaal", "datum", "titel", "palm", "ibiza", "deco", "boog",
 ]

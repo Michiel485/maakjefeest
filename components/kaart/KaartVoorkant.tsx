@@ -87,36 +87,6 @@ function Sneeuwvlok({ maat, kleur, dikte = 0.9 }: { maat: number; kleur: string;
   )
 }
 
-/** Een bloesemtak die van links naar rechts groeit */
-function Bloesemtak({ breedte, kleur }: { breedte: number; kleur: string }) {
-  const bloem = (x: number, y: number, r: number, i: number) => (
-    <g key={i}>
-      {[0, 1, 2, 3, 4].map((k) => {
-        const a = (k * 2 * Math.PI) / 5 - Math.PI / 2
-        return <circle key={k} cx={rond(x + r * Math.cos(a))} cy={rond(y + r * Math.sin(a))} r={rond(r * 0.72)} fill={kleur} fillOpacity={0.35} />
-      })}
-      <circle cx={x} cy={y} r={rond(r * 0.38)} fill={kleur} />
-    </g>
-  )
-  return (
-    <svg width={breedte} height={rond((breedte * 70) / 220)} viewBox="0 0 220 70" fill="none">
-      <path d="M-4 22C40 10 82 30 126 24S196 36 224 30" stroke={kleur} strokeWidth="1.3" strokeLinecap="round" />
-      <path d="M58 16C66 6 76 2 88 4M140 26C150 38 162 44 176 44M100 28C104 40 112 48 122 52" stroke={kleur} strokeWidth="1" strokeLinecap="round" />
-      <path d="M30 17c4-8 12-10 18-8-4 7-11 10-18 8zM170 34c6-6 14-6 19-2-6 5-13 6-19 2zM78 28c-2 8 2 14 8 17 1-7-2-13-8-17z" fill={kleur} fillOpacity="0.45" />
-      {[
-        [44, 14, 6.5],
-        [92, 6, 5],
-        [118, 26, 7],
-        [178, 44, 5.5],
-        [156, 20, 4.5],
-        [122, 52, 4],
-      ].map(([x, y, r], i) => bloem(x, y, r, i))}
-      <circle cx="66" cy="22" r="2.2" fill={kleur} fillOpacity="0.6" />
-      <circle cx="202" cy="30" r="2.4" fill={kleur} fillOpacity="0.6" />
-    </svg>
-  )
-}
-
 /** Een opkomende zon boven de horizon */
 function Zonsopgang({ breedte, kleur }: { breedte: number; kleur: string }) {
   let stralen = ""
@@ -145,31 +115,6 @@ function Hart({ breedte, kleur, vol = false, dikte = 1.4 }: { breedte: number; k
   )
 }
 
-/** Zee met golven, een zon laag boven het water en een schelp */
-function Strandtafereel({ breedte, kleur }: { breedte: number; kleur: string }) {
-  const golf = (y: number) => {
-    let d = `M0 ${y}`
-    for (let x = 0; x < 300; x += 30) d += `Q${x + 15} ${y - 8} ${x + 30} ${y}`
-    return d
-  }
-  let ribben = ""
-  for (let i = 0; i <= 6; i++) {
-    const a = Math.PI + 0.35 + (i * (Math.PI - 0.7)) / 6
-    ribben += `M70 64L${rond(70 + 20 * Math.cos(a))} ${rond(64 + 20 * Math.sin(a))}`
-  }
-  return (
-    <svg width={breedte} height={rond((breedte * 110) / 300)} viewBox="0 0 300 110" fill="none">
-      <circle cx="212" cy="44" r="18" fill={kleur} fillOpacity="0.85" />
-      <path d={golf(72)} stroke={kleur} strokeWidth="1.5" strokeLinecap="round" />
-      <path d={golf(88)} stroke={kleur} strokeWidth="1.2" strokeLinecap="round" strokeOpacity="0.65" />
-      <path d={golf(104)} stroke={kleur} strokeWidth="1" strokeLinecap="round" strokeOpacity="0.4" />
-      <path d="M70 64L51 57A20 20 0 0 1 89 57Z" fill={kleur} fillOpacity="0.25" />
-      <path d={ribben} stroke={kleur} strokeWidth="1" strokeLinecap="round" />
-      <path d="M50 57A20 20 0 0 1 90 57" stroke={kleur} strokeWidth="1.2" />
-    </svg>
-  )
-}
-
 /** Boho: bogen als een regenboog met een zonnetje erin */
 function Regenboog({ breedte, kleur }: { breedte: number; kleur: string }) {
   let stralen = ""
@@ -188,43 +133,8 @@ function Regenboog({ breedte, kleur }: { breedte: number; kleur: string }) {
   )
 }
 
-/** Een slinger met vlaggetjes */
-function Vlaggetjes({ breedte, kleuren }: { breedte: number; kleuren: string[] }) {
-  // Punten langs de boog van de slinger: een kwadratische curve
-  const punt = (t: number) => ({ x: 300 * t, y: 6 + 2 * t * (1 - t) * 30 })
-  const aantal = 11
-  const vlaggen = Array.from({ length: aantal }, (_, i) => {
-    const a = punt((i + 0.15) / aantal)
-    const b = punt((i + 0.85) / aantal)
-    const m = punt((i + 0.5) / aantal)
-    return (
-      <path key={i} d={`M${rond(a.x)} ${rond(a.y)}L${rond(b.x)} ${rond(b.y)}L${rond(m.x)} ${rond(m.y + 22)}Z`} fill={kleuren[i % kleuren.length]} />
-    )
-  })
-  return (
-    <svg width={breedte} height={rond((breedte * 56) / 300)} viewBox="0 0 300 56" fill="none">
-      <path d="M0 6Q150 66 300 6" stroke={kleuren[0]} strokeWidth="1.1" />
-      {vlaggen}
-    </svg>
-  )
-}
-
-// Confetti op vaste plekken (geen Math.random: server en browser moeten
-// hetzelfde tekenen), als deel van de breedte en de hoogte
-const CONFETTI: { x: number; y: number; w: number; h: number; draai: number; rond?: boolean; kleur: number }[] = [
-  { x: 0.08, y: 0.2, w: 7, h: 3, draai: 25, kleur: 0 },
-  { x: 0.9, y: 0.22, w: 6, h: 6, draai: 0, rond: true, kleur: 1 },
-  { x: 0.16, y: 0.46, w: 5, h: 5, draai: 0, rond: true, kleur: 2 },
-  { x: 0.84, y: 0.5, w: 8, h: 3, draai: -30, kleur: 0 },
-  { x: 0.06, y: 0.72, w: 7, h: 3, draai: 60, kleur: 1 },
-  { x: 0.93, y: 0.78, w: 5, h: 5, draai: 0, rond: true, kleur: 0 },
-  { x: 0.24, y: 0.9, w: 8, h: 3, draai: -15, kleur: 2 },
-  { x: 0.74, y: 0.92, w: 6, h: 6, draai: 0, rond: true, kleur: 1 },
-  { x: 0.5, y: 0.97, w: 7, h: 3, draai: 40, kleur: 0 },
-]
-
 /** De themaontwerpen: allemaal dezelfde opbouw, met een eigen tekening */
-const THEMA_ONTWERPEN: NieuwOntwerp[] = ["winter", "lente", "zomer", "liefde", "strand", "boho", "festival"]
+const THEMA_ONTWERPEN: NieuwOntwerp[] = ["winter", "zomer", "liefde", "boho"]
 
 /** De teksten op een ontwerp die op de homepagina een eigen letter en grootte kunnen krijgen */
 export type TekstRol = "kop" | "namen" | "datum" | "locatie" | "tijden" | "dresscode"
@@ -886,8 +796,9 @@ function Inhoud({
   }
 
   // ── De themaontwerpen (27 september 2026) ────────────────────────────────
-  // Winter, lente, zomer, liefde, strand, Ibiza boho en festival. Voor de kaart
-  // en de homepagina. De tekeningen staan in de kleur van de stijl.
+  // Winter, zomer, liefde en Ibiza boho. Voor de kaart en de homepagina. De
+  // tekeningen staan in de kleur van de stijl. Lente, strand en festival zijn
+  // er de dag erna weer uit: te duidelijk gemaakt (Michiel, 27 september 2026).
   if (THEMA_ONTWERPEN.includes(ontwerp)) {
     const datum = datumKort(d.datumIso, " · ") ?? d.dateText
     const kopRegel = (grootte = 11, kleur = label) => (
@@ -946,18 +857,6 @@ function Inhoud({
       ), vlokken.map((v, i) => los({ left: breedte * v.x, top: `${v.y * 100}%`, opacity: v.o }, <Sneeuwvlok maat={px(v.m)} kleur={accent} />, i)))
     }
 
-    if (ontwerp === "lente") {
-      return wortel(`${px(78)}px ${px(30)}px ${px(74)}px`, (
-        <D style={kolom}>
-          {kopRegel()}
-          {inhoud()}
-        </D>
-      ), [
-        los({ left: 0, top: px(8) }, <Bloesemtak breedte={breedte * 0.66} kleur={accent} />, 0),
-        los({ right: 0, bottom: px(8), transform: "rotate(180deg)" }, <Bloesemtak breedte={breedte * 0.52} kleur={accent} />, 1),
-      ])
-    }
-
     if (ontwerp === "zomer") {
       return wortel(`${px(34)}px ${px(30)}px`, (
         <D style={kolom}>
@@ -971,12 +870,6 @@ function Inhoud({
     if (ontwerp === "liefde") {
       const ini = initialenLijst(d.names)
       const hb = px(150)
-      const hartjes = [
-        { x: 0.1, y: 0.1, m: 14, o: 0.55 },
-        { x: 0.82, y: 0.14, m: 10, o: 0.45 },
-        { x: 0.88, y: 0.62, m: 16, o: 0.5 },
-        { x: 0.06, y: 0.72, m: 11, o: 0.4 },
-      ]
       return wortel(`${px(34)}px ${px(30)}px`, (
         <D style={kolom}>
           {kopRegel()}
@@ -989,26 +882,6 @@ function Inhoud({
             </D>
           </D>
           {inhoud()}
-        </D>
-      ), hartjes.map((h, i) => los({ left: breedte * h.x, top: `${h.y * 100}%`, opacity: h.o }, <Hart breedte={px(h.m)} kleur={accent} vol />, i)))
-    }
-
-    if (ontwerp === "strand") {
-      return wortel(`${px(36)}px ${px(26)}px ${px(30)}px`, (
-        <D style={kolom}>
-          {kopRegel()}
-          <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.05, color: kop }} />
-          {datum && (
-            <div style={{ display: "flex", ...tt("datum", letters.kop, 12.5), letterSpacing: "0.24em", textTransform: "uppercase", color: accent }}>{datum}</div>
-          )}
-          {d.location && (
-            <Regels tekst={d.location} style={{ ...tt("locatie", letters.tekst, 11.5), lineHeight: 1.5, letterSpacing: "0.06em", color: tekst, opacity: 0.88 }} />
-          )}
-          <D style={{ marginTop: px(4) }}><Strandtafereel breedte={px(330)} kleur={accent} /></D>
-          {d.message && (
-            <Regels tekst={d.message} style={{ fontFamily: letters.tekst, fontSize: px(12), lineHeight: 1.55, color: tekst, maxWidth: px(290), opacity: 0.9 }} />
-          )}
-          {details(accent, { grootte: 10.5, marge: 2, max: 300 })}
         </D>
       ))
     }
@@ -1023,32 +896,6 @@ function Inhoud({
       ))
     }
 
-    // Festival: vlaggetjes, confetti en de namen stoer en groot
-    const kleurtjes = [accent, label, kop]
-    return wortel(`${px(80)}px ${px(26)}px ${px(40)}px`, (
-      <D style={kolom}>
-        <div style={{ display: "flex", ...tt("kop", letters.extra, 46), lineHeight: 1, color: accent, textAlign: "center" }}>{d.heading}</div>
-        {inhoud({ naamRegel: 1.02, datumKleur: kop })}
-      </D>
-    ), [
-      los({ left: 0, top: 0 }, <Vlaggetjes breedte={breedte} kleuren={[accent, `${accent}99`, kop]} />, 99),
-      ...CONFETTI.map((c, i) =>
-        los(
-          {
-            left: breedte * c.x,
-            top: `${c.y * 100}%`,
-            width: px(c.w),
-            height: px(c.h),
-            backgroundColor: kleurtjes[c.kleur],
-            opacity: 0.7,
-            borderRadius: c.rond ? px(c.w) : px(1),
-            transform: `rotate(${c.draai}deg)`,
-          },
-          null,
-          i
-        )
-      ),
-    ])
   }
 
   // ── De ontwerpen van de homepagina (27 september 2026) ─────────────────────
