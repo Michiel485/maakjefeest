@@ -20,6 +20,8 @@ export interface HomeOntwerpTekst {
   tijden?: string | null
   dresscode?: string | null
   details?: DetailsStand | null
+  /** Namen naast of onder elkaar; leeg is zoals het ontwerp */
+  namenStand?: "naast" | "onder" | null
 }
 
 /** Per tekst een lettertype (een id uit lib/title-fonts.ts) en een grootte (1 is zoals ontworpen) */
@@ -66,6 +68,7 @@ export default function HomeOntwerp({
         timeText: tijden ?? undefined,
         dresscode: dresscode ?? undefined,
         details: tekst.details ?? undefined,
+        namen: tekst.namenStand ?? undefined,
       },
       { title: tekst.namen, frame_names: tekst.namen, datum: tekst.datum, locatie: tekst.locatie }
     ),

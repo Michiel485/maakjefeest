@@ -82,6 +82,8 @@ interface HomepageSettings {
   tijden?: string
   dresscode?: string
   details?: 'op' | 'onder'
+  /** Namen op het ontwerp naast of onder elkaar */
+  namen?: 'naast' | 'onder'
 }
 
 const DEFAULT_HOMEPAGE_SETTINGS: HomepageSettings = {

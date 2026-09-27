@@ -40,6 +40,8 @@ export interface HomepageSettings {
   tijden?: string
   dresscode?: string
   details?: 'op' | 'onder'
+  /** Namen op het ontwerp naast of onder elkaar */
+  namen?: 'naast' | 'onder'
 }
 
 function clamp(v: number, min: number, max: number) {
@@ -545,6 +547,7 @@ export default function EventHomePreview({
               tijden: hp?.tijden ?? null,
               dresscode: hp?.dresscode ?? null,
               details: hp?.details ?? null,
+              namenStand: hp?.namen ?? null,
             }}
             instellingen={hp?.ontwerpTekst}
           />

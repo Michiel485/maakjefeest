@@ -782,7 +782,11 @@ function Inhoud({
               gap: px(7),
             }}
           >
-            <Regels tekst={namenRegels(d.names)} style={{ fontFamily: letters.namen, fontSize: pxN(ontwerp === "herfst" || ontwerp === "herfstruit" ? 21 : 30), lineHeight: 1.12, color: kader.kleur.namen }} />
+            {d.namenStand === "naast" ? (
+              <Namen plek={plek} stand="naast" namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.12, color: kader.kleur.namen }} />
+            ) : (
+              <Regels tekst={namenRegels(d.names)} style={{ fontFamily: letters.namen, fontSize: pxN(ontwerp === "herfst" || ontwerp === "herfstruit" ? 21 : 30), lineHeight: 1.12, color: kader.kleur.namen }} />
+            )}
             {datum && (
               <div style={{ display: "flex", ...tt("datum", letters.kop, 10.5), letterSpacing: "0.14em", color: kader.kleur.accent }}>{datum}</div>
             )}

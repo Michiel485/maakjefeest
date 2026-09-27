@@ -5,6 +5,7 @@
 // Alles staat in homepage_settings, dus er is geen nieuwe kolom nodig.
 
 import type { NieuwOntwerp } from "./cards"
+import { KADERS } from "./kaart-ontwerpen"
 
 /**
  * De ontwerpen die op de homepagina kunnen. Niet Foto en Foto met handschrift:
@@ -45,11 +46,16 @@ export function homeOntwerp(opties: { ontwerp?: unknown; useFrame?: boolean | nu
   return "olijf"
 }
 
-/** Hoe breed het ontwerp op de pagina mag worden: liggende tekeningen breder */
+/**
+ * Hoe breed het ontwerp op de pagina mag worden. De tekeningen groot, zoals de
+ * kaders vroeger (tot 672 breed); met 460 kreeg je de tekst er nauwelijks in
+ * (Michiel, 27 september 2026). Liggende tekeningen nog breder.
+ */
 export function homeOntwerpMaxBreedte(ontwerp: NieuwOntwerp): number {
-  if (ontwerp === "goudblad" || ontwerp === "magnolia") return 760
-  if (ontwerp === "olijf") return 560
-  return 460
+  if (ontwerp === "goudblad" || ontwerp === "magnolia") return 820
+  if (KADERS[ontwerp]?.vorm === "krans") return 640
+  if (ontwerp === "olijf") return 600
+  return 480
 }
 
 export const HOME_KOP_STANDAARD = "Wij gaan trouwen"

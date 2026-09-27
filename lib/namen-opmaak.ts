@@ -43,6 +43,11 @@ export interface NamenPlek {
   ruimte: number
   letterafstand?: number
   hoofdletters?: boolean
+  /**
+   * Het ontwerp zet de namen uit zichzelf onder elkaar (de kransen). Naast
+   * elkaar alleen als het bruidspaar dat kiest.
+   */
+  standaardOnder?: boolean
 }
 
 /**
@@ -150,10 +155,16 @@ export function namenPlek(ontwerp: CardDesign, opties: { breedte: number; datumI
   }
   const kader = KADERS[ontwerp]
   if (kader?.vorm === "liggend") return maat(34, 400 * kader.ruimte[0])
+  // De kransen: in de witte vorm, die 372 breed is op een kaart van 400
+  // (Michiel, 27 september 2026: naast elkaar moest ook kunnen)
+  if (kader?.vorm === "krans") {
+    return maat(ontwerp === "herfst" || ontwerp === "herfstruit" ? 21 : 30, 372 * kader.ruimte[0], { standaardOnder: true })
+  }
   return null
 }
 
 /** Wat de kaart zelf zou kiezen, voor de bouwer: dat staat daar geselecteerd */
 export function namenStandVanzelf(namen: string, plek: NamenPlek): NamenStand {
+  if (plek.standaardOnder) return "onder"
   return namenOpmaak(namen, plek).tekst.includes("\n") ? "onder" : "naast"
 }
