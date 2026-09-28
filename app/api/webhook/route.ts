@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server"
+import { after, NextResponse } from "next/server"
+import { meldFout } from "@/lib/foutmelding"
 import { createMollieClient } from "@mollie/api-client"
 import type { Payment } from "@mollie/api-client"
 import { verversEvent } from "@/lib/db"
@@ -68,9 +69,13 @@ async function verwerkFactuur(
       .from("invoices")
       .upload(pdfPath, pdfBuffer, { contentType: "application/pdf", upsert: true })
     if (!uploadError) pdfFilePath = pdfPath
-    else console.error("[webhook] PDF upload error:", uploadError)
+    else {
+      console.error("[webhook] PDF upload error:", uploadError)
+      after(() => meldFout({ soort: "stil", waar: "betaling: factuur-PDF opslaan", pad: "/api/webhook", fout: uploadError }))
+    }
   } catch (pdfErr) {
     console.error("[webhook] PDF generation error:", pdfErr)
+    after(() => meldFout({ soort: "stil", waar: "betaling: factuur-PDF maken", pad: "/api/webhook", fout: pdfErr }))
   }
 
   const { error: invoiceError } = await supabase.from("invoices").insert({
@@ -87,7 +92,10 @@ async function verwerkFactuur(
     mollie_payment_id: payment.id,
     file_path:         pdfFilePath ?? null,
   })
-  if (invoiceError) console.error("[webhook] invoice insert error:", invoiceError)
+  if (invoiceError) {
+    console.error("[webhook] invoice insert error:", invoiceError)
+    after(() => meldFout({ soort: "stil", waar: "betaling: factuur opslaan", pad: "/api/webhook", fout: invoiceError }))
+  }
 
   if (customerEmail) {
     await sendInvoiceEmail({
@@ -294,6 +302,7 @@ export async function POST(request: Request) {
 
   if (updateError) {
     console.error("[webhook] update error:", updateError)
+    after(() => meldFout({ soort: "stil", waar: "betaling: pakket activeren", pad: "/api/webhook", fout: updateError }))
     return NextResponse.json({ error: "DB update failed" }, { status: 500 })
   }
 

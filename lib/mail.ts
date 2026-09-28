@@ -1768,3 +1768,68 @@ export async function sendStandEmail({
     return { success: false as const, error: err }
   }
 }
+
+// ── Foutmelding voor de beheerder (28 september 2026) ─────────────────────
+// Zie lib/foutmelding.ts: daar zit de rem, dit is alleen de mail.
+
+export interface FoutmeldingData {
+  toEmail: string
+  soort: "server" | "browser" | "stil"
+  waar: string
+  pad: string
+  bericht: string
+  stapel: string | null
+  extra: string | null
+  tijd: Date
+}
+
+const FOUT_SOORT_TEKST: Record<FoutmeldingData["soort"], string> = {
+  server: "De server liep vast",
+  browser: "Een pagina liep vast bij een bezoeker",
+  stil: "Iets werd niet opgeslagen of verwerkt",
+}
+
+function zonderHtml(t: string): string {
+  return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+}
+
+export async function sendFoutmeldingEmail(data: FoutmeldingData) {
+  const tijd = data.tijd.toLocaleString("nl-NL", { timeZone: "Europe/Amsterdam", weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })
+  const regel = (label: string, waarde: string) =>
+    `<tr><td style="padding:6px 12px 6px 0;color:#9A8E82;font-size:13px;vertical-align:top;white-space:nowrap;">${label}</td><td style="padding:6px 0;font-size:14px;color:#1A1A1A;">${zonderHtml(waarde)}</td></tr>`
+
+  const html = `
+    <div style="font-family:Georgia,'Times New Roman',serif;max-width:560px;margin:0 auto;padding:32px 24px;background:#FAF7F2;color:#1A1A1A;">
+      <p style="font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:#B4533A;font-weight:600;margin:0 0 8px;">SayingYes · foutmelding</p>
+      <h1 style="font-size:24px;font-weight:700;margin:0 0 16px;">${FOUT_SOORT_TEKST[data.soort]}</h1>
+      <table style="border-collapse:collapse;margin:0 0 16px;">
+        ${regel("Wanneer", tijd)}
+        ${regel("Waar", data.waar)}
+        ${regel("Pagina", data.pad)}
+        ${regel("Melding", data.bericht)}
+        ${data.extra ? regel("Meer", data.extra) : ""}
+      </table>
+      ${data.stapel ? `<pre style="background:#fff;border:1px solid #E8D5A3;border-radius:8px;padding:12px;font-size:11px;line-height:1.5;white-space:pre-wrap;word-break:break-word;color:#5C5248;">${zonderHtml(data.stapel)}</pre>` : ""}
+      <p style="margin:20px 0 0;font-size:12px;color:#9A8E82;line-height:1.6;">
+        Dezelfde fout mailt hoogstens één keer per uur, en er komen hoogstens tien foutmails per uur.
+        Plak deze mail bij Claude, dan zoeken we het samen uit.
+      </p>
+    </div>`
+
+  try {
+    const { error } = await getResend().emails.send({
+      from: FROM,
+      to: [data.toEmail],
+      subject: `⚠️ ${FOUT_SOORT_TEKST[data.soort]}: ${data.waar}`.slice(0, 150),
+      html,
+    })
+    if (error) {
+      console.error("[mail] Foutmelding error:", error)
+      return { success: false, error }
+    }
+    return { success: true }
+  } catch (err) {
+    console.error("[mail] Unexpected error sending foutmelding:", err)
+    return { success: false, error: err }
+  }
+}

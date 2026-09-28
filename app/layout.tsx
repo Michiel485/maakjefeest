@@ -23,6 +23,7 @@ import {
 } from "next/font/google";
 import Analytics from "@/components/Analytics";
 import CookieBanner from "@/components/CookieBanner";
+import FoutVanger from "@/components/FoutVanger";
 import VisitorTracking from "@/components/VisitorTracking";
 import { MARKETING_URL } from "@/lib/site-url";
 import "./globals.css";
@@ -269,6 +270,7 @@ export default function RootLayout({
         <Analytics />
         <VisitorTracking />
         <CookieBanner />
+        <FoutVanger />
       </body>
     </html>
   );

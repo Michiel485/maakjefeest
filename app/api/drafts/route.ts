@@ -1,3 +1,5 @@
+import { after } from "next/server"
+import { meldFout } from "@/lib/foutmelding"
 import { createServerClient } from "@supabase/ssr"
 import { createServiceClient } from "@/lib/supabase"
 import { cookies } from "next/headers"
@@ -232,6 +234,7 @@ export async function POST(request: Request) {
       const { error: kaartErr } = await db.from("events").update(kaartVelden).eq("id", event_id)
       if (kaartErr) {
         console.error("[drafts] kaartvelden fout:", kaartErr)
+        after(() => meldFout({ soort: "stil", waar: "website opslaan: kaartvelden", pad: new URL(request.url).pathname, fout: kaartErr }))
         return Response.json({ error: kaartErr.message }, { status: 500 })
       }
       if (existing.status === "published") await verversEvent(existing.slug as string | null)
@@ -255,6 +258,7 @@ export async function POST(request: Request) {
 
       if (updateErr) {
         console.error("[drafts] update fout:", updateErr)
+        after(() => meldFout({ soort: "stil", waar: "website opslaan", pad: new URL(request.url).pathname, fout: updateErr }))
         return Response.json({ error: updateErr.message }, { status: 500 })
       }
 
@@ -271,6 +275,8 @@ export async function POST(request: Request) {
       const { error: pagesErr } = await db.from("pages").insert(pageRows)
       if (pagesErr) {
         console.error("[drafts] pages insert fout:", pagesErr)
+      after(() => meldFout({ soort: "stil", waar: "website opslaan: pagina's", pad: new URL(request.url).pathname, fout: pagesErr }))
+    after(() => meldFout({ soort: "stil", waar: "website opslaan: pagina's", pad: new URL(request.url).pathname, fout: pagesErr }))
         return Response.json({ error: pagesErr.message }, { status: 500 })
       }
 
@@ -360,6 +366,7 @@ export async function POST(request: Request) {
 
   if (eventError || !event) {
     console.error("[drafts] nieuw event fout:", eventError)
+    after(() => meldFout({ soort: "stil", waar: "website aanmaken", pad: new URL(request.url).pathname, fout: eventError ?? "geen event terug" }))
     return Response.json(
       { error: eventError?.message ?? "Kon het concept niet aanmaken" },
       { status: 500 }
@@ -377,6 +384,7 @@ export async function POST(request: Request) {
   const { error: pagesErr } = await db.from("pages").insert(pageRows)
   if (pagesErr) {
     console.error("[drafts] pages insert fout:", pagesErr)
+    after(() => meldFout({ soort: "stil", waar: "website opslaan: pagina's", pad: new URL(request.url).pathname, fout: pagesErr }))
     return Response.json({ error: pagesErr.message }, { status: 500 })
   }
 

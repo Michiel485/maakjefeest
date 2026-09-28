@@ -1,3 +1,4 @@
+import { meldFout } from "@/lib/foutmelding"
 import { createServiceClient } from "@/lib/supabase"
 import { verwijderEventInhoud } from "@/lib/opruimen"
 import { sendDraftReminderEmail, sendRenewalReminderEmail, sendExpiryWarningEmail, sendDeadlineEmail, sendStandEmail } from "@/lib/mail"
@@ -54,6 +55,8 @@ export async function GET(request: Request) {
 
   if (fetchErr) {
     console.error("[cron/cleanup] Failed to fetch drafts:", fetchErr)
+    // Vaak een teken dat Supabase gepauzeerd is
+    await meldFout({ soort: "stil", waar: "dagelijkse taak: database niet bereikbaar", pad: "/api/cron/cleanup", fout: fetchErr })
     return Response.json({ error: fetchErr.message }, { status: 500 })
   }
 
@@ -244,6 +247,10 @@ export async function GET(request: Request) {
   results.visitorDigest = await sendVisitorDigest(service, now)
 
   console.log("[cron/cleanup] Done:", results)
+  if (results.errors.length > 0) {
+    await meldFout({ soort: "stil", waar: "dagelijkse taak", pad: "/api/cron/cleanup", fout: `${results.errors.length} fout(en)`, extra: results.errors.slice(0, 5).join(" | ") })
+  }
+
   return Response.json({ ok: true, ...results })
 }
 

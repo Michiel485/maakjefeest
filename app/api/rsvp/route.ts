@@ -1,3 +1,5 @@
+import { after } from "next/server"
+import { meldFout } from "@/lib/foutmelding"
 import { createServiceClient } from "@/lib/supabase"
 import { sendRSVPConfirmation, sendAdminRSVPNotification } from "@/lib/mail"
 import { planAllows } from "@/lib/plans"
@@ -460,6 +462,7 @@ export async function POST(request: Request) {
 
   if (fout) {
     console.error("[rsvp] wegschrijven:", fout)
+    after(() => meldFout({ soort: "stil", waar: "aanmelden: opslaan", pad: new URL(request.url).pathname, fout: fout }))
     return Response.json({ error: "Kon aanmelding niet opslaan" }, { status: 500 })
   }
 

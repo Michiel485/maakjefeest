@@ -1,3 +1,5 @@
+import { after } from "next/server"
+import { meldFout } from "@/lib/foutmelding"
 import { titelFontId } from "@/lib/title-fonts"
 import { isStyle } from "@/lib/event-styles"
 import { kaartPalet } from "@/lib/kaart-paletten"
@@ -110,6 +112,7 @@ export async function PATCH(
 
   if (error) {
     console.error("[cards] update:", error.message)
+    after(() => meldFout({ soort: "stil", waar: "kaart opslaan", pad: new URL(request.url).pathname, fout: error }))
     // De database kent dit ontwerp nog niet: de migratie met de nieuwe
     // ontwerpen is nog niet gedraaid. Zonder dit zag je alleen "Opslaan
     // mislukt" (26 september 2026).

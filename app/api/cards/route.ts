@@ -1,3 +1,5 @@
+import { after } from "next/server"
+import { meldFout } from "@/lib/foutmelding"
 import { createServiceClient } from "@/lib/supabase"
 import { createClient } from "@/lib/supabase-server"
 import { CARD_TEMPLATE_WAARDEN, generateShareToken, MAX_KAARTEN_PER_EVENT, type CardGuestType, type CardTemplate, type CardType } from "@/lib/cards"
@@ -113,6 +115,7 @@ export async function POST(request: Request) {
 
   if (error || !card) {
     console.error("[cards] insert:", error?.message)
+    after(() => meldFout({ soort: "stil", waar: "kaart aanmaken", pad: new URL(request.url).pathname, fout: error ?? "geen kaart terug" }))
     return Response.json({ error: "Kaart aanmaken mislukt" }, { status: 500 })
   }
 
