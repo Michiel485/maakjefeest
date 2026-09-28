@@ -135,6 +135,11 @@ export interface CardContent {
   // Of er onder de kaart om een aanmelding wordt gevraagd, en hoeveel. Zie
   // AanmeldStand in lib/gasten.ts: geen, alleen ja of nee, of volledig.
   aanmelden?: string
+  /**
+   * Tot wanneer gasten kunnen antwoorden, als 2027-05-01. Staat boven het
+   * formulier, en na die dag sluit het (Michiel, 28 september 2026).
+   */
+  antwoordVoor?: string
   // ── Details op de kaart ───────────────────────────────────────────────────
   // Michiels wens van 22 september 2026: subtiel kunnen tonen voor wie de
   // kaart is, hoe laat het is en wat de dresscode is, zonder de kaart te
@@ -624,6 +629,8 @@ export interface CardDisplay extends CardVasteTeksten {
   detailsStand?: "op" | "onder" | null
   /** Een eigen lettertype voor de namen (id uit lib/title-fonts.ts) */
   namenFont?: string | null
+  /** Tot wanneer gasten kunnen antwoorden, als 2027-05-01 */
+  antwoordVoor?: string | null
   /**
    * Heeft het bruidspaar de boodschap zelf geschreven? Een strak ontwerp zet
    * alleen een eigen boodschap onder de kaart, niet onze standaardtekst.
@@ -682,6 +689,7 @@ export function buildCardDisplay(
     ontwerpVerhouding: content.ontwerpVerhouding || null,
     detailsStand: content.details === "op" || content.details === "onder" ? content.details : null,
     namenFont: content.namenFont || null,
+    antwoordVoor: isIsoDatum(content.antwoordVoor) ? content.antwoordVoor : null,
     eigenBericht: !!content.message?.trim(),
     ...displayTeksten(taal),
   }
@@ -695,4 +703,21 @@ export function generateShareToken(): string {
     .replace(/\+/g, "a")
     .replace(/\//g, "b")
     .replace(/=/g, "")
+}
+
+/** Een datum als 2027-05-01 */
+export function isIsoDatum(v: unknown): v is string {
+  return typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v)
+}
+
+/** Het moment waarop het formulier sluit: aan het eind van de antwoorddatum */
+export function antwoordSluit(iso: string | null | undefined): string | null {
+  return isIsoDatum(iso) ? `${iso}T23:59:59` : null
+}
+
+/** "Graag je antwoord uiterlijk 1 mei 2027", in de taal van de kaart */
+export function antwoordVoorTekst(iso: string | null | undefined, taal: unknown, zin: string): string | null {
+  if (!isIsoDatum(iso)) return null
+  const datum = new Date(`${iso}T12:00:00`).toLocaleDateString(KAART_TEKST[cardTaal(taal)].locale, { day: "numeric", month: "long", year: "numeric" })
+  return zin.replace("{datum}", datum)
 }

@@ -1,5 +1,6 @@
 "use client"
 
+import { antwoordSluit, antwoordVoorTekst } from "@/lib/cards"
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react"
 import type { SC } from "@/lib/event-styles"
 import type { CardDisplay } from "@/lib/cards"
@@ -1014,7 +1015,14 @@ export default function CardReveal({
                 >
                   {aanmeldStand === "janee" ? formulierTekst(display.taal).benJeErbij : formulierTekst(display.taal).aanmelden}
                 </p>
+                {/* Tot wanneer ze kunnen antwoorden, als het bruidspaar dat koos */}
+                {display.antwoordVoor && (
+                  <p className="text-center text-sm -mt-2 mb-4" style={{ color: sc.cardText ?? sc.bodyText, opacity: 0.8 }}>
+                    {antwoordVoorTekst(display.antwoordVoor, display.taal, formulierTekst(display.taal).uiterlijk)}
+                  </p>
+                )}
                 <AanmeldFormulier
+                  deadline={antwoordSluit(display.antwoordVoor)}
                   bronToken={bronToken}
                   stand={aanmeldStand}
                   taal={display.taal}

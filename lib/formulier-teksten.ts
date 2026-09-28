@@ -50,6 +50,8 @@ export interface FormulierTeksten {
   jammer: string
   tochAanpassen: string
   deadline: string
+  /** Boven het formulier op een kaart met een antwoorddatum; {datum} wordt de datum */
+  uiterlijk: string
   eerderEen: string
   eerderMeer: string
   datAanpassen: string
@@ -104,6 +106,7 @@ export const FORMULIER_TEKST: Record<CardTaal, FormulierTeksten> = {
     jammer: "We vinden het jammer, maar fijn dat je het laat weten.",
     tochAanpassen: "Toch iets aanpassen",
     deadline: "De aanmeldtermijn is verstreken. Neem even contact op met het bruidspaar.",
+    uiterlijk: "Graag je antwoord uiterlijk {datum}",
     eerderEen: "Op dit toestel meldde je eerder aan:",
     eerderMeer: "Op dit toestel zijn eerder aangemeld:",
     datAanpassen: "Dat aanpassen",
@@ -155,6 +158,7 @@ export const FORMULIER_TEKST: Record<CardTaal, FormulierTeksten> = {
     jammer: "We're sorry you can't make it, but thank you for letting us know.",
     tochAanpassen: "Change something",
     deadline: "The RSVP deadline has passed. Please get in touch with the couple.",
+    uiterlijk: "Please reply by {datum}",
     eerderEen: "You already replied on this device:",
     eerderMeer: "Already replied on this device:",
     datAanpassen: "Change that",
@@ -206,6 +210,7 @@ export const FORMULIER_TEKST: Record<CardTaal, FormulierTeksten> = {
     jammer: "C'est dommage, mais merci de nous prévenir.",
     tochAanpassen: "Modifier quelque chose",
     deadline: "La date limite de réponse est passée. Contactez les mariés.",
+    uiterlijk: "Merci de répondre avant le {datum}",
     eerderEen: "Vous avez déjà répondu sur cet appareil :",
     eerderMeer: "Déjà répondu sur cet appareil :",
     datAanpassen: "Modifier cela",
@@ -257,6 +262,7 @@ export const FORMULIER_TEKST: Record<CardTaal, FormulierTeksten> = {
     jammer: "Schade, aber schön, dass du Bescheid sagst.",
     tochAanpassen: "Doch etwas ändern",
     deadline: "Die Anmeldefrist ist abgelaufen. Melde dich bitte beim Brautpaar.",
+    uiterlijk: "Bitte antworte bis zum {datum}",
     eerderEen: "Auf diesem Gerät hast du dich schon angemeldet:",
     eerderMeer: "Auf diesem Gerät schon angemeldet:",
     datAanpassen: "Das ändern",
@@ -308,6 +314,7 @@ export const FORMULIER_TEKST: Record<CardTaal, FormulierTeksten> = {
     jammer: "Nos da pena, pero gracias por avisarnos.",
     tochAanpassen: "Cambiar algo",
     deadline: "El plazo para confirmar ha terminado. Ponte en contacto con los novios.",
+    uiterlijk: "Por favor, responde antes del {datum}",
     eerderEen: "Ya respondiste en este dispositivo:",
     eerderMeer: "Ya respondieron en este dispositivo:",
     datAanpassen: "Cambiar eso",
@@ -359,6 +366,7 @@ export const FORMULIER_TEKST: Record<CardTaal, FormulierTeksten> = {
     jammer: "Ci dispiace, ma grazie per avercelo fatto sapere.",
     tochAanpassen: "Modifica qualcosa",
     deadline: "Il termine per confermare è scaduto. Contatta gli sposi.",
+    uiterlijk: "Ti preghiamo di rispondere entro il {datum}",
     eerderEen: "Hai già risposto da questo dispositivo:",
     eerderMeer: "Hanno già risposto da questo dispositivo:",
     datAanpassen: "Modifica",

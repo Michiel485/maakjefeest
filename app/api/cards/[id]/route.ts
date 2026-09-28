@@ -1,3 +1,4 @@
+import { isIsoDatum } from "@/lib/cards"
 import { after } from "next/server"
 import { meldFout } from "@/lib/foutmelding"
 import { titelFontId } from "@/lib/title-fonts"
@@ -57,6 +58,7 @@ function sanitizeContent(raw: unknown): CardContent {
     namenFont: titelFontId(input.namenFont),
     taal: cardTaal(input.taal),
     aanmelden: aanmeldStand(input.aanmelden),
+    antwoordVoor: isIsoDatum(input.antwoordVoor) ? input.antwoordVoor : undefined,
   }
 }
 

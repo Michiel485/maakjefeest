@@ -1,5 +1,7 @@
 "use client"
 
+import { antwoordVoorTekst, isIsoDatum } from "@/lib/cards"
+import { formulierTekst } from "@/lib/formulier-teksten"
 import NamenVelden from "@/components/NamenVelden"
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
@@ -62,6 +64,7 @@ import {
   LS_WEBSITE_INHOUD,
   nieuwWebsiteConcept,
   LS_MAIL,
+  LS_NAMEN,
 } from "@/lib/nieuw-concept"
 
 // Kleuren komen uit lib/ontwerp.ts, de enige bron. De korte namen hieronder
@@ -131,6 +134,22 @@ const VOLGORDE: Record<Stap, string> = {
 // voor wie hij is, dan wat erop staat, en dan kijken. Michiels keuze van
 // 25 september 2026.
 const CATEGORIE_VOLGORDE = ["uiterlijk", "gasten", "tekst", "bekijken"] as const
+
+// ── Stap voor stap (Michiel, 28 september 2026) ─────────────────────────────
+// De eerste keer loop je door de kaart heen met één vraag tegelijk, en de kaart
+// ernaast verandert mee. Het zijn de gewone onderdelen, alleen in een vaste
+// volgorde en met een vraag als kop. "Alles zelf kiezen" staat er bewust klein
+// onder: even de begeleiding volgen werkt beter. Later start je hem opnieuw
+// met "Stap voor stap".
+const LS_GIDS = "sayingyes_kaart_gids"
+interface GidsStap {
+  /** Kort, voor op de knop naar deze stap */
+  kort: string
+  vraag: string
+  uitleg: string
+  tip?: string
+  secties: Stap[]
+}
 
 function BladIcoon({ blad }: { blad: Exclude<Blad, "kaart"> }) {
   const pad = {
@@ -232,6 +251,8 @@ interface KaartOntwerp {
   names: string
   /** Tijden en dresscode op of onder de kaart; leeg is de standaard van het ontwerp */
   details: DetailsStand | ""
+  /** Tot wanneer gasten kunnen antwoorden (2027-05-01), leeg is geen datum */
+  antwoordVoor: string
   /** Een eigen lettertype voor de namen; leeg is dat van het ontwerp */
   namenFont: string
   datum: string
@@ -264,6 +285,7 @@ const LEEG: KaartOntwerp = {
   template: STANDAARD_ONTWERP,
   names: "",
   details: "",
+  antwoordVoor: "",
   namenFont: "",
   datum: "",
   location: "",
@@ -362,6 +384,10 @@ export default function KaartMakenPage() {
   // die sectie een paar tellen later dicht zodra een bestaande kaart binnen
   // was (Michiel, 24 september 2026).
   const [stap, setStap] = useState<Stap | null>(null)
+  // De stap van de begeleiding, of null als je alles zelf kiest
+  const [gids, setGids] = useState<number | null>(null)
+  // Kwam je via de start? Dan koos je daar al een ontwerp
+  const [vanStart, setVanStart] = useState(false)
   // Welk paneel op de telefoon open is; op een groot scherm doet dit niets.
   const [blad, setBlad] = useState<Blad | null>(null)
   // Heb je Gasten al eens bekeken? Dan heb je bewust gekozen of je gasten iets
@@ -380,8 +406,10 @@ export default function KaartMakenPage() {
   // (Michiel, 25 september 2026).
   useLayoutEffect(() => {
     if (bladRef.current) bladRef.current.scrollTop = 0
-  }, [blad])
+  }, [blad, gids])
   function openBlad(b: Blad | null) {
+    // Een paneel openen is zelf kiezen: dan stopt de begeleiding
+    if (b) setGids(null)
     setBlad(b)
     setSleep(0)
     setBladKlein(false)
@@ -417,6 +445,8 @@ export default function KaartMakenPage() {
 
   /** Hoort deze sectie bij het paneel dat nu op de telefoon open is? */
   function inPaneel(s: Stap): boolean {
+    // In de begeleiding: alleen de onderdelen van deze stap, open
+    if (gids !== null) return (gidsStappen[gids]?.secties ?? []).includes(s)
     return !!blad && blad !== "kaart" && BLAD_SECTIES[blad].includes(s)
   }
   /**
@@ -424,6 +454,7 @@ export default function KaartMakenPage() {
    * alleen zichtbaar in zijn eigen paneel.
    */
   function telefoon(s: Stap): string {
+    if (gids !== null) return `${VOLGORDE[s]} ${inPaneel(s) ? "" : "hidden"}`
     return `${VOLGORDE[s]} ${inPaneel(s) ? "" : "max-md:hidden"}`
   }
   /**
@@ -457,8 +488,13 @@ export default function KaartMakenPage() {
       : bevat(display.dateText) || (aangeraakt.length < 40 && /\d{4}/.test(aangeraakt)) ? "kaart-datum"
       : bevat(display.location) ? "kaart-locatie"
       : "kaart-boodschap"
-    if (window.matchMedia("(max-width: 767px)").matches) openBlad("tekst")
-    setStap("tekst")
+    if (gids !== null) {
+      const hier = gidsStappen.findIndex((g) => g.secties.includes("tekst"))
+      if (hier >= 0) setGids(hier)
+    } else {
+      if (window.matchMedia("(max-width: 767px)").matches) openBlad("tekst")
+      setStap("tekst")
+    }
     setTimeout(() => {
       const el = document.getElementById(veld) as HTMLInputElement | HTMLTextAreaElement | null
       el?.focus()
@@ -571,6 +607,67 @@ export default function KaartMakenPage() {
     eventStatus === "published" ? (upgradePrice(eventPlan, plan) ?? 0) : PLANS[plan].price
   const prijs = formatEur(bijTeBetalen).replace(",00", "")
   const isTrouwkaart = ontwerp.type === "trouwkaart"
+  const gidsStappen: GidsStap[] = [
+    {
+      kort: "Uiterlijk",
+      vraag: "Zo ziet jullie kaart eruit",
+      uitleg: vanStart
+        ? "Dit ontwerp koos je bij de start. Wil je toch andere kleuren of een ander ontwerp? Kies hieronder, je ziet het meteen op de kaart."
+        : "Kies eerst de kleuren en dan een ontwerp. Je ziet het meteen op de kaart, en alles kun je later nog veranderen.",
+      secties: ["stijl", "template"],
+    },
+    isTrouwkaart
+      ? {
+          kort: "Voor wie",
+          vraag: "Wie nodig je uit met deze kaart?",
+          uitleg: "De hele dag, alleen de avond of de receptie? Dan past de tekst op de kaart zich daarop aan. Voor elke groep kun je straks een eigen kaart maken.",
+          secties: ["groep"],
+        }
+      : {
+          kort: "Voor wie",
+          vraag: "Voor wie is deze Save the Date?",
+          uitleg: "Voor al je gasten, of alleen voor de daggasten of de avondgasten? Voor elke groep kun je straks een eigen kaart maken.",
+          secties: ["groep"],
+        },
+    {
+      kort: "Tekst",
+      vraag: isTrouwkaart ? "Wat staat er op de kaart?" : "Klopt de tekst?",
+      uitleg: isTrouwkaart
+        ? "Jullie namen, de datum en de locatie staan er al. Vul de tijden en een dresscode in als je die hebt."
+        : "Jullie namen, de datum en de locatie staan er al. Pas de tekst aan zoals jullie willen.",
+      tip: "Je kunt elke tekst op de kaart ook aantikken om hem te wijzigen.",
+      secties: isTrouwkaart ? ["tekst", "details"] : ["tekst"],
+    },
+    {
+      kort: "Reageren",
+      vraag: isTrouwkaart ? "Wat wil je van je gasten weten?" : "Hoe laten je gasten iets weten?",
+      uitleg: isTrouwkaart
+        ? "Je gasten reageren op de kaart zelf, en iedereen die reageert komt in je gastenlijst. Kies wat je wilt weten, en tot wanneer ze kunnen antwoorden."
+        : "Met een Save the Date vraag je meestal alleen of ze erbij kunnen zijn. Wie reageert, komt meteen in je gastenlijst.",
+      secties: ["aanmelden"],
+    },
+    {
+      kort: "Meer kaarten",
+      vraag: "Ook een kaart in een andere taal?",
+      uitleg: "Veel paren maken meer dan één kaart: een in het Engels voor buitenlandse gasten, of een aparte kaart voor de avondgasten. Kies hier de taal van deze kaart. Een tweede kaart maak je na het bewaren met het plusje bij Je kaarten; alles staat er dan al in.",
+      secties: ["taal"],
+    },
+    {
+      kort: "Bekijken",
+      vraag: "Bekijk hem zoals je gasten hem zien",
+      uitleg: "Open de envelop, en stuur jezelf een proefkaart om hem op je eigen telefoon te zien. Tevreden? Bewaar hem dan, dan staat hij veilig in je dashboard.",
+      secties: ["bekijken"],
+    },
+  ]
+  function startGids() {
+    setBlad(null)
+    setStap(null)
+    setGids(0)
+  }
+  function stopGids() {
+    setGids(null)
+    try { localStorage.setItem(LS_GIDS, "klaar") } catch {}
+  }
   const huidigeKaart = kaarten.find((k) => k.id === cardId) ?? null
   // Alleen de kaarten van het soort waar je nu in zit: in de trouwkaart heb
   // je niets aan de lijst met Save the Dates.
@@ -622,7 +719,13 @@ export default function KaartMakenPage() {
     if (eventUitUrl) setOphalen(true)
     else setOntwerp(basis)
     // Nieuw ontwerp, geen bruiloft in de link of in de browser: begin bij de tekst.
-    if (!eventUitUrl && !eventUitOpslag) setStap("stijl")
+    if (!eventUitUrl && !eventUitOpslag) {
+      setStap("stijl")
+      try {
+        if (localStorage.getItem(LS_GIDS) !== "klaar") setGids(0)
+        setVanStart(!!localStorage.getItem(LS_NAMEN))
+      } catch {}
+    }
 
     createClient().auth.getUser().then(async ({ data }) => {
       const email = data.user?.email ?? null
@@ -683,6 +786,7 @@ export default function KaartMakenPage() {
               ontwerpDataUrl: null,
               ontwerpVerhouding: kaart?.content.ontwerpVerhouding ?? null,
               details: detailsStand(kaart?.content.details) ?? "",
+              antwoordVoor: isIsoDatum(kaart?.content.antwoordVoor) ? (kaart?.content.antwoordVoor as string) : "",
               namenFont: titelFontId(kaart?.content.namenFont) ?? "",
               template: kaart?.template ?? "klassiek",
               names: kaart?.content.names ?? (event.frame_names as string) ?? (event.title as string) ?? "",
@@ -801,6 +905,7 @@ export default function KaartMakenPage() {
     namenFont: ontwerp.namenFont || undefined,
     taal: ontwerp.taal,
     aanmelden: ontwerp.aanmelden,
+    antwoordVoor: ontwerp.aanmelden !== "geen" && ontwerp.antwoordVoor ? ontwerp.antwoordVoor : undefined,
   }
   // Hoe deze kaart heet als je zelf niets invult: het soort kaart, de
   // gastengroep en de taal. Dat is ook de grijze tekst in het naamveld, zodat
@@ -1097,6 +1202,7 @@ export default function KaartMakenPage() {
       ontwerpDataUrl: null,
       ontwerpVerhouding: k.content.ontwerpVerhouding ?? null,
       details: detailsStand(k.content.details) ?? "",
+      antwoordVoor: isIsoDatum(k.content.antwoordVoor) ? (k.content.antwoordVoor as string) : "",
       namenFont: titelFontId(k.content.namenFont) ?? "",
       location: k.content.location ?? o.location,
       message: k.content.message ?? "",
@@ -1490,7 +1596,7 @@ export default function KaartMakenPage() {
           )}
         </div>
       }
-      onderbalk={
+      onderbalk={gids !== null ? undefined :
         <nav className="flex justify-around px-1 pt-1.5 pb-2" aria-label="Onderdelen van de kaart">
           {CATEGORIE_VOLGORDE.map((b) => {
             const aan = blad === b
@@ -1671,8 +1777,8 @@ export default function KaartMakenPage() {
         <aside
           ref={bladRef}
           className={`flex flex-col w-full md:w-80 md:flex-shrink-0 bg-white border-r border-gray-100 md:overflow-y-auto ${
-            blad
-              ? `max-md:fixed max-md:inset-x-0 max-md:bottom-[64px] max-md:z-40 max-md:rounded-t-2xl max-md:border-t max-md:shadow-[0_-16px_40px_-16px_rgba(26,18,4,0.35)] ${
+            blad || gids !== null
+              ? `max-md:fixed max-md:inset-x-0 ${gids !== null ? "max-md:bottom-0" : "max-md:bottom-[64px]"} max-md:z-40 max-md:rounded-t-2xl max-md:border-t max-md:shadow-[0_-16px_40px_-16px_rgba(26,18,4,0.35)] ${
                   bladKlein ? "max-md:max-h-[56px] max-md:overflow-hidden" : "max-md:max-h-[50vh] max-md:overflow-y-auto"
                 }`
               : "max-md:hidden"
@@ -1684,7 +1790,7 @@ export default function KaartMakenPage() {
           {CATEGORIE_VOLGORDE.map((c, i) => (
             <div
               key={c}
-              className={`max-md:hidden ${["order-[10]", "order-[20]", "order-[30]", "order-[40]"][i]} px-5 pt-4 pb-1.5 text-[10px] font-bold uppercase tracking-[0.2em]`}
+              className={`max-md:hidden ${gids !== null ? "md:hidden" : ""} ${["order-[10]", "order-[20]", "order-[30]", "order-[40]"][i]} px-5 pt-4 pb-1.5 text-[10px] font-bold uppercase tracking-[0.2em]`}
               style={{ color: GOLD, borderTop: i === 0 ? undefined : `1px solid ${GOLD_LIGHT}66` }}
             >
               {BLAD_TITEL[c]}
@@ -1693,7 +1799,7 @@ export default function KaartMakenPage() {
           ))}
           {/* Onderaan elk paneel: door naar de volgende, zodat je er vanzelf
               doorheen loopt. */}
-          {blad && blad !== "kaart" && (
+          {blad && blad !== "kaart" && gids === null && (
               <div className="md:hidden order-[100] px-5 py-4">
                 {volgende ? (
                   <button
@@ -1717,8 +1823,87 @@ export default function KaartMakenPage() {
               </div>
           )}
 
+          {/* ── De begeleiding: de vraag bovenaan, Verder onderaan ── */}
+          {gids !== null && gidsStappen[gids] && (
+            <div className="order-[1] px-5 pt-5 pb-4 border-b" style={{ borderColor: `${GOLD_LIGHT}80`, backgroundColor: GOLD_BG }}>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: GOLD }}>
+                  Stap {gids + 1} van {gidsStappen.length}
+                </span>
+                <span className="flex gap-1" aria-hidden>
+                  {gidsStappen.map((_, i) => (
+                    <span key={i} className="h-1 w-4 rounded-full" style={{ backgroundColor: i <= gids ? GOLD : GOLD_LIGHT }} />
+                  ))}
+                </span>
+              </div>
+              <h2 className="m-0 mt-2.5 text-[23px] leading-tight" style={{ fontFamily: "var(--font-cormorant)", color: CHARCOAL, fontWeight: 600 }}>
+                {gidsStappen[gids].vraag}
+              </h2>
+              <p className="m-0 mt-1.5 text-[13px] leading-relaxed" style={{ color: BODY }}>{gidsStappen[gids].uitleg}</p>
+              {gidsStappen[gids].tip && (
+                <p className="m-0 mt-2 text-[12px] leading-snug" style={{ color: CHARCOAL }}>
+                  <b>Tip:</b> {gidsStappen[gids].tip}
+                </p>
+              )}
+              {gidsStappen[gids].secties.includes("bekijken") && (
+                <button
+                  type="button"
+                  onClick={() => setSimulatie(true)}
+                  className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-semibold px-3.5 py-2 rounded-xl"
+                  style={{ backgroundColor: "#fff", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
+                >
+                  Open de envelop
+                </button>
+              )}
+            </div>
+          )}
+          {gids !== null && gidsStappen[gids] && (
+            <div className="order-[99] sticky bottom-0 z-10 bg-white px-5 pt-3 pb-4 border-t flex flex-col gap-2 mt-auto" style={{ borderColor: `${GOLD_LIGHT}80` }}>
+              <div className="flex gap-2">
+                {gids > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setGids(gids - 1)}
+                    className="text-sm font-semibold px-4 py-3 rounded-xl"
+                    style={{ backgroundColor: "#fff", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
+                  >
+                    Terug
+                  </button>
+                )}
+                {gids < gidsStappen.length - 1 ? (
+                  <button
+                    type="button"
+                    onClick={() => setGids(gids + 1)}
+                    className="flex-1 text-sm font-semibold px-4 py-3 rounded-xl"
+                    style={{ backgroundColor: CHARCOAL, color: IVORY, border: 0, cursor: "pointer" }}
+                  >
+                    Verder: {gidsStappen[gids + 1].kort} {"→"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => { stopGids(); void voerUit("bewaar") }}
+                    className="flex-1 text-sm font-semibold px-4 py-3 rounded-xl"
+                    style={{ backgroundColor: CHARCOAL, color: IVORY, border: 0, cursor: "pointer" }}
+                  >
+                    Klaar, bewaar mijn kaart
+                  </button>
+                )}
+              </div>
+              {/* Bewust klein: even de begeleiding volgen werkt beter */}
+              <button
+                type="button"
+                onClick={() => { stopGids(); setStap("stijl") }}
+                className="self-center text-[11px] underline underline-offset-2"
+                style={{ color: SUBTLE, background: "none", border: 0, cursor: "pointer" }}
+              >
+                Ik kies liever alles zelf
+              </button>
+            </div>
+          )}
+
           {/* De kop van het paneel, alleen op de telefoon */}
-          {blad && (
+          {blad && gids === null && (
             <div
               className="md:hidden sticky top-0 z-10 bg-white flex items-center justify-between px-5 pt-2 pb-2 border-b border-gray-100"
               style={{ touchAction: "none" }}
@@ -1765,7 +1950,18 @@ export default function KaartMakenPage() {
               23 september 2026, in plaats van een balk over de volle breedte
               onder de kop. Staat er vanaf het begin, ook voor er iets bewaard
               is, zodat je je ontwerp meteen een naam kunt geven. */}
-          <div className={`px-4 py-3 border-b border-gray-100 flex flex-col gap-2 ${blad === "kaart" ? "" : "max-md:hidden"}`} style={{ backgroundColor: GOLD_BG }}>
+          {gids === null && (
+            <button
+              type="button"
+              onClick={startGids}
+              className={`${blad === "kaart" ? "" : "max-md:hidden"} flex items-center gap-2 px-4 py-2.5 text-left text-[12px] font-semibold border-b border-gray-100`}
+              style={{ backgroundColor: "#fff", color: CHARCOAL, cursor: "pointer" }}
+            >
+              <span aria-hidden className="w-5 h-5 inline-flex items-center justify-center rounded-full text-[11px]" style={{ backgroundColor: GOLD_BG, color: GOLD, border: `1px solid ${GOLD_LIGHT}` }}>?</span>
+              Stap voor stap door je kaart
+            </button>
+          )}
+          <div className={`px-4 py-3 border-b border-gray-100 flex flex-col gap-2 ${gids !== null ? "hidden" : blad === "kaart" ? "" : "max-md:hidden"}`} style={{ backgroundColor: GOLD_BG }}>
             <div className="flex items-center gap-1.5">
               <input
                 value={ontwerp.naam}
@@ -2343,6 +2539,27 @@ export default function KaartMakenPage() {
               ))}
             </div>
 
+            {/* Tot wanneer gasten kunnen antwoorden (Michiel, 28 september 2026) */}
+            {ontwerp.aanmelden !== "geen" && (
+              <label className="flex flex-col gap-1.5">
+                <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>
+                  Antwoorden kan tot en met <span className="font-normal" style={{ color: SUBTLE }}>(als je dat wilt)</span>
+                </span>
+                <input
+                  type="date"
+                  id="kaart-antwoord-voor"
+                  className={inputCls}
+                  style={inputStyle}
+                  value={ontwerp.antwoordVoor}
+                  max={ontwerp.datum || undefined}
+                  onChange={(e) => update({ antwoordVoor: e.target.value })}
+                />
+                <span className="text-[11px] leading-snug" style={{ color: SUBTLE }}>
+                  Je gasten zien boven het formulier tot wanneer ze kunnen antwoorden, en daarna sluit het. Kies een paar dagen voordat je de aantallen aan je locatie moet doorgeven.
+                </span>
+              </label>
+            )}
+
             {/* Wat de gastenlijst is, uitgelegd op de plek waar je er voor het
                 eerst tegenaan loopt. Hier stond alleen "komt in je gastenlijst",
                 en dat zegt niets als je nog nooit een dashboard hebt gezien. */}
@@ -2458,7 +2675,7 @@ export default function KaartMakenPage() {
             Zo zie je je kaart veranderen terwijl je typt. */}
         <main
           ref={voorbeeldRef}
-          className={`flex-1 p-4 sm:p-5 md:overflow-y-auto md:relative md:order-2 ${blad && blad !== "kaart" && !bladKlein ? "max-md:max-h-[40vh] max-md:overflow-hidden" : ""}`}
+          className={`flex-1 p-4 sm:p-5 md:overflow-y-auto md:relative md:order-2 ${(blad && blad !== "kaart" && !bladKlein) || gids !== null ? "max-md:max-h-[40vh] max-md:overflow-hidden" : ""}`}
           onTouchStart={(e) => { veegStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY } }}
           onTouchEnd={(e) => {
             const s = veegStart.current
@@ -2491,7 +2708,7 @@ export default function KaartMakenPage() {
             {"💌"} Bekijk hoe het opengaat
           </button>
           </div>
-          <div className={`mx-auto max-w-md transition-transform duration-200 origin-top ${blad && blad !== "kaart" && !bladKlein ? "max-md:scale-[0.45]" : ""}`}>
+          <div className={`mx-auto max-w-md transition-transform duration-200 origin-top ${(blad && blad !== "kaart" && !bladKlein) || gids !== null ? "max-md:scale-[0.45]" : ""}`}>
             {/* Op de telefoon weg: daar was de bovenkant te druk met twee
                 balken, een kopje, een demoknop en een uitleg (Michiel, 26
                 september 2026). De demo staat daar in de balk bovenin. */}
@@ -2543,6 +2760,11 @@ export default function KaartMakenPage() {
                 <p className="text-center text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: sc.headingColor, opacity: 0.75 }}>
                   En dit vullen je gasten in
                 </p>
+                {ontwerp.antwoordVoor && (
+                  <p className="text-center text-sm -mt-1 mb-3" style={{ color: sc.headingColor, opacity: 0.75 }}>
+                    {antwoordVoorTekst(ontwerp.antwoordVoor, ontwerp.taal, formulierTekst(ontwerp.taal).uiterlijk)}
+                  </p>
+                )}
                 {/* Dezelfde doos en kleuren als op de kaartpagina, zodat het
                     voorbeeld hier klopt met wat de gast ziet. */}
                 <div
