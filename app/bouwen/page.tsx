@@ -247,6 +247,30 @@ const PAGES: PageConfig[] = [
 // onderdeel schuift als paneel omhoog. Op de laptop zijn het de kopjes in de
 // zijbalk, in dezelfde volgorde.
 type Sectie = 'algemeen' | 'paginas' | 'url' | 'bekijken'
+
+// ── Stap voor stap (Michiel, 28 september 2026) ─────────────────────────────
+// Net als de kaartbouwer: één vraag tegelijk, met het voorbeeld ernaast. Elke
+// stap toont alleen zijn eigen onderdelen: welke secties, welke pagina, en
+// welke delen daarbinnen (alg:, home:, url:). Per pagina die aan staat een
+// eigen stap. Vervangt de rondleiding van Sophie.
+interface WebStap {
+  kort: string
+  vraag: string
+  uitleg: string
+  tip?: string
+  secties: Sectie[]
+  pagina?: PageId
+  delen?: string[]
+}
+const PAGINA_STAP: Partial<Record<PageId, { vraag: string; uitleg: string }>> = {
+  OnsVerhaal: { vraag: "Vertel jullie verhaal", uitleg: "Hoe jullie elkaar ontmoetten, het aanzoek. Gasten lezen het graag." },
+  Programma: { vraag: "Hoe ziet de dag eruit?", uitleg: "Zet de onderdelen van de dag op een rij, met de tijden." },
+  Informatie: { vraag: "Wat moeten gasten weten?", uitleg: "Dresscode, parkeren, overnachten: wat anders vaak gevraagd wordt." },
+  Cadeautips: { vraag: "Wat wensen jullie?", uitleg: "Een lijstje of een wens, zodat gasten niet hoeven te raden." },
+  Ceremoniemeesters: { vraag: "Wie zijn jullie ceremoniemeesters?", uitleg: "Zo weten gasten bij wie ze terechtkunnen voor een verrassing." },
+  RSVP: { vraag: "Wat wil je van je gasten weten?", uitleg: "Gasten melden zich aan op de site en komen vanzelf in je gastenlijst." },
+  Fotos: { vraag: "Foto's van jullie samen", uitleg: "Een paar mooie foto's maken de site persoonlijk." },
+}
 type Blad = "uiterlijk" | "paginas" | "adres" | "bekijken"
 const BLAD_VOLGORDE: Blad[] = ["uiterlijk", "paginas", "adres", "bekijken"]
 const BLAD_TITEL: Record<Blad, string> = {
@@ -419,6 +443,17 @@ export default function BouwenPage() {
 
   // Welk paneel op de telefoon open is; op een groot scherm blijft dit leeg.
   const [blad, setBlad] = useState<Blad | null>(null)
+  // De stap waar je bent
+  const [gids, setGids] = useState(0)
+  // Op de telefoon het voorbeeld kleiner zolang het paneel groot is
+  const [isTelefoon, setIsTelefoon] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)")
+    const zet = () => setIsTelefoon(mq.matches)
+    zet()
+    mq.addEventListener("change", zet)
+    return () => mq.removeEventListener("change", zet)
+  }, [])
   const bladRef = useRef<HTMLElement>(null)
   // Twee standen, net als in de kaartbouwer: vol, of klein met alleen de kop
   // zichtbaar zodat je de hele pagina ziet. Half omlaag vegen maakt hem
@@ -440,28 +475,28 @@ export default function BouwenPage() {
   useLayoutEffect(() => {
     if (blad && bladRef.current) bladRef.current.scrollTop = 0
   }, [blad, activeSubPage])
-  /** Hoort deze sectie bij het paneel dat nu op de telefoon open is? */
-  const inPaneel = (s: Sectie) => !!blad && BLAD_SECTIE[blad] === s
-  /** Zijn plek in de zijbalk, en op de telefoon alleen zichtbaar in zijn eigen paneel. */
-  const sectieKlassen = (s: Sectie) => `${SECTIE_ORDE[s]} ${inPaneel(s) ? "" : "max-md:hidden"}`
-  // In een paneel op de telefoon staat alles open, dan mis je niets. Op de
-  // laptop blijft het één tegelijk.
-  const algOpen = (s: 'stijl' | 'layout' | 'lettertype') => openAlgSection === s || blad === "uiterlijk"
-  const urlOpen = (s: 'url' | 'beveiliging') => openUrlSection === s || blad === "adres"
-  const homeOpen = (s: 'layout' | 'headerfoto' | 'kaders' | 'tekstvelden' | 'welkomst') => openHomeSection === s || blad === "paginas"
+  // Wat de stap van nu laat zien. De stappen zelf staan verderop (webStappen),
+  // want ze hangen af van welke pagina's aan staan.
+  const stapNuRef = useRef<WebStap | null>(null)
+  const toont = (s: Sectie) => (stapNuRef.current?.secties ?? []).includes(s)
+  const deel = (k: string) => (stapNuRef.current?.delen ?? []).includes(k)
+  /** Zijn plek in de zijbalk, en alleen zichtbaar in zijn eigen stap. */
+  const sectieKlassen = (s: Sectie) => `${SECTIE_ORDE[s]} ${toont(s) ? "" : "hidden"}`
+  /** Een deel binnen een sectie: open in zijn eigen stap, anders weg */
+  const deelKlas = (k: string) => (deel(k) ? "border-t border-gray-100" : "hidden")
+  const algOpen = (s: 'stijl' | 'layout' | 'lettertype') => deel(`alg:${s}`)
+  const urlOpen = (s: 'url' | 'beveiliging') => deel(`url:${s}`)
+  const homeOpen = (s: 'layout' | 'headerfoto' | 'kaders' | 'tekstvelden' | 'welkomst') => deel(`home:${s}`)
   // Tik je in het voorbeeld op iets, dan open je de pagina waar het bij
   // hoort. Op de telefoon schuift daarvoor het paneel Pagina's omhoog.
   function toonPaginas() {
     setActiveSection('paginas')
-    if (window.matchMedia("(max-width: 767px)").matches) {
-      setBlad("paginas")
-      setBladKlein(false)
-    }
+    setBladKlein(false)
   }
   /** Naar een onderdeel: op de telefoon het paneel, op de laptop het kopje. */
   function gaNaarBlad(b: Blad) {
-    if (window.matchMedia("(max-width: 767px)").matches) openBlad(b)
-    else setActiveSection(BLAD_SECTIE[b])
+    const i = webStappenRef.current.findIndex((st) => st.secties.includes(BLAD_SECTIE[b]) && !st.pagina)
+    if (i >= 0) naarStap(i)
   }
 
   function handlePreviewFieldClick(field: string) {
@@ -1313,7 +1348,7 @@ export default function BouwenPage() {
   const canvasWidth = viewport === "mobiel" ? 390 : 1024
   // Met een paneel open op de telefoon wat kleiner, zodat je boven het paneel
   // nog een flink stuk van de pagina ziet.
-  const voorbeeldSchaal = canvasScale * zoomMultiplier * (blad && !bladKlein ? 0.6 : 1)
+  const voorbeeldSchaal = canvasScale * zoomMultiplier * (isTelefoon && !bladKlein ? 0.6 : 1)
 
   const activePagesOrdered = PAGES.filter((p) => active[p.id])
   const eventName = draft?.naam || "Jullie bruiloft"
@@ -1395,6 +1430,60 @@ export default function BouwenPage() {
     setPreviewPage(id)
     setActiveSubPage(id)
   }
+
+  const webStappen: WebStap[] = [
+    { kort: "Stijl", vraag: "Welke stijl past bij jullie?", uitleg: "Kleuren en letters voor de hele site.", secties: ["algemeen"], delen: ["alg:stijl", "alg:lettertype"] },
+    { kort: "Homepage", vraag: "Hoe ziet jullie homepage eruit?", uitleg: "Een ontwerp zoals op jullie kaart, of een grote foto met tekst.", secties: ["paginas"], pagina: "Home", delen: ["home:layout", "home:kaders", "home:headerfoto"] },
+    { kort: "Tekst", vraag: "Wat staat er op de homepage?", uitleg: "Namen, datum en locatie staan er al.", tip: "Tik op een tekst in het voorbeeld om hem te wijzigen.", secties: ["paginas"], pagina: "Home", delen: ["home:tekstvelden", "home:welkomst"] },
+    { kort: "Pagina's", vraag: "Welke pagina's wil je?", uitleg: "Zet aan wat je nodig hebt. Daarna vul je ze één voor één in.", secties: ["algemeen", "paginas"], delen: ["alg:layout"] },
+    ...activePagesOrdered
+      .filter((pg) => pg.id !== "Home")
+      .map((pg): WebStap => ({
+        kort: pg.id === "RSVP" ? "Aanmelden" : pg.label,
+        vraag: PAGINA_STAP[pg.id]?.vraag ?? pg.label,
+        uitleg: PAGINA_STAP[pg.id]?.uitleg ?? "",
+        secties: ["paginas"],
+        pagina: pg.id,
+      })),
+    { kort: "Webadres", vraag: "Waar staat jullie site?", uitleg: "Jullie eigen adres, en als je wilt een wachtwoord.", secties: ["url"], delen: ["url:url", "url:beveiliging"] },
+    { kort: "Bekijken", vraag: "Klaar om te delen?", uitleg: "Loop het lijstje na en zet jullie site live.", secties: ["bekijken"] },
+  ]
+  const gidsNu = Math.min(gids, webStappen.length - 1)
+  const stapNu = webStappen[gidsNu]
+  stapNuRef.current = stapNu
+  const webStappenRef = useRef<WebStap[]>(webStappen)
+  webStappenRef.current = webStappen
+  function naarStap(i: number) {
+    setBlad(null)
+    setBladKlein(false)
+    setOpenHomeSection(null)
+    setGids(Math.max(0, Math.min(webStappenRef.current.length - 1, i)))
+  }
+  // De stap bepaalt welke sectie en welke pagina open zijn
+  useEffect(() => {
+    const st = webStappenRef.current[gidsNu]
+    if (!st) return
+    setActiveSection(st.pagina || st.secties.includes("paginas") ? "paginas" : st.secties[0])
+    setActiveSubPage(st.pagina ?? null)
+    if (st.pagina) setPreviewPage(st.pagina)
+    if (bladRef.current) bladRef.current.scrollTop = 0
+  }, [gidsNu])
+  // Tik je in het voorbeeld op iets, dan open je de pagina waar het bij
+  // hoort; de stap springt daarheen mee
+  useEffect(() => {
+    const st = webStappenRef.current[gidsNu]
+    if (!st || !activeSubPage) return
+    if (activeSubPage === st.pagina) {
+      if (activeSubPage === "Home" && openHomeSection && !(st.delen ?? []).includes(`home:${openHomeSection}`)) {
+        const i = webStappenRef.current.findIndex((s) => s.pagina === "Home" && (s.delen ?? []).includes(`home:${openHomeSection}`))
+        if (i >= 0) setGids(i)
+      }
+      return
+    }
+    const i = webStappenRef.current.findIndex((s) => s.pagina === activeSubPage)
+    if (i >= 0) setGids(i)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSubPage, openHomeSection])
   const activePageIds = new Set<string>(activePagesOrdered.map(p => p.id))
   const showSection = (id: string) => isSinglePagePreview ? activePageIds.has(id) : previewPage === id
 
@@ -1570,29 +1659,51 @@ export default function BouwenPage() {
         </>
       }
       onderbalk={
-        <nav className="flex justify-around px-1 pt-1.5 pb-2" aria-label="Onderdelen van de website">
-          {BLAD_VOLGORDE.map((b) => {
-            const aan = blad === b
-            return (
-              <button
-                key={b}
-                type="button"
-                onClick={() => openBlad(aan ? null : b)}
-                aria-pressed={aan}
-                className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl text-[11px] font-semibold min-w-[68px]"
-                style={{ color: aan ? KLEUR.goud : KLEUR.zacht, backgroundColor: aan ? KLEUR.goudVlak : "transparent", border: 0, cursor: "pointer" }}
-              >
-                <span className="relative">
-                  <BladIcoon blad={b} />
-                  {stip[b] && (
-                    <span aria-label="hier staat nog iets open" className="absolute -top-0.5 -right-1.5 w-2 h-2 rounded-full" style={{ backgroundColor: "#D97706" }} />
-                  )}
-                </span>
-                {BLAD_TITEL[b]}
-              </button>
-            )
-          })}
-        </nav>
+        <div className="flex items-center gap-2 px-3 pt-2 pb-2.5">
+          <button
+            type="button"
+            onClick={() => naarStap(gidsNu - 1)}
+            disabled={gidsNu === 0}
+            aria-label="Vorige stap"
+            className="w-11 h-11 flex-shrink-0 inline-flex items-center justify-center rounded-xl disabled:opacity-30"
+            style={{ backgroundColor: "#fff", color: KLEUR.inkt, border: `1px solid ${KLEUR.goudLicht}`, cursor: "pointer" }}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+          </button>
+          {/* Tik op de stap: het paneel klein of groot, zodat je de site ziet */}
+          <button
+            type="button"
+            onClick={() => setBladKlein(!bladKlein)}
+            className="flex-1 min-w-0 text-left"
+            style={{ background: "none", border: 0, padding: 0, cursor: "pointer" }}
+          >
+            <span className="block text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: KLEUR.goud }}>
+              Stap {gidsNu + 1} van {webStappen.length}
+            </span>
+            <span className="block text-[13px] font-semibold truncate" style={{ color: KLEUR.inkt }}>
+              {bladKlein ? "Tik om verder te gaan" : stapNu?.kort}
+            </span>
+          </button>
+          {gidsNu < webStappen.length - 1 ? (
+            <button
+              type="button"
+              onClick={() => naarStap(gidsNu + 1)}
+              className="h-11 px-5 flex-shrink-0 text-sm font-semibold rounded-xl"
+              style={{ backgroundColor: KLEUR.inkt, color: KLEUR.ivoor, border: 0, cursor: "pointer" }}
+            >
+              Verder
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void handleSave()}
+              className="h-11 px-5 flex-shrink-0 text-sm font-semibold rounded-xl"
+              style={{ backgroundColor: KLEUR.inkt, color: KLEUR.ivoor, border: 0, cursor: "pointer" }}
+            >
+              Bewaar
+            </button>
+          )}
+        </div>
       }
       acties={
         <>
@@ -1639,14 +1750,84 @@ export default function BouwenPage() {
         <aside
           ref={bladRef}
           className={`w-full md:w-80 md:flex-shrink-0 bg-white border-r border-gray-100 flex flex-col md:overflow-y-auto ${
-            blad
-              ? `max-md:fixed max-md:inset-x-0 max-md:bottom-[64px] max-md:z-40 max-md:rounded-t-2xl max-md:border-t max-md:shadow-[0_-16px_40px_-16px_rgba(26,18,4,0.35)] ${
-                  bladKlein ? "max-md:max-h-[56px] max-md:overflow-hidden" : "max-md:max-h-[50vh] max-md:overflow-y-auto"
-                }`
-              : "max-md:hidden"
+            `max-md:fixed max-md:inset-x-0 max-md:bottom-[64px] max-md:z-40 max-md:rounded-t-2xl max-md:border-t max-md:shadow-[0_-16px_40px_-16px_rgba(26,18,4,0.35)] ${
+              bladKlein ? "max-md:max-h-[64px] max-md:overflow-hidden" : "max-md:max-h-[46vh] max-md:overflow-y-auto"
+            }`
           }`}
           style={sleep !== 0 ? { transform: `translateY(${sleep}px)`, transition: "none" } : { transition: "transform 180ms ease, max-height 200ms ease" }}
         >
+          {/* ── De vraag van deze stap, met de stappenbalk ── */}
+          {stapNu && (
+            <div
+              className="order-[1] px-5 pt-4 pb-4 border-b"
+              style={{ borderColor: `${KLEUR.goudLicht}80`, backgroundColor: KLEUR.goudVlak }}
+              onClick={() => { if (bladKlein) setBladKlein(false) }}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: KLEUR.goud }}>
+                  Stap {gidsNu + 1} van {webStappen.length}
+                </span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: KLEUR.zacht }}>{stapNu.kort}</span>
+              </div>
+              {/* De stappen, aan te klikken: zo spring je vrij heen en weer */}
+              <div className="flex gap-1 mt-2" role="tablist" aria-label="Stappen">
+                {webStappen.map((st, i) => (
+                  <button
+                    key={`${st.kort}-${i}`}
+                    type="button"
+                    role="tab"
+                    aria-selected={i === gidsNu}
+                    aria-label={`Stap ${i + 1}: ${st.kort}`}
+                    title={st.kort}
+                    onClick={(e) => { e.stopPropagation(); naarStap(i) }}
+                    className="flex-1 py-1"
+                    style={{ background: "none", border: 0, padding: 0, cursor: "pointer" }}
+                  >
+                    <span className="block h-1 w-full rounded-full" style={{ backgroundColor: i <= gidsNu ? KLEUR.goud : KLEUR.goudLicht }} />
+                  </button>
+                ))}
+              </div>
+              <h2 className="m-0 mt-3 text-[23px] leading-tight" style={{ fontFamily: "var(--font-cormorant)", color: KLEUR.inkt, fontWeight: 600 }}>
+                {stapNu.vraag}
+              </h2>
+              {stapNu.uitleg && <p className="m-0 mt-1 text-[13px] leading-relaxed" style={{ color: KLEUR.tekst }}>{stapNu.uitleg}</p>}
+              {stapNu.tip && <p className="m-0 mt-1.5 text-[12px] leading-snug" style={{ color: KLEUR.zacht }}>{stapNu.tip}</p>}
+            </div>
+          )}
+          {stapNu && (
+            <div className="max-md:hidden order-[99] sticky bottom-0 z-10 bg-white px-5 pt-3 pb-4 border-t flex gap-2 mt-auto" style={{ borderColor: `${KLEUR.goudLicht}80` }}>
+              {gidsNu > 0 && (
+                <button
+                  type="button"
+                  onClick={() => naarStap(gidsNu - 1)}
+                  className="text-sm font-semibold px-4 py-3 rounded-xl"
+                  style={{ backgroundColor: "#fff", color: KLEUR.inkt, border: `1px solid ${KLEUR.goudLicht}`, cursor: "pointer" }}
+                >
+                  Terug
+                </button>
+              )}
+              {gidsNu < webStappen.length - 1 ? (
+                <button
+                  type="button"
+                  onClick={() => naarStap(gidsNu + 1)}
+                  className="flex-1 text-sm font-semibold px-4 py-3 rounded-xl"
+                  style={{ backgroundColor: KLEUR.inkt, color: KLEUR.ivoor, border: 0, cursor: "pointer" }}
+                >
+                  Verder: {webStappen[gidsNu + 1].kort} {"→"}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => void handleSave()}
+                  className="flex-1 text-sm font-semibold px-4 py-3 rounded-xl"
+                  style={{ backgroundColor: KLEUR.inkt, color: KLEUR.ivoor, border: 0, cursor: "pointer" }}
+                >
+                  Bewaar mijn website
+                </button>
+              )}
+            </div>
+          )}
+
           {/* De kop van het paneel, alleen op de telefoon. In een pagina een
               pijltje terug naar de lijst. */}
           {blad && (
@@ -1726,14 +1907,14 @@ export default function BouwenPage() {
 
           {/* ── BEKIJKEN ── */}
           <div className={`${sectieKlassen('bekijken')} border-b border-gray-100`}>
-            <div className="max-md:hidden">
+            <div className="hidden">
               <SectieKop
                 titel="Bekijken"
                 open={activeSection === 'bekijken'}
                 onToggle={() => setActiveSection(prev => prev === 'bekijken' ? null : 'bekijken')}
               />
             </div>
-            {activeSection === 'bekijken' && (
+            {toont('bekijken') && (
               <div className="px-5 pt-4 md:pt-0 pb-5 flex flex-col gap-3">
                 {/* Klaar om te publiceren? Wat nog ontbreekt is aanklikbaar,
                     net als in de kaartbouwer. */}
@@ -1812,19 +1993,20 @@ export default function BouwenPage() {
 
           {/* ── 3. URL & BEVEILIGING (alleen bij een pakket met publieke site) ── */}
           <div className={`${sectieKlassen('url')} border-b border-gray-100`}>
-            <div className="max-md:hidden">
+            <div className="hidden">
               <SectieKop
                 titel="Webadres"
                 open={activeSection === 'url'}
                 onToggle={() => setActiveSection(prev => prev === 'url' ? null : 'url')}
               />
             </div>
-            {activeSection === 'url' && (
+            {toont('url') && (
               <div className="flex flex-col">
 
                 {/* ── Jouw URL ── */}
-                <div className="border-t border-gray-100">
+                <div className={deelKlas("url:url")}>
                   <button
+                    style={{ display: "none" }}
                     onClick={() => setOpenUrlSection(prev => prev === 'url' ? null : 'url')}
                     className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                   >
@@ -1885,8 +2067,9 @@ export default function BouwenPage() {
                 </div>
 
                 {/* ── Beveiliging ── */}
-                <div className="border-t border-gray-100">
+                <div className={deelKlas("url:beveiliging")}>
                   <button
+                    style={{ display: "none" }}
                     onClick={() => setOpenUrlSection(prev => prev === 'beveiliging' ? null : 'beveiliging')}
                     className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                   >
@@ -1987,19 +2170,20 @@ export default function BouwenPage() {
           </div>
           {/* ── 1. ALGEMEEN ── */}
           <div className={`${sectieKlassen('algemeen')} border-b border-gray-100`}>
-            <div className="max-md:hidden">
+            <div className="hidden">
               <SectieKop
                 titel="Uiterlijk"
                 open={activeSection === 'algemeen'}
                 onToggle={() => setActiveSection(prev => prev === 'algemeen' ? null : 'algemeen')}
               />
             </div>
-            {activeSection === 'algemeen' && (
+            {toont('algemeen') && (
               <div className="flex flex-col">
 
                 {/* ── Stijl ── */}
-                <div className="border-t border-gray-100">
+                <div className={deelKlas("alg:stijl")}>
                   <button
+                    style={{ display: "none" }}
                     onClick={() => setOpenAlgSection(prev => prev === 'stijl' ? null : 'stijl')}
                     className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                   >
@@ -2044,8 +2228,9 @@ export default function BouwenPage() {
                 </div>
 
                 {/* ── Lay-out ── */}
-                <div className="border-t border-gray-100">
+                <div className={deelKlas("alg:layout")}>
                   <button
+                    style={{ display: "none" }}
                     onClick={() => setOpenAlgSection(prev => prev === 'layout' ? null : 'layout')}
                     className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                   >
@@ -2089,8 +2274,9 @@ export default function BouwenPage() {
                 </div>
 
                 {/* ── Basislettertype ── */}
-                <div className="border-t border-gray-100">
+                <div className={deelKlas("alg:lettertype")}>
                   <button
+                    style={{ display: "none" }}
                     onClick={() => setOpenAlgSection(prev => prev === 'lettertype' ? null : 'lettertype')}
                     className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                   >
@@ -2117,28 +2303,30 @@ export default function BouwenPage() {
 
           {/* ── 2. PAGINA'S ── */}
           <div className={`${sectieKlassen('paginas')} border-b border-gray-100`}>
-            <div className="max-md:hidden">
+            <div className="hidden">
               <SectieKop
                 titel="Pagina's"
                 open={activeSection === 'paginas'}
                 onToggle={() => setActiveSection(prev => prev === 'paginas' ? null : 'paginas')}
               />
             </div>
-            {activeSection === 'paginas' && (
+            {toont('paginas') && (
               <div>
                 {PAGES.map((page) => {
                   const isOn = active[page.id]
                   const isExpanded = activeSubPage === page.id && isOn
                   return (
-                    <div key={page.id} className={`border-t border-gray-100 ${blad === "paginas" && activeSubPage && activeSubPage !== page.id ? "max-md:hidden" : ""}`}>
+                    <div key={page.id} className={`border-t border-gray-100 ${stapNu?.pagina && stapNu.pagina !== page.id ? "hidden" : ""}`}>
                       {/* Page row. In een paneel op de telefoon staat de naam
                           van de pagina in de kop, met een pijltje terug. */}
-                      <div className={`flex items-center justify-between px-4 py-2.5 ${blad === "paginas" && activeSubPage ? "max-md:hidden" : ""}`}>
+                      <div className={`flex items-center justify-between px-4 py-2.5 ${stapNu?.pagina ? "hidden" : ""}`}>
                         <button
                           onClick={() => {
                             if (!isOn) return
                             setPreviewPage(page.id)
-                            setActiveSubPage(prev => prev === page.id ? null : page.id)
+                            // Naar de stap van die pagina
+                            const i = webStappen.findIndex((st) => st.pagina === page.id)
+                            if (i >= 0) naarStap(i)
                           }}
                           className={`flex items-center gap-2 flex-1 min-w-0 text-left ${isOn ? 'cursor-pointer' : 'cursor-default'}`}
                         >
@@ -2182,8 +2370,9 @@ export default function BouwenPage() {
                           <div className="-mx-5 -mt-4 -mb-5 flex flex-col">
 
                             {/* ── Lay-out ── */}
-                            <div className="border-t border-gray-100">
+                            <div className={deelKlas("home:layout")}>
                               <button
+                                style={{ display: "none" }}
                                 onClick={() => setOpenHomeSection(prev => prev === 'layout' ? null : 'layout')}
                                 className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                               >
@@ -2216,18 +2405,15 @@ export default function BouwenPage() {
                                       </button>
                                     ))}
                                   </div>
-                                  <div className="text-xs leading-relaxed space-y-1.5" style={{ color: "#9A8E82" }}>
-                                    <p><span className="font-semibold" style={{ color: "#5C5248" }}>Met ontwerp</span>: bovenaan eventueel een grote foto, daaronder een ontwerp zoals op jullie trouwkaart. Kies uit de ontwerpen en pas de tekst, het lettertype en de grootte aan.</p>
-                                    <p><span className="font-semibold" style={{ color: "#5C5248" }}>Foto en tekst</span>: links jullie foto, rechts de namen, de datum en de locatie. Strak en rustig, zonder ontwerp.</p>
-                                    <p className="pt-0.5" style={{ color: "#C5A059" }}>Wissel gerust: jullie tekst blijft staan.</p>
-                                  </div>
+                                  {/* De uitleg staat in de stap zelf (Michiel, 28 september 2026: minder tekst) */}
                                 </div>
                               )}
                             </div>
 
                             {/* ── Headerfoto ── */}
-                            <div className="border-t border-gray-100">
+                            <div className={deelKlas("home:headerfoto")}>
                               <button
+                                style={{ display: "none" }}
                                 onClick={() => setOpenHomeSection(prev => prev === 'headerfoto' ? null : 'headerfoto')}
                                 className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                               >
@@ -2283,8 +2469,9 @@ export default function BouwenPage() {
                             </div>
 
                             {/* ── Kaders ── */}
-                            <div className="border-t border-gray-100">
+                            <div className={deelKlas("home:kaders")}>
                               <button
+                                style={{ display: "none" }}
                                 onClick={() => setOpenHomeSection(prev => prev === 'kaders' ? null : 'kaders')}
                                 className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                               >
@@ -2320,8 +2507,9 @@ export default function BouwenPage() {
                             </div>
 
                             {/* ── Tekstvelden ── */}
-                            <div className="border-t border-gray-100">
+                            <div className={deelKlas("home:tekstvelden")}>
                               <button
+                                style={{ display: "none" }}
                                 onClick={() => setOpenHomeSection(prev => prev === 'tekstvelden' ? null : 'tekstvelden')}
                                 className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                               >
@@ -2625,8 +2813,9 @@ export default function BouwenPage() {
                             </div>
 
                             {/* ── Welkomstbericht ── */}
-                            <div className="border-t border-gray-100">
+                            <div className={deelKlas("home:welkomst")}>
                               <button
+                                style={{ display: "none" }}
                                 onClick={() => setOpenHomeSection(prev => prev === 'welkomst' ? null : 'welkomst')}
                                 className="flex items-center gap-2 w-full pl-8 pr-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                               >
@@ -3262,7 +3451,7 @@ export default function BouwenPage() {
           <div className="flex flex-1 min-h-0 overflow-hidden">
 
             {/* Canvas */}
-              <div ref={canvasContainerRef} className={`flex-1 overflow-y-auto bg-gray-100 p-4 md:p-6 ${blad && !bladKlein ? "max-md:pb-[55vh]" : "max-md:pb-16"}`}>
+              <div ref={canvasContainerRef} className={`flex-1 overflow-y-auto bg-gray-100 p-4 md:p-6 ${!bladKlein ? "max-md:pb-[50vh]" : "max-md:pb-16"}`}>
                 <div className="mx-auto" style={{ width: `${Math.round(canvasWidth * voorbeeldSchaal)}px` }}>
                   <div style={{ width: canvasWidth, transform: `scale(${voorbeeldSchaal})`, transformOrigin: "top left" }}>
                     <div className="rounded-2xl shadow-xl overflow-clip" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily, letterSpacing: sc.bodyLetterSpacing, fontWeight: sc.bodyFontWeight }}>
@@ -3582,19 +3771,6 @@ export default function BouwenPage() {
         </div>
       )}
 
-      {/* ── Sophie tutorial ── */}
-      <SophieTutorial
-        onNavigate={(nav: SophieNav) => {
-          // Op de telefoon staat de zijbalk in een paneel; open het goede
-          if (window.matchMedia("(max-width: 767px)").matches && nav.activeSection) {
-            openBlad(({ algemeen: "uiterlijk", paginas: "paginas", url: "adres" } as const)[nav.activeSection])
-          }
-          if ('activeSection' in nav) setActiveSection(nav.activeSection ?? null)
-          if ('openAlgSection' in nav) setOpenAlgSection(nav.openAlgSection ?? null)
-          if ('activeSubPage' in nav) setActiveSubPage((nav.activeSubPage as PageId) ?? null)
-          if ('openHomeSection' in nav) setOpenHomeSection(nav.openHomeSection ?? null)
-        }}
-      />
     </BouwerSchil>
   )
 }
