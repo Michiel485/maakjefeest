@@ -163,11 +163,6 @@ interface ProgrammaItem { id?: string; time: string; title?: string; description
 type ContentMap = Partial<Record<PageId, Record<string, unknown>>>
 type StyleConfig = typeof STYLE_CONFIG[Style]
 
-const UPLOAD_MIME: Record<string, string> = {
-  jpg: "image/jpeg", jpeg: "image/jpeg",
-  png: "image/png", webp: "image/webp", gif: "image/gif",
-}
-
 const MAX_DIM = 1920
 const WEBP_QUALITY = 0.82
 
@@ -217,20 +212,19 @@ async function compressImage(file: File): Promise<File> {
   })
 }
 
-async function uploadToStorage(file: File, bucket: string): Promise<string> {
+// Via de server (app/api/upload-hero), niet meer rechtstreeks met de
+// openbare sleutel: daarvoor moest de map open staan voor iedereen
+// (28 september 2026)
+async function uploadToStorage(file: File): Promise<string> {
   let toUpload = file
   try { toUpload = await compressImage(file) } catch { /* fallback: upload original */ }
 
-  const ext = toUpload.name.split(".").pop()?.toLowerCase() ?? "webp"
-  const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-  const contentType = toUpload.type || UPLOAD_MIME[ext] || "image/jpeg"
-  const supabase = createClient()
-  const { data, error } = await supabase.storage
-    .from(bucket)
-    .upload(filename, toUpload, { contentType, upsert: true })
-  if (error || !data?.path) throw new Error(error?.message ?? "Upload mislukt")
-  const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(data.path)
-  return urlData.publicUrl
+  const fd = new FormData()
+  fd.append("file", toUpload)
+  const res = await fetch("/api/upload-hero", { method: "POST", body: fd })
+  const json = (await res.json().catch(() => ({}))) as { url?: string; error?: string }
+  if (!res.ok || !json.url) throw new Error(json.error ?? "Upload mislukt")
+  return json.url
 }
 
 
@@ -993,7 +987,7 @@ export default function BouwenPage() {
     setHeroUploading(true)
 
     try {
-      const url = await uploadToStorage(file, "hero-images")
+      const url = await uploadToStorage(file)
       console.log("[hero] geüpload naar Storage:", url)
       URL.revokeObjectURL(blobUrl)
       setHeroImageUrl(url)
@@ -1022,7 +1016,7 @@ export default function BouwenPage() {
     setStoryImageBlob(blobUrl)
     setStoryUploading(true)
     try {
-      const url = await uploadToStorage(file, "hero-images")
+      const url = await uploadToStorage(file)
       URL.revokeObjectURL(blobUrl)
       setStoryImageBlob(null)
       updateContent("OnsVerhaal", { ...(content.OnsVerhaal ?? {}), image_url: url })
@@ -1053,7 +1047,7 @@ export default function BouwenPage() {
     const accumulated = [...currentUrls]
     try {
       for (const file of toUpload) {
-        const url = await uploadToStorage(file, "hero-images")
+        const url = await uploadToStorage(file)
         accumulated.push(url)
         updateContent("Fotos", { ...(content.Fotos ?? {}), urls: [...accumulated] })
       }
@@ -3878,7 +3872,7 @@ function MastersEditor({
     setMasters(prev => prev.map(m => m.id === masterId ? { ...m, foto_url: blobUrl } : m))
     setUploading(masterId)
     try {
-      const url = await uploadToStorage(file, "hero-images")
+      const url = await uploadToStorage(file)
       URL.revokeObjectURL(blobUrl)
       update(masterId, { foto_url: url })
     } catch {
