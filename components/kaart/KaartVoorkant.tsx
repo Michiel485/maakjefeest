@@ -697,8 +697,13 @@ function Inhoud({
             {d.inviteLine}
           </div>
         )}
+        {/* Tijden en dresscode op één regel, klein en rustig. Eerst elk op
+            een eigen regel en vet, en dat stond onrustig (Michiel, 28
+            september 2026). */}
         {d.timeText && !detailRollen && (
-          <Regels tekst={d.timeText} uitlijnen={uitlijnen} style={{ fontFamily: font, fontSize: grootte, fontWeight: 600, lineHeight: 1.5, letterSpacing: "0.06em", color: kleur, maxWidth: max }} />
+          <div style={{ display: "flex", fontFamily: font, fontSize: grootte, fontWeight: 500, lineHeight: 1.6, letterSpacing: "0.1em", textTransform: "uppercase", color: kleur, maxWidth: max, textAlign: uitlijnen === "center" ? "center" : "left", justifyContent: uitlijnen }}>
+            {d.timeText.split("\n").join("  ·  ")}
+          </div>
         )}
         {/* Op de homepagina: elke regel zijn eigen letter en grootte */}
         {d.timeText && detailRollen &&
@@ -761,11 +766,9 @@ function Inhoud({
         </div>
       )}
       {d.timeText && (
-        <Regels
-          tekst={d.timeText}
-          uitlijnen={uitlijnen}
-          style={{ fontFamily: font, fontSize: pxK(11), fontWeight: 600, lineHeight: 1.6, letterSpacing: "0.06em", color: kleur.accent }}
-        />
+        <div style={{ display: "flex", fontFamily: font, fontSize: pxK(10.5), fontWeight: 500, lineHeight: 1.6, letterSpacing: "0.1em", textTransform: "uppercase", color: kleur.accent, maxWidth: px(310), textAlign: uitlijnen === "center" ? "center" : "left", justifyContent: uitlijnen }}>
+          {d.timeText.split("\n").join("  ·  ")}
+        </div>
       )}
     </D>
   )

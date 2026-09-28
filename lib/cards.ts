@@ -661,7 +661,10 @@ export function buildCardDisplay(
     // nog niet uit.
     // Een eigen uitnodigingsregel is weg (Michiel, 25 september 2026: de
     // boodschap is genoeg). Wat er ooit getypt is, komt niet meer op de kaart.
-    inviteLine: type === "trouwkaart" && content.guestType ? tk.uitnodiging[content.guestType] : null,
+    // De zin per gastengroep stond hier als vaste, extra regel in de
+    // accentkleur, en die kon je niet aanpassen (Michiel, 28 september 2026).
+    // Nu is hij de standaardboodschap: aan te passen zoals elke boodschap.
+    inviteLine: null,
     // In de accentkleur onder de tekst wat er verder te weten is: voor wie,
     // hoe laat, welke kleding. Alleen wat is ingevuld, elk op een eigen regel.
     // Eerst stond het naast elkaar met een puntje ertussen; Michiel wil het
@@ -670,13 +673,12 @@ export function buildCardDisplay(
     // ze overbodig (Michiel, 25 september 2026)
     timeText:
       [
-        content.toonGastType && content.guestType ? tk.gasten[content.guestType] : null,
         type === "trouwkaart" ? content.timeText?.trim() || null : null,
         type === "trouwkaart" && content.dresscode?.trim() ? `${tk.dresscode}: ${content.dresscode.trim()}` : null,
       ]
         .filter((d): d is string => !!d)
         .join("\n") || null,
-    message: content.message?.trim() || tk.bericht[type],
+    message: content.message?.trim() || (type === "trouwkaart" && content.guestType ? `${tk.uitnodiging[content.guestType]}.` : tk.bericht[type]),
     // Een foto hoort bij de kaart zodra er één gekozen is, los van het ontwerp
     photoUrl: content.photoUrl?.trim() || (template === "foto" ? event.hero_image_url?.trim() || null : null),
     design: cardDesign(template),
