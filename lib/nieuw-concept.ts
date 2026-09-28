@@ -12,6 +12,14 @@ export const LS_WEBSITE_CONCEPT = "sayingyes_draft"
 export const LS_WEBSITE_INHOUD = "sayingyes_content"
 
 /**
+ * De twee namen apart, uit de start (app/start). Zo kan straks elk ontwerp
+ * zelf kiezen wat ertussen komt: een hartje, een & of "en".
+ */
+export const LS_NAMEN = "sayingyes_namen"
+/** Het mailadres uit de start, als voorzet bij Bewaren in de bouwers */
+export const LS_MAIL = "sayingyes_mail"
+
+/**
  * Tijdstip waarop de kaartbouwer een concept klaarzette voor de websitebouwer.
  *
  * Dit bestaat omdat de overdracht alleen werkte als je niet was ingelogd. Was
@@ -75,6 +83,7 @@ export function nieuwWebsiteConcept({
   style = "ivoor",
   slug,
   email,
+  ontwerp,
 }: {
   namen: string
   datum: string
@@ -82,6 +91,8 @@ export function nieuwWebsiteConcept({
   style?: string
   slug?: string
   email?: string
+  /** Het ontwerp voor de homepagina, bijvoorbeeld het ontwerp dat je in /start koos */
+  ontwerp?: string
 }) {
   const schoneNamen = namen.trim() || "Ons"
   const schoneLocatie = locatie.trim()
@@ -120,6 +131,7 @@ export function nieuwWebsiteConcept({
       locatieFont: "cormorant", locatieSize: 2.8, titlePosition: "under",
       initialsVisible: true, frameNamesVisible: true, datumVisible: true, locatieVisible: true,
       siteLayout: "boxed", pageMode: "multi",
+      ...(ontwerp ? { ontwerp } : {}),
     },
     homeContent: {
       title: "Wij gaan trouwen!",

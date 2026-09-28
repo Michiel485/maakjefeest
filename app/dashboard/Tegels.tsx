@@ -253,11 +253,14 @@ export function KaartTegel({
   regels,
   stand,
   reacties = [],
+  inclusief,
 }: {
   soort: "save_the_date" | "trouwkaart"
   titel: string
   prijs: string
   uitleg: string
+  /** Wat er bij dit pakket al in zit, zoals "Inclusief de Save the Date" */
+  inclusief?: string
   /** Dekt het pakket deze kaart? */
   mag: boolean
   /** Is de bruiloft geactiveerd, dus werkt de link? */
@@ -274,6 +277,7 @@ export function KaartTegel({
   if (regels.length === 0 && !mag) {
     return (
       <Tegel titel={titel} grijs breed rechts={<span className="text-xs font-semibold" style={{ color: KLEUR.goud, letterSpacing: "0.03em" }}>{prijs}</span>}>
+        {inclusief && <p className="m-0 -mt-1 text-xs font-semibold" style={{ color: KLEUR.groenTekst }}>{inclusief}</p>}
         <p className="m-0 text-sm" style={{ color: KLEUR.zacht }}>{uitleg}</p>
         <div className="flex gap-2 mt-auto">
           <TegelKnop href={bouwer} soort="stil">Ontwerpen</TegelKnop>
@@ -463,8 +467,10 @@ export function WebsiteTegel({
   if (!mag) {
     return (
       <Tegel titel="Website" grijs breed rechts={<span className="text-xs font-semibold" style={{ color: KLEUR.goud, letterSpacing: "0.03em" }}>{prijs}</span>}>
+        {/* Als ladder: de website bevat de kaarten al (Michiel, 28 september 2026) */}
+        <p className="m-0 -mt-1 text-xs font-semibold" style={{ color: KLEUR.groenTekst }}>Inclusief trouwkaart en Save the Date</p>
         <p className="m-0 text-sm" style={{ color: KLEUR.zacht }}>
-          Voor alles wat niet op de kaart past: route, programma, cadeautips, en een fotomuur voor de dag zelf. Je kunt hem alvast bouwen; live zetten kost pas geld.
+          Voor alles wat niet op de kaart past: route, programma, cadeautips, en een fotomuur voor de dag zelf. De trouwkaart is meteen een mooie manier om de link naar je site te sturen, ook als je al papieren kaarten verstuurde. Je kunt de site alvast bouwen; live zetten kost pas geld.
         </p>
         <div className="flex gap-2 mt-auto">
           <TegelKnop href={bouwer} soort="stil">Bouwen</TegelKnop>

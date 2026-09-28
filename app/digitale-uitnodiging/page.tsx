@@ -135,7 +135,7 @@ export default function DigitaleUitnodigingPage() {
           </Link>
           <NavLoginButton />
           <Link
-            href="/kaart-maken?type=trouwkaart"
+            href="/start?pakket=uitnodiging"
             className="hidden sm:inline-flex text-sm font-semibold px-5 py-2.5 rounded-xl transition-all duration-300 hover:opacity-85"
             style={{ backgroundColor: CHARCOAL, color: IVORY }}
           >
@@ -163,7 +163,7 @@ export default function DigitaleUitnodigingPage() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
-              href="/kaart-maken?type=trouwkaart"
+              href="/start?pakket=uitnodiging"
               className="inline-flex items-center gap-2.5 text-base font-semibold px-8 py-4 rounded-2xl transition-all duration-300 hover:-translate-y-0.5"
               style={{ backgroundColor: TERRA, color: EMERALD, boxShadow: "0 8px 32px rgba(213,156,118,0.35)" }}
             >
@@ -352,7 +352,7 @@ export default function DigitaleUitnodigingPage() {
             Maak de kaart gratis, bekijk de voorvertoning en betaal pas als je hem verstuurt.
           </p>
           <Link
-            href="/kaart-maken?type=trouwkaart"
+            href="/start?pakket=uitnodiging"
             className="inline-flex items-center gap-2.5 text-base font-semibold px-10 py-4 rounded-2xl transition-all duration-300 hover:-translate-y-0.5"
             style={{ backgroundColor: CHARCOAL, color: IVORY, boxShadow: "0 8px 32px rgba(26,26,26,0.18)" }}
           >

@@ -32,6 +32,7 @@ import {
   LS_WEBSITE_INHOUD,
   NAAR_WEBSITE_GELDIG_MS,
   nieuwWebsiteConcept,
+  LS_MAIL,
 } from "@/lib/nieuw-concept"
 
 type EventType = "bruiloft" | "verjaardag" | "evenement"
@@ -348,6 +349,13 @@ export default function BouwenPage() {
   const [justSaved, setJustSaved] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [authEmail, setAuthEmail] = useState("")
+  // Het mailadres uit de start, als je dat daar al gaf
+  useEffect(() => {
+    try {
+      const uitStart = localStorage.getItem(LS_MAIL)
+      if (uitStart) setAuthEmail((v) => v || uitStart)
+    } catch {}
+  }, [])
   const [authSent, setAuthSent] = useState(false)
   const [authLoading, setAuthLoading] = useState(false)
   const [changeKey, setChangeKey] = useState(0)

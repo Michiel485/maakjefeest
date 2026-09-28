@@ -37,12 +37,14 @@ export const PLANS: Record<Plan, PlanInfo> = {
   },
   uitnodiging: {
     id: "uitnodiging",
-    label: "Uitnodiging & RSVP",
+    // Heette "Uitnodiging & RSVP"; overal Trouwkaart, zoals in het dashboard
+    // en de start (Michiel, 28 september 2026)
+    label: "Trouwkaart",
     price: 25,
     subtitel: "De uitnodiging waar gasten met één tik op reageren",
     tagline: "De uitnodiging die werkt: gasten reageren met één tik.",
     features: [
-      "Alles van Save the Date",
+      "Inclusief de Save the Date",
       "Trouwkaart per gastengroep: dag, avond of receptie",
       "Eigen uitnodigingstekst en tijden per kaart",
       "RSVP-pagina met dieetwensen en aantal personen",
@@ -58,7 +60,8 @@ export const PLANS: Record<Plan, PlanInfo> = {
     subtitel: "Alles voor jullie gasten op één plek",
     tagline: "Kaarten, RSVP en een complete trouwwebsite op jullie eigen adres.",
     features: [
-      "Alles van Uitnodiging & RSVP",
+      "Inclusief trouwkaart en Save the Date",
+      "De trouwkaart als mooie manier om de link naar je site te sturen, ook naast papieren kaarten",
       "Volledige trouwwebsite op jullienamen.sayingyes.nl",
       "Programma, informatie, cadeautips, ons verhaal en fotogalerij",
       "Live gastenfotomuur met QR-code en slideshow",
@@ -143,12 +146,9 @@ export function renewalAllowed(plan: unknown): boolean {
 // Waar begint iemand die dit pakket kiest: kaartpakketten in de kaartbouwer,
 // de complete site via de aanmaakpagina van de websitebouwer.
 export function planStartUrl(plan: unknown): string {
-  const p = normalizePlan(plan)
-  if (p === "save_the_date") return "/kaart-maken?type=save_the_date"
-  if (p === "uitnodiging") return "/kaart-maken?type=trouwkaart"
-  // Rechtstreeks de bouwer in. Het aanmaakformulier is weg: namen, datum en
-  // locatie vul je in de bouwer zelf in, bij Algemene info.
-  return "/bouwen?plan=compleet"
+  // Via de start, met dit pakket alvast gekozen: eerst de namen, de datum en
+  // een kaart met jullie namen, dan de bouwer (28 september 2026)
+  return `/start?pakket=${normalizePlan(plan)}`
 }
 
 export function planRank(plan: unknown): number {

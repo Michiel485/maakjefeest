@@ -60,6 +60,7 @@ import {
   LS_WEBSITE_CONCEPT,
   LS_WEBSITE_INHOUD,
   nieuwWebsiteConcept,
+  LS_MAIL,
 } from "@/lib/nieuw-concept"
 
 // Kleuren komen uit lib/ontwerp.ts, de enige bron. De korte namen hieronder
@@ -495,6 +496,13 @@ export default function KaartMakenPage() {
   const [simulatie, setSimulatie] = useState(false)
   const [mailActie, setMailActie] = useState<Actie | null>(null)
   const [mailAdres, setMailAdres] = useState("")
+  // Het mailadres uit de start, als je dat daar al gaf
+  useEffect(() => {
+    try {
+      const uitStart = localStorage.getItem(LS_MAIL)
+      if (uitStart) setMailAdres((v) => v || uitStart)
+    } catch {}
+  }, [])
   const [mailVerstuurd, setMailVerstuurd] = useState(false)
   const [busy, setBusy] = useState<Actie | "download" | "foto" | "proef" | null>(null)
   const [melding, setMelding] = useState<{ tekst: string; fout?: boolean } | null>(null)

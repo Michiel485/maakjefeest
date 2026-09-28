@@ -259,6 +259,7 @@ export default async function DashboardPage({
                verschil bij. Dit stond hier als de volle prijs. */
             prijs={formatEur(prijsInv).replace(",00", "")}
             uitleg="Tijden, dresscode en de volledige aanmelding met dieetwensen en allergieën."
+            inclusief="Inclusief de Save the Date"
             mag={magInv}
             live={stand.live}
             eventId={bruiloft?.id ?? null}
@@ -279,6 +280,12 @@ export default async function DashboardPage({
             geldigTot={liveSite?.expires_at ?? null}
             prijs={formatEur(prijsSite).replace(",00", "")}
           />
+          {/* Eén ladder, geen drie losse producten (Michiel, 28 september 2026) */}
+          {!stand.magSite && (
+            <p className="m-0 -mt-1 px-1 text-[13px] leading-relaxed" style={{ color: KLEUR.zacht }}>
+              Begin gerust klein: later upgraden kan altijd, je betaalt alleen het verschil. Kaarten blijven online zonder einddatum, de website een jaar en in elk geval tot een maand na de bruiloft.
+            </p>
+          )}
 
           {/* ── De gastenlijst, met de lijst zelf erin ── */}
           <Tegel
