@@ -272,25 +272,22 @@ function Strikje({ breedte, kleur, achtergrond }: { breedte: number; kleur: stri
       <rect x="24" y="14" width="72" height="16" fill={achtergrond} stroke="none" />
       <path d="M60 22C50 8 31 2 27 12C23 22 44 27 60 22" />
       <path d="M60 22C70 8 89 2 93 12C97 22 76 27 60 22" />
-      <path d="M57 24C52 36 46 48 38 62C41 60 44 60 46 63" />
-      <path d="M63 24C68 36 74 48 83 60C80 59 77 59 75 62" />
+      {/* Twee slierten die rustig uitlopen. Eerst met een haakje aan het eind,
+          en dat boog onnatuurlijk af (Michiel, 28 september 2026). */}
+      <path d="M57 24C53 34 51 42 47 50S39 59 36 65" />
+      <path d="M63 24C67 34 69 42 73 50S81 59 84 65" />
       <ellipse cx="60" cy="22.5" rx="4.2" ry="3.6" fill={achtergrond} />
     </svg>
   )
 }
 
-/** Een krul van kant, voor op de jurk */
-function krul(x: number, y: number, m = 1, spiegel = false): string {
-  const k = spiegel ? -1 : 1
-  return `M${x} ${y}c${3 * m * k} ${-4 * m} ${9 * m * k} ${-3 * m} ${9 * m * k} ${2 * m}s${-5 * m * k} ${6 * m} ${-7 * m * k} ${3 * m}`
-}
-
-/** Twee harten naast elkaar: een in pak met strikje, een als jurk van kant */
+/**
+ * Twee harten naast elkaar: een in pak met strikje, een als trouwjurk. De jurk
+ * was eerst alleen krulletjes van kant, en dat herkende je niet (Michiel,
+ * 28 september 2026). Nu een witte jurk met een hartvormige halslijn en een
+ * wijde rok, in een zacht gekleurd hart.
+ */
 function PakEnJurk({ breedte, kop, accent, achtergrond }: { breedte: number; kop: string; accent: string; achtergrond: string }) {
-  const kant = [
-    krul(18, 24), krul(36, 34, 0.9, true), krul(60, 20), krul(76, 36, 0.9, true),
-    krul(26, 50, 0.9), krul(54, 50), krul(72, 58, 0.8, true), krul(42, 68, 0.8),
-  ]
   return (
     <svg width={breedte} height={rond((breedte * 104) / 206)} viewBox="0 0 206 104" fill="none">
       <g transform="translate(6 8) rotate(-7 50 45)">
@@ -304,10 +301,14 @@ function PakEnJurk({ breedte, kop, accent, achtergrond }: { breedte: number; kop
         ))}
       </g>
       <g transform="translate(98 10) rotate(7 50 45)">
-        <path d={HART} fill={achtergrond} stroke={kop} strokeWidth="1.6" strokeLinejoin="round" />
-        <path d="M14 32C26 42 38 30 50 44S70 52 86 36" stroke={accent} strokeWidth="0.8" strokeLinecap="round" />
-        {kant.map((d, i) => (
-          <path key={i} d={d} stroke={accent} strokeWidth="1" strokeLinecap="round" />
+        <path d={HART} fill={achtergrond} />
+        <path d={HART} fill={accent} fillOpacity="0.24" stroke={kop} strokeWidth="1.6" strokeLinejoin="round" />
+        {/* De jurk: altijd wit, ook op een donkere kaart */}
+        <path d="M39 25C42 21 47 21 50 25C53 21 58 21 61 25L57 40C61 49 64 60 65 70C56 73.5 44 73.5 35 70C36 60 39 49 43 40Z" fill="#FFFFFF" stroke={kop} strokeWidth="1.1" strokeLinejoin="round" />
+        <path d="M47 43C46 52 44 62 42 71M53 43C54 52 56 62 58 71M50 43V72" stroke={kop} strokeWidth="0.6" strokeOpacity="0.45" strokeLinecap="round" />
+        <path d="M42.6 38.5H57.4L57.9 42.3H42.1Z" fill={accent} />
+        {[[38, 69.6], [43, 70.8], [48, 71.3], [53, 71.3], [58, 70.8], [62, 69.8]].map(([x, y]) => (
+          <circle key={x} cx={x} cy={y} r="0.9" fill={accent} />
         ))}
       </g>
     </svg>
