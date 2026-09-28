@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { createServerClient } from "@supabase/ssr"
+import { gelijk, slotVan, toegangCookie, toegangSleutel } from "@/lib/event-slot"
 
 export const config = {
   matcher: ["/((?!api|_next/static|_next/image|favicon.ico|_vercel).*)"],
@@ -14,15 +15,29 @@ export async function proxy(req: NextRequest) {
     ? "localhost"
     : currentHost.endsWith(".sayingyes.be") ? "sayingyes.be" : "sayingyes.nl"
 
-  // Subdomain rewrite for event pages (e.g. janenjoop.maakjefeest.nl)
-  if (
+  // Een klantsite: op een eigen subdomein (janenjoop.sayingyes.nl), of direct
+  // op /events/janenjoop
+  const opSubdomein =
     currentHost !== baseDomain &&
     currentHost !== `www.${baseDomain}` &&
     currentHost.endsWith(`.${baseDomain}`)
-  ) {
-    const slug = currentHost.replace(`.${baseDomain}`, "")
-    url.pathname = `/events/${slug}${url.pathname}`
-    return NextResponse.rewrite(url)
+  const slug = opSubdomein
+    ? currentHost.replace(`.${baseDomain}`, "")
+    : (url.pathname.match(/^\/events\/([^/]+)/)?.[1] ?? null)
+
+  if (slug) {
+    // Heeft de site een slot, dan pas de site met een geldige toegangscookie.
+    // Anders alleen het slot: de inhoud gaat dan niet mee naar de browser
+    // (zie lib/event-slot.ts).
+    if (!(await magErin(req, slug))) {
+      url.pathname = `/toegang/${slug}`
+      return NextResponse.rewrite(url)
+    }
+    if (opSubdomein) {
+      url.pathname = `/events/${slug}${url.pathname}`
+      return NextResponse.rewrite(url)
+    }
+    return NextResponse.next()
   }
 
   // Dashboard protection: require Supabase Auth session.
@@ -70,4 +85,17 @@ export async function proxy(req: NextRequest) {
   }
 
   return NextResponse.next()
+}
+
+async function magErin(req: NextRequest, slug: string): Promise<boolean> {
+  let geheim: string | null
+  try {
+    geheim = await slotVan(slug)
+  } catch {
+    // De database geeft geen antwoord: niemand zomaar door
+    return false
+  }
+  if (!geheim) return true
+  const cookie = req.cookies.get(toegangCookie(slug))?.value
+  return !!cookie && gelijk(cookie, await toegangSleutel(slug, geheim))
 }

@@ -1,6 +1,8 @@
 import { createServiceClient } from "@/lib/supabase"
 import { bezoekerIp, teVeelPogingen } from "@/lib/rem"
 import { fuzzyMatch } from "@/lib/wachtwoord"
+import { slotGeheim, toegangCookie, toegangSleutel, TOEGANG_DUUR } from "@/lib/event-slot"
+import { NextResponse } from "next/server"
 
 export const dynamic = "force-dynamic"
 
@@ -35,7 +37,7 @@ export async function POST(request: Request) {
   const service = createServiceClient()
   const { data: event } = await service
     .from("events")
-    .select("pw_enabled, pw_type, pw_value, pw_answer")
+    .select("slug, pw_enabled, pw_type, pw_value, pw_answer")
     .eq("slug", body.slug.slice(0, 200))
     .eq("status", "published")
     .single()
@@ -51,5 +53,20 @@ export async function POST(request: Request) {
       ? poging === ((event.pw_value as string | null) ?? "")
       : fuzzyMatch(poging, (event.pw_answer as string | null) ?? "")
 
-  return Response.json({ ok: goed })
+  if (!goed) return Response.json({ ok: false })
+
+  // Goed: een toegangscookie, waarmee de server de site voortaan meestuurt
+  // (proxy.ts). Alleen voor de server leesbaar.
+  const geheim = slotGeheim(event)
+  const antwoord = NextResponse.json({ ok: true })
+  if (geheim) {
+    antwoord.cookies.set(toegangCookie(event.slug as string), await toegangSleutel(event.slug as string, geheim), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: TOEGANG_DUUR,
+    })
+  }
+  return antwoord
 }

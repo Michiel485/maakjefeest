@@ -1,49 +1,33 @@
 ﻿"use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useCallback } from "react"
 import type { SC } from "@/lib/event-styles"
 
-// Let op wat hier NIET in staat: het wachtwoord en het antwoord op de geheime
-// vraag. Die werden eerder als prop meegegeven en stonden daarmee in de
-// broncode van de pagina, zichtbaar voor iedereen die op "bron weergeven"
-// drukte. De controle gebeurt nu op de server, zie app/api/event-toegang.
+// Het slot van een klantsite. Alleen het slot: de site zelf komt pas van de
+// server als het wachtwoord klopt (proxy.ts en lib/event-slot.ts). Eerst
+// stond de site hier als children in, verstopt maar wel in de broncode.
+//
+// Het wachtwoord en het antwoord op de geheime vraag staan hier ook niet in.
+// De controle gebeurt op de server, zie app/api/event-toegang.
 interface EventGatekeeperProps {
   slug: string
-  pwEnabled: boolean
   pwType: "password" | "secret_question" | null
   pwQuestion: string | null
   sc: SC
   eventTitle: string
-  children: React.ReactNode
 }
-
-const SESSION_KEY = (slug: string) => `sy_unlocked_${slug}`
 
 export default function EventGatekeeper({
   slug,
-  pwEnabled,
   pwType,
   pwQuestion,
   sc,
   eventTitle,
-  children,
 }: EventGatekeeperProps) {
-  const [unlocked, setUnlocked] = useState(false)
-  const [checked, setChecked] = useState(false)
   const [inputValue, setInputValue] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [shaking, setShaking] = useState(false)
   const [bezig, setBezig] = useState(false)
-
-  useEffect(() => {
-    if (!pwEnabled) { setUnlocked(true); setChecked(true); return }
-    try {
-      if (sessionStorage.getItem(SESSION_KEY(slug)) === "1") {
-        setUnlocked(true)
-      }
-    } catch {}
-    setChecked(true)
-  }, [slug, pwEnabled])
 
   const handleSubmit = useCallback(async () => {
     setError(null)
@@ -69,8 +53,9 @@ export default function EventGatekeeper({
     setBezig(false)
 
     if (correct) {
-      try { sessionStorage.setItem(SESSION_KEY(slug), "1") } catch {}
-      setUnlocked(true)
+      // De server heeft nu een toegangscookie gezet: opnieuw laden geeft de site
+      setBezig(true)
+      window.location.reload()
       return
     }
 
@@ -84,11 +69,6 @@ export default function EventGatekeeper({
           : "Dat antwoord klopt niet helemaal. Probeer het opnieuw."
     )
   }, [inputValue, pwType, slug, bezig])
-
-  // Not yet checked → render nothing to avoid flash
-  if (!checked) return null
-
-  if (unlocked) return <>{children}</>
 
   return (
     <>

@@ -1,7 +1,6 @@
 import { createServiceClient } from "@/lib/supabase"
 import { getStyleConfig } from "@/lib/event-styles"
 import EventNav from "./event-nav"
-import EventGatekeeper from "@/components/EventGatekeeper"
 import { normalizePlan, publicPageTypes } from "@/lib/plans"
 import { rijOfNiets } from "@/lib/db"
 import type { Metadata, Viewport } from "next"
@@ -37,7 +36,7 @@ export default async function EventLayout({
 
   const event = rijOfNiets(await supabase
     .from("events")
-    .select("id, title, nav_title, frame_names, style, font_frame_names, font_page_titles, nav_layout, pw_enabled, pw_type, pw_question, homepage_settings, plan")
+    .select("id, title, nav_title, frame_names, style, font_frame_names, font_page_titles, nav_layout, homepage_settings, plan")
     .eq("slug", slug)
     .eq("status", "published")
     .single(), "Website")
@@ -81,13 +80,9 @@ export default async function EventLayout({
   // Kleinere pakketten zijn altijd één pagina (hero + eventueel RSVP)
   const isSinglePage = !isCompleet || hs?.pageMode === 'single'
 
-  // Alleen wat de bezoeker mag zien. Het wachtwoord en het antwoord op de
-  // geheime vraag blijven op de server: die werden hier eerder uitgelezen en
-  // als prop meegegeven, en stonden daarmee gewoon in de broncode van de
-  // pagina. De controle loopt nu via app/api/event-toegang.
-  const pwEnabled = (event.pw_enabled as boolean) ?? false
-  const pwType = (event.pw_type as "password" | "secret_question" | null) ?? null
-  const pwQuestion = (event.pw_question as string | null) ?? null
+  // Een site met een slot komt hier alleen als de bezoeker het wachtwoord al
+  // gaf: proxy.ts laat anders alleen het slot zien (app/toegang/[slug]).
+  // Eerst verstopte de browser de site, maar stond hij wel in de broncode.
 
   const siteContent = (
     <div className={`max-w-5xl mx-auto sm:shadow-2xl sm:rounded-2xl overflow-clip flex flex-col relative${sc.floral ? " bohemian-scale" : ""}`}
@@ -151,24 +146,8 @@ export default async function EventLayout({
         `}</style>
       )}
 
-      {pwEnabled ? (
-        <EventGatekeeper
-          slug={slug}
-          pwEnabled={pwEnabled}
-          pwType={pwType}
-          pwQuestion={pwQuestion}
-          sc={sc}
-          eventTitle={(event.nav_title as string | null) || (event.title as string) || ""}
-        >
-          {siteContent}
-          {voettekst}
-        </EventGatekeeper>
-      ) : (
-        <>
-          {siteContent}
-          {voettekst}
-        </>
-      )}
+      {siteContent}
+      {voettekst}
     </div>
   )
 }
