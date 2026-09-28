@@ -46,9 +46,9 @@ export interface OntwerpLetters {
 }
 
 export const ONTWERP_LETTERS: Record<NieuwOntwerp, OntwerpLetters> = {
-  minimaal: { namen: L.italiana, kop: L.montserrat, tekst: L.montserrat },
+  minimaal: { namen: L.italiana, kop: L.montserrat, tekst: L.montserrat, extra: L.greatvibes },
   fotovol: { namen: L.greatvibes, kop: L.montserrat, tekst: L.montserrat },
-  boog: { namen: L.prata, kop: L.cormorant, tekst: L.montserrat },
+  boog: { namen: L.prata, kop: L.cormorant, tekst: L.montserrat, extra: L.greatvibes },
   deco: { namen: L.cinzel, kop: L.cinzel, tekst: L.montserrat },
   datum: { namen: L.allura, kop: L.bodoni, tekst: L.montserrat },
   // Een eigen ontwerp is een afbeelding; alleen de lege plek heeft tekst
@@ -62,33 +62,58 @@ export const ONTWERP_LETTERS: Record<NieuwOntwerp, OntwerpLetters> = {
   pampasruit: { namen: L.allura, kop: L.jost, tekst: L.jost },
   terra: { namen: L.allison, kop: L.jost, tekst: L.jost },
   terraruit: { namen: L.allison, kop: L.jost, tekst: L.jost },
-  herfst: { namen: L.prata, kop: L.jost, tekst: L.jost },
-  herfstruit: { namen: L.prata, kop: L.jost, tekst: L.jost },
+  herfst: { namen: L.prata, kop: L.jost, tekst: L.jost, extra: L.greatvibes },
+  herfstruit: { namen: L.prata, kop: L.jost, tekst: L.jost, extra: L.greatvibes },
   goudblad: { namen: L.allison, kop: L.jost, tekst: L.jost },
   magnolia: { namen: L.greatvibes, kop: L.jost, tekst: L.jost },
   // Alleen voor de homepagina
-  editoriaal: { namen: L.bodoni, kop: L.montserrat, tekst: L.montserrat },
+  editoriaal: { namen: L.bodoni, kop: L.montserrat, tekst: L.montserrat, extra: L.greatvibes },
   monogram: { namen: L.italiana, kop: L.montserrat, tekst: L.montserrat, extra: L.cormorant },
   lijnkader: { namen: L.greatvibes, kop: L.cinzel, tekst: L.cormorant },
   datumband: { namen: L.allura, kop: L.jost, tekst: L.jost },
   // De themaontwerpen
-  winter: { namen: L.italiana, kop: L.cinzel, tekst: L.jost },
-  zomer: { namen: L.prata, kop: L.jost, tekst: L.jost },
+  winter: { namen: L.italiana, kop: L.cinzel, tekst: L.jost, extra: L.greatvibes },
+  zomer: { namen: L.prata, kop: L.jost, tekst: L.jost, extra: L.greatvibes },
   liefde: { namen: L.allura, kop: L.cormorant, tekst: L.cormorant, extra: L.cormorant },
-  boho: { namen: L.italiana, kop: L.jost, tekst: L.jost },
+  boho: { namen: L.italiana, kop: L.jost, tekst: L.jost, extra: L.greatvibes },
   hartlijn: { namen: L.allura, kop: L.jost, tekst: L.jost },
   tweeharten: { namen: L.greatvibes, kop: L.cormorant, tekst: L.cormorant },
   hartamp: { namen: L.bodoni, kop: L.montserrat, tekst: L.montserrat },
   hartkader: { namen: L.allura, kop: L.cinzel, tekst: L.cormorant },
   krijthart: { namen: L.allura, kop: L.jost, tekst: L.jost },
   kalligrafie: { namen: L.greatvibes, kop: L.cormorant, tekst: L.cormorant },
-  schaduwhart: { namen: L.jostDun, kop: L.jost, tekst: L.jost },
+  schaduwhart: { namen: L.jostDun, kop: L.jost, tekst: L.jost, extra: L.greatvibes },
   krijtgroot: { namen: L.allura, kop: L.jost, tekst: L.jost },
   hartrand: { namen: L.greatvibes, kop: L.cormorant, tekst: L.cormorant },
-  harthoek: { namen: L.italiana, kop: L.jost, tekst: L.jost },
+  harthoek: { namen: L.italiana, kop: L.jost, tekst: L.jost, extra: L.greatvibes },
   pakjurk: { namen: L.greatvibes, kop: L.montserrat, tekst: L.montserrat },
   proost: { namen: L.cormorant, kop: L.cormorant, tekst: L.cormorant, extra: L.allison },
   strik: { namen: L.bodoni, kop: L.montserrat, tekst: L.montserrat, extra: L.greatvibes },
+}
+
+/**
+ * Wat er tussen de twee namen komt (Michiel, 28 september 2026). Standaard een
+ * & in de letter van de namen: bij een sierletter is die al mooi. Bij een
+ * strakke of klassieke namenletter een sierlijke & in de accentkleur (de
+ * extra letter van het ontwerp), en bij een paar moderne ontwerpen zonder
+ * grote hart-tekening een klein hartje. Ontwerpen die de namen zelf opdelen
+ * (Hart in de &, Strik, Palm) staan hier niet in.
+ */
+export type Verbinder = "amp" | "sierAmp" | "hart"
+export const VERBINDER: Partial<Record<NieuwOntwerp, Verbinder>> = {
+  minimaal: "sierAmp",
+  boog: "sierAmp",
+  herfst: "sierAmp",
+  herfstruit: "sierAmp",
+  editoriaal: "sierAmp",
+  winter: "sierAmp",
+  zomer: "sierAmp",
+  boho: "sierAmp",
+  schaduwhart: "sierAmp",
+  harthoek: "sierAmp",
+  titel: "hart",
+  fotoschrift: "hart",
+  datum: "hart",
 }
 
 // ── De kaders uit de websitebouwer ─────────────────────────────────────────

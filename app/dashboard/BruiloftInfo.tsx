@@ -1,5 +1,6 @@
 "use client"
 
+import NamenVelden from "@/components/NamenVelden"
 import { useEffect, useState } from "react"
 import { KLEUR } from "@/lib/ontwerp"
 import { afstandInWoorden } from "@/lib/fasen"
@@ -141,18 +142,10 @@ export default function BruiloftInfo({
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <label className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1.5">
           <span className="text-xs font-semibold" style={{ color: KLEUR.inkt }}>Jullie namen</span>
-          <input
-            id="bruiloft-naam"
-            className={veld}
-            style={veldStijl}
-            placeholder="Sophie &amp; Daan"
-            value={naam}
-            onChange={(e) => setNaam(e.target.value)}
-            maxLength={80}
-          />
-        </label>
+          <NamenVelden id="bruiloft-naam" klasse={veld} stijl={veldStijl} waarde={naam} onWijzig={setNaam} />
+        </div>
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-semibold" style={{ color: KLEUR.inkt }}>Trouwdatum</span>
           <input

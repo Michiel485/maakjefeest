@@ -1,5 +1,6 @@
 "use client"
 
+import NamenVelden from "@/components/NamenVelden"
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -1922,21 +1923,18 @@ export default function KaartMakenPage() {
                 <b style={{ color: CHARCOAL }}>Jullie eigen ontwerp is de kaart.</b> Er komt geen tekst overheen. De namen en de datum gebruiken we alleen voor het zegel, de voorvertoning in WhatsApp en de agenda. Een boodschap komt onder de kaart.
               </p>
             )}
-            <label className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold flex items-center justify-between gap-2" style={{ color: CHARCOAL }}>Jullie namen <Plek waar={tekstPlek("namen")} /></span>
-              {/* Een tekstvak en geen invoerregel, zodat een enter werkt: veel
-                  paren zetten de tweede naam graag op een eigen regel. */}
-              <textarea
-                className={`${inputCls} resize-none`}
-                style={{ ...inputStyle, minHeight: 48 }}
-                rows={2}
-                placeholder="Sophie & Daan"
+              {/* Twee losse namen: het ontwerp kiest zelf wat ertussen komt en
+                  of ze naast of onder elkaar staan (Michiel, 28 september 2026) */}
+              <NamenVelden
+                klasse={inputCls}
+                stijl={inputStyle}
                 id="kaart-namen"
-                value={ontwerp.names}
-                onChange={(e) => update({ names: e.target.value })}
-                maxLength={80}
+                waarde={ontwerp.names}
+                onWijzig={(v) => update({ names: v })}
               />
-            </label>
+            </div>
             {/* Een eigen lettertype voor de namen. Niet bij een eigen ontwerp:
                 daar staat geen tekst op. */}
             {cardDesign(ontwerp.template) !== "eigen" && (

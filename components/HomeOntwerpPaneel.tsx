@@ -8,6 +8,7 @@
 // Kies je een ontwerp, dan gaan lettertypes en groottes terug naar die van
 // het ontwerp, zodat alles weer binnen de tekening valt, zoals in het tegeltje.
 
+import NamenVelden from "@/components/NamenVelden"
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import HomeOntwerp, { type HomeOntwerpTekst, type HomeTekstInstellingen } from "@/components/HomeOntwerp"
 import type { TekstRol } from "@/components/kaart/KaartVoorkant"
@@ -193,8 +194,9 @@ export function HomeOntwerpTekstvelden({
         {letter("kop")}
       </Veld>
       <Veld id="hp-field-namen" label="Namen">
-        <textarea rows={2} value={namen} onChange={(e) => onNamen(e.target.value)} placeholder="Michiel & Lindsey" className={`${invoer} resize-none`} />
-        <p className="text-[10px] text-gray-400 leading-snug -mt-0.5">Op één regel getypt staat op één regel. Met een enter ertussen onder elkaar.</p>
+        {/* Twee losse namen: het ontwerp kiest wat ertussen komt en of ze
+            naast of onder elkaar passen (Michiel, 28 september 2026) */}
+        <NamenVelden klasse={invoer} waarde={namen} onWijzig={onNamen} />
         {letter("namen")}
       </Veld>
       <Veld id="hp-field-datum" label="Datum">

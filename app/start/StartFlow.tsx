@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase"
 import { buildCardDisplay, type CardDesign, type CardType } from "@/lib/cards"
+import { splitsNamen, voegNamenSamen } from "@/lib/namen"
 import { getStyleConfig, type SC } from "@/lib/event-styles"
 import { kaartKleuren } from "@/lib/kaart-paletten"
 import Voorkant from "@/components/kaart/Voorkant"
@@ -38,11 +39,7 @@ type Keuze = Plan | "weetniet"
 
 const STAPPEN = 5
 
-function samen(een: string, twee: string): string {
-  const a = een.trim()
-  const b = twee.trim()
-  return a && b ? `${a} & ${b}` : a || b
-}
+const samen = voegNamenSamen
 
 /** Hoeveel maanden tot de bruiloft, of null zonder datum */
 function maandenTot(datum: string): number | null {
@@ -146,9 +143,13 @@ export default function StartFlow() {
     // Was je hier eerder? Dan staat wat je invulde er nog
     try {
       const namen = JSON.parse(localStorage.getItem(LS_NAMEN) ?? "null") as { een?: string; twee?: string } | null
-      if (namen?.een) setEen(namen.een)
-      if (namen?.twee) setTwee(namen.twee)
-      const kaart = JSON.parse(localStorage.getItem(LS_KAART) ?? "{}") as { datum?: unknown }
+      const kaart = JSON.parse(localStorage.getItem(LS_KAART) ?? "{}") as { datum?: unknown; names?: unknown }
+      // Anders de namen van een kaart die al in de browser stond
+      const uitKaart = typeof kaart.names === "string" ? splitsNamen(kaart.names) ?? [kaart.names, ""] : null
+      const a = namen?.een ?? uitKaart?.[0] ?? ""
+      const b = namen?.twee ?? uitKaart?.[1] ?? ""
+      if (a) setEen(a)
+      if (b) setTwee(b)
       if (typeof kaart.datum === "string") setDatum(kaart.datum)
       setLocatie(localStorage.getItem(LS_LOCATIE) ?? "")
       setMail(localStorage.getItem(LS_MAIL) ?? "")

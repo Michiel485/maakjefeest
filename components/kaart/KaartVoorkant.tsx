@@ -15,7 +15,8 @@
 import { cloneElement, isValidElement, type CSSProperties, type ReactNode } from "react"
 import type { CardDisplay, NieuwOntwerp } from "@/lib/cards"
 import type { SC } from "@/lib/event-styles"
-import { detailsKeuze, detailsOpKaart, illustratie, KADERS, ONTWERP_LETTERS, type VoorkantLetters } from "@/lib/kaart-ontwerpen"
+import { detailsKeuze, detailsOpKaart, illustratie, KADERS, ONTWERP_LETTERS, VERBINDER, type Verbinder, type VoorkantLetters } from "@/lib/kaart-ontwerpen"
+import { splitsNamen } from "@/lib/namen"
 import { namenOpmaak, namenPlek, type NamenPlek } from "@/lib/namen-opmaak"
 import { tekstBreedte, type GemetenLetter } from "@/lib/letterbreedtes"
 import { initialenLijst } from "@/lib/initialen"
@@ -344,6 +345,14 @@ export type TekstRol = "kop" | "namen" | "datum" | "locatie" | "tijden" | "dress
 export type EigenTekst = Partial<Record<TekstRol, { font?: string; schaal?: number }>>
 
 /** De namen, passend gemaakt voor de ruimte die het ontwerp ervoor heeft. */
+/** Wat er tussen de namen komt, en in welke letter en kleur (lib/kaart-ontwerpen.ts) */
+interface VerbinderStijl {
+  soort: Verbinder
+  /** De sierletter voor de sierlijke & */
+  letter: string
+  kleur: string
+}
+
 function Namen({
   namen,
   plek,
@@ -351,6 +360,8 @@ function Namen({
   uitlijnen,
   vrijeSchaal,
   max,
+  vb,
+  onderElkaar = false,
 }: {
   namen: string
   plek: NamenPlek
@@ -358,9 +369,55 @@ function Namen({
   uitlijnen?: "center" | "flex-start"
   vrijeSchaal?: number
   max?: number
+  vb?: VerbinderStijl
+  /** Altijd elke naam op een eigen regel */
+  onderElkaar?: boolean
 }) {
-  const o = namenOpmaak(namen, plek, { vrijeSchaal, max })
-  return <Regels tekst={o.tekst} heel={o.heel} uitlijnen={uitlijnen} style={{ ...style, fontSize: o.grootte }} />
+  const delen = splitsNamen(namen)
+  // De twee namen los: dan tekent het ontwerp zelf wat ertussen komt. Gemeten
+  // als "naam & naam", dus passend maken werkt zoals altijd.
+  const tekst = delen ? `${delen[0]} & ${delen[1]}` : namen
+  const o = namenOpmaak(tekst, plek, { vrijeSchaal, max })
+  const soort = vb?.soort ?? "amp"
+  if (!delen || (soort === "amp" && !onderElkaar)) {
+    return <Regels tekst={o.tekst} heel={o.heel} uitlijnen={uitlijnen} style={{ ...style, fontSize: o.grootte }} />
+  }
+  const g = o.grootte
+  const verbinder =
+    soort === "hart" && vb ? (
+      // Bij kleine namen (in hoofdletters onderaan een kaart) iets groter,
+      // anders is het hartje een stipje
+      <Hart breedte={g < 24 ? g * 0.62 : g * 0.4} kleur={vb.kleur} vol />
+    ) : soort === "sierAmp" && vb ? (
+      // De & in Great Vibes loopt rechts ver door: daar wat extra ruimte
+      <div style={{ display: "flex", fontFamily: vb.letter, fontSize: g * 1.05, lineHeight: 1, color: vb.kleur, textTransform: "none", letterSpacing: 0, marginRight: g * 0.1 }}>&amp;</div>
+    ) : (
+      <div style={{ display: "flex" }}>&amp;</div>
+    )
+  const naam = (n: string) => <div style={{ display: "flex", whiteSpace: "nowrap" }}>{n}</div>
+  const kant = uitlijnen ?? "center"
+  // Een hartje heeft meer lucht nodig dan een &, zeker bij kleine namen
+  const tussen = soort === "hart" ? (g < 24 ? g * 0.5 : g * 0.32) : g * 0.22
+  if (!onderElkaar && !o.tekst.includes("\n")) {
+    return (
+      <D style={{ ...style, fontSize: g, alignItems: "center", justifyContent: kant, gap: tussen }}>
+        {naam(delen[0])}
+        {verbinder}
+        {naam(delen[1])}
+      </D>
+    )
+  }
+  // Op twee regels: de tweede naam met de verbinder ervoor, zoals de breuk
+  // die namenOpmaak ook maakt
+  return (
+    <D style={{ ...style, fontSize: g, flexDirection: "column", alignItems: kant }}>
+      {naam(delen[0])}
+      <D style={{ alignItems: "center", gap: tussen }}>
+        {verbinder}
+        {naam(delen[1])}
+      </D>
+    </D>
+  )
 }
 
 /** "M | L", voor in de boog als er geen foto is (Michiel: een streep, geen &). */
@@ -386,11 +443,7 @@ function datumKort(iso: string | null | undefined, teken: string): string | null
  * dan null en staan de namen er gewoon zoals ze getypt zijn.
  */
 function naamDelen(namen: string): [string, string] | null {
-  const verbinders = /^(&|\+|\||\/|en|and|et|und|y|e)$/i
-  const regels = namen.split(/\r?\n/).map((r) => r.trim()).filter((r) => r && !verbinders.test(r))
-  if (regels.length === 2) return [regels[0], regels[1]]
-  const m = namen.replace(/\s+/g, " ").trim().match(/^(.+?)\s+(?:&|\+|\||\/|en|and|et|und|y|e)\s+(.+)$/i)
-  return m ? [m[1], m[2]] : null
+  return splitsNamen(namen)
 }
 
 /**
@@ -619,6 +672,8 @@ function Inhoud({
   const tekst = vrij ? sc.bodyText : sc.cardText ?? sc.bodyText
 
   const accent = sc.accent
+  // Wat er tussen de namen komt, per ontwerp (Michiel, 28 september 2026)
+  const vb: VerbinderStijl = { soort: VERBINDER[ontwerp] ?? "amp", letter: letters.extra ?? letters.namen, kleur: accent }
   // De kleine kop ("Save the Date") in de kleur van de stijl, tenzij die op
   // deze achtergrond wegvalt
   const label = leesbaar(sc.labelColor, achtergrond, [kop])
@@ -781,7 +836,7 @@ function Inhoud({
         </D>
 
         <D style={{ flexDirection: "column", gap: px(18), marginTop: px(30), marginBottom: px(30) }}>
-          <Namen plek={plek} {...namenVrij} namen={d.names} uitlijnen="flex-start" style={{ fontFamily: letters.namen, lineHeight: 1.04, color: kop }} />
+          <Namen vb={vb} plek={plek} {...namenVrij} namen={d.names} uitlijnen="flex-start" style={{ fontFamily: letters.namen, lineHeight: 1.04, color: kop }} />
           {d.dateText && (
             <div style={{ display: "flex", ...tt("datum", letters.kop, 12), letterSpacing: "0.22em", textTransform: "uppercase", color: kop }}>
               {d.dateText}
@@ -840,7 +895,7 @@ function Inhoud({
           <div style={{ display: "flex", ...tt("kop", letters.kop, 10), letterSpacing: "0.34em", textTransform: "uppercase", color: wit, opacity: 0.9 }}>
             {d.heading}
           </div>
-          <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.12, color: wit }} />
+          <Namen vb={vb} plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.12, color: wit }} />
           <div style={{ display: "flex", width: px(38), height: lijn, backgroundColor: wit, opacity: 0.6, marginTop: px(2), marginBottom: px(2) }} />
           {d.dateText && (
             <div style={{ display: "flex", ...tt("datum", letters.kop, 12.5), letterSpacing: "0.24em", textTransform: "uppercase", color: wit }}>
@@ -915,7 +970,7 @@ function Inhoud({
           <div style={{ display: "flex", ...tt("kop", letters.kop, 11), letterSpacing: "0.3em", textTransform: "uppercase", color: label }}>
             {d.heading}
           </div>
-          <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.18, color: kop }} />
+          <Namen vb={vb} plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.18, color: kop }} />
           {d.dateText && (
             <div style={{ display: "flex", ...tt("datum", letters.kop, 15), letterSpacing: "0.14em", textTransform: "uppercase", color: accent }}>
               {d.dateText}
@@ -983,7 +1038,7 @@ function Inhoud({
           <div style={{ display: "flex", ...tt("kop", letters.kop, 10.5), letterSpacing: "0.38em", textTransform: "uppercase", color: label }}>
             {d.heading}
           </div>
-          <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.3, letterSpacing: "0.1em", textTransform: "uppercase", color: kop, marginTop: px(4), marginBottom: px(4) }} />
+          <Namen vb={vb} plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.3, letterSpacing: "0.1em", textTransform: "uppercase", color: kop, marginTop: px(4), marginBottom: px(4) }} />
           <D style={{ alignItems: "center", gap: px(8), width: px(210) }}>
             <div style={{ display: "flex", flexGrow: 1, height: lijn, backgroundColor: accent }} />
             <div style={{ display: "flex", width: px(6), height: px(6), backgroundColor: accent, transform: "rotate(45deg)" }} />
@@ -1017,7 +1072,7 @@ function Inhoud({
     )
     const inhoud = (o: { naamRegel?: number; datumKleur?: string } = {}) => (
       <D style={kolom}>
-        <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: o.naamRegel ?? 1.12, color: kop }} />
+        <Namen vb={vb} plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: o.naamRegel ?? 1.12, color: kop }} />
         {datum && (
           <div style={{ display: "flex", ...tt("datum", letters.kop, 12.5), letterSpacing: "0.24em", textTransform: "uppercase", color: o.datumKleur ?? accent }}>
             {datum}
@@ -1137,7 +1192,7 @@ function Inhoud({
           </D>
         )
       } else {
-        namenBlok = <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.05, color: kop }} />
+        namenBlok = <Namen vb={vb} plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.05, color: kop }} />
       }
       return wortel(`${px(40)}px ${px(26)}px`, (
         <D style={kolom}>
@@ -1169,7 +1224,7 @@ function Inhoud({
           <D style={{ position: "relative", width: hb, height: hb * 0.9, alignItems: "center", justifyContent: "center" }}>
             {los({ left: 0, top: 0 }, <Hart breedte={hb} kleur={accent} dikte={0.45} />)}
             <D style={{ flexDirection: "column", alignItems: "center", gap: px(8), marginTop: px(-34) }}>
-              <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.12, color: kop }} />
+              <Namen vb={vb} plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.12, color: kop }} />
               {datum && (
                 <div style={{ display: "flex", ...tt("datum", letters.kop, 11), letterSpacing: "0.24em", textTransform: "uppercase", color: accent }}>{datum}</div>
               )}
@@ -1232,7 +1287,7 @@ function Inhoud({
           <D style={{ position: "relative", width: vak, height: hb * 1.5, alignItems: "center", justifyContent: "center" }}>
             {los({ left: (vak - hb) / 2, top: 0, opacity: 0.45, transform: "rotate(-5deg)" }, <KrijtHart breedte={hb} kleur={accent} />)}
             <D style={{ flexDirection: "column", alignItems: "center", gap: px(10), marginTop: px(-24) }}>
-              <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.1, color: kop }} />
+              <Namen vb={vb} plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.1, color: kop }} />
               {datum && (
                 <div style={{ display: "flex", ...tt("datum", letters.kop, 12.5), letterSpacing: "0.24em", textTransform: "uppercase", color: kop }}>{datum}</div>
               )}
@@ -1256,7 +1311,7 @@ function Inhoud({
       return wortel(`${px(76)}px ${px(44)}px ${px(50)}px`, (
         <D style={kolom}>
           {kopRegel(10.5)}
-          <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.12, color: kop, marginTop: px(4) }} />
+          <Namen vb={vb} plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.12, color: kop, marginTop: px(4) }} />
           <div style={{ display: "flex", width: px(56), height: lijn, backgroundColor: accent }} />
           {datum && (
             <div style={{ display: "flex", ...tt("datum", letters.kop, 12.5), letterSpacing: "0.26em", textTransform: "uppercase", color: accent }}>{datum}</div>
@@ -1279,13 +1334,11 @@ function Inhoud({
     // Hart in de hoek: alles links, groot en rustig, en het hart met schaduw
     // rechtsonder
     if (ontwerp === "harthoek") {
-      const delen = naamDelen(d.names)
-      const namen = delen ? `${delen[0]}\n& ${delen[1]}` : d.names
       return (
         <D style={{ ...basis, justifyContent: "space-between", padding: `${px(46)}px ${px(36)}px ${px(30)}px`, borderRadius: px(14) }}>
           <D style={{ flexDirection: "column", alignItems: "flex-start", gap: px(10) }}>
             <div style={{ display: "flex", ...tt("kop", letters.kop, 10.5), letterSpacing: "0.34em", textTransform: "uppercase", color: label }}>{d.heading}</div>
-            <Namen plek={plek} {...namenVrij} namen={namen} uitlijnen="flex-start" style={{ fontFamily: letters.namen, lineHeight: 1.08, color: kop, marginTop: px(8) }} />
+            <Namen vb={vb} onderElkaar plek={plek} {...namenVrij} namen={d.names} uitlijnen="flex-start" style={{ fontFamily: letters.namen, lineHeight: 1.08, color: kop, marginTop: px(8) }} />
             <div style={{ display: "flex", width: px(46), height: lijn, backgroundColor: accent, marginTop: px(4) }} />
             {datum && (
               <div style={{ display: "flex", ...tt("datum", letters.kop, 12.5), letterSpacing: "0.24em", textTransform: "uppercase", color: accent }}>{datum}</div>
@@ -1354,7 +1407,7 @@ function Inhoud({
           </svg>
           <D style={{ ...kolom, gap: px(8) }}>
             {titel}
-            <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.3, letterSpacing: "0.22em", textTransform: "uppercase", color: kop, marginTop: px(14) }} />
+            <Namen vb={vb} plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.3, letterSpacing: "0.22em", textTransform: "uppercase", color: kop, marginTop: px(14) }} />
             {d.dateText && (
               <div style={{ display: "flex", ...tt("datum", letters.tekst, 16), color: accent, textAlign: "center" }}>{d.dateText}</div>
             )}
@@ -1391,7 +1444,7 @@ function Inhoud({
           </D>
         )
       } else {
-        namenBlok = <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.05, color: kop }} />
+        namenBlok = <Namen vb={vb} plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.05, color: kop }} />
       }
       return (
         <D style={{ ...basis, height: hoogte, alignItems: "center", justifyContent: "center", padding: `${px(70)}px ${px(50)}px ${px(56)}px`, borderRadius: px(10) }}>
@@ -1447,7 +1500,7 @@ function Inhoud({
           {d.heading}
         </div>
         <div style={{ display: "flex", width: "100%", height: lijn, backgroundColor: kop, opacity: 0.45 }} />
-        <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.02, color: kop, marginTop: px(8), marginBottom: px(8) }} />
+        <Namen vb={vb} plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.02, color: kop, marginTop: px(8), marginBottom: px(8) }} />
         <div style={{ display: "flex", width: "100%", height: lijn, backgroundColor: kop, opacity: 0.45 }} />
         <D style={{ width: "100%", justifyContent: d.location ? "space-between" : "center", alignItems: "center", gap: px(16) }}>
           {d.dateText && (
@@ -1484,7 +1537,7 @@ function Inhoud({
             {ini[1] && <div style={{ display: "flex", fontFamily: letters.extra, fontSize: pxN(58), lineHeight: 1, color: kop }}>{ini[1]}</div>}
           </D>
         </D>
-        <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.15, color: kop, marginTop: px(6) }} />
+        <Namen vb={vb} plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.15, color: kop, marginTop: px(6) }} />
         {d.dateText && (
           <D style={{ alignItems: "center", gap: px(12) }}>
             {lijnStuk(36)}
@@ -1528,7 +1581,7 @@ function Inhoud({
           <div style={{ display: "flex", ...tt("kop", letters.kop, 11), letterSpacing: "0.34em", textTransform: "uppercase", color: accent }}>
             {d.heading}
           </div>
-          <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.15, color: kop }} />
+          <Namen vb={vb} plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.15, color: kop }} />
           <D style={{ alignItems: "center", gap: px(8) }}>
             {lijnStuk(30)}
             <div style={{ display: "flex", width: px(6), height: px(6), backgroundColor: accent, transform: "rotate(45deg)" }} />
@@ -1556,7 +1609,7 @@ function Inhoud({
         <div style={{ display: "flex", ...tt("kop", letters.kop, 11), letterSpacing: "0.42em", textTransform: "uppercase", color: label }}>
           {d.heading}
         </div>
-        <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.1, color: kop }} />
+        <Namen vb={vb} plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.1, color: kop }} />
         <D
           style={{
             width: "100%",
@@ -1620,7 +1673,7 @@ function Inhoud({
             <div style={{ display: "flex", ...tt("kop", letters.kop, 9.5), letterSpacing: "0.32em", textTransform: "uppercase", color: kader.kleur.accent }}>
               {d.heading}
             </div>
-            <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.1, color: kader.kleur.namen }} />
+            <Namen vb={vb} plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.1, color: kader.kleur.namen }} />
             {datum && (
               <div style={{ display: "flex", ...tt("datum", letters.kop, 11), letterSpacing: "0.2em", color: kader.kleur.accent }}>{datum}</div>
             )}
@@ -1663,7 +1716,7 @@ function Inhoud({
               gap: px(7),
             }}
           >
-            <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.12, color: kader.kleur.namen }} />
+            <Namen vb={vb} plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.12, color: kader.kleur.namen }} />
             {datum && (
               <div style={{ display: "flex", ...tt("datum", letters.kop, 10.5), letterSpacing: "0.14em", color: kader.kleur.accent }}>{datum}</div>
             )}
@@ -1718,7 +1771,7 @@ function Inhoud({
           <div style={{ display: "flex", ...tt("kop", letters.kop, 11), letterSpacing: "0.32em", textTransform: "uppercase", color: goud }}>
             {d.heading}
           </div>
-          <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.15, color: groen }} />
+          <Namen vb={vb} plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.15, color: groen }} />
           {d.dateText && (
             <div style={{ display: "flex", ...tt("datum", letters.kop, 12), letterSpacing: "0.22em", textTransform: "uppercase", color: goud, textAlign: "center" }}>
               {d.dateText}
@@ -1768,7 +1821,7 @@ function Inhoud({
               {datum}
             </div>
           )}
-          <Namen plek={plek} {...namenVrij} namen={d.names}
+          <Namen vb={vb} plek={plek} {...namenVrij} namen={d.names}
             style={{ fontFamily: letters.tekst, letterSpacing: "0.16em", color: kop, opacity: 0.8, marginTop: px(10) }}
           />
           {d.location && (
@@ -1818,7 +1871,7 @@ function Inhoud({
             <div style={{ display: "flex", fontFamily: letters.namen, fontSize: pxN(54), lineHeight: 1, color: kop }}>{delen[1]}</div>
           </D>
         ) : (
-          <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.05, color: kop, marginTop: px(14) }} />
+          <Namen vb={vb} plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.05, color: kop, marginTop: px(14) }} />
         )}
         {datum && (
           <div style={{ display: "flex", ...tt("datum", letters.namen, 20), letterSpacing: "0.04em", color: kop, marginTop: px(22) }}>
@@ -1888,7 +1941,7 @@ function Inhoud({
           </D>
         </D>
         <D style={{ flexDirection: "column", alignItems: "center", gap: px(6) }}>
-          <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1, color: kop }} />
+          <Namen vb={vb} plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1, color: kop }} />
           {datum && (
             <div style={{ display: "flex", ...tt("datum", letters.tekst, 12), letterSpacing: "0.22em", color: kop, opacity: 0.85 }}>
               {datum}
@@ -1945,7 +1998,7 @@ function Inhoud({
               {datum}
             </div>
           )}
-          <Namen plek={plek} {...namenVrij}
+          <Namen vb={vb} plek={plek} {...namenVrij}
             namen={d.names.replace(/\s*\n\s*/g, " ")}
             style={{ fontFamily: letters.tekst, letterSpacing: "0.3em", textTransform: "uppercase", color: wit, opacity: 0.9, marginTop: px(4) }}
           />
@@ -1995,7 +2048,7 @@ function Inhoud({
           </div>
         )
       )}
-      <Namen plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.1, color: accent }} />
+      <Namen vb={vb} plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.1, color: accent }} />
       {d.location && (
         <Regels
           tekst={d.location}
