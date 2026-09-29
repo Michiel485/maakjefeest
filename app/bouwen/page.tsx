@@ -483,7 +483,9 @@ export default function BouwenPage() {
   /** Zijn plek in de zijbalk, en alleen zichtbaar in zijn eigen stap. */
   const sectieKlassen = (s: Sectie) => `${SECTIE_ORDE[s]} ${toont(s) ? "" : "hidden"}`
   /** Een deel binnen een sectie: open in zijn eigen stap, anders weg */
-  const deelKlas = (k: string) => (deel(k) ? "border-t border-gray-100" : "hidden")
+  // Met ruimte bovenin: de kopjes van de delen zijn weg, en zonder zat de
+  // inhoud tegen de vraag van de stap aan (Michiel, 29 september 2026)
+  const deelKlas = (k: string) => (deel(k) ? "border-t border-gray-100 pt-4" : "hidden")
   const algOpen = (s: 'stijl' | 'layout' | 'lettertype') => deel(`alg:${s}`)
   const urlOpen = (s: 'url' | 'beveiliging') => deel(`url:${s}`)
   const homeOpen = (s: 'layout' | 'headerfoto' | 'kaders' | 'tekstvelden' | 'welkomst') => deel(`home:${s}`)
@@ -2291,7 +2293,7 @@ export default function BouwenPage() {
                     <div className="px-5 pb-4 flex flex-col gap-2">
                       <FontSelect value={fontPageTitles} onChange={saveFontPageTitles} />
                       <p className="text-xs text-gray-400 leading-relaxed">
-                        Dit lettertype geldt voor alle pagina's, behalve voor de homepage. De tekstvelden op de homepage kun je apart aanpassen bij de instellingen van de pagina 'Home'.
+                        Voor alle pagina's. De letters op de homepage kies je bij de tekst van de homepage.
                       </p>
                     </div>
                   )}

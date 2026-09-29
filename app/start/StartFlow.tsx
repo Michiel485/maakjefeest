@@ -15,11 +15,13 @@ import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase"
-import { buildCardDisplay, type CardDesign, type CardType } from "@/lib/cards"
+import { buildCardDisplay, type CardDesign, type CardType, type NieuwOntwerp } from "@/lib/cards"
 import { splitsNamen, voegNamenSamen } from "@/lib/namen"
 import { getStyleConfig, type SC } from "@/lib/event-styles"
 import { kaartKleuren } from "@/lib/kaart-paletten"
 import Voorkant from "@/components/kaart/Voorkant"
+import HomeOntwerp from "@/components/HomeOntwerp"
+import { HOME_KOP_STANDAARD } from "@/lib/home-ontwerp"
 import { PLANS, formatEur, isPlan, type Plan } from "@/lib/plans"
 import { KLEUR, LETTER, VORM } from "@/lib/ontwerp"
 import { Knop, invoerKlassen, invoerStijl } from "@/components/ui"
@@ -115,6 +117,35 @@ function Mini({ design, namen, datum, locatie, type, sc }: { design: CardDesign;
   )
 }
 
+/** Het ontwerp zoals het op de homepagina staat, in het klein */
+function MiniHome({ design, namen, datum, locatie, sc }: { design: CardDesign; namen: string; datum: string; locatie: string; sc: SC }) {
+  const vak = useRef<HTMLDivElement>(null)
+  const [schaal, setSchaal] = useState(0.25)
+  useEffect(() => {
+    const v = vak.current
+    if (!v) return
+    const meet = () => setSchaal(v.clientWidth / 400)
+    const ro = new ResizeObserver(meet)
+    ro.observe(v)
+    meet()
+    return () => ro.disconnect()
+  }, [])
+  return (
+    <div ref={vak} aria-hidden className="relative w-full overflow-hidden" style={{ aspectRatio: "5 / 7", borderRadius: 10, backgroundColor: sc.bodyBg, pointerEvents: "none" }}>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div style={{ width: 400, flexShrink: 0, transform: `scale(${schaal})`, transformOrigin: "center" }}>
+          <HomeOntwerp
+            ontwerp={design as NieuwOntwerp}
+            sc={sc}
+            tekst={{ kop: HOME_KOP_STANDAARD, namen: namen || "Jullie namen", datum: datum || null, locatie: locatie || null }}
+            vasteBreedte={400}
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function StartFlow() {
   const router = useRouter()
   const [stap, setStap] = useState(0)
@@ -168,6 +199,8 @@ export default function StartFlow() {
   const gekozen: Keuze = keuze ?? advies ?? "save_the_date"
   const kaartType: CardType = gekozen === "save_the_date" || gekozen === "weetniet" ? "save_the_date" : "trouwkaart"
   const sc = kaartKleuren(getStyleConfig("zand"), "")
+  // De website begint in Ivoor, zoals een nieuw concept
+  const scSite = getStyleConfig("ivoor")
 
   /** Alles in de browser zetten, onder de sleutels die de bouwers lezen */
   function bewaarInBrowser() {
@@ -191,6 +224,7 @@ export default function StartFlow() {
             datum,
             locatie: locatie.trim(),
             frame_location: locatie.trim(),
+            homepage_settings: { ...((bestaand.homepage_settings as Record<string, unknown> | undefined) ?? {}), ontwerp },
           }))
         } else {
           localStorage.setItem(LS_WEBSITE_CONCEPT, JSON.stringify(nieuwWebsiteConcept({ namen, datum, locatie, style: "ivoor", ontwerp })))
@@ -363,10 +397,10 @@ export default function StartFlow() {
             </>
           )}
 
-          {stap === 2 && (
+          {stap === 3 && (
             <>
-              {kop("Zo kan jullie kaart eruitzien")}
-              {onder("Kies er een om mee te beginnen. Kleuren, tekst en ontwerp pas je later nog aan.")}
+              {kop(gekozen === "compleet" ? "Kies een ontwerp voor jullie website" : "Zo kan jullie kaart eruitzien")}
+              {onder(gekozen === "compleet" ? "Dit komt op jullie homepage. Later pas je alles nog aan." : "Kies er een om mee te beginnen. Later pas je alles nog aan.")}
               <div className="grid grid-cols-3 gap-2.5">
                 {ONTWERPEN.map((o) => {
                   const actief = ontwerp === o.id
@@ -379,7 +413,9 @@ export default function StartFlow() {
                       className="p-1 flex flex-col gap-1.5 text-left bg-white cursor-pointer"
                       style={{ borderRadius: 12, border: `2px solid ${actief ? KLEUR.goud : "transparent"}` }}
                     >
-                      <Mini design={o.id} namen={namen} datum={datum} locatie={locatie} type={kaartType} sc={sc} />
+                      {gekozen === "compleet"
+                        ? <MiniHome design={o.id} namen={namen} datum={datum} locatie={locatie} sc={scSite} />
+                        : <Mini design={o.id} namen={namen} datum={datum} locatie={locatie} type={kaartType} sc={sc} />}
                       <span className="px-0.5 text-[12px] font-semibold leading-tight" style={{ color: KLEUR.inkt }}>{o.naam}</span>
                     </button>
                   )
@@ -391,7 +427,7 @@ export default function StartFlow() {
             </>
           )}
 
-          {stap === 3 && (
+          {stap === 2 && (
             <>
               {kop("Wat wil je maken?")}
               {onder(adviesTekst(datum))}
@@ -460,7 +496,7 @@ export default function StartFlow() {
 
           <div className="flex gap-2.5 mt-7">
             {stap > 0 && !verstuurd && (
-              <Knop soort="rand" onClick={() => { setFout(null); setStap(stap - 1) }}>
+              <Knop soort="rand" onClick={() => { setFout(null); setStap(stap === 4 && gekozen === "weetniet" ? 2 : stap - 1) }}>
                 Terug
               </Knop>
             )}

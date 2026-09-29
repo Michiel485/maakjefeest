@@ -96,7 +96,6 @@ export default function HomeOntwerpGalerij({
   }
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-[11px] text-gray-400 leading-snug">De tekst op het ontwerp pas je aan bij Tekstvelden.</p>
       <div className="grid grid-cols-3 gap-2">
         {HOME_ONTWERPEN.map((o) => (
           <Tegel
