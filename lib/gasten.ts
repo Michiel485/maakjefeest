@@ -49,16 +49,16 @@ export type AanmeldStand = "geen" | "janee" | "adres" | "volledig"
 
 export const AANMELD_LABEL: Record<AanmeldStand, string> = {
   geen: "Niets vragen",
-  janee: "Aanwezig ja/nee",
-  adres: "Aanwezig ja/nee, met adres",
+  janee: "Ja of nee",
+  adres: "Ja of nee, met adres",
   volledig: "Volledig aanmelden",
 }
 
 export const AANMELD_UITLEG: Record<AanmeldStand, string> = {
-  geen: "de gast ziet alleen de kaart en kan de datum in zijn agenda zetten",
-  janee: "je gasten laten met één tik weten of ze erbij zijn, en je gastenlijst vult zich vanzelf",
-  adres: "wil je straks papieren trouwkaarten sturen? Laat je gasten hier zelf hun adres achterlaten",
-  volledig: "alles, inclusief dieetwensen en je eigen vragen",
+  geen: "Alleen de kaart. Gasten zetten de datum in hun agenda.",
+  janee: "Eén tik: komen ze of niet.",
+  adres: "Ja of nee, plus hun adres voor een papieren kaart later.",
+  volledig: "Alles, ook dieetwensen en je eigen vragen.",
 }
 
 export function aanmeldStand(waarde: unknown): AanmeldStand {

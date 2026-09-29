@@ -358,6 +358,8 @@ export default function BouwenPage() {
   const [fontFrameNames, setFontFrameNames] = useState("pinyonscript")
   const [fontPageTitles, setFontPageTitles] = useState("playfair")
   const [viewport, setViewport] = useState<Viewport>("desktop")
+  // Het keuzevenster van de stijlknop boven het voorbeeld
+  const [stijlOpen, setStijlOpen] = useState(false)
   const [heroImageError, setHeroImageError] = useState<string | null>(null)
   const canvasContainerRef = useRef<HTMLDivElement>(null)
   const [canvasScale, setCanvasScale] = useState(1)
@@ -1434,7 +1436,7 @@ export default function BouwenPage() {
   }
 
   const webStappen: WebStap[] = [
-    { kort: "Stijl", vraag: "Welke stijl past bij jullie?", uitleg: "Kleuren en letters voor de hele site.", secties: ["algemeen"], delen: ["alg:stijl", "alg:lettertype"] },
+    { kort: "Stijl", vraag: "Welke stijl past bij jullie?", uitleg: "Kleuren en letters voor de hele site. Klik in het voorbeeld door de pagina's; met de knop Stijl erboven wissel je altijd.", secties: ["algemeen"], delen: ["alg:stijl", "alg:lettertype"] },
     { kort: "Homepage", vraag: "Hoe ziet jullie homepage eruit?", uitleg: "Een ontwerp zoals op jullie kaart, of een grote foto met tekst.", secties: ["paginas"], pagina: "Home", delen: ["home:layout", "home:kaders", "home:headerfoto"] },
     { kort: "Tekst", vraag: "Wat staat er op de homepage?", uitleg: "Namen, datum en locatie staan er al.", tip: "Tik op een tekst in het voorbeeld om hem te wijzigen.", secties: ["paginas"], pagina: "Home", delen: ["home:tekstvelden", "home:welkomst"] },
     { kort: "Pagina's", vraag: "Welke pagina's wil je?", uitleg: "Zet aan wat je nodig hebt. Daarna vul je ze één voor één in.", secties: ["algemeen", "paginas"], delen: ["alg:layout"] },
@@ -2087,7 +2089,7 @@ export default function BouwenPage() {
                       <div className="flex items-center justify-between gap-3">
                         <div>
                           <p className="text-xs font-semibold text-gray-700">Website afschermen</p>
-                          <p className="text-[11px] text-gray-400 mt-0.5">Gasten moeten een code of antwoord invoeren</p>
+                          <p className="text-[11px] text-gray-400 mt-0.5">Alleen te openen met een wachtwoord of geheime vraag</p>
                         </div>
                         <button
                           role="switch"
@@ -2130,7 +2132,7 @@ export default function BouwenPage() {
                                 placeholder="bijv. JansenBakker2025"
                                 className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] transition-all"
                               />
-                              <p className="text-[11px] text-gray-400">Gasten moeten dit exact invoeren (hoofdlettergevoelig).</p>
+                              <p className="text-[11px] text-gray-400">Hoofdletters tellen mee.</p>
                             </label>
                           )}
 
@@ -2157,7 +2159,7 @@ export default function BouwenPage() {
                                   placeholder="bijv. Jansen en Bakker"
                                   className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] transition-all"
                                 />
-                                <p className="text-[11px] text-gray-400">Variaties zoals &ldquo;Jansen & Bakker&rdquo; worden ook geaccepteerd (~90% gelijkenis).</p>
+                                <p className="text-[11px] text-gray-400">Kleine tikfouten keuren we goed.</p>
                               </label>
                             </>
                           )}
@@ -2249,7 +2251,7 @@ export default function BouwenPage() {
                       {/* Paginaweergave */}
                       <div className="flex flex-col gap-1.5">
                         <p className="text-xs font-semibold text-gray-700">Paginaweergave</p>
-                        <p className="text-[11px] text-gray-400 leading-snug">Aparte pagina's zijn bereikbaar via het menu. Bij één pagina scrollt de bezoeker door alle onderdelen.</p>
+                        <p className="text-[11px] text-gray-400 leading-snug">Met een menu, of alles onder elkaar op één pagina.</p>
                         <div className="flex rounded-xl border border-[var(--goud-licht)] overflow-hidden mt-0.5">
                           {([
                             { value: 'multi', label: "Aparte pagina's" },
@@ -2886,7 +2888,7 @@ export default function BouwenPage() {
                           {/* ── Ceremoniemeesters controls ── */}
                           {page.id === 'Ceremoniemeesters' && (
                             <div className="flex flex-col gap-4">
-                              <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Ceremoniemeesters</p>
+                              
                               <MastersEditor
                                 masters={(content.Ceremoniemeesters?.masters as MasterPerson[] | undefined) ?? []}
                                 onChange={(masters) => updateContent("Ceremoniemeesters", { ...(content.Ceremoniemeesters ?? {}), masters })}
@@ -3117,7 +3119,7 @@ export default function BouwenPage() {
                                 </div>
                               </div>
                               <div>
-                                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Sluitingsdatum</p>
+                                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Antwoorden kan tot en met</p>
                                 <label className="flex flex-col gap-1.5">
                                   <span className="text-xs font-semibold text-gray-600">Aanmelden niet meer mogelijk na</span>
                                   <input
@@ -3126,11 +3128,11 @@ export default function BouwenPage() {
                                     onChange={(e) => updateContent("RSVP", { ...(content.RSVP ?? {}), deadline: e.target.value || null })}
                                     className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] transition-all"
                                   />
-                                  <span className="text-xs text-gray-400">Laat leeg voor geen sluitingsdatum.</span>
+                                  <span className="text-xs text-gray-400">Daarna sluit het formulier. Leeg is geen einddatum.</span>
                                 </label>
                               </div>
                               <div>
-                                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">DJ-tip / Song Request</p>
+                                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Verzoeknummer</p>
                                 <label className="flex items-start gap-3 cursor-pointer select-none">
                                   <input
                                     type="checkbox"
@@ -3160,7 +3162,7 @@ export default function BouwenPage() {
                                 </label>
                               </div>
                               <div>
-                                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Eigen Ja/Nee-vraag</p>
+                                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Eigen vraag (ja of nee)</p>
                                 <label className="flex flex-col gap-1.5">
                                   <span className="text-xs font-semibold text-gray-600">Stel je eigen vraag</span>
                                   <input
@@ -3190,7 +3192,7 @@ export default function BouwenPage() {
                           {/* ── Ons Verhaal controls ── */}
                           {page.id === 'OnsVerhaal' && (
                             <div className="flex flex-col gap-5">
-                              <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Ons Verhaal</p>
+                              
                               <label className="flex flex-col gap-1.5">
                                 <span className="text-xs font-semibold text-gray-600">Titel</span>
                                 <input
@@ -3246,7 +3248,7 @@ export default function BouwenPage() {
                                         </button>
                                       </div>
                                     )}
-                                    {storyUploading && <p className="text-xs text-gray-400">Uploading...</p>}
+                                    {storyUploading && <p className="text-xs text-gray-400">Bezig met uploaden…</p>}
                                   </div>
                                 ) : (
                                   <button
@@ -3269,7 +3271,7 @@ export default function BouwenPage() {
                           {/* ── Informatie controls ── */}
                           {page.id === 'Informatie' && (
                             <div className="flex flex-col gap-4">
-                              <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Informatie</p>
+                              
                               <PraktischEditor
                                 tiles={praktischTiles ?? DEFAULT_PRAKTISCH_TILES}
                                 onChange={(tiles) => updateContent("Informatie", { ...(content.Informatie ?? {}), items: tiles })}
@@ -3280,7 +3282,7 @@ export default function BouwenPage() {
                           {/* ── Cadeautips controls ── */}
                           {page.id === 'Cadeautips' && (
                             <div className="flex flex-col gap-4">
-                              <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Cadeautips</p>
+                              
                               <WishlistEditor
                                 items={wishlistItems ?? DEFAULT_WISHLIST_ITEMS}
                                 onChange={(items) => updateContent("Cadeautips", { ...(content.Cadeautips ?? {}), items })}
@@ -3291,7 +3293,7 @@ export default function BouwenPage() {
                           {/* ── Foto's controls ── */}
                           {page.id === 'Fotos' && (
                             <div className="flex flex-col gap-5">
-                              <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Foto&apos;s</p>
+                              
                               <label className="flex flex-col gap-1.5">
                                 <span className="text-xs font-semibold text-gray-600">Paginatitel</span>
                                 <input
@@ -3392,7 +3394,59 @@ export default function BouwenPage() {
         {/* ── Main panel ── */}
         <main className="relative flex flex-1 flex-col overflow-hidden bg-gray-100 border-t md:border-t-0 border-[var(--goud-licht)]">
           <div className={`flex items-center justify-between px-4 py-2 bg-gray-100 border-b border-[var(--goud-licht)] flex-shrink-0 ${blad && !bladKlein ? "max-md:hidden" : ""}`}>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Live preview</p>
+            {/* Altijd bij de hand: een andere stijl, en je blijft op de pagina
+                waar je bent. Zo zie je hoe elke pagina er in die stijl uitziet
+                (Michiel, 29 september 2026). */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setStijlOpen((o) => !o)}
+                aria-expanded={stijlOpen}
+                className="inline-flex items-center gap-2 text-xs font-semibold pl-1.5 pr-3 py-1.5 rounded-lg bg-white"
+                style={{ color: KLEUR.inkt, border: `1px solid ${KLEUR.goudLicht}`, cursor: "pointer" }}
+              >
+                <span
+                  aria-hidden
+                  className="w-5 h-5 rounded-full"
+                  style={{ background: `linear-gradient(135deg, ${STYLE_CONFIG[style].bodyBg} 50%, ${STYLE_CONFIG[style].accent} 50%)`, boxShadow: "0 0 0 1px rgba(0,0,0,0.08)" }}
+                />
+                Stijl: {STYLE_NAAM[style]}
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M6 9l6 6 6-6" /></svg>
+              </button>
+              {stijlOpen && (
+                <>
+                  <div className="fixed inset-0 z-30" onClick={() => setStijlOpen(false)} />
+                  <div className="absolute left-0 top-full mt-2 z-40 bg-white rounded-2xl p-3 grid grid-cols-5 gap-2.5 w-[290px] shadow-xl" style={{ border: `1px solid ${KLEUR.goudLicht}` }}>
+                    {STYLE_VOLGORDE.map((s) => {
+                      const cfg = STYLE_CONFIG[s]
+                      const actief = style === s
+                      return (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => saveStyle(s)}
+                          title={STYLE_NAAM[s]}
+                          className="flex flex-col items-center gap-1"
+                          style={{ cursor: "pointer", background: "none", border: "none", padding: 0 }}
+                        >
+                          <span
+                            className="w-9 h-9 rounded-full"
+                            style={{
+                              background: `linear-gradient(135deg, ${cfg.bodyBg} 50%, ${cfg.accent} 50%)`,
+                              boxShadow: actief ? "0 0 0 2px #fff, 0 0 0 4px #C5A059" : "0 0 0 1px rgba(0,0,0,0.08)",
+                            }}
+                          />
+                          <span className="text-[10px]" style={{ color: actief ? KLEUR.inkt : KLEUR.tekst, fontWeight: actief ? 700 : 500 }}>{STYLE_NAAM[s]}</span>
+                        </button>
+                      )
+                    })}
+                    <p className="col-span-5 m-0 mt-1 text-[11px] leading-snug" style={{ color: KLEUR.zacht }}>
+                      Klik in het voorbeeld door de pagina&apos;s om te zien hoe de stijl overal staat.
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
             <div className="flex items-center gap-2">
                 {/* Zoom controls — desktop only */}
                 <div className="hidden md:flex items-center gap-1 bg-gray-200 rounded-lg p-0.5">

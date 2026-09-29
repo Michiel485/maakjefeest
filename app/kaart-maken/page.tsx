@@ -2282,7 +2282,7 @@ export default function KaartMakenPage() {
 
               Ook bij een Save the Date, want wie zijn indeling al weet kan
               meteen twee losse kaarten maken. */}
-          <Sectie className={telefoon("groep")} vast={inPaneel("groep")} open={isOpen("groep")} onToggle={() => setStap(stap === "groep" ? null : "groep")} titel="Voor wie is deze kaart">
+          <Sectie className={telefoon("groep")} vast={inPaneel("groep")} open={isOpen("groep")} onToggle={() => setStap(stap === "groep" ? null : "groep")} titel="Gastengroep">
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => update({ guestType: "" })}
@@ -2392,7 +2392,7 @@ export default function KaartMakenPage() {
             vast={inPaneel("aanmelden")}
             open={isOpen("aanmelden")}
             onToggle={() => setStap(stap === "aanmelden" ? null : "aanmelden")}
-            titel={`Aanmelden · ${AANMELD_KORT[ontwerp.aanmelden]}`}
+            titel="Aanmelden"
           >
             {/* Een bewuste keuze, met het advies erbij. Standaard vraagt een
                 Save the Date niets; dat is aan jou. */}
@@ -2449,7 +2449,7 @@ export default function KaartMakenPage() {
 
           </Sectie>
 
-          <Sectie className={telefoon("taal")} vast={inPaneel("taal")} open={isOpen("taal")} onToggle={() => setStap(stap === "taal" ? null : "taal")} titel="Taal van de kaart">
+          <Sectie className={telefoon("taal")} vast={inPaneel("taal")} open={isOpen("taal")} onToggle={() => setStap(stap === "taal" ? null : "taal")} titel="Taal">
             <div className="grid grid-cols-2 gap-2">
               {CARD_TALEN.map((tl) => (
                 <button
@@ -2470,7 +2470,7 @@ export default function KaartMakenPage() {
             <p className="m-0 text-[11px] leading-snug" style={{ color: SUBTLE }}>Vaste teksten, zoals de knoppen, volgen deze taal. Wat jullie typen vertalen wij niet.</p>
           </Sectie>
 
-          <Sectie className={telefoon("bekijken")} vast={inPaneel("bekijken")} open={isOpen("bekijken")} onToggle={() => setStap(stap === "bekijken" ? null : "bekijken")} titel="Voorbeeld en proefkaart">
+          <Sectie className={telefoon("bekijken")} vast={inPaneel("bekijken")} open={isOpen("bekijken")} onToggle={() => setStap(stap === "bekijken" ? null : "bekijken")} titel="Bekijken">
             {/* Klaar om te versturen? Wat nog ontbreekt is aanklikbaar en brengt
                 je naar de plek waar het hoort. Michiels keuze van 25 september
                 2026. */}
@@ -2505,13 +2505,13 @@ export default function KaartMakenPage() {
               className="w-full text-sm font-semibold px-3 py-3 rounded-xl transition-all hover:-translate-y-0.5"
               style={{ backgroundColor: CHARCOAL, color: IVORY, border: "none", cursor: "pointer" }}
             >
-              💌 Zo ontvangen je gasten hem
+              Bekijk hoe hij opengaat
             </button>
             <Knop soort="rand" breed onClick={stuurProefkaart} disabled={busy !== null} bezig={busy === "proef"} bezigTekst="Versturen">
-              ✉️ Stuur een proefkaart naar mezelf
+              Stuur mezelf een proefkaart
             </Knop>
             <Knop soort="rand" breed onClick={downloadVoorbeeld} disabled={busy !== null} bezig={busy === "download"} bezigTekst="Maken">
-              ⬇ Download voorbeeld
+              Download een voorbeeld
             </Knop>
             <p className="text-[11px] leading-snug" style={{ color: SUBTLE }}>
               Het voorbeeld heeft een watermerk. Na activeren krijg je de kaart zonder, met de link voor je gasten.
