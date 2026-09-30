@@ -1453,7 +1453,7 @@ export default function BouwenPage() {
   const webStappen: WebStap[] = [
     { kort: "Stijl", vraag: "Welke stijl past bij jullie?", uitleg: "Kleuren en letters voor de hele site. Klik in het voorbeeld door de pagina's; met de knop Stijl erboven wissel je altijd.", secties: ["algemeen"], delen: ["alg:stijl", "alg:lettertype"] },
     { kort: "Homepage", vraag: "Hoe ziet jullie homepage eruit?", uitleg: "Een ontwerp zoals op jullie kaart, of een grote foto met tekst.", secties: ["paginas"], pagina: "Home", delen: ["home:layout", "home:kaders", "home:headerfoto"] },
-    { kort: "Tekst", vraag: "Wat staat er op de homepage?", uitleg: "Namen, datum en locatie staan er al.", tip: "Tik op een tekst in het voorbeeld om hem te wijzigen.", secties: ["paginas"], pagina: "Home", delen: ["home:tekstvelden", "home:welkomst"] },
+    { kort: "Tekst", vraag: "Wat staat er op de homepage?", uitleg: "Namen, datum en locatie staan er al. De rest is voorbeeldtekst: pas die aan naar jullie eigen woorden.", tip: "Tik op een tekst in het voorbeeld om hem te wijzigen.", secties: ["paginas"], pagina: "Home", delen: ["home:tekstvelden", "home:welkomst"] },
     { kort: "Pagina's", vraag: "Welke pagina's wil je?", uitleg: "Zet aan wat je nodig hebt. Daarna vul je ze één voor één in.", secties: ["algemeen", "paginas"], delen: ["alg:layout"] },
     ...activePagesOrdered
       .filter((pg) => pg.id !== "Home")
@@ -1461,6 +1461,9 @@ export default function BouwenPage() {
         kort: pg.id === "RSVP" ? "Aanmelden" : pg.label,
         vraag: PAGINA_STAP[pg.id]?.vraag ?? pg.label,
         uitleg: PAGINA_STAP[pg.id]?.uitleg ?? "",
+        // Er staat alvast voorbeeldtekst in; zeg dat, zodat niemand denkt dat
+        // het al klaar is (Michiel, 30 september 2026)
+        tip: pg.id === "Programma" || pg.id === "Informatie" || pg.id === "Cadeautips" ? "Er staat alvast voorbeeldtekst. Pas die aan of haal hem weg." : undefined,
         secties: ["paginas"],
         pagina: pg.id,
       })),

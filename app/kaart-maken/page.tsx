@@ -612,8 +612,8 @@ export default function KaartMakenPage() {
       kort: "Reageren",
       vraag: isTrouwkaart ? "Wat wil je van je gasten weten?" : "Hoe reageren je gasten?",
       uitleg: isTrouwkaart
-        ? "Je gasten melden zich aan op de kaart zelf. Jij ziet in je gastenlijst meteen wie komt en wie niet, met hun dieetwensen."
-        : "Je gasten reageren op de kaart zelf. Jij ziet in je gastenlijst meteen wie komt en wie niet, zonder appjes bij te houden.",
+        ? "Zet aanmelden aan en je gasten reageren met één tik op de kaart zelf. Gratis erbij: een gastenlijst die zich vanzelf vult. Je ziet in één oogopslag wie komt en wie niet, met hun dieetwensen, zonder appjes bij te houden."
+        : "Zet aanmelden aan en je gasten reageren met één tik op de kaart zelf. Gratis erbij: een gastenlijst die zich vanzelf vult. Je ziet in één oogopslag wie komt en wie niet, zonder appjes bij te houden.",
       tip: isTrouwkaart ? undefined : "Ons advies: vraag alleen ja of nee. Dat kost je gasten één tik.",
       secties: ["aanmelden"],
     },
@@ -2148,7 +2148,16 @@ export default function KaartMakenPage() {
 
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold flex items-center justify-between gap-2" style={{ color: CHARCOAL }}>
-                {tekstPlek("bericht") === "onder" ? "Boodschap (optioneel)" : "Boodschap"} <Plek waar={tekstPlek("bericht")} />
+                {tekstPlek("bericht") === "onder" ? "Boodschap (optioneel)" : "Boodschap"}
+                {/* Staat er nog geen eigen tekst, dan is wat je ziet een voorbeeld
+                    (Michiel, 30 september 2026) */}
+                {!ontwerp.message.trim() && tekstPlek("bericht") !== "onder" ? (
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap" style={{ backgroundColor: GOLD_BG, color: "#9A7B3F", border: `1px solid ${GOLD_LIGHT}` }}>
+                    voorbeeld, pas gerust aan
+                  </span>
+                ) : (
+                  <Plek waar={tekstPlek("bericht")} />
+                )}
               </span>
               <textarea
                 id="kaart-boodschap"
@@ -2503,11 +2512,6 @@ export default function KaartMakenPage() {
             {/* Wat de gastenlijst is, uitgelegd op de plek waar je er voor het
                 eerst tegenaan loopt. Hier stond alleen "komt in je gastenlijst",
                 en dat zegt niets als je nog nooit een dashboard hebt gezien. */}
-            {ontwerp.aanmelden !== "geen" && (
-              <p className="m-0 text-[12px] leading-snug rounded-xl px-3 py-2.5" style={{ color: BODY, backgroundColor: GOLD_BG, border: `1px solid ${GOLD_LIGHT}` }}>
-                <b style={{ color: CHARCOAL }}>Gratis gastenlijst erbij.</b> Wie reageert, staat er vanzelf in. Je ziet in één oogopslag wie komt.
-              </p>
-            )}
 
           </Sectie>
 
