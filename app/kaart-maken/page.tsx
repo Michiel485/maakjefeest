@@ -1,5 +1,6 @@
 "use client"
 
+import { kaartPagina } from "@/lib/event-styles"
 import { useStapGeschiedenis, useTerugSluit } from "@/lib/terug"
 import { antwoordVoorTekst, isIsoDatum } from "@/lib/cards"
 import { formulierTekst } from "@/lib/formulier-teksten"
@@ -2099,6 +2100,22 @@ export default function KaartMakenPage() {
                 onWijzig={(v) => update({ names: v })}
               />
             </div>
+            {/* Een eigen lettertype voor de namen. Niet bij een eigen ontwerp:
+                daar staat geen tekst op. */}
+            {cardDesign(ontwerp.template) !== "eigen" && (
+              <div className="flex flex-col gap-1.5 -mt-1">
+                <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Lettertype van de namen</span>
+                <LetterKiezer
+                  waarde={ontwerp.namenFont || undefined}
+                  onKies={(v) => update({ namenFont: v ?? "" })}
+                  leegLabel="Lettertype van het ontwerp"
+                  leegFont={(() => {
+                    const d = cardDesign(ontwerp.template)
+                    return isKlassiekOntwerp(d) ? CARD_DESIGN_STYLE[d].namenFont : browserLetters(d).namen
+                  })()}
+                />
+              </div>
+            )}
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-semibold flex items-center justify-between gap-2" style={{ color: CHARCOAL }}>Trouwdatum <Plek waar={tekstPlek("datum")} /></span>
               <input id="kaart-datum" type="date" className={inputCls} style={inputStyle} value={ontwerp.datum} onChange={(e) => update({ datum: e.target.value })} />
@@ -2259,22 +2276,6 @@ export default function KaartMakenPage() {
                   ? "Kies hieronder een foto, dan vult die de hele kaart."
                   : "Kies hieronder een foto voor in de boog. Zonder foto staan jullie initialen erin."}
               </p>
-            )}
-            {/* Een eigen lettertype voor de namen. Niet bij een eigen ontwerp:
-                daar staat geen tekst op. */}
-            {cardDesign(ontwerp.template) !== "eigen" && (
-              <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Lettertype van de namen</span>
-                <LetterKiezer
-                  waarde={ontwerp.namenFont || undefined}
-                  onKies={(v) => update({ namenFont: v ?? "" })}
-                  leegLabel="Lettertype van het ontwerp"
-                  leegFont={(() => {
-                    const d = cardDesign(ontwerp.template)
-                    return isKlassiekOntwerp(d) ? CARD_DESIGN_STYLE[d].namenFont : browserLetters(d).namen
-                  })()}
-                />
-              </div>
             )}
           </Sectie>
 
@@ -2587,7 +2588,7 @@ export default function KaartMakenPage() {
           /* Dezelfde achtergrond als je gast straks ziet, zodat het voorbeeld
              in de bouwer klopt met de kaart die aankomt. Michiels wens van
              23 september 2026. */
-          style={{ background: sc.bodyBackground ?? sc.bodyBg }}
+          style={{ background: kaartPagina(sc) }}
         >
           {/* Rechtsboven in het voorbeeld, in dezelfde stijl als "Terug naar
               ontwerpen" in de simulatie. Michiels punt: die knop hoort bij
@@ -2710,7 +2711,7 @@ export default function KaartMakenPage() {
            een patroon met een kleur erachter, en dat is als kleur ongeldig.
            Dan viel de achtergrond weg en zag je de bouwer erdoorheen zodra je
            onder de kaart scrolde (Michiels bevinding van 23 september 2026). */
-        <div className="fixed inset-0 z-[100] overflow-y-auto" style={{ background: sc.bodyBackground ?? sc.bodyBg }}>
+        <div className="fixed inset-0 z-[100] overflow-y-auto" style={{ background: kaartPagina(sc) }}>
           <button
             onClick={() => setSimulatie(false)}
             className="fixed top-12 right-4 z-[110] text-sm font-semibold px-4 py-2 rounded-xl shadow-lg"

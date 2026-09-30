@@ -1,5 +1,6 @@
 "use client"
 
+import { kaartPagina } from "@/lib/event-styles"
 import { antwoordSluit, antwoordVoorTekst } from "@/lib/cards"
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react"
 import type { SC } from "@/lib/event-styles"
@@ -492,7 +493,7 @@ export default function CardReveal({
         compact ? "py-4" : previewNotice ? "min-h-screen pt-24 pb-12" : "min-h-screen py-12"
       }`}
       style={{
-        background: sc.bodyBackground ?? sc.bodyBg,
+        background: kaartPagina(sc),
         // De envelop zakt tijdens de animatie onder deze doos uit. Zonder dit
         // groeit de pagina daardoor en verschuift het beeld een paar pixels,
         // soms met een scrollbalk erbij. Clip in plaats van hidden, zodat dit

@@ -111,6 +111,9 @@ export const STYLE_CONFIG = {
     labelColor: "#D59C76",
     bodyBg: "#0D5058",
     bodyBackground: null as string | null,
+    // Om de kaart heen iets lichter: dezelfde kleur als de kaart liet hem
+    // wegvallen (Michiel, 30 september 2026)
+    kaartAchtergrond: "#3C7D80" as string | null,
     cardBg: "#0D4A52" as string | null,
     cardText: "#FFFFFF" as string | null,
     goldBorder: true as boolean,
@@ -140,6 +143,9 @@ export const STYLE_CONFIG = {
     labelColor: "#C9A45C",
     bodyBg: "#1C1A17",
     bodyBackground: null as string | null,
+    // Om de kaart heen iets lichter: dezelfde kleur als de kaart liet hem
+    // wegvallen (Michiel, 30 september 2026)
+    kaartAchtergrond: "#4A4640" as string | null,
     cardBg: "#121110" as string | null,
     cardText: "#F3EBDD" as string | null,
     goldBorder: true as boolean,
@@ -312,6 +318,9 @@ export const STYLE_CONFIG = {
     labelColor: "#D6B26E",
     bodyBg: "#16233F",
     bodyBackground: null as string | null,
+    // Om de kaart heen iets lichter: dezelfde kleur als de kaart liet hem
+    // wegvallen (Michiel, 30 september 2026)
+    kaartAchtergrond: "#3C4C70" as string | null,
     cardBg: "#111C35" as string | null,
     cardText: "#F4F1EA" as string | null,
     goldBorder: true as boolean,
@@ -338,6 +347,9 @@ export const STYLE_CONFIG = {
     labelColor: "#E3A99C",
     bodyBg: "#3A1D35",
     bodyBackground: null as string | null,
+    // Om de kaart heen iets lichter: dezelfde kleur als de kaart liet hem
+    // wegvallen (Michiel, 30 september 2026)
+    kaartAchtergrond: "#6A4262" as string | null,
     cardBg: "#321830" as string | null,
     cardText: "#FBF1F3" as string | null,
     goldBorder: true as boolean,
@@ -364,6 +376,9 @@ export const STYLE_CONFIG = {
     labelColor: "#D9C08A",
     bodyBg: "#1C3328",
     bodyBackground: null as string | null,
+    // Om de kaart heen iets lichter: dezelfde kleur als de kaart liet hem
+    // wegvallen (Michiel, 30 september 2026)
+    kaartAchtergrond: "#476553" as string | null,
     cardBg: "#172C22" as string | null,
     cardText: "#F3F0E6" as string | null,
     goldBorder: true as boolean,
@@ -433,6 +448,8 @@ export interface SC {
   fontImport: string | null
   frameBodyText: string | null
   outerBg?: string | null
+  /** De achtergrond om een kaart heen, als die anders moet dan bodyBg */
+  kaartAchtergrond?: string | null
   fontHero: string
   fontHeroWeight: number
   fontInitials: string
@@ -486,4 +503,13 @@ export function formatDate(iso: string, locale = "nl-NL") {
     month: "long",
     year: "numeric",
   })
+}
+
+/**
+ * De achtergrond om een kaart heen: op de kaartpagina, in de demo en in de
+ * kaartbouwer. Bij de donkere stijlen iets lichter dan de pagina van de
+ * website, zodat de kaart niet wegvalt.
+ */
+export function kaartPagina(sc: SC): string {
+  return sc.kaartAchtergrond ?? sc.bodyBackground ?? sc.bodyBg
 }

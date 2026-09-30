@@ -156,6 +156,8 @@ export function kaartKleuren(sc: SC, kleur: unknown): SC {
     buttonText: p.knopTekst,
     bodyBg: p.pagina,
     bodyBackground: null,
+    // Een eigen palet heeft zijn eigen pagina
+    kaartAchtergrond: null,
     cardBg: p.kaart,
     cardText: p.kop,
     goldBorder: false,
