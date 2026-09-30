@@ -303,8 +303,30 @@ export default function CardReveal({
   // verschijnen; rustig en feestelijk delen dezelfde beweging.
   const klassiekeAnimatie = display.animatie === "klassiek"
 
-  function open() {
-    if (stage !== "closed") return
+  // Letters en afbeeldingen alvast klaarzetten terwijl je naar de envelop
+  // kijkt. Eerst gebeurde dat op het moment dat de kaart eruit schoof, en dan
+  // ging hij de eerste keer schokkerig open (Michiel, 30 september 2026).
+  const klaarRef = useRef<Promise<unknown> | null>(null)
+  useEffect(() => {
+    const kaart = kaartRef.current
+    const beelden = kaart ? Array.from(kaart.querySelectorAll("img")) : []
+    klaarRef.current = Promise.race([
+      Promise.all([
+        document.fonts?.ready ?? Promise.resolve(),
+        ...beelden.map((b) => (b.decode ? b.decode().catch(() => {}) : Promise.resolve())),
+      ]),
+      new Promise((r) => setTimeout(r, 1500)),
+    ])
+  }, [display])
+  const bezigRef = useRef(false)
+
+  async function open() {
+    if (stage !== "closed" || bezigRef.current) return
+    bezigRef.current = true
+    // Is het klaarzetten nog bezig (de eerste keer, direct na het laden), dan
+    // heel even wachten; daarna gaat het soepel
+    if (klaarRef.current) await Promise.race([klaarRef.current, new Promise((r) => setTimeout(r, 600))])
+    bezigRef.current = false
     if (reduceMotion) {
       setStage("open")
       return
@@ -636,6 +658,7 @@ export default function CardReveal({
                 aria-label={display.openEnvelopLabel}
                 className="absolute inset-0 block outline-none"
                 style={{
+                  willChange: "transform, opacity",
                   background: "none",
                   border: "none",
                   padding: 0,
@@ -677,6 +700,7 @@ export default function CardReveal({
                 aria-hidden="true"
                 className="absolute inset-0"
                 style={{
+                  willChange: "transform, opacity",
                   // Dicht ligt de klep vóór de kaart, want hij is dan de
                   // buitenkant van de envelop. Pas halverwege het openklappen
                   // staat hij recht overeind en gaat hij erachter; eerder zou je
@@ -727,6 +751,7 @@ export default function CardReveal({
                 aria-hidden="true"
                 className="absolute inset-0"
                 style={{
+                  willChange: "transform, opacity",
                   // Boven de klep, want het zegel houdt die klep juist dicht.
                   // De vorm van de voorkant en die van de klep overlappen niet,
                   // dus voor de envelop zelf maakt die volgorde niks uit.
@@ -857,6 +882,7 @@ export default function CardReveal({
                         // Het kraken en vallen zit in de keyframes, zodat het
                         // twee bewegingen zijn in plaats van één sprong
                         animation: `${helft === 0 ? "zegel-links" : "zegel-rechts"} 0.95s ease-in both`,
+                        willChange: "transform, opacity",
                       }}
                     >
                       <span className="absolute inset-0" style={{ clipPath: vorm }}>
@@ -899,6 +925,9 @@ export default function CardReveal({
             // die ligt qua stapeling boven de envelopknop.
             pointerEvents: stage === "open" ? undefined : "none",
             transformOrigin: "top center",
+            // Een eigen laag zolang hij beweegt: dan hoeft de browser de kaart
+            // niet elk beeld opnieuw te tekenen
+            ...(stage === "open" ? {} : { willChange: "transform, opacity" }),
             ...(reduceMotion || stage === "open"
               ? {}
               : klassiekeAnimatie
