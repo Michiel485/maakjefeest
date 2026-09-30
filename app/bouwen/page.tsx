@@ -813,10 +813,18 @@ export default function BouwenPage() {
           ...extraContent,
           ...(hc ? { Home: hc as unknown as Record<string, unknown> } : {}),
         })
-        setActive({
+        // Alle pagina's aan, behalve wat je zelf uitzette: dat onthoudt de
+        // browser ook zonder account (Michiel, 30 september 2026)
+        const bewaardePaginas = Array.isArray(d.pages) ? (d.pages as string[]) : null
+        const alleAan: Record<PageId, boolean> = {
           Home: true, Programma: true, RSVP: true, Informatie: true,
           Cadeautips: true, OnsVerhaal: true, Ceremoniemeesters: true, Fotos: true,
-        })
+        }
+        setActive(
+          bewaardePaginas
+            ? (Object.fromEntries(PAGES.map((pg) => [pg.id, pg.id === "Home" || bewaardePaginas.includes(pg.id)])) as Record<PageId, boolean>)
+            : alleAan
+        )
           const mail = (d.email as string) || email
           if (mail) setAuthEmail(mail)
           setLadenKlaar(true)
@@ -904,7 +912,7 @@ export default function BouwenPage() {
               font_frame_names: d.font_frame_names || "cormorant",
               font_page_titles: d.font_page_titles || "cormorant",
               homepage_settings: d.homepage_settings,
-              pages: ["Home", "Programma", "RSVP", "Informatie", "Cadeautips", "OnsVerhaal", "Ceremoniemeesters"],
+              pages: Array.isArray(d.pages) ? d.pages : PAGES.map((pg) => pg.id),
               content: { ...extraContent, ...(hc ? { Home: hc } : {}) },
             }),
           })
@@ -1157,6 +1165,7 @@ export default function BouwenPage() {
           homepage_settings: hpSettings,
           homeContent: content.Home ?? draft.homeContent,
           concept_naam: conceptNaam,
+          pages: PAGES.filter((pg) => active[pg.id]).map((pg) => pg.id),
         }))
         const { Home: _home, ...restContent } = content
         localStorage.setItem("sayingyes_content", JSON.stringify(restContent))
@@ -1325,6 +1334,7 @@ export default function BouwenPage() {
           nav_layout: navLayout,
           homepage_settings: hpSettings,
           homeContent: draft.homeContent,
+          pages: PAGES.filter((pg) => active[pg.id]).map((pg) => pg.id),
         }
         localStorage.setItem("sayingyes_draft", JSON.stringify(currentDraft))
         const { Home: _home, ...restContent } = content
@@ -3466,126 +3476,129 @@ export default function BouwenPage() {
 
         {/* ── Main panel ── */}
         <main className="relative flex flex-1 flex-col overflow-hidden bg-gray-100 border-t md:border-t-0 border-[var(--goud-licht)]">
-          <div className={`flex items-center justify-between px-4 py-2 bg-gray-100 border-b border-[var(--goud-licht)] flex-shrink-0 ${blad && !bladKlein ? "max-md:hidden" : ""}`}>
-            {/* Altijd bij de hand: een andere stijl, en je blijft op de pagina
-                waar je bent. Zo zie je hoe elke pagina er in die stijl uitziet
-                (Michiel, 29 september 2026). */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setStijlOpen((o) => !o)}
-                aria-expanded={stijlOpen}
-                className="inline-flex items-center gap-2 text-xs font-semibold pl-1.5 pr-3 py-1.5 rounded-lg bg-white"
-                style={{ color: KLEUR.inkt, border: `1px solid ${KLEUR.goudLicht}`, cursor: "pointer" }}
-              >
-                <span
-                  aria-hidden
-                  className="w-5 h-5 rounded-full"
-                  style={{ background: `linear-gradient(135deg, ${STYLE_CONFIG[style].bodyBg} 50%, ${STYLE_CONFIG[style].accent} 50%)`, boxShadow: "0 0 0 1px rgba(0,0,0,0.08)" }}
-                />
-                Stijl: {STYLE_NAAM[style]}
-                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M6 9l6 6 6-6" /></svg>
-              </button>
-              {stijlOpen && (
-                <>
-                  <div className="fixed inset-0 z-30" onClick={() => setStijlOpen(false)} />
-                  <div className="absolute left-0 top-full mt-2 z-40 bg-white rounded-2xl p-3 grid grid-cols-5 gap-2.5 w-[290px] shadow-xl" style={{ border: `1px solid ${KLEUR.goudLicht}` }}>
-                    {STYLE_VOLGORDE.map((s) => {
-                      const cfg = STYLE_CONFIG[s]
-                      const actief = style === s
-                      return (
-                        <button
-                          key={s}
-                          type="button"
-                          onClick={() => saveStyle(s)}
-                          title={STYLE_NAAM[s]}
-                          className="flex flex-col items-center gap-1"
-                          style={{ cursor: "pointer", background: "none", border: "none", padding: 0 }}
-                        >
-                          <span
-                            className="w-9 h-9 rounded-full"
-                            style={{
-                              background: `linear-gradient(135deg, ${cfg.bodyBg} 50%, ${cfg.accent} 50%)`,
-                              boxShadow: actief ? "0 0 0 2px #fff, 0 0 0 4px #C5A059" : "0 0 0 1px rgba(0,0,0,0.08)",
-                            }}
-                          />
-                          <span className="text-[10px]" style={{ color: actief ? KLEUR.inkt : KLEUR.tekst, fontWeight: actief ? 700 : 500 }}>{STYLE_NAAM[s]}</span>
-                        </button>
-                      )
-                    })}
-                    {/* Het lettertype erbij, net zo snel te wisselen (Michiel, 30 september 2026) */}
-                    <div className="col-span-5 mt-1 flex flex-col gap-1.5">
-                      <span className="text-[11px] font-semibold" style={{ color: KLEUR.inkt }}>Lettertype</span>
-                      <FontSelect value={fontPageTitles} onChange={saveFontPageTitles} />
-                    </div>
-                    <p className="col-span-5 m-0 mt-1 text-[11px] leading-snug" style={{ color: KLEUR.zacht }}>
-                      Klik in het voorbeeld door de pagina&apos;s om te zien hoe de stijl overal staat.
-                    </p>
-                  </div>
-                </>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-                {/* Zoom controls — desktop only */}
-                <div className="hidden md:flex items-center gap-1 bg-gray-200 rounded-lg p-0.5">
-                  <button
-                    onClick={() => setZoomMultiplier(z => Math.max(0.5, parseFloat((z - 0.1).toFixed(1))))}
-                    title="Zoom uit"
-                    className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => setZoomMultiplier(1)}
-                    title="Zoom resetten"
-                    className="text-[11px] font-semibold text-gray-500 hover:text-gray-700 w-9 text-center transition-colors tabular-nums"
-                  >
-                    {Math.round(zoomMultiplier * 100)}%
-                  </button>
-                  <button
-                    onClick={() => setZoomMultiplier(z => Math.min(1.5, parseFloat((z + 0.1).toFixed(1))))}
-                    title="Zoom in"
-                    className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                    </svg>
-                  </button>
-                </div>
-
-                {/* Viewport toggle */}
-                <div className="flex items-center gap-1 bg-gray-200 rounded-lg p-0.5">
-                  <button
-                    onClick={() => setViewport("desktop")}
-                    title="Desktop"
-                    className={`p-1.5 rounded-md transition-colors ${viewport === "desktop" ? "bg-white shadow-sm text-gray-700" : "text-gray-400 hover:text-gray-600"}`}
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <rect x="2" y="3" width="20" height="14" rx="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 21h8M12 17v4" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => setViewport("mobiel")}
-                    title="Mobiel"
-                    className={`p-1.5 rounded-md transition-colors ${viewport === "mobiel" ? "bg-white shadow-sm text-gray-700" : "text-gray-400 hover:text-gray-600"}`}
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <rect x="5" y="2" width="14" height="20" rx="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01" strokeWidth={2.5} />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-          </div>
 
           {/* ── Canvas ── */}
           <div className="flex flex-1 min-h-0 overflow-hidden">
 
             {/* Canvas */}
               <div ref={canvasContainerRef} className={`flex-1 overflow-y-auto bg-gray-100 p-4 md:p-6 ${!bladKlein ? "max-md:pb-[50vh]" : "max-md:pb-16"}`}>
+              {/* Geen aparte balk met een lijn eronder: de knoppen scrollen mee met
+                  het voorbeeld, zodat de site nergens onder verdwijnt (Michiel, 30
+                  september 2026) */}
+              <div className={`flex items-center justify-between gap-3 mb-3 -mt-1 md:-mt-2 ${blad && !bladKlein ? "max-md:hidden" : ""}`}>
+                {/* Altijd bij de hand: een andere stijl, en je blijft op de pagina
+                    waar je bent. Zo zie je hoe elke pagina er in die stijl uitziet
+                    (Michiel, 29 september 2026). */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setStijlOpen((o) => !o)}
+                    aria-expanded={stijlOpen}
+                    className="inline-flex items-center gap-2 text-xs font-semibold pl-1.5 pr-3 py-1.5 rounded-lg bg-white"
+                    style={{ color: KLEUR.inkt, border: `1px solid ${KLEUR.goudLicht}`, cursor: "pointer" }}
+                  >
+                    <span
+                      aria-hidden
+                      className="w-5 h-5 rounded-full"
+                      style={{ background: `linear-gradient(135deg, ${STYLE_CONFIG[style].bodyBg} 50%, ${STYLE_CONFIG[style].accent} 50%)`, boxShadow: "0 0 0 1px rgba(0,0,0,0.08)" }}
+                    />
+                    Stijl: {STYLE_NAAM[style]}
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M6 9l6 6 6-6" /></svg>
+                  </button>
+                  {stijlOpen && (
+                    <>
+                      <div className="fixed inset-0 z-30" onClick={() => setStijlOpen(false)} />
+                      <div className="absolute left-0 top-full mt-2 z-40 bg-white rounded-2xl p-3 grid grid-cols-5 gap-2.5 w-[290px] shadow-xl" style={{ border: `1px solid ${KLEUR.goudLicht}` }}>
+                        {STYLE_VOLGORDE.map((s) => {
+                          const cfg = STYLE_CONFIG[s]
+                          const actief = style === s
+                          return (
+                            <button
+                              key={s}
+                              type="button"
+                              onClick={() => saveStyle(s)}
+                              title={STYLE_NAAM[s]}
+                              className="flex flex-col items-center gap-1"
+                              style={{ cursor: "pointer", background: "none", border: "none", padding: 0 }}
+                            >
+                              <span
+                                className="w-9 h-9 rounded-full"
+                                style={{
+                                  background: `linear-gradient(135deg, ${cfg.bodyBg} 50%, ${cfg.accent} 50%)`,
+                                  boxShadow: actief ? "0 0 0 2px #fff, 0 0 0 4px #C5A059" : "0 0 0 1px rgba(0,0,0,0.08)",
+                                }}
+                              />
+                              <span className="text-[10px]" style={{ color: actief ? KLEUR.inkt : KLEUR.tekst, fontWeight: actief ? 700 : 500 }}>{STYLE_NAAM[s]}</span>
+                            </button>
+                          )
+                        })}
+                        {/* Het lettertype erbij, net zo snel te wisselen (Michiel, 30 september 2026) */}
+                        <div className="col-span-5 mt-1 flex flex-col gap-1.5">
+                          <span className="text-[11px] font-semibold" style={{ color: KLEUR.inkt }}>Lettertype</span>
+                          <FontSelect value={fontPageTitles} onChange={saveFontPageTitles} />
+                        </div>
+                        <p className="col-span-5 m-0 mt-1 text-[11px] leading-snug" style={{ color: KLEUR.zacht }}>
+                          Klik in het voorbeeld door de pagina&apos;s om te zien hoe de stijl overal staat.
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                    {/* Zoom controls — desktop only */}
+                    <div className="hidden md:flex items-center gap-1 bg-gray-200 rounded-lg p-0.5">
+                      <button
+                        onClick={() => setZoomMultiplier(z => Math.max(0.5, parseFloat((z - 0.1).toFixed(1))))}
+                        title="Zoom uit"
+                        className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => setZoomMultiplier(1)}
+                        title="Zoom resetten"
+                        className="text-[11px] font-semibold text-gray-500 hover:text-gray-700 w-9 text-center transition-colors tabular-nums"
+                      >
+                        {Math.round(zoomMultiplier * 100)}%
+                      </button>
+                      <button
+                        onClick={() => setZoomMultiplier(z => Math.min(1.5, parseFloat((z + 0.1).toFixed(1))))}
+                        title="Zoom in"
+                        className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    {/* Viewport toggle */}
+                    <div className="flex items-center gap-1 bg-gray-200 rounded-lg p-0.5">
+                      <button
+                        onClick={() => setViewport("desktop")}
+                        title="Desktop"
+                        className={`p-1.5 rounded-md transition-colors ${viewport === "desktop" ? "bg-white shadow-sm text-gray-700" : "text-gray-400 hover:text-gray-600"}`}
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <rect x="2" y="3" width="20" height="14" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M8 21h8M12 17v4" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => setViewport("mobiel")}
+                        title="Mobiel"
+                        className={`p-1.5 rounded-md transition-colors ${viewport === "mobiel" ? "bg-white shadow-sm text-gray-700" : "text-gray-400 hover:text-gray-600"}`}
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <rect x="5" y="2" width="14" height="20" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01" strokeWidth={2.5} />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+              </div>
                 <div className="mx-auto" style={{ width: `${Math.round(canvasWidth * voorbeeldSchaal)}px` }}>
                   <div style={{ width: canvasWidth, transform: `scale(${voorbeeldSchaal})`, transformOrigin: "top left" }}>
                     <div className="rounded-2xl shadow-xl overflow-clip" style={{ backgroundColor: sc.navBg, fontFamily: sc.fontFamily, letterSpacing: sc.bodyLetterSpacing, fontWeight: sc.bodyFontWeight }}>

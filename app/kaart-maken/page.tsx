@@ -2633,8 +2633,11 @@ export default function KaartMakenPage() {
               kaart niet naar beneden duwt. */}
           {/* items-start: anders rekt de rij van nul hoog de knop mee tot nul,
               en dan viel de tekst over een platgedrukte knop heen. */}
-          <div className="hidden md:flex items-start justify-between gap-3 mb-4">
-          <div className="w-[340px] flex flex-col gap-2 rounded-2xl p-3" style={{ backgroundColor: "#fff", border: `1px solid ${GOLD_LIGHT}`, boxShadow: "0 8px 24px -16px rgba(26,18,4,0.35)" }}>
+          {/* Op een breed scherm links naast de kaart, in een rij van nul hoog:
+              dan duwt hij de kaart niet naar beneden (Michiel, 30 september
+              2026). De kaart schuift daarvoor een half blok naar rechts. */}
+          <div className="hidden md:flex items-start justify-between gap-3 mb-4 xl:flex-col xl:justify-start xl:sticky xl:top-0 xl:z-10 xl:h-0 xl:mb-0">
+          <div className="w-[320px] flex flex-col gap-2 rounded-2xl p-3" style={{ backgroundColor: "#fff", border: `1px solid ${GOLD_LIGHT}`, boxShadow: "0 8px 24px -16px rgba(26,18,4,0.35)" }}>
             {kaartenBlok}
           </div>
           <button
@@ -2646,7 +2649,7 @@ export default function KaartMakenPage() {
             {"💌"} Bekijk hoe het opengaat
           </button>
           </div>
-          <div className={`mx-auto max-w-md transition-transform duration-200 origin-top ${!bladKlein ? "max-md:scale-[0.45]" : ""}`}>
+          <div className={`mx-auto max-w-md transition-transform duration-200 origin-top xl:relative xl:left-[170px] ${!bladKlein ? "max-md:scale-[0.45]" : ""}`}>
             {/* Op de telefoon weg: daar was de bovenkant te druk met twee
                 balken, een kopje, een demoknop en een uitleg (Michiel, 26
                 september 2026). De demo staat daar in de balk bovenin. */}
