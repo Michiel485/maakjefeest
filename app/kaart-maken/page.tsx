@@ -2,7 +2,7 @@
 
 import { kaartPagina } from "@/lib/event-styles"
 import { useStapGeschiedenis, useTerugSluit } from "@/lib/terug"
-import { antwoordVoorTekst, isIsoDatum } from "@/lib/cards"
+import { antwoordVoorTekst, isIsoDatum, detailsStijl as detailsStijlUit, type DetailsStijl } from "@/lib/cards"
 import { formulierTekst } from "@/lib/formulier-teksten"
 import NamenVelden from "@/components/NamenVelden"
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
@@ -239,6 +239,9 @@ interface KaartOntwerp {
   details: DetailsStand | ""
   /** Tot wanneer gasten kunnen antwoorden (2027-05-01), leeg is geen datum */
   antwoordVoor: string
+  /** Hoe tijden en dresscode op de kaart staan; leeg is kopjes */
+  detailsStijl: DetailsStijl | ""
+  detailsIcoon: boolean
   /** Een eigen lettertype voor de namen; leeg is dat van het ontwerp */
   namenFont: string
   datum: string
@@ -272,6 +275,8 @@ const LEEG: KaartOntwerp = {
   names: "",
   details: "",
   antwoordVoor: "",
+  detailsStijl: "",
+  detailsIcoon: false,
   namenFont: "",
   datum: "",
   location: "",
@@ -759,6 +764,8 @@ export default function KaartMakenPage() {
               ontwerpVerhouding: kaart?.content.ontwerpVerhouding ?? null,
               details: detailsStand(kaart?.content.details) ?? "",
               antwoordVoor: isIsoDatum(kaart?.content.antwoordVoor) ? (kaart?.content.antwoordVoor as string) : "",
+              detailsStijl: detailsStijlUit(kaart?.content.detailsStijl) ?? "",
+              detailsIcoon: kaart?.content.detailsIcoon === true,
               namenFont: titelFontId(kaart?.content.namenFont) ?? "",
               template: kaart?.template ?? "klassiek",
               names: kaart?.content.names ?? (event.frame_names as string) ?? (event.title as string) ?? "",
@@ -881,6 +888,8 @@ export default function KaartMakenPage() {
     ontwerpUrl: ontwerp.ontwerpUrl ?? ontwerp.ontwerpDataUrl ?? undefined,
     ontwerpVerhouding: ontwerp.ontwerpVerhouding ?? undefined,
     details: ontwerp.details || undefined,
+    detailsStijl: ontwerp.detailsStijl || undefined,
+    detailsIcoon: ontwerp.detailsIcoon || undefined,
     namenFont: ontwerp.namenFont || undefined,
     taal: ontwerp.taal,
     aanmelden: ontwerp.aanmelden,
@@ -1182,6 +1191,8 @@ export default function KaartMakenPage() {
       ontwerpVerhouding: k.content.ontwerpVerhouding ?? null,
       details: detailsStand(k.content.details) ?? "",
       antwoordVoor: isIsoDatum(k.content.antwoordVoor) ? (k.content.antwoordVoor as string) : "",
+      detailsStijl: detailsStijlUit(k.content.detailsStijl) ?? "",
+      detailsIcoon: k.content.detailsIcoon === true,
       namenFont: titelFontId(k.content.namenFont) ?? "",
       location: k.content.location ?? o.location,
       message: k.content.message ?? "",
@@ -1471,6 +1482,8 @@ export default function KaartMakenPage() {
           ontwerpUrl: ontwerp.ontwerpUrl ?? ontwerp.ontwerpDataUrl ?? undefined,
           ontwerpVerhouding: ontwerp.ontwerpVerhouding ?? undefined,
           details: ontwerp.details || undefined,
+    detailsStijl: ontwerp.detailsStijl || undefined,
+    detailsIcoon: ontwerp.detailsIcoon || undefined,
           namenFont: ontwerp.namenFont || undefined,
           dresscode: ontwerp.dresscode || undefined,
           toonGastType: ontwerp.toonGastType || undefined,
@@ -2424,6 +2437,40 @@ export default function KaartMakenPage() {
                 maxLength={40}
               />
             </label>
+            {/* Hoe ze op de kaart staan (Michiel, 30 september 2026) */}
+            {tekstPlek("details") === "op" && (
+              <div className="flex flex-col gap-2">
+                <span className="text-xs font-semibold" style={{ color: CHARCOAL }}>Weergave</span>
+                <div className="grid grid-cols-3 gap-1.5" role="radiogroup" aria-label="Weergave van tijden en dresscode">
+                  {([["kopjes", "Kopjes"], ["lijst", "Onder elkaar"], ["sierlijn", "Sierlijn"]] as const).map(([s, label]) => {
+                    const aan = (ontwerp.detailsStijl || "kopjes") === s
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        role="radio"
+                        aria-checked={aan}
+                        onClick={() => update({ detailsStijl: s })}
+                        className="text-xs font-semibold px-2 py-2 rounded-xl"
+                        style={{ border: `2px solid ${aan ? GOLD : GOLD_LIGHT}`, backgroundColor: aan ? "#fff" : "transparent", color: CHARCOAL, cursor: "pointer" }}
+                      >
+                        {label}
+                      </button>
+                    )
+                  })}
+                </div>
+                <label className="flex items-center justify-between gap-3" style={{ cursor: "pointer" }}>
+                  <span className="text-xs" style={{ color: CHARCOAL }}>Met icoontjes</span>
+                  <input
+                    type="checkbox"
+                    checked={ontwerp.detailsIcoon}
+                    onChange={(e) => update({ detailsIcoon: e.target.checked })}
+                    className="w-5 h-5"
+                    style={{ accentColor: GOLD, cursor: "pointer" }}
+                  />
+                </label>
+              </div>
+            )}
             {detailsKeuze(cardDesign(ontwerp.template)) && (
               <div className="flex items-center justify-between gap-3">
                 <span className="text-xs" style={{ color: SUBTLE }}>Staan ze op of onder de kaart?</span>

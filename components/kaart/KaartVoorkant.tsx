@@ -105,6 +105,25 @@ function Zonsopgang({ breedte, kleur }: { breedte: number; kleur: string }) {
   )
 }
 
+/** Een klokje in een fijne lijn, voor bij de tijden */
+function Klokje({ maat, kleur }: { maat: number; kleur: string }) {
+  return (
+    <svg width={maat} height={maat} viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="8.5" stroke={kleur} strokeWidth="1.4" />
+      <path d="M12 7.5V12l3 2" stroke={kleur} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+/** Een kleerhanger in een fijne lijn, voor bij de dresscode */
+function Kleerhanger({ maat, kleur }: { maat: number; kleur: string }) {
+  return (
+    <svg width={maat} height={maat} viewBox="0 0 24 24" fill="none">
+      <path d="M10.2 7.2a1.8 1.8 0 1 1 2.6 1.6c-.5.3-.8.7-.8 1.2v.9M3.5 18.5L12 11.5l8.5 7H3.5z" stroke={kleur} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 const HART = "M50 86C22 66 4 48 4 28 4 14 15 4 28 4c10 0 18 6 22 14 4-8 12-14 22-14 13 0 24 10 24 24 0 20-18 38-46 58z"
 
 /** Een hart uit een fijne lijn, of gevuld voor de kleine hartjes */
@@ -685,7 +704,7 @@ function Inhoud({
   // Zonder liep een lange regel bij Olijf buiten het gouden kader.
   const details = (kleur: string, opties: { grootte?: number; font?: string; marge?: number; uitlijnen?: "center" | "flex-start"; max?: number } = {}) => {
     if (!detailsKeuze(ontwerp) || !detailsOpKaart(ontwerp, d.detailsStand)) return null
-    if (!d.inviteLine && !d.timeText) return null
+    if (!d.inviteLine && !d.timeText && !d.tijd && !d.dresscode) return null
     const uitlijnen = opties.uitlijnen ?? "center"
     const grootte = pxK(opties.grootte ?? 10.5)
     const font = opties.font ?? letters.tekst
@@ -699,9 +718,7 @@ function Inhoud({
         )}
         {/* Tijden en dresscode klein en rustig, maar altijd elk op een
             eigen regel (Michiel, 30 september 2026) */}
-        {d.timeText && !detailRollen && (
-          <Regels tekst={d.timeText} uitlijnen={uitlijnen} style={{ fontFamily: font, fontSize: grootte, fontWeight: 500, lineHeight: 1.6, letterSpacing: "0.1em", textTransform: "uppercase", color: kleur, maxWidth: max }} />
-        )}
+        {!detailRollen && tijdEnDresscode(kleur, tekst, font, opties.grootte ?? 10.5, uitlijnen, max)}
         {/* Op de homepagina: elke regel zijn eigen letter en grootte */}
         {d.timeText && detailRollen &&
           d.timeText.split("\n").map((regel, i) => (
@@ -721,6 +738,77 @@ function Inhoud({
               {regel}
             </div>
           ))}
+      </D>
+    )
+  }
+
+  // Tijden en dresscode in de gekozen weergave: kopjes naast elkaar, onder
+  // elkaar, of onder een sierlijn, met of zonder lijnicoontjes (Michiel, 30
+  // september 2026)
+  const tijdEnDresscode = (accentKleur: string, tekstKleur: string, font: string, grootte: number, uitlijnen: "center" | "flex-start", max: number) => {
+    if (!d.tijd && !d.dresscode) return null
+    const stijl = d.detailsStijl ?? "kopjes"
+    const icoon = d.detailsIcoon === true
+    const g = pxK(grootte)
+    const ik = Math.round(g * 1.25)
+    const klok = <Klokje maat={ik} kleur={accentKleur} />
+    const hanger = <Kleerhanger maat={ik} kleur={accentKleur} />
+    const midden = uitlijnen === "center"
+    const waarde = (tekst: string, extra: CSSProperties = {}) => (
+      <div style={{ display: "flex", fontFamily: font, fontSize: g * 1.2, lineHeight: 1.35, color: tekstKleur, textAlign: midden ? "center" : "left", ...extra }}>{tekst}</div>
+    )
+    if (stijl === "kopjes") {
+      const kolom = (label: string, tekst: string, ic: ReactNode) => (
+        <D style={{ flexDirection: "column", alignItems: midden ? "center" : "flex-start", gap: px(2), maxWidth: d.tijd && d.dresscode ? max / 2 - px(10) : max }}>
+          <D style={{ alignItems: "center", gap: px(4) }}>
+            {icoon && ic}
+            <div style={{ display: "flex", fontFamily: font, fontSize: g * 0.8, fontWeight: 600, letterSpacing: "0.26em", textTransform: "uppercase", color: accentKleur }}>{label}</div>
+          </D>
+          {waarde(tekst)}
+        </D>
+      )
+      return (
+        <D style={{ alignItems: "stretch", justifyContent: midden ? "center" : "flex-start", gap: px(10), maxWidth: max }}>
+          {d.tijd && kolom(d.tijdLabel, d.tijd, klok)}
+          {d.tijd && d.dresscode && <div style={{ display: "flex", width: lijn, backgroundColor: accentKleur, opacity: 0.45 }} />}
+          {d.dresscode && kolom(d.dresscodeLabel, d.dresscode, hanger)}
+        </D>
+      )
+    }
+    if (stijl === "lijst") {
+      const regel = (tekst: string, ic: ReactNode) => (
+        <D style={{ alignItems: "center", gap: px(6) }}>
+          {icoon && ic}
+          {waarde(tekst)}
+        </D>
+      )
+      return (
+        <D style={{ flexDirection: "column", alignItems: midden ? "center" : "flex-start", gap: px(4), maxWidth: max }}>
+          {d.tijd && regel(d.tijd, klok)}
+          {d.dresscode && regel(icoon ? d.dresscode : `${d.dresscodeLabel}: ${d.dresscode}`, hanger)}
+        </D>
+      )
+    }
+    // Onder een sierlijn
+    return (
+      <D style={{ flexDirection: "column", alignItems: midden ? "center" : "flex-start", gap: px(3), maxWidth: max }}>
+        <D style={{ alignItems: "center", gap: px(7), marginBottom: px(4) }}>
+          <div style={{ display: "flex", width: px(40), height: lijn, backgroundColor: accentKleur }} />
+          <div style={{ display: "flex", width: px(5), height: px(5), backgroundColor: accentKleur, transform: "rotate(45deg)" }} />
+          <div style={{ display: "flex", width: px(40), height: lijn, backgroundColor: accentKleur }} />
+        </D>
+        {d.tijd && (
+          <D style={{ alignItems: "center", gap: px(6) }}>
+            {icoon && klok}
+            {waarde(d.tijd)}
+          </D>
+        )}
+        {d.dresscode && (
+          <D style={{ alignItems: "center", gap: px(6) }}>
+            {icoon && hanger}
+            {waarde(icoon ? d.dresscode : `${d.dresscodeLabel.toLowerCase()}: ${d.dresscode}`, { fontSize: g * 1.05, opacity: 0.85 })}
+          </D>
+        )}
       </D>
     )
   }
@@ -762,9 +850,7 @@ function Inhoud({
           {d.inviteLine}
         </div>
       )}
-      {d.timeText && (
-        <Regels tekst={d.timeText} uitlijnen={uitlijnen} style={{ fontFamily: font, fontSize: pxK(10.5), fontWeight: 500, lineHeight: 1.6, letterSpacing: "0.1em", textTransform: "uppercase", color: kleur.accent, maxWidth: px(310) }} />
-      )}
+      {tijdEnDresscode(kleur.accent, kleur.tekst, font, 10.5, uitlijnen, px(310))}
     </D>
   )
 

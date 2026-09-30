@@ -119,6 +119,13 @@ export interface CardContent {
    */
   details?: "op" | "onder"
   /**
+   * Hoe tijden en dresscode op de kaart staan: met kopjes naast elkaar, onder
+   * elkaar, of onder een sierlijn. Met of zonder lijnicoontjes (Michiel, 30
+   * september 2026). Leeg is kopjes, zonder icoontjes.
+   */
+  detailsStijl?: DetailsStijl
+  detailsIcoon?: boolean
+  /**
    * Een eigen lettertype voor de namen (een id uit lib/title-fonts.ts). Leeg:
    * dat van het ontwerp. Gaat terug naar leeg bij een ander ontwerp (Michiel,
    * 27 september 2026).
@@ -396,6 +403,8 @@ interface KaartTeksten {
   uitnodiging: Record<CardGuestType, string>
   /** Het woord voor de kledingaanwijzing op de kaart. */
   dresscode: string
+  /** Het kopje boven de tijden op de kaart */
+  tijd: string
   /** De gastengroepen zoals ze óp de kaart komen te staan, in de taal van de
    *  kaart. Enkelvoud: die regel gaat over deze ene gast, niet over een groep. */
   gasten: Record<CardGuestType, string>
@@ -438,6 +447,7 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
     verbinder: "en",
     tikOpen: "Tik om te openen",
     dresscode: "Dresscode",
+    tijd: "Tijd",
     gasten: { daggast: "Daggast", avondgast: "Avondgast", receptiegast: "Receptiegast" },
     locale: "nl-NL",
   },
@@ -461,6 +471,7 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
     verbinder: "and",
     tikOpen: "Tap to open",
     dresscode: "Dress code",
+    tijd: "Time",
     gasten: { daggast: "Day guest", avondgast: "Evening guest", receptiegast: "Reception guest" },
     // en-GB geeft "14 August 2027"; en-US zou "August 14, 2027" geven en dat
     // leest voor Europese gasten vreemd op een kaart.
@@ -486,6 +497,7 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
     verbinder: "et",
     tikOpen: "Touchez pour ouvrir",
     dresscode: "Tenue",
+    tijd: "Horaire",
     gasten: { daggast: "Invité de la journée", avondgast: "Invité de la soirée", receptiegast: "Invité de la réception" },
     locale: "fr-FR",
   },
@@ -509,6 +521,7 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
     verbinder: "und",
     tikOpen: "Zum Öffnen tippen",
     dresscode: "Dresscode",
+    tijd: "Zeit",
     gasten: { daggast: "Tagesgast", avondgast: "Abendgast", receptiegast: "Empfangsgast" },
     locale: "de-DE",
   },
@@ -532,6 +545,7 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
     verbinder: "y",
     tikOpen: "Toca para abrir",
     dresscode: "Código de vestimenta",
+    tijd: "Horario",
     gasten: { daggast: "Invitado de día", avondgast: "Invitado de noche", receptiegast: "Invitado a la recepción" },
     locale: "es-ES",
   },
@@ -555,6 +569,7 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
     verbinder: "e",
     tikOpen: "Tocca per aprire",
     dresscode: "Dress code",
+    tijd: "Orario",
     gasten: { daggast: "Invitato al giorno", avondgast: "Invitato alla sera", receptiegast: "Invitato al ricevimento" },
     locale: "it-IT",
   },
@@ -580,10 +595,17 @@ export const GUEST_TYPE_LABEL: Record<CardGuestType, string> = {
  * zetten. Ook voor wie met de hand een display bouwt, zoals de demokaart op
  * de marketingsite: die hoeft de lijst dan niet zelf bij te houden.
  */
+export type DetailsStijl = "kopjes" | "lijst" | "sierlijn"
+export function detailsStijl(v: unknown): DetailsStijl | undefined {
+  return v === "kopjes" || v === "lijst" || v === "sierlijn" ? v : undefined
+}
+
 export interface CardVasteTeksten {
   taal: CardTaal
   verbinder: string
   tikOpen: string
+  tijdLabel: string
+  dresscodeLabel: string
   rsvpKnop: string
   siteKnop: string
   agendaKnop: string
@@ -604,6 +626,8 @@ export function displayTeksten(taal: CardTaal = "nl"): CardVasteTeksten {
     gemaaktMet: tk.gemaaktMet,
     verbinder: tk.verbinder,
     tikOpen: tk.tikOpen,
+    tijdLabel: tk.tijd,
+    dresscodeLabel: tk.dresscode,
   }
 }
 
@@ -631,6 +655,11 @@ export interface CardDisplay extends CardVasteTeksten {
   namenFont?: string | null
   /** Tot wanneer gasten kunnen antwoorden, als 2027-05-01 */
   antwoordVoor?: string | null
+  /** Tijden en dresscode los, voor de weergave met kopjes, lijst of sierlijn */
+  tijd?: string | null
+  dresscode?: string | null
+  detailsStijl?: DetailsStijl
+  detailsIcoon?: boolean
   /**
    * Heeft het bruidspaar de boodschap zelf geschreven? Een strak ontwerp zet
    * alleen een eigen boodschap onder de kaart, niet onze standaardtekst.
@@ -692,6 +721,10 @@ export function buildCardDisplay(
     detailsStand: content.details === "op" || content.details === "onder" ? content.details : null,
     namenFont: content.namenFont || null,
     antwoordVoor: isIsoDatum(content.antwoordVoor) ? content.antwoordVoor : null,
+    tijd: type === "trouwkaart" ? content.timeText?.trim() || null : null,
+    dresscode: type === "trouwkaart" ? content.dresscode?.trim() || null : null,
+    detailsStijl: detailsStijl(content.detailsStijl) ?? "kopjes",
+    detailsIcoon: content.detailsIcoon === true,
     eigenBericht: !!content.message?.trim(),
     ...displayTeksten(taal),
   }

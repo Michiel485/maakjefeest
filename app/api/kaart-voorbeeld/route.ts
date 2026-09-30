@@ -1,6 +1,6 @@
 import { titelFontId } from "@/lib/title-fonts"
 import { kaartKleuren } from "@/lib/kaart-paletten"
-import { buildCardDisplay, CARD_TEMPLATE_WAARDEN, cardTaal, type CardContent, type CardGuestType, type CardTemplate, type CardType } from "@/lib/cards"
+import { buildCardDisplay, detailsStijl, CARD_TEMPLATE_WAARDEN, cardTaal, type CardContent, type CardGuestType, type CardTemplate, type CardType } from "@/lib/cards"
 import { getStyleConfig } from "@/lib/event-styles"
 import { renderCardImage } from "@/lib/card-image"
 
@@ -54,6 +54,8 @@ export async function POST(request: Request) {
     // Stonden er niet in, en dan miste de voorbeeldafbeelding de dresscode
     // en de gastengroep (26 september 2026)
     dresscode: tekst(body.dresscode, 40),
+    detailsStijl: detailsStijl(body.detailsStijl),
+    detailsIcoon: body.detailsIcoon === true ? true : undefined,
     toonGastType: body.toonGastType === true ? true : undefined,
     // Alleen echte URL's; een lokale data-URL uit de browser kan satori niet altijd aan
     photoUrl: typeof body.photoUrl === "string" && /^https?:\/\//.test(body.photoUrl) ? body.photoUrl.slice(0, 500) : undefined,
