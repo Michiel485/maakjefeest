@@ -1506,6 +1506,164 @@ export default function KaartMakenPage() {
     )
   }
 
+  // Welke kaart, hoe hij heet, bewaren, een nieuwe erbij en weggooien. Op de
+  // laptop in een balk boven het voorbeeld, op de telefoon achter de naam in
+  // de balk bovenin: niet meer in de zijbalk tussen de stappen (Michiel, 30
+  // september 2026).
+  const kaartenBlok = (
+    <>
+            <div className="flex items-center gap-1.5">
+              <input
+                value={ontwerp.naam}
+                onChange={(e) => update({ naam: e.target.value })}
+                placeholder={automatischeNaam}
+                maxLength={60}
+                aria-label="Naam van deze kaart"
+                title="De naam van deze kaart, alleen voor jullie. Zo heet hij in je dashboard en in je gastenlijst."
+                className="flex-1 min-w-0 rounded-xl border bg-white px-3 py-2 text-sm font-semibold placeholder-gray-400 focus:outline-none"
+                style={{ color: CHARCOAL, borderColor: GOLD_LIGHT }}
+              />
+              <IconKnop
+                title="Bewaren"
+                onClick={() => voerUit("bewaar")}
+                disabled={busy !== null}
+                bezig={busy === "bewaar"}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                  <path d="M17 21v-8H7v8M7 3v5h8" />
+                </svg>
+              </IconKnop>
+              <IconKnop
+                title={cardId
+                  ? "Nieuwe kaart op basis van deze. Alles blijft staan; pas aan wat anders moet, bijvoorbeeld de gastengroep of de taal. Meerdere kaarten zitten in de prijs."
+                  : "Bewaar de kaart eerst, dan kun je er een tweede naast maken"}
+                onClick={() => setNieuwVraag((v) => !v)}
+                disabled={busy !== null || !cardId || kaarten.length >= MAX_KAARTEN_PER_EVENT}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true">
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+              </IconKnop>
+              {/* Apart van bewaren en nieuw, zodat je hem niet raakt als je
+                  op het plusje bedoelt te drukken. */}
+              <span aria-hidden className="w-px h-6 mx-0.5" style={{ backgroundColor: GOLD_LIGHT }} />
+              <IconKnop
+                title={cardId ? "Deze kaart weggooien" : "Deze kaart is nog niet bewaard; er is niets om weg te gooien"}
+                onClick={() => setVerwijderVraag(true)}
+                disabled={busy !== null || !cardId}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M6 6l1 14a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-14M10 11v6M14 11v6" />
+                </svg>
+              </IconKnop>
+            </div>
+
+            {nieuwVraag && cardId && (
+              <div className="rounded-xl p-3 flex flex-col gap-2.5 text-[13px]" style={{ backgroundColor: "#fff", border: `1px solid ${GOLD_LIGHT}` }}>
+                <span className="font-semibold" style={{ color: CHARCOAL }}>Voor wie is de nieuwe kaart?</span>
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: SUBTLE }}>Andere gastengroep</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {CARD_GUEST_TYPES.filter((g) => g !== ontwerp.guestType).map((g) => (
+                      <button
+                        key={g}
+                        type="button"
+                        onClick={() => dupliceerKaart({ guestType: g })}
+                        className="text-[12px] font-semibold px-2.5 py-1.5 rounded-lg"
+                        style={{ backgroundColor: GOLD_BG, color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
+                      >
+                        {GUEST_TYPE_LABEL[g]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: SUBTLE }}>Andere taal</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {CARD_TALEN.filter((tl) => tl !== ontwerp.taal).map((tl) => (
+                      <button
+                        key={tl}
+                        type="button"
+                        onClick={() => dupliceerKaart({ taal: tl })}
+                        className="text-[12px] font-semibold px-2.5 py-1.5 rounded-lg"
+                        style={{ backgroundColor: GOLD_BG, color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
+                      >
+                        {CARD_TAAL_LABEL[tl]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex gap-3 items-center">
+                  <button
+                    type="button"
+                    onClick={() => dupliceerKaart()}
+                    className="text-[12px] font-semibold underline"
+                    style={{ color: CHARCOAL, background: "none", border: 0, padding: 0, cursor: "pointer" }}
+                  >
+                    Gewoon een kopie, ik pas het zelf aan
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNieuwVraag(false)}
+                    className="text-[12px] ml-auto"
+                    style={{ color: SUBTLE, background: "none", border: 0, padding: 0, cursor: "pointer" }}
+                  >
+                    Laat maar
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {verwijderVraag && cardId && (
+              <div className="rounded-xl p-3 flex flex-col gap-2 text-[13px]" style={{ backgroundColor: "#FEF2F2", border: "1px solid #FECACA" }}>
+                <span style={{ color: "#991B1B" }}>
+                  <b>{huidigeKaart ? kaartLabel(huidigeKaart) : "Deze kaart"}</b> weggooien? De link werkt daarna niet meer.
+                  Wie al reageerde blijft met zijn antwoord in je gastenlijst staan.
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void verwijderKaart()}
+                    disabled={busy !== null}
+                    className="text-[13px] font-semibold px-3 py-1.5 rounded-lg"
+                    style={{ backgroundColor: "#991B1B", color: "#fff", border: 0, cursor: "pointer" }}
+                  >
+                    {busy ? "Bezig…" : "Ja, weggooien"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setVerwijderVraag(false)}
+                    className="text-[13px] px-2 py-1.5 rounded-lg"
+                    style={{ color: SUBTLE, background: "none", border: 0, cursor: "pointer" }}
+                  >
+                    Laat maar
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <p className="m-0 text-[11px] -mt-0.5" style={{ color: bewaarLetOp ? "#B45309" : SUBTLE }}>{bewaarStatus}</p>
+            {/* Altijd zichtbaar, ook zonder bewaarde kaarten van dit soort: dan
+                staat er "Nieuwe kaart, nog niet bewaard", zodat je ziet waar je
+                aan werkt. Michiels wens van 23 september 2026. */}
+            {(
+              <select
+                value={cardId ?? "nieuw"}
+                onChange={(e) => e.target.value !== "nieuw" && kiesKaart(e.target.value)}
+                aria-label="Welke kaart bewerk je"
+                className="w-full rounded-xl border bg-white px-3 py-2 text-sm"
+                style={{ color: CHARCOAL, borderColor: GOLD_LIGHT, cursor: "pointer" }}
+              >
+                {kaartenVanDitSoort.map((k) => (
+                  <option key={k.id} value={k.id}>{kaartLabel(k)}</option>
+                ))}
+                {!cardId && <option value="nieuw">Nieuwe kaart, nog niet bewaard</option>}
+              </select>
+            )}
+    </>
+  )
+
   return (
     <BouwerSchil
       actief={ontwerp.type}
@@ -1930,157 +2088,11 @@ export default function KaartMakenPage() {
               23 september 2026, in plaats van een balk over de volle breedte
               onder de kop. Staat er vanaf het begin, ook voor er iets bewaard
               is, zodat je je ontwerp meteen een naam kunt geven. */}
-          <div className={`px-4 py-3 border-b border-gray-100 flex flex-col gap-2 ${blad === "kaart" ? "" : "max-md:hidden"}`} style={{ backgroundColor: GOLD_BG }}>
-            <div className="flex items-center gap-1.5">
-              <input
-                value={ontwerp.naam}
-                onChange={(e) => update({ naam: e.target.value })}
-                placeholder={automatischeNaam}
-                maxLength={60}
-                aria-label="Naam van deze kaart"
-                title="De naam van deze kaart, alleen voor jullie. Zo heet hij in je dashboard en in je gastenlijst."
-                className="flex-1 min-w-0 rounded-xl border bg-white px-3 py-2 text-sm font-semibold placeholder-gray-400 focus:outline-none"
-                style={{ color: CHARCOAL, borderColor: GOLD_LIGHT }}
-              />
-              <IconKnop
-                title="Bewaren"
-                onClick={() => voerUit("bewaar")}
-                disabled={busy !== null}
-                bezig={busy === "bewaar"}
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-                  <path d="M17 21v-8H7v8M7 3v5h8" />
-                </svg>
-              </IconKnop>
-              <IconKnop
-                title={cardId
-                  ? "Nieuwe kaart op basis van deze. Alles blijft staan; pas aan wat anders moet, bijvoorbeeld de gastengroep of de taal. Meerdere kaarten zitten in de prijs."
-                  : "Bewaar de kaart eerst, dan kun je er een tweede naast maken"}
-                onClick={() => setNieuwVraag((v) => !v)}
-                disabled={busy !== null || !cardId || kaarten.length >= MAX_KAARTEN_PER_EVENT}
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true">
-                  <path d="M12 5v14M5 12h14" />
-                </svg>
-              </IconKnop>
-              {/* Apart van bewaren en nieuw, zodat je hem niet raakt als je
-                  op het plusje bedoelt te drukken. */}
-              <span aria-hidden className="w-px h-6 mx-0.5" style={{ backgroundColor: GOLD_LIGHT }} />
-              <IconKnop
-                title={cardId ? "Deze kaart weggooien" : "Deze kaart is nog niet bewaard; er is niets om weg te gooien"}
-                onClick={() => setVerwijderVraag(true)}
-                disabled={busy !== null || !cardId}
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M6 6l1 14a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-14M10 11v6M14 11v6" />
-                </svg>
-              </IconKnop>
+          {blad === "kaart" && (
+            <div className="md:hidden px-4 py-3 border-b border-gray-100 flex flex-col gap-2" style={{ backgroundColor: GOLD_BG }}>
+              {kaartenBlok}
             </div>
-
-            {nieuwVraag && cardId && (
-              <div className="rounded-xl p-3 flex flex-col gap-2.5 text-[13px]" style={{ backgroundColor: "#fff", border: `1px solid ${GOLD_LIGHT}` }}>
-                <span className="font-semibold" style={{ color: CHARCOAL }}>Voor wie is de nieuwe kaart?</span>
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: SUBTLE }}>Andere gastengroep</span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {CARD_GUEST_TYPES.filter((g) => g !== ontwerp.guestType).map((g) => (
-                      <button
-                        key={g}
-                        type="button"
-                        onClick={() => dupliceerKaart({ guestType: g })}
-                        className="text-[12px] font-semibold px-2.5 py-1.5 rounded-lg"
-                        style={{ backgroundColor: GOLD_BG, color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
-                      >
-                        {GUEST_TYPE_LABEL[g]}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: SUBTLE }}>Andere taal</span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {CARD_TALEN.filter((tl) => tl !== ontwerp.taal).map((tl) => (
-                      <button
-                        key={tl}
-                        type="button"
-                        onClick={() => dupliceerKaart({ taal: tl })}
-                        className="text-[12px] font-semibold px-2.5 py-1.5 rounded-lg"
-                        style={{ backgroundColor: GOLD_BG, color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
-                      >
-                        {CARD_TAAL_LABEL[tl]}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="flex gap-3 items-center">
-                  <button
-                    type="button"
-                    onClick={() => dupliceerKaart()}
-                    className="text-[12px] font-semibold underline"
-                    style={{ color: CHARCOAL, background: "none", border: 0, padding: 0, cursor: "pointer" }}
-                  >
-                    Gewoon een kopie, ik pas het zelf aan
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setNieuwVraag(false)}
-                    className="text-[12px] ml-auto"
-                    style={{ color: SUBTLE, background: "none", border: 0, padding: 0, cursor: "pointer" }}
-                  >
-                    Laat maar
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {verwijderVraag && cardId && (
-              <div className="rounded-xl p-3 flex flex-col gap-2 text-[13px]" style={{ backgroundColor: "#FEF2F2", border: "1px solid #FECACA" }}>
-                <span style={{ color: "#991B1B" }}>
-                  <b>{huidigeKaart ? kaartLabel(huidigeKaart) : "Deze kaart"}</b> weggooien? De link werkt daarna niet meer.
-                  Wie al reageerde blijft met zijn antwoord in je gastenlijst staan.
-                </span>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => void verwijderKaart()}
-                    disabled={busy !== null}
-                    className="text-[13px] font-semibold px-3 py-1.5 rounded-lg"
-                    style={{ backgroundColor: "#991B1B", color: "#fff", border: 0, cursor: "pointer" }}
-                  >
-                    {busy ? "Bezig…" : "Ja, weggooien"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setVerwijderVraag(false)}
-                    className="text-[13px] px-2 py-1.5 rounded-lg"
-                    style={{ color: SUBTLE, background: "none", border: 0, cursor: "pointer" }}
-                  >
-                    Laat maar
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <p className="m-0 text-[11px] -mt-0.5" style={{ color: bewaarLetOp ? "#B45309" : SUBTLE }}>{bewaarStatus}</p>
-            {/* Altijd zichtbaar, ook zonder bewaarde kaarten van dit soort: dan
-                staat er "Nieuwe kaart, nog niet bewaard", zodat je ziet waar je
-                aan werkt. Michiels wens van 23 september 2026. */}
-            {(
-              <select
-                value={cardId ?? "nieuw"}
-                onChange={(e) => e.target.value !== "nieuw" && kiesKaart(e.target.value)}
-                aria-label="Welke kaart bewerk je"
-                className="w-full rounded-xl border bg-white px-3 py-2 text-sm"
-                style={{ color: CHARCOAL, borderColor: GOLD_LIGHT, cursor: "pointer" }}
-              >
-                {kaartenVanDitSoort.map((k) => (
-                  <option key={k.id} value={k.id}>{kaartLabel(k)}</option>
-                ))}
-                {!cardId && <option value="nieuw">Nieuwe kaart, nog niet bewaard</option>}
-              </select>
-            )}
-          </div>
+          )}
 
           <Sectie className={telefoon("tekst")} vast={inPaneel("tekst")} open={isOpen("tekst")} onToggle={() => setStap(stap === "tekst" ? null : "tekst")} titel="Tekst">
             {cardDesign(ontwerp.template) === "eigen" && (
@@ -2521,35 +2533,7 @@ export default function KaartMakenPage() {
           </Sectie>
 
           <Sectie className={telefoon("bekijken")} vast={inPaneel("bekijken")} open={isOpen("bekijken")} onToggle={() => setStap(stap === "bekijken" ? null : "bekijken")} titel="Bekijken">
-            {/* Klaar om te versturen? Wat nog ontbreekt is aanklikbaar en brengt
-                je naar de plek waar het hoort. Michiels keuze van 25 september
-                2026. */}
-            <div className="rounded-xl p-3 flex flex-col gap-1" style={{ backgroundColor: GOLD_BG, border: `1px solid ${GOLD_LIGHT}` }}>
-              <span className="text-xs font-semibold mb-1" style={{ color: CHARCOAL }}>
-                {controles.every((c) => c.klaar || c.mag) ? "Klaar om te versturen" : "Nog even nalopen"}
-              </span>
-              {controles.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => { if (!c.klaar) doeControle(c.id) }}
-                  className="flex items-center gap-2 text-left text-[12px] py-1"
-                  style={{ background: "none", border: 0, padding: 0, cursor: c.klaar ? "default" : "pointer", color: c.klaar ? BODY : CHARCOAL }}
-                >
-                  <span
-                    aria-hidden
-                    className="w-4 h-4 flex-shrink-0 rounded-full inline-flex items-center justify-center text-[10px] font-bold"
-                    style={c.klaar
-                      ? { backgroundColor: KLEUR.groen, color: "#fff" }
-                      : { border: `1.5px solid ${c.mag ? GOLD_LIGHT : "#D97706"}` }}
-                  >
-                    {c.klaar ? "✓" : ""}
-                  </span>
-                  <span className="flex-1">{c.label}</span>
-                  {!c.klaar && <span className="font-semibold" style={{ color: GOLD }}>{c.actie} {"›"}</span>}
-                </button>
-              ))}
-            </div>
+            {/* De checklist is weg: overbodig naast de stappen (Michiel, 30 september 2026) */}
             <button
               onClick={() => setSimulatie(true)}
               className="w-full text-sm font-semibold px-3 py-3 rounded-xl transition-all hover:-translate-y-0.5"
@@ -2598,7 +2582,10 @@ export default function KaartMakenPage() {
               kaart niet naar beneden duwt. */}
           {/* items-start: anders rekt de rij van nul hoog de knop mee tot nul,
               en dan viel de tekst over een platgedrukte knop heen. */}
-          <div className="hidden md:flex sticky top-0 z-10 h-0 justify-end items-start">
+          <div className="hidden md:flex items-start justify-between gap-3 mb-4">
+          <div className="w-[340px] flex flex-col gap-2 rounded-2xl p-3" style={{ backgroundColor: "#fff", border: `1px solid ${GOLD_LIGHT}`, boxShadow: "0 8px 24px -16px rgba(26,18,4,0.35)" }}>
+            {kaartenBlok}
+          </div>
           <button
             type="button"
             onClick={() => setSimulatie(true)}
@@ -2612,7 +2599,7 @@ export default function KaartMakenPage() {
             {/* Op de telefoon weg: daar was de bovenkant te druk met twee
                 balken, een kopje, een demoknop en een uitleg (Michiel, 26
                 september 2026). De demo staat daar in de balk bovenin. */}
-            <div className="hidden md:flex items-center justify-center gap-3 mb-1 md:max-xl:mt-11">
+            <div className="hidden md:flex items-center justify-center gap-3 mb-1">
               <p className="m-0 text-center text-xs font-semibold uppercase tracking-widest" style={{ color: sc.headingColor, opacity: 0.75 }}>
                 Zo ziet jullie kaart eruit
               </p>

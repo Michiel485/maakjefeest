@@ -1,5 +1,6 @@
 "use client"
 
+import { contrast } from "@/lib/contrast"
 import { kaartPagina } from "@/lib/event-styles"
 import { antwoordSluit, antwoordVoorTekst } from "@/lib/cards"
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react"
@@ -254,6 +255,8 @@ export default function CardReveal({
   // Alleen de download en de social-voorvertoning krijgen het volle watermerk;
   // wat het bruidspaar zelf op het scherm ziet blijft licht.
   const banen = watermerk === "vol" ? 7 : previewNotice || watermerk === "licht" ? 3 : 0
+  // Is de kaart donker? Wit tegen de kaart heeft dan meer contrast dan zwart.
+  const donkereKaart = contrast("#FFFFFF", sc.cardBg ?? sc.bodyBg) > contrast("#111111", sc.cardBg ?? sc.bodyBg)
   // Hoe breed de kaart op dit scherm is. De nieuwe ontwerpen rekenen in
   // pixels (zodat de afbeelding er precies zo uitziet), dus die moeten het weten.
   const [kaartBreedte, setKaartBreedte] = useState(400)
@@ -551,8 +554,10 @@ export default function CardReveal({
               className={banen > 3 ? "text-xl sm:text-3xl font-semibold whitespace-nowrap" : "text-sm sm:text-lg font-semibold whitespace-nowrap"}
               style={{
                 transform: "rotate(-28deg)",
-                color: "#111",
-                opacity: banen > 3 ? 0.13 : 0.055,
+                // Licht op een donkere kaart, anders viel het weg bij Noir,
+                // Nacht, Pruim en Woud (Michiel, 30 september 2026)
+                color: donkereKaart ? "#FFFFFF" : "#111",
+                opacity: donkereKaart ? (banen > 3 ? 0.16 : 0.09) : banen > 3 ? 0.13 : 0.055,
                 letterSpacing: "0.35em",
               }}
             >
