@@ -1,5 +1,6 @@
 "use client"
 
+import { useStapGeschiedenis, useTerugSluit } from "@/lib/terug"
 import { antwoordVoorTekst, isIsoDatum } from "@/lib/cards"
 import { formulierTekst } from "@/lib/formulier-teksten"
 import NamenVelden from "@/components/NamenVelden"
@@ -444,6 +445,8 @@ export default function KaartMakenPage() {
    * groot scherm de sectie in de zijbalk.
    */
   function tikOpKaart(e: React.MouseEvent) {
+    // Alleen in de stap Tekst; daarbuiten was het onhandig (Michiel, 30 september 2026)
+    if (!gidsStappen[gids]?.secties.includes("tekst")) return
     // Witruimte gelijk trekken: namen over drie regels komen binnen als
     // "michiel↵&↵lindsey" en staan in het ontwerp als "michiel & lindsey".
     const schoon = (s: string) => s.replace(/\s+/g, " ").trim().toLowerCase()
@@ -516,6 +519,10 @@ export default function KaartMakenPage() {
   // waarop iemand net iets gemaakt heeft en openstaat voor de vraag "en nu?",
   // en tot nu toe gebruikten we het voor een onderstreept linkje.
   const [overdracht, setOverdracht] = useState(false)
+  // De vorige-knop sluit de demo en de vensters (lib/terug.ts)
+  useTerugSluit(simulatie, () => setSimulatie(false))
+  useTerugSluit(mailActie !== null, () => setMailActie(null))
+  useTerugSluit(overdracht, () => setOverdracht(false))
 
   // Kom je net terug van de inloglink, dan moet je ontwerp eerst bewaard worden
   // voordat je naar de kassa kunt. Dat duurt een paar tellen, en je zag in die
@@ -562,6 +569,8 @@ export default function KaartMakenPage() {
    * drukt. Je zag dus ook niets gebeuren.
    */
   function toonFormulier() {
+    // Op de telefoon niet: daar schoof de kaart dan uit beeld (Michiel, 30 september 2026)
+    if (window.matchMedia("(max-width: 767px)").matches) return
     setTimeout(() => {
       const vlak = voorbeeldRef.current
       const doel = formulierRef.current
@@ -586,7 +595,9 @@ export default function KaartMakenPage() {
     {
       kort: "Voor wie",
       vraag: isTrouwkaart ? "Wie nodig je uit?" : "Voor wie is deze kaart?",
-      uitleg: isTrouwkaart ? "De hele dag, de avond of de receptie. De tekst op de kaart past zich aan." : "Voor al je gasten, of een aparte kaart per groep.",
+      uitleg: isTrouwkaart
+        ? "Kies de groep: de tekst op de kaart past zich aan. Heb je dag- en avondgasten? Maak dan per groep een kaart, dan zie je in je gastenlijst per groep wie komt."
+        : "Nodig je iedereen uit voor de hele dag? Kies Alle gasten. Heb je dag- en avondgasten, maak dan per groep een kaart: dan zie je per groep wie komt.",
       secties: ["groep"],
     },
     {
@@ -600,8 +611,9 @@ export default function KaartMakenPage() {
       kort: "Reageren",
       vraag: isTrouwkaart ? "Wat wil je van je gasten weten?" : "Hoe reageren je gasten?",
       uitleg: isTrouwkaart
-        ? "Gasten reageren op de kaart zelf en komen vanzelf in je gastenlijst."
-        : "Ons advies: vraag alleen of ze erbij kunnen zijn. Eén tik, en ze staan in je gastenlijst.",
+        ? "Je gasten melden zich aan op de kaart zelf. Jij ziet in je gastenlijst meteen wie komt en wie niet, met hun dieetwensen."
+        : "Je gasten reageren op de kaart zelf. Jij ziet in je gastenlijst meteen wie komt en wie niet, zonder appjes bij te houden.",
+      tip: isTrouwkaart ? undefined : "Ons advies: vraag alleen ja of nee. Dat kost je gasten één tik.",
       secties: ["aanmelden"],
     },
     {
@@ -617,6 +629,8 @@ export default function KaartMakenPage() {
       secties: ["bekijken"],
     },
   ]
+  // De vorige-knop gaat een stap terug
+  useStapGeschiedenis("kaart", gids, (i) => { setBlad(null); setBladKlein(false); setGids(i) })
   /** Naar een stap, en op de telefoon het paneel weer groot */
   function naarStap(i: number) {
     setBlad(null)
@@ -1769,8 +1783,18 @@ export default function KaartMakenPage() {
               style={{ borderColor: `${GOLD_LIGHT}80`, backgroundColor: GOLD_BG }}
               onClick={() => { if (bladKlein) setBladKlein(false) }}
             >
+              {/* Op de telefoon: het paneel inklappen om de hele kaart te zien */}
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setBladKlein(!bladKlein) }}
+                className="md:hidden float-right -mt-1 mb-1 ml-2 inline-flex items-center gap-1 text-[12px] font-semibold px-2.5 py-1 rounded-lg"
+                style={{ backgroundColor: "#fff", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
+              >
+                {bladKlein ? "Verder bewerken" : "Bekijk kaart"}
+                <svg className={`w-3 h-3 transition-transform ${bladKlein ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M6 9l6 6 6-6" /></svg>
+              </button>
               {/* De stappen, aan te klikken: zo spring je vrij heen en weer */}
-              <div className="flex gap-1" role="tablist" aria-label="Stappen">
+              <div className="flex gap-1 clear-both" role="tablist" aria-label="Stappen">
                 {gidsStappen.map((g, i) => (
                   <button
                     key={g.kort}
@@ -2570,7 +2594,7 @@ export default function KaartMakenPage() {
             <p className="hidden md:block m-0 mb-4 text-center text-[11px]" style={{ color: sc.headingColor, opacity: 0.55 }}>
               {cardDesign(ontwerp.template) === "eigen"
                 ? "Jullie eigen ontwerp, zonder tekst eroverheen"
-                : "Tik op een tekst op de kaart om hem te wijzigen"}
+                : gidsStappen[gids]?.secties.includes("tekst") ? "Tik op een tekst op de kaart om hem te wijzigen" : ""}
             </p>
             {kaartenVanDitSoort.length > 1 && (
               <div className="md:hidden -mt-2 mb-3 flex items-center justify-center gap-1.5" aria-label="Veeg voor je andere kaarten">
@@ -2604,7 +2628,7 @@ export default function KaartMakenPage() {
                 </button>
               </div>
             )}
-            <div className="rounded-2xl cursor-text" onClick={tikOpKaart} title="Tik op een tekst om hem te wijzigen">
+            <div className={`rounded-2xl ${gidsStappen[gids]?.secties.includes("tekst") ? "cursor-text" : ""}`} onClick={tikOpKaart} title={gidsStappen[gids]?.secties.includes("tekst") ? "Tik op een tekst om hem te wijzigen" : undefined}>
               <CardReveal
                 display={display}
                 initials={initialen}

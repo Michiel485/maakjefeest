@@ -11,6 +11,7 @@
 // zijn mailadres geeft, gaat via dezelfde route als "Bewaren" in de bouwers:
 // na de klik in de mail wordt het ontwerp vanzelf in het account bewaard.
 
+import { bewaardeStap, useStapGeschiedenis } from "@/lib/terug"
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -148,13 +149,17 @@ function MiniHome({ design, namen, datum, locatie, sc }: { design: CardDesign; n
 
 export default function StartFlow() {
   const router = useRouter()
-  const [stap, setStap] = useState(0)
+  // Kom je met de vorige-knop terug uit een bouwer, dan sta je weer bij de
+  // stap waar je was
+  const [stap, setStap] = useState(() => (typeof window === "undefined" ? 0 : bewaardeStap("start") ?? 0))
   const [een, setEen] = useState("")
   const [twee, setTwee] = useState("")
   const [datum, setDatum] = useState("")
   const [locatie, setLocatie] = useState("")
   const [ontwerp, setOntwerp] = useState<CardDesign>("schaduwhart")
   const [keuze, setKeuze] = useState<Keuze | null>(null)
+  // De vorige-knop gaat een stap terug (lib/terug.ts)
+  useStapGeschiedenis("start", stap, setStap)
   const [mail, setMail] = useState("")
   const [fout, setFout] = useState<string | null>(null)
   const [bezig, setBezig] = useState(false)
@@ -171,6 +176,12 @@ export default function StartFlow() {
     // Vanuit een prijsblok: dat pakket alvast gekozen
     const pakket = new URLSearchParams(window.location.search).get("pakket")
     if (isPlan(pakket)) setKeuze(pakket)
+    try {
+      const eerder = sessionStorage.getItem("sayingyes_start_keuze")
+      if (eerder && (isPlan(eerder) || eerder === "weetniet")) setKeuze(eerder as Keuze)
+      const k = JSON.parse(localStorage.getItem("sayingyes_kaart") ?? "{}") as { template?: string }
+      if (k.template && ONTWERPEN.some((o) => o.id === k.template)) setOntwerp(k.template as CardDesign)
+    } catch {}
     // Was je hier eerder? Dan staat wat je invulde er nog
     try {
       const namen = JSON.parse(localStorage.getItem(LS_NAMEN) ?? "null") as { een?: string; twee?: string } | null
@@ -235,6 +246,10 @@ export default function StartFlow() {
     } catch {}
   }
 
+  useEffect(() => {
+    try { if (keuze) sessionStorage.setItem("sayingyes_start_keuze", keuze) } catch {}
+  }, [keuze])
+
   function bestemming(): string {
     if (gekozen === "compleet") return "/bouwen?plan=compleet"
     if (gekozen === "weetniet") return "/dashboard"
@@ -245,7 +260,7 @@ export default function StartFlow() {
     setFout(null)
     bewaarInBrowser()
     if (!metMail) {
-      router.push(bestemming())
+      router.replace(bestemming())
       return
     }
     const adres = mail.trim()
@@ -512,7 +527,7 @@ export default function StartFlow() {
                 </Knop>
               )}
               {stap === 4 && verstuurd && (
-                <Knop breed onClick={() => router.push(bestemming())}>
+                <Knop breed onClick={() => router.replace(bestemming())}>
                   {`Door naar ${naarWelkeBouwer}`}
                 </Knop>
               )}

@@ -1,5 +1,6 @@
 ﻿"use client"
 
+import { useStapGeschiedenis, useTerugSluit } from "@/lib/terug"
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import AanmeldFormulier from "@/components/AanmeldFormulier"
 import HomeOntwerpGalerij, { HomeOntwerpTekstvelden } from "@/components/HomeOntwerpPaneel"
@@ -1463,6 +1464,9 @@ export default function BouwenPage() {
     setOpenHomeSection(null)
     setGids(Math.max(0, Math.min(webStappenRef.current.length - 1, i)))
   }
+  // De vorige-knop gaat een stap terug, en sluit het venster om te bewaren
+  useStapGeschiedenis("site", gidsNu, (i) => { setBlad(null); setBladKlein(false); setOpenHomeSection(null); setGids(i) })
+  useTerugSluit(showAuthModal, () => { setShowAuthModal(false); setSaveError(null) })
   // De stap bepaalt welke sectie en welke pagina open zijn
   useEffect(() => {
     const st = webStappenRef.current[gidsNu]
@@ -1476,7 +1480,9 @@ export default function BouwenPage() {
   // hoort; de stap springt daarheen mee
   useEffect(() => {
     const st = webStappenRef.current[gidsNu]
-    if (!st || !activeSubPage) return
+    // Alleen vanuit een stap met een pagina: in Stijl of Webadres wil je door
+    // de site klikken zonder weg te springen (Michiel, 30 september 2026)
+    if (!st || !activeSubPage || !st.pagina) return
     if (activeSubPage === st.pagina) {
       if (activeSubPage === "Home" && openHomeSection && !(st.delen ?? []).includes(`home:${openHomeSection}`)) {
         const i = webStappenRef.current.findIndex((s) => s.pagina === "Home" && (s.delen ?? []).includes(`home:${openHomeSection}`))
@@ -1767,6 +1773,16 @@ export default function BouwenPage() {
               style={{ borderColor: `${KLEUR.goudLicht}80`, backgroundColor: KLEUR.goudVlak }}
               onClick={() => { if (bladKlein) setBladKlein(false) }}
             >
+              {/* Op de telefoon: het paneel inklappen om de hele site te zien */}
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setBladKlein(!bladKlein) }}
+                className="md:hidden float-right -mt-1 mb-1 ml-2 inline-flex items-center gap-1 text-[12px] font-semibold px-2.5 py-1 rounded-lg"
+                style={{ backgroundColor: "#fff", color: KLEUR.inkt, border: `1px solid ${KLEUR.goudLicht}`, cursor: "pointer" }}
+              >
+                {bladKlein ? "Verder bewerken" : "Bekijk site"}
+                <svg className={`w-3 h-3 transition-transform ${bladKlein ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M6 9l6 6 6-6" /></svg>
+              </button>
               <div className="flex items-center justify-between gap-3">
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: KLEUR.goud }}>
                   Stap {gidsNu + 1} van {webStappen.length}
