@@ -802,6 +802,13 @@ export default function KaartMakenPage() {
             setEventStatus(typeof event.status === "string" ? event.status : null)
             setHoortBij(typeof event.hoort_bij === "string" ? event.hoort_bij : null)
             setEventLocatie(typeof event.locatie === "string" ? event.locatie : "")
+          } else if (er.status === 404 || er.status === 403) {
+            // De onthouden bruiloft bestaat niet meer, of is niet van dit
+            // account: vergeten, anders stuurde de knop Website je naar een
+            // bruiloft die niet te openen was (Michiel, 30 september 2026)
+            setEventId(null)
+            setCardId(null)
+            try { localStorage.removeItem(LS_IDS) } catch {}
           }
         } catch {}
       }
@@ -1485,7 +1492,7 @@ export default function KaartMakenPage() {
 
   if (ophalen) {
     return (
-      <BouwerSchil actief={ontwerp.type} eventId={eventId}>
+      <BouwerSchil actief={ontwerp.type} eventId={userEmail ? eventId : null}>
         <div className="flex-1 flex items-center justify-center p-8">
           <div className="text-center max-w-sm">
             <p className="m-0 text-2xl" style={{ color: GOLD }}>{"♥"}</p>
@@ -1501,7 +1508,7 @@ export default function KaartMakenPage() {
   return (
     <BouwerSchil
       actief={ontwerp.type}
-      eventId={eventId}
+      eventId={userEmail ? eventId : null}
       /* Op een groot scherm de hoogte van het venster: dan scrollen de
          zijbalk en het voorbeeld elk apart, net als in de websitebouwer, en
          blijft de zijbalk staan als je onder de kaart kijkt. Michiels wens
@@ -1780,9 +1787,27 @@ export default function KaartMakenPage() {
           {blad !== "kaart" && gidsStappen[gids] && (
             <div
               className="order-[1] px-5 pt-4 pb-4 border-b"
-              style={{ borderColor: `${GOLD_LIGHT}80`, backgroundColor: GOLD_BG }}
+              style={{ borderColor: `${GOLD_LIGHT}80`, backgroundColor: GOLD_BG, touchAction: "none" }}
               onClick={() => { if (bladKlein) setBladKlein(false) }}
+              // Op de telefoon: omlaag vegen klapt het paneel in, zodat je het
+              // hele voorbeeld ziet; omhoog vegen haalt het terug (Michiel, 30
+              // september 2026). Het paneel volgt je vinger.
+              onTouchStart={(e) => { sleepStart.current = e.touches[0].clientY }}
+              onTouchMove={(e) => {
+                if (sleepStart.current === null) return
+                const dy = e.touches[0].clientY - sleepStart.current
+                setSleep(bladKlein ? Math.min(0, dy) : Math.max(0, dy))
+              }}
+              onTouchEnd={(e) => {
+                const begin = sleepStart.current
+                sleepStart.current = null
+                const dy = begin === null ? 0 : e.changedTouches[0].clientY - begin
+                setSleep(0)
+                if (!bladKlein && dy > 50) setBladKlein(true)
+                else if (bladKlein && dy < -30) setBladKlein(false)
+              }}
             >
+              <span aria-hidden className="md:hidden block mx-auto -mt-2 mb-2.5 w-10 h-1 rounded-full" style={{ backgroundColor: GOLD_LIGHT }} />
               {/* Op de telefoon: het paneel inklappen om de hele kaart te zien */}
               <button
                 type="button"

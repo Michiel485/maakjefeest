@@ -647,7 +647,21 @@ export default function BouwenPage() {
           // /bouwen zou een lus maken: die stuurt je bij een bewaarde bruiloft
           // weer hierheen, en dan blijft het laadscherm staan.
           if (!event) {
-            setLaadFout("We konden deze bruiloft niet vinden. Misschien is hij verwijderd.")
+            // Niet te openen (niet ingelogd, of niet meer van jou): gewoon
+            // beginnen met het concept uit de browser, in plaats van een
+            // foutmelding (Michiel, 30 september 2026). Eén keer: kwam je hier
+            // net al vandaan, dan wel de melding, zodat er geen lus ontstaat.
+            let alGeprobeerd = false
+            try {
+              alGeprobeerd = sessionStorage.getItem("sayingyes_bouwen_terugval") === urlEventId
+              sessionStorage.setItem("sayingyes_bouwen_terugval", urlEventId)
+              localStorage.removeItem("sayingyes_saved_event_id")
+            } catch {}
+            if (alGeprobeerd) {
+              setLaadFout("We konden deze bruiloft niet vinden. Misschien is hij verwijderd.")
+              return
+            }
+            window.location.replace("/bouwen?plan=compleet")
             return
           }
 
@@ -1770,9 +1784,27 @@ export default function BouwenPage() {
           {stapNu && (
             <div
               className="order-[1] px-5 pt-4 pb-4 border-b"
-              style={{ borderColor: `${KLEUR.goudLicht}80`, backgroundColor: KLEUR.goudVlak }}
+              style={{ borderColor: `${KLEUR.goudLicht}80`, backgroundColor: KLEUR.goudVlak, touchAction: "none" }}
               onClick={() => { if (bladKlein) setBladKlein(false) }}
+              // Op de telefoon: omlaag vegen klapt het paneel in, zodat je het
+              // hele voorbeeld ziet; omhoog vegen haalt het terug (Michiel, 30
+              // september 2026). Het paneel volgt je vinger.
+              onTouchStart={(e) => { sleepStart.current = e.touches[0].clientY }}
+              onTouchMove={(e) => {
+                if (sleepStart.current === null) return
+                const dy = e.touches[0].clientY - sleepStart.current
+                setSleep(bladKlein ? Math.min(0, dy) : Math.max(0, dy))
+              }}
+              onTouchEnd={(e) => {
+                const begin = sleepStart.current
+                sleepStart.current = null
+                const dy = begin === null ? 0 : e.changedTouches[0].clientY - begin
+                setSleep(0)
+                if (!bladKlein && dy > 50) setBladKlein(true)
+                else if (bladKlein && dy < -30) setBladKlein(false)
+              }}
             >
+              <span aria-hidden className="md:hidden block mx-auto -mt-2 mb-2.5 w-10 h-1 rounded-full" style={{ backgroundColor: KLEUR.goudLicht }} />
               {/* Op de telefoon: het paneel inklappen om de hele site te zien */}
               <button
                 type="button"
