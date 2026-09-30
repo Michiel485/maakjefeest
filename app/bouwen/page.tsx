@@ -269,7 +269,7 @@ const PAGINA_STAP: Partial<Record<PageId, { vraag: string; uitleg: string }>> = 
   Informatie: { vraag: "Wat moeten gasten weten?", uitleg: "Dresscode, parkeren, overnachten: wat anders vaak gevraagd wordt." },
   Cadeautips: { vraag: "Wat wensen jullie?", uitleg: "Een lijstje of een wens, zodat gasten niet hoeven te raden." },
   Ceremoniemeesters: { vraag: "Wie zijn jullie ceremoniemeesters?", uitleg: "Zo weten gasten bij wie ze terechtkunnen voor een verrassing." },
-  RSVP: { vraag: "Wat wil je van je gasten weten?", uitleg: "Gasten melden zich aan op de site en komen vanzelf in je gastenlijst." },
+  RSVP: { vraag: "Wat wil je van je gasten weten?", uitleg: "Gasten melden zich aan op de site en komen vanzelf in je gratis gastenlijst. Die staat in je dashboard: daar zie je wie komt, met dieetwensen, en lees je er meer over." },
   Fotos: { vraag: "Foto's van jullie samen", uitleg: "Een paar mooie foto's maken de site persoonlijk." },
 }
 type Blad = "uiterlijk" | "paginas" | "adres" | "bekijken"
@@ -815,7 +815,7 @@ export default function BouwenPage() {
         })
         setActive({
           Home: true, Programma: true, RSVP: true, Informatie: true,
-          Cadeautips: true, OnsVerhaal: true, Ceremoniemeesters: true, Fotos: false,
+          Cadeautips: true, OnsVerhaal: true, Ceremoniemeesters: true, Fotos: true,
         })
           const mail = (d.email as string) || email
           if (mail) setAuthEmail(mail)
@@ -1451,11 +1451,13 @@ export default function BouwenPage() {
   }
 
   const webStappen: WebStap[] = [
-    { kort: "Stijl", vraag: "Welke stijl past bij jullie?", uitleg: "Kleuren en letters voor de hele site. Klik in het voorbeeld door de pagina's; met de knop Stijl erboven wissel je altijd.", secties: ["algemeen"], delen: ["alg:stijl", "alg:lettertype"] },
+    { kort: "Stijl", vraag: "Welke stijl past bij jullie?", uitleg: "Kleuren en letters voor de hele site. Klik in het voorbeeld door de pagina's; met de knop Stijl erboven wissel je altijd.", secties: ["algemeen"], delen: ["alg:stijl", "alg:lettertype", "alg:layout"] },
     { kort: "Homepage", vraag: "Hoe ziet jullie homepage eruit?", uitleg: "Een ontwerp zoals op jullie kaart, of een grote foto met tekst.", secties: ["paginas"], pagina: "Home", delen: ["home:layout", "home:kaders", "home:headerfoto"] },
     { kort: "Tekst", vraag: "Wat staat er op de homepage?", uitleg: "Namen, datum en locatie staan er al. De rest is voorbeeldtekst: pas die aan naar jullie eigen woorden.", tip: "Tik op een tekst in het voorbeeld om hem te wijzigen.", secties: ["paginas"], pagina: "Home", delen: ["home:tekstvelden", "home:welkomst"] },
-    { kort: "Pagina's", vraag: "Welke pagina's wil je?", uitleg: "Zet aan wat je nodig hebt. Daarna vul je ze één voor één in.", secties: ["algemeen", "paginas"], delen: ["alg:layout"] },
-    ...activePagesOrdered
+    // Geen aparte stap Pagina's meer: alle pagina's staan aan, en in de stap
+    // van een pagina zet je hem uit als je hem niet wilt (Michiel, 30
+    // september 2026)
+    ...PAGES
       .filter((pg) => pg.id !== "Home")
       .map((pg): WebStap => ({
         kort: pg.id === "RSVP" ? "Aanmelden" : pg.label,
@@ -1847,6 +1849,26 @@ export default function BouwenPage() {
               </h2>
               {stapNu.uitleg && <p className="m-0 mt-1 text-[13px] leading-relaxed" style={{ color: KLEUR.tekst }}>{stapNu.uitleg}</p>}
               {stapNu.tip && <p className="m-0 mt-1.5 text-[12px] leading-snug" style={{ color: KLEUR.zacht }}>{stapNu.tip}</p>}
+              {/* Een pagina aan of uit, in zijn eigen stap */}
+              {stapNu.pagina && PAGES.find((pg) => pg.id === stapNu.pagina)?.toggleable && (
+                <label className="mt-3 flex items-center justify-between gap-3 rounded-xl px-3 py-2.5" style={{ backgroundColor: "#fff", border: `1px solid ${KLEUR.goudLicht}`, cursor: "pointer" }} onClick={(e) => e.stopPropagation()}>
+                  <span className="flex flex-col">
+                    <span className="text-[13px] font-semibold" style={{ color: KLEUR.inkt }}>Deze pagina op de site</span>
+                    <span className="text-[11px]" style={{ color: KLEUR.zacht }}>
+                      {active[stapNu.pagina] ? "Niet nodig? Zet hem uit." : "Staat uit. Zet hem aan om hem in te vullen."}
+                    </span>
+                  </span>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={active[stapNu.pagina]}
+                    onClick={() => toggle(stapNu.pagina as PageId)}
+                    className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors ${active[stapNu.pagina] ? "bg-[#C5A059]" : "bg-gray-200"}`}
+                  >
+                    <span className={`absolute h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${active[stapNu.pagina] ? "translate-x-6" : "translate-x-1"}`} />
+                  </button>
+                </label>
+              )}
             </div>
           )}
           {stapNu && (
@@ -3491,6 +3513,11 @@ export default function BouwenPage() {
                         </button>
                       )
                     })}
+                    {/* Het lettertype erbij, net zo snel te wisselen (Michiel, 30 september 2026) */}
+                    <div className="col-span-5 mt-1 flex flex-col gap-1.5">
+                      <span className="text-[11px] font-semibold" style={{ color: KLEUR.inkt }}>Lettertype</span>
+                      <FontSelect value={fontPageTitles} onChange={saveFontPageTitles} />
+                    </div>
                     <p className="col-span-5 m-0 mt-1 text-[11px] leading-snug" style={{ color: KLEUR.zacht }}>
                       Klik in het voorbeeld door de pagina&apos;s om te zien hoe de stijl overal staat.
                     </p>

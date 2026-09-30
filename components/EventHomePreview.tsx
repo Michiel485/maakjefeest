@@ -398,12 +398,12 @@ export default function EventHomePreview({
           <div className="px-8 py-10 flex flex-col items-center" style={{ backgroundColor: sc.bodyBackground ? "transparent" : sc.navBg }}>
             <div className="max-w-2xl w-full text-center">
               {homeTitle && (
-                <p {...fieldClick('welkomst-titel')} className="font-bold mb-2 whitespace-pre-wrap" style={{ fontSize: `${homeTitleSize ?? 1.75}rem`, color: sc.headingColor, fontFamily: sc.fontFamily, textAlign: 'center' }}>
+                <p {...fieldClick('welkomst-titel')} className="font-bold mb-2 whitespace-pre-wrap" style={{ fontSize: `${homeTitleSize ?? 1.75}rem`, color: sc.headingColor, fontFamily: sc.fontFamily, textAlign: homeAlign ?? 'center' }}>
                   {homeTitle}
                 </p>
               )}
               {homeBody && (
-                <p {...fieldClick('welkomst-tekst')} className="leading-relaxed whitespace-pre-wrap" style={{ fontSize: `${homeBodySize ?? 0.9375}rem`, color: sc.bodyText, fontFamily: sc.fontFamily, textAlign: 'center' }}>
+                <p {...fieldClick('welkomst-tekst')} className="leading-relaxed whitespace-pre-wrap" style={{ fontSize: `${homeBodySize ?? 0.9375}rem`, color: sc.bodyText, fontFamily: sc.fontFamily, textAlign: homeAlign ?? 'center' }}>
                   {homeBody}
                 </p>
               )}
@@ -571,12 +571,12 @@ export default function EventHomePreview({
         <div className="px-8 py-10 flex flex-col items-center" style={{ backgroundColor: sc.bodyBackground ? "transparent" : sc.navBg }}>
           <div className="max-w-2xl w-full text-center">
             {homeTitle && (
-              <p {...fieldClick('welkomst-titel')} className="font-bold mb-2 whitespace-pre-wrap" style={{ fontSize: `${homeTitleSize ?? (sc.floral ? 1.25 : 1.0)}rem`, color: sc.headingColor, fontFamily: sc.fontFamily, textAlign: 'center' }}>
+              <p {...fieldClick('welkomst-titel')} className="font-bold mb-2 whitespace-pre-wrap" style={{ fontSize: `${homeTitleSize ?? (sc.floral ? 1.25 : 1.0)}rem`, color: sc.headingColor, fontFamily: sc.fontFamily, textAlign: homeAlign ?? 'center' }}>
                 {homeTitle}
               </p>
             )}
             {homeBody && (
-              <p {...fieldClick('welkomst-tekst')} className="leading-relaxed whitespace-pre-wrap" style={{ fontSize: `${homeBodySize ?? (sc.floral ? 1.125 : 0.9375)}rem`, color: sc.bodyText, fontFamily: sc.fontFamily, textAlign: 'center' }}>
+              <p {...fieldClick('welkomst-tekst')} className="leading-relaxed whitespace-pre-wrap" style={{ fontSize: `${homeBodySize ?? (sc.floral ? 1.125 : 0.9375)}rem`, color: sc.bodyText, fontFamily: sc.fontFamily, textAlign: homeAlign ?? 'center' }}>
                 {homeBody}
               </p>
             )}

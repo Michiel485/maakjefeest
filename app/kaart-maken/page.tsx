@@ -617,8 +617,8 @@ export default function KaartMakenPage() {
       kort: "Reageren",
       vraag: isTrouwkaart ? "Wat wil je van je gasten weten?" : "Hoe reageren je gasten?",
       uitleg: isTrouwkaart
-        ? "Zet aanmelden aan en je gasten reageren met één tik op de kaart zelf. Gratis erbij: een gastenlijst die zich vanzelf vult. Je ziet in één oogopslag wie komt en wie niet, met hun dieetwensen, zonder appjes bij te houden."
-        : "Zet aanmelden aan en je gasten reageren met één tik op de kaart zelf. Gratis erbij: een gastenlijst die zich vanzelf vult. Je ziet in één oogopslag wie komt en wie niet, zonder appjes bij te houden.",
+        ? "Zet aanmelden aan en je gasten reageren met één tik op de kaart zelf. Gratis erbij: een gastenlijst die zich vanzelf vult. Je ziet in één oogopslag wie komt en wie niet, met hun dieetwensen, zonder appjes bij te houden. Je vindt hem in je dashboard."
+        : "Zet aanmelden aan en je gasten reageren met één tik op de kaart zelf. Gratis erbij: een gastenlijst die zich vanzelf vult. Je ziet in één oogopslag wie komt en wie niet, zonder appjes bij te houden. Je vindt hem in je dashboard.",
       tip: isTrouwkaart ? undefined : "Ons advies: vraag alleen ja of nee. Dat kost je gasten één tik.",
       secties: ["aanmelden"],
     },
@@ -631,7 +631,7 @@ export default function KaartMakenPage() {
     {
       kort: "Bekijken",
       vraag: "Bekijk hem zoals je gasten hem zien",
-      uitleg: "Open de envelop en stuur jezelf een proefkaart. Tevreden? Bewaar hem.",
+      uitleg: "Open de envelop en stuur jezelf een proefkaart. Tevreden? Bewaar hem. In je dashboard vind je daarna al je kaarten en de gastenlijst, met uitleg.",
       secties: ["bekijken"],
     },
   ]
