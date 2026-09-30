@@ -4,6 +4,7 @@ Persoonlijke actielijst van Michiel. Claude houdt deze bij; afgeronde punten gaa
 
 ## Open
 
+- [ ] **Lettertypes zelf in de site zetten** in plaats van ze bij elke build bij Google op te halen. De build op Vercel mislukte op 28 en 29 september 2026 drie keer met `next/font/google queries have exactly one entry` omdat Google Fonts niet reageerde; een lege commit loste het steeds op. Oplossing: de woff2-bestanden van de gebruikte letters (app/layout.tsx) in de repo zetten en laden met `next/font/local`. Let op: de kaartafbeeldingen (satori) halen hun letters tijdens het draaien bij Google op, dat is een aparte route en werkt los hiervan.
 - [ ] **Websitebouwer in stukken knippen**: `/bouwen` laadt één script van 494 kB (ongecomprimeerd; de kaartbouwer 200 kB, het dashboard 70 kB). Sinds 22 sep 2026 worden de andere tabbladen alvast opgehaald, dus wisselen voelt snel, maar de eerste keer openen blijft zwaar op een telefoon. De acht pagina-editors en de Sophie-tutorial pas laden als ze open gaan (`next/dynamic`). Hoort bij stap 5, want dan gaan die editors toch onder handen.
 - [ ] **Teksten op /start nog een ronde doorlopen**: de opbouw en stijl staan goed (11 sep 2026), maar de teksten in de drie kaarten en de regel eronder wil Michiel nog aanscherpen. Kies een moment waarop we er met een frisse blik naar kijken.
 - [ ] **Kaartbouwer testen** nu de drie ontwerpen live staan: Strak, Sierlijk en Bohemian, watermerk, envelopsimulatie, downloadvoorbeeld en activeren voor 15 euro. Meld wat er niet lekker voelt.
