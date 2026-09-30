@@ -718,7 +718,7 @@ function Inhoud({
         )}
         {/* Tijden en dresscode klein en rustig, maar altijd elk op een
             eigen regel (Michiel, 30 september 2026) */}
-        {!detailRollen && tijdEnDresscode(kleur, tekst, font, opties.grootte ?? 10.5, uitlijnen, max)}
+        {!detailRollen && tijdEnDresscode(kleur, tekst, font, opties.grootte ?? 10.5, uitlijnen, max, d.message ? px(8) : 0)}
         {/* Op de homepagina: elke regel zijn eigen letter en grootte */}
         {d.timeText && detailRollen &&
           d.timeText.split("\n").map((regel, i) => (
@@ -745,7 +745,8 @@ function Inhoud({
   // Tijden en dresscode in de gekozen weergave: kopjes naast elkaar, onder
   // elkaar, of onder een sierlijn, met of zonder lijnicoontjes (Michiel, 30
   // september 2026)
-  const tijdEnDresscode = (accentKleur: string, tekstKleur: string, font: string, grootte: number, uitlijnen: "center" | "flex-start", max: number) => {
+  // boven: extra lucht boven het blok, na de boodschap (Michiel, 30 september 2026)
+  const tijdEnDresscode = (accentKleur: string, tekstKleur: string, font: string, grootte: number, uitlijnen: "center" | "flex-start", max: number, boven = 0) => {
     if (!d.tijd && !d.dresscode) return null
     const stijl = d.detailsStijl ?? "kopjes"
     const icoon = d.detailsIcoon === true
@@ -768,7 +769,7 @@ function Inhoud({
         </D>
       )
       return (
-        <D style={{ alignItems: "stretch", justifyContent: midden ? "center" : "flex-start", gap: px(10), maxWidth: max }}>
+        <D style={{ alignItems: "stretch", justifyContent: midden ? "center" : "flex-start", gap: px(10), maxWidth: max, marginTop: boven }}>
           {d.tijd && kolom(d.tijdLabel, d.tijd, klok)}
           {d.tijd && d.dresscode && <div style={{ display: "flex", width: lijn, backgroundColor: accentKleur, opacity: 0.45 }} />}
           {d.dresscode && kolom(d.dresscodeLabel, d.dresscode, hanger)}
@@ -783,7 +784,7 @@ function Inhoud({
         </D>
       )
       return (
-        <D style={{ flexDirection: "column", alignItems: midden ? "center" : "flex-start", gap: px(4), maxWidth: max }}>
+        <D style={{ flexDirection: "column", alignItems: midden ? "center" : "flex-start", gap: px(4), maxWidth: max, marginTop: boven }}>
           {d.tijd && regel(d.tijd, klok)}
           {d.dresscode && regel(icoon ? d.dresscode : `${d.dresscodeLabel}: ${d.dresscode}`, hanger)}
         </D>
@@ -791,7 +792,7 @@ function Inhoud({
     }
     // Onder een sierlijn
     return (
-      <D style={{ flexDirection: "column", alignItems: midden ? "center" : "flex-start", gap: px(3), maxWidth: max }}>
+      <D style={{ flexDirection: "column", alignItems: midden ? "center" : "flex-start", gap: px(3), maxWidth: max, marginTop: boven }}>
         <D style={{ alignItems: "center", gap: px(7), marginBottom: px(4) }}>
           <div style={{ display: "flex", width: px(40), height: lijn, backgroundColor: accentKleur }} />
           <div style={{ display: "flex", width: px(5), height: px(5), backgroundColor: accentKleur, transform: "rotate(45deg)" }} />
@@ -850,7 +851,7 @@ function Inhoud({
           {d.inviteLine}
         </div>
       )}
-      {tijdEnDresscode(kleur.accent, kleur.tekst, font, 10.5, uitlijnen, px(310))}
+      {tijdEnDresscode(kleur.accent, kleur.tekst, font, 10.5, uitlijnen, px(310), d.message ? px(6) : 0)}
     </D>
   )
 

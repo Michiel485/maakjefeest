@@ -952,24 +952,24 @@ export default function CardReveal({
             {/* Wat een strak ontwerp niet op de kaart zet, staat eronder, rustig
                 op de pagina. Zo gaat er niets verloren. */}
             {(onderLocatie || onderBericht || onderUitnodiging || onderTijd) && (
-              <div className="mt-7 flex flex-col items-center text-center gap-2 px-3" style={eindBlok}>
+              <div className="mt-7 flex flex-col items-center text-center gap-2.5 px-3" style={eindBlok}>
                 {onderLocatie && (
-                  <p className="m-0 text-sm font-semibold" style={{ color: sc.headingColor, whiteSpace: "pre-line" }}>
+                  <p className="m-0 text-[17px] font-semibold" style={{ color: sc.headingColor, whiteSpace: "pre-line" }}>
                     {onderLocatie}
                   </p>
                 )}
                 {onderBericht && (
-                  <p className="m-0 text-sm italic leading-relaxed max-w-sm" style={{ color: sc.bodyText, whiteSpace: "pre-line" }}>
+                  <p className="m-0 text-base italic leading-relaxed max-w-sm" style={{ color: sc.bodyText, whiteSpace: "pre-line" }}>
                     {onderBericht}
                   </p>
                 )}
                 {onderUitnodiging && (
-                  <p className="m-0 text-sm leading-relaxed max-w-sm" style={{ color: sc.bodyText }}>
+                  <p className="m-0 text-base leading-relaxed max-w-sm" style={{ color: sc.bodyText }}>
                     {onderUitnodiging}
                   </p>
                 )}
                 {onderTijd && (
-                  <p className="m-0 text-sm font-semibold leading-relaxed" style={{ color: sc.accent, letterSpacing: "0.03em", whiteSpace: "pre-line" }}>
+                  <p className="m-0 text-[17px] font-semibold leading-relaxed" style={{ color: sc.headingColor, letterSpacing: "0.02em", whiteSpace: "pre-line" }}>
                     {onderTijd}
                   </p>
                 )}

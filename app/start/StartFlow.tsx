@@ -148,6 +148,9 @@ export default function StartFlow() {
     try {
       localStorage.setItem(LS_NAMEN, JSON.stringify({ een: een.trim(), twee: twee.trim() }))
       const vorig = JSON.parse(localStorage.getItem(LS_KAART) ?? "{}") as Record<string, unknown>
+      // Wie opnieuw begint, krijgt de tijden en dresscode weer op de kaart
+      // (Michiel, 30 september 2026)
+      delete vorig.details
       localStorage.setItem(LS_KAART, JSON.stringify({ ...vorig, names: namen, datum, type: kaartType }))
       if (locatie.trim()) localStorage.setItem(LS_LOCATIE, locatie.trim())
       if (gekozen === "compleet") {
