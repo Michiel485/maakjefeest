@@ -61,6 +61,7 @@ function sanitizeContent(raw: unknown): CardContent {
     antwoordVoor: isIsoDatum(input.antwoordVoor) ? input.antwoordVoor : undefined,
     detailsStijl: detailsStijl(input.detailsStijl),
     detailsIcoon: input.detailsIcoon === true ? true : undefined,
+    siteKnopUit: input.siteKnopUit === true ? true : undefined,
   }
 }
 

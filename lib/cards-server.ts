@@ -16,6 +16,7 @@ export interface CardEventRow extends CardEventSource {
   font_initials: string | null
   font_frame_names: string | null
   font_page_titles: string | null
+  nav_title: string | null
 }
 
 export interface CardWithEvent {
@@ -37,7 +38,7 @@ export async function fetchCardByToken(token: string): Promise<CardWithEvent | n
   const event = rijOfNiets(await supabase
     .from("events")
     .select(
-      "title, frame_names, datum, locatie, hero_image_url, slug, status, plan, user_email, style, initials, font_hero, font_initials, font_frame_names, font_page_titles"
+      "title, frame_names, datum, locatie, hero_image_url, slug, status, plan, user_email, style, initials, font_hero, font_initials, font_frame_names, font_page_titles, nav_title"
     )
     .eq("id", card.event_id)
     .single(), "Website bij de kaart")

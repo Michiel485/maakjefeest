@@ -18,6 +18,7 @@ import { aanmeldStand } from "@/lib/gasten"
 import CardReveal from "./card-reveal"
 import { initialenLijst } from "@/lib/initialen"
 import KaartKijkTeller from "@/components/KaartKijkTeller"
+import { siteNamen, siteOpeningData } from "@/lib/site-opening"
 
 // Nog niet betaald en niet de eigenaar: de kaartlink is het product, dus die
 // werkt pas na activeren. Het bruidspaar zelf ziet wel een voorbeeld.
@@ -73,7 +74,21 @@ export function KaartWeergave({
   // naar die site verdwijnen dan wel, want die pagina's zijn offline.
   const siteLive = event.status === "published"
   const heeftSite = planAllows(event.plan, "site")
-  const siteUrl = siteLive && heeftSite ? eventSiteUrl(event.slug) : null
+  // De knop naar de website alleen onder een trouwkaart, niet onder een Save
+  // the Date, en alleen als het bruidspaar hem niet uitzette (Michiel, 30
+  // september 2026)
+  const siteKnop = card.type === "trouwkaart" && card.content.siteKnopUit !== true
+  const siteUrl = siteLive && heeftSite && siteKnop ? eventSiteUrl(event.slug) : null
+  // Het beginscherm van de site, achter de deuren. Met de stijl van de site,
+  // niet die van de kaart: de site begint er straks precies zo mee.
+  const siteOpening = siteUrl
+    ? siteOpeningData(
+        event.style,
+        { fontFrameNames: event.font_frame_names, fontPageTitles: event.font_page_titles },
+        siteNamen(event),
+        event.datum
+      )
+    : null
   // Bij Uitnodiging & RSVP staat het formulier op de enige pagina die er is
   const rsvpUrl = siteLive && planAllows(event.plan, "rsvp")
     ? heeftSite ? `${eventSiteUrl(event.slug)}/RSVP` : `${eventSiteUrl(event.slug)}#rsvp`
@@ -96,6 +111,7 @@ export function KaartWeergave({
         initials={initials}
         sc={sc}
         siteUrl={siteUrl}
+        siteOpening={siteOpening}
         rsvpUrl={rsvpUrl}
         agendaUrl={event.datum ? `/kaart/${card.share_token}/agenda` : null}
         aanmeldStand={aanmeldStand(card.content.aanmelden)}

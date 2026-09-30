@@ -58,6 +58,7 @@ import {
 import { Draaier, Knop, Melding, Sectie } from "@/components/ui"
 import AanmeldFormulier from "@/components/AanmeldFormulier"
 import BouwerSchil from "@/components/BouwerSchil"
+import WebsiteDemo, { bronOpening, bronUitEvent, type SiteBron } from "@/components/WebsiteDemo"
 import {
   DEFAULT_PRAKTISCH,
   DEFAULT_PROGRAMMA,
@@ -65,6 +66,7 @@ import {
   LS_WEBSITE_CONCEPT,
   LS_WEBSITE_INHOUD,
   nieuwWebsiteConcept,
+  initialenMetStreep,
   LS_MAIL,
   LS_NAMEN,
 } from "@/lib/nieuw-concept"
@@ -242,6 +244,8 @@ interface KaartOntwerp {
   /** Hoe tijden en dresscode op de kaart staan; leeg is kopjes */
   detailsStijl: DetailsStijl | ""
   detailsIcoon: boolean
+  /** De knop naar de website onder de trouwkaart uitgezet */
+  siteKnopUit: boolean
   /** Een eigen lettertype voor de namen; leeg is dat van het ontwerp */
   namenFont: string
   datum: string
@@ -277,6 +281,7 @@ const LEEG: KaartOntwerp = {
   antwoordVoor: "",
   detailsStijl: "",
   detailsIcoon: false,
+  siteKnopUit: false,
   namenFont: "",
   datum: "",
   location: "",
@@ -498,6 +503,9 @@ export default function KaartMakenPage() {
   // De locatie van de bruiloft zelf, die op de website komt. Los van de
   // locatie op deze kaart, want die kan per gastengroep anders zijn.
   const [eventLocatie, setEventLocatie] = useState("")
+  // De website van deze bruiloft zoals de server hem kent, voor de demo van
+  // de knop "Bekijk onze website"
+  const [siteVanServer, setSiteVanServer] = useState<SiteBron | null>(null)
   // Een eigen naam voor dit concept, zodat je varianten uit elkaar houdt.
   // Leeg is prima: dan toont de lijst de namen en de datum.
   // Bij welke bruiloft een nieuw ontwerp hoort. Uit het klantreisgesprek van
@@ -508,6 +516,9 @@ export default function KaartMakenPage() {
   // Alle concepten van deze klant, voor de keuzelijst bovenin
   const [concepten, setConcepten] = useState<ConceptRij[]>([])
   const [simulatie, setSimulatie] = useState(false)
+  // Het voorbeeld van de website na de deuren (Michiel, 30 september 2026)
+  const [siteDemo, setSiteDemo] = useState(false)
+  useTerugSluit(siteDemo, () => setSiteDemo(false))
   const [mailActie, setMailActie] = useState<Actie | null>(null)
   const [mailAdres, setMailAdres] = useState("")
   // Het mailadres uit de start, als je dat daar al gaf
@@ -590,6 +601,39 @@ export default function KaartMakenPage() {
     eventStatus === "published" ? (upgradePrice(eventPlan, plan) ?? 0) : PLANS[plan].price
   const prijs = formatEur(bijTeBetalen).replace(",00", "")
   const isTrouwkaart = ontwerp.type === "trouwkaart"
+  // De knop naar de website: alleen op een trouwkaart. In de demo staat hij er
+  // altijd; werken doet hij alleen met de website in het pakket.
+  const [websiteInBrowser, setWebsiteInBrowser] = useState<{ bron: SiteBron | null; gekozen: boolean }>({ bron: null, gekozen: false })
+  useEffect(() => {
+    try {
+      const d = JSON.parse(localStorage.getItem(LS_WEBSITE_CONCEPT) ?? "null") as SiteBron | null
+      setWebsiteInBrowser({ bron: d, gekozen: !!d || sessionStorage.getItem("sayingyes_start_keuze") === "compleet" })
+    } catch {}
+  }, [simulatie])
+  const metWebsite = eventPlan ? planAllows(eventPlan, "site") : websiteInBrowser.gekozen
+  const basisSite: SiteBron =
+    siteVanServer ??
+    websiteInBrowser.bron ??
+    (nieuwWebsiteConcept({ namen: ontwerp.names, datum: ontwerp.datum, locatie: eventLocatie || ontwerp.location, style: ontwerp.style }) as SiteBron)
+  // Nog niets ingevuld op de website? Dan de namen en de datum van de kaart,
+  // anders stond er in de demo een lege site
+  const demoSite: SiteBron = {
+    ...basisSite,
+    frame_names: basisSite.frame_names?.trim() || ontwerp.names,
+    nav_title: basisSite.nav_title?.trim() || ontwerp.names,
+    initials: basisSite.initials?.trim() || initialenMetStreep(ontwerp.names),
+    datum: basisSite.datum || ontwerp.datum || null,
+    locatie: basisSite.locatie || eventLocatie || ontwerp.location,
+    frame_location: basisSite.frame_location || eventLocatie || ontwerp.location,
+  }
+  const websiteExtra = metWebsite
+    ? null
+    : formatEur(
+        eventStatus === "published"
+          ? upgradePrice(eventPlan, "compleet") ?? 0
+          : PLANS.compleet.price - PLANS[plan].price
+      ).replace(",00", "")
+  const toonSiteKnop = isTrouwkaart && !ontwerp.siteKnopUit
   const metFoto = FOTO_ONTWERPEN.includes(cardDesign(ontwerp.template))
   const gidsStappen: GidsStap[] = [
     {
@@ -726,7 +770,8 @@ export default function KaartMakenPage() {
         try {
           const r = await fetch(`/api/drafts/${eventUitUrl}`)
           if (r.ok) {
-            const { event } = (await r.json()) as { event: Record<string, unknown> }
+            const { event, pages } = (await r.json()) as { event: Record<string, unknown>; pages?: Array<{ type: string; content: unknown }> }
+            setSiteVanServer(bronUitEvent(event, pages))
             if (isPlan(event.plan)) setEventPlan(event.plan)
             setEventStatus(typeof event.status === "string" ? event.status : null)
             setHoortBij(typeof event.hoort_bij === "string" ? event.hoort_bij : null)
@@ -766,6 +811,7 @@ export default function KaartMakenPage() {
               antwoordVoor: isIsoDatum(kaart?.content.antwoordVoor) ? (kaart?.content.antwoordVoor as string) : "",
               detailsStijl: detailsStijlUit(kaart?.content.detailsStijl) ?? "",
               detailsIcoon: kaart?.content.detailsIcoon === true,
+              siteKnopUit: kaart?.content.siteKnopUit === true,
               namenFont: titelFontId(kaart?.content.namenFont) ?? "",
               template: kaart?.template ?? "klassiek",
               names: kaart?.content.names ?? (event.frame_names as string) ?? (event.title as string) ?? "",
@@ -805,7 +851,8 @@ export default function KaartMakenPage() {
           ])
           if (kr.ok) setKaarten(((await kr.json()) as { cards: CardRow[] }).cards)
           if (er.ok) {
-            const { event } = (await er.json()) as { event: Record<string, unknown> }
+            const { event, pages } = (await er.json()) as { event: Record<string, unknown>; pages?: Array<{ type: string; content: unknown }> }
+            setSiteVanServer(bronUitEvent(event, pages))
             if (isPlan(event.plan)) setEventPlan(event.plan)
             setEventStatus(typeof event.status === "string" ? event.status : null)
             setHoortBij(typeof event.hoort_bij === "string" ? event.hoort_bij : null)
@@ -890,6 +937,7 @@ export default function KaartMakenPage() {
     details: ontwerp.details || undefined,
     detailsStijl: ontwerp.detailsStijl || undefined,
     detailsIcoon: ontwerp.detailsIcoon || undefined,
+    siteKnopUit: ontwerp.siteKnopUit || undefined,
     namenFont: ontwerp.namenFont || undefined,
     taal: ontwerp.taal,
     aanmelden: ontwerp.aanmelden,
@@ -1193,6 +1241,7 @@ export default function KaartMakenPage() {
       antwoordVoor: isIsoDatum(k.content.antwoordVoor) ? (k.content.antwoordVoor as string) : "",
       detailsStijl: detailsStijlUit(k.content.detailsStijl) ?? "",
       detailsIcoon: k.content.detailsIcoon === true,
+      siteKnopUit: k.content.siteKnopUit === true,
       namenFont: titelFontId(k.content.namenFont) ?? "",
       location: k.content.location ?? o.location,
       message: k.content.message ?? "",
@@ -2601,6 +2650,29 @@ export default function KaartMakenPage() {
             <p className="text-[11px] leading-snug" style={{ color: SUBTLE }}>
               Het voorbeeld heeft een watermerk. Na activeren krijg je de kaart zonder, met de link voor je gasten.
             </p>
+            {/* De knop naar de website, alleen op een trouwkaart (Michiel, 30
+                september 2026) */}
+            {isTrouwkaart && (
+              <div className="rounded-xl p-3 flex flex-col gap-1.5" style={{ backgroundColor: GOLD_BG, border: `1px solid ${GOLD_LIGHT}` }}>
+                <label className="flex items-center justify-between gap-3 text-[13px] font-semibold" style={{ color: CHARCOAL, cursor: "pointer" }}>
+                  Knop naar jullie website
+                  <input
+                    type="checkbox"
+                    checked={!ontwerp.siteKnopUit}
+                    onChange={(e) => update({ siteKnopUit: !e.target.checked })}
+                    className="w-4 h-4"
+                    style={{ accentColor: CHARCOAL }}
+                  />
+                </label>
+                <span className="text-[11px] leading-snug" style={{ color: SUBTLE }}>
+                  {!metWebsite
+                    ? `Met een tik gaan gasten van de kaart naar jullie site. Dat hoort bij de trouwwebsite${websiteExtra ? `, voor ${websiteExtra} extra` : ""}. Probeer hem in de demo.`
+                    : eventStatus === "published"
+                      ? "Onder de kaart. De kaart gaat open als twee deuren, met jullie site erachter."
+                      : "Onder de kaart. Je gasten zien hem zodra jullie website online staat."}
+                </span>
+              </div>
+            )}
           </Sectie>
         </aside>
 
@@ -2705,6 +2777,8 @@ export default function KaartMakenPage() {
                 startOpen
                 compact
                 watermerk="licht"
+                siteDemo={toonSiteKnop ? () => setSiteDemo(true) : undefined}
+                siteOpening={toonSiteKnop ? bronOpening(demoSite) : null}
               />            </div>
 
             {/* ── Wat je gasten zien ──
@@ -2769,6 +2843,8 @@ export default function KaartMakenPage() {
             sc={sc}
             siteUrl={null}
             rsvpUrl={null}
+            siteDemo={toonSiteKnop ? () => setSiteDemo(true) : undefined}
+            siteOpening={toonSiteKnop ? bronOpening(demoSite) : null}
             /* Pas zichtbaar zodra de kaart bewaard is; eerder is er geen link
                om de datum vandaan te halen. */
             agendaUrl={huidigeKaart && ontwerp.datum ? `/kaart/${huidigeKaart.share_token}/agenda` : null}
@@ -2795,6 +2871,20 @@ export default function KaartMakenPage() {
           />
 
         </div>
+      )}
+
+      {siteDemo && (
+        <WebsiteDemo
+          bron={demoSite}
+          metWebsite={metWebsite}
+          extraPrijs={websiteExtra}
+          onSluit={() => setSiteDemo(false)}
+          onNaarWebsite={() => {
+            const id = userEmail ? eventId : null
+            if (!id) neemMeeNaarWebsite()
+            router.push(id ? `/bouwen?event_id=${id}` : "/bouwen?plan=compleet")
+          }}
+        />
       )}
 
       {/* ── E-mail vragen bij bewaren of activeren ── */}

@@ -126,6 +126,11 @@ export interface CardContent {
   detailsStijl?: DetailsStijl
   detailsIcoon?: boolean
   /**
+   * De knop naar de website onder een trouwkaart staat standaard aan; dit is
+   * alleen gezet als het bruidspaar hem uitzette (Michiel, 30 september 2026)
+   */
+  siteKnopUit?: boolean
+  /**
    * Een eigen lettertype voor de namen (een id uit lib/title-fonts.ts). Leeg:
    * dat van het ontwerp. Gaat terug naar leeg bij een ander ontwerp (Michiel,
    * 27 september 2026).
@@ -439,7 +444,7 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
       receptiegast: "Wij nodigen je van harte uit voor de receptie",
     },
     rsvpKnop: "Laat weten of je erbij bent",
-    siteKnop: "Bekijk onze trouwsite",
+    siteKnop: "Bekijk onze website",
     agendaKnop: "Zet de datum in je agenda",
     siteVolgt: "Meer informatie volgt binnenkort 🤍",
     openEnvelop: "Open de envelop",
@@ -463,7 +468,7 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
       receptiegast: "We warmly invite you to join us for the reception",
     },
     rsvpKnop: "Let us know if you can make it",
-    siteKnop: "Visit our wedding website",
+    siteKnop: "Visit our website",
     agendaKnop: "Add the date to your calendar",
     siteVolgt: "More details coming soon 🤍",
     openEnvelop: "Open the envelope",
@@ -489,7 +494,7 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
       receptiegast: "Nous vous invitons chaleureusement à la réception",
     },
     rsvpKnop: "Dites-nous si vous serez là",
-    siteKnop: "Voir notre site de mariage",
+    siteKnop: "Voir notre site",
     agendaKnop: "Ajouter la date à votre agenda",
     siteVolgt: "Plus d'informations bientôt 🤍",
     openEnvelop: "Ouvrir l'enveloppe",
@@ -513,7 +518,7 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
       receptiegast: "Wir laden dich herzlich zum Empfang ein",
     },
     rsvpKnop: "Sag uns, ob du dabei bist",
-    siteKnop: "Unsere Hochzeitswebsite ansehen",
+    siteKnop: "Unsere Website ansehen",
     agendaKnop: "Termin in deinen Kalender",
     siteVolgt: "Weitere Infos folgen bald 🤍",
     openEnvelop: "Umschlag öffnen",
@@ -537,7 +542,7 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
       receptiegast: "Te invitamos con mucho cariño a la recepción",
     },
     rsvpKnop: "Dinos si podrás venir",
-    siteKnop: "Visita nuestra web de boda",
+    siteKnop: "Visita nuestra web",
     agendaKnop: "Añade la fecha a tu calendario",
     siteVolgt: "Pronto más información 🤍",
     openEnvelop: "Abre el sobre",
@@ -561,7 +566,7 @@ export const KAART_TEKST: Record<CardTaal, KaartTeksten> = {
       receptiegast: "Ti invitiamo con affetto al ricevimento",
     },
     rsvpKnop: "Facci sapere se ci sarai",
-    siteKnop: "Visita il nostro sito di nozze",
+    siteKnop: "Visita il nostro sito",
     agendaKnop: "Aggiungi la data al calendario",
     siteVolgt: "Presto altre informazioni 🤍",
     openEnvelop: "Apri la busta",

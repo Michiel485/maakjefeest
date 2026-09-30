@@ -12,6 +12,8 @@ import { ONDER_DE_KAART, detailsOpKaart } from "@/lib/kaart-ontwerpen"
 import AanmeldFormulier from "@/components/AanmeldFormulier"
 import type { AanmeldStand } from "@/lib/gasten"
 import { formulierTekst } from "@/lib/formulier-teksten"
+import SiteDeuren from "@/components/kaart/SiteDeuren"
+import { naarSiteVanKaart, type SiteOpeningData } from "@/lib/site-opening"
 
 // "zegel" is de stap waarin het lakzegel breekt; die bestaat alleen in de
 // nieuwe animatie. De klassieke animatie slaat hem over.
@@ -211,6 +213,8 @@ export default function CardReveal({
   startOpen = false,
   compact = false,
   watermerk = "geen",
+  siteOpening = null,
+  siteDemo,
 }: {
   display: CardDisplay
   initials: string
@@ -251,6 +255,13 @@ export default function CardReveal({
   // Watermerkbanen zonder de strook bovenaan. "licht" is voor het voorbeeld in
   // de bouwer: genoeg om misbruik te ontmoedigen, zonder het ontwerp te verpesten.
   watermerk?: "geen" | "licht" | "vol"
+  /** Het beginscherm van de site, achter de deuren (lib/site-opening.ts) */
+  siteOpening?: SiteOpeningData | null
+  /**
+   * In de bouwer: de knop naar de website staat er, maar opent na de deuren
+   * het voorbeeld van de site in plaats van de echte site
+   */
+  siteDemo?: () => void
 }) {
   // Alleen de download en de social-voorvertoning krijgen het volle watermerk;
   // wat het bruidspaar zelf op het scherm ziet blijft licht.
@@ -260,6 +271,15 @@ export default function CardReveal({
   // Hoe breed de kaart op dit scherm is. De nieuwe ontwerpen rekenen in
   // pixels (zodat de afbeelding er precies zo uitziet), dus die moeten het weten.
   const [kaartBreedte, setKaartBreedte] = useState(400)
+  // De deuren naar de website: waar de kaart stond toen je op de knop tikte
+  const [deuren, setDeuren] = useState<DOMRect | null>(null)
+  // Terug van de site met de vorige-knop: de browser zet de pagina terug zoals
+  // hij was, met de deuren nog open. Dan weer de kaart.
+  useEffect(() => {
+    const terug = (e: PageTransitionEvent) => { if (e.persisted) setDeuren(null) }
+    window.addEventListener("pageshow", terug)
+    return () => window.removeEventListener("pageshow", terug)
+  }, [])
   const [stage, setStage] = useState<Stage>(startOpen ? "open" : "closed")
   // De klep ligt vóór de kaart tot hij halverwege het openklappen is
   const [klepVoorKaart, setKlepVoorKaart] = useState(true)
@@ -1115,36 +1135,74 @@ export default function CardReveal({
               </div>
             )}
 
-            {/* Knoppen naar de trouwsite */}
-            {(siteUrl || (rsvpUrl && aanmeldStand === "geen")) && (
-              <div
-                className="mt-6 flex flex-col sm:flex-row gap-3"
-                style={eindBlok}
-              >
-                {rsvpUrl && aanmeldStand === "geen" && (
-                  <a
-                    href={rsvpUrl}
-                    className="flex-1 py-3.5 rounded-xl text-sm font-semibold text-center transition-opacity hover:opacity-85"
-                    style={{ backgroundColor: sc.accent, color: sc.buttonText, textDecoration: "none" }}
-                  >
-                    {display.rsvpKnop}
-                  </a>
-                )}
-                {siteUrl && (
-                  <a
-                    href={siteUrl}
-                    className="flex-1 py-3.5 rounded-xl text-sm font-semibold text-center transition-opacity hover:opacity-85"
-                    style={{
-                      backgroundColor: "transparent",
-                      color: sc.headingColor,
-                      border: `1.5px solid ${sc.accent}`,
-                      textDecoration: "none",
-                    }}
-                  >
-                    {display.siteKnop}
-                  </a>
-                )}
+            {/* Aanmelden op de site, als dat niet onder de kaart kan */}
+            {rsvpUrl && aanmeldStand === "geen" && (
+              <div className="mt-6 flex" style={eindBlok}>
+                <a
+                  href={rsvpUrl}
+                  className="flex-1 py-3.5 rounded-xl text-sm font-semibold text-center transition-opacity hover:opacity-85"
+                  style={{ backgroundColor: sc.accent, color: sc.buttonText, textDecoration: "none" }}
+                >
+                  {display.rsvpKnop}
+                </a>
               </div>
+            )}
+
+            {/* Naar de trouwwebsite: de kaart gaat open als twee deuren, met
+                daarachter het begin van de site (Michiel, 30 september 2026) */}
+            {(siteUrl || siteDemo) && (
+              <div className="mt-6 flex flex-col items-center" style={eindBlok}>
+                {siteUrl && <link rel="prefetch" href={naarSiteVanKaart(siteUrl)} />}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    const plek = gezichtRef.current?.getBoundingClientRect()
+                    if (plek) setDeuren(plek)
+                    else if (siteUrl) window.location.href = naarSiteVanKaart(siteUrl)
+                    else siteDemo?.()
+                  }}
+                  className="group w-full inline-flex items-center justify-center gap-2.5 py-4 rounded-xl text-[15px] font-semibold transition-transform hover:-translate-y-0.5"
+                  style={{
+                    backgroundColor: sc.headingColor,
+                    color: contrast("#FFFFFF", sc.headingColor) >= contrast("#1A1A1A", sc.headingColor) ? "#FFFFFF" : "#1A1A1A",
+                    border: 0,
+                    cursor: "pointer",
+                    boxShadow: "0 10px 24px -14px rgba(0,0,0,0.45)",
+                  }}
+                >
+                  {/* Twee deurtjes die op een kier staan */}
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M3 21h18" />
+                    <path d="M5 21V4l6 1.5v15" />
+                    <path d="M19 21V4l-6 1.5v15" />
+                  </svg>
+                  {display.siteKnop}
+                  <svg className="transition-transform group-hover:translate-x-0.5" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </button>
+              </div>
+            )}
+            {deuren && (siteOpening || siteDemo) && (
+              <SiteDeuren
+                van={deuren}
+                kaart={<Voorkant display={display} sc={sc} breedte={kaartBreedte} />}
+                breedte={kaartBreedte}
+                hoogte={gezichtHoogte ?? Math.round((deuren.height * kaartBreedte) / Math.max(1, deuren.width))}
+                opening={siteOpening ?? { bg: sc.bodyBg, tekst: sc.headingColor, accent: sc.accent, fontNamen: sc.fontFrameNames, fontNamenGewicht: sc.fontFrameNamesWeight, fontTekst: sc.fontFamily, fontImport: null, namen: display.names, datum: display.dateText || null }}
+                rustig={reduceMotion}
+                onKlaar={() => {
+                  if (siteUrl) {
+                    window.location.href = naarSiteVanKaart(siteUrl)
+                    return
+                  }
+                  // In de bouwer: eerst het voorbeeld van de site eroverheen,
+                  // dan pas de deuren weg, anders flitst de kaart er tussendoor
+                  siteDemo?.()
+                  setTimeout(() => setDeuren(null), 120)
+                }}
+              />
             )}
           </div>
       </div>
