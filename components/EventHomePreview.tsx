@@ -40,6 +40,9 @@ export interface HomepageSettings {
   tijden?: string
   dresscode?: string
   details?: 'op' | 'onder'
+  /** Hoe tijden en dresscode op het ontwerp staan, zoals op de trouwkaart (Michiel, 30 september 2026) */
+  detailsStijl?: 'kopjes' | 'lijst' | 'sierlijn'
+  detailsIcoon?: boolean
 }
 
 function clamp(v: number, min: number, max: number) {
@@ -545,6 +548,8 @@ export default function EventHomePreview({
               tijden: hp?.tijden ?? null,
               dresscode: hp?.dresscode ?? null,
               details: hp?.details ?? null,
+              detailsStijl: hp?.detailsStijl ?? null,
+              detailsIcoon: hp?.detailsIcoon === true,
             }}
             instellingen={hp?.ontwerpTekst}
           />

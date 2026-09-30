@@ -718,26 +718,10 @@ function Inhoud({
         )}
         {/* Tijden en dresscode klein en rustig, maar altijd elk op een
             eigen regel (Michiel, 30 september 2026) */}
-        {!detailRollen && tijdEnDresscode(kleur, tekst, font, opties.grootte ?? 10.5, uitlijnen, max, d.message ? px(8) : 0)}
-        {/* Op de homepagina: elke regel zijn eigen letter en grootte */}
-        {d.timeText && detailRollen &&
-          d.timeText.split("\n").map((regel, i) => (
-            <div
-              key={i}
-              style={{
-                display: "flex",
-                ...tt(detailRollen[i] ?? "tijden", font, opties.grootte ?? 10.5),
-                fontWeight: 600,
-                lineHeight: 1.5,
-                letterSpacing: "0.06em",
-                color: kleur,
-                maxWidth: max,
-                textAlign: uitlijnen === "center" ? "center" : "left",
-              }}
-            >
-              {regel}
-            </div>
-          ))}
+        {/* Ook op de homepagina in de gekozen weergave, met de letter en
+            grootte die het bruidspaar per tekst koos (Michiel, 30 september
+            2026) */}
+        {tijdEnDresscode(kleur, tekst, font, opties.grootte ?? 10.5, uitlijnen, max, d.message ? px(8) : 0)}
       </D>
     )
   }
@@ -755,38 +739,41 @@ function Inhoud({
     const klok = <Klokje maat={ik} kleur={accentKleur} />
     const hanger = <Kleerhanger maat={ik} kleur={accentKleur} />
     const midden = uitlijnen === "center"
-    const waarde = (tekst: string, extra: CSSProperties = {}) => (
-      <div style={{ display: "flex", fontFamily: font, fontSize: g * 1.2, lineHeight: 1.35, color: tekstKleur, textAlign: midden ? "center" : "left", ...extra }}>{tekst}</div>
+    // Op de homepagina kan elke tekst een eigen letter en grootte hebben
+    const rolFont = (rol: "tijden" | "dresscode") => eigen?.[rol]?.font ?? font
+    const rolSchaal = (rol: "tijden" | "dresscode") => eigen?.[rol]?.schaal ?? 1
+    const waarde = (tekst: string, rol: "tijden" | "dresscode", extra: CSSProperties = {}) => (
+      <div style={{ display: "flex", fontFamily: rolFont(rol), fontSize: g * 1.2 * rolSchaal(rol), lineHeight: 1.35, color: tekstKleur, textAlign: midden ? "center" : "left", ...extra, ...(extra.fontSize ? { fontSize: (extra.fontSize as number) * rolSchaal(rol) } : {}) }}>{tekst}</div>
     )
     if (stijl === "kopjes") {
-      const kolom = (label: string, tekst: string, ic: ReactNode) => (
+      const kolom = (label: string, tekst: string, ic: ReactNode, rol: "tijden" | "dresscode") => (
         <D style={{ flexDirection: "column", alignItems: midden ? "center" : "flex-start", gap: px(2), maxWidth: d.tijd && d.dresscode ? max / 2 - px(10) : max }}>
           <D style={{ alignItems: "center", gap: px(4) }}>
             {icoon && ic}
-            <div style={{ display: "flex", fontFamily: font, fontSize: g * 0.8, fontWeight: 600, letterSpacing: "0.26em", textTransform: "uppercase", color: accentKleur }}>{label}</div>
+            <div style={{ display: "flex", fontFamily: font, fontSize: g * 0.8 * rolSchaal(rol), fontWeight: 600, letterSpacing: "0.26em", textTransform: "uppercase", color: accentKleur }}>{label}</div>
           </D>
-          {waarde(tekst)}
+          {waarde(tekst, rol)}
         </D>
       )
       return (
         <D style={{ alignItems: "stretch", justifyContent: midden ? "center" : "flex-start", gap: px(10), maxWidth: max, marginTop: boven }}>
-          {d.tijd && kolom(d.tijdLabel, d.tijd, klok)}
+          {d.tijd && kolom(d.tijdLabel, d.tijd, klok, "tijden")}
           {d.tijd && d.dresscode && <div style={{ display: "flex", width: lijn, backgroundColor: accentKleur, opacity: 0.45 }} />}
-          {d.dresscode && kolom(d.dresscodeLabel, d.dresscode, hanger)}
+          {d.dresscode && kolom(d.dresscodeLabel, d.dresscode, hanger, "dresscode")}
         </D>
       )
     }
     if (stijl === "lijst") {
-      const regel = (tekst: string, ic: ReactNode) => (
+      const regel = (tekst: string, ic: ReactNode, rol: "tijden" | "dresscode") => (
         <D style={{ alignItems: "center", gap: px(6) }}>
           {icoon && ic}
-          {waarde(tekst)}
+          {waarde(tekst, rol)}
         </D>
       )
       return (
         <D style={{ flexDirection: "column", alignItems: midden ? "center" : "flex-start", gap: px(4), maxWidth: max, marginTop: boven }}>
-          {d.tijd && regel(d.tijd, klok)}
-          {d.dresscode && regel(icoon ? d.dresscode : `${d.dresscodeLabel}: ${d.dresscode}`, hanger)}
+          {d.tijd && regel(d.tijd, klok, "tijden")}
+          {d.dresscode && regel(icoon ? d.dresscode : `${d.dresscodeLabel}: ${d.dresscode}`, hanger, "dresscode")}
         </D>
       )
     }
@@ -801,13 +788,13 @@ function Inhoud({
         {d.tijd && (
           <D style={{ alignItems: "center", gap: px(6) }}>
             {icoon && klok}
-            {waarde(d.tijd)}
+            {waarde(d.tijd, "tijden")}
           </D>
         )}
         {d.dresscode && (
           <D style={{ alignItems: "center", gap: px(6) }}>
             {icoon && hanger}
-            {waarde(icoon ? d.dresscode : `${d.dresscodeLabel.toLowerCase()}: ${d.dresscode}`, { fontSize: g * 1.05, opacity: 0.85 })}
+            {waarde(icoon ? d.dresscode : `${d.dresscodeLabel.toLowerCase()}: ${d.dresscode}`, "dresscode", { fontSize: g * 1.05, opacity: 0.85 })}
           </D>
         )}
       </D>

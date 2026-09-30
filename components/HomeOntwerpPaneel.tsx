@@ -12,7 +12,7 @@ import NamenVelden from "@/components/NamenVelden"
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import HomeOntwerp, { type HomeOntwerpTekst, type HomeTekstInstellingen } from "@/components/HomeOntwerp"
 import type { TekstRol } from "@/components/kaart/KaartVoorkant"
-import { CARD_TEMPLATE_LABEL, type NieuwOntwerp } from "@/lib/cards"
+import { CARD_TEMPLATE_LABEL, type DetailsStijl, type NieuwOntwerp } from "@/lib/cards"
 import type { SC } from "@/lib/event-styles"
 import { HOME_ONTWERPEN, HOME_KOP_STANDAARD } from "@/lib/home-ontwerp"
 import { detailsKeuze, detailsOpKaart, type DetailsStand } from "@/lib/kaart-ontwerpen"
@@ -26,6 +26,8 @@ export interface HomeOntwerpInstellingen {
   tijden?: string
   dresscode?: string
   details?: DetailsStand
+  detailsStijl?: DetailsStijl
+  detailsIcoon?: boolean
 }
 
 const invoer =
@@ -232,6 +234,40 @@ export function HomeOntwerpTekstvelden({
               </button>
             ))}
           </div>
+        </div>
+      )}
+      {/* Dezelfde weergaven als op de trouwkaart (Michiel, 30 september 2026) */}
+      {waar === "op" && (instellingen.tijden?.trim() || instellingen.dresscode?.trim()) && (
+        <div className="flex flex-col gap-2">
+          <span className="text-xs text-gray-500">Hoe staan ze op het ontwerp?</span>
+          <div className="grid grid-cols-3 gap-1.5" role="radiogroup" aria-label="Weergave van tijden en dresscode">
+            {(["kopjes", "lijst", "sierlijn"] as const).map((s) => {
+              const aan = (instellingen.detailsStijl ?? "kopjes") === s
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  role="radio"
+                  aria-checked={aan}
+                  onClick={() => onWijzig({ detailsStijl: s })}
+                  className="text-xs font-semibold px-2 py-2 rounded-xl"
+                  style={{ backgroundColor: aan ? "#1A1A1A" : "#fff", color: aan ? "#fff" : "#1A1A1A", border: `1px solid ${aan ? "#1A1A1A" : "var(--goud-licht)"}`, cursor: "pointer" }}
+                >
+                  {s === "kopjes" ? "Met kopjes" : s === "lijst" ? "Onder elkaar" : "Met sierlijn"}
+                </button>
+              )
+            })}
+          </div>
+          <label className="flex items-center gap-2 text-xs text-gray-600" style={{ cursor: "pointer" }}>
+            <input
+              type="checkbox"
+              checked={instellingen.detailsIcoon === true}
+              onChange={(e) => onWijzig({ detailsIcoon: e.target.checked })}
+              className="w-4 h-4"
+              style={{ accentColor: "#1A1A1A" }}
+            />
+            Met icoontjes
+          </label>
         </div>
       )}
       {aangepast && (

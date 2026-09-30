@@ -85,6 +85,9 @@ interface HomepageSettings {
   tijden?: string
   dresscode?: string
   details?: 'op' | 'onder'
+  /** Hoe tijden en dresscode op het ontwerp staan, zoals op de trouwkaart (Michiel, 30 september 2026) */
+  detailsStijl?: 'kopjes' | 'lijst' | 'sierlijn'
+  detailsIcoon?: boolean
 }
 
 const DEFAULT_HOMEPAGE_SETTINGS: HomepageSettings = {
@@ -3482,10 +3485,10 @@ export default function BouwenPage() {
 
             {/* Canvas */}
               <div ref={canvasContainerRef} className={`flex-1 overflow-y-auto bg-gray-100 p-4 md:p-6 ${!bladKlein ? "max-md:pb-[50vh]" : "max-md:pb-16"}`}>
-              {/* Geen aparte balk met een lijn eronder: de knoppen scrollen mee met
-                  het voorbeeld, zodat de site nergens onder verdwijnt (Michiel, 30
+              {/* Geen balk met een lijn eronder, maar losse knoppen die blijven
+                  staan als je scrolt; de site schuift eronder door (Michiel, 30
                   september 2026) */}
-              <div className={`flex items-center justify-between gap-3 mb-3 -mt-1 md:-mt-2 ${blad && !bladKlein ? "max-md:hidden" : ""}`}>
+              <div className={`sticky top-2 z-30 flex items-center justify-between gap-3 mb-3 -mt-1 md:-mt-2 pointer-events-none [&>*]:pointer-events-auto ${blad && !bladKlein ? "max-md:hidden" : ""}`}>
                 {/* Altijd bij de hand: een andere stijl, en je blijft op de pagina
                     waar je bent. Zo zie je hoe elke pagina er in die stijl uitziet
                     (Michiel, 29 september 2026). */}
@@ -3494,7 +3497,7 @@ export default function BouwenPage() {
                     type="button"
                     onClick={() => setStijlOpen((o) => !o)}
                     aria-expanded={stijlOpen}
-                    className="inline-flex items-center gap-2 text-xs font-semibold pl-1.5 pr-3 py-1.5 rounded-lg bg-white"
+                    className="inline-flex items-center gap-2 text-xs font-semibold pl-1.5 pr-3 py-1.5 rounded-lg bg-white shadow-md"
                     style={{ color: KLEUR.inkt, border: `1px solid ${KLEUR.goudLicht}`, cursor: "pointer" }}
                   >
                     <span
@@ -3546,7 +3549,7 @@ export default function BouwenPage() {
                 </div>
                 <div className="flex items-center gap-2">
                     {/* Zoom controls — desktop only */}
-                    <div className="hidden md:flex items-center gap-1 bg-gray-200 rounded-lg p-0.5">
+                    <div className="hidden md:flex items-center gap-1 bg-gray-200 rounded-lg p-0.5 shadow-md">
                       <button
                         onClick={() => setZoomMultiplier(z => Math.max(0.5, parseFloat((z - 0.1).toFixed(1))))}
                         title="Zoom uit"
@@ -3575,7 +3578,7 @@ export default function BouwenPage() {
                     </div>
 
                     {/* Viewport toggle */}
-                    <div className="flex items-center gap-1 bg-gray-200 rounded-lg p-0.5">
+                    <div className="flex items-center gap-1 bg-gray-200 rounded-lg p-0.5 shadow-md">
                       <button
                         onClick={() => setViewport("desktop")}
                         title="Desktop"

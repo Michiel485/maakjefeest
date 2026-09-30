@@ -6,7 +6,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import KaartVoorkant, { type EigenTekst, type TekstRol } from "@/components/kaart/KaartVoorkant"
-import { buildCardDisplay, type NieuwOntwerp } from "@/lib/cards"
+import { buildCardDisplay, type DetailsStijl, type NieuwOntwerp } from "@/lib/cards"
 import type { SC } from "@/lib/event-styles"
 import { browserLetters, detailsKeuze, detailsOpKaart, type DetailsStand } from "@/lib/kaart-ontwerpen"
 import { gemetenLetter, getTitleFont } from "@/lib/title-fonts"
@@ -20,6 +20,8 @@ export interface HomeOntwerpTekst {
   tijden?: string | null
   dresscode?: string | null
   details?: DetailsStand | null
+  detailsStijl?: DetailsStijl | null
+  detailsIcoon?: boolean
 }
 
 /** Per tekst een lettertype (een id uit lib/title-fonts.ts) en een grootte (1 is zoals ontworpen) */
@@ -66,6 +68,8 @@ export default function HomeOntwerp({
         timeText: tijden ?? undefined,
         dresscode: dresscode ?? undefined,
         details: tekst.details ?? undefined,
+        detailsStijl: tekst.detailsStijl ?? undefined,
+        detailsIcoon: tekst.detailsIcoon || undefined,
       },
       { title: tekst.namen, frame_names: tekst.namen, datum: tekst.datum, locatie: tekst.locatie }
     ),

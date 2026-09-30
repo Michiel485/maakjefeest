@@ -516,6 +516,8 @@ export default function KaartMakenPage() {
   // Alle concepten van deze klant, voor de keuzelijst bovenin
   const [concepten, setConcepten] = useState<ConceptRij[]>([])
   const [simulatie, setSimulatie] = useState(false)
+  // Het keuzevenster met de kaarten en bewaren, boven het voorbeeld
+  const [kaartBlokOpen, setKaartBlokOpen] = useState(false)
   // Het voorbeeld van de website na de deuren (Michiel, 30 september 2026)
   const [siteDemo, setSiteDemo] = useState(false)
   useTerugSluit(siteDemo, () => setSiteDemo(false))
@@ -2705,23 +2707,49 @@ export default function KaartMakenPage() {
               kaart niet naar beneden duwt. */}
           {/* items-start: anders rekt de rij van nul hoog de knop mee tot nul,
               en dan viel de tekst over een platgedrukte knop heen. */}
-          {/* Op een breed scherm links naast de kaart, in een rij van nul hoog:
-              dan duwt hij de kaart niet naar beneden (Michiel, 30 september
-              2026). De kaart schuift daarvoor een half blok naar rechts. */}
-          <div className="hidden md:flex items-start justify-between gap-3 mb-4 xl:flex-col xl:justify-start xl:sticky xl:top-0 xl:z-10 xl:h-0 xl:mb-0">
-          <div className="w-[320px] flex flex-col gap-2 rounded-2xl p-3" style={{ backgroundColor: "#fff", border: `1px solid ${GOLD_LIGHT}`, boxShadow: "0 8px 24px -16px rgba(26,18,4,0.35)" }}>
-            {kaartenBlok}
+          {/* Een knopje linksboven dat het blok met de kaarten en bewaren
+              openklapt, zoals de stijlknop in de websitebouwer. Het blok zelf
+              duwde de kaart omlaag of opzij; zo staat de kaart in het midden
+              (Michiel, 30 september 2026). Een rij van nul hoog, die blijft
+              staan als je in het voorbeeld scrolt. */}
+          <div className="hidden md:flex sticky top-0 z-20 h-0 items-start justify-between gap-3">
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setKaartBlokOpen((o) => !o)}
+                aria-expanded={kaartBlokOpen}
+                className="inline-flex items-center gap-2 max-w-[300px] text-sm font-semibold pl-3 pr-3 py-2 rounded-xl shadow-lg"
+                style={{ backgroundColor: "#fff", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
+              >
+                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                  <path d="M17 21v-8H7v8M7 3v5h8" />
+                </svg>
+                <span className="truncate">{ontwerp.naam.trim() || automatischeNaam}</span>
+                <span className="shrink-0 w-2 h-2 rounded-full" style={{ backgroundColor: bewaarLetOp ? "#D97706" : "#16A34A" }} title={bewaarStatus} />
+                <svg className={`w-3 h-3 shrink-0 transition-transform ${kaartBlokOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+              </button>
+              {kaartBlokOpen && (
+                <>
+                  <div className="fixed inset-0 z-30" onClick={() => setKaartBlokOpen(false)} />
+                  <div className="absolute left-0 top-full mt-2 z-40 w-[340px] flex flex-col gap-2 rounded-2xl p-3" style={{ backgroundColor: "#fff", border: `1px solid ${GOLD_LIGHT}`, boxShadow: "0 16px 40px -18px rgba(26,18,4,0.45)" }}>
+                    {kaartenBlok}
+                  </div>
+                </>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setSimulatie(true)}
+              className="inline-flex items-center gap-1.5 whitespace-nowrap text-sm font-semibold px-4 py-2 rounded-xl shadow-lg"
+              style={{ backgroundColor: "#fff", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
+            >
+              {"💌"} Bekijk hoe het opengaat
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => setSimulatie(true)}
-            className="inline-flex items-center gap-1.5 whitespace-nowrap text-sm font-semibold px-4 py-2 rounded-xl shadow-lg"
-            style={{ backgroundColor: "#fff", color: CHARCOAL, border: `1px solid ${GOLD_LIGHT}`, cursor: "pointer" }}
-          >
-            {"💌"} Bekijk hoe het opengaat
-          </button>
-          </div>
-          <div className={`mx-auto max-w-md transition-transform duration-200 origin-top xl:relative xl:left-[170px] ${!bladKlein ? "max-md:scale-[0.45]" : ""}`}>
+          {/* Op een smaller scherm passen de knopjes niet naast de kop: dan
+              begint de kaart eronder */}
+          <div className={`mx-auto max-w-md transition-transform duration-200 origin-top md:max-xl:mt-12 ${!bladKlein ? "max-md:scale-[0.45]" : ""}`}>
             {/* Op de telefoon weg: daar was de bovenkant te druk met twee
                 balken, een kopje, een demoknop en een uitleg (Michiel, 26
                 september 2026). De demo staat daar in de balk bovenin. */}
