@@ -4,7 +4,7 @@ Persoonlijke actielijst van Michiel. Claude houdt deze bij; afgeronde punten gaa
 
 ## Open
 
-- [ ] **Lettertypes zelf in de site zetten** in plaats van ze bij elke build bij Google op te halen. De build op Vercel mislukte op 28 en 29 september 2026 drie keer met `next/font/google queries have exactly one entry` omdat Google Fonts niet reageerde; een lege commit loste het steeds op. Oplossing: de woff2-bestanden van de gebruikte letters (app/layout.tsx) in de repo zetten en laden met `next/font/local`. Let op: de kaartafbeeldingen (satori) halen hun letters tijdens het draaien bij Google op, dat is een aparte route en werkt los hiervan.
+- [ ] **Google Fonts ook tijdens het bezoek weghalen**: de build haalt niets meer bij Google, maar een paar stijlen laden in de browser nog een schuine Cormorant en Pinyon Script via `@import` bij Google (`fontImport` in lib/event-styles.ts), en de kaartafbeeldingen (satori) halen hun letters tijdens het draaien bij Google. Werkt, maar elke gast stuurt zo zijn IP-adres naar Google; in Duitsland is dat al eens als AVG-overtreding beoordeeld. Oplossing: de schuine variant en Pinyon ook in app/fonts, en satori de bestanden uit app/fonts laten lezen.
 - [ ] **Websitebouwer in stukken knippen**: `/bouwen` laadt één script van 494 kB (ongecomprimeerd; de kaartbouwer 200 kB, het dashboard 70 kB). Sinds 22 sep 2026 worden de andere tabbladen alvast opgehaald, dus wisselen voelt snel, maar de eerste keer openen blijft zwaar op een telefoon. De acht pagina-editors en de Sophie-tutorial pas laden als ze open gaan (`next/dynamic`). Hoort bij stap 5, want dan gaan die editors toch onder handen.
 - [ ] **Teksten op /start nog een ronde doorlopen**: de opbouw en stijl staan goed (11 sep 2026), maar de teksten in de drie kaarten en de regel eronder wil Michiel nog aanscherpen. Kies een moment waarop we er met een frisse blik naar kijken.
 - [ ] **Kaartbouwer testen** nu de drie ontwerpen live staan: Strak, Sierlijk en Bohemian, watermerk, envelopsimulatie, downloadvoorbeeld en activeren voor 15 euro. Meld wat er niet lekker voelt.
@@ -30,6 +30,8 @@ Persoonlijke actielijst van Michiel. Claude houdt deze bij; afgeronde punten gaa
 - [ ] **Reviews verzamelen** zodra er echte klanten zijn (testimonials op de homepage plus Review-schema).
 
 ## Afgerond
+
+- [x] 1 okt 2026: **Lettertypes staan in de site zelf** (`app/fonts`, 20 lettertypes, 612 kB, geladen met `next/font/local`). De build haalde ze elke keer bij Google Fonts op en mislukte op 28, 29 en 30 september meerdere keren. Dezelfde latin-bestanden, namen en gewichten als voorheen; lokale productiebuild geslaagd en in de browser nagekeken dat alles uit de eigen site komt.
 
 - [x] 28 sep 2026: **Nieuwe start** (`/start`, alle Start gratis-knoppen): namen apart, datum en locatie (over te slaan), jullie namen op drie echte ontwerpen, wat wil je maken met een aanrader op basis van de datum (half jaar / zes weken), en bewaren met mailadres via de bestaande Bewaren-route. Daarna direct de gekozen bouwer in, met ontwerp, namen, datum en locatie ingevuld; bij de website staat het gekozen ontwerp op de homepage. Vervangt de geplande korte tutorial. Pakketten overal als ladder: Trouwkaart inclusief Save the Date, Website inclusief beide; het pakket heet overal Trouwkaart. Nog te doen: de ontwerpen de twee losse namen laten gebruiken (`sayingyes_namen`), en voorwaarden en schrijfwijzer noemen nog Uitnodiging & RSVP.
 

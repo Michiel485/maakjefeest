@@ -1,26 +1,5 @@
 ﻿import type { Metadata, Viewport } from "next";
-import {
-  Geist,
-  Geist_Mono,
-  Playfair_Display,
-  Great_Vibes,
-  Cormorant_Garamond,
-  Pinyon_Script,
-  Cinzel,
-  Dancing_Script,
-  Montserrat,
-  Marcellus,
-  Lora,
-  WindSong,
-  Allura,
-  Bodoni_Moda,
-  Italiana,
-  GFS_Didot,
-  Prata,
-  Allison,
-  Abril_Fatface,
-  Jost,
-} from "next/font/google";
+import localFont from "next/font/local";
 import Analytics from "@/components/Analytics";
 import CookieBanner from "@/components/CookieBanner";
 import FoutVanger from "@/components/FoutVanger";
@@ -28,143 +7,172 @@ import VisitorTracking from "@/components/VisitorTracking";
 import { MARKETING_URL } from "@/lib/site-url";
 import "./globals.css";
 
-const geistSans = Geist({
+// De lettertypes staan in app/fonts, niet meer bij Google. De build haalde ze
+// eerst elke keer bij Google Fonts op en mislukte op 28, 29 en 30 september
+// 2026 meerdere keren omdat Google niet op tijd antwoordde (Michiel, 1 oktober
+// 2026). Dezelfde bestanden (de latin-set, zoals voorheen), dezelfde namen en
+// dezelfde gewichten. Een bereik zoals "300 600" is een variabel lettertype:
+// één bestand voor alle diktes.
+//
+// Niet vooraf laden (preload false) wat alleen een bepaald ontwerp nodig heeft.
+// De kaartafbeeldingen (satori) halen hun letters apart op, tijdens het
+// draaien; die gaan hier niet langs.
+
+const geistSans = localFont({
+  src: "./fonts/geist-var.woff2",
   variable: "--font-geist-sans",
-  subsets: ["latin"],
+  weight: "100 900",
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
+const geistMono = localFont({
+  src: "./fonts/geist-mono-var.woff2",
   variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: "100 900",
+  display: "swap",
 });
 
-const playfairDisplay = Playfair_Display({
+const playfairDisplay = localFont({
+  src: "./fonts/playfair-var.woff2",
   variable: "--font-playfair",
+  weight: "400 700",
+  display: "swap",
   preload: false,
-  subsets: ["latin"],
-  weight: ["400", "700"],
 });
 
-const greatVibes = Great_Vibes({
+const greatVibes = localFont({
+  src: "./fonts/greatvibes-400.woff2",
   variable: "--font-greatvibes",
-  preload: false,
-  subsets: ["latin"],
   weight: "400",
+  display: "swap",
+  preload: false,
 });
 
-const cormorantGaramond = Cormorant_Garamond({
+const cormorantGaramond = localFont({
+  src: "./fonts/cormorant-var.woff2",
   variable: "--font-cormorant",
-  subsets: ["latin"],
-  weight: ["300", "400", "600"],
+  weight: "300 600",
+  display: "swap",
 });
 
-const pinyonScript = Pinyon_Script({
+const pinyonScript = localFont({
+  src: "./fonts/pinyonscript-400.woff2",
   variable: "--font-pinyonscript",
-  preload: false,
-  subsets: ["latin"],
   weight: "400",
+  display: "swap",
+  preload: false,
 });
 
-const cinzel = Cinzel({
+const cinzel = localFont({
+  src: "./fonts/cinzel-var.woff2",
   variable: "--font-cinzel",
+  weight: "400 700",
+  display: "swap",
   preload: false,
-  subsets: ["latin"],
-  weight: ["400", "700"],
 });
 
-const dancingScript = Dancing_Script({
+const dancingScript = localFont({
+  src: "./fonts/dancing-400.woff2",
   variable: "--font-dancing",
+  weight: "400",
+  display: "swap",
   preload: false,
-  subsets: ["latin"],
-  weight: ["400"],
 });
 
-const montserrat = Montserrat({
+const montserrat = localFont({
+  src: "./fonts/montserrat-var.woff2",
   variable: "--font-montserrat",
+  weight: "300 600",
+  display: "swap",
   preload: false,
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
 });
 
-const marcellus = Marcellus({
+const marcellus = localFont({
+  src: "./fonts/marcellus-400.woff2",
   variable: "--font-marcellus",
-  preload: false,
-  subsets: ["latin"],
   weight: "400",
+  display: "swap",
+  preload: false,
 });
 
-const lora = Lora({
+const lora = localFont({
+  src: "./fonts/lora-var.woff2",
   variable: "--font-lora",
+  weight: "400 600",
+  display: "swap",
   preload: false,
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
 });
 
-const windSong = WindSong({
+const windSong = localFont({
+  src: "./fonts/windsong-400.woff2",
   variable: "--font-windsong",
-  preload: false,
-  subsets: ["latin"],
   weight: "400",
+  display: "swap",
+  preload: false,
 });
 
-const allura = Allura({
+const allura = localFont({
+  src: "./fonts/allura-400.woff2",
   variable: "--font-allura",
-  preload: false,
-  subsets: ["latin"],
   weight: "400",
+  display: "swap",
+  preload: false,
 });
 
-const bodoniModa = Bodoni_Moda({
+const bodoniModa = localFont({
+  src: "./fonts/bodonimoda-var.woff2",
   variable: "--font-bodonimoda",
+  weight: "400 700",
+  display: "swap",
   preload: false,
-  subsets: ["latin"],
-  weight: ["400", "700"],
 });
 
-const italiana = Italiana({
+const italiana = localFont({
+  src: "./fonts/italiana-400.woff2",
   variable: "--font-italiana",
-  preload: false,
-  subsets: ["latin"],
   weight: "400",
+  display: "swap",
+  preload: false,
 });
 
-const gfsDidot = GFS_Didot({
+const gfsDidot = localFont({
+  src: "./fonts/gfsdidot-400.woff2",
   variable: "--font-gfsdidot",
-  preload: false,
-  subsets: ["latin"],
   weight: "400",
+  display: "swap",
+  preload: false,
 });
 
-const prata = Prata({
+const prata = localFont({
+  src: "./fonts/prata-400.woff2",
   variable: "--font-prata",
-  preload: false,
-  subsets: ["latin"],
   weight: "400",
+  display: "swap",
+  preload: false,
 });
 
-// Voor de themakaarten (25 september 2026): een losse handschriftletter
-// voor namen als "Annemiek", een vette titelletter voor "Save the Date" en
-// een dunne schreefloze voor namen als "Eline and Manuel". Niet vooraf
-// laden: alleen een kaart in zo'n ontwerp heeft ze nodig.
-const allison = Allison({
+const allison = localFont({
+  src: "./fonts/allison-400.woff2",
   variable: "--font-allison",
-  preload: false,
-  subsets: ["latin"],
   weight: "400",
+  display: "swap",
+  preload: false,
 });
 
-const abrilFatface = Abril_Fatface({
+const abrilFatface = localFont({
+  src: "./fonts/abril-400.woff2",
   variable: "--font-abril",
-  preload: false,
-  subsets: ["latin"],
   weight: "400",
+  display: "swap",
+  preload: false,
 });
 
-const jost = Jost({
+const jost = localFont({
+  src: "./fonts/jost-var.woff2",
   variable: "--font-jost",
+  weight: "300 500",
+  display: "swap",
   preload: false,
-  subsets: ["latin"],
-  weight: ["300", "400", "500"],
 });
 
 export const viewport: Viewport = {
