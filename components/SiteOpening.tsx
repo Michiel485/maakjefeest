@@ -9,12 +9,15 @@ export default function SiteOpening({
   id,
   style,
   onderdrukHydratie = false,
+  inhoudStijl,
 }: {
   data: SiteOpeningData
   id?: string
   style?: CSSProperties
   /** Op de site zet een scriptje hem aan voordat React er is; dat mag */
   onderdrukHydratie?: boolean
+  /** Voor de namen en de datum apart, zodat die later kunnen opkomen dan de kleur */
+  inhoudStijl?: CSSProperties
 }) {
   const lijn: CSSProperties = { display: "block", width: 48, height: 1, backgroundColor: data.accent }
   return (
@@ -36,6 +39,7 @@ export default function SiteOpening({
       }}
     >
       {data.fontImport && <style>{data.fontImport}</style>}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20, ...inhoudStijl }}>
       <span style={lijn} />
       <span
         style={{
@@ -66,6 +70,7 @@ export default function SiteOpening({
         </span>
       )}
       <span style={lijn} />
+      </div>
     </div>
   )
 }

@@ -528,16 +528,25 @@ export default function CardReveal({
   const onderUitnodiging = detailsEronder ? display.inviteLine : null
   const onderTijd = detailsEronder ? display.timeText : null
   const stofjesAan = stage === "open" && display.animatie === "feestelijk" && !reduceMotion
+  // De envelop in het midden van het scherm. Hij ligt over de kaart, en onder
+  // de kaart nemen het aanmeldformulier en de knoppen al hun plek in; met
+  // alleen centreren stond de envelop daardoor hoog op het scherm (Michiel,
+  // 1 oktober 2026). Dus zoveel ruimte boven de kaart dat het vlak van de
+  // envelop precies in het midden valt. Na het openen staat de kaart daar ook.
+  // Zolang de kaart nog niet gemeten is: een schatting van zijn hoogte.
+  const envelopVlak = gezichtHoogte ? `${Math.max(gezichtHoogte, envelopHoogte + 24)}px` : "min(588px, calc((100vw - 32px) * 1.4))"
+  const ruimteBoven = `max(${previewNotice ? 96 : 48}px, calc((100svh - ${envelopVlak}) / 2))`
 
   return (
     <div
       // Als hele pagina: lucht boven en onder de kaart. Bij het voorbeeld staat
       // er een vaste balk bovenaan; die at de bovenruimte op, zodat de kaart
       // er strak tegenaan stond (Michiels bevinding van 23 september 2026).
-      className={`relative flex flex-col items-center justify-center px-4 ${
-        compact ? "py-4" : previewNotice ? "min-h-screen pt-24 pb-12" : "min-h-screen py-12"
+      className={`relative flex flex-col items-center px-4 ${
+        compact ? "justify-center py-4" : "justify-start min-h-screen pb-12"
       }`}
       style={{
+        ...(compact ? {} : { paddingTop: ruimteBoven }),
         background: kaartPagina(sc),
         // De envelop zakt tijdens de animatie onder deze doos uit. Zonder dit
         // groeit de pagina daardoor en verschuift het beeld een paar pixels,

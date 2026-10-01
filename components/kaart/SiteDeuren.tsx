@@ -114,6 +114,18 @@ export default function SiteDeuren({
           opacity: fase === "start" ? 0 : 1,
           transition: `opacity ${rustig ? 250 : 380}ms ease`,
         }}
+        // De namen en de datum pas als de deuren opengaan. Kwamen ze meteen
+        // op, dan staken ze links en rechts achter de kaart uit terwijl die nog
+        // naar het midden schoof (Michiel, 1 oktober 2026).
+        inhoudStijl={
+          rustig
+            ? undefined
+            : {
+                opacity: fase === "open" ? 1 : 0,
+                transform: fase === "open" ? "scale(1)" : "scale(0.94)",
+                transition: `opacity ${OPEN_MS * 0.55}ms ease ${OPEN_MS * 0.25}ms, transform ${OPEN_MS}ms cubic-bezier(.3,.7,.3,1) ${OPEN_MS * 0.15}ms`,
+              }
+        }
       />
       {!rustig && (
         <div
