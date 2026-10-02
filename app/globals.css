@@ -147,6 +147,16 @@ html.sy-beweegt [data-verschijn].sy-in {
   html.sy-beweegt [data-verschijn] { opacity: 1; transform: none; transition: none; }
 }
 
+/* Het pijltje onderaan de opening van de trouwsite wenkt zachtjes */
+@keyframes sy-wenk {
+  0%, 100% { transform: translate(-50%, 0); opacity: 0.7; }
+  50% { transform: translate(-50%, 6px); opacity: 1; }
+}
+.sy-wenk { animation: sy-wenk 2.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .sy-wenk { animation: none; }
+}
+
 /* ── Draaiend rondje voor "bezig" ──────────────────────────────────────────── */
 /* Gebruikt door Draaier in components/ui.tsx. Puur CSS, zodat een knop kan
    laten zien dat hij bezig is zonder JavaScript. */

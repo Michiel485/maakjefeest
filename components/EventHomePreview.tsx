@@ -1,13 +1,28 @@
 "use client"
 
-import { useRef, useState, useCallback, useEffect } from "react"
+// De homepagina van de trouwsite: de opening en het welkomstbriefje.
+//
+// De opening vult het scherm en bestaat in drie smaken (ontwerpronde, 2
+// oktober 2026): Foto (jullie foto over het hele scherm met de namen erop),
+// Ontwerp (het kaartontwerp groot en vrij op de pagina) en Foto en ontwerp
+// (naast elkaar, op de telefoon onder elkaar). In alle drie staan dezelfde
+// dingen: het kopje, de namen, de datum met het aftellen eronder, de locatie,
+// en de knoppen naar het aanmelden en de agenda. De indelingen "editorial" en
+// "modern" van vroeger worden hierop afgebeeld, zodat niemand zijn foto kwijt is.
+
+import { useRef, useState, useCallback, useEffect, type CSSProperties, type ReactNode } from "react"
 import type { SC } from "@/lib/event-styles"
 import { getTitleFont } from "@/lib/title-fonts"
 import HomeOntwerp from "@/components/HomeOntwerp"
+import SectieKop from "@/components/site/SectieKop"
 import { HOME_KOP_STANDAARD, homeOntwerp } from "@/lib/home-ontwerp"
 
+export type HomeOpening = "foto" | "ontwerp" | "foto-ontwerp"
+
 export interface HomepageSettings {
+  /** Van vroeger; de opening komt ervoor in de plaats. Zie homeOpening(). */
   layout: 'editorial' | 'modern'
+  opening?: HomeOpening
   subtitleText: string
   subtitleFont: string
   subtitleSize: number
@@ -45,20 +60,33 @@ export interface HomepageSettings {
   detailsIcoon?: boolean
 }
 
-function clamp(v: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, v))
+/**
+ * Welke opening de site heeft. Een gekozen opening; anders de vertaling van
+ * de oude indeling: wie een foto had houdt hem (naast het ontwerp), wie geen
+ * foto heeft krijgt het ontwerp. Foto zonder foto wordt Ontwerp.
+ */
+export function homeOpening(hp: Pick<HomepageSettings, "layout" | "opening"> | null | undefined, metFoto: boolean): HomeOpening {
+  const gekozen = hp?.opening
+  if (gekozen === "ontwerp") return "ontwerp"
+  if (gekozen === "foto" || gekozen === "foto-ontwerp") return metFoto ? gekozen : "ontwerp"
+  return metFoto ? "foto-ontwerp" : "ontwerp"
 }
 
-function GoldDivider({ accent }: { accent: string }) {
-  return (
-    <div className="flex items-center gap-3 my-4 w-full">
-      <div style={{ flex: 1, height: 1, backgroundColor: `${accent}60` }} />
-      <svg width="6" height="6" viewBox="0 0 8 8" fill={accent}>
-        <path d="M4 0 L8 4 L4 8 L0 4 Z" />
-      </svg>
-      <div style={{ flex: 1, height: 1, backgroundColor: `${accent}60` }} />
-    </div>
-  )
+/** "Nog 154 dagen", "Morgen is het zover", "Vandaag is de dag" of "Just married" */
+export function aftelRegel(datum: string | null | undefined): string | null {
+  if (!datum) return null
+  const vandaag = new Date(); vandaag.setHours(0, 0, 0, 0)
+  const dag = new Date(datum); dag.setHours(0, 0, 0, 0)
+  if (Number.isNaN(dag.getTime())) return null
+  const dagen = Math.round((dag.getTime() - vandaag.getTime()) / 86400000)
+  if (dagen > 1) return `Nog ${dagen} dagen`
+  if (dagen === 1) return "Morgen is het zover"
+  if (dagen === 0) return "Vandaag is de dag"
+  return "Just married"
+}
+
+function clamp(v: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, v))
 }
 
 export interface EventHomePreviewProps {
@@ -89,6 +117,8 @@ export interface EventHomePreviewProps {
   frameLocationSize?: number
   onNavigate?: (pageId: string) => void
   rsvpHref?: string
+  /** De knop "Zet in je agenda"; zonder adres (in de bouwer) doet hij niets */
+  agendaHref?: string
   homepageSettings?: HomepageSettings | null
   onFieldClick?: (field: string) => void
 }
@@ -112,13 +142,11 @@ export default function EventHomePreview({
   sc,
   useFrame = false,
   frameStyle,
-  initials,
   frameNames,
   frameLocation,
-  frameInitialsSize = 8,
-  frameNamesSize = 5.5,
   onNavigate,
   rsvpHref = "/RSVP",
+  agendaHref,
   homepageSettings,
   onFieldClick,
 }: EventHomePreviewProps) {
@@ -133,6 +161,7 @@ export default function EventHomePreview({
       })
     : () => ({})
 
+  // ── De foto slepen in de bouwer ──────────────────────────────────────────
   const [heroPos, setHeroPos] = useState({ x: heroPosX, y: heroPosY })
   const [heroDragging, setHeroDragging] = useState(false)
 
@@ -141,7 +170,7 @@ export default function EventHomePreview({
       setHeroPos({ x: heroPosX, y: heroPosY })
     }
   }, [heroPosX, heroPosY]) // eslint-disable-line react-hooks/exhaustive-deps
-  const heroRef = useRef<HTMLElement>(null)
+  const heroRef = useRef<HTMLDivElement>(null)
   const lastHeroPointer = useRef<{ x: number; y: number } | null>(null)
   const heroDraggingRef = useRef(false)
 
@@ -184,256 +213,115 @@ export default function EventHomePreview({
     onHeroPositionChange?.(heroPos.x, heroPos.y)
   }, [heroDragging, heroPos, onHeroPositionChange])
 
-  const isBoldHero = sc.fontHeroWeight >= 700
-
-  const frameDisplayNames    = (frameNames    && frameNames.trim())    ? frameNames    : title
-  const frameDisplayLocation = (frameLocation && frameLocation.trim()) ? frameLocation : (locatie ?? "")
-
-  // Countdown
-  let countdownText = "NOG ... DAGEN • TOT WE JA ZEGGEN"
-  if (datum) {
-    const today = new Date(); today.setHours(0, 0, 0, 0)
-    const weddingDay = new Date(datum); weddingDay.setHours(0, 0, 0, 0)
-    const days = Math.round((weddingDay.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-    if (days > 1)       countdownText = `NOG ${days} DAGEN • TOT WE JA ZEGGEN`
-    else if (days === 1) countdownText = "MORGEN IS DE GROTE DAG!"
-    else if (days === 0) countdownText = "VANDAAG IS DE DAG! 🤍"
-    else                 countdownText = `JUST MARRIED • ${datumFormatted ?? ""}`
-  }
-
-
-  // ── Resolve hp settings fonts ──────────────────────────────────────────────
+  // ── Wat er staat ──────────────────────────────────────────────────────────
   const hp = homepageSettings
-  const subtitleFontResult   = getTitleFont(hp?.subtitleFont)
-  const hoofdtitelFontResult = getTitleFont(hp?.hoofdtitelFont)
-  const datumFontResult      = getTitleFont(hp?.datumFont)
-  const locatieFontResult    = getTitleFont(hp?.locatieFont)
+  const namen    = (frameNames    && frameNames.trim())    ? frameNames    : title
+  const plek     = (frameLocation && frameLocation.trim()) ? frameLocation : (locatie ?? "")
+  const opening  = homeOpening(hp, hasPhoto)
+  const ontwerpNu = homeOntwerp({ ontwerp: hp?.ontwerp, useFrame, frameStyle })
+  const aftel = aftelRegel(datum)
+  const tijden = hp?.tijden?.trim() || null
+  const dresscode = hp?.dresscode?.trim() || null
 
-  const subtitleStyle: React.CSSProperties = {
-    fontFamily: subtitleFontResult.family,
-    fontWeight: subtitleFontResult.weight,
-    fontSize: `${hp?.subtitleSize ?? 1.1}rem`,
-    color: sc.bodyText,
-    letterSpacing: '0.02em',
-    textAlign: 'center',
-    width: '100%',
+  // De letters zoals op het ontwerp gekozen, ook voor de tekst op de foto
+  const eigenLetter = (rol: "kop" | "namen" | "datum" | "locatie") => {
+    const w = hp?.ontwerpTekst?.[rol]
+    return w?.font ? getTitleFont(w.font) : null
   }
+  const namenLetter = eigenLetter("namen") ?? { family: sc.fontFrameNames, weight: sc.fontFrameNamesWeight }
+  const kopLetter = eigenLetter("kop")
+  const datumLetter = eigenLetter("datum")
 
-  const hoofdtitelStyle: React.CSSProperties = {
-    fontFamily: hoofdtitelFontResult.family,
-    fontWeight: hoofdtitelFontResult.weight,
-    fontSize: `${hp?.hoofdtitelSize ?? 5.5}rem`,
-    color: sc.headingColor,
-    lineHeight: 1.1,
-    whiteSpace: 'pre-wrap',
-  }
-
-  const datumStyleHp: React.CSSProperties = {
-    fontFamily: datumFontResult.family,
-    fontWeight: datumFontResult.weight,
-    fontSize: `${hp?.datumSize ?? 1.6}rem`,
-    color: sc.accent,
-    letterSpacing: '0.12em',
-    paddingLeft: '0.12em',
-    textAlign: 'center',
-  }
-
-  const datumDisplay = (() => {
-    if (!datum) return datumFormatted
-    if ((hp?.datumNotatie ?? 'uitgeschreven') === 'numeriek') {
-      const [y, m, d] = datum.split('-')
-      return `${d}-${m}-${y}`
+  // ── Bouwstenen ────────────────────────────────────────────────────────────
+  const knoppen = (opFoto: boolean) => {
+    const basis: CSSProperties = {
+      display: "inline-block",
+      padding: "12px 24px",
+      borderRadius: 999,
+      fontFamily: sc.fontFamily,
+      fontWeight: 700,
+      fontSize: "0.9375rem",
+      textDecoration: "none",
+      letterSpacing: "0.01em",
+      transition: "transform 0.2s ease, box-shadow 0.2s ease",
     }
-    return datumFormatted
-  })()
-
-  const locatieStyleHp: React.CSSProperties = {
-    fontFamily: locatieFontResult.family,
-    fontWeight: locatieFontResult.weight,
-    fontSize: `${hp?.locatieSize ?? 1.1}rem`,
-    color: sc.bodyText,
-    letterSpacing: '0.04em',
-    paddingLeft: '0.04em',
-    textAlign: 'center',
-    width: '100%',
-  }
-
-  // ── Layout 2: Modern split-screen ─────────────────────────────────────────
-  if (hp?.layout === 'modern') {
     return (
-      <div className="@container">
-        {/* Split: photo left, text right */}
-        <div className="flex flex-col @md:flex-row" style={{ minHeight: 520 }}>
-
-          {/* Photo panel (left on desktop, top on mobile) */}
-          <div ref={heroRef as React.RefObject<HTMLDivElement>} className="@md:w-1/2 h-64 @md:h-auto relative overflow-hidden"
-            onMouseDown={editableHero ? (e) => { e.preventDefault(); startHeroDrag(e.clientX, e.clientY) } : undefined}
-            onMouseMove={editableHero ? (e) => moveHeroDrag(e.clientX, e.clientY) : undefined}
-            onMouseUp={editableHero ? endHeroDrag : undefined}
-            onMouseLeave={editableHero ? endHeroDrag : undefined}
-            onTouchStart={editableHero ? (e) => startHeroDrag(e.touches[0].clientX, e.touches[0].clientY) : undefined}
-            onTouchMove={editableHero ? (e) => { e.preventDefault(); moveHeroDrag(e.touches[0].clientX, e.touches[0].clientY) } : undefined}
-            onTouchEnd={editableHero ? endHeroDrag : undefined}
-            onClick={onFieldClick ? (e) => { e.stopPropagation(); onFieldClick('headerfoto') } : undefined}
-            style={{ cursor: editableHero && heroImageUrl ? (heroDragging ? 'grabbing' : 'grab') : 'default' }}
-          >
-            {heroImageUrl ? (
-              <>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={heroImageUrl}
-                  alt=""
-                  draggable={false}
-                  className="absolute inset-0 w-full h-full object-cover select-none"
-                  style={{ objectPosition: `${heroPos.x}% ${heroPos.y}%` }}
-                />
-                {showOverlay && (
-                  <div
-                    className="absolute inset-0"
-                    style={
-                      sc.floral
-                        ? { background: "linear-gradient(to bottom, rgba(28,25,23,0.06) 0%, rgba(28,25,23,0.22) 100%)" }
-                        : { backgroundColor: sc.accent, opacity: 0.18 }
-                    }
-                  />
-                )}
-                {/* Hoofdtitel overlay op foto wanneer "Over foto" gekozen */}
-                {(hp.hoofdtitelVisible === true) && title && (hp.titlePosition ?? 'under') === 'over' && (
-                  <div className="absolute inset-0 flex items-end justify-center pb-6 @md:pb-10 px-6"
-                    style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 55%)' }}
-                  >
-                    <h1
-                      {...fieldClick('hoofdtitel')}
-                      style={{ ...hoofdtitelStyle, color: '#fff', fontSize: `clamp(1.8rem, ${hp.hoofdtitelSize ?? 5.5}rem, ${(hp.hoofdtitelSize ?? 5.5) * 1.2}rem)`, lineHeight: 1.1, textShadow: '0 2px 12px rgba(0,0,0,0.4)', textAlign: 'center' }}
-                    >
-                      {title}
-                    </h1>
-                  </div>
-                )}
-                {editableHero && !heroDragging && (
-                  <div className="absolute bottom-3 left-0 right-0 flex justify-center pointer-events-none">
-                    <span className="text-xs px-3 py-1 rounded-full opacity-80" style={{ backgroundColor: "rgba(0,0,0,0.5)", color: "#fff" }}>
-                      Sleep om te positioneren
-                    </span>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="w-full h-full" style={{ backgroundColor: `${sc.accent}30` }} />
-            )}
-          </div>
-
-          {/* Text panel (right on desktop, bottom on mobile) */}
-          <div
-            className="@md:w-1/2 flex items-center justify-center px-10 py-14 @md:py-20"
-            style={{ backgroundColor: sc.bodyBg }}
-          >
-            <div className="flex flex-col items-center text-center gap-5 max-w-sm w-full">
-              {/* Hoofdtitel in tekstvlak wanneer "In tekstvlak" (under) gekozen — boven subtitel */}
-              {(hp.hoofdtitelVisible === true) && title && (hp.titlePosition ?? 'under') !== 'over' && (
-                <h1 {...fieldClick('hoofdtitel')} style={{ ...hoofdtitelStyle, fontSize: `clamp(2rem, ${hp?.hoofdtitelSize ?? 5.5}rem, ${(hp?.hoofdtitelSize ?? 5.5) * 1.2}rem)` }}>
-                  {title}
-                </h1>
-              )}
-              {(hp.subtitleVisible !== false) && hp.subtitleText && (
-                <p {...fieldClick('subtitle')} style={subtitleStyle}>{hp.subtitleText}</p>
-              )}
-              {/* Initialen */}
-              {(hp.initialsVisible !== false) && initials && (
-                <p
-                  {...fieldClick('initialen')}
-                  style={{ fontFamily: sc.fontInitials, fontWeight: sc.fontInitialsWeight, fontSize: `${frameInitialsSize * 0.5}rem`, color: sc.accent, letterSpacing: '0.2em', paddingLeft: '0.2em', whiteSpace: 'nowrap', textAlign: 'center', width: '100%' }}
-                >
-                  {initials}
-                </p>
-              )}
-              {/* Namen in kader */}
-              {(hp.frameNamesVisible !== false) && frameNames && frameNames.trim() && (
-                <p
-                  {...fieldClick('namen')}
-                  style={{ fontFamily: sc.fontFrameNames, fontWeight: sc.fontFrameNamesWeight, fontSize: `clamp(1.5rem, ${frameNamesSize * 0.5}rem, ${frameNamesSize * 0.6}rem)`, color: sc.headingColor, whiteSpace: 'pre-wrap', lineHeight: 1.2, textAlign: 'center', width: '100%' }}
-                >
-                  {frameNames}
-                </p>
-              )}
-              {(hp.datumVisible !== false) && datumDisplay && (
-                <p {...fieldClick('datum')} style={datumStyleHp}>{datumDisplay}</p>
-              )}
-              {(hp.locatieVisible !== false) && frameDisplayLocation && (
-                <p {...fieldClick('locatie')} style={locatieStyleHp}>{frameDisplayLocation}</p>
-              )}
-              <a
-                href={rsvpHref}
-                onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("RSVP") } : undefined}
-                className="mt-4 inline-block text-sm font-bold px-7 py-3 rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
-                style={{
-                  backgroundColor: sc.buttonBg,
-                  color: sc.buttonText,
-                  textDecoration: "none",
-                  boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
-                  fontFamily: sc.fontFamily,
-                }}
-              >
-                Meld je aan
-              </a>
-            </div>
-          </div>
-        </div>
-
-        {/* Countdown strip */}
+      <div className="flex flex-wrap items-center justify-center gap-3" style={{ marginTop: 28 }}>
+        <a
+          href={rsvpHref}
+          onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("RSVP") } : undefined}
+          className="hover:-translate-y-0.5 hover:shadow-xl"
+          style={{ ...basis, backgroundColor: sc.buttonBg, color: sc.buttonText, boxShadow: "0 6px 18px rgba(0,0,0,0.18)" }}
+        >
+          Laat weten of je erbij bent
+        </a>
         {datum && (
-          <div
-            className="w-full py-3 text-center"
+          <a
+            href={agendaHref ?? "#"}
+            onClick={agendaHref ? undefined : (e) => e.preventDefault()}
+            className="hover:-translate-y-0.5"
             style={{
-              backgroundColor: sc.bodyBg,
-              borderTop: `1px solid ${sc.accent}50`,
-              borderBottom: `1px solid ${sc.accent}50`,
+              ...basis,
+              backgroundColor: "transparent",
+              color: opFoto ? "#fff" : sc.accent,
+              border: `1px solid ${opFoto ? "rgba(255,255,255,0.7)" : sc.accent}`,
             }}
           >
-            <p className="font-medium uppercase" style={{ fontSize: "0.9rem", color: sc.accent, letterSpacing: "0.18em", fontFamily: sc.fontFamily }}>
-              {countdownText}
-            </p>
-          </div>
-        )}
-
-        {/* Welcome content */}
-        {(homeTitle || homeBody) && (
-          <div className="px-8 py-10 flex flex-col items-center" style={{ backgroundColor: sc.bodyBackground ? "transparent" : sc.navBg }}>
-            <div className="max-w-2xl w-full text-center">
-              {homeTitle && (
-                <p {...fieldClick('welkomst-titel')} className="font-bold mb-2 whitespace-pre-wrap" style={{ fontSize: `${homeTitleSize ?? 1.75}rem`, color: sc.headingColor, fontFamily: sc.fontFamily, textAlign: homeAlign ?? 'center' }}>
-                  {homeTitle}
-                </p>
-              )}
-              {homeBody && (
-                <p {...fieldClick('welkomst-tekst')} className="leading-relaxed whitespace-pre-wrap" style={{ fontSize: `${homeBodySize ?? 0.9375}rem`, color: sc.bodyText, fontFamily: sc.fontFamily, textAlign: homeAlign ?? 'center' }}>
-                  {homeBody}
-                </p>
-              )}
-            </div>
-          </div>
+            Zet in je agenda
+          </a>
         )}
       </div>
     )
   }
 
-  // ── Layout 1: Editorial (existing behavior + enhancements) ─────────────────
+  const aftelBlok = (opFoto: boolean) => aftel ? (
+    <p
+      style={{
+        margin: "18px 0 0",
+        fontFamily: sc.fontFamily,
+        fontSize: "0.75rem",
+        fontWeight: 700,
+        letterSpacing: "0.22em",
+        textTransform: "uppercase",
+        color: opFoto ? "rgba(255,255,255,0.85)" : sc.accent,
+        textAlign: "center",
+      }}
+    >
+      {aftel}
+    </p>
+  ) : null
 
-  const showTitleOverPhoto = hasPhoto && (hp?.titlePosition ?? 'over') === 'over' && (hp?.hoofdtitelVisible === true)
-  const showTitleUnderPhoto = (hp?.hoofdtitelVisible === true) && (
-    !hasPhoto || (hp?.titlePosition === 'under')
+  const scrollWenk = (opFoto: boolean) => (
+    <button
+      type="button"
+      aria-label="Verder lezen"
+      onClick={(e) => {
+        const vak = (e.currentTarget.closest("[data-opening]") as HTMLElement | null)
+        if (!vak) return
+        const top = vak.getBoundingClientRect().bottom + window.scrollY - 64
+        window.scrollTo({ top, behavior: "smooth" })
+      }}
+      className="sy-wenk"
+      style={{
+        position: "absolute",
+        left: "50%",
+        bottom: 16,
+        transform: "translateX(-50%)",
+        background: "none",
+        border: 0,
+        padding: 8,
+        cursor: "pointer",
+        color: opFoto ? "rgba(255,255,255,0.85)" : sc.accent,
+      }}
+    >
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+    </button>
   )
-  // Onder de headerfoto een ontwerp, net als een kaart. Dat vervangt het
-  // kader en de losse tekstregels van vroeger (Michiel, 26 september 2026).
-  // Een site met een kader krijgt vanzelf het ontwerp met dezelfde tekening.
-  const ontwerpNu = homeOntwerp({ ontwerp: hp?.ontwerp, useFrame, frameStyle })
 
-  const heroSection = hasPhoto ? (
-    <section
+  const fotoVlak = (klasse: string, kinderen?: ReactNode) => (
+    <div
       ref={heroRef}
-      className={`relative w-full aspect-[21/9] overflow-hidden select-none ${
-        editableHero ? heroDragging ? "cursor-grabbing" : "cursor-grab" : ""
-      }`}
+      className={`overflow-hidden select-none ${klasse} ${editableHero && heroImageUrl ? (heroDragging ? "cursor-grabbing" : "cursor-grab") : ""}`}
       onMouseDown={editableHero ? (e) => { e.preventDefault(); startHeroDrag(e.clientX, e.clientY) } : undefined}
       onMouseMove={editableHero ? (e) => moveHeroDrag(e.clientX, e.clientY) : undefined}
       onMouseUp={editableHero ? endHeroDrag : undefined}
@@ -441,7 +329,7 @@ export default function EventHomePreview({
       onTouchStart={editableHero ? (e) => startHeroDrag(e.touches[0].clientX, e.touches[0].clientY) : undefined}
       onTouchMove={editableHero ? (e) => { e.preventDefault(); moveHeroDrag(e.touches[0].clientX, e.touches[0].clientY) } : undefined}
       onTouchEnd={editableHero ? endHeroDrag : undefined}
-      onClick={onFieldClick ? (e) => { e.stopPropagation(); onFieldClick('headerfoto') } : undefined}
+      onClick={onFieldClick && !kinderen ? (e) => { e.stopPropagation(); onFieldClick('headerfoto') } : undefined}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
@@ -451,13 +339,6 @@ export default function EventHomePreview({
         className="absolute inset-0 w-full h-full object-cover"
         style={{ objectPosition: `${heroPos.x}% ${heroPos.y}%` }}
       />
-      {editableHero && !heroDragging && (
-        <div className="absolute bottom-3 left-0 right-0 flex justify-center pointer-events-none">
-          <span className="text-xs px-3 py-1 rounded-full opacity-80" style={{ backgroundColor: "rgba(0,0,0,0.5)", color: "#fff" }}>
-            Sleep om te positioneren
-          </span>
-        </div>
-      )}
       {showOverlay && (
         <div
           className="absolute inset-0"
@@ -468,124 +349,168 @@ export default function EventHomePreview({
           }
         />
       )}
-      {/* Title OVER the photo */}
-      {showTitleOverPhoto && title && (
-        <div className="absolute inset-0 flex items-center justify-center px-8 text-center">
-          <h1
-            {...fieldClick('hoofdtitel')}
-            className="hp-hoofdtitel leading-tight whitespace-pre-wrap"
-            style={{
-              color: "#fff",
-              fontFamily: hp?.hoofdtitelFont ? hoofdtitelFontResult.family : sc.fontHero,
-              fontWeight: hp?.hoofdtitelFont ? hoofdtitelFontResult.weight : sc.fontHeroWeight,
-              filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.75))",
-            }}
-          >
-            {title}
-          </h1>
+      {editableHero && !heroDragging && (
+        <div className="absolute bottom-3 left-0 right-0 flex justify-center pointer-events-none z-10">
+          <span className="text-xs px-3 py-1 rounded-full opacity-80" style={{ backgroundColor: "rgba(0,0,0,0.5)", color: "#fff" }}>
+            Sleep om te positioneren
+          </span>
         </div>
       )}
-    </section>
-  ) : null
+      {kinderen}
+    </div>
+  )
 
-  // Title under photo (or no photo): show above frame / elegant divider
-  const titleUnderSection = showTitleUnderPhoto && title ? (
-    <div className="flex flex-col items-center text-center px-8 pt-4 @md:pt-8 pb-0" style={{ backgroundColor: sc.bodyBg }}>
-      <h1
-        {...fieldClick('hoofdtitel')}
-        className="hp-hoofdtitel leading-tight whitespace-pre-wrap"
+  // Het ontwerp, met het aftellen en de knoppen eronder
+  const ontwerpBlok = (
+    <div className="w-full flex flex-col items-center">
+      <div {...fieldClick('ontwerp-kop')} className="w-full flex justify-center">
+        <HomeOntwerp
+          ontwerp={ontwerpNu}
+          sc={sc}
+          tekst={{
+            kop: hp?.ontwerpKop ?? HOME_KOP_STANDAARD,
+            namen,
+            datum: datum ?? null,
+            locatie: plek || null,
+            tijden,
+            dresscode,
+            details: hp?.details ?? null,
+            detailsStijl: hp?.detailsStijl ?? null,
+            detailsIcoon: hp?.detailsIcoon === true,
+          }}
+          instellingen={hp?.ontwerpTekst}
+        />
+      </div>
+      {aftelBlok(false)}
+      {knoppen(false)}
+    </div>
+  )
+
+  // De tekst op de foto, in dezelfde letters als op het ontwerp
+  const tekstOpFoto = (
+    <div className="relative z-10 flex flex-col items-center text-center px-6" style={{ color: "#fff", textShadow: "0 2px 14px rgba(0,0,0,0.45)" }}>
+      <p
+        {...fieldClick('ontwerp-kop')}
         style={{
-          fontFamily: hoofdtitelFontResult.family,
-          fontWeight: hoofdtitelFontResult.weight,
-          color: sc.headingColor,
+          margin: 0,
+          fontFamily: kopLetter?.family ?? sc.fontFamily,
+          fontWeight: kopLetter?.weight ?? 700,
+          fontSize: kopLetter ? "1.5rem" : "0.75rem",
+          letterSpacing: kopLetter ? "0.02em" : "0.28em",
+          textTransform: kopLetter ? undefined : "uppercase",
+          opacity: 0.92,
         }}
       >
-        {title}
+        {hp?.ontwerpKop ?? HOME_KOP_STANDAARD}
+      </p>
+      <h1
+        {...fieldClick('namen')}
+        style={{
+          margin: "14px 0 0",
+          fontFamily: namenLetter.family,
+          fontWeight: namenLetter.weight,
+          fontSize: `clamp(2.6rem, 9cqw, 5.2rem)`,
+          lineHeight: 1.08,
+          textWrap: "balance",
+          whiteSpace: "pre-wrap",
+        }}
+      >
+        {namen}
       </h1>
+      {datumFormatted && (
+        <p
+          {...fieldClick('datum')}
+          style={{
+            margin: "18px 0 0",
+            fontFamily: datumLetter?.family ?? sc.fontFamily,
+            fontWeight: datumLetter?.weight ?? 600,
+            fontSize: datumLetter ? "1.6rem" : "1rem",
+            letterSpacing: datumLetter ? "0.02em" : "0.16em",
+            textTransform: datumLetter ? undefined : "uppercase",
+          }}
+        >
+          {datumFormatted}
+        </p>
+      )}
+      {plek && (
+        <p {...fieldClick('locatie')} style={{ margin: "8px 0 0", fontFamily: sc.fontFamily, fontSize: "1rem", opacity: 0.9 }}>
+          {plek}
+        </p>
+      )}
+      {(tijden || dresscode) && (
+        <p style={{ margin: "8px 0 0", fontFamily: sc.fontFamily, fontSize: "0.9375rem", opacity: 0.85 }}>
+          {[tijden, dresscode].filter(Boolean).join("  ·  ")}
+        </p>
+      )}
+      {aftelBlok(true)}
+      {knoppen(true)}
     </div>
-  ) : null
+  )
+
+  // Zo hoog als het scherm, min het menu erboven
+  const hoogte: CSSProperties = { minHeight: "calc(100svh - 72px)" }
+
+  let openingBlok: ReactNode
+  if (opening === "foto") {
+    openingBlok = (
+      <section data-opening="foto" className="relative flex items-center justify-center" style={{ ...hoogte, padding: "88px 0 96px" }}>
+        {fotoVlak("absolute inset-0", (
+          <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.28) 0%, rgba(0,0,0,0.12) 45%, rgba(0,0,0,0.5) 100%)" }} />
+        ))}
+        {tekstOpFoto}
+        {scrollWenk(true)}
+      </section>
+    )
+  } else if (opening === "foto-ontwerp") {
+    openingBlok = (
+      <section data-opening="foto-ontwerp" className="relative grid grid-cols-1 @md:grid-cols-2" style={hoogte}>
+        {fotoVlak("relative h-72 @md:h-auto @md:min-h-full")}
+        <div className="relative flex items-center justify-center px-6 py-12 @md:py-16 @md:pb-20" style={{ backgroundColor: sc.bodyBg }}>
+          {ontwerpBlok}
+          <div className="hidden @md:block">{scrollWenk(false)}</div>
+        </div>
+      </section>
+    )
+  } else {
+    openingBlok = (
+      <section data-opening="ontwerp" className="relative flex items-center justify-center px-6" style={{ ...hoogte, padding: "56px 24px 96px", backgroundColor: sc.bodyBg }}>
+        {ontwerpBlok}
+        {scrollWenk(false)}
+      </section>
+    )
+  }
 
   return (
     <div className="@container">
-      <style>{`
-        .hp-subtitle   { font-size: ${((hp?.subtitleSize   ?? 1.1) * 0.65).toFixed(3)}rem; }
-        .hp-hoofdtitel { font-size: ${((hp?.hoofdtitelSize ?? 5.5) * 0.55).toFixed(3)}rem; }
-        .hp-initialen  { font-size: ${(frameInitialsSize * 0.30).toFixed(3)}rem; }
-        .hp-namen      { font-size: ${(frameNamesSize    * 0.30).toFixed(3)}rem; }
-        .hp-datum      { font-size: ${((hp?.datumSize    ?? 1.6) * 0.65).toFixed(3)}rem; }
-        .hp-locatie    { font-size: ${((hp?.locatieSize  ?? 1.1) * 0.65).toFixed(3)}rem; }
-        @container (min-width: 560px) {
-          .hp-subtitle   { font-size: ${(hp?.subtitleSize   ?? 1.1).toFixed(3)}rem; }
-          .hp-hoofdtitel { font-size: ${(hp?.hoofdtitelSize ?? 5.5).toFixed(3)}rem; }
-          .hp-initialen  { font-size: ${(frameInitialsSize * 0.5).toFixed(3)}rem; }
-          .hp-namen      { font-size: ${(frameNamesSize    * 0.5).toFixed(3)}rem; }
-          .hp-datum      { font-size: ${(hp?.datumSize    ?? 1.6).toFixed(3)}rem; }
-          .hp-locatie    { font-size: ${(hp?.locatieSize  ?? 1.1).toFixed(3)}rem; }
-        }
-      `}</style>
-      {heroSection}
+      {openingBlok}
 
-      {/* Title under photo (if applicable) */}
-      {hasPhoto && showTitleUnderPhoto && titleUnderSection}
-
-      {/* Geen headerfoto: de titel boven het ontwerp */}
-      {!hasPhoto && showTitleUnderPhoto && titleUnderSection}
-
-      {/* Het ontwerp, vrij op de pagina */}
-      <section
-        className={`w-full flex flex-col items-center ${showTitleUnderPhoto && title ? "pt-4 @md:pt-8" : "pt-8 @md:pt-12"} pb-8 px-6`}
-        style={{ backgroundColor: sc.bodyBg }}
-      >
-        <div {...fieldClick('ontwerp-kop')} className="w-full flex justify-center">
-          <HomeOntwerp
-            ontwerp={ontwerpNu}
-            sc={sc}
-            tekst={{
-              kop: hp?.ontwerpKop ?? HOME_KOP_STANDAARD,
-              namen: frameDisplayNames,
-              datum: datum ?? null,
-              locatie: frameDisplayLocation || null,
-              tijden: hp?.tijden ?? null,
-              dresscode: hp?.dresscode ?? null,
-              details: hp?.details ?? null,
-              detailsStijl: hp?.detailsStijl ?? null,
-              detailsIcoon: hp?.detailsIcoon === true,
-            }}
-            instellingen={hp?.ontwerpTekst}
-          />
-        </div>
-        <a
-          href={rsvpHref}
-          onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("RSVP") } : undefined}
-          className="mt-6 inline-block text-sm font-bold px-7 py-3 rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
-          style={{ backgroundColor: sc.buttonBg, color: sc.buttonText, textDecoration: "none", boxShadow: "0 4px 14px rgba(0,0,0,0.15)", fontFamily: sc.fontFamily }}
-        >
-          Meld je aan
-        </a>
-      </section>
-
-      {/* Countdown strip */}
-      <div className="w-full py-3 text-center" style={{ backgroundColor: sc.bodyBg, borderTop: `1px solid ${sc.accent}50`, borderBottom: `1px solid ${sc.accent}50` }}>
-        <p className="font-medium uppercase" style={{ fontSize: "0.9rem", color: sc.accent, letterSpacing: "0.18em", fontFamily: sc.fontFamily }}>
-          {countdownText}
-        </p>
-      </div>
-
-      {/* Home content (Welkomstbericht) */}
+      {/* Het welkomstbriefje: kopje, tekst en de namen als ondertekening */}
       {(homeTitle || homeBody) && (
-        <div className="px-8 py-10 flex flex-col items-center" style={{ backgroundColor: sc.bodyBackground ? "transparent" : sc.navBg }}>
-          <div className="max-w-2xl w-full text-center">
-            {homeTitle && (
-              <p {...fieldClick('welkomst-titel')} className="font-bold mb-2 whitespace-pre-wrap" style={{ fontSize: `${homeTitleSize ?? (sc.floral ? 1.25 : 1.0)}rem`, color: sc.headingColor, fontFamily: sc.fontFamily, textAlign: homeAlign ?? 'center' }}>
-                {homeTitle}
-              </p>
-            )}
-            {homeBody && (
-              <p {...fieldClick('welkomst-tekst')} className="leading-relaxed whitespace-pre-wrap" style={{ fontSize: `${homeBodySize ?? (sc.floral ? 1.125 : 0.9375)}rem`, color: sc.bodyText, fontFamily: sc.fontFamily, textAlign: homeAlign ?? 'center' }}>
-                {homeBody}
-              </p>
-            )}
+        <div className="px-8 pt-14 pb-16 flex flex-col items-center">
+          <div {...fieldClick('welkomst-titel')} className="w-full">
+            <SectieKop sc={sc} kopje={homeTitle ? "Welkom" : undefined} titel={homeTitle || "Welkom"} />
           </div>
+          {homeBody && (
+            <p
+              {...fieldClick('welkomst-tekst')}
+              className="leading-relaxed whitespace-pre-wrap"
+              style={{ fontSize: `${homeBodySize ?? (sc.floral ? 1.125 : 1)}rem`, color: sc.bodyText, fontFamily: sc.fontFamily, textAlign: homeAlign ?? 'center', maxWidth: 620, width: "100%", margin: 0 }}
+            >
+              {homeBody}
+            </p>
+          )}
+          <p
+            style={{
+              margin: "28px 0 0",
+              fontFamily: namenLetter.family,
+              fontWeight: namenLetter.weight,
+              fontSize: `${homeTitleSize ? Math.max(1.4, homeTitleSize) : 1.7}rem`,
+              color: sc.headingColor,
+              textAlign: "center",
+            }}
+          >
+            {namen}
+          </p>
         </div>
       )}
     </div>

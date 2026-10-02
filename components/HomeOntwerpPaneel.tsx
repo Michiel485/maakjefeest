@@ -175,7 +175,7 @@ export function HomeOntwerpTekstvelden({
   // In welke letter elke tekst standaard staat, voor de eerste keuze in de lijst
   const ol = browserLetters(ontwerp)
   const ontwerpFont: Record<TekstRol, string> = { kop: ol.kop, namen: ol.namen, datum: ol.kop, locatie: ol.tekst, tijden: ol.tekst, dresscode: ol.tekst }
-  const letter = (rol: TekstRol) => (
+  const letter = (rol: TekstRol) => meer && (
     <LetterRegel
       waarde={tekstInst[rol]?.font}
       ontwerpFont={ontwerpFont[rol]}
@@ -185,6 +185,10 @@ export function HomeOntwerpTekstvelden({
     />
   )
   const aangepast = Object.values(tekstInst).some((w) => w && (w.font || (w.schaal != null && w.schaal !== 1)))
+  // Lettertypes en groottes per tekst pas als je erom vraagt: negen van de
+  // tien stellen dat nooit bij (ontwerpronde, 2 oktober 2026)
+  const [meer, setMeer] = useState(aangepast)
+  useEffect(() => { if (aangepast) setMeer(true) }, [aangepast])
   const kanKiezen = detailsKeuze(ontwerp)
   const waar: DetailsStand = detailsOpKaart(ontwerp, instellingen.details) ? "op" : "onder"
 
@@ -270,6 +274,14 @@ export function HomeOntwerpTekstvelden({
           </label>
         </div>
       )}
+      <button
+        type="button"
+        onClick={() => setMeer((v) => !v)}
+        className="self-start text-xs font-semibold text-gray-500 hover:text-[#C5A059]"
+        style={{ background: "none", border: 0, padding: 0, cursor: "pointer" }}
+      >
+        {meer ? "Lettertypes en groottes verbergen" : "Lettertypes en groottes aanpassen"}
+      </button>
       {aangepast && (
         <button
           type="button"

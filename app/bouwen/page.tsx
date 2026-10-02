@@ -8,7 +8,7 @@ import LetterKiezer from "@/components/LetterKiezer"
 import { homeOntwerp } from "@/lib/home-ontwerp"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import EventHomePreview from "@/components/EventHomePreview"
+import EventHomePreview, { homeOpening } from "@/components/EventHomePreview"
 import EventNav from "@/app/events/[slug]/event-nav"
 import PraktischPreview, { DEFAULT_PRAKTISCH_TILES, type PraktischTile } from "@/components/PraktischPreview"
 import WishlistPreview, { DEFAULT_WISHLIST_ITEMS, type WishlistItem } from "@/components/WishlistPreview"
@@ -55,6 +55,7 @@ interface HomeContent {
 
 interface HomepageSettings {
   layout: 'editorial' | 'modern'
+  opening?: 'foto' | 'ontwerp' | 'foto-ontwerp'
   subtitleText: string
   subtitleFont: string
   subtitleSize: number
@@ -813,6 +814,7 @@ export default function BouwenPage() {
         setFontFrameNames((d.font_frame_names as string) || "cormorant")
         setFontPageTitles((d.font_page_titles as string) || "cormorant")
         if (hp) setHpSettings({ ...DEFAULT_HOMEPAGE_SETTINGS, ...hp })
+        if (typeof d.hero_image_url === "string" && d.hero_image_url) setHeroImageUrl(d.hero_image_url)
         if (typeof d.concept_naam === "string") setConceptNaam(d.concept_naam)
         setContent({
           ...extraContent,
@@ -1171,6 +1173,8 @@ export default function BouwenPage() {
           homeContent: content.Home ?? draft.homeContent,
           concept_naam: conceptNaam,
           pages: PAGES.filter((pg) => active[pg.id]).map((pg) => pg.id),
+          // De geüploade foto ook, anders is hij na een herlaad weg
+          hero_image_url: heroImageUrl && !heroImageUrl.startsWith("blob:") ? heroImageUrl : undefined,
         }))
         const { Home: _home, ...restContent } = content
         localStorage.setItem("sayingyes_content", JSON.stringify(restContent))
@@ -1340,6 +1344,9 @@ export default function BouwenPage() {
           homepage_settings: hpSettings,
           homeContent: draft.homeContent,
           pages: PAGES.filter((pg) => active[pg.id]).map((pg) => pg.id),
+          // De geüploade foto ook, anders is hij na een herlaad weg (een
+          // blob-adres van een upload die nog loopt is dan niets meer waard)
+          hero_image_url: heroImageUrl && !heroImageUrl.startsWith("blob:") ? heroImageUrl : undefined,
         }
         localStorage.setItem("sayingyes_draft", JSON.stringify(currentDraft))
         const { Home: _home, ...restContent } = content
@@ -1467,7 +1474,7 @@ export default function BouwenPage() {
 
   const webStappen: WebStap[] = [
     { kort: "Stijl", vraag: "Welke stijl past bij jullie?", uitleg: "Kleuren en letters voor de hele site. Klik in het voorbeeld door de pagina's; met de knop Stijl erboven wissel je altijd.", secties: ["algemeen"], delen: ["alg:stijl", "alg:lettertype", "alg:layout"] },
-    { kort: "Homepage", vraag: "Hoe ziet jullie homepage eruit?", uitleg: "Een ontwerp zoals op jullie kaart, of een grote foto met tekst.", secties: ["paginas"], pagina: "Home", delen: ["home:layout", "home:kaders", "home:headerfoto"] },
+    { kort: "Homepage", vraag: "Hoe ziet jullie homepage eruit?", uitleg: "Een grote foto, het ontwerp zoals op jullie kaart, of allebei naast elkaar.", secties: ["paginas"], pagina: "Home", delen: ["home:layout", "home:kaders", "home:headerfoto"] },
     { kort: "Tekst", vraag: "Wat staat er op de homepage?", uitleg: "Namen, datum en locatie staan er al. De rest is voorbeeldtekst: pas die aan naar jullie eigen woorden.", tip: "Tik op een tekst in het voorbeeld om hem te wijzigen.", secties: ["paginas"], pagina: "Home", delen: ["home:tekstvelden", "home:welkomst"] },
     // Geen aparte stap Pagina's meer: alle pagina's staan aan, en in de stap
     // van een pagina zet je hem uit als je hem niet wilt (Michiel, 30
@@ -1530,6 +1537,8 @@ export default function BouwenPage() {
   }, [activeSubPage, openHomeSection])
   const activePageIds = new Set<string>(activePagesOrdered.map(p => p.id))
   const showSection = (id: string) => isSinglePagePreview ? activePageIds.has(id) : previewPage === id
+  // Welke opening de homepagina nu heeft (components/EventHomePreview.tsx)
+  const openingNu = homeOpening(hpSettings, !!heroImageUrl)
   // Op één pagina: de volgorde, en om en om een band met een andere tint,
   // precies zoals app/events/[slug]/page.tsx het doet
   const voorbeeldSectieStijl = (id: PageId): React.CSSProperties | undefined => {
@@ -2484,27 +2493,31 @@ export default function BouwenPage() {
                               </button>
                               {homeOpen('layout') && (
                                 <div className="px-5 pb-4 flex flex-col gap-3">
+                                  {/* Drie openingen, allemaal zo groot als het scherm (ontwerpronde, 2 oktober 2026) */}
                                   <div className="flex gap-2">
                                     {([
-                                      // Namen die zeggen wat je krijgt (Michiel, 27 september 2026)
-                                      { id: 'editorial', label: 'Met ontwerp',    sub: 'Zoals je trouwkaart' },
-                                      { id: 'modern',    label: 'Foto en tekst',  sub: 'Naast elkaar' },
-                                    ] as const).map((opt) => (
+                                      { id: 'foto',         label: 'Foto',             sub: 'Schermvullend' },
+                                      { id: 'ontwerp',      label: 'Ontwerp',          sub: 'Zoals je kaart' },
+                                      { id: 'foto-ontwerp', label: 'Foto en ontwerp',  sub: 'Naast elkaar' },
+                                    ] as const).map((opt) => {
+                                      const zonderFoto = opt.id !== 'ontwerp' && !heroImageUrl
+                                      return (
                                       <button
                                         key={opt.id}
-                                        onClick={() => updateHpSettings({ layout: opt.id })}
+                                        onClick={() => updateHpSettings({ opening: opt.id })}
+                                        title={zonderFoto ? "Voeg eerst een foto toe" : undefined}
                                         className={`flex-1 flex flex-col items-center py-2.5 px-2 rounded-xl border text-xs font-semibold transition-all ${
-                                          hpSettings.layout === opt.id
+                                          openingNu === opt.id
                                             ? 'border-[#C5A059] bg-[#FBF5E8] text-[#C5A059] ring-2 ring-[#C5A059]/30'
-                                            : 'border-[var(--goud-licht)] text-gray-400 hover:border-gray-300'
+                                            : zonderFoto ? 'border-dashed border-[var(--goud-licht)] text-gray-300' : 'border-[var(--goud-licht)] text-gray-400 hover:border-gray-300'
                                         }`}
                                       >
                                         <span className="font-bold">{opt.label}</span>
-                                        <span className="text-[10px] font-normal opacity-70">{opt.sub}</span>
+                                        <span className="text-[10px] font-normal opacity-70">{zonderFoto ? 'Eerst een foto' : opt.sub}</span>
                                       </button>
-                                    ))}
+                                      )
+                                    })}
                                   </div>
-                                  {/* De uitleg staat in de stap zelf (Michiel, 28 september 2026: minder tekst) */}
                                 </div>
                               )}
                             </div>
@@ -2579,13 +2592,12 @@ export default function BouwenPage() {
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                                   </svg>
                                 </span>
-                                <span className="text-sm font-medium text-gray-800">{hpSettings.layout === 'editorial' ? 'Ontwerp' : 'Kaders'}</span>
+                                <span className="text-sm font-medium text-gray-800">Ontwerp</span>
                               </button>
                               {homeOpen('kaders') && (
                                 <div className="px-5 pb-4 flex flex-col gap-4">
-                                  {hpSettings.layout === 'editorial' ? (
-                                    /* Onder de headerfoto een ontwerp, net als een kaart
-                                       (Michiel, 26 september 2026). Vervangt de kaders. */
+                                  {openingNu !== 'foto' ? (
+                                    /* Een ontwerp, net als een kaart (Michiel, 26 september 2026) */
                                     <div id="hp-field-ontwerp">
                                       <HomeOntwerpGalerij
                                         instellingen={hpSettings}
@@ -2598,7 +2610,7 @@ export default function BouwenPage() {
                                       />
                                     </div>
                                   ) : (
-                                    <p className="text-xs text-gray-400 leading-relaxed">Een ontwerp kies je bij de lay-out &ldquo;Met ontwerp&rdquo;.</p>
+                                    <p className="text-xs text-gray-400 leading-relaxed">Bij de opening Foto staat er geen ontwerp. Kies Ontwerp of Foto en ontwerp.</p>
                                   )}
 
                                 </div>
@@ -2622,63 +2634,22 @@ export default function BouwenPage() {
                               {homeOpen('tekstvelden') && (
                                 <div className="px-5 pb-4 flex flex-col gap-4">
 
-                                  {/* Hoofdtitel */}
+                                  {/* De naam van de site: in het menu en in het tabblad van de browser */}
                                   <div id="hp-field-hoofdtitel" className="flex flex-col gap-1.5">
-                                    <div className="flex items-center justify-between">
-                                      <span className="text-xs font-semibold text-gray-600">Hoofdtitel</span>
-                                      <div className="flex items-center gap-1.5">
-                                        <button
-                                          onClick={() => updateHpSettings({ hoofdtitelVisible: !hpSettings.hoofdtitelVisible })}
-                                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.hoofdtitelVisible ? 'bg-[#C5A059]' : 'bg-gray-200'}`}
-                                        >
-                                          <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.hoofdtitelVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
-                                        </button>
-                                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'hoofdtitel' ? 'bg-[#FBF5E8] text-[#C5A059]' : 'text-gray-300'}`}>Aa</span>
-                                      </div>
-                                    </div>
-                                    <textarea
-                                      rows={2}
+                                    <span className="text-xs font-semibold text-gray-600">Naam van de site <span className="font-normal text-gray-400">(in het menu)</span></span>
+                                    <input
+                                      type="text"
                                       value={draft?.naam ?? ""}
                                       onChange={(e) => updateDraft({ naam: e.target.value })}
-                                      onFocus={() => setHpOpenGear('hoofdtitel')}
                                       placeholder="Bijv. Bruiloft Michiel & Lisa"
-                                      className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] resize-none transition-all"
+                                      className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] transition-all"
                                     />
-                                    {(hpOpenGear === 'hoofdtitel' || hpSettings.layout === 'editorial') && (
-                                      <div className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-[var(--goud-licht)]">
-                                        <FontSelect value={hpSettings.hoofdtitelFont} onChange={(v) => updateHpSettings({ hoofdtitelFont: v })} />
-                                        <div className="flex items-center justify-between">
-                                          <span className="text-xs text-gray-500">Grootte</span>
-                                          <span className="text-xs text-gray-400">{hpSettings.hoofdtitelSize}rem</span>
-                                        </div>
-                                        <input type="range" min={1} max={10} step={0.25} value={hpSettings.hoofdtitelSize} onChange={(e) => updateHpSettings({ hoofdtitelSize: Number(e.target.value) })} className="w-full accent-[#C5A059]" />
-                                        {heroImageUrl && (
-                                          <>
-                                            <p className="text-xs text-gray-500 mt-1">Positie</p>
-                                            <div className="flex rounded-xl border border-[var(--goud-licht)] overflow-hidden bg-white">
-                                              {([
-                                                { id: 'over',  label: 'Over foto'  },
-                                                { id: 'under', label: hpSettings.layout === 'modern' ? 'In tekstvlak' : 'Onder foto' },
-                                              ] as const).map((opt) => (
-                                                <button
-                                                  key={opt.id}
-                                                  onClick={() => updateHpSettings({ titlePosition: opt.id })}
-                                                  className={`flex-1 py-2 text-xs font-semibold transition-colors ${hpSettings.titlePosition === opt.id ? 'bg-[#C5A059] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
-                                                >
-                                                  {opt.label}
-                                                </button>
-                                              ))}
-                                            </div>
-                                          </>
-                                        )}
-                                      </div>
-                                    )}
                                   </div>
 
                                   {/* Bij Flexibel: de tekst op het ontwerp, in de volgorde van de
                                       pagina, met onder elk veld een eigen lettertype en grootte
                                       (Michiel, 27 september 2026) */}
-                                  {hpSettings.layout === 'editorial' && (
+                                  {(
                                     <HomeOntwerpTekstvelden
                                       instellingen={hpSettings}
                                       onWijzig={(w) => updateHpSettings(w)}
@@ -2691,221 +2662,6 @@ export default function BouwenPage() {
                                       onLocatie={(v) => updateDraft({ frame_location: v })}
                                     />
                                   )}
-                                  {hpSettings.layout !== 'editorial' && (<>
-                                  {/* Subtitel */}
-                                  <div id="hp-field-subtitle" className="flex flex-col gap-1.5">
-                                    <div className="flex items-center justify-between">
-                                      <span className="text-xs font-semibold text-gray-600">Subtitel</span>
-                                      <div className="flex items-center gap-1.5">
-                                        <button
-                                          onClick={() => updateHpSettings({ subtitleVisible: !hpSettings.subtitleVisible })}
-                                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.subtitleVisible ? 'bg-[#C5A059]' : 'bg-gray-200'}`}
-                                        >
-                                          <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.subtitleVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
-                                        </button>
-                                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'subtitle' ? 'bg-[#FBF5E8] text-[#C5A059]' : 'text-gray-300'}`}>Aa</span>
-                                      </div>
-                                    </div>
-                                    <input
-                                      type="text"
-                                      value={hpSettings.subtitleText}
-                                      onChange={(e) => updateHpSettings({ subtitleText: e.target.value })}
-                                      onFocus={() => setHpOpenGear('subtitle')}
-                                      placeholder="bijv. Samen vieren we de liefde"
-                                      className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] transition-all"
-                                    />
-                                    {hpOpenGear === 'subtitle' && (
-                                      <div className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-[var(--goud-licht)]">
-                                        <FontSelect value={hpSettings.subtitleFont} onChange={(v) => updateHpSettings({ subtitleFont: v })} />
-                                        <div className="flex items-center justify-between">
-                                          <span className="text-xs text-gray-500">Grootte</span>
-                                          <span className="text-xs text-gray-400">{hpSettings.subtitleSize}rem</span>
-                                        </div>
-                                        <input type="range" min={0.7} max={5} step={0.1} value={hpSettings.subtitleSize} onChange={(e) => updateHpSettings({ subtitleSize: Number(e.target.value) })} className="w-full accent-[#C5A059]" />
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  {/* Initialen */}
-                                  <div id="hp-field-initialen" className="flex flex-col gap-1.5">
-                                    <div className="flex items-center justify-between">
-                                      <span className="text-xs font-semibold text-gray-600">Initialen</span>
-                                      <div className="flex items-center gap-1.5">
-                                        <button
-                                          onClick={() => updateHpSettings({ initialsVisible: !hpSettings.initialsVisible })}
-                                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.initialsVisible ? 'bg-[#C5A059]' : 'bg-gray-200'}`}
-                                        >
-                                          <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.initialsVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
-                                        </button>
-                                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'initialen' ? 'bg-[#FBF5E8] text-[#C5A059]' : 'text-gray-300'}`}>Aa</span>
-                                      </div>
-                                    </div>
-                                    <input
-                                      type="text"
-                                      value={draft?.initials ?? ""}
-                                      onChange={(e) => updateDraft({ initials: e.target.value })}
-                                      onFocus={() => setHpOpenGear('initialen')}
-                                      placeholder="bijv. M | W"
-                                      className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] transition-all"
-                                    />
-                                    {hpOpenGear === 'initialen' && (
-                                      <div className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-[var(--goud-licht)]">
-                                        <FontSelect value={fontInitials} onChange={saveFontInitials} />
-                                        <div className="flex items-center justify-between">
-                                          <span className="text-xs text-gray-500">Grootte</span>
-                                          <span className="text-xs text-gray-400">{draft?.frameInitialsSize ?? 8}</span>
-                                        </div>
-                                        <input type="range" min={4} max={18} step={0.5} value={draft?.frameInitialsSize ?? 8} onChange={(e) => updateDraft({ frameInitialsSize: Number(e.target.value) })} className="w-full accent-[#C5A059]" />
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  {/* Namen */}
-                                  <div id="hp-field-namen" className="flex flex-col gap-1.5">
-                                    <div className="flex items-center justify-between">
-                                      <span className="text-xs font-semibold text-gray-600">Namen</span>
-                                      <div className="flex items-center gap-1.5">
-                                        <button
-                                          onClick={() => updateHpSettings({ frameNamesVisible: !hpSettings.frameNamesVisible })}
-                                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.frameNamesVisible ? 'bg-[#C5A059]' : 'bg-gray-200'}`}
-                                        >
-                                          <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.frameNamesVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
-                                        </button>
-                                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'namen' ? 'bg-[#FBF5E8] text-[#C5A059]' : 'text-gray-300'}`}>Aa</span>
-                                      </div>
-                                    </div>
-                                    <textarea
-                                      rows={2}
-                                      value={draft?.frame_names ?? ""}
-                                      onChange={(e) => updateDraft({ frame_names: e.target.value })}
-                                      onFocus={() => setHpOpenGear('namen')}
-                                      placeholder={"bijv. Michiel\n& Lindsey"}
-                                      className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] transition-all resize-none"
-                                    />
-                                    {hpOpenGear === 'namen' && (
-                                      <div className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-[var(--goud-licht)]">
-                                        <FontSelect value={fontFrameNames} onChange={saveFontFrameNames} />
-                                        <div className="flex items-center justify-between">
-                                          <span className="text-xs text-gray-500">Grootte</span>
-                                          <span className="text-xs text-gray-400">{draft?.frameNamesSize ?? 5.5}</span>
-                                        </div>
-                                        <input type="range" min={2} max={13} step={0.5} value={draft?.frameNamesSize ?? 5.5} onChange={(e) => updateDraft({ frameNamesSize: Number(e.target.value) })} className="w-full accent-[#C5A059]" />
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  {/* Datum */}
-                                  <div id="hp-field-datum" className="flex flex-col gap-1.5">
-                                    <div className="flex items-center justify-between">
-                                      <span className="text-xs font-semibold text-gray-600">Datum</span>
-                                      <div className="flex items-center gap-1.5">
-                                        <button
-                                          onClick={() => updateHpSettings({ datumVisible: !hpSettings.datumVisible })}
-                                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.datumVisible ? 'bg-[#C5A059]' : 'bg-gray-200'}`}
-                                        >
-                                          <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.datumVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
-                                        </button>
-                                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'datum' ? 'bg-[#FBF5E8] text-[#C5A059]' : 'text-gray-300'}`}>Aa</span>
-                                      </div>
-                                    </div>
-                                    <input
-                                      type="date"
-                                      value={draft?.datum ?? ""}
-                                      onChange={(e) => updateDraft({ datum: e.target.value })}
-                                      onFocus={() => setHpOpenGear('datum')}
-                                      className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] transition-all"
-                                    />
-                                    {hpOpenGear === 'datum' && (
-                                      <div className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-[var(--goud-licht)]">
-                                        <FontSelect value={hpSettings.datumFont} onChange={(v) => updateHpSettings({ datumFont: v })} />
-                                        {draft?.use_frame ? (
-                                          <>
-                                            <div className="flex items-center justify-between">
-                                              <span className="text-xs text-gray-500">Grootte in kader</span>
-                                              <span className="text-xs text-gray-400">{draft?.frameDateSize ?? 1.8}</span>
-                                            </div>
-                                            <input type="range" min={0.3} max={6} step={0.1} value={draft?.frameDateSize ?? 1.8} onChange={(e) => updateDraft({ frameDateSize: Number(e.target.value) })} className="w-full accent-[#C5A059]" />
-                                          </>
-                                        ) : (
-                                          <>
-                                            <div className="flex items-center justify-between">
-                                              <span className="text-xs text-gray-500">Grootte</span>
-                                              <span className="text-xs text-gray-400">{hpSettings.datumSize}rem</span>
-                                            </div>
-                                            <input type="range" min={0.7} max={3} step={0.1} value={hpSettings.datumSize} onChange={(e) => updateHpSettings({ datumSize: Number(e.target.value) })} className="w-full accent-[#C5A059]" />
-                                          </>
-                                        )}
-                                        <div className="flex flex-col gap-1">
-                                          <span className="text-xs text-gray-500">Notatie</span>
-                                          <div className="flex rounded-xl border border-[var(--goud-licht)] overflow-hidden">
-                                            <button
-                                              onClick={() => updateHpSettings({ datumNotatie: 'uitgeschreven' })}
-                                              className={`flex-1 py-1.5 text-xs font-semibold transition-colors ${(hpSettings.datumNotatie ?? 'uitgeschreven') === 'uitgeschreven' ? 'bg-[#C5A059] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
-                                            >
-                                              Optie 1
-                                            </button>
-                                            <button
-                                              onClick={() => updateHpSettings({ datumNotatie: 'numeriek' })}
-                                              className={`flex-1 py-1.5 text-xs font-semibold transition-colors ${(hpSettings.datumNotatie ?? 'uitgeschreven') === 'numeriek' ? 'bg-[#C5A059] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
-                                            >
-                                              Optie 2
-                                            </button>
-                                          </div>
-                                          <p className="text-[10px] text-gray-400 leading-snug">
-                                            {(hpSettings.datumNotatie ?? 'uitgeschreven') === 'uitgeschreven' ? '28 juni 2026' : '28-06-2026'}
-                                          </p>
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  {/* Locatie */}
-                                  <div id="hp-field-locatie" className="flex flex-col gap-1.5">
-                                    <div className="flex items-center justify-between">
-                                      <span className="text-xs font-semibold text-gray-600">Locatie</span>
-                                      <div className="flex items-center gap-1.5">
-                                        <button
-                                          onClick={() => updateHpSettings({ locatieVisible: !hpSettings.locatieVisible })}
-                                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.locatieVisible ? 'bg-[#C5A059]' : 'bg-gray-200'}`}
-                                        >
-                                          <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.locatieVisible ? 'translate-x-4' : 'translate-x-0.5'}`} />
-                                        </button>
-                                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded transition-colors ${hpOpenGear === 'locatie' ? 'bg-[#FBF5E8] text-[#C5A059]' : 'text-gray-300'}`}>Aa</span>
-                                      </div>
-                                    </div>
-                                    <input
-                                      type="text"
-                                      value={draft?.frame_location ?? ""}
-                                      onChange={(e) => updateDraft({ frame_location: e.target.value })}
-                                      onFocus={() => setHpOpenGear('locatie')}
-                                      placeholder="bijv. Kasteel de Haar"
-                                      className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] transition-all"
-                                    />
-                                    {hpOpenGear === 'locatie' && (
-                                      <div className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-[var(--goud-licht)]">
-                                        <FontSelect value={hpSettings.locatieFont} onChange={(v) => updateHpSettings({ locatieFont: v })} />
-                                        {draft?.use_frame ? (
-                                          <>
-                                            <div className="flex items-center justify-between">
-                                              <span className="text-xs text-gray-500">Grootte in kader</span>
-                                              <span className="text-xs text-gray-400">{draft?.frameLocationSize ?? 1.8}</span>
-                                            </div>
-                                            <input type="range" min={0.3} max={6} step={0.1} value={draft?.frameLocationSize ?? 1.8} onChange={(e) => updateDraft({ frameLocationSize: Number(e.target.value) })} className="w-full accent-[#C5A059]" />
-                                          </>
-                                        ) : (
-                                          <>
-                                            <div className="flex items-center justify-between">
-                                              <span className="text-xs text-gray-500">Grootte</span>
-                                              <span className="text-xs text-gray-400">{hpSettings.locatieSize}rem</span>
-                                            </div>
-                                            <input type="range" min={0.7} max={3} step={0.1} value={hpSettings.locatieSize} onChange={(e) => updateHpSettings({ locatieSize: Number(e.target.value) })} className="w-full accent-[#C5A059]" />
-                                          </>
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  </>)}
 
                                 </div>
                               )}
@@ -2923,7 +2679,7 @@ export default function BouwenPage() {
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                                   </svg>
                                 </span>
-                                <span className="text-sm font-medium text-gray-800">{hpSettings.layout === 'editorial' ? 'Tekst onder het ontwerp' : 'Welkomstbericht'}</span>
+                                <span className="text-sm font-medium text-gray-800">Welkomstbriefje</span>
                               </button>
                               {homeOpen('welkomst') && (
                                 <div className="px-5 pb-4 flex flex-col gap-3">
@@ -2948,7 +2704,7 @@ export default function BouwenPage() {
                                       rows={5}
                                       value={homeContent.body}
                                       onChange={(e) => updateDraft({ homeContent: { ...homeContent, body: e.target.value } })}
-                                      placeholder="Schrijf een welkomstbericht voor je gasten..."
+                                      placeholder="Wat fijn dat je er bent. Hier vind je alles over onze dag..."
                                       className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] resize-none transition-all"
                                     />
                                     <div className="flex items-center justify-between">
@@ -4093,7 +3849,7 @@ function Editor({
         <label className="block text-sm font-semibold text-gray-700 mb-2">Welkomsttekst</label>
         <textarea
           rows={6}
-          placeholder="Schrijf een welkomstbericht voor je gasten..."
+          placeholder="Wat fijn dat je er bent. Hier vind je alles over onze dag..."
           value={(content.text as string) ?? ""}
           onChange={(e) => onChange({ ...content, text: e.target.value })}
           className="w-full rounded-xl border border-[var(--goud-licht)] px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] resize-none transition-all"

@@ -104,6 +104,7 @@ export default async function EventHomePage({
       homeTitleSize={typeof c.titleSize === "number" ? c.titleSize : undefined}
       homeBodySize={typeof c.bodySize === "number" ? c.bodySize : undefined}
       rsvpHref={rsvpHref}
+      agendaHref={`${basePath}/agenda`}
       sc={sc}
       homepageSettings={hs}
     />
