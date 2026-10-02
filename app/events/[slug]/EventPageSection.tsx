@@ -1,4 +1,4 @@
-import { type SC } from "@/lib/event-styles"
+import { formatDate, type SC } from "@/lib/event-styles"
 // Hetzelfde formulier als onder de trouwkaart. Zie de uitleg boven in
 // components/AanmeldFormulier.tsx: identiek is hier de opdracht, niet
 // "ongeveer hetzelfde".
@@ -22,6 +22,9 @@ export interface PageData {
 export interface SectieEvent {
   datum?: string | null
   locatie?: string | null
+  /** De knoppen op de afsluiting van het aanmelden */
+  agendaHref?: string | null
+  programmaHref?: string | null
 }
 
 export default function EventPageSection({ page, sc, eventId, event }: { page: PageData; sc: SC; eventId: string; event?: SectieEvent }) {
@@ -85,38 +88,35 @@ export default function EventPageSection({ page, sc, eventId, event }: { page: P
     const rsvpShowOvernachting = typeof c.showOvernachting === "boolean" ? c.showOvernachting : (typeof c.showBus === "boolean" ? c.showBus : false)
     const rsvpCustomQuestion = typeof c.customQuestion === "string" && c.customQuestion.trim() ? c.customQuestion : null
     const rsvpCustomQuestion2 = typeof c.customQuestion2 === "string" && c.customQuestion2.trim() ? c.customQuestion2 : null
-    const cardInner = (
-      <>
-        {/* Gecentreerd boven het formulier (Michiel, 26 september 2026) */}
-        <p style={{ fontSize: "0.9375rem", marginBottom: 16, textAlign: "center", color: sc.goldBorder ? (sc.cardText ?? sc.bodyText) : sc.bodyText }}>{introText}</p>
-        <AanmeldFormulier
-          eventId={eventId}
-          stand="volledig"
-          knopTekstKleur={sc.buttonText}
-          accentColor={sc.accent}
-          labelColor={sc.goldBorder ? (sc.cardText ?? sc.bodyText) : sc.bodyText}
-          guestTypes={rsvpGuestTypes}
-          showSongRequest={rsvpShowSong}
-          deadline={rsvpDeadline}
-          showOvernachting={rsvpShowOvernachting}
-          customQuestion={rsvpCustomQuestion}
-          customQuestion2={rsvpCustomQuestion2}
-        />
-      </>
-    )
+    // Geen doos meer om het formulier: het staat in de kleuren en letters van
+    // de site zelf, als een gesprek in stappen (ontwerpronde, 2 oktober 2026)
     return (
-      <div className="@container" style={{ padding: "48px 32px 64px", textAlign: "center", fontFamily: sc.fontFamily }}>
-        <SectieKop sc={sc} kopje="Ben je erbij?" titel={page.title} />
-        <div style={{ maxWidth: 480, marginLeft: "auto", marginRight: "auto" }}>
-          {sc.goldBorder && sc.cardBg ? (
-            <div style={{ backgroundColor: sc.cardBg, border: `2px solid ${sc.accent}`, borderRadius: 16, padding: "28px 32px", textAlign: "left" }}>
-              {cardInner}
-            </div>
-          ) : (
-            <div style={{ borderRadius: 16, border: `1px solid ${sc.accent}20`, backgroundColor: `${sc.accent}08`, padding: "28px 32px", textAlign: "left" }}>
-              {cardInner}
-            </div>
-          )}
+      <div className="@container" style={{ padding: "48px 24px 64px", fontFamily: sc.fontFamily }}>
+        <SectieKop
+          sc={sc}
+          kopje="Ben je erbij?"
+          titel={page.title}
+          onder={<p style={{ margin: 0, fontSize: "1rem", lineHeight: 1.6, color: sc.bodyText }}>{introText}</p>}
+        />
+        <div style={{ maxWidth: 520, marginLeft: "auto", marginRight: "auto" }}>
+          <AanmeldFormulier
+            eventId={eventId}
+            stand="volledig"
+            knopTekstKleur={sc.buttonText}
+            accentColor={sc.accent}
+            labelColor={sc.bodyText}
+            titelFont={sc.fontPageTitles}
+            titelGewicht={sc.fontPageTitlesWeight}
+            datumTekst={event?.datum ? formatDate(event.datum) : null}
+            agendaHref={event?.agendaHref ?? null}
+            programmaHref={event?.programmaHref ?? null}
+            guestTypes={rsvpGuestTypes}
+            showSongRequest={rsvpShowSong}
+            deadline={rsvpDeadline}
+            showOvernachting={rsvpShowOvernachting}
+            customQuestion={rsvpCustomQuestion}
+            customQuestion2={rsvpCustomQuestion2}
+          />
         </div>
       </div>
     )

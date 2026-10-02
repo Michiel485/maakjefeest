@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, type CSSProperties } from "react"
 import {
   aanmeldStand,
   MAX_KIND_LEEFTIJD,
@@ -20,6 +20,12 @@ import { formulierTekst } from "@/lib/formulier-teksten"
 // bereikt; dat hoort bij een Save the Date en moet in tien seconden te doen
 // zijn, want dat is waarom mensen het invullen. Bij "volledig" komt de rest
 // erbij. Dieetwensen achttien maanden vooraf zijn zinloos.
+//
+// Als een gesprek in stappen (ontwerpronde, 2 oktober 2026): eerst alleen
+// "ben je erbij?", dan wie er komen, dan de wensen, en een persoonlijke
+// afsluiting. In de kleuren en letters van de kaart of de site, zonder witte
+// doos: de velden zijn licht doorschijnend, zodat ze op een donkere en op een
+// lichte site goed staan.
 
 const LS_APPARAAT = "sayingyes_gast"
 
@@ -60,8 +66,8 @@ interface EerdereGroep {
 }
 
 /** "Lindsey", "Lindsey en Michiel", "Lindsey, Michiel en Sam" */
-function namenlijst(personen: EerderePersoon[], en = "en"): string {
-  const n = personen.map((p) => p.voornaam).filter(Boolean)
+function namenlijst(namen: string[], en = "en"): string {
+  const n = namen.map((s) => s.trim()).filter(Boolean)
   if (n.length <= 1) return n[0] ?? ""
   return `${n.slice(0, -1).join(", ")} ${en} ${n[n.length - 1]}`
 }
@@ -87,6 +93,8 @@ const leegPersoon = (): Persoon => ({
 })
 const leegKind = (): Kind => ({ voornaam: "", leeftijd: "", dietary: "" })
 
+type Stap = "erbij" | "wie" | "wensen"
+
 export interface AanmeldFormulierProps {
   /** Eén van beide: de bruiloft, of de kaartlink waar dit onder staat. */
   eventId?: string
@@ -95,6 +103,9 @@ export interface AanmeldFormulierProps {
   accentColor?: string
   labelColor?: string
   knopTekstKleur?: string
+  /** Het titellettertype van de kaart of de site, voor de afsluiting */
+  titelFont?: string
+  titelGewicht?: number
   /** Vlakken en randen; op een kaart wil je lichter dan op een webpagina. */
   compact?: boolean
   deadline?: string | null
@@ -112,6 +123,11 @@ export interface AanmeldFormulierProps {
   voorbeeld?: boolean
   /** De taal van de kaart; het formulier volgt hem. Standaard Nederlands. */
   taal?: CardTaal
+  /** De trouwdag, uitgeschreven, voor "Tot 5 maart 2027, Sam!" */
+  datumTekst?: string | null
+  /** De knoppen op de afsluiting; zonder adres geen knop */
+  agendaHref?: string | null
+  programmaHref?: string | null
 }
 
 export default function AanmeldFormulier({
@@ -121,6 +137,8 @@ export default function AanmeldFormulier({
   accentColor = "#C5A059",
   labelColor = "#374151",
   knopTekstKleur = "#ffffff",
+  titelFont,
+  titelGewicht = 500,
   compact = false,
   deadline = null,
   guestTypes = ["daggast"],
@@ -130,18 +148,21 @@ export default function AanmeldFormulier({
   customQuestion2 = null,
   voorbeeld = false,
   taal = "nl",
+  datumTekst = null,
+  agendaHref = null,
+  programmaHref = null,
 }: AanmeldFormulierProps) {
   const T = formulierTekst(taal)
   const stand = aanmeldStand(standIn)
   const volledig = stand === "volledig"
 
   const [komt, setKomt] = useState<"yes" | "no" | null>(null)
+  const [stap, setStap] = useState<Stap>("erbij")
   // Alleen bij de stand "adres": straat en huisnummer, postcode en plaats, in
   // één veld. Het bruidspaar wil er een envelop mee kunnen adresseren, meer
   // niet, en één veld vult sneller dan drie.
   const [adres, setAdres] = useState("")
   const vraagAdres = stand === "adres"
-  const [aantal, setAantal] = useState(1)
   const [personen, setPersonen] = useState<Persoon[]>([leegPersoon()])
   const [metKinderen, setMetKinderen] = useState(false)
   const [kinderen, setKinderen] = useState<Kind[]>([leegKind()])
@@ -178,7 +199,6 @@ export default function AanmeldFormulier({
       achternaam: p.achternaam,
     }))
     setPersonen(rijen)
-    setAantal(rijen.length)
     setMetKinderen(kids.length > 0)
     setKinderen(kids.length > 0 ? kids.map((k) => ({ ...leegKind(), voornaam: k.voornaam, leeftijd: k.leeftijd != null ? String(k.leeftijd) : "" })) : [leegKind()])
   }
@@ -192,7 +212,6 @@ export default function AanmeldFormulier({
   function kiesNieuw() {
     setGroepId(null)
     setPersonen([leegPersoon()])
-    setAantal(1)
     setMetKinderen(false)
     setKinderen([leegKind()])
     setKeuze("nieuw")
@@ -228,24 +247,39 @@ export default function AanmeldFormulier({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bronToken, voorbeeld])
 
-
   const naDeadline = deadline ? new Date() > new Date(deadline) : false
   const heeftVraag1 = typeof customQuestion === "string" && customQuestion.trim().length > 0
   const heeftVraag2 = typeof customQuestion2 === "string" && customQuestion2.trim().length > 0
-
-  useEffect(() => {
-    setPersonen((vorig) =>
-      aantal > vorig.length
-        ? [...vorig, ...Array.from({ length: aantal - vorig.length }, leegPersoon)]
-        : vorig.slice(0, aantal)
-    )
-  }, [aantal])
 
   function zetPersoon(i: number, veld: keyof Persoon, waarde: string) {
     setPersonen((v) => v.map((p, idx) => (idx === i ? { ...p, [veld]: waarde } : p)))
   }
   function zetKind(i: number, veld: keyof Kind, waarde: string) {
     setKinderen((v) => v.map((k, idx) => (idx === i ? { ...k, [veld]: waarde } : k)))
+  }
+
+  // ── De stappen ───────────────────────────────────────────────────────────
+  // Bij "ja" en het volledige formulier is er een stap met wensen; bij "nee"
+  // of een Save the Date is het in twee stappen klaar.
+  const metWensen = komt === "yes" && volledig
+  const stappen: Stap[] = metWensen ? ["erbij", "wie", "wensen"] : ["erbij", "wie"]
+  const stapNr = Math.max(0, stappen.indexOf(stap))
+
+  function kies(v: "yes" | "no") {
+    setKomt(v)
+    setFout(null)
+    setStap("wie")
+  }
+
+  function naarWensen() {
+    if (!personen[0].voornaam.trim()) { setFout(T.foutVoornaam); return }
+    setFout(null)
+    setStap("wensen")
+  }
+
+  function terug() {
+    setFout(null)
+    setStap(stap === "wensen" ? "wie" : "erbij")
   }
 
   async function verstuur(e: React.FormEvent) {
@@ -334,32 +368,96 @@ export default function AanmeldFormulier({
     }
   }
 
+  // ── Opmaak ───────────────────────────────────────────────────────────────
+  const veld: CSSProperties = {
+    width: "100%",
+    borderRadius: 12,
+    border: `1px solid ${accentColor}66`,
+    backgroundColor: `${accentColor}12`,
+    color: labelColor,
+    padding: compact ? "9px 12px" : "11px 14px",
+    fontSize: compact ? 14 : 15,
+    lineHeight: 1.4,
+    outline: "none",
+    fontFamily: "inherit",
+  }
+  const ring = { "--sy-ring": `${accentColor}55` } as CSSProperties
+  const labelKlassen = `block font-semibold mb-2 ${compact ? "text-xs" : "text-sm"}`
+  const knopVol: CSSProperties = {
+    width: "100%",
+    padding: compact ? "12px 18px" : "14px 20px",
+    borderRadius: 999,
+    backgroundColor: accentColor,
+    color: knopTekstKleur,
+    border: "none",
+    fontWeight: 700,
+    fontSize: compact ? 14 : 15,
+    cursor: "pointer",
+    boxShadow: "0 6px 18px rgba(0,0,0,0.14)",
+  }
+  const knopLos: CSSProperties = {
+    display: "inline-block",
+    padding: compact ? "11px 18px" : "12px 22px",
+    borderRadius: 999,
+    border: `1px solid ${accentColor}`,
+    color: accentColor,
+    background: "transparent",
+    fontWeight: 700,
+    fontSize: compact ? 14 : 15,
+    textDecoration: "none",
+    cursor: "pointer",
+  }
+
+  const invoer = (props: React.InputHTMLAttributes<HTMLInputElement>) => (
+    <input {...props} className={`sy-veld ${props.className ?? ""}`} style={{ ...veld, ...ring, ...(props.style ?? {}) }} />
+  )
+
   // ── Na afloop ─────────────────────────────────────────────────────────────
   if (status === "klaar") {
     const gaatKomen = komt === "yes"
+    const namen = namenlijst(personen.map((p) => p.voornaam), T.en)
+    const kop = bijgewerkt
+      ? T.bijgewerkt
+      : gaatKomen
+        ? `${datumTekst ? T.totDatum(datumTekst) : T.totDan.replace(/[!.]$/, "")}${namen ? `, ${namen}` : ""}!`
+        : T.jammerBedankt
     return (
-      <div
-        className="rounded-2xl p-6 text-center"
-        style={{
-          backgroundColor: gaatKomen ? "#ECFDF5" : "#FFF7ED",
-          border: `1px solid ${gaatKomen ? "#10b98133" : "#f59e0b33"}`,
-        }}
-      >
-        <p className="font-bold mb-1" style={{ color: gaatKomen ? "#065F46" : "#92400E" }}>
-          {bijgewerkt ? T.bijgewerkt : gaatKomen ? T.totDan : T.jammerBedankt}
+      <div className="text-center" style={{ color: labelColor, padding: compact ? "8px 0" : "16px 0" }}>
+        <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+          <span style={{ display: "block", width: 36, height: 1, backgroundColor: accentColor, opacity: 0.7 }} />
+          <svg width="7" height="7" viewBox="0 0 8 8" fill={accentColor}><path d="M4 0 L8 4 L4 8 L0 4 Z" /></svg>
+          <span style={{ display: "block", width: 36, height: 1, backgroundColor: accentColor, opacity: 0.7 }} />
+        </span>
+        <p
+          style={{
+            margin: 0,
+            fontFamily: titelFont ?? "inherit",
+            fontWeight: titelFont ? titelGewicht : 700,
+            fontSize: titelFont ? (compact ? "1.75rem" : "2.1rem") : (compact ? "1.25rem" : "1.5rem"),
+            lineHeight: 1.15,
+            textWrap: "balance",
+          }}
+        >
+          {kop}
         </p>
-        <p className="text-sm" style={{ color: labelColor, opacity: 0.8 }}>
+        <p className="text-sm" style={{ margin: "10px 0 0", opacity: 0.85 }}>
           {gaatKomen
             ? volledig
               ? T.genoteerd
               : T.rekening
             : T.jammer}
         </p>
+        {gaatKomen && (agendaHref || programmaHref) && (
+          <div className="flex flex-wrap justify-center" style={{ gap: 8, marginTop: 18 }}>
+            {agendaHref && <a href={agendaHref} style={knopLos}>{T.agenda}</a>}
+            {programmaHref && <a href={programmaHref} style={{ ...knopLos, backgroundColor: accentColor, color: knopTekstKleur }}>{T.programma}</a>}
+          </div>
+        )}
         <button
           type="button"
-          onClick={() => { setStatus("idle"); setBijgewerkt(false) }}
-          className="mt-3 text-xs font-semibold underline"
-          style={{ color: labelColor, opacity: 0.7 }}
+          onClick={() => { setStatus("idle"); setBijgewerkt(false); setStap("erbij") }}
+          className="mt-4 text-xs font-semibold underline"
+          style={{ color: labelColor, opacity: 0.7, background: "none", border: 0, cursor: "pointer" }}
         >
           {T.tochAanpassen}
         </button>
@@ -375,16 +473,12 @@ export default function AanmeldFormulier({
     )
   }
 
-  // ── Het formulier ─────────────────────────────────────────────────────────
-  const veldKlassen = "w-full rounded-xl border bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2"
-  const veldStijl: React.CSSProperties = { borderColor: `${accentColor}55`, color: "#1A1A1A" }
-  const labelKlassen = `block font-semibold mb-2 ${compact ? "text-xs" : "text-sm"}`
-
+  // ── Eerder aangemeld: wat wil je? ────────────────────────────────────────
   if (keuze === "open" && eerder.length > 0) {
-    const knop = "w-full py-3 px-4 rounded-xl font-semibold text-sm text-left transition-all"
+    const knop: CSSProperties = { width: "100%", padding: "12px 16px", borderRadius: 14, fontWeight: 600, fontSize: 14, textAlign: "left", cursor: "pointer", color: labelColor }
     return (
-      <div className="flex flex-col gap-3">
-        <p className="text-sm m-0" style={{ color: labelColor }}>
+      <div className="flex flex-col gap-3" style={{ color: labelColor }}>
+        <p className="text-sm m-0">
           {eerder.length === 1 ? T.eerderEen : T.eerderMeer}
         </p>
         {eerder.map((g) => (
@@ -392,18 +486,16 @@ export default function AanmeldFormulier({
             key={g.id ?? "groep"}
             type="button"
             onClick={() => kiesAanpassen(g)}
-            className={knop}
-            style={{ backgroundColor: "#fff", border: `2px solid ${accentColor}66`, color: "#1A1A1A", cursor: "pointer" }}
+            style={{ ...knop, backgroundColor: `${accentColor}14`, border: `1.5px solid ${accentColor}` }}
           >
-            <span className="block">{namenlijst(g.personen, T.en)}</span>
-            <span className="block text-xs font-normal mt-0.5" style={{ color: "#6B6259" }}>{T.datAanpassen}</span>
+            <span className="block">{namenlijst(g.personen.map((p) => p.voornaam), T.en)}</span>
+            <span className="block text-xs font-normal mt-0.5" style={{ opacity: 0.75 }}>{T.datAanpassen}</span>
           </button>
         ))}
         <button
           type="button"
           onClick={kiesNieuw}
-          className={knop}
-          style={{ backgroundColor: "transparent", border: `2px dashed ${accentColor}55`, color: labelColor, cursor: "pointer" }}
+          style={{ ...knop, backgroundColor: "transparent", border: `1.5px dashed ${accentColor}88` }}
         >
           <span className="block">{T.iemandAnders}</span>
           <span className="block text-xs font-normal mt-0.5" style={{ opacity: 0.75 }}>{T.blijftStaan}</span>
@@ -412,10 +504,95 @@ export default function AanmeldFormulier({
     )
   }
 
+  // ── Het formulier, in stappen ────────────────────────────────────────────
+  const stapTitel = stap === "erbij" ? T.benJeErbij : stap === "wie" ? T.wieKomen : T.wensen
+
+  const voortgang = (
+    <div className="flex items-center justify-center" style={{ gap: 6, marginBottom: compact ? 10 : 14 }}>
+      {stappen.map((s, i) => (
+        <span key={s} style={{ display: "block", width: 22, height: 2, borderRadius: 2, backgroundColor: accentColor, opacity: i <= stapNr ? 1 : 0.3, transition: "opacity 0.3s ease" }} />
+      ))}
+    </div>
+  )
+
+  const persoonRij = (p: Persoon, i: number) => (
+    <div key={i} className="flex flex-col gap-2">
+      {komt === "yes" && personen.length > 1 && (
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold" style={{ color: labelColor, opacity: 0.7 }}>
+            {i === 0 ? T.jij : T.persoon(i + 1)}
+          </span>
+          {i > 0 && (
+            <button type="button" onClick={() => setPersonen((v) => v.filter((_, idx) => idx !== i))} className="text-xs font-semibold" style={{ color: labelColor, opacity: 0.6, background: "none", border: 0, cursor: "pointer" }}>
+              {T.weghalen}
+            </button>
+          )}
+        </div>
+      )}
+      <div className="flex gap-2">
+        {invoer({ placeholder: T.voornaam, value: p.voornaam, onChange: (e) => zetPersoon(i, "voornaam", e.target.value), maxLength: 80, required: i === 0, autoComplete: i === 0 ? "given-name" : "off" })}
+        {invoer({ placeholder: T.achternaam, value: p.achternaam, onChange: (e) => zetPersoon(i, "achternaam", e.target.value), maxLength: 80, autoComplete: i === 0 ? "family-name" : "off" })}
+      </div>
+      {i === 0 && (
+        <div className="flex flex-col sm:flex-row gap-2">
+          {invoer({ type: "email", placeholder: T.email, value: p.email, onChange: (e) => zetPersoon(i, "email", e.target.value), maxLength: 160, autoComplete: "email" })}
+          {invoer({ type: "tel", placeholder: T.telefoon, value: p.telefoon, onChange: (e) => zetPersoon(i, "telefoon", e.target.value), maxLength: 32, autoComplete: "tel" })}
+        </div>
+      )}
+      {i === 0 && vraagAdres && komt === "yes" && (
+        <textarea
+          className="sy-veld resize-none"
+          style={{ ...veld, ...ring, minHeight: 60 }}
+          rows={2}
+          placeholder={T.adres}
+          value={adres}
+          onChange={(e) => setAdres(e.target.value)}
+          maxLength={200}
+        />
+      )}
+    </div>
+  )
+
+  const wensenRij = (p: Persoon, i: number) => (
+    <div key={i} className="flex flex-col gap-2">
+      {personen.length > 1 && (
+        <span className="text-xs font-semibold" style={{ color: labelColor, opacity: 0.7 }}>
+          {p.voornaam.trim() || (i === 0 ? T.jij : T.persoon(i + 1))}
+        </span>
+      )}
+      <div className="flex flex-col sm:flex-row gap-2">
+        {invoer({ placeholder: T.dieet, value: p.dietary, onChange: (e) => zetPersoon(i, "dietary", e.target.value), maxLength: 120 })}
+        {invoer({ placeholder: T.allergie, value: p.allergie, onChange: (e) => zetPersoon(i, "allergie", e.target.value), maxLength: 120 })}
+      </div>
+    </div>
+  )
+
+  const berichtVeld = (
+    <div>
+      <label className={labelKlassen} style={{ color: labelColor }}>
+        {komt === "no" ? T.berichtNee : T.berichtJa}
+      </label>
+      <textarea
+        className="sy-veld resize-none"
+        style={{ ...veld, ...ring }}
+        rows={compact ? 2 : 3}
+        value={bericht}
+        onChange={(e) => setBericht(e.target.value)}
+        maxLength={1000}
+      />
+    </div>
+  )
+
+  const verstuurKnop = (
+    <button type="submit" disabled={status === "bezig" || voorbeeld} style={{ ...knopVol, opacity: status === "bezig" || voorbeeld ? 0.6 : 1, cursor: voorbeeld ? "default" : "pointer" }}>
+      {status === "bezig" ? T.versturenBezig : T.versturen}
+    </button>
+  )
+
   return (
-    <form onSubmit={verstuur} className={`flex flex-col ${compact ? "gap-4" : "gap-6"}`}>
-      {(keuze === "aanpassen" || persoonlijk) && (
-        <p className="text-xs m-0" style={{ color: labelColor, opacity: 0.8 }}>
+    <form onSubmit={verstuur} className={`flex flex-col ${compact ? "gap-4" : "gap-5"}`} style={{ color: labelColor }}>
+      {(keuze === "aanpassen" || persoonlijk) && stap === "erbij" && (
+        <p className="text-xs m-0 text-center" style={{ opacity: 0.8 }}>
           {persoonlijk ? T.persoonlijk : T.jePast}
           {!persoonlijk && eerder.length > 0 && (
             <>
@@ -432,13 +609,20 @@ export default function AanmeldFormulier({
           )}
         </p>
       )}
-      {/* ── Ben je erbij? ── */}
-      <div>
-        {/* In de kaart staat de vraag al als kop boven het formulier; dan
-            niet nog eens als label eronder. */}
-        {!compact && (
-          <label className={labelKlassen} style={{ color: labelColor }}>{T.benJeErbij}</label>
+
+      {/* De kop van de stap. Op de kaart staat "Ben je erbij?" al boven het
+          formulier; dan niet nog eens. */}
+      <div className="text-center">
+        {voortgang}
+        {!(compact && stap === "erbij") && (
+          <p style={{ margin: 0, fontFamily: titelFont ?? "inherit", fontWeight: titelFont ? titelGewicht : 700, fontSize: titelFont ? (compact ? "1.4rem" : "1.7rem") : (compact ? "1rem" : "1.125rem"), lineHeight: 1.2 }}>
+            {stapTitel}
+          </p>
         )}
+      </div>
+
+      {/* ── Stap 1: ben je erbij? ── */}
+      {stap === "erbij" && (
         <div className="flex flex-col sm:flex-row gap-2">
           {(["yes", "no"] as const).map((v) => {
             const aan = komt === v
@@ -446,274 +630,135 @@ export default function AanmeldFormulier({
               <button
                 key={v}
                 type="button"
-                onClick={() => setKomt(v)}
-                className="flex-1 py-3 px-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 whitespace-nowrap transition-all"
+                onClick={() => kies(v)}
+                className="flex-1 flex items-center justify-center gap-2 transition-transform hover:-translate-y-0.5"
                 style={{
-                  backgroundColor: aan ? (v === "yes" ? "#ECFDF5" : "#FFF7ED") : "#fff",
-                  border: `2px solid ${aan ? (v === "yes" ? "#10b981" : "#f59e0b") : `${accentColor}44`}`,
-                  // De knop is wit, dus de tekst is altijd donker. Met de
-                  // labelkleur stond er op een donkere kaart wit op wit.
-                  color: aan ? (v === "yes" ? "#065F46" : "#92400E") : "#1A1A1A",
+                  padding: compact ? "14px 12px" : "18px 14px",
+                  borderRadius: 14,
+                  fontWeight: 700,
+                  fontSize: compact ? 15 : 16,
+                  backgroundColor: aan ? accentColor : `${accentColor}12`,
+                  border: `1.5px solid ${aan ? accentColor : `${accentColor}88`}`,
+                  color: aan ? knopTekstKleur : labelColor,
                   cursor: "pointer",
                 }}
               >
-                <span>{v === "yes" ? "✓" : "✕"}</span>
+                <span aria-hidden="true" style={{ opacity: 0.85 }}>{v === "yes" ? "✓" : "✕"}</span>
                 {v === "yes" ? T.jaErbij : T.neeNiet}
               </button>
             )
           })}
         </div>
-      </div>
+      )}
 
-      {komt && (
+      {/* ── Stap 2: wie komen er? ── */}
+      {stap === "wie" && (
         <>
-          {/* ── Met hoeveel volwassenen ── */}
-          {komt === "yes" && (
-            <div>
-              <label className={labelKlassen} style={{ color: labelColor }}>
-                {T.hoeveel}
-              </label>
-              <div className="flex gap-2 flex-wrap">
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    onClick={() => setAantal(n)}
-                    className="w-10 h-10 rounded-xl font-bold text-sm transition-all"
-                    style={{
-                      backgroundColor: aantal === n ? accentColor : "transparent",
-                      color: aantal === n ? knopTekstKleur : labelColor,
-                      border: `2px solid ${aantal === n ? accentColor : `${accentColor}44`}`,
-                      cursor: "pointer",
-                    }}
-                  >
-                    {n}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ── Namen ── */}
           <div className="flex flex-col gap-4">
-            {(komt === "no" ? personen.slice(0, 1) : personen).map((p, i) => (
-              <div key={i} className="flex flex-col gap-2">
-                {komt === "yes" && personen.length > 1 && (
-                  <span className="text-xs font-semibold" style={{ color: labelColor, opacity: 0.7 }}>
-                    {i === 0 ? T.jij : T.persoon(i + 1)}
-                  </span>
-                )}
-                <div className="flex gap-2">
-                  <input
-                    className={veldKlassen}
-                    style={veldStijl}
-                    placeholder={T.voornaam}
-                    value={p.voornaam}
-                    onChange={(e) => zetPersoon(i, "voornaam", e.target.value)}
-                    maxLength={80}
-                    required={i === 0}
-                  />
-                  <input
-                    className={veldKlassen}
-                    style={veldStijl}
-                    placeholder={T.achternaam}
-                    value={p.achternaam}
-                    onChange={(e) => zetPersoon(i, "achternaam", e.target.value)}
-                    maxLength={80}
-                  />
-                </div>
-                {i === 0 && (
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <input
-                      type="email"
-                      className={veldKlassen}
-                      style={veldStijl}
-                      placeholder={T.email}
-                      value={p.email}
-                      onChange={(e) => zetPersoon(i, "email", e.target.value)}
-                      maxLength={160}
-                    />
-                    <input
-                      type="tel"
-                      className={veldKlassen}
-                      style={veldStijl}
-                      placeholder={T.telefoon}
-                      value={p.telefoon}
-                      onChange={(e) => zetPersoon(i, "telefoon", e.target.value)}
-                      maxLength={32}
-                    />
-                  </div>
-                )}
-                {i === 0 && vraagAdres && komt === "yes" && (
-                  <textarea
-                    className={`${veldKlassen} resize-none`}
-                    style={{ ...veldStijl, minHeight: 60 }}
-                    rows={2}
-                    placeholder={T.adres}
-                    value={adres}
-                    onChange={(e) => setAdres(e.target.value)}
-                    maxLength={200}
-                  />
-                )}
-                {volledig && komt === "yes" && (
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <input
-                      className={veldKlassen}
-                      style={veldStijl}
-                      placeholder={T.dieet}
-                      value={p.dietary}
-                      onChange={(e) => zetPersoon(i, "dietary", e.target.value)}
-                      maxLength={120}
-                    />
-                    <input
-                      className={veldKlassen}
-                      style={veldStijl}
-                      placeholder={T.allergie}
-                      value={p.allergie}
-                      onChange={(e) => zetPersoon(i, "allergie", e.target.value)}
-                      maxLength={120}
-                    />
-                  </div>
-                )}
-              </div>
-            ))}
+            {(komt === "no" ? personen.slice(0, 1) : personen).map(persoonRij)}
+            {komt === "yes" && personen.length < 8 && (
+              <button
+                type="button"
+                onClick={() => setPersonen((v) => [...v, leegPersoon()])}
+                className="self-start text-sm font-semibold"
+                style={{ color: accentColor, background: "none", border: 0, padding: 0, cursor: "pointer" }}
+              >
+                + {T.nogIemand}
+              </button>
+            )}
           </div>
 
-          {/* ── Kinderen ──
-              Niet iedereen naar zijn leeftijd vragen, dat is raar op een
-              trouwkaart. Alleen van kinderen, en met de reden erbij. */}
+          {/* Kinderen: niet iedereen naar zijn leeftijd vragen, dat is raar op
+              een trouwkaart. Alleen van kinderen, en met de reden erbij. */}
           {komt === "yes" && (
             <div>
               <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={metKinderen}
-                  onChange={(e) => setMetKinderen(e.target.checked)}
-                  style={{ accentColor }}
-                />
-                <span className="text-sm font-semibold" style={{ color: labelColor }}>
-                  {T.kinderenMee}
-                </span>
+                <input type="checkbox" checked={metKinderen} onChange={(e) => setMetKinderen(e.target.checked)} style={{ accentColor }} />
+                <span className="text-sm font-semibold">{T.kinderenMee}</span>
               </label>
               {metKinderen && (
                 <div className="mt-3 flex flex-col gap-2">
                   {kinderen.map((k, i) => (
-                    <div key={i} className="flex flex-col gap-2">
-                      <div className="flex gap-2">
-                        <input
-                          className={veldKlassen}
-                          style={veldStijl}
-                          placeholder={T.naamKind}
-                          value={k.voornaam}
-                          onChange={(e) => zetKind(i, "voornaam", e.target.value)}
-                          maxLength={80}
-                        />
-                        <input
-                          type="number"
-                          min={0}
-                          max={MAX_KIND_LEEFTIJD}
-                          className={`${veldKlassen} w-24`}
-                          style={veldStijl}
-                          placeholder={T.leeftijd}
-                          value={k.leeftijd}
-                          onChange={(e) => zetKind(i, "leeftijd", e.target.value)}
-                        />
-                      </div>
-                      {/* Elke gast zijn eigen wensen, ook een kind (Michiel,
-                          24 september 2026). */}
-                      {volledig && k.voornaam.trim() && (
-                        <input
-                          className={veldKlassen}
-                          style={veldStijl}
-                          placeholder={T.kindDieet(k.voornaam.trim())}
-                          value={k.dietary}
-                          onChange={(e) => zetKind(i, "dietary", e.target.value)}
-                          maxLength={120}
-                        />
-                      )}
+                    <div key={i} className="flex gap-2">
+                      {invoer({ placeholder: T.naamKind, value: k.voornaam, onChange: (e) => zetKind(i, "voornaam", e.target.value), maxLength: 80 })}
+                      {invoer({ type: "number", min: 0, max: MAX_KIND_LEEFTIJD, placeholder: T.leeftijd, value: k.leeftijd, onChange: (e) => zetKind(i, "leeftijd", e.target.value), style: { width: 96, flexShrink: 0 } })}
                     </div>
                   ))}
                   {kinderen.length < 8 && (
-                    <button
-                      type="button"
-                      onClick={() => setKinderen((v) => [...v, leegKind()])}
-                      className="text-xs font-semibold self-start underline"
-                      style={{ color: accentColor }}
-                    >
+                    <button type="button" onClick={() => setKinderen((v) => [...v, leegKind()])} className="text-xs font-semibold self-start underline" style={{ color: accentColor, background: "none", border: 0, padding: 0, cursor: "pointer" }}>
                       {T.nogEenKind}
                     </button>
                   )}
-                  <p className="text-[11px] leading-snug" style={{ color: labelColor, opacity: 0.65 }}>
-                    {T.leeftijdUitleg}
-                  </p>
+                  <p className="text-[11px] leading-snug" style={{ opacity: 0.65 }}>{T.leeftijdUitleg}</p>
                 </div>
               )}
             </div>
           )}
 
-          {/* ── Alleen bij het volledige formulier ── */}
-          {volledig && komt === "yes" && showSongRequest && (
+          {/* Wie zich afmeldt mag altijd iets kwijt: dat is vaak het moment
+              waarop iemand uitlegt waarom. */}
+          {komt === "no" && berichtVeld}
+
+          {fout && <p className="text-sm font-semibold" style={{ color: "#B4552D" }} role="alert">{fout}</p>}
+
+          {metWensen ? (
+            <button type="button" onClick={naarWensen} style={knopVol}>{T.verder}</button>
+          ) : (
+            verstuurKnop
+          )}
+        </>
+      )}
+
+      {/* ── Stap 3: jullie wensen ── */}
+      {stap === "wensen" && (
+        <>
+          <div className="flex flex-col gap-4">
+            {personen.map(wensenRij)}
+            {/* Elke gast zijn eigen wensen, ook een kind (Michiel, 24 september 2026). */}
+            {metKinderen && kinderen.filter((k) => k.voornaam.trim()).map((k) => {
+              const i = kinderen.indexOf(k)
+              return (
+                <div key={`k${i}`}>
+                  {invoer({ placeholder: T.kindDieet(k.voornaam.trim()), value: k.dietary, onChange: (e) => zetKind(i, "dietary", e.target.value), maxLength: 120 })}
+                </div>
+              )
+            })}
+          </div>
+
+          {showSongRequest && (
             <div>
-              <label className={labelKlassen} style={{ color: labelColor }}>{T.nummer}</label>
-              <input className={veldKlassen} style={veldStijl} value={liedje} onChange={(e) => setLiedje(e.target.value)} maxLength={120} />
+              <label className={labelKlassen}>{T.nummer}</label>
+              {invoer({ value: liedje, onChange: (e) => setLiedje(e.target.value), maxLength: 120 })}
             </div>
           )}
 
-          {volledig && komt === "yes" && showOvernachting && (
+          {showOvernachting && (
             <JaNee label={T.slapen} waarde={overnachting} zet={setOvernachting} accentColor={accentColor} labelColor={labelColor} knopTekstKleur={knopTekstKleur} labelKlassen={labelKlassen} ja={T.ja} nee={T.nee} />
           )}
-
-          {volledig && komt === "yes" && heeftVraag1 && (
+          {heeftVraag1 && (
             <JaNee label={customQuestion!} waarde={eigen1} zet={setEigen1} accentColor={accentColor} labelColor={labelColor} knopTekstKleur={knopTekstKleur} labelKlassen={labelKlassen} ja={T.ja} nee={T.nee} />
           )}
-          {volledig && komt === "yes" && heeftVraag2 && (
+          {heeftVraag2 && (
             <JaNee label={customQuestion2!} waarde={eigen2} zet={setEigen2} accentColor={accentColor} labelColor={labelColor} knopTekstKleur={knopTekstKleur} labelKlassen={labelKlassen} ja={T.ja} nee={T.nee} />
           )}
 
-          {/* Een berichtje hoort bij de uitnodiging, niet bij een Save the
-              Date: dat formulier moet in tien seconden te doen zijn. Wie zich
-              afmeldt mag wel altijd iets kwijt, want dat is vaak het moment
-              waarop iemand uitlegt waarom. */}
-          {(volledig || komt === "no") && (
-          <div>
-            <label className={labelKlassen} style={{ color: labelColor }}>
-              {komt === "no" ? T.berichtNee : T.berichtJa}
-            </label>
-            <textarea
-              className={`${veldKlassen} resize-none`}
-              style={veldStijl}
-              rows={compact ? 2 : 3}
-              value={bericht}
-              onChange={(e) => setBericht(e.target.value)}
-              maxLength={1000}
-            />
-          </div>
-          )}
+          {berichtVeld}
 
-          {fout && (
-            <p className="text-sm font-semibold" style={{ color: "#991B1B" }} role="alert">{fout}</p>
-          )}
+          {fout && <p className="text-sm font-semibold" style={{ color: "#B4552D" }} role="alert">{fout}</p>}
 
-          <button
-            type="submit"
-            disabled={status === "bezig" || voorbeeld}
-            className="w-full py-3.5 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-60"
-            style={{
-              backgroundColor: accentColor,
-              color: knopTekstKleur,
-              border: "none",
-              cursor: voorbeeld ? "default" : "pointer",
-            }}
-          >
-            {status === "bezig" ? T.versturenBezig : T.versturen}
-          </button>
-
-          {!voorbeeld && (
-            <p className="text-[11px] leading-snug text-center" style={{ color: labelColor, opacity: 0.6 }}>
-              {T.privacy}
-            </p>
-          )}
+          {verstuurKnop}
         </>
+      )}
+
+      {stap !== "erbij" && (
+        <div className="flex items-center justify-between" style={{ marginTop: -6 }}>
+          <button type="button" onClick={terug} className="text-xs font-semibold" style={{ color: labelColor, opacity: 0.7, background: "none", border: 0, padding: 0, cursor: "pointer" }}>
+            ← {T.terug}
+          </button>
+          {!voorbeeld && stap === stappen[stappen.length - 1] && (
+            <span className="text-[11px]" style={{ opacity: 0.6 }}>{T.privacy}</span>
+          )}
+        </div>
       )}
     </form>
   )
@@ -744,9 +789,9 @@ function JaNee({
             onClick={() => zet(v)}
             className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
             style={{
-              backgroundColor: waarde === v ? accentColor : "transparent",
+              backgroundColor: waarde === v ? accentColor : `${accentColor}12`,
               color: waarde === v ? knopTekstKleur : labelColor,
-              border: `2px solid ${waarde === v ? accentColor : `${accentColor}44`}`,
+              border: `1.5px solid ${waarde === v ? accentColor : `${accentColor}66`}`,
               cursor: "pointer",
             }}
           >

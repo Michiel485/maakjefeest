@@ -147,6 +147,11 @@ html.sy-beweegt [data-verschijn].sy-in {
   html.sy-beweegt [data-verschijn] { opacity: 1; transform: none; transition: none; }
 }
 
+/* De velden van het aanmeldformulier: licht doorschijnend, in de kleur van de
+   kaart of de site (components/AanmeldFormulier.tsx) */
+.sy-veld::placeholder { color: currentColor; opacity: 0.45; }
+.sy-veld:focus { box-shadow: 0 0 0 3px var(--sy-ring, rgba(197, 160, 89, 0.3)); }
+
 /* Het pijltje onderaan de opening van de trouwsite wenkt zachtjes */
 @keyframes sy-wenk {
   0%, 100% { transform: translate(-50%, 0); opacity: 0.7; }

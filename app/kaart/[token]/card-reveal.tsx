@@ -1093,6 +1093,10 @@ export default function CardReveal({
                   accentColor={sc.accent}
                   labelColor={sc.cardText ?? sc.bodyText}
                   knopTekstKleur={sc.buttonText}
+                  titelFont={sc.fontFrameNames}
+                  titelGewicht={sc.fontFrameNamesWeight}
+                  datumTekst={display.dateText || null}
+                  agendaHref={agendaUrl ?? null}
                   compact
                 />
               </div>

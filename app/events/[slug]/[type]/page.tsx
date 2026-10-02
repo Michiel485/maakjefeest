@@ -52,5 +52,18 @@ export default async function EventSubPage({
     fontPageTitles: event.font_page_titles as string | null,
   })
 
-  return <EventPageSection page={page} sc={sc} eventId={event.id} event={{ datum: (event.datum as string | null) ?? null, locatie: (event.locatie as string | null) ?? null }} />
+  const basePath = process.env.NODE_ENV === "production" ? "" : `/events/${slug}`
+  return (
+    <EventPageSection
+      page={page}
+      sc={sc}
+      eventId={event.id}
+      event={{
+        datum: (event.datum as string | null) ?? null,
+        locatie: (event.locatie as string | null) ?? null,
+        agendaHref: event.datum ? `${basePath}/agenda` : null,
+        programmaHref: `${basePath}/Programma`,
+      }}
+    />
+  )
 }

@@ -2838,6 +2838,8 @@ export default function KaartMakenPage() {
                     accentColor={sc.accent ?? GOLD}
                     labelColor={sc.cardText ?? sc.bodyText}
                     knopTekstKleur={sc.buttonText}
+                    titelFont={sc.fontFrameNames}
+                    titelGewicht={sc.fontFrameNamesWeight}
                     guestTypes={ontwerp.guestType ? [ontwerp.guestType] : ["daggast"]}
                   />
                 </div>
@@ -2893,6 +2895,8 @@ export default function KaartMakenPage() {
                 accentColor={sc.accent ?? GOLD}
                 labelColor={sc.cardText ?? sc.bodyText}
                 knopTekstKleur={sc.buttonText}
+                titelFont={sc.fontFrameNames}
+                titelGewicht={sc.fontFrameNamesWeight}
                 guestTypes={ontwerp.guestType ? [ontwerp.guestType] : ["daggast"]}
               />
             }

@@ -62,6 +62,17 @@ export interface FormulierTeksten {
   tochAnders: string
   /** "Lindsey en Michiel" */
   en: string
+  // Het formulier in stappen (ontwerpronde, 2 oktober 2026)
+  wieKomen: string
+  wensen: string
+  verder: string
+  terug: string
+  nogIemand: string
+  weghalen: string
+  /** "Tot 5 maart 2027" */
+  totDatum: (datum: string) => string
+  agenda: string
+  programma: string
 }
 
 export const FORMULIER_TEKST: Record<CardTaal, FormulierTeksten> = {
@@ -115,6 +126,15 @@ export const FORMULIER_TEKST: Record<CardTaal, FormulierTeksten> = {
     persoonlijk: "Fijn dat je er bent. Je namen staan er al; kies of je erbij bent.",
     jePast: "Je past je eerdere aanmelding aan.",
     tochAnders: "Toch iemand anders?",
+    wieKomen: "Wie komen er?",
+    wensen: "Jullie wensen",
+    verder: "Verder",
+    terug: "Terug",
+    nogIemand: "Nog iemand erbij",
+    weghalen: "Weghalen",
+    totDatum: (datum) => `Tot ${datum}`,
+    agenda: "Zet in je agenda",
+    programma: "Bekijk het programma",
     en: "en",
   },
   en: {
@@ -167,6 +187,15 @@ export const FORMULIER_TEKST: Record<CardTaal, FormulierTeksten> = {
     persoonlijk: "Lovely to see you. Your names are already filled in; just let us know if you'll be there.",
     jePast: "You're changing your earlier reply.",
     tochAnders: "Someone else after all?",
+    wieKomen: "Who's coming?",
+    wensen: "Your wishes",
+    verder: "Next",
+    terug: "Back",
+    nogIemand: "Add someone",
+    weghalen: "Remove",
+    totDatum: (datum) => `See you on ${datum}`,
+    agenda: "Add to calendar",
+    programma: "See the programme",
     en: "and",
   },
   fr: {
@@ -219,6 +248,15 @@ export const FORMULIER_TEKST: Record<CardTaal, FormulierTeksten> = {
     persoonlijk: "Ravis de vous voir. Vos noms sont déjà remplis ; dites-nous simplement si vous serez là.",
     jePast: "Vous modifiez votre réponse précédente.",
     tochAnders: "Quelqu'un d'autre finalement ?",
+    wieKomen: "Qui vient ?",
+    wensen: "Vos souhaits",
+    verder: "Continuer",
+    terug: "Retour",
+    nogIemand: "Ajouter quelqu'un",
+    weghalen: "Retirer",
+    totDatum: (datum) => `À bientôt, le ${datum}`,
+    agenda: "Ajouter à l'agenda",
+    programma: "Voir le programme",
     en: "et",
   },
   de: {
@@ -271,6 +309,15 @@ export const FORMULIER_TEKST: Record<CardTaal, FormulierTeksten> = {
     persoonlijk: "Schön, dass du da bist. Deine Namen stehen schon da; sag uns nur, ob du dabei bist.",
     jePast: "Du änderst deine frühere Anmeldung.",
     tochAnders: "Doch jemand anderes?",
+    wieKomen: "Wer kommt?",
+    wensen: "Eure Wünsche",
+    verder: "Weiter",
+    terug: "Zurück",
+    nogIemand: "Noch jemand",
+    weghalen: "Entfernen",
+    totDatum: (datum) => `Bis ${datum}`,
+    agenda: "In den Kalender",
+    programma: "Zum Programm",
     en: "und",
   },
   es: {
@@ -323,6 +370,15 @@ export const FORMULIER_TEKST: Record<CardTaal, FormulierTeksten> = {
     persoonlijk: "Qué bien verte. Tus nombres ya están; solo dinos si vienes.",
     jePast: "Estás cambiando tu respuesta anterior.",
     tochAnders: "¿Otra persona al final?",
+    wieKomen: "¿Quiénes vienen?",
+    wensen: "Vuestros deseos",
+    verder: "Siguiente",
+    terug: "Atrás",
+    nogIemand: "Añadir a alguien",
+    weghalen: "Quitar",
+    totDatum: (datum) => `Hasta el ${datum}`,
+    agenda: "Añadir al calendario",
+    programma: "Ver el programa",
     en: "y",
   },
   it: {
@@ -375,6 +431,15 @@ export const FORMULIER_TEKST: Record<CardTaal, FormulierTeksten> = {
     persoonlijk: "Che bello vederti. I tuoi nomi ci sono già; dicci solo se ci sarai.",
     jePast: "Stai modificando la tua risposta precedente.",
     tochAnders: "Un'altra persona, alla fine?",
+    wieKomen: "Chi viene?",
+    wensen: "I vostri desideri",
+    verder: "Avanti",
+    terug: "Indietro",
+    nogIemand: "Aggiungi qualcuno",
+    weghalen: "Rimuovi",
+    totDatum: (datum) => `A presto, il ${datum}`,
+    agenda: "Aggiungi al calendario",
+    programma: "Vedi il programma",
     en: "e",
   },
 }

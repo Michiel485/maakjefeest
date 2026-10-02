@@ -3466,48 +3466,34 @@ export default function BouwenPage() {
                           style={{ cursor: "pointer", ...voorbeeldSectieStijl("RSVP") }}
                           onClick={() => { toonPaginas(); gaNaarPagina("RSVP") }}
                         >
-                        <div className="@container" style={{ padding: "48px 32px 64px", textAlign: "center", fontFamily: sc.fontFamily }}>
-                          <SiteSectieKop sc={sc} kopje="Ben je erbij?" titel="RSVP" />
-                          <div style={{ maxWidth: 480, marginLeft: "auto", marginRight: "auto" }}>
-                            {(() => {
-                              const rsvpLabelColor = sc.goldBorder ? (sc.cardText ?? sc.bodyText) : sc.bodyText
-                              // Het echte formulier dat gasten zien, in de voorbeeldstand: je
-                              // kunt klikken en invullen, er wordt niets verstuurd. Eerst stond
-                              // hier een nagebouwd plaatje (Michiel, 26 september 2026).
-                              const cardInner = (
-                                <>
-                                  <p style={{ fontSize: "0.9375rem", marginBottom: 16, textAlign: "center", color: rsvpLabelColor }}>
-                                    {(content.RSVP?.text as string) || "Laat weten of je erbij bent via het formulier."}
-                                  </p>
-                                  {/* Klikken in het formulier is het formulier proberen, niet
-                                      naar de instellingen springen */}
-                                  <div onClick={(e) => e.stopPropagation()} style={{ cursor: "auto" }}>
-                                    <AanmeldFormulier
-                                      voorbeeld
-                                      stand="volledig"
-                                      knopTekstKleur={sc.buttonText}
-                                      accentColor={sc.accent}
-                                      labelColor={rsvpLabelColor}
-                                      guestTypes={rsvpGuestTypes}
-                                      showSongRequest={rsvpShowSong}
-                                      deadline={rsvpDeadline}
-                                      showOvernachting={rsvpShowOvernachting}
-                                      customQuestion={rsvpCustomQuestion.trim() || null}
-                                      customQuestion2={rsvpCustomQuestion2.trim() || null}
-                                    />
-                                  </div>
-                                </>
-                              )
-                              return sc.goldBorder && sc.cardBg ? (
-                                <div style={{ backgroundColor: sc.cardBg, border: `2px solid ${sc.accent}`, borderRadius: 16, padding: "28px 32px", textAlign: "left" }}>
-                                  {cardInner}
-                                </div>
-                              ) : (
-                                <div style={{ borderRadius: 16, border: `1px solid ${sc.accent}20`, backgroundColor: `${sc.accent}08`, padding: "28px 32px", textAlign: "left" }}>
-                                  {cardInner}
-                                </div>
-                              )
-                            })()}
+                        <div className="@container" style={{ padding: "48px 24px 64px", fontFamily: sc.fontFamily }}>
+                          <SiteSectieKop
+                            sc={sc}
+                            kopje="Ben je erbij?"
+                            titel="RSVP"
+                            onder={<p style={{ margin: 0, fontSize: "1rem", lineHeight: 1.6, color: sc.bodyText }}>{(content.RSVP?.text as string) || "Laat weten of je erbij bent via het formulier."}</p>}
+                          />
+                          {/* Het echte formulier dat gasten zien, in de voorbeeldstand: je
+                              kunt klikken en invullen, er wordt niets verstuurd. Klikken in
+                              het formulier is het formulier proberen, niet naar de
+                              instellingen springen. */}
+                          <div onClick={(e) => e.stopPropagation()} style={{ cursor: "auto", maxWidth: 520, marginLeft: "auto", marginRight: "auto" }}>
+                            <AanmeldFormulier
+                              voorbeeld
+                              stand="volledig"
+                              knopTekstKleur={sc.buttonText}
+                              accentColor={sc.accent}
+                              labelColor={sc.bodyText}
+                              titelFont={sc.fontPageTitles}
+                              titelGewicht={sc.fontPageTitlesWeight}
+                              datumTekst={draft?.datum ? formatDate(draft.datum) : null}
+                              guestTypes={rsvpGuestTypes}
+                              showSongRequest={rsvpShowSong}
+                              deadline={rsvpDeadline}
+                              showOvernachting={rsvpShowOvernachting}
+                              customQuestion={rsvpCustomQuestion.trim() || null}
+                              customQuestion2={rsvpCustomQuestion2.trim() || null}
+                            />
                           </div>
                         </div>
                         </div>

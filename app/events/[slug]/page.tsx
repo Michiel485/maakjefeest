@@ -135,7 +135,17 @@ export default async function EventHomePage({
       {/* Om en om een band met een iets andere tint; de opening telt als eerste, dus de eerste sectie erna is een band */}
       {otherPages.map((page, i) => (
         <Sectie key={page.type} id={page.type.toLowerCase()} sc={sc} band={i % 2 === 0} verschijn>
-          <EventPageSection page={page} sc={sc} eventId={event.id} event={{ datum: event.datum ?? null, locatie: event.locatie ?? null }} />
+          <EventPageSection
+            page={page}
+            sc={sc}
+            eventId={event.id}
+            event={{
+              datum: event.datum ?? null,
+              locatie: event.locatie ?? null,
+              agendaHref: event.datum ? `${basePath}/agenda` : null,
+              programmaHref: otherPages.some((p) => p.type === "Programma") ? "#programma" : null,
+            }}
+          />
         </Sectie>
       ))}
       <Verschijn />
