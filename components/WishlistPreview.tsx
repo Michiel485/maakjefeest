@@ -2,6 +2,7 @@
 
 import type { SC } from "@/lib/event-styles"
 import { ProgramIcon } from "./EventProgramPreview"
+import SectieKop from "./site/SectieKop"
 import { useUILocale } from "@/hooks/useUILocale"
 import { getUILabel } from "@/lib/ui-translations"
 
@@ -53,13 +54,8 @@ export default function WishlistPreview({
 }) {
   const locale = useUILocale()
   return (
-    <div className="@container px-6 py-10" style={{ backgroundColor: sc.bodyBackground ? "transparent" : sc.navBg, fontFamily: sc.fontFamily }}>
-      <p
-        className="notranslate text-4xl text-center mb-8"
-        style={{ color: sc.headingColor, fontFamily: sc.fontPageTitles, fontWeight: sc.fontPageTitlesWeight }}
-      >
-        {getUILabel(locale, "cadeautips")}
-      </p>
+    <div className="@container px-6 pt-12 pb-14" style={{ fontFamily: sc.fontFamily }}>
+      <SectieKop sc={sc} kopje="Een cadeau?" titel={<span className="notranslate">{getUILabel(locale, "cadeautips")}</span>} />
       <div className="flex flex-wrap justify-center gap-5">
         {items.map((item) => (
           <CardWrapper key={item.id} sc={sc} className="w-full @md:w-[calc(33.333%-1rem)]">

@@ -16,6 +16,8 @@ import EventMastersPreview from "@/components/EventMastersPreview"
 import EventProgramPreview, { PROGRAM_ICONS, ProgramIcon, DEFAULT_PROGRAM_ITEMS } from "@/components/EventProgramPreview"
 import StoryPreview from "@/components/StoryPreview"
 import FotosPreview from "@/components/FotosPreview"
+import SiteSectieKop from "@/components/site/SectieKop"
+import { sectieStijl } from "@/components/site/Sectie"
 import { formatDate, STYLE_CONFIG, STYLE_NAAM, STYLE_VOLGORDE, type Style } from "@/lib/event-styles"
 import { getTitleFont } from "@/lib/title-fonts"
 import { createClient } from "@/lib/supabase"
@@ -1528,6 +1530,13 @@ export default function BouwenPage() {
   }, [activeSubPage, openHomeSection])
   const activePageIds = new Set<string>(activePagesOrdered.map(p => p.id))
   const showSection = (id: string) => isSinglePagePreview ? activePageIds.has(id) : previewPage === id
+  // Op één pagina: de volgorde, en om en om een band met een andere tint,
+  // precies zoals app/events/[slug]/page.tsx het doet
+  const voorbeeldSectieStijl = (id: PageId): React.CSSProperties | undefined => {
+    if (!isSinglePagePreview) return undefined
+    const i = activePagesOrdered.findIndex((p) => p.id === id)
+    return { order: i, scrollMarginTop: 16, ...sectieStijl(sc, i % 2 === 1) }
+  }
 
 
   // Vangnet: blijft het laden om wat voor reden ook hangen, dan beginnen we
@@ -3635,10 +3644,11 @@ export default function BouwenPage() {
                             ?.scrollIntoView({ behavior: "smooth", block: "start" })
                         }}
                         singlePage={isSinglePagePreview}
+                        vast={false}
                       />
                       <div style={isSinglePagePreview ? { display: "flex", flexDirection: "column" } : undefined}>
                       {showSection("Home") && (
-                        <div data-voorbeeld-sectie="Home" style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "Home"), scrollMarginTop: 16 } : undefined}>
+                        <div data-voorbeeld-sectie="Home" style={voorbeeldSectieStijl("Home")}>
                         <EventHomePreview
                           title={draft?.naam ?? ""}
                           datum={draft?.datum || null}
@@ -3672,7 +3682,7 @@ export default function BouwenPage() {
                         </div>
                       )}
                       {showSection("Ceremoniemeesters") && (
-                        <div data-voorbeeld-sectie="Ceremoniemeesters" style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "Ceremoniemeesters"), scrollMarginTop: 16 } : undefined}>
+                        <div data-voorbeeld-sectie="Ceremoniemeesters" style={voorbeeldSectieStijl("Ceremoniemeesters")}>
                         <EventMastersPreview
                           masters={mastersForPreview}
                           sc={sc}
@@ -3684,7 +3694,7 @@ export default function BouwenPage() {
                         </div>
                       )}
                       {showSection("OnsVerhaal") && (
-                        <div data-voorbeeld-sectie="OnsVerhaal" style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "OnsVerhaal"), scrollMarginTop: 16 } : undefined}>
+                        <div data-voorbeeld-sectie="OnsVerhaal" style={voorbeeldSectieStijl("OnsVerhaal")}>
                         <StoryPreview
                           title={(content.OnsVerhaal?.title as string) ?? "Ons Verhaal"}
                           text={(content.OnsVerhaal?.text as string) ?? null}
@@ -3700,7 +3710,7 @@ export default function BouwenPage() {
                         </div>
                       )}
                       {showSection("Programma") && (
-                        <div data-voorbeeld-sectie="Programma" style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "Programma"), scrollMarginTop: 16 } : undefined}>
+                        <div data-voorbeeld-sectie="Programma" style={voorbeeldSectieStijl("Programma")}>
                         <EventProgramPreview
                           items={programmaItemsForPreview}
                           sc={sc}
@@ -3720,11 +3730,11 @@ export default function BouwenPage() {
                       {showSection("RSVP") && (
                         <div
                           data-voorbeeld-sectie="RSVP"
-                          style={{ cursor: "pointer", ...(isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "RSVP"), scrollMarginTop: 16 } : {}) }}
+                          style={{ cursor: "pointer", ...voorbeeldSectieStijl("RSVP") }}
                           onClick={() => { toonPaginas(); gaNaarPagina("RSVP") }}
                         >
-                        <div style={{ padding: "36px 32px 64px", textAlign: "center", backgroundColor: sc.navBg, fontFamily: sc.fontFamily }}>
-                          <h1 style={{ fontSize: "1.75rem", fontWeight: sc.fontPageTitlesWeight, color: sc.headingColor, fontFamily: sc.fontPageTitles, margin: "0 0 28px" }}>RSVP</h1>
+                        <div className="@container" style={{ padding: "48px 32px 64px", textAlign: "center", fontFamily: sc.fontFamily }}>
+                          <SiteSectieKop sc={sc} kopje="Ben je erbij?" titel="RSVP" />
                           <div style={{ maxWidth: 480, marginLeft: "auto", marginRight: "auto" }}>
                             {(() => {
                               const rsvpLabelColor = sc.goldBorder ? (sc.cardText ?? sc.bodyText) : sc.bodyText
@@ -3770,19 +3780,19 @@ export default function BouwenPage() {
                         </div>
                       )}
                       {showSection("Informatie") && (
-                        <div data-voorbeeld-sectie="Informatie" style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "Informatie"), scrollMarginTop: 16 } : undefined}>
+                        <div data-voorbeeld-sectie="Informatie" style={voorbeeldSectieStijl("Informatie")}>
                         <PraktischPreview tiles={praktischTiles ?? DEFAULT_PRAKTISCH_TILES} sc={sc} onTileClick={handleInfoTileClick} />
                         </div>
                       )}
                       {showSection("Cadeautips") && (
-                        <div data-voorbeeld-sectie="Cadeautips" style={isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "Cadeautips"), scrollMarginTop: 16 } : undefined}>
+                        <div data-voorbeeld-sectie="Cadeautips" style={voorbeeldSectieStijl("Cadeautips")}>
                         <WishlistPreview items={wishlistItems?.length ? wishlistItems : DEFAULT_WISHLIST_ITEMS} sc={sc} onItemClick={handleWishlistItemClick} />
                         </div>
                       )}
                       {showSection("Fotos") && (
                         <div
                           data-voorbeeld-sectie="Fotos"
-                          style={{ cursor: "pointer", ...(isSinglePagePreview ? { order: activePagesOrdered.findIndex(p => p.id === "Fotos"), scrollMarginTop: 16 } : {}) }}
+                          style={{ cursor: "pointer", ...voorbeeldSectieStijl("Fotos") }}
                           onClick={() => { toonPaginas(); gaNaarPagina("Fotos") }}
                         >
                         <FotosPreview
@@ -3790,6 +3800,7 @@ export default function BouwenPage() {
                           intro={(content.Fotos?.intro as string) || null}
                           urls={fotosUrls}
                           sc={sc}
+                          bouwer
                         />
                         </div>
                       )}

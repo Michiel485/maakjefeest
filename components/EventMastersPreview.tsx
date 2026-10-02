@@ -1,4 +1,5 @@
 import type { SC } from "@/lib/event-styles"
+import SectieKop from "./site/SectieKop"
 
 export interface Master {
   id?: string
@@ -24,21 +25,18 @@ export default function EventMastersPreview({ masters, sc, text, onMasterClick, 
   const visible = masters.filter((m) => m.naam || m.foto_url)
 
   return (
-    <div className="@container px-6 py-10" style={{ backgroundColor: sc.bodyBackground ? "transparent" : sc.navBg, fontFamily: sc.fontFamily }}>
+    <div className="@container px-6 pt-12 pb-14" style={{ fontFamily: sc.fontFamily }}>
 
-      {/* Paginatitel */}
-      <p
-        className="text-4xl text-center mb-8 max-w-fit mx-auto"
-        style={{ color: sc.headingColor, fontFamily: sc.fontPageTitles, fontWeight: sc.fontPageTitlesWeight }}
-      >
-        Ceremoniemeesters
-      </p>
+      <SectieKop sc={sc} kopje="Jullie aanspreekpunt" titel="Ceremoniemeesters" />
 
-      {/* Kaarten */}
+      {/* Kaarten. Zonder ceremoniemeesters alleen in de bouwer een hint; op
+          de echte site staat de sectie er dan helemaal niet (lib/sectie-inhoud.ts) */}
       {visible.length === 0 ? (
-        <p className="text-sm italic text-center" style={{ color: sc.bodyText }}>
-          Informatie over de ceremoniemeesters volgt binnenkort.
-        </p>
+        onMasterClick ? (
+          <p className="text-sm italic text-center" style={{ color: sc.bodyText, opacity: 0.6 }}>
+            Voeg hiernaast jullie ceremoniemeesters toe.
+          </p>
+        ) : null
       ) : (
         <div className="flex flex-wrap justify-center gap-10">
           {visible.map((master, i) => (

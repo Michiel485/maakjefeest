@@ -3,6 +3,7 @@ import { getStyleConfig } from "@/lib/event-styles"
 import EventNav from "./event-nav"
 import { normalizePlan, publicPageTypes } from "@/lib/plans"
 import { rijOfNiets } from "@/lib/db"
+import { sectieHeeftInhoud } from "@/lib/sectie-inhoud"
 import type { Metadata, Viewport } from "next"
 import SiteOpening from "@/components/SiteOpening"
 import { siteNamen, siteOpeningData, VAN_KAART } from "@/lib/site-opening"
@@ -58,13 +59,17 @@ export default async function EventLayout({
   const plan = normalizePlan(event.plan)
   const isCompleet = plan === "compleet"
 
+  // Met de inhoud erbij: een lege sectie staat niet op de site, dus ook niet
+  // in het menu (lib/sectie-inhoud.ts)
   const { data: rawPages } = await supabase
     .from("pages")
-    .select("type, title, order")
+    .select("type, title, order, content")
     .eq("event_id", event.id)
     .eq("is_enabled", true)
     .order("order", { ascending: true })
   const pages = publicPageTypes(plan, rawPages ?? [])
+    .filter((p) => sectieHeeftInhoud(p.type, p.content))
+    .map(({ type, title, order }) => ({ type, title, order }))
 
   const sc = getStyleConfig(event.style, {
     fontFrameNames:  event.font_frame_names  as string | null,

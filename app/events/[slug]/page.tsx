@@ -4,6 +4,10 @@ import { getStyleConfig, formatDate } from "@/lib/event-styles"
 import EventHomePreview, { type HomepageSettings } from "@/components/EventHomePreview"
 import EventPageSection, { type PageData } from "./EventPageSection"
 import BackToTopButton from "@/components/BackToTopButton"
+import Sectie from "@/components/site/Sectie"
+import Verschijn from "@/components/site/Verschijn"
+import AanmeldKnop from "@/components/site/AanmeldKnop"
+import { sectieHeeftInhoud } from "@/lib/sectie-inhoud"
 import { normalizePlan, publicPageTypes } from "@/lib/plans"
 import { rijOfNiets } from "@/lib/db"
 
@@ -117,18 +121,24 @@ export default async function EventHomePage({
     .eq("is_enabled", true)
     .order("order", { ascending: true })
 
+  // Lege secties staan er niet (lib/sectie-inhoud.ts); het menu laat ze ook weg
   const otherPages = publicPageTypes(plan, (allPages ?? []).filter((p) => p.type !== "Home") as PageData[])
+    .filter((p) => sectieHeeftInhoud(p.type, p.content))
+  const metAanmelden = otherPages.some((p) => p.type === "RSVP")
 
   return (
     <>
       <section id="home">
         {homePreview}
       </section>
-      {otherPages.map((page) => (
-        <section key={page.type} id={page.type.toLowerCase()} style={{ scrollMarginTop: 64 }}>
+      {/* Om en om een band met een iets andere tint; de opening telt als eerste, dus de eerste sectie erna is een band */}
+      {otherPages.map((page, i) => (
+        <Sectie key={page.type} id={page.type.toLowerCase()} sc={sc} band={i % 2 === 0} verschijn>
           <EventPageSection page={page} sc={sc} eventId={event.id} />
-        </section>
+        </Sectie>
       ))}
+      <Verschijn />
+      {metAanmelden && <AanmeldKnop href="#rsvp" sc={sc} />}
       <BackToTopButton accentColor={sc.accent} />
     </>
   )

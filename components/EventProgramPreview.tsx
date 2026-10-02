@@ -1,6 +1,9 @@
 "use client"
 
 import type { SC } from "@/lib/event-styles"
+import SectieKop from "./site/SectieKop"
+import { useUILocale } from "@/hooks/useUILocale"
+import { getUILabel } from "@/lib/ui-translations"
 
 export type ProgramLayout = "centered" | "timeline"
 
@@ -278,6 +281,7 @@ interface Props {
 export default function EventProgramPreview({
   items, sc, programLayout = "centered", builderMode, onImagePositionChange, onItemClick,
 }: Props) {
+  const locale = useUILocale()
   const sorted = items.slice().sort((a, b) => a.time.localeCompare(b.time))
   const list = sorted
   const faded = 1
@@ -290,12 +294,10 @@ export default function EventProgramPreview({
   `
 
   return (
-    <div className="@container" style={{ backgroundColor: sc.bodyBackground ? "transparent" : sc.navBg, fontFamily: sc.fontFamily }}>
+    <div className="@container" style={{ fontFamily: sc.fontFamily }}>
       <style>{progHoverStyle}</style>
-      <div style={{ padding: "36px 32px 52px" }}>
-        <h2 style={{ fontSize: "2.25rem", fontWeight: sc.fontPageTitlesWeight, color: sc.headingColor, fontFamily: sc.fontPageTitles, textAlign: "center", margin: "0 0 28px" }}>
-          Programma
-        </h2>
+      <div style={{ padding: "48px 32px 56px" }}>
+        <SectieKop sc={sc} kopje="De dag" titel={<span className="notranslate">{getUILabel(locale, "programma")}</span>} />
 
         {/* ── Centered — strict 3-column grid, text always middle ─────────── */}
         {programLayout === "centered" && (

@@ -2,6 +2,7 @@
 
 import { useRef, useState, useCallback } from "react"
 import type { SC } from "@/lib/event-styles"
+import SectieKop from "./site/SectieKop"
 
 export interface StoryPreviewProps {
   title: string | null
@@ -65,11 +66,23 @@ export default function StoryPreview({
     onPositionChange?.(pos.x, pos.y)
   }, [dragging, pos, onPositionChange])
 
+  // Zonder foto geen leeg gekleurd vlak op de echte site; in de bouwer blijft
+  // het vlak staan, want daar sleep je de foto erin
+  const metFotoKolom = !!imageUrl || editable
+
   return (
-    <div className="@container" style={{ backgroundColor: sc.bodyBackground ? "transparent" : sc.navBg, fontFamily: sc.fontFamily }}>
-      <div className="flex flex-col @md:flex-row flex-grow" style={{ minHeight: "420px" }}>
+    <div className="@container pt-12" style={{ fontFamily: sc.fontFamily }}>
+      <SectieKop
+        sc={sc}
+        kopje="Over ons"
+        titel={title || "Ons verhaal"}
+        onClick={onFieldClick ? () => onFieldClick("title") : undefined}
+        klikTitel={onFieldClick ? "Klik om te bewerken" : undefined}
+      />
+      <div className="flex flex-col @md:flex-row flex-grow" style={{ minHeight: metFotoKolom ? "360px" : undefined }}>
 
         {/* ── Foto-kolom ── */}
+        {metFotoKolom && (
         <div
           ref={containerRef}
           className={`relative w-full h-[280px] @md:h-auto @md:w-1/2 flex-shrink-0 overflow-hidden select-none ${
@@ -138,29 +151,16 @@ export default function StoryPreview({
             </div>
           )}
         </div>
+        )}
 
         {/* ── Tekst-kolom ── */}
         <div
-          className="flex flex-col justify-center items-center @md:items-start text-center @md:text-left px-8 py-10 @md:px-14 @md:py-16 @md:w-1/2"
-          style={{ backgroundColor: sc.navBg }}
+          className={
+            metFotoKolom
+              ? "flex flex-col justify-center items-center @md:items-start text-center @md:text-left px-8 py-10 @md:px-14 @md:py-12 @md:w-1/2"
+              : "flex flex-col items-center text-center px-8 pb-14 w-full"
+          }
         >
-          {title && (
-            <h2
-              className="mb-4 leading-tight"
-              style={{
-                fontFamily: sc.fontPageTitles,
-                color: sc.headingColor,
-                fontSize: "2.25rem",
-                fontWeight: sc.fontPageTitlesWeight,
-                cursor: onFieldClick ? "pointer" : undefined,
-              }}
-              onClick={onFieldClick ? () => onFieldClick("title") : undefined}
-              title={onFieldClick ? "Klik om te bewerken" : undefined}
-            >
-              {title}
-            </h2>
-          )}
-
           {text ? (
             <p
               className="leading-relaxed whitespace-pre-wrap max-w-prose"
@@ -175,7 +175,8 @@ export default function StoryPreview({
             >
               {text}
             </p>
-          ) : (
+          ) : (editable || onFieldClick) ? (
+            // Alleen in de bouwer; op de echte site staat een leeg verhaal er niet
             <p
               className="italic text-sm"
               style={{
@@ -187,9 +188,9 @@ export default function StoryPreview({
               onClick={onFieldClick ? () => onFieldClick("text") : undefined}
               title={onFieldClick ? "Klik om te bewerken" : undefined}
             >
-              Schrijf jullie verhaal in de sidebar...
+              Schrijf hiernaast jullie verhaal.
             </p>
-          )}
+          ) : null}
         </div>
 
       </div>

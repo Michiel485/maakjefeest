@@ -31,6 +31,7 @@ export default function EventNav({
   onNavigate,
   activeType,
   singlePage = false,
+  vast = true,
 }: {
   title: string
   pages: NavPage[]
@@ -40,6 +41,8 @@ export default function EventNav({
   onNavigate?: (type: string) => void
   activeType?: string
   singlePage?: boolean
+  /** Blijft bovenaan staan bij het scrollen. In de bouwer niet: daar staan de knoppen al bovenaan. */
+  vast?: boolean
 }) {
   const pathname = usePathname()
   const locale = useUILocale()
@@ -61,8 +64,44 @@ export default function EventNav({
 
   const homeHref = basePath || "/"
 
+  // Op één pagina: welk onderdeel nu in beeld is, zodat het menu laat zien
+  // waar je bent (ontwerpronde, 2 oktober 2026)
+  const [inBeeld, setInBeeld] = useState<string | null>(null)
+  useEffect(() => {
+    if (!singlePage || onNavigate || activeType !== undefined) return
+    const secties = Array.from(document.querySelectorAll<HTMLElement>("section[id]"))
+    if (!secties.length) return
+    const zichtbaar = new Map<string, number>()
+    const kijker = new IntersectionObserver(
+      (items) => {
+        for (const item of items) zichtbaar.set(item.target.id, item.isIntersecting ? item.intersectionRatio : 0)
+        let beste: string | null = null
+        let hoogste = 0
+        for (const s of secties) {
+          const r = zichtbaar.get(s.id) ?? 0
+          if (r > hoogste) { hoogste = r; beste = s.id }
+        }
+        setInBeeld(beste)
+      },
+      { rootMargin: "-30% 0px -50% 0px", threshold: [0, 0.1, 0.25, 0.5, 0.75, 1] }
+    )
+    for (const s of secties) kijker.observe(s)
+    return () => kijker.disconnect()
+  }, [singlePage, onNavigate, activeType, pages])
+
+  // Na een stukje scrollen wordt het menu een slag compacter
+  const [gescrold, setGescrold] = useState(false)
+  useEffect(() => {
+    if (!vast) return
+    const kijk = () => setGescrold(window.scrollY > 64)
+    kijk()
+    window.addEventListener("scroll", kijk, { passive: true })
+    return () => window.removeEventListener("scroll", kijk)
+  }, [vast])
+
   function isActive(type: string) {
     if (activeType !== undefined) return type === activeType
+    if (inBeeld) return type.toLowerCase() === inBeeld
     if (type === "Home") return pathname === homeHref || pathname === basePath
     return pathname === `${basePath}/${type}`
   }
@@ -211,6 +250,17 @@ export default function EventNav({
 
   const linksJustify = navLayout === "left" ? "justify-start" : "justify-center"
 
+  // Het menu is zelf de container voor de @md-regels. Eerst zat het in een
+  // omhulsel dat precies zo hoog was als het menu, en daardoor kon "sticky"
+  // nergens heen: het menu scrolde gewoon weg (Michiel, 2 oktober 2026).
+  const navKlassen = `notranslate @container z-50 px-8 border-b backdrop-blur-sm ${vast ? "sticky top-0" : ""}`
+  const rijPadding = { transition: "padding 0.2s ease" }
+  const uitklap = menuOpen && (
+    <div className="@md:hidden border-t -mx-8 px-6 py-3 flex flex-col gap-1" style={{ borderColor: `${sc.accent}20`, fontFamily: sc.fontFamily }} onClick={() => setMenuOpen(false)}>
+      {pageLinks}
+    </div>
+  )
+
   const hamburgerBtn = (
     <button
       className="flex flex-col justify-center items-center gap-1.5 p-1 rounded-lg transition-colors"
@@ -228,16 +278,15 @@ export default function EventNav({
   // ── Stacked layout: title centered above links ────────────────────────────
   if (navLayout === "stacked") {
     return (
-      <div className="@container">
+      <nav className={navKlassen} style={navStyle}>
         <style>{navHoverStyle}</style>
-        <nav className="notranslate sticky top-0 z-50 px-8 border-b backdrop-blur-sm" style={navStyle}>
           {/* Mobile row: language left, hamburger right */}
-          <div className="flex items-center justify-between py-4 @md:hidden">
+          <div className={`flex items-center justify-between @md:hidden ${gescrold ? "py-2" : "py-4"}`} style={rijPadding}>
             <LanguageSwitcher accent={sc.accent} textColor={sc.navText} bgColor={sc.navBg} align="left" />
             {hamburgerBtn}
           </div>
           {/* Desktop: column */}
-          <div ref={stapelRijRef} className="hidden @md:flex flex-col items-center gap-2 py-5 relative">
+          <div ref={stapelRijRef} className={`hidden @md:flex flex-col items-center gap-2 relative ${gescrold ? "py-3" : "py-5"}`} style={rijPadding}>
             <div ref={stapelTaalRef} className="absolute right-0 top-1/2 -translate-y-1/2">
               <LanguageSwitcher accent={sc.accent} textColor={sc.navText} bgColor={sc.navBg} />
             </div>
@@ -250,13 +299,8 @@ export default function EventNav({
               {pageLinks}
             </div>
           </div>
-        </nav>
-        {menuOpen && (
-          <div className="notranslate @md:hidden border-b px-6 py-3 flex flex-col gap-1" style={{ backgroundColor: `${sc.navBg}f2`, borderColor: `${sc.accent}20`, fontFamily: sc.fontFamily }} onClick={() => setMenuOpen(false)}>
-            {pageLinks}
-          </div>
-        )}
-      </div>
+        {uitklap}
+      </nav>
     )
   }
 
@@ -264,12 +308,11 @@ export default function EventNav({
   // linksBelow=false → single row: [title][links][controls]
   // linksBelow=true  → two rows:   [title][controls] / [links]
   return (
-    <div className="@container">
-      <style>{navHoverStyle}</style>
-      <nav ref={navRef} className="notranslate sticky top-0 z-50 px-8 border-b backdrop-blur-sm" style={navStyle}>
+      <nav ref={navRef} className={navKlassen} style={navStyle}>
+        <style>{navHoverStyle}</style>
 
         {/* Top strip */}
-        <div className="flex items-center justify-between gap-4 py-4">
+        <div className={`flex items-center justify-between gap-4 ${gescrold ? "py-2" : "py-4"}`} style={rijPadding}>
 
           {/* Language switcher: left on mobile, hidden on desktop (desktop version is in ctrlRef) */}
           <div className="@md:hidden flex-shrink-0">
@@ -302,14 +345,7 @@ export default function EventNav({
           </div>
         )}
 
+        {uitklap}
       </nav>
-
-      {/* Mobile dropdown */}
-      {menuOpen && (
-        <div className="notranslate @md:hidden border-b px-6 py-3 flex flex-col gap-1" style={{ backgroundColor: `${sc.navBg}f2`, borderColor: `${sc.accent}20`, fontFamily: sc.fontFamily }} onClick={() => setMenuOpen(false)}>
-          {pageLinks}
-        </div>
-      )}
-    </div>
   )
 }

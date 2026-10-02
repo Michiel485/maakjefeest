@@ -9,6 +9,7 @@ import StoryPreview from "@/components/StoryPreview"
 import PraktischPreview, { DEFAULT_PRAKTISCH_TILES, type PraktischTile } from "@/components/PraktischPreview"
 import WishlistPreview, { DEFAULT_WISHLIST_ITEMS, type WishlistItem } from "@/components/WishlistPreview"
 import FotosPreview from "@/components/FotosPreview"
+import SectieKop from "@/components/site/SectieKop"
 
 export interface PageData {
   id: string
@@ -100,10 +101,8 @@ export default function EventPageSection({ page, sc, eventId }: { page: PageData
       </>
     )
     return (
-      <div style={{ padding: "36px 32px 64px", textAlign: "center" }}>
-        <h1 style={{ fontSize: "1.75rem", fontWeight: sc.fontPageTitlesWeight, color: sc.headingColor, fontFamily: sc.fontPageTitles, margin: "0 0 28px" }}>
-          {page.title}
-        </h1>
+      <div className="@container" style={{ padding: "48px 32px 64px", textAlign: "center", fontFamily: sc.fontFamily }}>
+        <SectieKop sc={sc} kopje="Ben je erbij?" titel={page.title} />
         <div style={{ maxWidth: 480, marginLeft: "auto", marginRight: "auto" }}>
           {sc.goldBorder && sc.cardBg ? (
             <div style={{ backgroundColor: sc.cardBg, border: `2px solid ${sc.accent}`, borderRadius: 16, padding: "28px 32px", textAlign: "left" }}>
@@ -128,11 +127,9 @@ export default function EventPageSection({ page, sc, eventId }: { page: PageData
   }
 
   return (
-    <div style={{ padding: "36px 32px 64px" }}>
-      <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: sc.headingColor, fontFamily: sc.fontFamily, margin: "0 0 28px" }}>
-        {page.title}
-      </h1>
-      <p style={{ lineHeight: 1.75, whiteSpace: "pre-wrap", fontSize: "0.9375rem", color: sc.bodyText, margin: 0 }}>
+    <div className="@container" style={{ padding: "48px 32px 64px", fontFamily: sc.fontFamily }}>
+      <SectieKop sc={sc} titel={page.title} />
+      <p style={{ lineHeight: 1.75, whiteSpace: "pre-wrap", fontSize: "0.9375rem", color: sc.bodyText, margin: "0 auto", maxWidth: 640, textAlign: "center" }}>
         {typeof (page.content ?? {}).text === "string" ? (page.content as Record<string, unknown>).text as string : ""}
       </p>
     </div>

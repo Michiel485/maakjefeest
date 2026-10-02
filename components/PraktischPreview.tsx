@@ -2,6 +2,7 @@
 
 import type { SC } from "@/lib/event-styles"
 import { ProgramIcon } from "./EventProgramPreview"
+import SectieKop from "./site/SectieKop"
 
 export interface PraktischTile {
   id: string
@@ -47,13 +48,8 @@ export default function PraktischPreview({
   onTileClick?: (tileId: string, field: 'title' | 'text') => void
 }) {
   return (
-    <div className="@container px-6 py-10" style={{ backgroundColor: sc.bodyBackground ? "transparent" : sc.navBg, fontFamily: sc.fontFamily }}>
-      <p
-        className="text-4xl text-center mb-8"
-        style={{ color: sc.headingColor, fontFamily: sc.fontPageTitles, fontWeight: sc.fontPageTitlesWeight }}
-      >
-        Praktische Informatie
-      </p>
+    <div className="@container px-6 pt-12 pb-14" style={{ fontFamily: sc.fontFamily }}>
+      <SectieKop sc={sc} kopje="Goed om te weten" titel="Praktische informatie" />
       <div className="flex flex-wrap justify-center gap-5">
         {tiles.map((tile) => (
           <CardWrapper key={tile.id} sc={sc} className="w-full @md:w-[calc(33.333%-1rem)]">
