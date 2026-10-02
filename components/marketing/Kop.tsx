@@ -12,7 +12,7 @@ export default function Kop({ startHref = "/start" }: { startHref?: string }) {
       <Link href="/" className="text-2xl tracking-wide" style={{ fontFamily: KOP_FONT, color: INKT, fontWeight: 600, textDecoration: "none" }}>
         SayingYes
       </Link>
-      <nav className="flex items-center gap-5">
+      <nav className="flex items-center gap-4 sm:gap-5">
         <Link href="/digitale-trouwkaart" className="hidden md:inline text-sm transition-opacity hover:opacity-70" style={{ color: TEKST, textDecoration: "none" }}>
           Trouwkaart
         </Link>
@@ -23,9 +23,10 @@ export default function Kop({ startHref = "/start" }: { startHref?: string }) {
           Tips
         </Link>
         <NavLoginButton />
+        {/* Ook op de telefoon in beeld, iets kleiner (Michiel, 2 oktober 2026) */}
         <Link
           href={startHref}
-          className="hidden sm:inline-flex text-sm font-semibold px-5 py-2.5 rounded-xl transition-all duration-300 hover:opacity-85"
+          className="inline-flex text-sm font-semibold px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl transition-all duration-300 hover:opacity-85"
           style={{ backgroundColor: INKT, color: IVOOR, textDecoration: "none" }}
         >
           Start gratis

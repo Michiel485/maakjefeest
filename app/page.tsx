@@ -4,6 +4,7 @@ import ResetGoogleTranslate from "@/components/ResetGoogleTranslate"
 import Kop, { Ornament, Pijl, Vinkje } from "@/components/marketing/Kop"
 import Voet from "@/components/marketing/Voet"
 import NamenProef from "@/components/marketing/NamenProef"
+import StartBalk from "@/components/marketing/StartBalk"
 import { DONKER, DONKER_KAART, DONKER_TEKST, DONKER_ZACHT, GOUD, GOUD_LICHT, GOUD_VLAK, INKT, IVOOR, IVOOR_KAART, KOP_FONT, TEKST, ZAND } from "@/components/marketing/stijl"
 import { MARKETING_URL } from "@/lib/site-url"
 import { getAllTips } from "@/lib/tips"
@@ -114,7 +115,7 @@ export default function Home() {
       />
 
       {/* ── 1. Typ jullie namen ── */}
-      <section className="px-6 pt-14 pb-20 sm:pt-20 sm:pb-28" style={{ backgroundColor: IVOOR }}>
+      <section id="namen" className="px-6 pt-14 pb-16 sm:pt-20 sm:pb-28" style={{ backgroundColor: IVOOR }}>
         <div className="max-w-6xl mx-auto">
           <div className="max-w-2xl mb-10">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] mb-5" style={{ color: GOUD }}>
@@ -135,8 +136,8 @@ export default function Home() {
       </section>
 
       {/* ── 2. De envelop ── */}
-      <section className="py-24 sm:py-28 px-6" style={{ backgroundColor: ZAND }}>
-        <div className="max-w-6xl mx-auto grid gap-12 lg:grid-cols-[1fr_1.1fr] lg:items-center">
+      <section className="py-16 sm:py-28 px-6" style={{ backgroundColor: ZAND }}>
+        <div className="max-w-6xl mx-auto grid gap-8 lg:gap-12 lg:grid-cols-[1fr_1.1fr] lg:items-center">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] mb-5" style={{ color: GOUD }}>Zo komt hij aan</p>
             <h2 className="text-4xl sm:text-5xl leading-tight mb-6" style={{ fontFamily: KOP_FONT, color: INKT, fontWeight: 700 }}>
@@ -145,7 +146,7 @@ export default function Home() {
             <p className="text-base leading-relaxed mb-6" style={{ color: TEKST }}>
               Dit is wat jullie gasten zien als ze op de link tikken: een envelop met lakzegel in jullie stijl, de kaart erin, en eronder de knop om te laten weten of ze komen. Probeer het hiernaast, en tik daarna op Bekijk onze website.
             </p>
-            <ul className="flex flex-col gap-3 mb-8">
+            <ul className="hidden lg:flex flex-col gap-3 mb-8">
               {[
                 "Aanmelden met naam, aantal personen en dieetwensen, in drie stappen",
                 "De trouwdag met één tik in de agenda van je gasten",
@@ -158,7 +159,7 @@ export default function Home() {
                 </li>
               ))}
             </ul>
-            <Link href="/kaart-voorbeeld" className="text-sm font-semibold" style={{ color: GOUD, textDecoration: "none" }}>
+            <Link href="/kaart-voorbeeld" className="hidden lg:inline text-sm font-semibold" style={{ color: GOUD, textDecoration: "none" }}>
               Bekijk de voorbeeldkaart op een hele pagina &rarr;
             </Link>
           </div>
@@ -181,7 +182,7 @@ export default function Home() {
       </section>
 
       {/* ── 3. Drie stappen ── */}
-      <section className="py-24 sm:py-28 px-6" style={{ backgroundColor: IVOOR }}>
+      <section className="py-16 sm:py-28 px-6" style={{ backgroundColor: IVOOR }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] mb-5" style={{ color: GOUD }}>Zo werkt het</p>
@@ -190,7 +191,22 @@ export default function Home() {
             </h2>
             <Ornament />
           </div>
-          <div className="grid gap-6 md:grid-cols-3">
+          {/* Op de telefoon een lijstje, op de laptop drie kaarten: de kaarten
+              onder elkaar waren anderhalf scherm (Michiel, 2 oktober 2026) */}
+          <ol className="md:hidden flex flex-col gap-5">
+            {STAPPEN.map(([kop, tekst], i) => (
+              <li key={kop} className="flex items-start gap-4">
+                <span className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold" style={{ backgroundColor: GOUD, color: DONKER }}>
+                  {i + 1}
+                </span>
+                <div>
+                  <h3 className="text-xl mb-1" style={{ fontFamily: KOP_FONT, color: INKT, fontWeight: 700 }}>{kop}</h3>
+                  <p className="text-sm leading-relaxed" style={{ color: TEKST }}>{tekst}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+          <div className="hidden md:grid gap-6 md:grid-cols-3">
             {STAPPEN.map(([kop, tekst], i) => (
               <div key={kop} className="rounded-3xl p-8" style={{ backgroundColor: IVOOR_KAART, border: `1px solid ${GOUD_LICHT}` }}>
                 <div className="w-10 h-10 rounded-full flex items-center justify-center mb-5 text-sm font-bold" style={{ backgroundColor: GOUD, color: DONKER }}>
@@ -205,17 +221,23 @@ export default function Home() {
       </section>
 
       {/* ── 4. Van kaart naar website: de echte voorbeeldsite in een telefoon ── */}
-      <section className="py-24 sm:py-28 px-6" style={{ backgroundColor: GOUD_VLAK }}>
-        <div className="max-w-5xl mx-auto grid gap-12 lg:grid-cols-[1.1fr_1fr] lg:items-center">
+      <section className="py-16 sm:py-28 px-6" style={{ backgroundColor: GOUD_VLAK }}>
+        <div className="max-w-5xl mx-auto grid gap-8 lg:gap-12 lg:grid-cols-[1.1fr_1fr] lg:items-center">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] mb-5" style={{ color: GOUD }}>Van kaart naar website</p>
             <h2 className="text-4xl sm:text-5xl leading-tight mb-6" style={{ fontFamily: KOP_FONT, color: INKT, fontWeight: 700 }}>
               Dezelfde stijl, van envelop tot gastenboek
             </h2>
-            <p className="text-base leading-relaxed mb-6" style={{ color: TEKST }}>
+            {/* Op de telefoon een korte uitleg en dan meteen het telefoontje;
+                de lange tekst en de punten alleen op de laptop (Michiel,
+                2 oktober 2026) */}
+            <p className="lg:hidden text-base leading-relaxed mb-6" style={{ color: TEKST }}>
+              Achter de kaart staat als je wilt jullie hele website, in dezelfde kleuren en letters. Hieronder staat de echte site van Sophie en Daan. Scroll er doorheen.
+            </p>
+            <p className="hidden lg:block text-base leading-relaxed mb-6" style={{ color: TEKST }}>
               Begin met een Save the Date. Maak er later de trouwkaart van, met aanmelden en een gastenlijst. En zet er als je wilt de hele website achter: de kaart gaat als twee deuren open en daar staat jullie site, in dezelfde kleuren en letters. Hiernaast staat de echte site van Sophie en Daan. Scroll er doorheen.
             </p>
-            <ul className="flex flex-col gap-3 mb-8">
+            <ul className="hidden lg:flex flex-col gap-3 mb-8">
               {[
                 "De opening met jullie foto en het ontwerp van de kaart, met de dagen aftellen",
                 "Jullie verhaal in momenten en het programma als getekende tijdlijn",
@@ -228,10 +250,10 @@ export default function Home() {
                 </li>
               ))}
             </ul>
-            <p className="text-sm leading-relaxed mb-8" style={{ color: TEKST }}>
+            <p className="hidden lg:block text-sm leading-relaxed mb-8" style={{ color: TEKST }}>
               Vijftien stijlen, elk met zijn eigen kleuren en letters. Je kiest er een voor de kaart en de site samen, of een andere voor de site.
             </p>
-            <div className="flex flex-wrap gap-x-6 gap-y-3">
+            <div className="hidden lg:flex flex-wrap gap-x-6 gap-y-3">
               <Link href={VOORBEELD_SITE_URL} className="text-sm font-semibold" style={{ color: GOUD, textDecoration: "none" }}>
                 Bekijk de voorbeeldsite op een hele pagina &rarr;
               </Link>
@@ -256,11 +278,19 @@ export default function Home() {
               />
             </div>
           </div>
+          <div className="lg:hidden flex flex-col items-center gap-3 text-center">
+            <Link href={VOORBEELD_SITE_URL} className="text-sm font-semibold" style={{ color: GOUD, textDecoration: "none" }}>
+              Bekijk de voorbeeldsite op een hele pagina &rarr;
+            </Link>
+            <Link href="/trouwwebsite-maken" className="text-sm font-semibold" style={{ color: GOUD, textDecoration: "none" }}>
+              Alles over de trouwwebsite &rarr;
+            </Link>
+          </div>
         </div>
       </section>
 
       {/* ── 5. Prijzen ── */}
-      <section className="py-24 sm:py-28 px-6" style={{ backgroundColor: DONKER }}>
+      <section className="py-16 sm:py-28 px-6" style={{ backgroundColor: DONKER }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] mb-5" style={{ color: GOUD }}>Prijzen</p>
@@ -272,7 +302,52 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-3 mb-5">
+          {/* Op de telefoon drie regels, Compleet open en de andere twee na
+              een tik; de drie kaarten onder elkaar waren drie schermen
+              (Michiel, 2 oktober 2026) */}
+          <div className="md:hidden flex flex-col gap-3 mb-5">
+            {PLAN_ORDER.map((p) => {
+              const info = PLANS[p]
+              const uitgelicht = p === "compleet"
+              return (
+                <details
+                  key={p}
+                  open={uitgelicht}
+                  className="rounded-2xl"
+                  style={{ backgroundColor: DONKER_KAART, border: `1px solid ${uitgelicht ? GOUD : "#2A2218"}` }}
+                >
+                  <summary className="flex items-center justify-between gap-4 px-5 py-4 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                    <span>
+                      <span className="block text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: GOUD }}>{info.label}</span>
+                      <span className="block text-xs mt-1" style={{ color: DONKER_ZACHT }}>{info.subtitel}</span>
+                    </span>
+                    <span className="leading-none flex-shrink-0" style={{ fontFamily: KOP_FONT, fontSize: "1.9rem", fontWeight: 700, color: IVOOR }}>
+                      {euro(info.price)}
+                    </span>
+                  </summary>
+                  <div className="px-5 pb-5">
+                    <p className="text-xs mb-4 font-semibold" style={{ color: GOUD }}>{upgradeHint(p)}</p>
+                    <ul className="flex flex-col gap-2 mb-5">
+                      {info.features.map((item) => (
+                        <li key={item} className="flex items-start gap-2.5">
+                          <Vinkje />
+                          <span className="text-sm leading-relaxed" style={{ color: DONKER_TEKST }}>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <Link
+                      href={planStartUrl(p)}
+                      className="flex items-center justify-center gap-2 text-sm font-semibold px-6 py-3 rounded-xl"
+                      style={uitgelicht ? { backgroundColor: GOUD, color: DONKER, textDecoration: "none" } : { backgroundColor: "transparent", color: IVOOR, border: `1px solid ${GOUD}80`, textDecoration: "none" }}
+                    >
+                      Start gratis
+                    </Link>
+                  </div>
+                </details>
+              )
+            })}
+          </div>
+          <div className="hidden md:grid gap-4 md:grid-cols-3 mb-5">
             {PLAN_ORDER.map((p) => {
               const info = PLANS[p]
               const uitgelicht = p === "compleet"
@@ -318,7 +393,7 @@ export default function Home() {
       </section>
 
       {/* ── 6. Waarom wij: onze eigen bruiloft ── */}
-      <section className="py-24 sm:py-28 px-6" style={{ backgroundColor: IVOOR }}>
+      <section className="py-16 sm:py-28 px-6" style={{ backgroundColor: IVOOR }}>
         <div className="max-w-3xl mx-auto text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] mb-5" style={{ color: GOUD }}>Waarom SayingYes</p>
           <h2 className="text-4xl sm:text-5xl leading-tight mb-6" style={{ fontFamily: KOP_FONT, color: INKT, fontWeight: 700 }}>
@@ -326,17 +401,17 @@ export default function Home() {
           </h2>
           <Ornament />
           <p className="text-base leading-relaxed mt-8 mb-5" style={{ color: TEKST }}>
-            SayingYes begon als de trouwkaart en de website voor onze eigen bruiloft, op 5 maart 2027. We wilden geen papieren kaarten achterna bellen, geen lijstje in een spreadsheet, en geen foto&apos;s van gasten die nooit aankomen. Dus bouwden we het zelf: een kaart die via WhatsApp gaat, een gastenlijst die zichzelf vult, en een fotomuur voor op de dag.
+            SayingYes begon als de trouwkaart en de website voor onze eigen bruiloft, op 24 mei 2026. We wilden geen papieren kaarten achterna bellen, geen lijstje in een spreadsheet, en geen foto&apos;s van gasten die nooit aankomen. Dus bouwden we het zelf: een kaart die via WhatsApp ging, een gastenlijst die zichzelf vulde, en een fotomuur op de dag zelf.
           </p>
           <p className="text-base leading-relaxed" style={{ color: TEKST }}>
-            Alles wat je hier ziet gebruiken wij zelf. Mis je iets of werkt iets niet lekker? Antwoord op een van onze mails, wij lezen mee.
+            Alles wat je hier ziet hebben wij op onze eigen dag gebruikt. Mis je iets of werkt iets niet lekker? Antwoord op een van onze mails, wij lezen mee.
           </p>
           <p className="mt-8 text-sm" style={{ fontFamily: KOP_FONT, fontSize: "1.4rem", color: INKT }}>Michiel &amp; Lindsey</p>
         </div>
       </section>
 
       {/* ── 7. Veelgestelde vragen (+ FAQPage-schema) ── */}
-      <section className="py-24 sm:py-28 px-6" style={{ backgroundColor: ZAND }}>
+      <section className="py-16 sm:py-28 px-6" style={{ backgroundColor: ZAND }}>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -375,7 +450,7 @@ export default function Home() {
       </section>
 
       {/* ── 8. Tips ── */}
-      <section className="py-24 sm:py-28 px-6" style={{ backgroundColor: IVOOR }}>
+      <section className="py-16 sm:py-28 px-6" style={{ backgroundColor: IVOOR }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] mb-5" style={{ color: GOUD }}>Tips &amp; gidsen</p>
@@ -385,11 +460,11 @@ export default function Home() {
             <Ornament />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {laatsteTips.map((tip) => (
+            {laatsteTips.map((tip, i) => (
               <Link
                 key={tip.slug}
                 href={`/tips/${tip.slug}`}
-                className="group flex flex-col rounded-2xl p-7 border transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                className={`group ${i === 0 ? "flex" : "hidden md:flex"} flex-col rounded-2xl p-7 border transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md`}
                 style={{ backgroundColor: "#FFFDF9", borderColor: `${GOUD_LICHT}60`, textDecoration: "none" }}
               >
                 <h3 className="mb-3" style={{ fontFamily: KOP_FONT, fontSize: "1.35rem", fontWeight: 700, color: INKT, lineHeight: 1.25 }}>{tip.title}</h3>
@@ -407,7 +482,7 @@ export default function Home() {
       </section>
 
       {/* ── 9. Slot ── */}
-      <section className="py-28 px-6 text-center" style={{ backgroundColor: IVOOR_KAART }}>
+      <section className="py-20 sm:py-28 px-6 text-center" style={{ backgroundColor: IVOOR_KAART }}>
         <div className="max-w-2xl mx-auto">
           <div className="mb-10"><Ornament /></div>
           <h2 className="text-4xl sm:text-5xl mb-5 leading-tight" style={{ fontFamily: KOP_FONT, color: INKT, fontWeight: 700 }}>
@@ -431,6 +506,7 @@ export default function Home() {
       </section>
 
       <Voet />
+      <StartBalk naId="namen" />
     </div>
   )
 }
