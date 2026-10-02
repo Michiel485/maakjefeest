@@ -7,15 +7,11 @@ import { sectieHeeftInhoud } from "@/lib/sectie-inhoud"
 import { naDeDag } from "@/lib/na-de-dag"
 import type { Metadata, Viewport } from "next"
 import SiteOpening from "@/components/SiteOpening"
-import { siteNamen, siteOpeningData, VAN_KAART } from "@/lib/site-opening"
+import { siteNamen, siteOpeningData, VAN_KAART_SCRIPT } from "@/lib/site-opening"
 
 // Kom je van de kaart (de knop "Bekijk onze website"), dan begint de site met
-// hetzelfde beginscherm als achter de deuren van de kaart, en verdwijnt dat
-// rustig. Een scriptje en geen React: het moet er staan voordat de site voor
-// het eerst op het scherm komt, en de pagina is gecached, dus de server kan
-// het adres niet lezen. De toevoeging gaat daarna weer uit het adres.
-const [VK_SLEUTEL, VK_WAARDE] = VAN_KAART.split("=")
-const INTRO_SCRIPT = `(function(){try{var u=new URL(location.href);if(u.searchParams.get(${JSON.stringify(VK_SLEUTEL)})!==${JSON.stringify(VK_WAARDE)})return;var el=document.getElementById("sy-van-kaart");if(!el)return;el.style.display="flex";u.searchParams.delete(${JSON.stringify(VK_SLEUTEL)});history.replaceState(history.state,"",u.pathname+u.search+u.hash);var klaar=false;function weg(){if(klaar)return;klaar=true;setTimeout(function(){el.style.opacity="0";setTimeout(function(){el.style.display="none"},800)},350)}if(document.readyState!=="loading")weg();else document.addEventListener("DOMContentLoaded",weg);setTimeout(weg,1500)}catch(e){}})();`
+// hetzelfde beginscherm als achter de deuren van de kaart. Het scriptje staat
+// in lib/site-opening.ts, want de voorbeeldsite op sayingyes.nl doet hetzelfde.
 
 export const revalidate = 60
 
@@ -186,7 +182,7 @@ export default async function EventLayout({
         )}
         style={{ display: "none", zIndex: 1000, transition: "opacity 0.8s ease" }}
       />
-      <script dangerouslySetInnerHTML={{ __html: INTRO_SCRIPT }} />
+      <script dangerouslySetInnerHTML={{ __html: VAN_KAART_SCRIPT }} />
       {siteContent}
       {voettekst}
     </div>

@@ -337,7 +337,7 @@ export default function EventProgramPreview({ items, sc, datum, builderMode, onI
     return () => { window.removeEventListener("scroll", meet); window.removeEventListener("resize", meet) }
   }, [builderMode])
 
-  const lijnKlas = "absolute top-0 bottom-0 left-[27px] @md:left-1/2"
+  const lijnKlas = "absolute top-0 bottom-0 left-[32px] @md:left-1/2"
 
   return (
     <div className="@container" style={{ fontFamily: sc.fontFamily }}>
@@ -352,16 +352,21 @@ export default function EventProgramPreview({ items, sc, datum, builderMode, onI
             const nu = i === nuIdx
             const id = item.id ?? `${item.time}::${item.description}`
             const laatste = i === sorted.length - 1
+            // In de bouwer klik je op de tekst om hem te bewerken. De stijl
+            // komt er apart bij: eerst verving de klik de hele style, en dan
+            // stond de tekst in de standaardkleur, bij Noir onzichtbaar
+            // (Michiel, 2 oktober 2026)
             const klik = (veld: 'title' | 'description') => onItemClick && item.id
-              ? { onClick: () => onItemClick(item.id!, veld), style: { cursor: "pointer" } as const, title: "Klik om te bewerken" }
+              ? { onClick: () => onItemClick(item.id!, veld), title: "Klik om te bewerken" }
               : {}
+            const wijs = onItemClick && item.id ? { cursor: "pointer" as const } : {}
             return (
-              <div key={id} className="relative grid grid-cols-[56px_1fr] @md:grid-cols-[1fr_80px_1fr] items-start" style={{ paddingBottom: laatste ? 0 : 36 }}>
+              <div key={id} className="relative grid grid-cols-[64px_1fr] @md:grid-cols-[1fr_88px_1fr] items-start" style={{ paddingBottom: laatste ? 0 : 36 }}>
                 {/* Het rondje op de lijn, met het icoon of een fotootje */}
                 <div className="flex justify-center @md:col-start-2 @md:row-start-1" style={{ paddingTop: 4 }}>
                   <div
                     style={{
-                      width: 54, height: 54, borderRadius: "50%", flexShrink: 0, overflow: "hidden",
+                      width: 64, height: 64, borderRadius: "50%", flexShrink: 0, overflow: "hidden",
                       backgroundColor: nu ? sc.accent : sc.bodyBg,
                       border: `1.5px solid ${sc.accent}`,
                       boxShadow: nu ? `0 0 0 7px ${sc.accent}30` : undefined,
@@ -374,13 +379,13 @@ export default function EventProgramPreview({ items, sc, datum, builderMode, onI
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={item.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: `${item.imagePosX ?? 50}% 50%` }} />
                     ) : (
-                      <ProgramIcon iconId={item.iconId} size={26} strokeWidth={1.5} />
+                      <ProgramIcon iconId={item.iconId} size={34} strokeWidth={1.5} />
                     )}
                   </div>
                 </div>
 
                 {/* De tekst: op de telefoon rechts van de lijn, op desktop om en om */}
-                <div className={`min-w-0 pl-3 @md:pl-0 @md:row-start-1 ${rechts ? "@md:col-start-3 @md:pl-7 @md:text-left" : "@md:col-start-1 @md:pr-7 @md:text-right"}`} style={{ paddingTop: 6 }}>
+                <div className={`min-w-0 pl-3 @md:pl-0 @md:row-start-1 ${rechts ? "@md:col-start-3 @md:pl-7 @md:text-left" : "@md:col-start-1 @md:pr-7 @md:text-right"}`} style={{ paddingTop: 10 }}>
                   {nu && (
                     <span style={{ display: "block", fontSize: "0.6875rem", fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: sc.accent, marginBottom: 4 }}>Nu</span>
                   )}
@@ -390,12 +395,12 @@ export default function EventProgramPreview({ items, sc, datum, builderMode, onI
                     </p>
                   )}
                   {item.title && (
-                    <p className="break-words" style={{ margin: "8px 0 2px", fontWeight: 700, fontSize: "1.125rem", lineHeight: 1.3, color: sc.headingColor }} {...klik('title')}>
+                    <p className="break-words" style={{ margin: "8px 0 2px", fontWeight: 700, fontSize: "1.125rem", lineHeight: 1.3, color: sc.headingColor, ...wijs }} {...klik('title')}>
                       {item.title}
                     </p>
                   )}
                   {item.description && (
-                    <p className="break-words whitespace-pre-wrap" style={{ margin: 0, fontSize: "0.9375rem", lineHeight: 1.6, color: sc.bodyText }} {...klik('description')}>
+                    <p className="break-words whitespace-pre-wrap" style={{ margin: 0, fontSize: "0.9375rem", lineHeight: 1.6, color: sc.bodyText, ...wijs }} {...klik('description')}>
                       {item.description}
                     </p>
                   )}

@@ -3,7 +3,7 @@ import Link from "next/link"
 import { getStyleConfig } from "@/lib/event-styles"
 import { MARKETING_URL } from "@/lib/site-url"
 import CardReveal from "../kaart/[token]/card-reveal"
-import { displayTeksten } from "@/lib/cards"
+import { VOORBEELD, VOORBEELD_SITE_URL, voorbeeldKaart, voorbeeldOpening } from "@/lib/voorbeeld"
 import Kop, { Pijl } from "@/components/marketing/Kop"
 import Voet from "@/components/marketing/Voet"
 import { GOUD, INKT, IVOOR, KOP_FONT, TEKST } from "@/components/marketing/stijl"
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 // pagina met kop en voet: eerst stond hij kaal, zonder uitleg en zonder weg
 // terug (ontwerpronde, ronde 7).
 export default function KaartVoorbeeldPage() {
-  const sc = getStyleConfig("emerald")
+  const sc = getStyleConfig(VOORBEELD.stijl)
 
   return (
     <div style={{ backgroundColor: IVOOR }} className="min-h-screen antialiased">
@@ -39,28 +39,16 @@ export default function KaartVoorbeeldPage() {
             Zo ontvangen je gasten de kaart
           </h1>
           <p className="text-base leading-relaxed" style={{ color: TEKST }}>
-            Tik op het zegel. De envelop gaat open, de kaart komt eruit, en eronder staat het aanmelden in drie stappen. Dit is de kaart van Sophie en Daan; die van jullie krijgt jullie namen, kleuren en tekst.
+            Tik op het zegel. De envelop gaat open, de kaart komt eruit, en eronder staat de knop naar hun website: de kaart gaat open als twee deuren. Dit is de kaart van Sophie en Daan; die van jullie krijgt jullie namen, kleuren en tekst.
           </p>
         </div>
       </section>
       <CardReveal
-        display={{
-          heading: "Wij gaan trouwen",
-          names: "Sophie & Daan",
-          dateText: "12 juni 2027",
-          location: "Landgoed Duno, Doorwerth",
-          inviteLine: "Wij nodigen je van harte uit voor onze hele trouwdag",
-          timeText: "Van 13:00 tot 23:00 uur",
-          message: "Wij gaan trouwen en vieren dat graag met jou. Kom je ook?",
-          photoUrl: null,
-          design: "sierlijk",
-          // De demo op de marketingsite mag het mooiste laten zien
-          animatie: "feestelijk",
-          ...displayTeksten("nl"),
-        }}
-        initials="S&D"
+        display={voorbeeldKaart()}
+        initials={VOORBEELD.initialen}
         sc={sc}
-        siteUrl={null}
+        siteUrl={VOORBEELD_SITE_URL}
+        siteOpening={voorbeeldOpening()}
         rsvpUrl={null}
         demo
       />

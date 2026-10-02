@@ -52,6 +52,17 @@ export function siteOpeningData(
 /** Met deze toevoeging aan het adres weet de site dat je van de kaart komt */
 export const VAN_KAART = "van=kaart"
 
+/**
+ * Het beginscherm voor wie van de kaart komt, zonder React: het moet er staan
+ * voordat de site voor het eerst op het scherm komt, en de pagina is gecached,
+ * dus de server kan het adres niet lezen. Zoekt het element #sy-van-kaart,
+ * zet het aan, haalt de toevoeging uit het adres en laat het scherm rustig
+ * verdwijnen. Gebruikt door de klantsite (app/events/[slug]/layout.tsx) en de
+ * voorbeeldsite (app/voorbeeld-site).
+ */
+const [VK_SLEUTEL, VK_WAARDE] = VAN_KAART.split("=")
+export const VAN_KAART_SCRIPT = `(function(){try{var u=new URL(location.href);if(u.searchParams.get(${JSON.stringify(VK_SLEUTEL)})!==${JSON.stringify(VK_WAARDE)})return;var el=document.getElementById("sy-van-kaart");if(!el)return;el.style.display="flex";u.searchParams.delete(${JSON.stringify(VK_SLEUTEL)});history.replaceState(history.state,"",u.pathname+u.search+u.hash);var klaar=false;function weg(){if(klaar)return;klaar=true;setTimeout(function(){el.style.opacity="0";setTimeout(function(){el.style.display="none"},800)},350)}if(document.readyState!=="loading")weg();else document.addEventListener("DOMContentLoaded",weg);setTimeout(weg,1500)}catch(e){}})();`
+
 export function naarSiteVanKaart(url: string, gast?: string | null): string {
   // De persoonlijke link gaat mee: dan zegt de site "Hoi Sam" en staat zijn
   // naam al in het formulier (components/site/Begroeting.tsx)

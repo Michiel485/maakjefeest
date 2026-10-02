@@ -8,10 +8,9 @@ import { DONKER, DONKER_KAART, DONKER_TEKST, DONKER_ZACHT, GOUD, GOUD_LICHT, GOU
 import { MARKETING_URL } from "@/lib/site-url"
 import { getAllTips } from "@/lib/tips"
 import { PLANS, PLAN_ORDER, RENEWAL_MONTHS, RENEWAL_PRICE, formatEur, planStartUrl, upgradeHint } from "@/lib/plans"
-import { STYLE_CONFIG, STYLE_NAAM, STYLE_VOLGORDE } from "@/lib/event-styles"
 import CardReveal from "./kaart/[token]/card-reveal"
 import { getStyleConfig } from "@/lib/event-styles"
-import { displayTeksten } from "@/lib/cards"
+import { VOORBEELD, VOORBEELD_SITE_URL, voorbeeldKaart, voorbeeldOpening } from "@/lib/voorbeeld"
 
 // De homepage van SayingYes (ontwerpronde, ronde 7, 2 oktober 2026). Eén
 // ding: laten zien hoe het is om zo'n kaart te krijgen. Niet vertellen.
@@ -59,7 +58,7 @@ const FAQ_ITEMS: [string, string][] = [
   ],
   [
     "Wat zit er in de trouwwebsite?",
-    "Een eigen adres zoals jullienamen.sayingyes.nl, de opening met jullie foto of ontwerp, jullie verhaal, het programma als tijdlijn, praktische informatie met route, cadeautips, de ceremoniemeesters, aanmelden, foto's en een gastenboek. Plus de live fotomuur: gasten scannen een QR-code en hun foto's verschijnen op de muur en op een groot scherm.",
+    "Een eigen adres zoals jullienamen.sayingyes.nl, de opening met jullie foto of ontwerp, jullie verhaal, het programma als tijdlijn, praktische informatie met route, cadeautips, de ceremoniemeesters, aanmelden, foto's en een gastenboek. Plus de live fotomuur: gasten scannen een QR-code en hun foto's verschijnen op de muur en op een groot scherm. Bekijk de voorbeeldsite op sayingyes.nl/voorbeeld-site.",
   ],
   [
     "Is onze trouwwebsite privé?",
@@ -84,7 +83,7 @@ const STAPPEN: [string, string][] = [
 export default function Home() {
   // De drie nieuwste artikelen: interne links vanaf de voorpagina naar de tips
   const laatsteTips = getAllTips().slice(0, 3)
-  const demoSc = getStyleConfig("emerald")
+  const demoSc = getStyleConfig(VOORBEELD.stijl)
 
   return (
     <div style={{ backgroundColor: IVOOR }} className="min-h-screen antialiased">
@@ -144,13 +143,13 @@ export default function Home() {
               Een envelop die opengaat
             </h2>
             <p className="text-base leading-relaxed mb-6" style={{ color: TEKST }}>
-              Dit is wat jullie gasten zien als ze op de link tikken: een envelop met lakzegel in jullie stijl, de kaart erin, en eronder de knop om te laten weten of ze komen. Probeer het hiernaast.
+              Dit is wat jullie gasten zien als ze op de link tikken: een envelop met lakzegel in jullie stijl, de kaart erin, en eronder de knop om te laten weten of ze komen. Probeer het hiernaast, en tik daarna op Bekijk onze website.
             </p>
             <ul className="flex flex-col gap-3 mb-8">
               {[
                 "Aanmelden met naam, aantal personen en dieetwensen, in drie stappen",
                 "De trouwdag met één tik in de agenda van je gasten",
-                "Een knop naar jullie website, als die erbij zit",
+                "Een knop naar jullie website: de kaart gaat open als twee deuren",
                 "Later iets veranderd? Dezelfde link laat altijd de nieuwste kaart zien",
               ].map((punt) => (
                 <li key={punt} className="flex items-start gap-3 text-sm leading-relaxed" style={{ color: TEKST }}>
@@ -164,23 +163,15 @@ export default function Home() {
             </Link>
           </div>
           <div className="rounded-3xl overflow-hidden" style={{ border: `1px solid ${GOUD_LICHT}`, boxShadow: "0 24px 60px rgba(0,0,0,0.12)" }}>
+            {/* De kaart van Sophie en Daan (lib/voorbeeld.ts). De knop
+                "Bekijk onze website" opent de kaart als twee deuren en gaat
+                door naar hun voorbeeldsite, precies zoals bij een gast */}
             <CardReveal
-              display={{
-                heading: "Wij gaan trouwen",
-                names: "Sophie & Daan",
-                dateText: "12 juni 2027",
-                location: "Landgoed Duno, Doorwerth",
-                inviteLine: "Wij nodigen je van harte uit voor onze hele trouwdag",
-                timeText: "Van 13:00 tot 23:00 uur",
-                message: "Wij gaan trouwen en vieren dat graag met jou. Kom je ook?",
-                photoUrl: null,
-                design: "sierlijk",
-                animatie: "feestelijk",
-                ...displayTeksten("nl"),
-              }}
-              initials="S&D"
+              display={voorbeeldKaart()}
+              initials={VOORBEELD.initialen}
               sc={demoSc}
-              siteUrl={null}
+              siteUrl={VOORBEELD_SITE_URL}
+              siteOpening={voorbeeldOpening()}
               rsvpUrl={null}
               demo
               compact
@@ -213,38 +204,57 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 4. Van kaart naar website, in vijftien stijlen ── */}
+      {/* ── 4. Van kaart naar website: de echte voorbeeldsite in een telefoon ── */}
       <section className="py-24 sm:py-28 px-6" style={{ backgroundColor: GOUD_VLAK }}>
-        <div className="max-w-5xl mx-auto grid gap-12 lg:grid-cols-2 lg:items-center">
+        <div className="max-w-5xl mx-auto grid gap-12 lg:grid-cols-[1.1fr_1fr] lg:items-center">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] mb-5" style={{ color: GOUD }}>Van kaart naar website</p>
             <h2 className="text-4xl sm:text-5xl leading-tight mb-6" style={{ fontFamily: KOP_FONT, color: INKT, fontWeight: 700 }}>
               Dezelfde stijl, van envelop tot gastenboek
             </h2>
             <p className="text-base leading-relaxed mb-6" style={{ color: TEKST }}>
-              Begin met een Save the Date. Maak er later de trouwkaart van, met aanmelden en een gastenlijst. En zet er als je wilt de hele website achter: de kaart gaat als twee deuren open en daar staat jullie site, in dezelfde kleuren en letters. Jullie verhaal, het programma als tijdlijn, de route, cadeautips, de ceremoniemeesters en op de dag zelf de fotomuur.
+              Begin met een Save the Date. Maak er later de trouwkaart van, met aanmelden en een gastenlijst. En zet er als je wilt de hele website achter: de kaart gaat als twee deuren open en daar staat jullie site, in dezelfde kleuren en letters. Hiernaast staat de echte site van Sophie en Daan. Scroll er doorheen.
             </p>
+            <ul className="flex flex-col gap-3 mb-8">
+              {[
+                "De opening met jullie foto en het ontwerp van de kaart, met de dagen aftellen",
+                "Jullie verhaal in momenten en het programma als getekende tijdlijn",
+                "Route, dresscode, cadeautips en de ceremoniemeesters met WhatsApp",
+                "Aanmelden in drie stappen, op de dag zelf de fotomuur, daarna het gastenboek",
+              ].map((punt) => (
+                <li key={punt} className="flex items-start gap-3 text-sm leading-relaxed" style={{ color: TEKST }}>
+                  <Vinkje />
+                  {punt}
+                </li>
+              ))}
+            </ul>
             <p className="text-sm leading-relaxed mb-8" style={{ color: TEKST }}>
-              Vijftien stijlen, elk met zijn eigen kleuren en letters. Je kiest er een voor de kaart en de site samen.
+              Vijftien stijlen, elk met zijn eigen kleuren en letters. Je kiest er een voor de kaart en de site samen, of een andere voor de site.
             </p>
-            <Link href="/trouwwebsite-maken" className="text-sm font-semibold" style={{ color: GOUD, textDecoration: "none" }}>
-              Alles over de trouwwebsite &rarr;
-            </Link>
+            <div className="flex flex-wrap gap-x-6 gap-y-3">
+              <Link href={VOORBEELD_SITE_URL} className="text-sm font-semibold" style={{ color: GOUD, textDecoration: "none" }}>
+                Bekijk de voorbeeldsite op een hele pagina &rarr;
+              </Link>
+              <Link href="/trouwwebsite-maken" className="text-sm font-semibold" style={{ color: GOUD, textDecoration: "none" }}>
+                Alles over de trouwwebsite &rarr;
+              </Link>
+            </div>
           </div>
-          <div className="grid grid-cols-5 gap-3">
-            {STYLE_VOLGORDE.map((s) => {
-              const c = STYLE_CONFIG[s]
-              return (
-                <div key={s} className="flex flex-col items-center gap-2">
-                  <div
-                    className="w-full aspect-square rounded-full"
-                    style={{ background: `linear-gradient(135deg, ${c.bodyBg} 0%, ${c.bodyBg} 50%, ${c.accent} 50%, ${c.accent} 100%)`, border: `1px solid ${GOUD_LICHT}` }}
-                    aria-hidden="true"
-                  />
-                  <span className="text-[11px]" style={{ color: TEKST }}>{STYLE_NAAM[s]}</span>
-                </div>
-              )
-            })}
+          <div className="flex justify-center">
+            {/* Een telefoon met de voorbeeldsite erin, live en scrollbaar */}
+            <div
+              className="relative"
+              style={{ width: 330, maxWidth: "100%", aspectRatio: "330 / 680", borderRadius: 44, border: `11px solid ${INKT}`, backgroundColor: INKT, boxShadow: "0 30px 60px rgba(0,0,0,0.22)", overflow: "hidden" }}
+            >
+              <div aria-hidden="true" className="absolute top-0 left-1/2 -translate-x-1/2 z-10" style={{ width: 110, height: 22, borderRadius: "0 0 16px 16px", backgroundColor: INKT }} />
+              <iframe
+                src={`${VOORBEELD_SITE_URL}#home`}
+                title="Voorbeeld van een trouwwebsite van SayingYes"
+                loading="lazy"
+                className="block w-full h-full"
+                style={{ border: 0, borderRadius: 33, backgroundColor: demoSc.bodyBg }}
+              />
+            </div>
           </div>
         </div>
       </section>

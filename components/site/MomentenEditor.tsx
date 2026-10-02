@@ -10,10 +10,13 @@ import { MAX_MOMENTEN, verhaalMomenten, verhaalQuote, type Moment } from "@/lib/
 const invoer =
   "w-full rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] transition-all"
 
+// Als voorbeeld in de lege velden, nooit als ingevulde tekst: wat er staat
+// moet van het bruidspaar zelf zijn (Michiel, 2 oktober 2026)
 const VOORBEELDEN: Partial<Moment>[] = [
-  { jaar: "2016", titel: "De eerste date", tekst: "Hij was te laat, zij vergaf het hem na één drankje." },
-  { jaar: "2021", titel: "Samen een huis", tekst: "Met een hond en een moestuin die nooit iets opleverde." },
+  { jaar: "2016", titel: "Hoe we elkaar leerden kennen", tekst: "Op een feestje van een gezamenlijke vriend. Hij was te laat, zij vergaf het hem na één drankje." },
+  { jaar: "2020", titel: "Samen wonen", tekst: "Een huis met een hond en een moestuin die nooit iets opleverde." },
   { jaar: "2025", titel: "Het aanzoek", tekst: "Op het strand, met zand in de ring." },
+  { jaar: "Nu", titel: "Wij gaan trouwen", tekst: "En dat vieren we het liefst met jullie erbij." },
 ]
 
 export default function MomentenEditor({
@@ -43,8 +46,7 @@ export default function MomentenEditor({
   const zet = (id: string, patch: Partial<Moment>) => schrijf(momenten.map((m) => (m.id === id ? { ...m, ...patch } : m)))
   const voegToe = () => {
     if (momenten.length >= MAX_MOMENTEN) return
-    const vb = VOORBEELDEN[momenten.length] ?? {}
-    schrijf([...momenten, { id: crypto.randomUUID(), jaar: "", titel: vb.titel ?? "", tekst: "", image_url: null, image_pos_x: 50, image_pos_y: 50 }])
+    schrijf([...momenten, { id: crypto.randomUUID(), jaar: "", titel: "", tekst: "", image_url: null, image_pos_x: 50, image_pos_y: 50 }])
   }
   const weg = (id: string) => schrijf(momenten.filter((m) => m.id !== id))
   const verplaats = (i: number, richting: -1 | 1) => {
@@ -113,9 +115,11 @@ export default function MomentenEditor({
                 </button>
               </div>
             </div>
+            {/* Het kopje kreeg w-full naast het jaar en stak zo buiten het
+                paneel (Michiel, 2 oktober 2026): flex-1 met min-w-0 */}
             <div className="flex gap-2">
-              <input type="text" value={m.jaar ?? ""} onChange={(e) => zet(m.id, { jaar: e.target.value })} placeholder="2016" maxLength={24} className={`${invoer} w-24 flex-shrink-0`} aria-label="Jaar of woord" />
-              <input type="text" value={m.titel ?? ""} onChange={(e) => zet(m.id, { titel: e.target.value })} placeholder="De eerste date" maxLength={60} className={invoer} aria-label="Kopje" />
+              <input type="text" value={m.jaar ?? ""} onChange={(e) => zet(m.id, { jaar: e.target.value })} placeholder={VOORBEELDEN[i]?.jaar ?? "2016"} maxLength={24} className={`${invoer} w-20 flex-shrink-0`} aria-label="Jaar of woord" />
+              <input type="text" value={m.titel ?? ""} onChange={(e) => zet(m.id, { titel: e.target.value })} placeholder={VOORBEELDEN[i]?.titel ?? "Een kopje"} maxLength={60} className={`${invoer} flex-1 min-w-0`} aria-label="Kopje" />
             </div>
             <textarea
               id={`onsverhaal-moment-${m.id}-tekst`}
@@ -153,6 +157,20 @@ export default function MomentenEditor({
         )
       })}
 
+      {momenten.length === 0 && (
+        <div className="rounded-xl px-3.5 py-3 text-xs leading-relaxed" style={{ backgroundColor: "var(--goud-vlak)", color: "#6B5F52" }}>
+          <p className="m-0 font-semibold mb-1.5" style={{ color: "#3F3730" }}>Bijvoorbeeld</p>
+          <ul className="m-0 p-0 list-none flex flex-col gap-1">
+            {VOORBEELDEN.map((v) => (
+              <li key={v.jaar} className="flex gap-2">
+                <span className="font-semibold shrink-0 w-8" style={{ color: "var(--goud)" }}>{v.jaar}</span>
+                <span>{v.titel}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {momenten.length < MAX_MOMENTEN && (
         <button
           type="button"
@@ -163,7 +181,7 @@ export default function MomentenEditor({
           {momenten.length === 0 ? "Eerste moment toevoegen" : "Nog een moment"}
         </button>
       )}
-      <p className="text-[11px] text-gray-400 leading-snug">Hoe we elkaar ontmoetten, het moment dat het serieus werd, het aanzoek. Drie momenten is meestal genoeg.</p>
+      <p className="text-[11px] text-gray-400 leading-snug">Een jaar of een woord, een kopje en een paar zinnen. Drie of vier momenten is meestal genoeg.</p>
       <input ref={bestand} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={kiesFoto} />
     </div>
   )

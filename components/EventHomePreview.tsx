@@ -560,7 +560,9 @@ export default function EventHomePreview({
       {vandaag && !onFieldClick && <Confetti kleuren={[sc.accent, sc.buttonBg, sc.headingColor]} />}
       {openingBlok}
 
-      {/* Het welkomstbriefje: kopje, tekst en de namen als ondertekening */}
+      {/* Het welkomstbriefje: kopje en tekst. De namen als ondertekening
+          eronder zijn weg: die stonden al in de opening en je kon ze hier niet
+          weghalen (Michiel, 2 oktober 2026) */}
       {(homeTitle || homeBody) && (
         <div className="px-8 pt-14 pb-16 flex flex-col items-center">
           <div {...fieldClick('welkomst-titel')} className="w-full">
@@ -575,18 +577,6 @@ export default function EventHomePreview({
               {homeBody}
             </p>
           )}
-          <p
-            style={{
-              margin: "28px 0 0",
-              fontFamily: namenLetter.family,
-              fontWeight: namenLetter.weight,
-              fontSize: `${homeTitleSize ? Math.max(1.4, homeTitleSize) : 1.7}rem`,
-              color: sc.headingColor,
-              textAlign: "center",
-            }}
-          >
-            {namen}
-          </p>
         </div>
       )}
     </div>

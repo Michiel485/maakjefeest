@@ -21,6 +21,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/trouwwebsite-maken`, changeFrequency: "monthly", priority: 0.9 },
     { url: `${BASE}/digitale-uitnodiging`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE}/kaart-voorbeeld`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${BASE}/voorbeeld-site`, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE}/tips`,            changeFrequency: "weekly",  priority: 0.7 },
     ...tips,
     { url: `${BASE}/contact`,         changeFrequency: "yearly",  priority: 0.4 },

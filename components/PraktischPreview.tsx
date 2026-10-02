@@ -46,7 +46,7 @@ export default function PraktischPreview({
 }: {
   tiles: PraktischTile[]
   sc: SC
-  /** De locatie van de bruiloft: dan komt er een tegel Route bij met een knop naar de kaarten-app */
+  /** De locatie van de bruiloft: dan komt er een tegel Route bij met een knop naar Maps */
   locatie?: string | null
   onTileClick?: (tileId: string, field: 'title' | 'text') => void
 }) {
@@ -99,7 +99,7 @@ export default function PraktischPreview({
               className="inline-block text-sm font-bold transition-transform hover:-translate-y-0.5"
               style={{ marginTop: 4, padding: "9px 18px", borderRadius: 999, backgroundColor: sc.buttonBg, color: sc.buttonText, textDecoration: "none" }}
             >
-              Open in kaarten
+              Open in Maps
             </a>
           </CardWrapper>
         )}
