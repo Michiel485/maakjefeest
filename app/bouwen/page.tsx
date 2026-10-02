@@ -1537,30 +1537,47 @@ export default function BouwenPage() {
   useStapGeschiedenis("site", gidsNu, (i) => { setBlad(null); setBladKlein(false); setOpenHomeSection(null); setGids(i) })
   useTerugSluit(showAuthModal, () => { setShowAuthModal(false); setSaveError(null) })
   // De stap bepaalt welke sectie en welke pagina open zijn
+  // De twee effecten hieronder houden de stap en de open pagina gelijk, elk
+  // de ene kant op. Zet het eerste de pagina, dan mag het tweede daar niet
+  // weer de stap uit afleiden: anders kunnen ze elkaar blijven aansturen en
+  // springt het paneel heen en weer tussen twee stappen (Michiel, 2 oktober
+  // 2026, in Chrome bij de stap Programma). Deze vlag zegt: dit kwam van de
+  // stap zelf, niet van een klik in het voorbeeld.
+  const subPageVanStap = useRef(false)
+  const activeSubPageRef = useRef(activeSubPage)
+  activeSubPageRef.current = activeSubPage
   useEffect(() => {
     const st = webStappenRef.current[gidsNu]
     if (!st) return
+    const pagina = st.pagina ?? null
+    if (activeSubPageRef.current !== pagina) subPageVanStap.current = true
     setActiveSection(st.pagina || st.secties.includes("paginas") ? "paginas" : st.secties[0])
-    setActiveSubPage(st.pagina ?? null)
+    setActiveSubPage(pagina)
     if (st.pagina) setPreviewPage(st.pagina)
     if (bladRef.current) bladRef.current.scrollTop = 0
   }, [gidsNu])
   // Tik je in het voorbeeld op iets, dan open je de pagina waar het bij
   // hoort; de stap springt daarheen mee
   useEffect(() => {
+    if (subPageVanStap.current) { subPageVanStap.current = false; return }
     const st = webStappenRef.current[gidsNu]
     // Alleen vanuit een stap met een pagina: in Stijl of Webadres wil je door
     // de site klikken zonder weg te springen (Michiel, 30 september 2026)
     if (!st || !activeSubPage || !st.pagina) return
+    // De homepagina heeft twee stappen; het open deel zegt welke
+    const homeStap = () => {
+      if (!openHomeSection) return -1
+      return webStappenRef.current.findIndex((s) => s.pagina === "Home" && (s.delen ?? []).includes(`home:${openHomeSection}`))
+    }
     if (activeSubPage === st.pagina) {
       if (activeSubPage === "Home" && openHomeSection && !(st.delen ?? []).includes(`home:${openHomeSection}`)) {
-        const i = webStappenRef.current.findIndex((s) => s.pagina === "Home" && (s.delen ?? []).includes(`home:${openHomeSection}`))
-        if (i >= 0) setGids(i)
+        const i = homeStap()
+        if (i >= 0 && i !== gidsNu) setGids(i)
       }
       return
     }
-    const i = webStappenRef.current.findIndex((s) => s.pagina === activeSubPage)
-    if (i >= 0) setGids(i)
+    const i = activeSubPage === "Home" && homeStap() >= 0 ? homeStap() : webStappenRef.current.findIndex((s) => s.pagina === activeSubPage)
+    if (i >= 0 && i !== gidsNu) setGids(i)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSubPage, openHomeSection])
   const activePageIds = new Set<string>(activePagesOrdered.map(p => p.id))
