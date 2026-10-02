@@ -18,6 +18,10 @@ export interface PlanInfo {
   invoiceDescription: string
 }
 
+/** Verlengen van de complete website: zes maanden erbij, in één keer (geen abonnement) */
+export const RENEWAL_PRICE = 22
+export const RENEWAL_MONTHS = 6
+
 export const PLANS: Record<Plan, PlanInfo> = {
   save_the_date: {
     id: "save_the_date",

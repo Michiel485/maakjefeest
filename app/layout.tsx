@@ -206,14 +206,13 @@ export const metadata: Metadata = {
     url: SITE_URL,
     siteName: "SayingYes",
     title: "SayingYes | Digitale trouwkaart, Save the Date en trouwwebsite",
-    description: "Digitale uitnodiging voor jullie bruiloft via WhatsApp, met RSVP en een eigen trouwwebsite. Gratis starten, vanaf €15.",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "SayingYes, digitale trouwkaart en trouwwebsite" }],
+    description: "Digitale trouwkaart via WhatsApp, met aanmelden en een eigen trouwwebsite. Gratis ontwerpen, betalen als je verstuurt.",
+    // Het deelplaatje komt uit app/opengraph-image.tsx
   },
   twitter: {
     card: "summary_large_image",
     title: "SayingYes | Digitale trouwkaart, Save the Date en trouwwebsite",
-    description: "Digitale uitnodiging voor jullie bruiloft via WhatsApp, met RSVP en een eigen trouwwebsite. Gratis starten, vanaf €15.",
-    images: ["/og-image.png"],
+    description: "Digitale trouwkaart via WhatsApp, met aanmelden en een eigen trouwwebsite. Gratis ontwerpen, betalen als je verstuurt.",
   },
 };
 

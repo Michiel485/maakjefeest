@@ -163,7 +163,7 @@ export default async function TipPage({ params }: { params: Promise<{ slug: stri
             <div style={{ width: 32, height: 1, backgroundColor: GOLD_LIGHT }} />
           </div>
           <p className="mb-1 font-semibold" style={{ fontFamily: "var(--font-cormorant)", fontSize: "1.4rem", color: CHARCOAL }}>Klaar om te beginnen?</p>
-          <p className="text-sm mb-5" style={{ color: BODY }}>Maak jullie trouwwebsite in een paar minuten aan.</p>
+          <p className="text-sm mb-5" style={{ color: BODY }}>Maak jullie trouwkaart of trouwwebsite in een paar minuten.</p>
           <Link
             href="/start"
             className="inline-flex text-sm font-semibold px-6 py-3 rounded-xl transition-all hover:opacity-85"

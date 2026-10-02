@@ -1,12 +1,13 @@
 import { createMollieClient } from "@mollie/api-client"
 import { createServerClient } from "@supabase/ssr"
 import { createServiceClient } from "@/lib/supabase"
+import { RENEWAL_PRICE } from "@/lib/plans"
 import { cookies } from "next/headers"
 import { renewalAllowed } from "@/lib/plans"
 
 export const dynamic = "force-dynamic"
 
-const RENEWAL_BASE = 22.00
+const RENEWAL_BASE = RENEWAL_PRICE
 
 async function validateDiscount(code: string): Promise<{ valid: boolean; finalAmount?: number }> {
   const supabase = createServiceClient()

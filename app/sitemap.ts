@@ -16,7 +16,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return [
     { url: BASE,                      changeFrequency: "weekly",  priority: 1.0 },
-    { url: `${BASE}/digitale-uitnodiging`, changeFrequency: "monthly", priority: 0.9 },
+    { url: `${BASE}/digitale-trouwkaart`, changeFrequency: "monthly", priority: 0.9 },
+    { url: `${BASE}/save-the-date`,    changeFrequency: "monthly", priority: 0.9 },
+    { url: `${BASE}/trouwwebsite-maken`, changeFrequency: "monthly", priority: 0.9 },
+    { url: `${BASE}/digitale-uitnodiging`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE}/kaart-voorbeeld`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${BASE}/tips`,            changeFrequency: "weekly",  priority: 0.7 },
     ...tips,

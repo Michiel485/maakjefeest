@@ -1,5 +1,5 @@
 import { Resend } from "resend"
-import { PLANS, draftReminderTekst, isCardPlan, type DraftVariant, type Plan } from "./plans"
+import { PLANS, RENEWAL_MONTHS, RENEWAL_PRICE, draftReminderTekst, isCardPlan, type DraftVariant, type Plan } from "./plans"
 import { deadlineTekst, type DeadlineMoment } from "./deadline"
 import { standAdvies, standKop, type StandCijfers } from "./stand"
 import type { SC } from "./event-styles"
@@ -472,11 +472,11 @@ export async function sendRenewalReminderEmail({
   const html = omlijsting({
     gezicht: SAYINGYES,
     kop: "Jullie site staat bijna een jaar online",
-    inhoud: `${alinea(`<strong>${veilig(eventTitle)}</strong> gaat op <strong>${expireStr}</strong> offline. Willen jullie de site, de foto's en de gastenlijst langer bewaren? Verlengen kost &euro;&nbsp;22 voor zes maanden, in één keer, geen abonnement.`)}
-      ${knoppen(knop(dashboardUrl, "Verlengen voor 22 euro", SAYINGYES))}
+    inhoud: `${alinea(`<strong>${veilig(eventTitle)}</strong> gaat op <strong>${expireStr}</strong> offline. Willen jullie de site, de foto's en de gastenlijst langer bewaren? Verlengen kost &euro;&nbsp;${RENEWAL_PRICE} voor ${RENEWAL_MONTHS} maanden, in één keer, geen abonnement.`)}
+      ${knoppen(knop(dashboardUrl, `Verlengen voor ${RENEWAL_PRICE} euro`, SAYINGYES))}
       ${alinea(`Verleng je niet, dan gaat de site op ${expireStr} vanzelf offline. Jullie gegevens bewaren we, dus later opnieuw aanzetten kan altijd.`, "font-size:13px;color:#9A8E82;")}`,
   })
-  return verstuur("Renewal reminder", { to: toEmail, subject: `Jullie trouwwebsite gaat op ${expireStr} offline, verlengen kan voor 22 euro`, html })
+  return verstuur("Renewal reminder", { to: toEmail, subject: `Jullie trouwwebsite gaat op ${expireStr} offline, verlengen kan voor ${RENEWAL_PRICE} euro`, html })
 }
 
 // ── Nog 7 dagen ──────────────────────────────────────────────────────────────
@@ -501,8 +501,8 @@ export async function sendExpiryWarningEmail({
   const html = omlijsting({
     gezicht: SAYINGYES,
     kop: `Nog 7 dagen, dan gaat de site offline`,
-    inhoud: `${vlak(`<p style="margin:0;font-size:14px;color:#9a3412;line-height:1.65;"><strong>${veilig(eventTitle)}</strong> gaat op <strong>${expireStr}</strong> offline. Verleng vandaag nog voor &euro;&nbsp;22 om hem online te houden.</p>`, "let-op")}
-      ${knoppen(knop(dashboardUrl, "Verlengen voor 22 euro", SAYINGYES))}
+    inhoud: `${vlak(`<p style="margin:0;font-size:14px;color:#9a3412;line-height:1.65;"><strong>${veilig(eventTitle)}</strong> gaat op <strong>${expireStr}</strong> offline. Verleng vandaag nog voor &euro;&nbsp;${RENEWAL_PRICE} om hem online te houden.</p>`, "let-op")}
+      ${knoppen(knop(dashboardUrl, `Verlengen voor ${RENEWAL_PRICE} euro`, SAYINGYES))}
       ${
         // Uit het klantreisgesprek van 21 september 2026: de foto's van je
         // gasten blijven bij ons staan, maar de deur gaat dicht, en dit is
@@ -535,7 +535,7 @@ export async function sendOfflineEmail({
     gezicht: SAYINGYES,
     kop: "Jullie site is offline",
     inhoud: `${alinea(`<strong>${veilig(eventTitle)}</strong> staat vanaf vandaag niet meer online. Jullie gegevens, de gastenlijst${fotos > 0 ? ` en de ${fotos} foto's van je gasten` : ""} bewaren we gewoon.`)}
-      ${alinea("Wil je de site toch nog een tijdje laten staan, bijvoorbeeld voor de foto's? Dan zet je hem in je dashboard weer aan voor 22 euro per zes maanden.")}
+      ${alinea("Wil je de site toch nog een tijdje laten staan, bijvoorbeeld voor de foto's? Dan zet je hem in je dashboard weer aan voor ${RENEWAL_PRICE} euro per ${RENEWAL_MONTHS} maanden.")}
       ${knoppen(knop(dashboardUrl, "Naar je dashboard", SAYINGYES))}`,
   })
   return verstuur("Offline", { to: toEmail, subject: `${eventTitle}: jullie site is offline`, html })

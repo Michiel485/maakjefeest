@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import MeetStap from "@/components/marketing/MeetStap"
 
 export const metadata: Metadata = {
   title: "Betaling geslaagd",
@@ -6,5 +7,5 @@ export const metadata: Metadata = {
 }
 
 export default function SuccesLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>
+  return <><MeetStap naam="betaald" />{children}</>
 }
