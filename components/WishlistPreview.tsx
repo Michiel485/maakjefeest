@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import type { SC } from "@/lib/event-styles"
 import { ProgramIcon } from "./EventProgramPreview"
 import SectieKop from "./site/SectieKop"
@@ -43,13 +44,76 @@ function CardWrapper({ sc, className, children }: { sc: SC; className?: string; 
   )
 }
 
+/** Een bijdrage overmaken: rekeningnummer of betaalverzoek, alleen als het is ingevuld */
+export interface Rekening {
+  iban?: string
+  naam?: string
+  link?: string
+}
+
+function RekeningBlok({ rekening, sc }: { rekening: Rekening; sc: SC }) {
+  const [gekopieerd, setGekopieerd] = useState(false)
+  const iban = rekening.iban?.trim() || null
+  const link = rekening.link?.trim() || null
+  if (!iban && !link) return null
+  const kleurTekst = sc.goldBorder ? (sc.cardText ?? sc.bodyText) : sc.bodyText
+  async function kopieer() {
+    if (!iban) return
+    try {
+      await navigator.clipboard.writeText(iban.replace(/\s+/g, ""))
+      setGekopieerd(true)
+      setTimeout(() => setGekopieerd(false), 2000)
+    } catch {
+      // Dan staat het nummer er gewoon, de gast kan het zelf overnemen
+    }
+  }
+  return (
+    <div className="flex flex-col items-center text-center mx-auto" style={{ marginTop: 28, gap: 10, maxWidth: 420 }}>
+      <p style={{ margin: 0, fontSize: "0.9375rem", color: kleurTekst }}>
+        Liever een bijdrage overmaken?
+      </p>
+      {iban && (
+        <p style={{ margin: 0, fontFamily: sc.fontPageTitles, fontWeight: sc.fontPageTitlesWeight, fontSize: "1.25rem", color: sc.headingColor, letterSpacing: "0.04em" }}>
+          {iban}
+          {rekening.naam?.trim() && <span style={{ display: "block", fontFamily: sc.fontFamily, fontSize: "0.8125rem", fontWeight: 400, color: kleurTekst, letterSpacing: 0, marginTop: 2 }}>t.n.v. {rekening.naam.trim()}</span>}
+        </p>
+      )}
+      <div className="flex flex-wrap justify-center" style={{ gap: 8 }}>
+        {iban && (
+          <button
+            type="button"
+            onClick={kopieer}
+            className="text-sm font-bold transition-transform hover:-translate-y-0.5"
+            style={{ padding: "9px 18px", borderRadius: 999, border: `1px solid ${sc.accent}`, color: sc.accent, background: "transparent", cursor: "pointer" }}
+          >
+            {gekopieerd ? "Gekopieerd" : "Kopieer IBAN"}
+          </button>
+        )}
+        {link && (
+          <a
+            href={link}
+            target="_blank"
+            rel="noopener"
+            className="text-sm font-bold transition-transform hover:-translate-y-0.5"
+            style={{ padding: "9px 18px", borderRadius: 999, backgroundColor: sc.buttonBg, color: sc.buttonText, textDecoration: "none" }}
+          >
+            Open betaalverzoek
+          </a>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function WishlistPreview({
   items,
   sc,
+  rekening,
   onItemClick,
 }: {
   items: WishlistItem[]
   sc: SC
+  rekening?: Rekening | null
   onItemClick?: (itemId: string, field: 'title' | 'text') => void
 }) {
   const locale = useUILocale()
@@ -83,6 +147,7 @@ export default function WishlistPreview({
           </CardWrapper>
         ))}
       </div>
+      {rekening && <RekeningBlok rekening={rekening} sc={sc} />}
     </div>
   )
 }

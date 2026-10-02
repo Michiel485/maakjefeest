@@ -7,7 +7,8 @@ import EventMastersPreview from "@/components/EventMastersPreview"
 import EventProgramPreview from "@/components/EventProgramPreview"
 import StoryPreview from "@/components/StoryPreview"
 import PraktischPreview, { DEFAULT_PRAKTISCH_TILES, type PraktischTile } from "@/components/PraktischPreview"
-import WishlistPreview, { DEFAULT_WISHLIST_ITEMS, type WishlistItem } from "@/components/WishlistPreview"
+import WishlistPreview, { DEFAULT_WISHLIST_ITEMS, type Rekening, type WishlistItem } from "@/components/WishlistPreview"
+import { verhaalMomenten, verhaalQuote } from "@/lib/verhaal"
 import FotosPreview from "@/components/FotosPreview"
 import SectieKop from "@/components/site/SectieKop"
 
@@ -18,17 +19,19 @@ export interface PageData {
   content: Record<string, unknown>
 }
 
-export default function EventPageSection({ page, sc, eventId }: { page: PageData; sc: SC; eventId: string }) {
+export interface SectieEvent {
+  datum?: string | null
+  locatie?: string | null
+}
+
+export default function EventPageSection({ page, sc, eventId, event }: { page: PageData; sc: SC; eventId: string; event?: SectieEvent }) {
   if (page.type === "OnsVerhaal") {
     const c = page.content ?? {}
     return (
       <StoryPreview
         title={typeof c.title === "string" ? c.title : null}
-        text={typeof c.text === "string" ? c.text : null}
-        imageUrl={typeof c.image_url === "string" ? c.image_url : null}
-        imagePosX={typeof c.image_pos_x === "number" ? c.image_pos_x : 50}
-        imagePosY={typeof c.image_pos_y === "number" ? c.image_pos_y : 50}
-        showOverlay={typeof c.show_overlay === "boolean" ? c.show_overlay : true}
+        quote={verhaalQuote(c)}
+        momenten={verhaalMomenten(c)}
         sc={sc}
       />
     )
@@ -38,9 +41,7 @@ export default function EventPageSection({ page, sc, eventId }: { page: PageData
     const items = Array.isArray(page.content?.items)
       ? (page.content.items as { id?: string; time: string; title?: string; description: string; iconId?: string; image_url?: string | null; imagePosX?: number }[])
       : []
-    const rawLayout = (page.content?.layout as string) || "centered"
-    const programLayout = (rawLayout === "bento" ? "centered" : rawLayout) as "centered" | "timeline"
-    return <EventProgramPreview items={items} sc={sc} programLayout={programLayout} />
+    return <EventProgramPreview items={items} sc={sc} datum={event?.datum ?? null} />
   }
 
   if (page.type === "Informatie") {
@@ -48,23 +49,26 @@ export default function EventPageSection({ page, sc, eventId }: { page: PageData
     // hier dan niets, terwijl de bouwer de voorbeelden wel liet zien (Michiel,
     // 27 september 2026, bij de cadeautips).
     const tiles = Array.isArray(page.content?.items) ? (page.content.items as PraktischTile[]) : DEFAULT_PRAKTISCH_TILES
-    return <PraktischPreview tiles={tiles} sc={sc} />
+    return <PraktischPreview tiles={tiles} sc={sc} locatie={event?.locatie ?? null} />
   }
 
   if (page.type === "Cadeautips") {
     const eigen = Array.isArray(page.content?.items) ? (page.content.items as WishlistItem[]) : []
     const items = eigen.length ? eigen : DEFAULT_WISHLIST_ITEMS
-    return <WishlistPreview items={items} sc={sc} />
+    const rekening = page.content?.rekening && typeof page.content.rekening === "object" ? (page.content.rekening as Rekening) : null
+    return <WishlistPreview items={items} sc={sc} rekening={rekening} />
   }
 
   if (page.type === "Ceremoniemeesters") {
     const c = page.content ?? {}
-    const rawMasters = Array.isArray(c.masters) ? (c.masters as { naam?: string; telefoon?: string; email?: string; foto_url?: string | null }[]) : []
+    const rawMasters = Array.isArray(c.masters) ? (c.masters as { naam?: string; telefoon?: string; email?: string; foto_url?: string | null; rol?: string; onderwerpen?: string }[]) : []
     const masters = rawMasters.map((m) => ({
       naam: m.naam ?? "",
       telefoon: m.telefoon ?? "",
       email: m.email ?? "",
       foto_url: m.foto_url ?? null,
+      rol: m.rol ?? "",
+      onderwerpen: m.onderwerpen ?? "",
     }))
     const text = typeof c.text === "string" ? c.text : undefined
     return <EventMastersPreview masters={masters} sc={sc} text={text} />

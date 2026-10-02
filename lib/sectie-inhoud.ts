@@ -4,11 +4,13 @@
 // 2026). Praktische info, cadeautips en aanmelden hebben altijd inhoud, want
 // die vallen terug op de voorbeelden uit de bouwer.
 
+import { verhaalHeeftInhoud } from "./verhaal"
+
 export function sectieHeeftInhoud(type: string, content: unknown): boolean {
   const c = (content && typeof content === "object" ? content : {}) as Record<string, unknown>
   switch (type) {
     case "OnsVerhaal":
-      return (typeof c.text === "string" && c.text.trim().length > 0) || (typeof c.image_url === "string" && c.image_url.length > 0)
+      return verhaalHeeftInhoud(c)
     case "Programma": {
       const items = Array.isArray(c.items) ? (c.items as { time?: string; title?: string; description?: string }[]) : []
       return items.some((it) => (it.title ?? "").trim() || (it.description ?? "").trim())

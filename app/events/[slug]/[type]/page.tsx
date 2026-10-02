@@ -27,7 +27,7 @@ export default async function EventSubPage({
 
   const event = rijOfNiets(await supabase
     .from("events")
-    .select("id, style, font_hero, font_initials, font_frame_names, font_page_titles, plan")
+    .select("id, style, font_hero, font_initials, font_frame_names, font_page_titles, plan, datum, locatie")
     .eq("slug", slug)
     .eq("status", "published")
     .single(), "Website")
@@ -52,5 +52,5 @@ export default async function EventSubPage({
     fontPageTitles: event.font_page_titles as string | null,
   })
 
-  return <EventPageSection page={page} sc={sc} eventId={event.id} />
+  return <EventPageSection page={page} sc={sc} eventId={event.id} event={{ datum: (event.datum as string | null) ?? null, locatie: (event.locatie as string | null) ?? null }} />
 }

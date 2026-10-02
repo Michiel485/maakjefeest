@@ -1,198 +1,107 @@
 "use client"
 
-import { useRef, useState, useCallback } from "react"
+// Ons verhaal: momenten om en om, foto links en tekst rechts en dan andersom,
+// met de foto's een klein beetje scheef zoals losse foto's op tafel, en
+// daarboven één zin die eruit springt (ontwerpronde, 2 oktober 2026).
+// Eén moment zonder jaar is gewoon het oude verhaal, maar dan mooi gezet.
+
 import type { SC } from "@/lib/event-styles"
+import type { Moment } from "@/lib/verhaal"
 import SectieKop from "./site/SectieKop"
+import SleepFoto from "./site/SleepFoto"
 
 export interface StoryPreviewProps {
   title: string | null
-  text: string | null
-  imageUrl: string | null
-  imagePosX?: number
-  imagePosY?: number
-  showOverlay?: boolean
+  quote?: string | null
+  momenten: Moment[]
   editable?: boolean
-  onPositionChange?: (x: number, y: number) => void
-  onFieldClick?: (field: 'title' | 'text') => void
+  /** In de bouwer: 'title', 'quote' of 'moment:<id>' */
+  onFieldClick?: (field: string) => void
+  onPositionChange?: (id: string, x: number, y: number) => void
   sc: SC
 }
 
-function clamp(v: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, v))
-}
-
-export default function StoryPreview({
-  title,
-  text,
-  imageUrl,
-  imagePosX = 50,
-  imagePosY = 50,
-  showOverlay = true,
-  editable = false,
-  onPositionChange,
-  onFieldClick,
-  sc,
-}: StoryPreviewProps) {
-
-  const [pos, setPos] = useState({ x: imagePosX, y: imagePosY })
-  const [dragging, setDragging] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null)
-  const lastPointer = useRef<{ x: number; y: number } | null>(null)
-
-  const objectPosition = `${pos.x}% ${pos.y}%`
-
-  const startDrag = useCallback((clientX: number, clientY: number) => {
-    if (!editable || !imageUrl) return
-    setDragging(true)
-    lastPointer.current = { x: clientX, y: clientY }
-  }, [editable, imageUrl])
-
-  const moveDrag = useCallback((clientX: number, clientY: number) => {
-    if (!dragging || !lastPointer.current || !containerRef.current) return
-    const rect = containerRef.current.getBoundingClientRect()
-    const deltaX = clientX - lastPointer.current.x
-    const deltaY = clientY - lastPointer.current.y
-    lastPointer.current = { x: clientX, y: clientY }
-    setPos(prev => ({
-      x: clamp(prev.x - (deltaX / rect.width) * 100, 0, 100),
-      y: clamp(prev.y - (deltaY / rect.height) * 100, 0, 100),
-    }))
-  }, [dragging])
-
-  const endDrag = useCallback(() => {
-    if (!dragging) return
-    setDragging(false)
-    lastPointer.current = null
-    onPositionChange?.(pos.x, pos.y)
-  }, [dragging, pos, onPositionChange])
-
-  // Zonder foto geen leeg gekleurd vlak op de echte site; in de bouwer blijft
-  // het vlak staan, want daar sleep je de foto erin
-  const metFotoKolom = !!imageUrl || editable
+export default function StoryPreview({ title, quote, momenten, editable = false, onFieldClick, onPositionChange, sc }: StoryPreviewProps) {
+  const klik = (veld: string) => onFieldClick ? { onClick: () => onFieldClick(veld), style: { cursor: "pointer" } as const, title: "Klik om te bewerken" } : {}
+  const metInhoud = momenten.filter((m) => m.tekst.trim() || m.image_url)
+  const leeg = metInhoud.length === 0 && !quote?.trim()
 
   return (
-    <div className="@container pt-12" style={{ fontFamily: sc.fontFamily }}>
+    <div className="@container" style={{ fontFamily: sc.fontFamily, padding: "48px 24px 56px" }}>
       <SectieKop
         sc={sc}
         kopje="Over ons"
         titel={title || "Ons verhaal"}
         onClick={onFieldClick ? () => onFieldClick("title") : undefined}
         klikTitel={onFieldClick ? "Klik om te bewerken" : undefined}
+        onder={quote?.trim() ? (
+          <p
+            {...klik("quote")}
+            style={{
+              margin: 0,
+              fontFamily: sc.fontPageTitles,
+              fontWeight: sc.fontPageTitlesWeight,
+              fontStyle: "italic",
+              fontSize: "clamp(1.25rem, 3cqw, 1.6rem)",
+              lineHeight: 1.4,
+              color: sc.headingColor,
+              textWrap: "balance",
+            }}
+          >
+            &ldquo;{quote.trim()}&rdquo;
+          </p>
+        ) : undefined}
       />
-      <div className="flex flex-col @md:flex-row flex-grow" style={{ minHeight: metFotoKolom ? "360px" : undefined }}>
 
-        {/* ── Foto-kolom ── */}
-        {metFotoKolom && (
-        <div
-          ref={containerRef}
-          className={`relative w-full h-[280px] @md:h-auto @md:w-1/2 flex-shrink-0 overflow-hidden select-none ${
-            editable && imageUrl
-              ? dragging ? "cursor-grabbing" : "cursor-grab"
-              : ""
-          }`}
-          onMouseDown={editable ? (e) => { e.preventDefault(); startDrag(e.clientX, e.clientY) } : undefined}
-          onMouseMove={editable ? (e) => moveDrag(e.clientX, e.clientY) : undefined}
-          onMouseUp={editable ? endDrag : undefined}
-          onMouseLeave={editable ? endDrag : undefined}
-          onTouchStart={editable ? (e) => { startDrag(e.touches[0].clientX, e.touches[0].clientY) } : undefined}
-          onTouchMove={editable ? (e) => { e.preventDefault(); moveDrag(e.touches[0].clientX, e.touches[0].clientY) } : undefined}
-          onTouchEnd={editable ? endDrag : undefined}
-        >
-          {imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={imageUrl}
-              alt=""
-              draggable={false}
-              className="absolute inset-0 w-full h-full object-cover"
-              style={{ objectPosition }}
-            />
-          ) : (
-            <div
-              className="absolute inset-0"
-              style={{ backgroundColor: sc.accent, opacity: 0.12 }}
-            />
-          )}
+      {leeg && (editable || onFieldClick) && (
+        <p className="italic text-sm text-center" style={{ color: sc.bodyText, opacity: 0.5 }}>
+          Schrijf hiernaast jullie verhaal in momenten.
+        </p>
+      )}
 
-          {/* Overlay — zelfde logica als de Hero, alleen als showOverlay aan staat */}
-          {imageUrl && showOverlay && (
-            <div
-              className="absolute inset-0"
-              style={
-                sc.floral
-                  ? { background: "linear-gradient(to bottom, rgba(28,25,23,0.12) 0%, rgba(28,25,23,0.44) 100%)" }
-                  : { backgroundColor: sc.accent, opacity: 0.35 }
-              }
-            />
-          )}
-
-          {/* Zachte randovergang naar de tekstkolom: mobiel = onderaan, desktop = rechts */}
-          {imageUrl && (
-            <>
-              <div
-                className="absolute bottom-0 left-0 right-0 h-8 @md:hidden"
-                style={{ background: `linear-gradient(to bottom, transparent, ${sc.navBg})` }}
-              />
-              <div
-                className="absolute top-0 right-0 bottom-0 w-12 hidden @md:block"
-                style={{ background: `linear-gradient(to right, transparent, ${sc.navBg})` }}
-              />
-            </>
-          )}
-
-          {editable && imageUrl && !dragging && (
-            <div className="absolute bottom-3 left-0 right-0 flex justify-center pointer-events-none">
-              <span
-                className="text-xs px-3 py-1 rounded-full opacity-80"
-                style={{ backgroundColor: "rgba(0,0,0,0.5)", color: "#fff" }}
-              >
-                Sleep om te positioneren
-              </span>
+      <div className="mx-auto flex flex-col" style={{ maxWidth: 860, gap: 44 }}>
+        {metInhoud.map((m, i) => {
+          const rechts = i % 2 === 1
+          const metFoto = !!m.image_url
+          const tekst = (
+            <div className={`flex flex-col ${metFoto ? "items-center text-center @md:items-start @md:text-left" : "items-center text-center"}`} style={{ gap: 6, maxWidth: metFoto ? undefined : 620, margin: metFoto ? undefined : "0 auto" }}>
+              {m.jaar && (
+                <span style={{ fontFamily: sc.fontPageTitles, fontWeight: sc.fontPageTitlesWeight, fontSize: "1.5rem", lineHeight: 1, color: sc.accent }}>{m.jaar}</span>
+              )}
+              {m.titel && (
+                <span style={{ fontWeight: 700, fontSize: "1.125rem", color: sc.headingColor, lineHeight: 1.3 }}>{m.titel}</span>
+              )}
+              {m.tekst && (
+                <p className="whitespace-pre-wrap leading-relaxed" style={{ margin: 0, color: sc.bodyText, fontSize: "1rem" }}>{m.tekst}</p>
+              )}
             </div>
-          )}
-        </div>
-        )}
-
-        {/* ── Tekst-kolom ── */}
-        <div
-          className={
-            metFotoKolom
-              ? "flex flex-col justify-center items-center @md:items-start text-center @md:text-left px-8 py-10 @md:px-14 @md:py-12 @md:w-1/2"
-              : "flex flex-col items-center text-center px-8 pb-14 w-full"
+          )
+          if (!metFoto) {
+            return <div key={m.id} {...klik(`moment:${m.id}`)}>{tekst}</div>
           }
-        >
-          {text ? (
-            <p
-              className="leading-relaxed whitespace-pre-wrap max-w-prose"
-              style={{
-                fontFamily: sc.fontFamily,
-                color: sc.bodyText,
-                fontSize: "1rem",
-                cursor: onFieldClick ? "pointer" : undefined,
-              }}
-              onClick={onFieldClick ? () => onFieldClick("text") : undefined}
-              title={onFieldClick ? "Klik om te bewerken" : undefined}
-            >
-              {text}
-            </p>
-          ) : (editable || onFieldClick) ? (
-            // Alleen in de bouwer; op de echte site staat een leeg verhaal er niet
-            <p
-              className="italic text-sm"
-              style={{
-                fontFamily: sc.fontFamily,
-                color: sc.bodyText,
-                opacity: 0.45,
-                cursor: onFieldClick ? "pointer" : undefined,
-              }}
-              onClick={onFieldClick ? () => onFieldClick("text") : undefined}
-              title={onFieldClick ? "Klik om te bewerken" : undefined}
-            >
-              Schrijf hiernaast jullie verhaal.
-            </p>
-          ) : null}
-        </div>
-
+          return (
+            <div key={m.id} className="grid grid-cols-1 @md:grid-cols-2 items-center" style={{ gap: 28 }} {...klik(`moment:${m.id}`)}>
+              <div className={rechts ? "@md:order-2" : ""} style={{ padding: "6px 10px" }}>
+                <SleepFoto
+                  src={m.image_url!}
+                  posX={m.image_pos_x ?? 50}
+                  posY={m.image_pos_y ?? 50}
+                  editable={editable}
+                  onChange={onPositionChange ? (x, y) => onPositionChange(m.id, x, y) : undefined}
+                  className="w-full"
+                  style={{
+                    aspectRatio: "4 / 3",
+                    borderRadius: 10,
+                    boxShadow: "0 14px 34px rgba(0,0,0,0.18)",
+                    transform: `rotate(${rechts ? 1.6 : -1.6}deg)`,
+                    border: `6px solid ${sc.navBg}`,
+                  }}
+                />
+              </div>
+              <div className={rechts ? "@md:order-1" : ""}>{tekst}</div>
+            </div>
+          )
+        })}
       </div>
     </div>
   )

@@ -322,16 +322,37 @@ export default function EventHomePreview({
   // Slepen in de bouwer. Bij de opening Foto zitten de handvatten op de hele
   // opening, zodat je ook over de namen heen kunt slepen; de foto zit er
   // immers onder (Michiel, 2 oktober 2026).
+  // Op de telefoon scroll je gewoon over de foto heen; pas als je hem even
+  // vasthoudt gaat hij schuiven. Eerst was elke aanraking een versleping en
+  // kon je in de bouwer niet meer naar beneden (Michiel, 2 oktober 2026).
+  const vasthoud = useRef<ReturnType<typeof setTimeout> | null>(null)
   const sleepProps = editableHero ? {
     onMouseDown: (e: React.MouseEvent) => { e.preventDefault(); startHeroDrag(e.clientX, e.clientY) },
     onMouseMove: (e: React.MouseEvent) => moveHeroDrag(e.clientX, e.clientY),
     onMouseUp: endHeroDrag,
     onMouseLeave: endHeroDrag,
-    onTouchStart: (e: React.TouchEvent) => startHeroDrag(e.touches[0].clientX, e.touches[0].clientY),
-    onTouchMove: (e: React.TouchEvent) => { e.preventDefault(); moveHeroDrag(e.touches[0].clientX, e.touches[0].clientY) },
-    onTouchEnd: endHeroDrag,
+    onTouchStart: (e: React.TouchEvent) => {
+      const { clientX, clientY } = e.touches[0]
+      if (vasthoud.current) clearTimeout(vasthoud.current)
+      vasthoud.current = setTimeout(() => { vasthoud.current = null; startHeroDrag(clientX, clientY) }, 450)
+    },
+    onTouchMove: (e: React.TouchEvent) => {
+      if (!heroDraggingRef.current) {
+        // Nog niet vastgehouden: dit is scrollen, geen slepen
+        if (vasthoud.current) { clearTimeout(vasthoud.current); vasthoud.current = null }
+        return
+      }
+      moveHeroDrag(e.touches[0].clientX, e.touches[0].clientY)
+    },
+    onTouchEnd: () => {
+      if (vasthoud.current) { clearTimeout(vasthoud.current); vasthoud.current = null }
+      endHeroDrag()
+    },
   } : {}
   const sleepCursor = editableHero && heroImageUrl ? (heroDragging ? "cursor-grabbing" : "cursor-grab") : ""
+  const [aanraak, setAanraak] = useState(false)
+  useEffect(() => { setAanraak(window.matchMedia("(pointer: coarse)").matches) }, [])
+  const sleepHint = aanraak ? "Houd vast om te verschuiven" : "Sleep om te positioneren"
 
   const fotoVlak = (klasse: string, kinderen?: ReactNode, opOuder = false) => (
     <div
@@ -361,7 +382,7 @@ export default function EventHomePreview({
       {editableHero && !heroDragging && (
         <div className="absolute bottom-3 left-0 right-0 flex justify-center pointer-events-none z-10">
           <span className="text-xs px-3 py-1 rounded-full opacity-80" style={{ backgroundColor: "rgba(0,0,0,0.5)", color: "#fff" }}>
-            Sleep om te positioneren
+            {sleepHint}
           </span>
         </div>
       )}

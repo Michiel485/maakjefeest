@@ -11,10 +11,12 @@ import Link from "next/link"
 import EventHomePreview, { homeOpening } from "@/components/EventHomePreview"
 import EventNav from "@/app/events/[slug]/event-nav"
 import PraktischPreview, { DEFAULT_PRAKTISCH_TILES, type PraktischTile } from "@/components/PraktischPreview"
-import WishlistPreview, { DEFAULT_WISHLIST_ITEMS, type WishlistItem } from "@/components/WishlistPreview"
+import WishlistPreview, { DEFAULT_WISHLIST_ITEMS, type Rekening, type WishlistItem } from "@/components/WishlistPreview"
 import EventMastersPreview from "@/components/EventMastersPreview"
 import EventProgramPreview, { PROGRAM_ICONS, ProgramIcon, DEFAULT_PROGRAM_ITEMS } from "@/components/EventProgramPreview"
 import StoryPreview from "@/components/StoryPreview"
+import MomentenEditor from "@/components/site/MomentenEditor"
+import { verhaalMomenten, verhaalQuote } from "@/lib/verhaal"
 import FotosPreview from "@/components/FotosPreview"
 import SiteSectieKop from "@/components/site/SectieKop"
 import { sectieStijl } from "@/components/site/Sectie"
@@ -125,6 +127,10 @@ interface MasterPerson {
   telefoon: string
   email: string
   foto_url: string | null
+  /** "zus van Lindsey" */
+  rol?: string
+  /** Komma's ertussen: "speeches, verrassingen, dieetwensen" */
+  onderwerpen?: string
 }
 
 interface Draft {
@@ -566,16 +572,20 @@ export default function BouwenPage() {
     }, 150)
   }
 
-  function handleStoryFieldClick(field: 'title' | 'text') {
+  // 'title', 'quote' of 'moment:<id>' (components/StoryPreview.tsx)
+  function handleStoryFieldClick(field: string) {
     toonPaginas()
     setActiveSubPage('OnsVerhaal')
     setTimeout(() => {
-      const el = document.getElementById(field === 'title' ? 'onsverhaal-title' : 'onsverhaal-text')
+      const id = field.startsWith('moment:') ? `onsverhaal-moment-${field.slice(7)}-tekst` : `onsverhaal-${field}`
+      const el = document.getElementById(id)
       if (!el) return
       el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      el.focus()
-      const len = (el as HTMLInputElement | HTMLTextAreaElement).value.length
-      ;(el as HTMLInputElement | HTMLTextAreaElement).setSelectionRange(len, len)
+      if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+        el.focus()
+        const len = el.value.length
+        el.setSelectionRange(len, len)
+      }
     }, 150)
   }
 
@@ -1449,7 +1459,7 @@ export default function BouwenPage() {
 
   const mastersForPreview = ((content.Ceremoniemeesters?.masters as MasterPerson[] | undefined) ?? [])
     .filter(m => m.naam || m.foto_url)
-    .map(m => ({ id: m.id ?? "", naam: m.naam ?? "", telefoon: m.telefoon ?? "", email: m.email ?? "", foto_url: m.foto_url ?? null }))
+    .map(m => ({ id: m.id ?? "", naam: m.naam ?? "", telefoon: m.telefoon ?? "", email: m.email ?? "", foto_url: m.foto_url ?? null, rol: m.rol ?? "", onderwerpen: m.onderwerpen ?? "" }))
 
   const programmaItems = (content.Programma?.items as ProgrammaItem[]) || []
   const programmaItemsSorted = programmaItems.slice().sort((a, b) => a.time.localeCompare(b.time))
@@ -2765,13 +2775,13 @@ export default function BouwenPage() {
                                 onChange={(masters) => updateContent("Ceremoniemeesters", { ...(content.Ceremoniemeesters ?? {}), masters })}
                               />
                               <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-semibold text-gray-500">Vrije tekst onderaan</label>
+                                <label className="text-xs font-semibold text-gray-500">Inleiding</label>
                                 <textarea
                                   id="ceremoniemeesters-vrije-tekst"
                                   rows={4}
                                   value={typeof content.Ceremoniemeesters?.text === "string" ? content.Ceremoniemeesters.text : ""}
                                   onChange={(e) => updateContent("Ceremoniemeesters", { ...(content.Ceremoniemeesters ?? {}), text: e.target.value })}
-                                  placeholder="Optionele tekst onderaan de pagina..."
+                                  placeholder="Wil je iets regelen wat wij niet mogen weten? Dan bij onze ceremoniemeesters..."
                                   className="w-full rounded-lg border border-[var(--goud-licht)] px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] resize-none leading-relaxed"
                                 />
                               </div>
@@ -2781,20 +2791,6 @@ export default function BouwenPage() {
                           {/* ── Programma controls ── */}
                           {page.id === 'Programma' && (
                             <div>
-                              <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Weergave</p>
-                              <div className="flex rounded-xl border border-[var(--goud-licht)] overflow-hidden mb-5">
-                                {(["timeline", "centered"] as const).map((opt) => (
-                                  <button
-                                    key={opt}
-                                    onClick={() => updateContent("Programma", { items: programmaItems, layout: opt })}
-                                    className={`flex-1 py-2 text-xs font-semibold transition-colors ${
-                                      programLayout === opt ? "bg-[#C5A059] text-white" : "text-gray-500 hover:bg-gray-50"
-                                    }`}
-                                  >
-                                    {opt === "timeline" ? "Tijdlijn" : "Gecentreerd"}
-                                  </button>
-                                ))}
-                              </div>
                               <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Onderdelen</p>
                               <div className="flex flex-col gap-2">
                                 {programmaItems.map((item, i) => (
@@ -3063,7 +3059,6 @@ export default function BouwenPage() {
                           {/* ── Ons Verhaal controls ── */}
                           {page.id === 'OnsVerhaal' && (
                             <div className="flex flex-col gap-5">
-                              
                               <label className="flex flex-col gap-1.5">
                                 <span className="text-xs font-semibold text-gray-600">Titel</span>
                                 <input
@@ -3075,67 +3070,12 @@ export default function BouwenPage() {
                                   className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] transition-all"
                                 />
                               </label>
-                              <label className="flex flex-col gap-1.5">
-                                <span className="text-xs font-semibold text-gray-600">Verhaal</span>
-                                <textarea
-                                  id="onsverhaal-text"
-                                  rows={6}
-                                  value={(content.OnsVerhaal?.text as string) ?? ""}
-                                  onChange={(e) => updateContent("OnsVerhaal", { ...(content.OnsVerhaal ?? {}), text: e.target.value })}
-                                  placeholder="Vertel hier jullie verhaal..."
-                                  className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] resize-none transition-all"
-                                />
-                              </label>
-                              <div>
-                                <p className="text-xs font-semibold text-gray-600 mb-2">Foto</p>
-                                {storyImageError && <p className="text-xs text-red-500 mb-2">{storyImageError}</p>}
-                                {(storyImageBlob ?? (content.OnsVerhaal?.image_url as string | null)) ? (
-                                  <div className="flex flex-col gap-2">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img
-                                      src={(storyImageBlob ?? (content.OnsVerhaal?.image_url as string))!}
-                                      alt=""
-                                      className="w-full h-24 object-cover rounded-xl"
-                                    />
-                                    {!storyUploading && (
-                                      <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-xs font-semibold text-gray-600">Kleur overlay</span>
-                                          <button
-                                            onClick={() => updateDraft({ storyOverlay: !storyOverlay })}
-                                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${storyOverlay ? "bg-[#C5A059]" : "bg-gray-200"}`}
-                                          >
-                                            <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${storyOverlay ? "translate-x-4" : "translate-x-0.5"}`} />
-                                          </button>
-                                        </div>
-                                        <button
-                                          onClick={() => {
-                                            setStoryImageBlob(null)
-                                            updateContent("OnsVerhaal", { ...(content.OnsVerhaal ?? {}), image_url: null })
-                                          }}
-                                          className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors"
-                                        >
-                                          Verwijderen
-                                        </button>
-                                      </div>
-                                    )}
-                                    {storyUploading && <p className="text-xs text-gray-400">Bezig met uploaden…</p>}
-                                  </div>
-                                ) : (
-                                  <button
-                                    onClick={() => storyFileInputRef.current?.click()}
-                                    disabled={storyUploading}
-                                    className="w-full flex items-center justify-center gap-2 text-sm font-semibold border-2 border-dashed border-[var(--goud-licht)] rounded-xl py-5 text-gray-400 hover:border-[var(--goud)] hover:text-[var(--goud)] disabled:opacity-50 transition-colors"
-                                  >
-                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                    Foto uploaden
-                                  </button>
-                                )}
-                                <input ref={storyFileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={handleStoryImageUpload} />
-                              </div>
+                              {/* Het verhaal in momenten (lib/verhaal.ts) */}
+                              <MomentenEditor
+                                content={content.OnsVerhaal as Record<string, unknown> | undefined}
+                                onChange={(c) => updateContent("OnsVerhaal", c)}
+                                upload={uploadToStorage}
+                              />
                             </div>
                           )}
 
@@ -3158,6 +3098,22 @@ export default function BouwenPage() {
                                 items={wishlistItems ?? DEFAULT_WISHLIST_ITEMS}
                                 onChange={(items) => updateContent("Cadeautips", { ...(content.Cadeautips ?? {}), items })}
                               />
+                              {/* Een bijdrage overmaken: de gast kopieert het rekeningnummer of opent
+                                  een betaalverzoek. Alleen op de site als het is ingevuld. */}
+                              {(() => {
+                                const rek = (content.Cadeautips?.rekening as Rekening | undefined) ?? {}
+                                const zet = (patch: Partial<Rekening>) => updateContent("Cadeautips", { ...(content.Cadeautips ?? {}), rekening: { ...rek, ...patch } })
+                                const klas = "w-full rounded-lg border border-[var(--goud-licht)] px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)]"
+                                return (
+                                  <div className="flex flex-col gap-2 bg-gray-50 rounded-xl p-3">
+                                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Een bijdrage overmaken</span>
+                                    <input type="text" value={rek.iban ?? ""} onChange={(e) => zet({ iban: e.target.value })} placeholder="IBAN, bijv. NL12 ABCD 0123 4567 89" maxLength={40} className={klas} />
+                                    <input type="text" value={rek.naam ?? ""} onChange={(e) => zet({ naam: e.target.value })} placeholder="Op naam van" maxLength={60} className={klas} />
+                                    <input type="url" value={rek.link ?? ""} onChange={(e) => zet({ link: e.target.value })} placeholder="Betaalverzoek-link (Tikkie of je bank)" maxLength={300} className={klas} />
+                                    <p className="text-[11px] text-gray-400 leading-snug">De gast krijgt een knop om het nummer te kopiëren of het betaalverzoek te openen. Leeg laten mag.</p>
+                                  </div>
+                                )
+                              })()}
                             </div>
                           )}
 
@@ -3473,13 +3429,13 @@ export default function BouwenPage() {
                         <div data-voorbeeld-sectie="OnsVerhaal" style={voorbeeldSectieStijl("OnsVerhaal")}>
                         <StoryPreview
                           title={(content.OnsVerhaal?.title as string) ?? "Ons Verhaal"}
-                          text={(content.OnsVerhaal?.text as string) ?? null}
-                          imageUrl={storyImageBlob ?? ((content.OnsVerhaal?.image_url as string) || null)}
-                          imagePosX={(content.OnsVerhaal?.image_pos_x as number) ?? 50}
-                          imagePosY={(content.OnsVerhaal?.image_pos_y as number) ?? 50}
-                          showOverlay={storyOverlay}
+                          quote={verhaalQuote(content.OnsVerhaal)}
+                          momenten={verhaalMomenten(content.OnsVerhaal)}
                           editable={true}
-                          onPositionChange={(x, y) => updateContent("OnsVerhaal", { ...(content.OnsVerhaal ?? {}), image_pos_x: x, image_pos_y: y })}
+                          onPositionChange={(id, x, y) => {
+                            const momenten = verhaalMomenten(content.OnsVerhaal).map((m) => (m.id === id ? { ...m, image_pos_x: x, image_pos_y: y } : m))
+                            updateContent("OnsVerhaal", { ...(content.OnsVerhaal ?? {}), momenten })
+                          }}
                           onFieldClick={handleStoryFieldClick}
                           sc={sc}
                         />
@@ -3491,6 +3447,7 @@ export default function BouwenPage() {
                           items={programmaItemsForPreview}
                           sc={sc}
                           programLayout={programLayout}
+                          datum={draft?.datum || null}
                           builderMode
                           onImagePositionChange={(itemId, x) => {
                             const updated = programmaItems.map((it) => {
@@ -3557,12 +3514,12 @@ export default function BouwenPage() {
                       )}
                       {showSection("Informatie") && (
                         <div data-voorbeeld-sectie="Informatie" style={voorbeeldSectieStijl("Informatie")}>
-                        <PraktischPreview tiles={praktischTiles ?? DEFAULT_PRAKTISCH_TILES} sc={sc} onTileClick={handleInfoTileClick} />
+                        <PraktischPreview tiles={praktischTiles ?? DEFAULT_PRAKTISCH_TILES} sc={sc} locatie={eventLocatie || null} onTileClick={handleInfoTileClick} />
                         </div>
                       )}
                       {showSection("Cadeautips") && (
                         <div data-voorbeeld-sectie="Cadeautips" style={voorbeeldSectieStijl("Cadeautips")}>
-                        <WishlistPreview items={wishlistItems?.length ? wishlistItems : DEFAULT_WISHLIST_ITEMS} sc={sc} onItemClick={handleWishlistItemClick} />
+                        <WishlistPreview items={wishlistItems?.length ? wishlistItems : DEFAULT_WISHLIST_ITEMS} sc={sc} rekening={content.Cadeautips?.rekening as Rekening | undefined} onItemClick={handleWishlistItemClick} />
                         </div>
                       )}
                       {showSection("Fotos") && (
@@ -4073,6 +4030,25 @@ function MastersEditor({
             value={master.email}
             onChange={(e) => update(master.id!, { email: e.target.value })}
             placeholder="naam@voorbeeld.nl"
+            className="w-full rounded-lg border border-[var(--goud-licht)] px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)]"
+          />
+          {/* Rol en onderwerpen: waar je deze persoon voor belt (ontwerpronde, 2 oktober 2026) */}
+          <input
+            id={`master-rol-${master.id}`}
+            type="text"
+            value={master.rol ?? ""}
+            onChange={(e) => update(master.id!, { rol: e.target.value })}
+            placeholder="Rol, bijv. zus van Lindsey"
+            maxLength={60}
+            className="w-full rounded-lg border border-[var(--goud-licht)] px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)]"
+          />
+          <input
+            id={`master-onderwerpen-${master.id}`}
+            type="text"
+            value={master.onderwerpen ?? ""}
+            onChange={(e) => update(master.id!, { onderwerpen: e.target.value })}
+            placeholder="Waarvoor, bijv. speeches, verrassingen, dieetwensen"
+            maxLength={120}
             className="w-full rounded-lg border border-[var(--goud-licht)] px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)]"
           />
         </div>

@@ -41,12 +41,16 @@ function CardWrapper({ sc, className, children }: { sc: SC; className?: string; 
 export default function PraktischPreview({
   tiles,
   sc,
+  locatie,
   onTileClick,
 }: {
   tiles: PraktischTile[]
   sc: SC
+  /** De locatie van de bruiloft: dan komt er een tegel Route bij met een knop naar de kaarten-app */
+  locatie?: string | null
   onTileClick?: (tileId: string, field: 'title' | 'text') => void
 }) {
+  const plek = locatie?.trim() || null
   return (
     <div className="@container px-6 pt-12 pb-14" style={{ fontFamily: sc.fontFamily }}>
       <SectieKop sc={sc} kopje="Goed om te weten" titel="Praktische informatie" />
@@ -76,6 +80,29 @@ export default function PraktischPreview({
             )}
           </CardWrapper>
         ))}
+        {/* De route als laatste tegel, zodra de locatie is ingevuld */}
+        {plek && (
+          <CardWrapper sc={sc} className="w-full @md:w-[calc(33.333%-1rem)]">
+            <span style={{ color: sc.accent }}>
+              <ProgramIcon iconId="car" strokeWidth={1.5} className="w-16 h-16" />
+            </span>
+            <p className="font-extrabold text-base leading-tight" style={{ color: sc.goldBorder ? (sc.cardText ?? sc.headingColor) : sc.headingColor }}>
+              Route
+            </p>
+            <p className="text-sm leading-relaxed" style={{ color: sc.goldBorder ? (sc.cardText ?? sc.bodyText) : sc.bodyText }}>
+              {plek}
+            </p>
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(plek)}`}
+              target="_blank"
+              rel="noopener"
+              className="inline-block text-sm font-bold transition-transform hover:-translate-y-0.5"
+              style={{ marginTop: 4, padding: "9px 18px", borderRadius: 999, backgroundColor: sc.buttonBg, color: sc.buttonText, textDecoration: "none" }}
+            >
+              Open in kaarten
+            </a>
+          </CardWrapper>
+        )}
       </div>
     </div>
   )

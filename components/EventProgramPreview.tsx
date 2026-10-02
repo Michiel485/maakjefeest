@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useRef, useState } from "react"
 import type { SC } from "@/lib/event-styles"
 import SectieKop from "./site/SectieKop"
 import { useUILocale } from "@/hooks/useUILocale"
@@ -268,144 +269,141 @@ export const DEFAULT_PROGRAM_ITEMS: ProgramItem[] = [
 ]
 
 // ── Component ──────────────────────────────────────────────────────────────
+// Eén indeling: de getekende tijdlijn (ontwerpronde, 2 oktober 2026). Een
+// dunne lijn in de accentkleur tekent zichzelf terwijl je scrolt; op de lijn
+// de iconen in een rondje, de tijd groot in het titellettertype, de tekst
+// ernaast. Op desktop om en om links en rechts, op de telefoon alles rechts.
+// Op de trouwdag licht het onderdeel op dat nu bezig is.
 
 interface Props {
   items: ProgramItem[]
   sc: SC
+  /** De trouwdag (JJJJ-MM-DD); op die dag licht het onderdeel op dat nu bezig is */
+  datum?: string | null
+  /** Van vroeger; er is nog één indeling */
   programLayout?: ProgramLayout
   builderMode?: boolean
   onImagePositionChange?: (id: string, x: number, y: number) => void
   onItemClick?: (itemId: string, field?: 'title' | 'description') => void
 }
 
-export default function EventProgramPreview({
-  items, sc, programLayout = "centered", builderMode, onImagePositionChange, onItemClick,
-}: Props) {
+function minuten(t: string): number {
+  const [h, m] = t.split(":").map(Number)
+  return (h || 0) * 60 + (m || 0)
+}
+
+function vandaagIso(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+}
+
+export default function EventProgramPreview({ items, sc, datum, builderMode, onItemClick }: Props) {
   const locale = useUILocale()
   const sorted = items.slice().sort((a, b) => a.time.localeCompare(b.time))
-  const list = sorted
-  const faded = 1
 
-  const progHoverStyle = `
-    .fk-prog-item { transition: transform 0.18s ease, box-shadow 0.18s ease; }
-    .fk-prog-item:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.09); }
-    .fk-prog-timeline-item { transition: transform 0.18s ease; }
-    .fk-prog-timeline-item:hover { transform: translateX(5px); }
-  `
+  // Welk onderdeel nu bezig is, alleen op de dag zelf
+  const [nuIdx, setNuIdx] = useState(-1)
+  useEffect(() => {
+    if (builderMode || !datum) return
+    const bepaal = () => {
+      if (vandaagIso() !== datum.slice(0, 10)) { setNuIdx(-1); return }
+      const n = new Date()
+      const nu = n.getHours() * 60 + n.getMinutes()
+      let idx = -1
+      sorted.forEach((it, i) => { if (it.time && minuten(it.time) <= nu) idx = i })
+      setNuIdx(idx)
+    }
+    bepaal()
+    const t = setInterval(bepaal, 60_000)
+    return () => clearInterval(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [builderMode, datum, items])
+
+  // De lijn tekent zichzelf: zo ver als de pagina gescrold is
+  const vak = useRef<HTMLDivElement>(null)
+  const [deel, setDeel] = useState(builderMode ? 1 : 0)
+  useEffect(() => {
+    if (builderMode) return
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { setDeel(1); return }
+    const meet = () => {
+      const el = vak.current
+      if (!el) return
+      const r = el.getBoundingClientRect()
+      setDeel(Math.min(1, Math.max(0, (window.innerHeight * 0.85 - r.top) / r.height)))
+    }
+    meet()
+    window.addEventListener("scroll", meet, { passive: true })
+    window.addEventListener("resize", meet)
+    return () => { window.removeEventListener("scroll", meet); window.removeEventListener("resize", meet) }
+  }, [builderMode])
+
+  const lijnKlas = "absolute top-0 bottom-0 left-[27px] @md:left-1/2"
 
   return (
     <div className="@container" style={{ fontFamily: sc.fontFamily }}>
-      <style>{progHoverStyle}</style>
-      <div style={{ padding: "48px 32px 56px" }}>
+      <div style={{ padding: "48px 20px 64px" }}>
         <SectieKop sc={sc} kopje="De dag" titel={<span className="notranslate">{getUILabel(locale, "programma")}</span>} />
+        <div ref={vak} className="relative mx-auto" style={{ maxWidth: 840 }}>
+          <div aria-hidden="true" className={lijnKlas} style={{ width: 1, marginLeft: -0.5, backgroundColor: `${sc.accent}2e` }} />
+          <div aria-hidden="true" className={lijnKlas} style={{ width: 1, marginLeft: -0.5, backgroundColor: sc.accent, transformOrigin: "top", transform: `scaleY(${deel})`, transition: "transform 0.25s linear" }} />
 
-        {/* ── Centered — strict 3-column grid, text always middle ─────────── */}
-        {programLayout === "centered" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: sc.goldBorder ? 12 : 0 }}>
-            {list.map((item, i) => {
-              const inner = (
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "110px 1fr",
-                    alignItems: "center",
-                    gap: 24,
-                    padding: sc.goldBorder ? "24px 28px" : "28px 0",
-                    borderBottom: !sc.goldBorder && i < list.length - 1 ? `1px dashed ${sc.accent}35` : "none",
-                    opacity: faded,
-                  }}
-                >
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-                    <span style={{ color: sc.accent }}>
-                      <ProgramIcon iconId={item.iconId} size={80} strokeWidth={1.5} />
-                    </span>
-                    <span style={{ fontSize: "1.75rem", fontWeight: 700, color: sc.labelColor, letterSpacing: "0.02em", lineHeight: 1 }}>
-                      {item.time}
-                    </span>
-                  </div>
-                  <div>
-                    {item.title && (
-                      <p
-                        style={{ fontSize: "1.25rem", fontWeight: 800, color: sc.goldBorder ? (sc.cardText ?? sc.headingColor) : sc.headingColor, margin: "0 0 6px", lineHeight: 1.2, cursor: onItemClick ? "pointer" : undefined }}
-                        onClick={onItemClick && item.id ? () => onItemClick(item.id!, 'title') : undefined}
-                        title={onItemClick ? "Klik om te bewerken" : undefined}
-                      >
-                        {item.title}
-                      </p>
-                    )}
-                    {item.description && (
-                      <p className="min-w-0 break-words" style={{ fontSize: "0.9375rem", fontWeight: 400, color: sc.goldBorder ? (sc.cardText ?? sc.bodyText) : sc.bodyText, margin: 0, lineHeight: 1.6, cursor: onItemClick ? "pointer" : undefined }}
-                        onClick={onItemClick && item.id ? () => onItemClick(item.id!, 'description') : undefined}
-                        title={onItemClick ? "Klik om te bewerken" : undefined}
-                      >
-                        {item.description}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )
-              if (sc.goldBorder && sc.cardBg) {
-                return (
-                  <div key={item.id ?? i} className="fk-prog-item" style={{ backgroundColor: sc.cardBg, border: `2px solid ${sc.accent}`, borderRadius: 16, overflow: "hidden" }}>
-                    {inner}
-                  </div>
-                )
-              }
-              return <div key={item.id ?? i} className="fk-prog-item" style={{ borderRadius: 12 }}>{inner}</div>
-            })}
-          </div>
-        )}
-
-        {/* ── Timeline ──────────────────────────────────────────────────── */}
-        {programLayout === "timeline" && (
-          <div className="relative @md:pl-[148px]">
-            {list.map((item, i) => {
-              const isLast = i === list.length - 1
-              return (
-                <div
-                  key={item.id ?? i}
-                  className={`fk-prog-timeline-item relative pl-[68px] @md:pl-0 ${isLast ? "pb-0" : "pb-4 @md:pb-3"}`}
-                  style={{ opacity: faded }}
-                >
-                  {/* ── Connector line: mobile center = left-[34px] (6px+28px), desktop = @md:left-[-84px] ── */}
-                  {!isLast && (
-                    <div
-                      className="absolute left-[34px] top-7 bottom-[-16px] @md:left-[-84px] @md:top-16 @md:bottom-[-12px] w-[3px] rounded-sm z-0"
-                      style={{ backgroundColor: `${sc.accent}35` }}
-                    />
-                  )}
-                  {/* ── Icon circle ── */}
+          {sorted.map((item, i) => {
+            const rechts = i % 2 === 1
+            const nu = i === nuIdx
+            const id = item.id ?? `${item.time}::${item.description}`
+            const laatste = i === sorted.length - 1
+            const klik = (veld: 'title' | 'description') => onItemClick && item.id
+              ? { onClick: () => onItemClick(item.id!, veld), style: { cursor: "pointer" } as const, title: "Klik om te bewerken" }
+              : {}
+            return (
+              <div key={id} className="relative grid grid-cols-[56px_1fr] @md:grid-cols-[1fr_80px_1fr] items-start" style={{ paddingBottom: laatste ? 0 : 36 }}>
+                {/* Het rondje op de lijn, met het icoon of een fotootje */}
+                <div className="flex justify-center @md:col-start-2 @md:row-start-1" style={{ paddingTop: 4 }}>
                   <div
-                    className="absolute left-[6px] top-0 w-14 h-14 @md:left-[-148px] @md:w-32 @md:h-32 rounded-full flex items-center justify-center z-[2]"
-                    style={{ backgroundColor: sc.navBg, border: `4px solid ${sc.accent}55`, color: sc.accent }}
+                    style={{
+                      width: 54, height: 54, borderRadius: "50%", flexShrink: 0, overflow: "hidden",
+                      backgroundColor: nu ? sc.accent : sc.bodyBg,
+                      border: `1.5px solid ${sc.accent}`,
+                      boxShadow: nu ? `0 0 0 7px ${sc.accent}30` : undefined,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      color: nu ? sc.buttonText : sc.accent,
+                      transition: "background-color 0.4s ease, box-shadow 0.4s ease",
+                    }}
                   >
-                    <ProgramIcon iconId={item.iconId} strokeWidth={1.5} className="w-8 h-8 @md:w-20 @md:h-20" />
-                  </div>
-                  {/* ── Content ── */}
-                  <div className="relative z-[1] pt-1 min-w-0 @md:pt-4">
-                    <h3
-                      className="text-base font-extrabold leading-tight min-w-0 break-words @md:text-2xl mb-1 @md:mb-2"
-                      style={{ cursor: onItemClick ? "pointer" : undefined }}
-                      onClick={onItemClick && item.id ? () => onItemClick(item.id!, 'title') : undefined}
-                      title={onItemClick ? "Klik om te bewerken" : undefined}
-                    >
-                      <span style={{ color: sc.labelColor }} className="mr-2">{item.time}</span>
-                      {item.title && <span style={{ color: sc.headingColor }}>{item.title}</span>}
-                    </h3>
-                    <p
-                      className="text-sm font-normal leading-relaxed min-w-0 break-words @md:text-lg @md:min-h-[6rem]"
-                      style={{ color: sc.bodyText, cursor: onItemClick ? "pointer" : undefined }}
-                      onClick={onItemClick && item.id ? () => onItemClick(item.id!, 'description') : undefined}
-                      title={onItemClick ? "Klik om te bewerken" : undefined}
-                    >
-                      {item.description ?? ""}
-                    </p>
+                    {item.image_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={item.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: `${item.imagePosX ?? 50}% 50%` }} />
+                    ) : (
+                      <ProgramIcon iconId={item.iconId} size={26} strokeWidth={1.5} />
+                    )}
                   </div>
                 </div>
-              )
-            })}
-          </div>
-        )}
+
+                {/* De tekst: op de telefoon rechts van de lijn, op desktop om en om */}
+                <div className={`min-w-0 pl-3 @md:pl-0 @md:row-start-1 ${rechts ? "@md:col-start-3 @md:pl-7 @md:text-left" : "@md:col-start-1 @md:pr-7 @md:text-right"}`} style={{ paddingTop: 6 }}>
+                  {nu && (
+                    <span style={{ display: "block", fontSize: "0.6875rem", fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: sc.accent, marginBottom: 4 }}>Nu</span>
+                  )}
+                  {item.time && (
+                    <p style={{ margin: 0, fontFamily: sc.fontPageTitles, fontWeight: sc.fontPageTitlesWeight, fontSize: "1.75rem", lineHeight: 1, color: sc.accent, fontVariantNumeric: "tabular-nums" }}>
+                      {item.time}
+                    </p>
+                  )}
+                  {item.title && (
+                    <p className="break-words" style={{ margin: "8px 0 2px", fontWeight: 700, fontSize: "1.125rem", lineHeight: 1.3, color: sc.headingColor }} {...klik('title')}>
+                      {item.title}
+                    </p>
+                  )}
+                  {item.description && (
+                    <p className="break-words whitespace-pre-wrap" style={{ margin: 0, fontSize: "0.9375rem", lineHeight: 1.6, color: sc.bodyText }} {...klik('description')}>
+                      {item.description}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
       </div>
     </div>
   )
