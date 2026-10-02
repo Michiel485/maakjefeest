@@ -2,6 +2,8 @@ import { createServiceClient } from "@/lib/supabase"
 import { createClient } from "@/lib/supabase-server"
 import { sendGastBerichtEmail } from "@/lib/mail"
 import { eventSiteUrl, MARKETING_URL } from "@/lib/site-url"
+import { formatDate, getStyleConfig } from "@/lib/event-styles"
+import { siteNamen } from "@/lib/site-opening"
 import { bezoekerIp, teVeelPogingen } from "@/lib/rem"
 
 export const dynamic = "force-dynamic"
@@ -55,15 +57,16 @@ export async function POST(request: Request) {
   // Alleen bruiloften van deze klant. Zonder deze controle zou iemand met een
   // willekeurig id post kunnen sturen namens een ander bruidspaar.
   const eventIds = [...new Set(gasten.map((g) => g.event_id as string))]
+  type Bruiloft = { id: string; title: string; slug: string; user_email: string; style: string | null; frame_names: string | null; nav_title: string | null; datum: string | null; locatie: string | null }
   const { data: events } = await service
     .from("events")
-    .select("id, title, slug, user_email")
+    .select("id, title, slug, user_email, style, frame_names, nav_title, datum, locatie")
     .in("id", eventIds)
 
   const vanMij = new Map(
     (events ?? [])
       .filter((e) => e.user_email === user.email)
-      .map((e) => [e.id as string, e as { id: string; title: string; slug: string }])
+      .map((e) => [e.id as string, e as Bruiloft])
   )
   if (vanMij.size === 0) return Response.json({ error: "Geen toegang" }, { status: 403 })
 
@@ -105,6 +108,8 @@ export async function POST(request: Request) {
       ? `${MARKETING_URL}/kaart/${g.bron_token}`
       : eventSiteUrl(event.slug)
 
+    // In de kleuren van de bruiloft, met de namen van het bruidspaar bovenaan;
+    // antwoorden komt bij het bruidspaar terecht (lib/mail-sjabloon.ts)
     const r = await sendGastBerichtEmail({
       toEmail: email,
       gastNaam: contact.naam.split(" ")[0] || contact.naam,
@@ -112,6 +117,13 @@ export async function POST(request: Request) {
       soort,
       bericht,
       link,
+      bruiloft: {
+        namen: siteNamen(event),
+        sc: getStyleConfig(event.style ?? "ivoor"),
+        replyTo: event.user_email,
+        datumTekst: event.datum ? formatDate(event.datum) : null,
+        locatie: event.locatie,
+      },
     })
     if (r.success) verstuurd++
   }

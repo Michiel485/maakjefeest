@@ -51,7 +51,7 @@ export const PLANS: Record<Plan, PlanInfo> = {
       "Dashboard met alle aanmeldingen en export",
       "Geen einddatum en geen abonnement",
     ],
-    invoiceDescription: "Uitnodiging & RSVP, digitale kaarten met RSVP-pagina",
+    invoiceDescription: "Trouwkaart, digitale kaarten met aanmelden",
   },
   compleet: {
     id: "compleet",

@@ -3,6 +3,10 @@ import { meldFout } from "@/lib/foutmelding"
 import { createServiceClient } from "@/lib/supabase"
 import { sendRSVPConfirmation, sendAdminRSVPNotification } from "@/lib/mail"
 import { planAllows } from "@/lib/plans"
+import { formatDate, getStyleConfig } from "@/lib/event-styles"
+import { siteNamen } from "@/lib/site-opening"
+import { eventSiteUrl, MARKETING_URL } from "@/lib/site-url"
+import { agendaBestand } from "@/lib/agenda"
 import { bezoekerIp, teVeelPogingen } from "@/lib/rem"
 import {
   gastSleutel,
@@ -244,7 +248,7 @@ export async function POST(request: Request) {
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, title, user_email, plan")
+    .select("id, title, user_email, plan, slug, style, frame_names, nav_title, datum, locatie")
     .eq("id", event_id)
     .eq("status", "published")
     .single()
@@ -477,10 +481,12 @@ export async function POST(request: Request) {
   }
 
   // ── Mails ─────────────────────────────────────────────────────────────────
-  // Alleen bij een volledige aanmelding. Een voorlopig ja op een Save the Date
-  // is geen moment voor een bevestigingsmail met dieetwensen erin, en het
-  // bruidspaar wil daar geen mail per gast van.
-  if (status === "definitief") {
+  // De gast krijgt een bevestiging in de kleuren van de bruiloft, met de dag
+  // als agendabestand erbij; bij een voorlopig ja op een Save the Date kort,
+  // zonder dieetwensen (Michiel koos daarvoor op 2 oktober 2026). Het
+  // bruidspaar hoort het alleen bij een volledige aanmelding; bij de Save the
+  // Date wil hij geen mail per gast.
+  {
     const eventTitle = (event.title as string) ?? "het evenement"
     const guestPayload = rows.map((r) => ({
       name: r.name,
@@ -495,14 +501,38 @@ export async function POST(request: Request) {
     const hoofdEmail = tekst(hoofdgast.email, MAX_EMAIL)
 
     if (hoofdEmail) {
+      const namen = siteNamen(event as { frame_names?: string | null; nav_title?: string | null; title?: string | null })
+      const datumIso = event.datum as string | null
+      const dag = datumIso ? new Date(datumIso) : null
+      const slug = event.slug as string | null
+      const siteLive = planAllows(event.plan, "site") && !!slug
       await sendRSVPConfirmation({
         toEmail: hoofdEmail,
         primaryName: hoofdgast.naam,
         eventTitle,
         guests: guestPayload,
+        voorlopig: status !== "definitief",
+        bruiloft: {
+          namen,
+          sc: getStyleConfig((event.style as string | null) ?? "ivoor"),
+          replyTo: (event.user_email as string | null) ?? null,
+          datumTekst: datumIso ? formatDate(datumIso) : null,
+          locatie: (event.locatie as string | null) ?? null,
+          siteUrl: siteLive ? eventSiteUrl(slug!) : null,
+          kaartUrl: bronToken ? `${MARKETING_URL}/kaart/${bronToken}` : null,
+          ics: dag && !Number.isNaN(dag.getTime())
+            ? agendaBestand({
+                uid: `bruiloft-${event.id}@sayingyes.nl`,
+                dag,
+                titel: `Bruiloft ${namen}`,
+                locatie: (event.locatie as string | null) ?? null,
+                url: siteLive ? eventSiteUrl(slug!) : null,
+              })
+            : null,
+        },
       })
     }
-    if (event.user_email) {
+    if (status === "definitief" && event.user_email) {
       await sendAdminRSVPNotification({
         toEmail: event.user_email as string,
         eventTitle,

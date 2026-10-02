@@ -108,6 +108,7 @@ async function verwerkFactuur(
       amountIncl:      formatEur(amountIncl),
       molliePaymentId: payment.id,
       pdfBuffer,
+      omschrijving:    description,
     })
   }
 }

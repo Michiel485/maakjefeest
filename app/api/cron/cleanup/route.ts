@@ -1,7 +1,10 @@
 import { meldFout } from "@/lib/foutmelding"
 import { createServiceClient } from "@/lib/supabase"
 import { verwijderEventInhoud } from "@/lib/opruimen"
-import { sendDraftReminderEmail, sendRenewalReminderEmail, sendExpiryWarningEmail, sendDeadlineEmail, sendStandEmail } from "@/lib/mail"
+import { sendDraftReminderEmail, sendRenewalReminderEmail, sendExpiryWarningEmail, sendDeadlineEmail, sendStandEmail, sendOfflineEmail, sendWeekVoorEmail, sendDagNaEmail } from "@/lib/mail"
+import { formatDate } from "@/lib/event-styles"
+import { siteNamen } from "@/lib/site-opening"
+import { eventSiteUrl } from "@/lib/site-url"
 import { dagenTotDeadline, leesDeadline, welkBericht } from "@/lib/deadline"
 import { frequentie, magStandMail } from "@/lib/stand"
 import { komtGast, reis } from "@/lib/gasten"
@@ -43,6 +46,8 @@ export async function GET(request: Request) {
     deadlines:        [] as string[],
     // Per bruiloft hoeveel nieuwe reacties er in de standmail stonden
     standen:          [] as string[],
+    // Een week voor de bruiloft en de dag erna, bijvoorbeeld "abc123:week"
+    momenten:         [] as string[],
   }
 
   // ── Fetch all draft events ─────────────────────────────────────────────────
@@ -188,6 +193,10 @@ export async function GET(request: Request) {
         .eq("status", "published")
       await verversEvent(event.slug as string | null)
       results.expired.push(event.id as string)
+      // Een laatste mail: eerst ging een site stil offline (ontwerpronde, ronde 6)
+      const { count: fotos } = await service.from("guest_photos").select("id", { count: "exact", head: true }).eq("event_id", event.id)
+      const uit = await sendOfflineEmail({ toEmail: email, eventTitle: title, dashboardUrl, fotos: fotos ?? 0 })
+      if (!uit.success) results.errors.push(`offline-mail-fail:${event.id}`)
       continue
     }
 
@@ -242,6 +251,7 @@ export async function GET(request: Request) {
   // Wij sturen nooit iets naar de locatie. Alleen naar het bruidspaar.
   results.deadlines = await stuurDeadlines(service, now)
   results.standen = await stuurStanden(service, now)
+  results.momenten = await stuurMomenten(service, now)
 
   // ── Bezoekersoverzicht van de afgelopen 24 uur naar de eigenaar (+ opruimen >90 dagen) ──
   results.visitorDigest = await sendVisitorDigest(service, now)
@@ -420,5 +430,91 @@ async function stuurStanden(
     uit.push(`${event.id}:${nieuw}`)
   }
 
+  return uit
+}
+
+// ── Een week voor de bruiloft, en de dag erna ───────────────────────────────
+// Twee momenten uit de klantreis die nog niemand hoorde (ontwerpronde, ronde
+// 6, 2 oktober 2026). Elk hoogstens één keer, onthouden in mail_week_voor_at
+// en mail_dag_na_at (supabase/migration_mailmomenten.sql). Staan die kolommen
+// er nog niet, dan gebeurt er niets en is dat geen fout.
+async function stuurMomenten(
+  service: ReturnType<typeof createServiceClient>,
+  now: Date
+): Promise<string[]> {
+  const uit: string[] = []
+  const { data: events, error } = await service
+    .from("events")
+    .select("id, title, slug, plan, user_email, datum, frame_names, nav_title, guest_photos_enabled, mail_week_voor_at, mail_dag_na_at")
+    .eq("status", "published")
+    .not("datum", "is", null)
+
+  if (error) {
+    console.log("[cron/cleanup] mailmomenten overgeslagen:", error.message)
+    return uit
+  }
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://sayingyes.nl"
+  const vandaag = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+  for (const event of events ?? []) {
+    const email = event.user_email as string | null
+    if (!email) continue
+    const d = new Date(event.datum as string)
+    if (Number.isNaN(d.getTime())) continue
+    const trouwdag = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+    const dagen = Math.round((trouwdag.getTime() - vandaag.getTime()) / DAG_MS)
+    const naam = (event.title as string) || "jullie bruiloft"
+    const namen = siteNamen(event as { frame_names?: string | null; nav_title?: string | null; title?: string | null })
+    const fotomuurAan = normalizePlan(event.plan) === "compleet" && (event.guest_photos_enabled as boolean | null) === true
+
+    // Een week ervoor: tussen 7 en 5 dagen, zodat een gemiste dag niet
+    // betekent dat de mail nooit komt
+    if (dagen <= 7 && dagen >= 5 && !event.mail_week_voor_at) {
+      const { data: gasten } = await service.from("rsvp").select("std_status, inv_status").eq("event_id", event.id)
+      let komen = 0
+      let stil = 0
+      for (const g of gasten ?? []) {
+        const k = komtGast(reis(g.std_status), reis(g.inv_status))
+        if (k === true) komen++
+        else if (k === null || k === undefined) stil++
+      }
+      const mail = await sendWeekVoorEmail({
+        toEmail: email,
+        eventTitle: naam,
+        datumTekst: formatDate(event.datum as string),
+        komen,
+        stil,
+        dashboardUrl: `${siteUrl}/dashboard`,
+        cateraarUrl: `${siteUrl}/print/gasten/${event.id}`,
+        fotomuurAan,
+      })
+      if (mail.success) {
+        await service.from("events").update({ mail_week_voor_at: now.toISOString() }).eq("id", event.id)
+        uit.push(`${event.id}:week`)
+      } else {
+        uit.push(`${event.id}:week-mislukt`)
+      }
+    }
+
+    // De dag erna: tussen 1 en 3 dagen na de dag
+    if (dagen <= -1 && dagen >= -3 && !event.mail_dag_na_at) {
+      const { count: fotos } = await service.from("guest_photos").select("id", { count: "exact", head: true }).eq("event_id", event.id)
+      const slug = event.slug as string | null
+      const mail = await sendDagNaEmail({
+        toEmail: email,
+        names: namen,
+        fotos: fotos ?? 0,
+        fotomuurUrl: fotomuurAan && slug ? `${eventSiteUrl(slug)}/fotomuur` : null,
+        siteUrl: slug ? eventSiteUrl(slug) : null,
+      })
+      if (mail.success) {
+        await service.from("events").update({ mail_dag_na_at: now.toISOString() }).eq("id", event.id)
+        uit.push(`${event.id}:dag-na`)
+      } else {
+        uit.push(`${event.id}:dag-na-mislukt`)
+      }
+    }
+  }
   return uit
 }
