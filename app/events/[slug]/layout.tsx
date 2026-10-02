@@ -4,6 +4,7 @@ import EventNav from "./event-nav"
 import { normalizePlan, publicPageTypes } from "@/lib/plans"
 import { rijOfNiets } from "@/lib/db"
 import { sectieHeeftInhoud } from "@/lib/sectie-inhoud"
+import { naDeDag } from "@/lib/na-de-dag"
 import type { Metadata, Viewport } from "next"
 import SiteOpening from "@/components/SiteOpening"
 import { siteNamen, siteOpeningData, VAN_KAART } from "@/lib/site-opening"
@@ -85,9 +86,20 @@ export default async function EventLayout({
   const guestPhotosEnabled =
     isCompleet && ((gpEvent?.guest_photos_enabled as boolean | undefined) ?? false)
 
-  const pageList = guestPhotosEnabled
-    ? [...pages, { type: "fotomuur", title: "Fotomuur", order: 999 }]
-    : pages
+  // Na de dag: aanmelden uit het menu (lib/na-de-dag.ts). Het gastenboek erin
+  // zodra er berichtjes met een vinkje zijn; de kolom bestaat pas na
+  // migration_gastenboek.sql, en zonder kolom is het boek gewoon leeg.
+  const voorbij = naDeDag(event.datum as string | null)
+  const { count: boekAantal } = await supabase
+    .from("rsvp")
+    .select("id", { count: "exact", head: true })
+    .eq("event_id", event.id)
+    .eq("bericht_openbaar", true)
+  const pageList = [
+    ...pages.filter((p) => !(voorbij && p.type === "RSVP")),
+    ...(guestPhotosEnabled ? [{ type: "fotomuur", title: "Fotomuur", order: 999 }] : []),
+    ...((boekAantal ?? 0) > 0 ? [{ type: "gastenboek", title: "Gastenboek", order: 1000 }] : []),
+  ]
   const basePath = process.env.NODE_ENV === "production" ? "" : `/events/${slug}`
 
   const hs = event.homepage_settings as { siteLayout?: string; pageMode?: string } | null

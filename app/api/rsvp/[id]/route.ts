@@ -27,21 +27,29 @@ export async function PATCH(
   try { body = await request.json() } catch { return Response.json({ error: "Ongeldige body" }, { status: 400 }) }
 
   const service = createServiceClient()
-  const { error } = await service
-    .from("rsvp")
-    .update({
-      name: body.name,
-      email: body.email || null,
-      attending: body.attending,
-      guest_type: body.guest_type,
-      dietary: body.dietary || null,
-      message: body.message || null,
-      song: body.song || null,
-      overnachting: body.overnachting ?? null,
-      custom_answer: body.custom_answer ?? null,
-      custom_answer_2: body.custom_answer_2 ?? null,
-    })
-    .eq("id", id)
+  const update: Record<string, unknown> = {
+    name: body.name,
+    email: body.email || null,
+    attending: body.attending,
+    guest_type: body.guest_type,
+    dietary: body.dietary || null,
+    message: body.message || null,
+    song: body.song || null,
+    overnachting: body.overnachting ?? null,
+    custom_answer: body.custom_answer ?? null,
+    custom_answer_2: body.custom_answer_2 ?? null,
+  }
+  // Het berichtje in het gastenboek op de site (components/site/Gastenboek.tsx)
+  if (typeof body.bericht_openbaar === "boolean") update.bericht_openbaar = body.bericht_openbaar
+  let { error } = await service.from("rsvp").update(update).eq("id", id)
+  // De kolom bestaat pas na migration_gastenboek.sql; mist die nog, dan mag
+  // dat het opslaan van de rest niet kosten
+  if (error && "bericht_openbaar" in update) {
+    delete update.bericht_openbaar
+    const opnieuw = await service.from("rsvp").update(update).eq("id", id)
+    if (!opnieuw.error) console.warn("[rsvp] bijgewerkt zonder bericht_openbaar - migratie nog niet gedraaid?")
+    error = opnieuw.error
+  }
 
   if (error) {
     console.error("RSVP update error:", error)

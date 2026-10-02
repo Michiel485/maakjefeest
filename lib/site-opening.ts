@@ -52,6 +52,9 @@ export function siteOpeningData(
 /** Met deze toevoeging aan het adres weet de site dat je van de kaart komt */
 export const VAN_KAART = "van=kaart"
 
-export function naarSiteVanKaart(url: string): string {
-  return url + (url.includes("?") ? "&" : "?") + VAN_KAART
+export function naarSiteVanKaart(url: string, gast?: string | null): string {
+  // De persoonlijke link gaat mee: dan zegt de site "Hoi Sam" en staat zijn
+  // naam al in het formulier (components/site/Begroeting.tsx)
+  const extra = gast && /^[0-9a-f-]{36}$/i.test(gast) ? `&gast=${gast}` : ""
+  return url + (url.includes("?") ? "&" : "?") + VAN_KAART + extra
 }

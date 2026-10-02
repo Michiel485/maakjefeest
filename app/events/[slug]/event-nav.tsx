@@ -109,6 +109,8 @@ export default function EventNav({
   function pageHref(type: string) {
     // De fotomuur is altijd een losse pagina, ook op single-page sites
     if (type === "fotomuur") return `${basePath}/fotomuur`
+    // Het gastenboek staat onderaan de homepagina, ook bij losse pagina's
+    if (type === "gastenboek") return singlePage ? "#gastenboek" : `${homeHref}#gastenboek`
     if (singlePage) return type === "Home" ? "#home" : `#${type.toLowerCase()}`
     return type === "Home" ? homeHref : `${basePath}/${type}`
   }

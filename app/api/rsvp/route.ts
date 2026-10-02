@@ -103,14 +103,24 @@ export async function GET(request: Request) {
   const bron = tekst(url.searchParams.get("bron"), 64)
   const apparaat = tekst(url.searchParams.get("apparaat"), 64)
   const gast = url.searchParams.get("gast") ?? ""
-  if (!bron || (!apparaat && !UUID.test(gast))) return Response.json({ groepen: [] })
+  // Vanaf de trouwsite (geen kaartlink) alleen de persoonlijke link; het
+  // toestelkenmerk hoort bij de kaart
+  const eventParam = url.searchParams.get("event") ?? ""
+  const vanSite = !bron && UUID.test(eventParam) && UUID.test(gast)
+  if (!vanSite && (!bron || (!apparaat && !UUID.test(gast)))) return Response.json({ groepen: [] })
 
   if (teVeelPogingen("rsvp-lezen", bezoekerIp(request), 40)) {
     return Response.json({ error: "Even rustig aan" }, { status: 429 })
   }
 
   const supabase = createServiceClient()
-  const { data: card } = await supabase.from("cards").select("event_id").eq("share_token", bron).single()
+  let card: { event_id: string } | null = null
+  if (vanSite) {
+    card = { event_id: eventParam }
+  } else {
+    const { data } = await supabase.from("cards").select("event_id").eq("share_token", bron!).single()
+    card = (data as { event_id: string } | null) ?? null
+  }
   if (!card) return Response.json({ groepen: [] })
 
   const kolommen = "id, voornaam, achternaam, name, is_kind, leeftijd, is_primary, huishouden_id, submission_id, created_at"

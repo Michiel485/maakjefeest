@@ -16,6 +16,7 @@ import { getTitleFont } from "@/lib/title-fonts"
 import HomeOntwerp from "@/components/HomeOntwerp"
 import SectieKop from "@/components/site/SectieKop"
 import TijdenDresscode from "@/components/site/TijdenDresscode"
+import Confetti from "@/components/site/Confetti"
 import { HOME_KOP_STANDAARD, homeOntwerp } from "@/lib/home-ontwerp"
 
 export type HomeOpening = "foto" | "ontwerp" | "foto-ontwerp"
@@ -120,6 +121,9 @@ export interface EventHomePreviewProps {
   rsvpHref?: string
   /** De knop "Zet in je agenda"; zonder adres (in de bouwer) doet hij niets */
   agendaHref?: string
+  /** Na de bruiloft: "Wij zijn getrouwd", geen aanmelden, de foto's als knop (lib/na-de-dag.ts) */
+  naDeDag?: boolean
+  fotosHref?: string | null
   homepageSettings?: HomepageSettings | null
   onFieldClick?: (field: string) => void
 }
@@ -148,6 +152,8 @@ export default function EventHomePreview({
   onNavigate,
   rsvpHref = "/RSVP",
   agendaHref,
+  naDeDag = false,
+  fotosHref = null,
   homepageSettings,
   onFieldClick,
 }: EventHomePreviewProps) {
@@ -221,6 +227,11 @@ export default function EventHomePreview({
   const opening  = homeOpening(hp, hasPhoto)
   const ontwerpNu = homeOntwerp({ ontwerp: hp?.ontwerp, useFrame, frameStyle })
   const aftel = aftelRegel(datum)
+  // Na de dag zegt het kopje "Wij zijn getrouwd", tenzij het bruidspaar zelf
+  // iets anders koos
+  const kopStandaard = hp?.ontwerpKop ?? HOME_KOP_STANDAARD
+  const kop = naDeDag && kopStandaard === HOME_KOP_STANDAARD ? "Wij zijn getrouwd" : kopStandaard
+  const vandaag = aftel === "Vandaag is de dag"
   const tijden = hp?.tijden?.trim() || null
   const dresscode = hp?.dresscode?.trim() || null
 
@@ -245,6 +256,17 @@ export default function EventHomePreview({
       textDecoration: "none",
       letterSpacing: "0.01em",
       transition: "transform 0.2s ease, box-shadow 0.2s ease",
+    }
+    // Na de dag geen aanmelden meer, wel de foto's
+    if (naDeDag) {
+      if (!fotosHref) return null
+      return (
+        <div className="flex flex-wrap items-center justify-center gap-3" style={{ marginTop: 28 }}>
+          <a href={fotosHref} className="hover:-translate-y-0.5 hover:shadow-xl" style={{ ...basis, backgroundColor: sc.buttonBg, color: sc.buttonText, boxShadow: "0 6px 18px rgba(0,0,0,0.18)" }}>
+            Bekijk de foto&apos;s
+          </a>
+        </div>
+      )
     }
     return (
       <div className="flex flex-wrap items-center justify-center gap-3" style={{ marginTop: 28 }}>
@@ -393,12 +415,14 @@ export default function EventHomePreview({
   // Het ontwerp, met het aftellen en de knoppen eronder
   const ontwerpBlok = (
     <div className="w-full flex flex-col items-center">
+      {/* "Hoi Sam" via de persoonlijke link (components/site/Begroeting.tsx) */}
+      <div id="sy-begroeting" className="text-center" />
       <div {...fieldClick('ontwerp-kop')} className="w-full flex justify-center">
         <HomeOntwerp
           ontwerp={ontwerpNu}
           sc={sc}
           tekst={{
-            kop: hp?.ontwerpKop ?? HOME_KOP_STANDAARD,
+            kop,
             namen,
             datum: datum ?? null,
             locatie: plek || null,
@@ -419,6 +443,7 @@ export default function EventHomePreview({
   // De tekst op de foto, in dezelfde letters als op het ontwerp
   const tekstOpFoto = (
     <div className="relative z-10 flex flex-col items-center text-center px-6" style={{ color: "#fff", textShadow: "0 2px 14px rgba(0,0,0,0.45)" }}>
+      <div id="sy-begroeting" />
       <p
         {...fieldClick('ontwerp-kop')}
         style={{
@@ -431,7 +456,7 @@ export default function EventHomePreview({
           opacity: 0.92,
         }}
       >
-        {hp?.ontwerpKop ?? HOME_KOP_STANDAARD}
+        {kop}
       </p>
       <h1
         {...fieldClick('namen')}
@@ -531,6 +556,8 @@ export default function EventHomePreview({
 
   return (
     <div className="@container">
+      {/* Op de trouwdag zelf, één keer, niet in de bouwer */}
+      {vandaag && !onFieldClick && <Confetti kleuren={[sc.accent, sc.buttonBg, sc.headingColor]} />}
       {openingBlok}
 
       {/* Het welkomstbriefje: kopje, tekst en de namen als ondertekening */}

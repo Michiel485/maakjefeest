@@ -218,14 +218,16 @@ export default function AanmeldFormulier({
   }
 
   useEffect(() => {
-    if (voorbeeld || !bronToken) return
+    if (voorbeeld || (!bronToken && !eventId)) return
     let gast: string | null = null
     try {
       gast = new URLSearchParams(window.location.search).get("gast")
     } catch {}
-    const kenmerk = bestaandKenmerk()
+    // Op de trouwsite alleen via de persoonlijke link; het toestelkenmerk
+    // hoort bij de kaart
+    const kenmerk = bronToken ? bestaandKenmerk() : null
     if (!gast && !kenmerk) return
-    const q = new URLSearchParams({ bron: bronToken })
+    const q = new URLSearchParams(bronToken ? { bron: bronToken } : { event: eventId! })
     if (gast) q.set("gast", gast)
     if (kenmerk) q.set("apparaat", kenmerk)
     fetch(`/api/rsvp?${q.toString()}`)
@@ -245,7 +247,7 @@ export default function AanmeldFormulier({
       })
       .catch(() => {})
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bronToken, voorbeeld])
+  }, [bronToken, eventId, voorbeeld])
 
   const naDeadline = deadline ? new Date() > new Date(deadline) : false
   const heeftVraag1 = typeof customQuestion === "string" && customQuestion.trim().length > 0
@@ -353,7 +355,7 @@ export default function AanmeldFormulier({
                 ...(keuze === "aanpassen" && groepId ? { groep: groepId } : {}),
                 ...(gastId ? { gast: gastId } : {}),
               }
-            : {}),
+            : gastId ? { gast: gastId } : {}),
           status: volledig ? "definitief" : "voorlopig",
           guests: gasten,
         }),

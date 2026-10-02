@@ -47,6 +47,8 @@ export interface RsvpRow {
   is_primary: boolean
   attending: string | null
   message: string | null
+  /** Het berichtje in het gastenboek op de site; bestaat pas na migration_gastenboek.sql */
+  bericht_openbaar?: boolean | null
   song: string | null
   overnachting: boolean | null
   custom_answer: boolean | null
@@ -134,6 +136,7 @@ interface EditForm {
   overnachting: boolean | null
   custom_answer: boolean | null
   custom_answer_2: boolean | null
+  bericht_openbaar: boolean
 }
 
 function rowToForm(row: RsvpRow): EditForm {
@@ -148,6 +151,7 @@ function rowToForm(row: RsvpRow): EditForm {
     overnachting: row.overnachting,
     custom_answer: row.custom_answer,
     custom_answer_2: row.custom_answer_2,
+    bericht_openbaar: row.bericht_openbaar === true,
   }
 }
 
@@ -355,7 +359,7 @@ export default function RsvpSection({
       setRsvps((prev) =>
         prev.map((r) =>
           r.id === editingRow.id
-            ? { ...r, name: editForm.name, email: editForm.email || null, attending: editForm.attending, guest_type: editForm.guest_type, dietary: editForm.dietary || null, message: editForm.message || null, song: editForm.song || null, overnachting: editForm.overnachting, custom_answer: editForm.custom_answer, custom_answer_2: editForm.custom_answer_2 }
+            ? { ...r, name: editForm.name, email: editForm.email || null, attending: editForm.attending, guest_type: editForm.guest_type, dietary: editForm.dietary || null, message: editForm.message || null, song: editForm.song || null, overnachting: editForm.overnachting, custom_answer: editForm.custom_answer, custom_answer_2: editForm.custom_answer_2, bericht_openbaar: editForm.bericht_openbaar }
             : r
         )
       )
@@ -1364,11 +1368,24 @@ export default function RsvpSection({
                 </Field>
               )}
 
-              {editForm.attending === "no" && (
-                <Field label="Berichtje">
-                  <textarea rows={3} value={editForm.message} onChange={(e) => setEditForm({ ...editForm, message: e.target.value })} placeholder="—" className={`${inputCls} resize-none`} style={inputStyle} />
-                </Field>
-              )}
+              <Field label="Berichtje">
+                <textarea rows={3} value={editForm.message} onChange={(e) => setEditForm({ ...editForm, message: e.target.value })} placeholder="Geen berichtje" className={`${inputCls} resize-none`} style={inputStyle} />
+                {editForm.message.trim() && (
+                  <label className="flex items-start gap-2 mt-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={editForm.bericht_openbaar}
+                      onChange={(e) => setEditForm({ ...editForm, bericht_openbaar: e.target.checked })}
+                      className="mt-0.5 w-4 h-4"
+                      style={{ accentColor: GOLD }}
+                    />
+                    <span className="text-sm" style={{ color: CHARCOAL }}>
+                      In het gastenboek op onze site
+                      <span className="block text-xs" style={{ color: "#9A8E82" }}>Met de voornaam erbij. Zonder vinkje ziet niemand het.</span>
+                    </span>
+                  </label>
+                )}
+              </Field>
 
               {saveError && <p className="text-sm text-red-500">{saveError}</p>}
             </div>

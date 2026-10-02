@@ -152,6 +152,15 @@ html.sy-beweegt [data-verschijn].sy-in {
 .sy-veld::placeholder { color: currentColor; opacity: 0.45; }
 .sy-veld:focus { box-shadow: 0 0 0 3px var(--sy-ring, rgba(197, 160, 89, 0.3)); }
 
+/* "Hoi Sam" in de opening komt zachtjes op (components/site/Begroeting.tsx) */
+@keyframes sy-opkomen {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [style*="sy-opkomen"] { animation: none !important; opacity: 1 !important; }
+}
+
 /* Het pijltje onderaan de opening van de trouwsite wenkt zachtjes */
 @keyframes sy-wenk {
   0%, 100% { transform: translate(-50%, 0); opacity: 0.7; }

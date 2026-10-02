@@ -15,6 +15,15 @@ import { formulierTekst } from "@/lib/formulier-teksten"
 import SiteDeuren from "@/components/kaart/SiteDeuren"
 import { naarSiteVanKaart, type SiteOpeningData } from "@/lib/site-opening"
 
+/** De gast van een persoonlijke link (?gast=...), om mee te nemen naar de site */
+function gastUitAdres(): string | null {
+  try {
+    return new URLSearchParams(window.location.search).get("gast")
+  } catch {
+    return null
+  }
+}
+
 // "zegel" is de stap waarin het lakzegel breekt; die bestaat alleen in de
 // nieuwe animatie. De klassieke animatie slaat hem over.
 type Stage = "closed" | "zegel" | "flap" | "card" | "open"
@@ -1165,14 +1174,14 @@ export default function CardReveal({
                 daarachter het begin van de site (Michiel, 30 september 2026) */}
             {(siteUrl || siteDemo) && (
               <div className="mt-6 flex flex-col items-center" style={eindBlok}>
-                {siteUrl && <link rel="prefetch" href={naarSiteVanKaart(siteUrl)} />}
+                {siteUrl && <link rel="prefetch" href={naarSiteVanKaart(siteUrl, gastUitAdres())} />}
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation()
                     const plek = gezichtRef.current?.getBoundingClientRect()
                     if (plek) setDeuren(plek)
-                    else if (siteUrl) window.location.href = naarSiteVanKaart(siteUrl)
+                    else if (siteUrl) window.location.href = naarSiteVanKaart(siteUrl, gastUitAdres())
                     else siteDemo?.()
                   }}
                   className="group w-full inline-flex items-center justify-center gap-2.5 py-4 rounded-xl text-[15px] font-semibold transition-transform hover:-translate-y-0.5"
@@ -1207,7 +1216,7 @@ export default function CardReveal({
                 rustig={reduceMotion}
                 onKlaar={() => {
                   if (siteUrl) {
-                    window.location.href = naarSiteVanKaart(siteUrl)
+                    window.location.href = naarSiteVanKaart(siteUrl, gastUitAdres())
                     return
                   }
                   // In de bouwer: eerst het voorbeeld van de site eroverheen,

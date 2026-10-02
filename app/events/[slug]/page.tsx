@@ -8,6 +8,10 @@ import Sectie from "@/components/site/Sectie"
 import Verschijn from "@/components/site/Verschijn"
 import AanmeldKnop from "@/components/site/AanmeldKnop"
 import { sectieHeeftInhoud } from "@/lib/sectie-inhoud"
+import { naDeDag } from "@/lib/na-de-dag"
+import Begroeting from "@/components/site/Begroeting"
+import Gastenboek, { type GastenboekBericht } from "@/components/site/Gastenboek"
+import FotosNaDeDag from "@/components/site/FotosNaDeDag"
 import { normalizePlan, publicPageTypes } from "@/lib/plans"
 import { rijOfNiets } from "@/lib/db"
 
@@ -79,6 +83,24 @@ export default async function EventHomePage({
   })
   const c = homePage?.content ?? {}
 
+  // Na de bruiloft: "Wij zijn getrouwd", geen aanmelden, de foto's bovenaan
+  const voorbij = naDeDag(event.datum as string | null)
+  const { data: gpEvent } = await supabase.from("events").select("guest_photos_enabled").eq("id", event.id).single()
+  const fotomuurAan = isCompleet && ((gpEvent?.guest_photos_enabled as boolean | undefined) ?? false)
+
+  // Het gastenboek: berichtjes met een vinkje van het bruidspaar. De kolom
+  // bestaat pas na migration_gastenboek.sql; mist die, dan is het boek leeg.
+  const { data: boekRijen } = await supabase
+    .from("rsvp")
+    .select("voornaam, name, message")
+    .eq("event_id", event.id)
+    .eq("bericht_openbaar", true)
+    .order("created_at", { ascending: true })
+    .limit(60)
+  const gastenboek: GastenboekBericht[] = ((boekRijen ?? []) as { voornaam: string | null; name: string | null; message: string | null }[])
+    .filter((r) => (r.message ?? "").trim())
+    .map((r) => ({ naam: (r.voornaam ?? r.name ?? "").trim() || "Een gast", tekst: (r.message ?? "").trim() }))
+
   const homePreview = (
     <EventHomePreview
       title={event.title}
@@ -105,13 +127,26 @@ export default async function EventHomePage({
       homeBodySize={typeof c.bodySize === "number" ? c.bodySize : undefined}
       rsvpHref={rsvpHref}
       agendaHref={`${basePath}/agenda`}
+      naDeDag={voorbij}
+      fotosHref={fotomuurAan ? `${basePath}/fotomuur` : null}
       sc={sc}
       homepageSettings={hs}
     />
   )
+  const begroeting = <Begroeting eventId={event.id} kleur={sc.accent} font={sc.fontFamily} />
 
   if (!isSinglePage) {
-    return homePreview
+    return (
+      <>
+        {homePreview}
+        {begroeting}
+        {gastenboek.length > 0 && (
+          <Sectie id="gastenboek" sc={sc} band>
+            <Gastenboek berichten={gastenboek} sc={sc} />
+          </Sectie>
+        )}
+      </>
+    )
   }
 
   // Single-page mode: stack all enabled sections (per pakket gefilterd)
@@ -125,7 +160,37 @@ export default async function EventHomePage({
   // Lege secties staan er niet (lib/sectie-inhoud.ts); het menu laat ze ook weg
   const otherPages = publicPageTypes(plan, (allPages ?? []).filter((p) => p.type !== "Home") as PageData[])
     .filter((p) => sectieHeeftInhoud(p.type, p.content))
-  const metAanmelden = otherPages.some((p) => p.type === "RSVP")
+    // Na de dag hoeft niemand zich meer aan te melden
+    .filter((p) => !(voorbij && p.type === "RSVP"))
+  const metAanmelden = !voorbij && otherPages.some((p) => p.type === "RSVP")
+
+  // Alle secties op een rij: na de dag eerst de foto's, en het gastenboek
+  // als laatste (na de foto's van het bruidspaar)
+  const secties: { id: string; inhoud: React.ReactNode }[] = []
+  if (voorbij && fotomuurAan) {
+    secties.push({ id: "fotos-van-de-dag", inhoud: <FotosNaDeDag sc={sc} fotomuurHref={`${basePath}/fotomuur`} delenHref={`${basePath}/foto-delen`} /> })
+  }
+  for (const page of otherPages) {
+    secties.push({
+      id: page.type.toLowerCase(),
+      inhoud: (
+        <EventPageSection
+          page={page}
+          sc={sc}
+          eventId={event.id}
+          event={{
+            datum: event.datum ?? null,
+            locatie: event.locatie ?? null,
+            agendaHref: event.datum ? `${basePath}/agenda` : null,
+            programmaHref: otherPages.some((p) => p.type === "Programma") ? "#programma" : null,
+          }}
+        />
+      ),
+    })
+  }
+  if (gastenboek.length > 0) {
+    secties.push({ id: "gastenboek", inhoud: <Gastenboek berichten={gastenboek} sc={sc} /> })
+  }
 
   return (
     <>
@@ -133,22 +198,13 @@ export default async function EventHomePage({
         {homePreview}
       </section>
       {/* Om en om een band met een iets andere tint; de opening telt als eerste, dus de eerste sectie erna is een band */}
-      {otherPages.map((page, i) => (
-        <Sectie key={page.type} id={page.type.toLowerCase()} sc={sc} band={i % 2 === 0} verschijn>
-          <EventPageSection
-            page={page}
-            sc={sc}
-            eventId={event.id}
-            event={{
-              datum: event.datum ?? null,
-              locatie: event.locatie ?? null,
-              agendaHref: event.datum ? `${basePath}/agenda` : null,
-              programmaHref: otherPages.some((p) => p.type === "Programma") ? "#programma" : null,
-            }}
-          />
+      {secties.map((s, i) => (
+        <Sectie key={s.id} id={s.id} sc={sc} band={i % 2 === 0} verschijn>
+          {s.inhoud}
         </Sectie>
       ))}
       <Verschijn />
+      {begroeting}
       {metAanmelden && <AanmeldKnop href="#rsvp" sc={sc} />}
       <BackToTopButton accentColor={sc.accent} />
     </>
