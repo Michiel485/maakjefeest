@@ -471,6 +471,24 @@ export default function BouwenPage() {
   const [bladKlein, setBladKlein] = useState(false)
   const [sleep, setSleep] = useState(0)
   const sleepStart = useRef<number | null>(null)
+  // Op de telefoon veeg je in het paneel naar links of rechts voor de
+  // volgende of vorige stap (Michiel, 2 oktober 2026). Niet vanaf een
+  // schuifje of tekstveld, want daar betekent een veeg iets anders.
+  const veegStart = useRef<{ x: number; y: number } | null>(null)
+  function veegBegin(e: React.TouchEvent) {
+    const doel = e.target as HTMLElement
+    if (doel.closest("input, textarea, select, [contenteditable], [data-geen-veeg]")) { veegStart.current = null; return }
+    veegStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+  }
+  function veegEind(e: React.TouchEvent) {
+    const begin = veegStart.current
+    veegStart.current = null
+    if (!begin) return
+    const dx = e.changedTouches[0].clientX - begin.x
+    const dy = e.changedTouches[0].clientY - begin.y
+    if (Math.abs(dx) < 70 || Math.abs(dy) > 50) return
+    naarStap(gidsNu + (dx < 0 ? 1 : -1))
+  }
   function openBlad(b: Blad | null) {
     setBlad(b)
     setBladKlein(false)
@@ -1815,6 +1833,8 @@ export default function BouwenPage() {
             }`
           }`}
           style={sleep !== 0 ? { transform: `translateY(${sleep}px)`, transition: "none" } : { transition: "transform 180ms ease, max-height 200ms ease" }}
+          onTouchStart={veegBegin}
+          onTouchEnd={veegEind}
         >
           {/* ── De vraag van deze stap, met de stappenbalk ── */}
           {stapNu && (

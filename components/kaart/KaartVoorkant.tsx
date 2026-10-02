@@ -106,7 +106,7 @@ function Zonsopgang({ breedte, kleur }: { breedte: number; kleur: string }) {
 }
 
 /** Een klokje in een fijne lijn, voor bij de tijden */
-function Klokje({ maat, kleur }: { maat: number; kleur: string }) {
+export function Klokje({ maat, kleur }: { maat: number; kleur: string }) {
   return (
     <svg width={maat} height={maat} viewBox="0 0 24 24" fill="none">
       <circle cx="12" cy="12" r="8.5" stroke={kleur} strokeWidth="1.4" />
@@ -116,7 +116,7 @@ function Klokje({ maat, kleur }: { maat: number; kleur: string }) {
 }
 
 /** Een kleerhanger in een fijne lijn, voor bij de dresscode */
-function Kleerhanger({ maat, kleur }: { maat: number; kleur: string }) {
+export function Kleerhanger({ maat, kleur }: { maat: number; kleur: string }) {
   return (
     <svg width={maat} height={maat} viewBox="0 0 24 24" fill="none">
       <path d="M10.2 7.2a1.8 1.8 0 1 1 2.6 1.6c-.5.3-.8.7-.8 1.2v.9M3.5 18.5L12 11.5l8.5 7H3.5z" stroke={kleur} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />

@@ -15,6 +15,7 @@ import type { SC } from "@/lib/event-styles"
 import { getTitleFont } from "@/lib/title-fonts"
 import HomeOntwerp from "@/components/HomeOntwerp"
 import SectieKop from "@/components/site/SectieKop"
+import TijdenDresscode from "@/components/site/TijdenDresscode"
 import { HOME_KOP_STANDAARD, homeOntwerp } from "@/lib/home-ontwerp"
 
 export type HomeOpening = "foto" | "ontwerp" | "foto-ontwerp"
@@ -224,7 +225,7 @@ export default function EventHomePreview({
   const dresscode = hp?.dresscode?.trim() || null
 
   // De letters zoals op het ontwerp gekozen, ook voor de tekst op de foto
-  const eigenLetter = (rol: "kop" | "namen" | "datum" | "locatie") => {
+  const eigenLetter = (rol: "kop" | "namen" | "datum" | "locatie" | "tijden" | "dresscode") => {
     const w = hp?.ontwerpTekst?.[rol]
     return w?.font ? getTitleFont(w.font) : null
   }
@@ -318,17 +319,25 @@ export default function EventHomePreview({
     </button>
   )
 
-  const fotoVlak = (klasse: string, kinderen?: ReactNode) => (
+  // Slepen in de bouwer. Bij de opening Foto zitten de handvatten op de hele
+  // opening, zodat je ook over de namen heen kunt slepen; de foto zit er
+  // immers onder (Michiel, 2 oktober 2026).
+  const sleepProps = editableHero ? {
+    onMouseDown: (e: React.MouseEvent) => { e.preventDefault(); startHeroDrag(e.clientX, e.clientY) },
+    onMouseMove: (e: React.MouseEvent) => moveHeroDrag(e.clientX, e.clientY),
+    onMouseUp: endHeroDrag,
+    onMouseLeave: endHeroDrag,
+    onTouchStart: (e: React.TouchEvent) => startHeroDrag(e.touches[0].clientX, e.touches[0].clientY),
+    onTouchMove: (e: React.TouchEvent) => { e.preventDefault(); moveHeroDrag(e.touches[0].clientX, e.touches[0].clientY) },
+    onTouchEnd: endHeroDrag,
+  } : {}
+  const sleepCursor = editableHero && heroImageUrl ? (heroDragging ? "cursor-grabbing" : "cursor-grab") : ""
+
+  const fotoVlak = (klasse: string, kinderen?: ReactNode, opOuder = false) => (
     <div
-      ref={heroRef}
-      className={`overflow-hidden select-none ${klasse} ${editableHero && heroImageUrl ? (heroDragging ? "cursor-grabbing" : "cursor-grab") : ""}`}
-      onMouseDown={editableHero ? (e) => { e.preventDefault(); startHeroDrag(e.clientX, e.clientY) } : undefined}
-      onMouseMove={editableHero ? (e) => moveHeroDrag(e.clientX, e.clientY) : undefined}
-      onMouseUp={editableHero ? endHeroDrag : undefined}
-      onMouseLeave={editableHero ? endHeroDrag : undefined}
-      onTouchStart={editableHero ? (e) => startHeroDrag(e.touches[0].clientX, e.touches[0].clientY) : undefined}
-      onTouchMove={editableHero ? (e) => { e.preventDefault(); moveHeroDrag(e.touches[0].clientX, e.touches[0].clientY) } : undefined}
-      onTouchEnd={editableHero ? endHeroDrag : undefined}
+      ref={opOuder ? undefined : heroRef}
+      className={`overflow-hidden select-none ${klasse} ${opOuder ? "" : sleepCursor}`}
+      {...(opOuder ? {} : sleepProps)}
       onClick={onFieldClick && !kinderen ? (e) => { e.stopPropagation(); onFieldClick('headerfoto') } : undefined}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -438,9 +447,22 @@ export default function EventHomePreview({
         </p>
       )}
       {(tijden || dresscode) && (
-        <p style={{ margin: "8px 0 0", fontFamily: sc.fontFamily, fontSize: "0.9375rem", opacity: 0.85 }}>
-          {[tijden, dresscode].filter(Boolean).join("  ·  ")}
-        </p>
+        <div style={{ marginTop: 18 }}>
+          {/* Dezelfde weergaven als op de kaart en op het ontwerp */}
+          <TijdenDresscode
+            tijden={tijden}
+            dresscode={dresscode}
+            stijl={hp?.detailsStijl}
+            icoon={hp?.detailsIcoon === true}
+            accent="rgba(255,255,255,0.9)"
+            tekst="#fff"
+            font={sc.fontFamily}
+            eigen={{
+              tijden: { family: eigenLetter("tijden")?.family, schaal: hp?.ontwerpTekst?.tijden?.schaal },
+              dresscode: { family: eigenLetter("dresscode")?.family, schaal: hp?.ontwerpTekst?.dresscode?.schaal },
+            }}
+          />
+        </div>
       )}
       {aftelBlok(true)}
       {knoppen(true)}
@@ -453,10 +475,16 @@ export default function EventHomePreview({
   let openingBlok: ReactNode
   if (opening === "foto") {
     openingBlok = (
-      <section data-opening="foto" className="relative flex items-center justify-center" style={{ ...hoogte, padding: "88px 0 96px" }}>
+      <section
+        ref={heroRef as React.RefObject<HTMLElement | null>}
+        data-opening="foto"
+        className={`relative flex items-center justify-center ${sleepCursor}`}
+        style={{ ...hoogte, padding: "88px 0 96px" }}
+        {...sleepProps}
+      >
         {fotoVlak("absolute inset-0", (
           <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.28) 0%, rgba(0,0,0,0.12) 45%, rgba(0,0,0,0.5) 100%)" }} />
-        ))}
+        ), true)}
         {tekstOpFoto}
         {scrollWenk(true)}
       </section>
