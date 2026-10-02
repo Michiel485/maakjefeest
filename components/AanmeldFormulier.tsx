@@ -613,11 +613,13 @@ export default function AanmeldFormulier({
       )}
 
       {/* De kop van de stap. Op de kaart staat "Ben je erbij?" al boven het
-          formulier; dan niet nog eens. */}
+          formulier; dan niet nog eens. In de gewone letter van de site, niet
+          in de sierletter: in een handschrift was "Wie komen er?" klein en
+          bijna niet te lezen (Michiel, 2 oktober 2026). */}
       <div className="text-center">
         {voortgang}
         {!(compact && stap === "erbij") && (
-          <p style={{ margin: 0, fontFamily: titelFont ?? "inherit", fontWeight: titelFont ? titelGewicht : 700, fontSize: titelFont ? (compact ? "1.4rem" : "1.7rem") : (compact ? "1rem" : "1.125rem"), lineHeight: 1.2 }}>
+          <p style={{ margin: 0, fontWeight: 700, fontSize: compact ? "1.05rem" : "1.2rem", lineHeight: 1.3 }}>
             {stapTitel}
           </p>
         )}
