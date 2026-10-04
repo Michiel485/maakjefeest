@@ -214,7 +214,7 @@ export default function VoorbeeldSitePage() {
               frameNames={VOORBEELD.namen}
               frameLocation={VOORBEELD.locatie}
               initials={VOORBEELD.initialen}
-              homeTitle="Welkom"
+              homeTitle="Fijn dat je er bent"
               homeBody={"Lieve familie en vrienden,\n\nWat fijn dat je hier bent. Op deze site vind je alles over onze dag: het programma, de route, waar je kunt slapen en hoe je ons kunt verrassen. Laat ons vooral even weten of je erbij bent, dan weten wij voor hoeveel mensen we taart bestellen."}
               homeAlign="center"
               rsvpHref="#rsvp"

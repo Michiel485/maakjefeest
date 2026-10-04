@@ -566,7 +566,14 @@ export default function EventHomePreview({
       {(homeTitle || homeBody) && (
         <div className="px-8 pt-14 pb-16 flex flex-col items-center">
           <div {...fieldClick('welkomst-titel')} className="w-full">
-            <SectieKop sc={sc} kopje={homeTitle ? "Welkom" : undefined} titel={homeTitle || "Welkom"} />
+            {/* Het kopje Welkom alleen boven een eigen titel; heet de titel
+                zelf Welkom, dan stond er twee keer hetzelfde (Michiel,
+                4 oktober 2026) */}
+            <SectieKop
+              sc={sc}
+              kopje={homeTitle && homeTitle.trim().toLowerCase() !== "welkom" ? "Welkom" : undefined}
+              titel={homeTitle || "Welkom"}
+            />
           </div>
           {homeBody && (
             <p

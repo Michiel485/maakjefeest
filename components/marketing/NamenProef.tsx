@@ -15,11 +15,15 @@ import { browserLetters } from "@/lib/kaart-ontwerpen"
 import { voegNamenSamen } from "@/lib/namen"
 import { LS_NAMEN } from "@/lib/nieuw-concept"
 import { meetStap } from "@/lib/stap"
+import { VOORBEELD } from "@/lib/voorbeeld"
 import { GOUD, GOUD_LICHT, INKT, IVOOR, TEKST, ZACHT } from "./stijl"
 
 const LS_KAART = "sayingyes_kaart"
-const ONTWERP: NieuwOntwerp = "olijf"
-const STIJL = "ivoor"
+// Boog in Zand: de initialen in de boog en de namen in een rustige letter
+// veranderen allebei mee. Olijf in Parel was het eerst, maar de sierletter
+// van de namen vond Michiel geen mooi voorbeeld (4 oktober 2026).
+const ONTWERP: NieuwOntwerp = "boog"
+const STIJL = "zand"
 
 const invoer =
   "w-full rounded-xl border px-4 py-3 text-base focus:outline-none focus:ring-2 transition-all"
@@ -55,12 +59,14 @@ export default function NamenProef() {
     } catch {}
   }, [])
 
-  const namen = voegNamenSamen(een, twee) || "Jullie namen"
+  // Zolang er niets getypt is: het voorbeeldpaar. "Jullie namen" gaf in de
+  // boog de initialen J | N.
+  const namen = voegNamenSamen(een, twee) || VOORBEELD.namen
   const display = buildCardDisplay(
     "trouwkaart",
     ONTWERP,
     { names: namen },
-    { title: namen, frame_names: namen, datum: datum || null, locatie: null }
+    { title: namen, frame_names: namen, datum: datum || VOORBEELD.datum, locatie: null }
   )
 
   function verder() {
@@ -68,7 +74,10 @@ export default function NamenProef() {
       localStorage.setItem(LS_NAMEN, JSON.stringify({ een: een.trim(), twee: twee.trim() }))
       const vorig = JSON.parse(localStorage.getItem(LS_KAART) ?? "{}") as Record<string, unknown>
       delete vorig.details
-      localStorage.setItem(LS_KAART, JSON.stringify({ ...vorig, names: voegNamenSamen(een, twee), datum, type: "trouwkaart" }))
+      // De bouwer opent met de kaart die je hier zag, tenzij je daar al een
+      // ontwerp had gekozen
+      const ontwerp = vorig.template ? {} : { template: ONTWERP, style: STIJL }
+      localStorage.setItem(LS_KAART, JSON.stringify({ ...vorig, ...ontwerp, names: voegNamenSamen(een, twee), datum, type: "trouwkaart" }))
     } catch {}
     meetStap("namen")
     router.push("/kaart-maken?type=trouwkaart")

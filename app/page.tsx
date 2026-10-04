@@ -263,14 +263,17 @@ export default function Home() {
             </div>
           </div>
           <div className="flex justify-center">
-            {/* Een telefoon met de voorbeeldsite erin, live en scrollbaar */}
+            {/* Een telefoon met de voorbeeldsite erin, live en scrollbaar.
+                Zonder #home in het adres: die sprong trok op de telefoon de
+                hele homepage mee naar beneden zodra het telefoontje laadde
+                (Michiel, 4 oktober 2026) */}
             <div
               className="relative"
               style={{ width: 330, maxWidth: "100%", aspectRatio: "330 / 680", borderRadius: 44, border: `11px solid ${INKT}`, backgroundColor: INKT, boxShadow: "0 30px 60px rgba(0,0,0,0.22)", overflow: "hidden" }}
             >
               <div aria-hidden="true" className="absolute top-0 left-1/2 -translate-x-1/2 z-10" style={{ width: 110, height: 22, borderRadius: "0 0 16px 16px", backgroundColor: INKT }} />
               <iframe
-                src={`${VOORBEELD_SITE_URL}#home`}
+                src={VOORBEELD_SITE_URL}
                 title="Voorbeeld van een trouwwebsite van SayingYes"
                 loading="lazy"
                 className="block w-full h-full"

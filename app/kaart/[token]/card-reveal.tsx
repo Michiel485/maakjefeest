@@ -526,9 +526,15 @@ export default function CardReveal({
   // De blokken onder de kaart (knoppen, CTA, afzender) nemen hun plek al in
   // voordat ze zichtbaar zijn. Anders herschikt de pagina zich precies op het
   // moment dat de kaart landt, en verspringt hij daar nog een stukje van.
+  // Behalve in een vak op een pagina (compact, de envelop op de homepage):
+  // daar stond de envelop door die lege ruimte bovenin het vak in plaats van
+  // in het midden (Michiel, 4 oktober 2026). Het vak groeit daar pas als de
+  // kaart open is; de kaart zelf staat bovenaan en blijft dus staan.
   const eindBlok = stage === "open"
     ? { animation: reduceMotion ? "none" : "knoppen-fadein 0.5s ease 0.5s both" }
-    : { visibility: "hidden" as const, pointerEvents: "none" as const }
+    : compact
+      ? { display: "none" as const }
+      : { visibility: "hidden" as const, pointerEvents: "none" as const }
   // Wat bij een strak ontwerp niet op de kaart staat, komt eronder
   const onder = ONDER_DE_KAART[display.design]
   const onderLocatie = onder?.locatie && display.location ? display.location : null
@@ -1039,22 +1045,6 @@ export default function CardReveal({
               </a>
             )}
 
-            {/* Demo op de marketingsite: CTA in plaats van site-knoppen */}
-            {demo && (
-              <a
-                href="/kaart-maken?type=trouwkaart"
-                className="mt-6 block py-3.5 rounded-xl text-sm font-semibold text-center transition-opacity hover:opacity-85"
-                style={{
-                  backgroundColor: sc.accent,
-                  color: sc.buttonText,
-                  textDecoration: "none",
-                  ...eindBlok,
-                }}
-              >
-                Zelf zo&apos;n kaart maken? Begin gratis →
-              </a>
-            )}
-
             {/* Site hoort bij het pakket maar staat nog niet live: vooruitblik */}
             {siteVolgt && !demo && (
               <p
@@ -1205,6 +1195,29 @@ export default function CardReveal({
                   </svg>
                 </button>
               </div>
+            )}
+            {/* Demo op de marketingsite: onder de knop naar de site, als
+                tweede knop met een rand. Kort en zonder de letterafstand van
+                de kaart, want in een smalle kolom brak de lange tekst over
+                twee regels (Michiel, 4 oktober 2026). */}
+            {demo && (
+              <a
+                href="/kaart-maken?type=trouwkaart"
+                className="mt-3 w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-opacity hover:opacity-85"
+                style={{
+                  backgroundColor: "transparent",
+                  color: sc.headingColor,
+                  border: `1.5px solid ${sc.accent}`,
+                  letterSpacing: "0.02em",
+                  textDecoration: "none",
+                  ...eindBlok,
+                }}
+              >
+                Zelf zo&apos;n kaart maken, gratis
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </a>
             )}
             {deuren && (siteOpening || siteDemo) && (
               <SiteDeuren
