@@ -57,7 +57,7 @@ interface HomeContent {
 
 interface HomepageSettings {
   layout: 'editorial' | 'modern'
-  opening?: 'foto' | 'ontwerp' | 'foto-ontwerp' | 'foto-boven'
+  opening?: 'foto' | 'ontwerp' | 'foto-ontwerp' | 'foto-boven' | 'ontwerp-foto'
   subtitleText: string
   subtitleFont: string
   subtitleSize: number
@@ -1507,7 +1507,7 @@ export default function BouwenPage() {
 
   const webStappen: WebStap[] = [
     { kort: "Stijl", vraag: "Welke stijl past bij jullie?", uitleg: "Kleuren en letters voor de hele site. Klik in het voorbeeld door de pagina's; met de knop Stijl erboven wissel je altijd.", secties: ["algemeen"], delen: ["alg:stijl", "alg:lettertype", "alg:layout"] },
-    { kort: "Homepage", vraag: "Hoe ziet jullie homepage eruit?", uitleg: "Een grote foto, het ontwerp zoals op jullie kaart, of allebei: naast elkaar of de foto erboven.", secties: ["paginas"], pagina: "Home", delen: ["home:layout", "home:kaders", "home:headerfoto"] },
+    { kort: "Homepage", vraag: "Hoe ziet jullie homepage eruit?", uitleg: "Een grote foto, het ontwerp zoals op jullie kaart, of allebei: naast elkaar, de foto erboven of de foto erachter.", secties: ["paginas"], pagina: "Home", delen: ["home:layout", "home:kaders", "home:headerfoto"] },
     { kort: "Tekst", vraag: "Wat staat er op de homepage?", uitleg: "Namen, datum en locatie staan er al. De rest is voorbeeldtekst: pas die aan naar jullie eigen woorden.", tip: "Tik op een tekst in het voorbeeld om hem te wijzigen.", secties: ["paginas"], pagina: "Home", delen: ["home:tekstvelden", "home:welkomst"] },
     // Geen aparte stap Pagina's meer: alle pagina's staan aan, en in de stap
     // van een pagina zet je hem uit als je hem niet wilt (Michiel, 30
@@ -2553,6 +2553,7 @@ export default function BouwenPage() {
                                       { id: 'ontwerp',      label: 'Ontwerp',          sub: 'Zoals je kaart' },
                                       { id: 'foto-ontwerp', label: 'Foto en ontwerp',  sub: 'Naast elkaar' },
                                       { id: 'foto-boven',   label: 'Foto boven',       sub: 'Ontwerp eronder' },
+                                      { id: 'ontwerp-foto', label: 'Ontwerp op foto',  sub: 'Foto als achtergrond' },
                                     ] as const).map((opt) => {
                                       const zonderFoto = opt.id !== 'ontwerp' && !heroImageUrl
                                       return (
@@ -2636,8 +2637,8 @@ export default function BouwenPage() {
                                           Verwijderen
                                         </button>
                                       </div>
-                                      {/* De hoogte van de foto, bij Foto en Foto boven (Michiel, 10 oktober 2026) */}
-                                      {(openingNu === 'foto' || openingNu === 'foto-boven') && (
+                                      {/* De hoogte van de foto, bij Foto, Foto boven en Ontwerp op foto (Michiel, 10 oktober 2026) */}
+                                      {(openingNu === 'foto' || openingNu === 'foto-boven' || openingNu === 'ontwerp-foto') && (
                                         <div className="flex flex-col gap-1.5">
                                           <div className="flex items-center justify-between">
                                             <span className="text-xs font-semibold text-gray-600">Hoogte van de foto</span>

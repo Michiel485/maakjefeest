@@ -20,8 +20,9 @@ import Confetti from "@/components/site/Confetti"
 import { HOME_KOP_STANDAARD, homeOntwerp } from "@/lib/home-ontwerp"
 
 // "foto-boven": de foto over de volle breedte en het ontwerp eronder (Michiel,
-// 10 oktober 2026)
-export type HomeOpening = "foto" | "ontwerp" | "foto-ontwerp" | "foto-boven"
+// 10 oktober 2026). "ontwerp-foto": het ontwerp als een kaart op de foto, die
+// de achtergrond vult (Michiel, 10 oktober 2026).
+export type HomeOpening = "foto" | "ontwerp" | "foto-ontwerp" | "foto-boven" | "ontwerp-foto"
 
 export interface HomepageSettings {
   /** Van vroeger; de opening komt ervoor in de plaats. Zie homeOpening(). */
@@ -82,7 +83,7 @@ export function standaardFotoHoogte(opening: HomeOpening): number {
 export function homeOpening(hp: Pick<HomepageSettings, "layout" | "opening"> | null | undefined, metFoto: boolean): HomeOpening {
   const gekozen = hp?.opening
   if (gekozen === "ontwerp") return "ontwerp"
-  if (gekozen === "foto" || gekozen === "foto-ontwerp" || gekozen === "foto-boven") return metFoto ? gekozen : "ontwerp"
+  if (gekozen === "foto" || gekozen === "foto-ontwerp" || gekozen === "foto-boven" || gekozen === "ontwerp-foto") return metFoto ? gekozen : "ontwerp"
   return metFoto ? "foto-ontwerp" : "ontwerp"
 }
 
@@ -552,6 +553,26 @@ export default function EventHomePreview({
           <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.28) 0%, rgba(0,0,0,0.12) 45%, rgba(0,0,0,0.5) 100%)" }} />
         ), true)}
         {tekstOpFoto}
+        {scrollWenk(true)}
+      </section>
+    )
+  } else if (opening === "ontwerp-foto") {
+    openingBlok = (
+      <section
+        ref={heroRef as React.RefObject<HTMLElement | null>}
+        data-opening="ontwerp-foto"
+        className={`relative flex items-center justify-center ${sleepCursor}`}
+        style={{ minHeight: fotoHoogteCss, padding: "56px 16px 88px" }}
+        {...sleepProps}
+      >
+        {fotoVlak("absolute inset-0", (
+          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.16)" }} />
+        ), true)}
+        {/* Het ontwerp als een kaart op de foto: met zijn eigen achtergrond
+            blijft het leesbaar, wat de foto ook is */}
+        <div className="relative z-10 w-full max-w-3xl rounded-[22px] px-4 py-8 @md:px-10 @md:py-10" style={{ backgroundColor: sc.bodyBg, boxShadow: "0 24px 60px rgba(0,0,0,0.28)" }}>
+          {ontwerpBlok}
+        </div>
         {scrollWenk(true)}
       </section>
     )

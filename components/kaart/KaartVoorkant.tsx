@@ -1770,7 +1770,7 @@ function Inhoud({
 
     // De doorzichtige krans: de initialen in de krans, de namen en de datum
     // eronder, zoals de kaart van Anne en Alex die Michiel liet zien
-    // (10 oktober 2026)
+    // (10 oktober 2026). Kleiner dan eerst: 84 viel buiten de krans met takjes.
     if (kader.doorzichtig) {
       const ini = initialenLijst(d.names)
       const datumPunt = datumKort(d.datumIso, " . ") ?? d.dateText
@@ -1793,9 +1793,9 @@ function Inhoud({
                 justifyContent: "center",
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", fontFamily: letters.extra, fontSize: pxN(84), lineHeight: 1, color: namenKleur }}>
+              <div style={{ display: "flex", alignItems: "center", fontFamily: letters.extra, fontSize: pxN(64), lineHeight: 1, color: namenKleur }}>
                 {ini[0] ?? "♥"}
-                {ini[1] && <span style={{ display: "flex", fontSize: pxN(50), margin: `0 ${px(3)}px`, color: datumKleur }}>&amp;</span>}
+                {ini[1] && <span style={{ display: "flex", fontSize: pxN(38), margin: `0 ${px(3)}px`, color: datumKleur }}>&amp;</span>}
                 {ini[1]}
               </div>
             </D>
