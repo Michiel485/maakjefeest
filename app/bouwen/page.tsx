@@ -8,7 +8,7 @@ import LetterKiezer from "@/components/LetterKiezer"
 import { homeOntwerp } from "@/lib/home-ontwerp"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import EventHomePreview, { homeOpening } from "@/components/EventHomePreview"
+import EventHomePreview, { homeOpening, standaardFotoHoogte } from "@/components/EventHomePreview"
 import EventNav from "@/app/events/[slug]/event-nav"
 import PraktischPreview, { DEFAULT_PRAKTISCH_TILES, type PraktischTile } from "@/components/PraktischPreview"
 import WishlistPreview, { DEFAULT_WISHLIST_ITEMS, type Rekening, type WishlistItem } from "@/components/WishlistPreview"
@@ -57,7 +57,7 @@ interface HomeContent {
 
 interface HomepageSettings {
   layout: 'editorial' | 'modern'
-  opening?: 'foto' | 'ontwerp' | 'foto-ontwerp'
+  opening?: 'foto' | 'ontwerp' | 'foto-ontwerp' | 'foto-boven'
   subtitleText: string
   subtitleFont: string
   subtitleSize: number
@@ -93,6 +93,11 @@ interface HomepageSettings {
   /** Hoe tijden en dresscode op het ontwerp staan, zoals op de trouwkaart (Michiel, 30 september 2026) */
   detailsStijl?: 'kopjes' | 'lijst' | 'sierlijn'
   detailsIcoon?: boolean
+  /** Hoe hoog de foto is, in procenten van de schermhoogte (Foto en Foto boven) */
+  fotoHoogte?: number
+  /** De knoppen onder het ontwerp; standaard aan */
+  rsvpKnop?: boolean
+  agendaKnop?: boolean
 }
 
 const DEFAULT_HOMEPAGE_SETTINGS: HomepageSettings = {
@@ -1502,7 +1507,7 @@ export default function BouwenPage() {
 
   const webStappen: WebStap[] = [
     { kort: "Stijl", vraag: "Welke stijl past bij jullie?", uitleg: "Kleuren en letters voor de hele site. Klik in het voorbeeld door de pagina's; met de knop Stijl erboven wissel je altijd.", secties: ["algemeen"], delen: ["alg:stijl", "alg:lettertype", "alg:layout"] },
-    { kort: "Homepage", vraag: "Hoe ziet jullie homepage eruit?", uitleg: "Een grote foto, het ontwerp zoals op jullie kaart, of allebei naast elkaar.", secties: ["paginas"], pagina: "Home", delen: ["home:layout", "home:kaders", "home:headerfoto"] },
+    { kort: "Homepage", vraag: "Hoe ziet jullie homepage eruit?", uitleg: "Een grote foto, het ontwerp zoals op jullie kaart, of allebei: naast elkaar of de foto erboven.", secties: ["paginas"], pagina: "Home", delen: ["home:layout", "home:kaders", "home:headerfoto"] },
     { kort: "Tekst", vraag: "Wat staat er op de homepage?", uitleg: "Namen, datum en locatie staan er al. De rest is voorbeeldtekst: pas die aan naar jullie eigen woorden.", tip: "Tik op een tekst in het voorbeeld om hem te wijzigen.", secties: ["paginas"], pagina: "Home", delen: ["home:tekstvelden", "home:welkomst"] },
     // Geen aparte stap Pagina's meer: alle pagina's staan aan, en in de stap
     // van een pagina zet je hem uit als je hem niet wilt (Michiel, 30
@@ -2541,11 +2546,13 @@ export default function BouwenPage() {
                               {homeOpen('layout') && (
                                 <div className="px-5 pb-4 flex flex-col gap-3">
                                   {/* Drie openingen, allemaal zo groot als het scherm (ontwerpronde, 2 oktober 2026) */}
-                                  <div className="flex gap-2">
+                                  {/* Vier openingen; Foto boven kwam erbij op 10 oktober 2026 */}
+                                  <div className="grid grid-cols-2 gap-2">
                                     {([
                                       { id: 'foto',         label: 'Foto',             sub: 'Schermvullend' },
                                       { id: 'ontwerp',      label: 'Ontwerp',          sub: 'Zoals je kaart' },
                                       { id: 'foto-ontwerp', label: 'Foto en ontwerp',  sub: 'Naast elkaar' },
+                                      { id: 'foto-boven',   label: 'Foto boven',       sub: 'Ontwerp eronder' },
                                     ] as const).map((opt) => {
                                       const zonderFoto = opt.id !== 'ontwerp' && !heroImageUrl
                                       return (
@@ -2564,6 +2571,29 @@ export default function BouwenPage() {
                                       </button>
                                       )
                                     })}
+                                  </div>
+                                  {/* De knoppen zijn niet verplicht (Michiel, 10 oktober 2026) */}
+                                  <div className="flex flex-col gap-2 pt-1">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-xs font-semibold text-gray-600">Knop Laat weten of je erbij bent</span>
+                                      <button
+                                        onClick={() => updateHpSettings({ rsvpKnop: hpSettings.rsvpKnop === false })}
+                                        aria-label="Knop Laat weten of je erbij bent"
+                                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.rsvpKnop !== false ? "bg-[#C5A059]" : "bg-gray-200"}`}
+                                      >
+                                        <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.rsvpKnop !== false ? "translate-x-4" : "translate-x-0.5"}`} />
+                                      </button>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-xs font-semibold text-gray-600">Knop Zet in je agenda</span>
+                                      <button
+                                        onClick={() => updateHpSettings({ agendaKnop: hpSettings.agendaKnop === false })}
+                                        aria-label="Knop Zet in je agenda"
+                                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hpSettings.agendaKnop !== false ? "bg-[#C5A059]" : "bg-gray-200"}`}
+                                      >
+                                        <span className={`absolute h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${hpSettings.agendaKnop !== false ? "translate-x-4" : "translate-x-0.5"}`} />
+                                      </button>
+                                    </div>
                                   </div>
                                 </div>
                               )}
@@ -2606,6 +2636,16 @@ export default function BouwenPage() {
                                           Verwijderen
                                         </button>
                                       </div>
+                                      {/* De hoogte van de foto, bij Foto en Foto boven (Michiel, 10 oktober 2026) */}
+                                      {(openingNu === 'foto' || openingNu === 'foto-boven') && (
+                                        <div className="flex flex-col gap-1.5">
+                                          <div className="flex items-center justify-between">
+                                            <span className="text-xs font-semibold text-gray-600">Hoogte van de foto</span>
+                                            <span className="text-xs text-gray-400">{hpSettings.fotoHoogte ?? standaardFotoHoogte(openingNu)}% van het scherm</span>
+                                          </div>
+                                          <input type="range" min={30} max={100} step={5} value={hpSettings.fotoHoogte ?? standaardFotoHoogte(openingNu)} onChange={(e) => updateHpSettings({ fotoHoogte: Number(e.target.value) })} className="w-full accent-[#C5A059]" aria-label="Hoogte van de foto" />
+                                        </div>
+                                      )}
                                     </div>
                                   ) : (
                                     <div>

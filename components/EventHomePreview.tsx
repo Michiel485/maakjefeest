@@ -19,7 +19,9 @@ import TijdenDresscode from "@/components/site/TijdenDresscode"
 import Confetti from "@/components/site/Confetti"
 import { HOME_KOP_STANDAARD, homeOntwerp } from "@/lib/home-ontwerp"
 
-export type HomeOpening = "foto" | "ontwerp" | "foto-ontwerp"
+// "foto-boven": de foto over de volle breedte en het ontwerp eronder (Michiel,
+// 10 oktober 2026)
+export type HomeOpening = "foto" | "ontwerp" | "foto-ontwerp" | "foto-boven"
 
 export interface HomepageSettings {
   /** Van vroeger; de opening komt ervoor in de plaats. Zie homeOpening(). */
@@ -60,6 +62,16 @@ export interface HomepageSettings {
   /** Hoe tijden en dresscode op het ontwerp staan, zoals op de trouwkaart (Michiel, 30 september 2026) */
   detailsStijl?: 'kopjes' | 'lijst' | 'sierlijn'
   detailsIcoon?: boolean
+  /** Hoe hoog de foto is, in procenten van de schermhoogte (Foto en Foto boven) */
+  fotoHoogte?: number
+  /** De knoppen onder het ontwerp; standaard aan (Michiel, 10 oktober 2026) */
+  rsvpKnop?: boolean
+  agendaKnop?: boolean
+}
+
+/** De standaardhoogte van de foto per opening, in procenten van het scherm */
+export function standaardFotoHoogte(opening: HomeOpening): number {
+  return opening === "foto-boven" ? 60 : 100
 }
 
 /**
@@ -70,7 +82,7 @@ export interface HomepageSettings {
 export function homeOpening(hp: Pick<HomepageSettings, "layout" | "opening"> | null | undefined, metFoto: boolean): HomeOpening {
   const gekozen = hp?.opening
   if (gekozen === "ontwerp") return "ontwerp"
-  if (gekozen === "foto" || gekozen === "foto-ontwerp") return metFoto ? gekozen : "ontwerp"
+  if (gekozen === "foto" || gekozen === "foto-ontwerp" || gekozen === "foto-boven") return metFoto ? gekozen : "ontwerp"
   return metFoto ? "foto-ontwerp" : "ontwerp"
 }
 
@@ -268,8 +280,12 @@ export default function EventHomePreview({
         </div>
       )
     }
+    const metRsvp = hp?.rsvpKnop !== false
+    const metAgenda = hp?.agendaKnop !== false && !!datum
+    if (!metRsvp && !metAgenda) return null
     return (
       <div className="flex flex-wrap items-center justify-center gap-3" style={{ marginTop: 28 }}>
+        {metRsvp && (
         <a
           href={rsvpHref}
           onClick={onNavigate ? (e) => { e.preventDefault(); onNavigate("RSVP") } : undefined}
@@ -278,7 +294,8 @@ export default function EventHomePreview({
         >
           Laat weten of je erbij bent
         </a>
-        {datum && (
+        )}
+        {metAgenda && (
           <a
             href={agendaHref ?? "#"}
             onClick={agendaHref ? undefined : (e) => e.preventDefault()}
@@ -515,8 +532,11 @@ export default function EventHomePreview({
     </div>
   )
 
-  // Zo hoog als het scherm, min het menu erboven
+  // Zo hoog als het scherm, min het menu erboven. Bij Foto en Foto boven kies
+  // je zelf hoe hoog de foto is (Michiel, 10 oktober 2026).
   const hoogte: CSSProperties = { minHeight: "calc(100svh - 72px)" }
+  const fotoHoogte = clamp(hp?.fotoHoogte ?? standaardFotoHoogte(opening), 30, 100)
+  const fotoHoogteCss = fotoHoogte >= 100 ? "calc(100svh - 72px)" : `${fotoHoogte}svh`
 
   let openingBlok: ReactNode
   if (opening === "foto") {
@@ -525,7 +545,7 @@ export default function EventHomePreview({
         ref={heroRef as React.RefObject<HTMLElement | null>}
         data-opening="foto"
         className={`relative flex items-center justify-center ${sleepCursor}`}
-        style={{ ...hoogte, padding: "88px 0 96px" }}
+        style={{ minHeight: fotoHoogteCss, padding: fotoHoogte >= 70 ? "88px 0 96px" : "48px 0 56px" }}
         {...sleepProps}
       >
         {fotoVlak("absolute inset-0", (
@@ -533,6 +553,17 @@ export default function EventHomePreview({
         ), true)}
         {tekstOpFoto}
         {scrollWenk(true)}
+      </section>
+    )
+  } else if (opening === "foto-boven") {
+    openingBlok = (
+      <section data-opening="foto-boven" className="relative flex flex-col">
+        <div style={{ height: fotoHoogteCss, minHeight: 180 }}>
+          {fotoVlak("relative w-full h-full")}
+        </div>
+        <div className="relative flex items-center justify-center" style={{ padding: "48px 24px 72px", backgroundColor: sc.bodyBg }}>
+          {ontwerpBlok}
+        </div>
       </section>
     )
   } else if (opening === "foto-ontwerp") {

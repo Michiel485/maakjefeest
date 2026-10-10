@@ -47,7 +47,9 @@ export const metadata: Metadata = {
 
 const INSTELLINGEN: HomepageSettings = {
   layout: "editorial",
-  opening: "foto-ontwerp",
+  // De foto bovenaan, het ontwerp eronder, met Michiels heidefoto (10 oktober 2026)
+  opening: "foto-boven",
+  fotoHoogte: 65,
   subtitleText: "",
   subtitleFont: "lora",
   subtitleSize: 1.1,
@@ -213,10 +215,10 @@ export default function VoorbeeldSitePage() {
               datum={VOORBEELD.datum}
               datumFormatted={datumTekst}
               locatie={VOORBEELD.locatie}
-              heroImageUrl="/marketing/hero.jpg"
-              heroOverlay
+              heroImageUrl="/voorbeeld/home-heide.webp"
+              heroOverlay={false}
               heroPosX={50}
-              heroPosY={60}
+              heroPosY={62}
               useFrame
               frameNames={VOORBEELD.namen}
               frameLocation={VOORBEELD.locatie}
