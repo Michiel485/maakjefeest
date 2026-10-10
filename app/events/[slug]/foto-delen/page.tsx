@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import { createServiceClient } from "@/lib/supabase"
 import { getStyleConfig } from "@/lib/event-styles"
 import { planAllows } from "@/lib/plans"
+import { siteNamen } from "@/lib/site-opening"
 import UploadForm from "./upload-form"
 
 export default async function FotoDelenPage({
@@ -17,7 +18,7 @@ export default async function FotoDelenPage({
   const { data: event } = await supabase
     .from("events")
     .select(
-      "id, title, nav_title, style, font_hero, font_initials, font_frame_names, font_page_titles, guest_photos_enabled, guest_photos_moderation, plan"
+      "id, title, nav_title, frame_names, style, font_hero, font_initials, font_frame_names, font_page_titles, guest_photos_enabled, guest_photos_moderation, plan"
     )
     .eq("slug", slug)
     .eq("status", "published")
@@ -37,7 +38,9 @@ export default async function FotoDelenPage({
   return (
     <UploadForm
       eventId={event.id}
-      eventTitle={(event.nav_title as string | null) || event.title}
+      // De namen van het ontwerp, net als in de mails; het veld Naam van de
+      // site is weg (10 oktober 2026)
+      eventTitle={siteNamen(event as { frame_names?: string | null; nav_title?: string | null; title?: string | null })}
       moderated={event.guest_photos_moderation === "approve"}
       wallHref={`${basePath}/fotomuur`}
       sc={sc}

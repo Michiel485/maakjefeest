@@ -545,7 +545,6 @@ export default function BouwenPage() {
       'welkomst-titel': 'welkomst',
       'welkomst-tekst': 'welkomst',
       'headerfoto': 'headerfoto',
-      'hoofdtitel': 'tekstvelden',
       'subtitle': 'tekstvelden',
       'namen': 'tekstvelden',
       'initialen': 'tekstvelden',
@@ -2722,18 +2721,9 @@ export default function BouwenPage() {
                               {homeOpen('tekstvelden') && (
                                 <div className="px-5 pb-4 flex flex-col gap-4">
 
-                                  {/* De naam van de site: in het menu en in het tabblad van de browser */}
-                                  <div id="hp-field-hoofdtitel" className="flex flex-col gap-1.5">
-                                    <span className="text-xs font-semibold text-gray-600">Naam van de site <span className="font-normal text-gray-400">(in het menu)</span></span>
-                                    <input
-                                      type="text"
-                                      value={draft?.naam ?? ""}
-                                      onChange={(e) => updateDraft({ naam: e.target.value })}
-                                      placeholder="Bijv. Bruiloft Michiel & Lisa"
-                                      className="rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] transition-all"
-                                    />
-                                  </div>
-
+                                  {/* Het veld "Naam van de site" is weg (Michiel, 10 oktober
+                                      2026): het menu en het tabblad toonden de naam niet
+                                      meer, en overal gaan de namen van het ontwerp voor */}
                                   {/* Bij Flexibel: de tekst op het ontwerp, in de volgorde van de
                                       pagina, met onder elk veld een eigen lettertype en grootte
                                       (Michiel, 27 september 2026) */}

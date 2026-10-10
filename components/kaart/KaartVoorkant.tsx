@@ -1789,7 +1789,9 @@ function Inhoud({
       const ini = initialenLijst(d.names)
       const datumPunt = datumKort(d.datumIso, " . ") ?? d.dateText
       return (
-        <D style={{ ...basis, alignItems: "center", justifyContent: "center", padding: `${px(26)}px ${px(14)}px ${px(30)}px`, borderRadius: px(12) }}>
+        // Op de homepagina zo hoog als wat erop staat, niet zo hoog als een
+        // kaart: dat gaf veel lege ruimte boven en onder (Michiel, 10 oktober 2026)
+        <D style={{ ...basis, ...(vrij ? { minHeight: 0 } : {}), alignItems: "center", justifyContent: "center", padding: vrij ? `${px(8)}px ${px(14)}px ${px(8)}px` : `${px(26)}px ${px(14)}px ${px(30)}px`, borderRadius: px(12) }}>
           <div style={{ display: "flex", ...tt("kop", letters.kop, 12), letterSpacing: "0.32em", textTransform: "uppercase", color: opFoto ? kop : leesbaar(kader.kleur.accent, achtergrond, [kop]) }}>
             {d.heading}
           </div>
@@ -1824,7 +1826,7 @@ function Inhoud({
               style={{ ...tt("locatie", letters.tekst, 12), lineHeight: 1.5, letterSpacing: "0.08em", color: kop, marginTop: px(8) }}
             />
           )}
-          <div style={{ display: "flex", width: px(30), height: lijn, backgroundColor: `${accent}80`, marginTop: px(10), marginBottom: px(10) }} />
+          {!vrij && <div style={{ display: "flex", width: px(30), height: lijn, backgroundColor: `${accent}80`, marginTop: px(10), marginBottom: px(10) }} />}
           {d.message && (
             <Regels tekst={d.message} style={{ fontFamily: letters.tekst, fontSize: pxK(12), lineHeight: 1.55, color: tekst, maxWidth: px(310) }} />
           )}

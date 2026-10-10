@@ -72,7 +72,8 @@ export interface HomepageSettings {
 
 /** De standaardhoogte van de foto per opening, in procenten van het scherm */
 export function standaardFotoHoogte(opening: HomeOpening): number {
-  return opening === "foto-boven" ? 60 : 100
+  // Ontwerp op foto: zo laag als kan, het ontwerp bepaalt de hoogte
+  return opening === "foto-boven" ? 60 : opening === "ontwerp-foto" ? 40 : 100
 }
 
 /**
@@ -565,7 +566,7 @@ export default function EventHomePreview({
         ref={heroRef as React.RefObject<HTMLElement | null>}
         data-opening="ontwerp-foto"
         className={`relative flex items-center justify-center ${sleepCursor}`}
-        style={{ minHeight: fotoHoogteCss, padding: "56px 16px 88px" }}
+        style={{ minHeight: fotoHoogteCss, padding: "28px 16px 52px" }}
         {...sleepProps}
       >
         {fotoVlak("absolute inset-0", (
