@@ -89,6 +89,7 @@ export const ONTWERP_LETTERS: Record<NieuwOntwerp, OntwerpLetters> = {
   pakjurk: { namen: L.greatvibes, kop: L.montserrat, tekst: L.montserrat },
   proost: { namen: L.cormorant, kop: L.cormorant, tekst: L.cormorant, extra: L.allison },
   strik: { namen: L.bodoni, kop: L.montserrat, tekst: L.montserrat, extra: L.greatvibes },
+  krans: { namen: L.italiana, kop: L.jost, tekst: L.jost, extra: L.greatvibes },
 }
 
 /**
@@ -111,6 +112,7 @@ export const VERBINDER: Partial<Record<NieuwOntwerp, Verbinder>> = {
   boho: "sierAmp",
   schaduwhart: "sierAmp",
   harthoek: "sierAmp",
+  krans: "sierAmp",
   titel: "hart",
   fotoschrift: "hart",
   datum: "hart",
@@ -132,6 +134,9 @@ export interface KaderOntwerp {
   verhouding?: number
   /** De kleuren horen bij de tekening */
   kleur: { namen: string; accent: string }
+  /** Ook het midden is doorzichtig: dan moeten namen en datum leesbaar zijn
+   *  op de achtergrond van de stijl, ook een donkere */
+  doorzichtig?: boolean
 }
 
 export const KADERS: Partial<Record<NieuwOntwerp, KaderOntwerp>> = {
@@ -142,6 +147,9 @@ export const KADERS: Partial<Record<NieuwOntwerp, KaderOntwerp>> = {
   herfst: { web: "/frames/earthy-circle.webp", afbeelding: "/kaart-illustraties/herfst.png", vorm: "krans", midden: [0.506, 0.492], ruimte: [0.4, 0.36], kleur: { namen: "#5A463C", accent: "#94574A" } },
   herfstruit: { web: "/frames/earthy-diamond.webp", afbeelding: "/kaart-illustraties/herfst-ruit.png", vorm: "krans", midden: [0.5025, 0.486], ruimte: [0.37, 0.28], kleur: { namen: "#5A463C", accent: "#94574A" } },
   goudblad: { web: "/frames/Bloem2-breed.webp", afbeelding: "/kaart-illustraties/gouden-blad.jpg", vorm: "liggend", verhouding: 0.666, midden: [0.5, 0.5], ruimte: [0.56, 0.64], kleur: { namen: "#7A5A45", accent: "#B98B5E" } },
+  // Getekend, met eucalyptus en besjes; aangeleverd door Michiel (10 oktober
+  // 2026). Helemaal doorzichtig, zodat hij op elke stijl past.
+  krans: { web: "/frames/eucalyptus-krans.webp", afbeelding: "/kaart-illustraties/eucalyptus-krans.png", vorm: "krans", midden: [0.501, 0.499], ruimte: [0.46, 0.36], kleur: { namen: "#4E3B33", accent: "#A86F5E" }, doorzichtig: true },
   magnolia: { web: "/frames/Bloem-rechthoek.webp", afbeelding: "/kaart-illustraties/magnolia.jpg", vorm: "liggend", verhouding: 0.56, midden: [0.5, 0.5], ruimte: [0.58, 0.66], kleur: { namen: "#44503F", accent: "#A08249" } },
 }
 
@@ -204,6 +212,7 @@ export const ONDER_DE_KAART: Partial<Record<CardDesign, OnderDeKaart>> = {
   terraruit: { locatie: false, bericht: false, details: true },
   herfst: { locatie: false, bericht: false, details: true },
   herfstruit: { locatie: false, bericht: false, details: true },
+  krans: { locatie: false, bericht: false, details: true },
   goudblad: { locatie: false, bericht: true, details: true },
   magnolia: { locatie: false, bericht: true, details: true },
   // Een eigen ontwerp heeft alles al in de afbeelding; alleen wat je er zelf

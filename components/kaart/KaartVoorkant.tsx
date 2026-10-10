@@ -1763,6 +1763,10 @@ function Inhoud({
     const kw = px(372)
     const bw = kw * kader.ruimte[0]
     const bh = kw * kader.ruimte[1]
+    // Een doorzichtige krans heeft geen wit vlak achter de namen: dan de
+    // kleuren van de tekening als ze leesbaar zijn, anders die van de stijl
+    const namenKleur = kader.doorzichtig ? leesbaar(kader.kleur.namen, achtergrond, [kop]) : kader.kleur.namen
+    const datumKleur = kader.doorzichtig ? leesbaar(kader.kleur.accent, achtergrond, [kop]) : kader.kleur.accent
     return (
       <D style={{ ...basis, alignItems: "center", justifyContent: "center", padding: `${px(28)}px ${px(14)}px ${px(30)}px`, borderRadius: px(12) }}>
         {/* De kop in de kleur van de tekening: in de bleke kleur van sommige
@@ -1788,9 +1792,9 @@ function Inhoud({
               gap: px(7),
             }}
           >
-            <Namen vb={vb} plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.12, color: kader.kleur.namen }} />
+            <Namen vb={vb} plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.12, color: namenKleur }} />
             {datum && (
-              <div style={{ display: "flex", ...tt("datum", letters.kop, 10.5), letterSpacing: "0.14em", color: kader.kleur.accent }}>{datum}</div>
+              <div style={{ display: "flex", ...tt("datum", letters.kop, 10.5), letterSpacing: "0.14em", color: datumKleur }}>{datum}</div>
             )}
           </D>
         </D>
