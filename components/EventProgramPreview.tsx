@@ -337,15 +337,36 @@ export default function EventProgramPreview({ items, sc, datum, builderMode, onI
     return () => { window.removeEventListener("scroll", meet); window.removeEventListener("resize", meet) }
   }, [builderMode])
 
-  const lijnKlas = "absolute top-0 bottom-0 left-[32px] @md:left-1/2"
+  // De lijn loopt van het midden van het eerste rondje tot het midden van het
+  // laatste. Eerst liep hij over het hele vak en stak hij boven het eerste en
+  // onder het laatste onderdeel uit (Michiel, 10 oktober 2026). Het midden van
+  // een rondje: 4 px ruimte erboven plus de helft van 64.
+  const MIDDEN = 36
+  const [lijnOnder, setLijnOnder] = useState(MIDDEN)
+  useEffect(() => {
+    const el = vak.current
+    if (!el) return
+    const meet = () => {
+      const onderdelen = el.querySelectorAll<HTMLElement>("[data-onderdeel]")
+      const laatste = onderdelen[onderdelen.length - 1]
+      if (laatste) setLijnOnder(Math.max(0, el.clientHeight - (laatste.offsetTop + MIDDEN)))
+    }
+    meet()
+    const ro = new ResizeObserver(meet)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [items])
+
+  const lijnKlas = "absolute left-[32px] @md:left-1/2"
+  const lijnPlek = { top: MIDDEN, bottom: lijnOnder }
 
   return (
     <div className="@container" style={{ fontFamily: sc.fontFamily }}>
       <div style={{ padding: "48px 20px 64px" }}>
         <SectieKop sc={sc} kopje="De dag" titel={<span className="notranslate">{getUILabel(locale, "programma")}</span>} />
         <div ref={vak} className="relative mx-auto" style={{ maxWidth: 840 }}>
-          <div aria-hidden="true" className={lijnKlas} style={{ width: 1, marginLeft: -0.5, backgroundColor: `${sc.accent}2e` }} />
-          <div aria-hidden="true" className={lijnKlas} style={{ width: 1, marginLeft: -0.5, backgroundColor: sc.accent, transformOrigin: "top", transform: `scaleY(${deel})`, transition: "transform 0.25s linear" }} />
+          <div aria-hidden="true" className={lijnKlas} style={{ ...lijnPlek, width: 1, marginLeft: -0.5, backgroundColor: `${sc.accent}2e` }} />
+          <div aria-hidden="true" className={lijnKlas} style={{ ...lijnPlek, width: 1, marginLeft: -0.5, backgroundColor: sc.accent,transformOrigin: "top", transform: `scaleY(${deel})`, transition: "transform 0.25s linear" }} />
 
           {sorted.map((item, i) => {
             const rechts = i % 2 === 1
@@ -361,7 +382,7 @@ export default function EventProgramPreview({ items, sc, datum, builderMode, onI
               : {}
             const wijs = onItemClick && item.id ? { cursor: "pointer" as const } : {}
             return (
-              <div key={id} className="relative grid grid-cols-[64px_1fr] @md:grid-cols-[1fr_88px_1fr] items-start" style={{ paddingBottom: laatste ? 0 : 36 }}>
+              <div key={id} data-onderdeel className="relative grid grid-cols-[64px_1fr] @md:grid-cols-[1fr_88px_1fr] items-start" style={{ paddingBottom: laatste ? 0 : 36 }}>
                 {/* Het rondje op de lijn, met het icoon of een fotootje */}
                 <div className="flex justify-center @md:col-start-2 @md:row-start-1" style={{ paddingTop: 4 }}>
                   <div
