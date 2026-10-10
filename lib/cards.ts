@@ -38,7 +38,7 @@ export type NieuwOntwerp =
   // (27 september 2026)
   | "krijtgroot" | "hartrand" | "harthoek" | "pakjurk" | "proost" | "strik"
   // Een getekende krans van Michiel, doorzichtig (10 oktober 2026)
-  | "krans"
+  | "krans" | "kranstakjes"
 export type CardDesign = KlassiekOntwerp | NieuwOntwerp
 export type CardTemplate = CardDesign | "foto"
 
@@ -48,7 +48,7 @@ export const CARD_TEMPLATE_WAARDEN: CardTemplate[] = [
   "titel", "palm", "ibiza", "fotoschrift", "olijf",
   "pampas", "pampasruit", "terra", "terraruit", "herfst", "herfstruit", "goudblad", "magnolia",
   "winter", "zomer", "liefde", "boho", "hartlijn", "tweeharten", "hartamp", "hartkader", "krijthart", "kalligrafie", "schaduwhart",
-  "krijtgroot", "hartrand", "harthoek", "pakjurk", "proost", "strik", "krans",
+  "krijtgroot", "hartrand", "harthoek", "pakjurk", "proost", "strik", "krans", "kranstakjes",
 ]
 
 export function isKlassiekOntwerp(d: CardDesign): d is KlassiekOntwerp {
@@ -228,7 +228,7 @@ export const CARD_TYPE_PLAN: Record<CardType, "save_the_date" | "uitnodiging"> =
 // kaart (Michiel, 27 september 2026).
 export const CARD_DESIGNS: CardDesign[] = [
   "schaduwhart", "harthoek", "krijthart", "krijtgroot", "kalligrafie", "hartrand", "hartamp", "hartlijn", "tweeharten", "hartkader", "pakjurk", "liefde",
-  "proost", "strik", "krans",
+  "proost", "strik", "krans", "kranstakjes",
   "klassiek", "sierlijk", "bohemian", "olijf", "pampas", "pampasruit", "terra", "terraruit", "herfst", "herfstruit", "goudblad", "magnolia",
   "minimaal", "datum", "titel", "palm", "ibiza", "deco", "boog", "fotovol", "fotoschrift",
   "winter", "zomer", "boho", "eigen",
@@ -261,6 +261,7 @@ export const CARD_TEMPLATE_LABEL: Record<CardDesign, string> = {
   goudblad: "Gouden blad",
   magnolia: "Magnolia",
   krans: "Krans",
+  kranstakjes: "Krans met takjes",
   editoriaal: "Editoriaal",
   monogram: "Monogram",
   lijnkader: "Klassiek kader",

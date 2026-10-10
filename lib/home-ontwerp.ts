@@ -17,7 +17,7 @@ export const HOME_ONTWERPEN: NieuwOntwerp[] = [
   // De ontwerpen met een hart bovenaan, net als bij de kaart (Michiel,
   // 27 september 2026)
   "schaduwhart", "harthoek", "krijthart", "krijtgroot", "kalligrafie", "hartrand", "hartamp", "hartlijn", "tweeharten", "hartkader", "pakjurk", "liefde",
-  "proost", "strik", "krans",
+  "proost", "strik", "krans", "kranstakjes",
   // Speciaal voor de homepagina, breed getekend (27 september 2026)
   "editoriaal", "monogram", "lijnkader", "datumband",
   // De andere themaontwerpen, ook voor de kaart

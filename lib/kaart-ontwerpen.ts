@@ -90,6 +90,7 @@ export const ONTWERP_LETTERS: Record<NieuwOntwerp, OntwerpLetters> = {
   proost: { namen: L.cormorant, kop: L.cormorant, tekst: L.cormorant, extra: L.allison },
   strik: { namen: L.bodoni, kop: L.montserrat, tekst: L.montserrat, extra: L.greatvibes },
   krans: { namen: L.italiana, kop: L.jost, tekst: L.jost, extra: L.greatvibes },
+  kranstakjes: { namen: L.italiana, kop: L.jost, tekst: L.jost, extra: L.greatvibes },
 }
 
 /**
@@ -113,6 +114,7 @@ export const VERBINDER: Partial<Record<NieuwOntwerp, Verbinder>> = {
   schaduwhart: "sierAmp",
   harthoek: "sierAmp",
   krans: "sierAmp",
+  kranstakjes: "sierAmp",
   titel: "hart",
   fotoschrift: "hart",
   datum: "hart",
@@ -150,6 +152,8 @@ export const KADERS: Partial<Record<NieuwOntwerp, KaderOntwerp>> = {
   // Getekend, met eucalyptus en besjes; aangeleverd door Michiel (10 oktober
   // 2026). Helemaal doorzichtig, zodat hij op elke stijl past.
   krans: { web: "/frames/eucalyptus-krans.webp", afbeelding: "/kaart-illustraties/eucalyptus-krans.png", vorm: "krans", midden: [0.501, 0.499], ruimte: [0.46, 0.36], kleur: { namen: "#4E3B33", accent: "#A86F5E" }, doorzichtig: true },
+  // Losse takjes rond een dubbele ring, ook van Michiel (10 oktober 2026)
+  kranstakjes: { web: "/frames/takjes-krans.webp", afbeelding: "/kaart-illustraties/takjes-krans.png", vorm: "krans", midden: [0.5, 0.509], ruimte: [0.44, 0.34], kleur: { namen: "#5C3A34", accent: "#B07A72" }, doorzichtig: true },
   magnolia: { web: "/frames/Bloem-rechthoek.webp", afbeelding: "/kaart-illustraties/magnolia.jpg", vorm: "liggend", verhouding: 0.56, midden: [0.5, 0.5], ruimte: [0.58, 0.66], kleur: { namen: "#44503F", accent: "#A08249" } },
 }
 
@@ -213,6 +217,7 @@ export const ONDER_DE_KAART: Partial<Record<CardDesign, OnderDeKaart>> = {
   herfst: { locatie: false, bericht: false, details: true },
   herfstruit: { locatie: false, bericht: false, details: true },
   krans: { locatie: false, bericht: false, details: true },
+  kranstakjes: { locatie: false, bericht: false, details: true },
   goudblad: { locatie: false, bericht: true, details: true },
   magnolia: { locatie: false, bericht: true, details: true },
   // Een eigen ontwerp heeft alles al in de afbeelding; alleen wat je er zelf
