@@ -19,11 +19,11 @@ import { VOORBEELD } from "@/lib/voorbeeld"
 import { GOUD, GOUD_LICHT, INKT, IVOOR, TEKST, ZACHT } from "./stijl"
 
 const LS_KAART = "sayingyes_kaart"
-// Boog in Zand: de initialen in de boog en de namen in een rustige letter
-// veranderen allebei mee. Olijf in Parel was het eerst, maar de sierletter
-// van de namen vond Michiel geen mooi voorbeeld (4 oktober 2026).
-const ONTWERP: NieuwOntwerp = "boog"
-const STIJL = "zand"
+// Hart met schaduw in Smaragd, dezelfde kaart als die van het voorbeeldpaar.
+// Eerst Olijf in Parel (sierletter vond Michiel niet mooi), daarna Boog in
+// Zand; Michiel koos op 10 oktober 2026 voor deze.
+const ONTWERP: NieuwOntwerp = "schaduwhart"
+const STIJL = "emerald"
 
 const invoer =
   "w-full rounded-xl border px-4 py-3 text-base focus:outline-none focus:ring-2 transition-all"
