@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, type CSSProperties } from "react"
 import type { SC } from "@/lib/event-styles"
 import SectieKop from "./site/SectieKop"
 import { useUILocale } from "@/hooks/useUILocale"
@@ -346,17 +346,20 @@ export default function EventProgramPreview({ items, sc, datum, builderMode, onI
 
   // De lijn loopt van het midden van het eerste rondje tot het midden van het
   // laatste. Eerst liep hij over het hele vak en stak hij boven het eerste en
-  // onder het laatste onderdeel uit (Michiel, 10 oktober 2026). Het midden van
-  // een rondje: 4 px ruimte erboven plus de helft van 64.
-  const MIDDEN = 36
-  const [lijnOnder, setLijnOnder] = useState(MIDDEN)
+  // onder het laatste onderdeel uit (Michiel, 10 oktober 2026). Gemeten aan de
+  // rondjes zelf, want die zijn op de desktop groter dan op de telefoon.
+  const [lijnPlek, setLijnPlek] = useState({ top: 36, bottom: 36 })
   useEffect(() => {
     const el = vak.current
     if (!el) return
     const meet = () => {
-      const onderdelen = el.querySelectorAll<HTMLElement>("[data-onderdeel]")
-      const laatste = onderdelen[onderdelen.length - 1]
-      if (laatste) setLijnOnder(Math.max(0, el.clientHeight - (laatste.offsetTop + MIDDEN)))
+      const rondjes = el.querySelectorAll<HTMLElement>("[data-rondje]")
+      const eerste = rondjes[0]
+      const laatste = rondjes[rondjes.length - 1]
+      if (!eerste || !laatste) return
+      const vakTop = el.getBoundingClientRect().top
+      const midden = (r: HTMLElement) => { const b = r.getBoundingClientRect(); return b.top - vakTop + b.height / 2 }
+      setLijnPlek({ top: Math.round(midden(eerste)), bottom: Math.max(0, Math.round(el.clientHeight - midden(laatste))) })
     }
     meet()
     const ro = new ResizeObserver(meet)
@@ -365,7 +368,6 @@ export default function EventProgramPreview({ items, sc, datum, builderMode, onI
   }, [items])
 
   const lijnKlas = "absolute left-[32px] @md:left-1/2"
-  const lijnPlek = { top: MIDDEN, bottom: lijnOnder }
 
   return (
     <div className="@container" style={{ fontFamily: sc.fontFamily }}>
@@ -389,25 +391,33 @@ export default function EventProgramPreview({ items, sc, datum, builderMode, onI
               : {}
             const wijs = onItemClick && item.id ? { cursor: "pointer" as const } : {}
             return (
-              <div key={id} data-onderdeel className="relative grid grid-cols-[64px_1fr] @md:grid-cols-[1fr_88px_1fr] items-start" style={{ paddingBottom: laatste ? 0 : 36 }}>
-                {/* Het rondje op de lijn, met het icoon of een fotootje */}
+              <div key={id} data-onderdeel className="group relative grid grid-cols-[64px_1fr] @md:grid-cols-[1fr_96px_1fr] items-start" style={{ paddingBottom: laatste ? 0 : 36 }}>
+                {/* Het rondje op de lijn, met het icoon of een fotootje. Op de
+                    desktop groter: 80 in plaats van 64, met een icoon van 52
+                    (Michiel, 10 oktober 2026). */}
                 <div className="flex justify-center @md:col-start-2 @md:row-start-1" style={{ paddingTop: 4 }}>
                   <div
+                    data-rondje
+                    // Met de muis over een onderdeel: het rondje wordt iets
+                    // groter en krijgt een zachte ring (Michiel, 10 oktober
+                    // 2026). Alleen met een muis; op de telefoon blijft het stil.
+                    className="w-16 h-16 @md:w-20 @md:h-20 group-hover:scale-110 group-hover:shadow-[0_0_0_6px_var(--rond-ring)]"
                     style={{
-                      width: 64, height: 64, borderRadius: "50%", flexShrink: 0, overflow: "hidden",
+                      "--rond-ring": `${sc.accent}26`,
+                      borderRadius: "50%", flexShrink: 0, overflow: "hidden",
                       backgroundColor: nu ? sc.accent : sc.bodyBg,
                       border: `1.5px solid ${sc.accent}`,
                       boxShadow: nu ? `0 0 0 7px ${sc.accent}30` : undefined,
                       display: "flex", alignItems: "center", justifyContent: "center",
                       color: nu ? sc.buttonText : sc.accent,
-                      transition: "background-color 0.4s ease, box-shadow 0.4s ease",
-                    }}
+                      transition: "background-color 0.4s ease, box-shadow 0.3s ease, transform 0.3s ease",
+                    } as CSSProperties}
                   >
                     {item.image_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={item.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: `${item.imagePosX ?? 50}% 50%` }} />
                     ) : (
-                      <ProgramIcon iconId={item.iconId} size={42 /* was 34, Michiel wilde ze groter (10 oktober 2026) */} strokeWidth={1.5} />
+                      <ProgramIcon iconId={item.iconId} size={42 /* was 34, Michiel wilde ze groter (10 oktober 2026) */} strokeWidth={1.5} className="@md:w-auto @md:h-[52px]" />
                     )}
                   </div>
                 </div>
