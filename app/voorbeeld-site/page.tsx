@@ -76,9 +76,10 @@ const INSTELLINGEN: HomepageSettings = {
 }
 
 const MOMENTEN: Moment[] = [
-  { id: "m1", jaar: "2016", titel: "Hoe we elkaar leerden kennen", tekst: "Op een feestje van een gezamenlijke vriend, in een keuken in Utrecht. Daan was te laat, Sophie vergaf het hem na één drankje. Twee weken later de eerste date, en daarna zijn we eigenlijk nooit meer uit elkaar gegaan." },
-  { id: "m2", jaar: "2020", titel: "Samen wonen", tekst: "Een huis in Arnhem met een tuin die te groot was voor onze plannen. We kregen Moos, een hond die nog steeds denkt dat hij een schoothond is." },
-  { id: "m3", jaar: "2025", titel: "Het aanzoek", tekst: "Op het strand van Terschelling, net na zonsondergang. Ze zei ja voordat hij was uitgepraat. De ring zat vol zand." },
+  // Foto's van Michiel (10 oktober 2026), verkleind in public/voorbeeld
+  { id: "m1", jaar: "2016", titel: "Hoe we elkaar leerden kennen", tekst: "In een bruin café in Utrecht, via een gezamenlijke vriend. Daan was te laat, Sophie vergaf het hem na één biertje en een bitterbal. Twee weken later de eerste date, en daarna zijn we eigenlijk nooit meer uit elkaar gegaan.", image_url: "/voorbeeld/verhaal-kennismaking.webp" },
+  { id: "m2", jaar: "2020", titel: "Samen wonen", tekst: "Een huis in Arnhem met een tuin die te groot was voor onze plannen. We kregen Moos, een hond die nog steeds denkt dat hij een schoothond is.", image_url: "/voorbeeld/verhaal-samen-wonen.webp" },
+  { id: "m3", jaar: "2025", titel: "Het aanzoek", tekst: "Op het strand van Terschelling, net na zonsondergang. Ze zei ja voordat hij was uitgepraat. De ring zat vol zand.", image_url: "/voorbeeld/verhaal-aanzoek.webp" },
 ]
 
 const CEREMONIEMEESTERS = [
