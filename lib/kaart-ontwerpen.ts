@@ -31,6 +31,7 @@ const L = {
   jost: { css: "var(--font-jost), Helvetica, sans-serif", google: "Jost", gewicht: 400 },
   // In plaats van Pinyon Script voor de namen (Michiel, 27 september 2026)
   greatvibes: { css: "var(--font-greatvibes), cursive", google: "Great Vibes", gewicht: 400 },
+  parisienne: { css: "var(--font-parisienne), cursive", google: "Parisienne", gewicht: 400 },
 } satisfies Record<string, KaartLetter>
 
 /**
@@ -101,7 +102,9 @@ export const ONTWERP_LETTERS: Record<NieuwOntwerp, OntwerpLetters> = {
  * grote hart-tekening een klein hartje. Ontwerpen die de namen zelf opdelen
  * (Hart in de &, Strik, Palm) staan hier niet in.
  */
-export type Verbinder = "amp" | "sierAmp" | "hart"
+// letterAmp: de & van AMP_LETTER in de kleur van de namen, voor de ontwerpen
+// met de namen in een sierletter (Michiel, 10 oktober 2026)
+export type Verbinder = "amp" | "sierAmp" | "letterAmp" | "hart"
 export const VERBINDER: Partial<Record<NieuwOntwerp, Verbinder>> = {
   minimaal: "sierAmp",
   boog: "sierAmp",
@@ -118,6 +121,26 @@ export const VERBINDER: Partial<Record<NieuwOntwerp, Verbinder>> = {
   titel: "hart",
   fotoschrift: "hart",
   datum: "hart",
+  fotovol: "letterAmp",
+  ibiza: "letterAmp",
+  olijf: "letterAmp",
+  pampas: "letterAmp",
+  pampasruit: "letterAmp",
+  terra: "letterAmp",
+  terraruit: "letterAmp",
+  goudblad: "letterAmp",
+  magnolia: "letterAmp",
+  lijnkader: "letterAmp",
+  datumband: "letterAmp",
+  liefde: "letterAmp",
+  hartlijn: "letterAmp",
+  tweeharten: "letterAmp",
+  hartkader: "letterAmp",
+  krijthart: "letterAmp",
+  kalligrafie: "letterAmp",
+  krijtgroot: "letterAmp",
+  hartrand: "letterAmp",
+  pakjurk: "letterAmp",
 }
 
 // ── De kaders uit de websitebouwer ─────────────────────────────────────────
@@ -178,17 +201,26 @@ export function illustratie(pad: string, voorAfbeelding: boolean): string {
   return `${basis.replace(/\/$/, "")}${pad}`
 }
 
+/**
+ * De sierlijke & tussen de namen en tussen de initialen, in alle ontwerpen
+ * dezelfde. Eerst die van Great Vibes; Michiel koos Parisienne, die lijkt op
+ * de kaart van Anne en Alex (10 oktober 2026).
+ */
+export const AMP_LETTER: KaartLetter = L.parisienne
+
 /** Dezelfde rollen, als font-family voor in een style. */
 export interface VoorkantLetters {
   namen: string
   kop: string
   tekst: string
   extra: string
+  /** De sierlijke & */
+  amp?: string
 }
 
 export function browserLetters(ontwerp: NieuwOntwerp): VoorkantLetters {
   const l = ONTWERP_LETTERS[ontwerp]
-  return { namen: l.namen.css, kop: l.kop.css, tekst: l.tekst.css, extra: (l.extra ?? l.namen).css }
+  return { namen: l.namen.css, kop: l.kop.css, tekst: l.tekst.css, extra: (l.extra ?? l.namen).css, amp: AMP_LETTER.css }
 }
 
 // ── Wat onder de kaart komt ─────────────────────────────────────────────────

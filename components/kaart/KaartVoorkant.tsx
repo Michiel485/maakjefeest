@@ -408,8 +408,11 @@ function Namen({
       // anders is het hartje een stipje
       <Hart breedte={g < 24 ? g * 0.62 : g * 0.4} kleur={vb.kleur} vol />
     ) : soort === "sierAmp" && vb ? (
-      // De & in Great Vibes loopt rechts ver door: daar wat extra ruimte
-      <div style={{ display: "flex", fontFamily: vb.letter, fontSize: g * 1.05, lineHeight: 1, color: vb.kleur, textTransform: "none", letterSpacing: 0, marginRight: g * 0.1 }}>&amp;</div>
+      // De sierlijke & (AMP_LETTER, Parisienne)
+      <div style={{ display: "flex", fontFamily: vb.letter, fontSize: g * 1.05, lineHeight: 1, color: vb.kleur, textTransform: "none", letterSpacing: 0 }}>&amp;</div>
+    ) : soort === "letterAmp" && vb ? (
+      // Dezelfde & als hierboven, maar in de kleur van de namen
+      <div style={{ display: "flex", fontFamily: vb.letter, fontSize: g * 1.05, lineHeight: 1, textTransform: "none", letterSpacing: 0 }}>&amp;</div>
     ) : (
       <div style={{ display: "flex" }}>&amp;</div>
     )
@@ -692,7 +695,7 @@ function Inhoud({
 
   const accent = sc.accent
   // Wat er tussen de namen komt, per ontwerp (Michiel, 28 september 2026)
-  const vb: VerbinderStijl = { soort: VERBINDER[ontwerp] ?? "amp", letter: letters.extra ?? letters.namen, kleur: accent }
+  const vb: VerbinderStijl = { soort: VERBINDER[ontwerp] ?? "amp", letter: letters.amp ?? letters.extra ?? letters.namen, kleur: accent }
   // De kleine kop ("Save the Date") in de kleur van de stijl, tenzij die op
   // deze achtergrond wegvalt
   const label = leesbaar(sc.labelColor, achtergrond, [kop])
@@ -1795,7 +1798,7 @@ function Inhoud({
             >
               <div style={{ display: "flex", alignItems: "center", fontFamily: letters.extra, fontSize: pxN(64), lineHeight: 1, color: namenKleur }}>
                 {ini[0] ?? "♥"}
-                {ini[1] && <span style={{ display: "flex", fontSize: pxN(38), margin: `0 ${px(3)}px`, color: datumKleur }}>&amp;</span>}
+                {ini[1] && <span style={{ display: "flex", fontFamily: letters.amp ?? letters.extra, fontSize: pxN(38), margin: `0 ${px(3)}px`, color: datumKleur }}>&amp;</span>}
                 {ini[1]}
               </div>
             </D>

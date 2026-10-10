@@ -6,7 +6,7 @@
 import { ImageResponse } from "next/og"
 import type { CardDisplay, NieuwOntwerp } from "./cards"
 import type { SC } from "./event-styles"
-import { ONTWERP_LETTERS, ONTWERP_VERHOUDING, type KaartLetter } from "./kaart-ontwerpen"
+import { AMP_LETTER, ONTWERP_LETTERS, ONTWERP_VERHOUDING, type KaartLetter } from "./kaart-ontwerpen"
 import { TITLE_FONT_OPTIONS, gemetenLetter } from "./title-fonts"
 import KaartVoorkant from "@/components/kaart/KaartVoorkant"
 
@@ -61,6 +61,7 @@ export async function renderNieuweKaartAfbeelding({
     kop: await laad(l.kop, "serif"),
     tekst: await laad(l.tekst, "sans-serif"),
     extra: await laad(l.extra ?? l.namen, "serif"),
+    amp: await laad(AMP_LETTER, "serif"),
   }
 
   // Diagonale banen over de hele afbeelding, net als bij de eerste ontwerpen

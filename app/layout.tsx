@@ -40,6 +40,15 @@ const playfairDisplay = localFont({
   preload: false,
 });
 
+// De sierlijke & op de kaarten (lib/kaart-ontwerpen.ts, AMP_LETTER)
+const parisienne = localFont({
+  src: "./fonts/parisienne-400.woff2",
+  variable: "--font-parisienne",
+  weight: "400",
+  display: "swap",
+  preload: false,
+});
+
 const greatVibes = localFont({
   src: "./fonts/greatvibes-400.woff2",
   variable: "--font-greatvibes",
@@ -225,7 +234,7 @@ export default function RootLayout({
     <html
       lang="nl"
       data-color-scheme="light"
-      className={`${geistSans.variable} ${geistMono.variable} ${playfairDisplay.variable} ${greatVibes.variable} ${cormorantGaramond.variable} ${pinyonScript.variable} ${cinzel.variable} ${dancingScript.variable} ${montserrat.variable} ${marcellus.variable} ${lora.variable} ${windSong.variable} ${allura.variable} ${bodoniModa.variable} ${italiana.variable} ${gfsDidot.variable} ${prata.variable} ${allison.variable} ${abrilFatface.variable} ${jost.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${playfairDisplay.variable} ${greatVibes.variable} ${parisienne.variable} ${cormorantGaramond.variable} ${pinyonScript.variable} ${cinzel.variable} ${dancingScript.variable} ${montserrat.variable} ${marcellus.variable} ${lora.variable} ${windSong.variable} ${allura.variable} ${bodoniModa.variable} ${italiana.variable} ${gfsDidot.variable} ${prata.variable} ${allison.variable} ${abrilFatface.variable} ${jost.variable} h-full antialiased`}
       style={{ colorScheme: "only light" }}
     >
       <body className="min-h-full flex flex-col">
