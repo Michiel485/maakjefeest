@@ -2448,6 +2448,9 @@ export default function BouwenPage() {
                   </button>
                   {algOpen('lettertype') && (
                     <div className="px-5 pb-4 flex flex-col gap-2">
+                      {/* Een titel, net als Paginaweergave erboven (Michiel, 10 oktober 2026);
+                          dezelfde naam als de knop bij de namen op de homepage */}
+                      <p className="text-xs font-semibold text-gray-700">Lettertype van de site</p>
                       <FontSelect value={fontPageTitles} onChange={saveFontPageTitles} />
                       <p className="text-xs text-gray-400 leading-relaxed">
                         Voor alle pagina's. De letters op de homepage kies je bij de tekst van de homepage.
