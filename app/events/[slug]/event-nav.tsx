@@ -330,7 +330,10 @@ export default function EventNav({
           </div>
 
           {/* Right controls: language switcher (desktop) + hamburger (mobile) */}
-          <div ref={ctrlRef} className="flex items-center gap-2 flex-shrink-0">
+          {/* ml-auto: altijd rechts, ook als er links niets staat. Stonden de
+              links op een eigen rij, dan schoof de taalkeuze naar links en
+              viel zijn menu buiten de site (Michiel, 10 oktober 2026). */}
+          <div ref={ctrlRef} className="flex items-center gap-2 flex-shrink-0 ml-auto">
             <div className="hidden @md:flex">
               <LanguageSwitcher accent={sc.accent} textColor={sc.navText} bgColor={sc.navBg} />
             </div>
