@@ -115,11 +115,18 @@ export default function MomentenEditor({
                 </button>
               </div>
             </div>
-            {/* Het kopje kreeg w-full naast het jaar en stak zo buiten het
-                paneel (Michiel, 2 oktober 2026): flex-1 met min-w-0 */}
-            <div className="flex gap-2">
-              <input type="text" value={m.jaar ?? ""} onChange={(e) => zet(m.id, { jaar: e.target.value })} placeholder={VOORBEELDEN[i]?.jaar ?? "2016"} maxLength={24} className={`${invoer} w-20 flex-shrink-0`} aria-label="Jaar of woord" />
-              <input type="text" value={m.titel ?? ""} onChange={(e) => zet(m.id, { titel: e.target.value })} placeholder={VOORBEELDEN[i]?.titel ?? "Een kopje"} maxLength={60} className={`${invoer} flex-1 min-w-0`} aria-label="Kopje" />
+            {/* Jaar en titel in een vast raster. In een flexrij won w-full van
+                w-20, werd het jaar zo breed als het paneel en viel de titel
+                erbuiten (Michiel, 2 en 10 oktober 2026). */}
+            <div className="grid grid-cols-[5.5rem_minmax(0,1fr)] gap-2">
+              <label className="flex flex-col gap-1 min-w-0">
+                <span className="text-[11px] font-semibold text-gray-500">Jaar</span>
+                <input type="text" value={m.jaar ?? ""} onChange={(e) => zet(m.id, { jaar: e.target.value })} placeholder={VOORBEELDEN[i]?.jaar ?? "2016"} maxLength={24} className={invoer} />
+              </label>
+              <label className="flex flex-col gap-1 min-w-0">
+                <span className="text-[11px] font-semibold text-gray-500">Titel</span>
+                <input type="text" value={m.titel ?? ""} onChange={(e) => zet(m.id, { titel: e.target.value })} placeholder={VOORBEELDEN[i]?.titel ?? "Een titel"} maxLength={60} className={invoer} />
+              </label>
             </div>
             <textarea
               id={`onsverhaal-moment-${m.id}-tekst`}
@@ -181,7 +188,7 @@ export default function MomentenEditor({
           {momenten.length === 0 ? "Eerste moment toevoegen" : "Nog een moment"}
         </button>
       )}
-      <p className="text-[11px] text-gray-400 leading-snug">Een jaar of een woord, een kopje en een paar zinnen. Drie of vier momenten is meestal genoeg.</p>
+      <p className="text-[11px] text-gray-400 leading-snug">Een jaar of een woord, een titel en een paar zinnen. Drie of vier momenten is meestal genoeg.</p>
       <input ref={bestand} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={kiesFoto} />
     </div>
   )

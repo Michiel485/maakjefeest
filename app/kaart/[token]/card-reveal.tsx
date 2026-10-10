@@ -63,6 +63,8 @@ const KAART_IN_ENVELOP = 0.14
 // rekening mee, anders komt bij de hoogste stand een randje kaart onder de
 // envelop uit.
 const ENVELOP_ZWEEF = 4
+// Hoeveel breder dan de kaart de envelop is in een vak op een pagina
+const COMPACT_ENVELOP_EXTRA = 10
 
 // Hoe lang de klep erover doet om open te klappen. Halverwege staat hij recht
 // overeind en gaat hij achter de kaart langs; daarvoor hoort hij ervoor.
@@ -315,7 +317,8 @@ export default function CardReveal({
     const meet = () => {
       setKaartBreedte(Math.max(240, Math.round(el.clientWidth)))
       if (gezicht) setGezichtHoogte(Math.round(gezicht.offsetHeight))
-      setEnvelopHoogte(Math.round((Math.min(460, window.innerWidth - 12) * 12) / 17))
+      const envelopBreedte = compact ? el.clientWidth + COMPACT_ENVELOP_EXTRA : window.innerWidth - 12
+      setEnvelopHoogte(Math.round((Math.min(460, envelopBreedte) * 12) / 17))
     }
     // Een ResizeObserver meldt zich ook meteen bij het begin; de timeout is
     // voor als hij dat niet doet, bijvoorbeeld in een tabblad op de achtergrond
@@ -324,7 +327,7 @@ export default function CardReveal({
     if (gezicht) ro.observe(gezicht)
     const t = setTimeout(meet, 0)
     return () => { ro.disconnect(); clearTimeout(t) }
-  }, [])
+  }, [compact])
   const reduceMotion = useSyncExternalStore(
     subscribeReducedMotion,
     () => window.matchMedia(REDUCED_MOTION_QUERY).matches,
@@ -695,8 +698,11 @@ export default function CardReveal({
               className="relative"
               style={{
                 // Breder dan de kaart (max 420), anders steekt de kaart aan de
-                // zijkanten uit en lijkt het nooit alsof hij erin zit
-                width: "min(460px, calc(100vw - 12px))",
+                // zijkanten uit en lijkt het nooit alsof hij erin zit. In een
+                // vak op een pagina (compact) rekent hij met de kaart en niet
+                // met het scherm: anders liep hij op de telefoon tot tegen de
+                // rand van het vak op de homepage (Michiel, 10 oktober 2026).
+                width: compact ? `min(460px, calc(100% + ${COMPACT_ENVELOP_EXTRA}px))` : "min(460px, calc(100vw - 12px))",
                 aspectRatio: "17/12",
               }}
             >

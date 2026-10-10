@@ -6,7 +6,7 @@
 // Eén moment zonder jaar is gewoon het oude verhaal, maar dan mooi gezet.
 
 import type { SC } from "@/lib/event-styles"
-import type { Moment } from "@/lib/verhaal"
+import { momentHeeftInhoud, type Moment } from "@/lib/verhaal"
 import SectieKop from "./site/SectieKop"
 import SleepFoto from "./site/SleepFoto"
 
@@ -23,7 +23,7 @@ export interface StoryPreviewProps {
 
 export default function StoryPreview({ title, quote, momenten, editable = false, onFieldClick, onPositionChange, sc }: StoryPreviewProps) {
   const klik = (veld: string) => onFieldClick ? { onClick: () => onFieldClick(veld), style: { cursor: "pointer" } as const, title: "Klik om te bewerken" } : {}
-  const metInhoud = momenten.filter((m) => m.tekst.trim() || m.image_url)
+  const metInhoud = momenten.filter(momentHeeftInhoud)
   const leeg = metInhoud.length === 0 && !quote?.trim()
 
   return (

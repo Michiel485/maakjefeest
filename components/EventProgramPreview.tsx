@@ -379,7 +379,7 @@ export default function EventProgramPreview({ items, sc, datum, builderMode, onI
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={item.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: `${item.imagePosX ?? 50}% 50%` }} />
                     ) : (
-                      <ProgramIcon iconId={item.iconId} size={34} strokeWidth={1.5} />
+                      <ProgramIcon iconId={item.iconId} size={42 /* was 34, Michiel wilde ze groter (10 oktober 2026) */} strokeWidth={1.5} />
                     )}
                   </div>
                 </div>

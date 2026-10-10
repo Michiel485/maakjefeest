@@ -52,7 +52,13 @@ export function verhaalQuote(content: unknown): string {
   return tekstOf(c.quote).trim()
 }
 
+/** Heeft dit moment iets om te laten zien? Een titel alleen telt ook: een
+ *  moment met alleen een titel bleef eerst onzichtbaar (Michiel, 10 oktober 2026). */
+export function momentHeeftInhoud(m: Moment): boolean {
+  return !!(m.tekst.trim() || m.titel?.trim() || m.image_url)
+}
+
 /** Staat er iets in het verhaal dat een gast kan zien? */
 export function verhaalHeeftInhoud(content: unknown): boolean {
-  return verhaalQuote(content).length > 0 || verhaalMomenten(content).some((m) => m.tekst.trim() || m.image_url)
+  return verhaalQuote(content).length > 0 || verhaalMomenten(content).some(momentHeeftInhoud)
 }
