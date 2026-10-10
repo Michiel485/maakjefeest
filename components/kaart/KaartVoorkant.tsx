@@ -640,6 +640,7 @@ function Inhoud({
   schaduw,
   voorAfbeelding = false,
   vrij = false,
+  opFoto = false,
   eigen,
   namenMeting,
   detailRollen,
@@ -659,6 +660,12 @@ function Inhoud({
   voorAfbeelding?: boolean
   /** Op de homepagina: geen kaart, maar het ontwerp vrij op de pagina */
   vrij?: boolean
+  /**
+   * Op een foto (de opening Ontwerp op foto): geen achtergrond, alleen het
+   * ontwerp. De kleuren komen uit een donkere stijl die de homepagina
+   * meegeeft (Michiel, 10 oktober 2026).
+   */
+  opFoto?: boolean
   /**
    * Per tekst een eigen letter (een font-family) en grootte (1 is zoals
    * ontworpen). Voor de homepagina; op een kaart is dit er niet.
@@ -690,6 +697,9 @@ function Inhoud({
   const hoogte = Math.round(breedte * 1.4)
 
   const achtergrond = vrij ? sc.bodyBg : sc.cardBg ?? "#FFFEFB"
+  // Wat echt geschilderd wordt. Op een foto niets: de foto is de achtergrond,
+  // ook achter de stukjes die een lijn onderbreken.
+  const vlak = opFoto ? "transparent" : achtergrond
   const kop = vrij ? sc.headingColor : sc.cardText ?? sc.headingColor
   const tekst = vrij ? sc.bodyText : sc.cardText ?? sc.bodyText
 
@@ -822,7 +832,8 @@ function Inhoud({
     width: breedte,
     minHeight: hoogte,
     overflow: "hidden",
-    backgroundColor: achtergrond,
+    backgroundColor: vlak,
+    ...(opFoto ? { textShadow: "0 2px 14px rgba(0,0,0,0.45)" } : {}),
     ...(schaduw ? { boxShadow: schaduw } : {}),
   }
 
@@ -1402,7 +1413,7 @@ function Inhoud({
       ), [
         los({ left: rand, top: rand, right: rand, bottom: rand, border: `${lijn}px solid ${accent}`, borderRadius: px(6) }, null, 0),
         // Het hart onderbreekt de rand: een stukje achtergrond erachter
-        los({ left: (breedte - hw) / 2 - px(10), top: rand - hw * 0.3, paddingLeft: px(10), paddingRight: px(10), backgroundColor: achtergrond }, <KalligrafieHart breedte={hw} kleur={accent} />, 1),
+        los({ left: (breedte - hw) / 2 - px(10), top: rand - hw * 0.3, paddingLeft: px(10), paddingRight: px(10), backgroundColor: vlak }, <KalligrafieHart breedte={hw} kleur={accent} />, 1),
       ])
     }
 
@@ -1439,7 +1450,7 @@ function Inhoud({
         <D style={kolom}>
           {kopRegel()}
           <D style={{ marginTop: px(8), marginBottom: px(8) }}>
-            <PakEnJurk breedte={px(250)} kop={kop} accent={accent} achtergrond={achtergrond} />
+            <PakEnJurk breedte={px(250)} kop={kop} accent={accent} achtergrond={vlak} />
           </D>
           {inhoud({ datumKleur: kop })}
         </D>
@@ -1527,7 +1538,7 @@ function Inhoud({
             <path d={golfKader(400, 560, { inzet: 26, hoek: 38, golf: 120, hoogte: 5 })} stroke={kop} strokeWidth="2" strokeLinejoin="round" />
           </svg>
           <div style={{ display: "flex", position: "absolute", left: px(130), top: px(3) }}>
-            <Strikje breedte={px(140)} kleur={kop} achtergrond={achtergrond} />
+            <Strikje breedte={px(140)} kleur={kop} achtergrond={vlak} />
           </div>
           <D style={{ ...kolom, gap: px(8) }}>
             {namenBlok}
@@ -1779,7 +1790,7 @@ function Inhoud({
       const datumPunt = datumKort(d.datumIso, " . ") ?? d.dateText
       return (
         <D style={{ ...basis, alignItems: "center", justifyContent: "center", padding: `${px(26)}px ${px(14)}px ${px(30)}px`, borderRadius: px(12) }}>
-          <div style={{ display: "flex", ...tt("kop", letters.kop, 12), letterSpacing: "0.32em", textTransform: "uppercase", color: leesbaar(kader.kleur.accent, achtergrond, [kop]) }}>
+          <div style={{ display: "flex", ...tt("kop", letters.kop, 12), letterSpacing: "0.32em", textTransform: "uppercase", color: opFoto ? kop : leesbaar(kader.kleur.accent, achtergrond, [kop]) }}>
             {d.heading}
           </div>
           <D style={{ position: "relative", width: kw, height: kw, marginTop: px(2) }}>

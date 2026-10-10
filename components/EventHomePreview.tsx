@@ -430,8 +430,9 @@ export default function EventHomePreview({
     </div>
   )
 
-  // Het ontwerp, met het aftellen en de knoppen eronder
-  const ontwerpBlok = (
+  // Het ontwerp, met het aftellen en de knoppen eronder. Op een foto zonder
+  // achtergrond en in lichte kleuren (Ontwerp op foto).
+  const ontwerpBlokVan = (opFoto: boolean) => (
     <div className="w-full flex flex-col items-center">
       {/* "Hoi Sam" via de persoonlijke link (components/site/Begroeting.tsx) */}
       <div id="sy-begroeting" className="text-center" />
@@ -451,12 +452,14 @@ export default function EventHomePreview({
             detailsIcoon: hp?.detailsIcoon === true,
           }}
           instellingen={hp?.ontwerpTekst}
+          opFoto={opFoto}
         />
       </div>
-      {aftelBlok(false)}
-      {knoppen(false)}
+      {aftelBlok(opFoto)}
+      {knoppen(opFoto)}
     </div>
   )
+  const ontwerpBlok = ontwerpBlokVan(false)
 
   // De tekst op de foto, in dezelfde letters als op het ontwerp
   const tekstOpFoto = (
@@ -566,12 +569,13 @@ export default function EventHomePreview({
         {...sleepProps}
       >
         {fotoVlak("absolute inset-0", (
-          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.16)" }} />
+          <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.38) 0%, rgba(0,0,0,0.28) 50%, rgba(0,0,0,0.45) 100%)" }} />
         ), true)}
-        {/* Het ontwerp als een kaart op de foto: met zijn eigen achtergrond
-            blijft het leesbaar, wat de foto ook is */}
-        <div className="relative z-10 w-full max-w-3xl rounded-[22px] px-4 py-8 @md:px-10 @md:py-10" style={{ backgroundColor: sc.bodyBg, boxShadow: "0 24px 60px rgba(0,0,0,0.28)" }}>
-          {ontwerpBlok}
+        {/* Alleen het ontwerp op de foto, zonder kaart eromheen: de foto
+            blijft zichtbaar (Michiel, 10 oktober 2026). Een donkere waas en
+            lichte tekst houden het leesbaar. */}
+        <div className="relative z-10 w-full flex justify-center">
+          {ontwerpBlokVan(true)}
         </div>
         {scrollWenk(true)}
       </section>

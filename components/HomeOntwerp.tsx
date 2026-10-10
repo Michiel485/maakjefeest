@@ -33,6 +33,7 @@ export default function HomeOntwerp({
   tekst,
   instellingen,
   vasteBreedte,
+  opFoto = false,
 }: {
   ontwerp: NieuwOntwerp
   sc: SC
@@ -40,7 +41,13 @@ export default function HomeOntwerp({
   instellingen?: HomeTekstInstellingen
   /** Voor een tegeltje in de bouwer: altijd deze breedte, zonder te meten */
   vasteBreedte?: number
+  /** Alleen het ontwerp op een foto, zonder achtergrond, in lichte kleuren */
+  opFoto?: boolean
 }) {
+  // Op een foto rekent het ontwerp met een donkere achtergrond: dan kiest het
+  // overal lichte tekst die leesbaar is op de foto
+  const scNu: SC = opFoto ? { ...sc, bodyBg: "#2B2622", headingColor: "#FFFFFF", bodyText: "#F4EFE9" } : sc
+
   // Zo breed als er ruimte is, tot de breedte die bij het ontwerp past
   const vak = useRef<HTMLDivElement>(null)
   const [ruimte, setRuimte] = useState(420)
@@ -100,10 +107,11 @@ export default function HomeOntwerp({
       <KaartVoorkant
         d={display}
         ontwerp={ontwerp}
-        sc={sc}
+        sc={scNu}
         breedte={breedte}
         letters={browserLetters(ontwerp)}
         vrij
+        opFoto={opFoto}
         eigen={eigen}
         detailRollen={detailRollen}
         namenMeting={gemetenLetter(instellingen?.namen?.font)}
