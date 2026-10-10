@@ -1767,6 +1767,57 @@ function Inhoud({
     // kleuren van de tekening als ze leesbaar zijn, anders die van de stijl
     const namenKleur = kader.doorzichtig ? leesbaar(kader.kleur.namen, achtergrond, [kop]) : kader.kleur.namen
     const datumKleur = kader.doorzichtig ? leesbaar(kader.kleur.accent, achtergrond, [kop]) : kader.kleur.accent
+
+    // De doorzichtige krans: de initialen in de krans, de namen en de datum
+    // eronder, zoals de kaart van Anne en Alex die Michiel liet zien
+    // (10 oktober 2026)
+    if (kader.doorzichtig) {
+      const ini = initialenLijst(d.names)
+      const datumPunt = datumKort(d.datumIso, " . ") ?? d.dateText
+      return (
+        <D style={{ ...basis, alignItems: "center", justifyContent: "center", padding: `${px(26)}px ${px(14)}px ${px(30)}px`, borderRadius: px(12) }}>
+          <div style={{ display: "flex", ...tt("kop", letters.kop, 12), letterSpacing: "0.32em", textTransform: "uppercase", color: leesbaar(kader.kleur.accent, achtergrond, [kop]) }}>
+            {d.heading}
+          </div>
+          <D style={{ position: "relative", width: kw, height: kw, marginTop: px(2) }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={src} alt="" width={kw} height={kw} style={{ position: "absolute", top: 0, left: 0, width: kw, height: kw }} />
+            <D
+              style={{
+                position: "absolute",
+                left: kw * kader.midden[0] - bw / 2,
+                top: kw * kader.midden[1] - bh / 2,
+                width: bw,
+                height: bh,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", fontFamily: letters.extra, fontSize: pxN(84), lineHeight: 1, color: namenKleur }}>
+                {ini[0] ?? "♥"}
+                {ini[1] && <span style={{ display: "flex", fontSize: pxN(50), margin: `0 ${px(3)}px`, color: datumKleur }}>&amp;</span>}
+                {ini[1]}
+              </div>
+            </D>
+          </D>
+          <Namen vb={vb} plek={plek} {...namenVrij} namen={d.names} style={{ fontFamily: letters.namen, lineHeight: 1.15, letterSpacing: "0.12em", color: namenKleur, marginTop: px(4) }} />
+          {datumPunt && (
+            <div style={{ display: "flex", ...tt("datum", letters.kop, 13), letterSpacing: "0.24em", color: namenKleur, marginTop: px(8) }}>{datumPunt}</div>
+          )}
+          {d.location && (
+            <Regels
+              tekst={d.location}
+              style={{ ...tt("locatie", letters.tekst, 12), lineHeight: 1.5, letterSpacing: "0.08em", color: kop, marginTop: px(8) }}
+            />
+          )}
+          <div style={{ display: "flex", width: px(30), height: lijn, backgroundColor: `${accent}80`, marginTop: px(10), marginBottom: px(10) }} />
+          {d.message && (
+            <Regels tekst={d.message} style={{ fontFamily: letters.tekst, fontSize: pxK(12), lineHeight: 1.55, color: tekst, maxWidth: px(310) }} />
+          )}
+          {details(leesbaar(accent, achtergrond, [kop]), { grootte: 11, marge: 10 })}
+        </D>
+      )
+    }
     return (
       <D style={{ ...basis, alignItems: "center", justifyContent: "center", padding: `${px(28)}px ${px(14)}px ${px(30)}px`, borderRadius: px(12) }}>
         {/* De kop in de kleur van de tekening: in de bleke kleur van sommige

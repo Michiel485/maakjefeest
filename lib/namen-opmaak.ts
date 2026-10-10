@@ -191,6 +191,9 @@ export function namenPlek(ontwerp: CardDesign, opties: { breedte: number; datumI
   // De kransen: in de witte vorm, die 372 breed is op een kaart van 400
   // (Michiel, 27 september 2026: naast elkaar moest ook kunnen)
   if (kader?.vorm === "krans") {
+    // De doorzichtige krans: de initialen in de krans, de namen eronder op
+    // de breedte van de kaart (10 oktober 2026)
+    if (kader.doorzichtig) return maat(31, 400 - 60, { letterafstand: 0.12 })
     return maat(ontwerp === "herfst" || ontwerp === "herfstruit" ? 21 : 30, 372 * kader.ruimte[0])
   }
   return null
