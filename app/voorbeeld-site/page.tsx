@@ -106,8 +106,13 @@ const NAV = [
 // In het telefoontje op de homepage (een iframe) hoort de balk niet
 const BALK_SCRIPT = `(function(){try{if(window.top!==window.self){var b=document.getElementById("sy-voorbeeld-balk");if(b)b.style.display="none"}}catch(e){}})();`
 
+// Noir met Montserrat, zoals Michiel zijn eigen site had staan (10 oktober
+// 2026). De voorbeeldkaart op de homepage blijft in de stijl van het paar.
+const SITE_STIJL = "zwartgoud"
+const SITE_LETTER = "montserrat"
+
 export default function VoorbeeldSitePage() {
-  const sc = getStyleConfig(VOORBEELD.stijl)
+  const sc = getStyleConfig(SITE_STIJL, { fontPageTitles: SITE_LETTER })
   const datumTekst = formatDate(VOORBEELD.datum)
 
   const secties: { id: string; inhoud: React.ReactNode }[] = [
