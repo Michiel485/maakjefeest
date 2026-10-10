@@ -18,6 +18,7 @@ import { HOME_ONTWERPEN, HOME_KOP_STANDAARD } from "@/lib/home-ontwerp"
 import { detailsKeuze, detailsOpKaart, type DetailsStand } from "@/lib/kaart-ontwerpen"
 import LetterKiezer from "@/components/LetterKiezer"
 import { browserLetters } from "@/lib/kaart-ontwerpen"
+import { TITLE_FONT_OPTIONS } from "@/lib/title-fonts"
 
 export interface HomeOntwerpInstellingen {
   ontwerp?: string
@@ -160,6 +161,7 @@ export function HomeOntwerpTekstvelden({
   onNamen,
   onDatum,
   onLocatie,
+  siteFont,
 }: {
   instellingen: HomeOntwerpInstellingen
   onWijzig: (w: Partial<HomeOntwerpInstellingen>) => void
@@ -170,12 +172,14 @@ export function HomeOntwerpTekstvelden({
   onNamen: (v: string) => void
   onDatum: (v: string) => void
   onLocatie: (v: string) => void
+  /** Het lettertype van de hele site (een id uit lib/title-fonts.ts) */
+  siteFont?: string
 }) {
   const tekstInst = instellingen.ontwerpTekst ?? {}
   // In welke letter elke tekst standaard staat, voor de eerste keuze in de lijst
   const ol = browserLetters(ontwerp)
   const ontwerpFont: Record<TekstRol, string> = { kop: ol.kop, namen: ol.namen, datum: ol.kop, locatie: ol.tekst, tijden: ol.tekst, dresscode: ol.tekst }
-  const letter = (rol: TekstRol) => meer && (
+  const letter = (rol: TekstRol, altijd = false) => (meer || altijd) && (
     <LetterRegel
       waarde={tekstInst[rol]?.font}
       ontwerpFont={ontwerpFont[rol]}
@@ -190,6 +194,7 @@ export function HomeOntwerpTekstvelden({
   const [meer, setMeer] = useState(aangepast)
   useEffect(() => { if (aangepast) setMeer(true) }, [aangepast])
   const kanKiezen = detailsKeuze(ontwerp)
+  const siteLetter = siteFont ? TITLE_FONT_OPTIONS.find((f) => f.id === siteFont) : undefined
   const waar: DetailsStand = detailsOpKaart(ontwerp, instellingen.details) ? "op" : "onder"
 
   return (
@@ -202,7 +207,19 @@ export function HomeOntwerpTekstvelden({
         {/* Twee losse namen: het ontwerp kiest wat ertussen komt en of ze
             naast of onder elkaar passen (Michiel, 28 september 2026) */}
         <NamenVelden klasse={invoer} waarde={namen} onWijzig={onNamen} />
-        {letter("namen")}
+        {/* Het lettertype van de namen altijd in beeld, met de letter van de
+            site als snelle keuze (Michiel, 10 oktober 2026) */}
+        {letter("namen", true)}
+        {siteLetter && tekstInst.namen?.font !== siteLetter.id && (
+          <button
+            type="button"
+            onClick={() => onWijzig({ ontwerpTekst: { ...tekstInst, namen: { ...tekstInst.namen, font: siteLetter.id } } })}
+            className="self-start text-xs font-semibold text-[#C5A059] hover:underline"
+            style={{ background: "none", border: 0, padding: 0, cursor: "pointer" }}
+          >
+            Lettertype van de site gebruiken ({siteLetter.label})
+          </button>
+        )}
       </Veld>
       <Veld id="hp-field-datum" label="Datum">
         <input type="date" value={datum} onChange={(e) => onDatum(e.target.value)} className={invoer} />

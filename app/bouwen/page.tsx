@@ -2738,6 +2738,7 @@ export default function BouwenPage() {
                                       onNamen={(v) => updateDraft({ frame_names: v })}
                                       onDatum={(v) => updateDraft({ datum: v })}
                                       onLocatie={(v) => updateDraft({ frame_location: v })}
+                                      siteFont={fontPageTitles}
                                     />
                                   )}
 
