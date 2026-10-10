@@ -82,9 +82,10 @@ const MOMENTEN: Moment[] = [
   { id: "m3", jaar: "2025", titel: "Het aanzoek", tekst: "Op het strand van Terschelling, net na zonsondergang. Ze zei ja voordat hij was uitgepraat. De ring zat vol zand.", image_url: "/voorbeeld/verhaal-aanzoek.webp" },
 ]
 
+// Foto's van Michiel (10 oktober 2026), vierkant rond het gezicht
 const CEREMONIEMEESTERS = [
-  { id: "c1", naam: "Emma", rol: "zus van Sophie", telefoon: "", email: "", foto_url: null, onderwerpen: "speeches, verrassingen, het programma" },
-  { id: "c2", naam: "Thomas", rol: "beste vriend van Daan", telefoon: "", email: "", foto_url: null, onderwerpen: "dieetwensen, vervoer, overnachten" },
+  { id: "c1", naam: "Emma", rol: "zus van Sophie", telefoon: "", email: "", foto_url: "/voorbeeld/ceremoniemeester-emma.webp", onderwerpen: "speeches, verrassingen, het programma" },
+  { id: "c2", naam: "Thomas", rol: "beste vriend van Daan", telefoon: "", email: "", foto_url: "/voorbeeld/ceremoniemeester-thomas.webp", onderwerpen: "dieetwensen, vervoer, overnachten" },
 ]
 
 const GASTENBOEK = [
