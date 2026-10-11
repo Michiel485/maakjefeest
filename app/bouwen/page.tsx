@@ -287,7 +287,7 @@ const PAGINA_STAP: Partial<Record<PageId, { vraag: string; uitleg: string }>> = 
   Informatie: { vraag: "Wat moeten gasten weten?", uitleg: "Dresscode, parkeren, overnachten: wat anders vaak gevraagd wordt." },
   Cadeautips: { vraag: "Wat wensen jullie?", uitleg: "Een lijstje of een wens, zodat gasten niet hoeven te raden." },
   Ceremoniemeesters: { vraag: "Wie zijn jullie ceremoniemeesters?", uitleg: "Zo weten gasten bij wie ze terechtkunnen voor een verrassing." },
-  RSVP: { vraag: "Wat wil je van je gasten weten?", uitleg: "Gasten melden zich aan op de site en komen vanzelf in je gratis gastenlijst. Die staat in je dashboard: daar zie je wie komt, met dieetwensen, en lees je er meer over." },
+  RSVP: { vraag: "Wat wil je van je gasten weten?", uitleg: "Gasten melden zich aan op de site en komen vanzelf in je gratis gastenlijst. Die staat in je dashboard: daar zie je wie komt, met dieetwensen, en lees je er meer over. Probeer het formulier gerust zelf uit in het voorbeeld: er wordt niets verstuurd." },
   Fotos: { vraag: "Foto's van jullie samen", uitleg: "Een paar mooie foto's maken de site persoonlijk." },
 }
 type Blad = "uiterlijk" | "paginas" | "adres" | "bekijken"
@@ -3033,7 +3033,7 @@ export default function BouwenPage() {
                                 </label>
                               </div>
                               <div>
-                                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Type gasten</p>
+                                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Welke soorten gasten komen er?</p>
                                 <div className="flex flex-col gap-2">
                                   {(["daggast", "avondgast", "receptiegast"] as const).map((t) => {
                                     const current = (content.RSVP?.guestTypes as string[]) ?? ["daggast", "avondgast"]
@@ -3060,7 +3060,7 @@ export default function BouwenPage() {
                                 </div>
                               </div>
                               <div>
-                                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Antwoorden kan tot en met</p>
+                                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Antwoorden kan tot en met <span className="normal-case tracking-normal font-normal">(optioneel)</span></p>
                                 <label className="flex flex-col gap-1.5">
                                   <span className="text-xs font-semibold text-gray-600">Aanmelden niet meer mogelijk na</span>
                                   <input
