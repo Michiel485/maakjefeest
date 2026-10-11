@@ -70,7 +70,7 @@ const FAQ_ITEMS: [string, string][] = [
   ],
   [
     "Wat kost een digitale uitnodiging bij SayingYes?",
-    "Een Save the Date kost eenmalig €15. Uitnodigingen per gastengroep met RSVP-pagina en dashboard kosten €25. De complete trouwwebsite met alles erop en eraan kost €49,99 voor een jaar. De kaartpakketten hebben geen einddatum. Upgraden kan altijd, je betaalt dan alleen het verschil. Ontwerpen is gratis; je betaalt pas als je de kaart verstuurt.",
+    "Een Save the Date kost eenmalig €15. De trouwkaart, per gastengroep met aanmelden en dashboard en inclusief de Save the Date, kost €25. De complete trouwwebsite kost €49,99 voor een jaar, met beide kaarten erbij. De kaartpakketten hebben geen einddatum. Upgraden kan altijd, je betaalt dan alleen het verschil. Ontwerpen is gratis; je betaalt pas als je de kaart verstuurt.",
   ],
 ]
 
@@ -196,7 +196,7 @@ export default function DigitaleUitnodigingPage() {
           </div>
           <div className="grid gap-6 md:grid-cols-3">
             {[
-              ["1", "Maak de kaart", "Kies klassiek of met foto, vul jullie namen, datum en locatie in en pas de tekst aan. Per gastengroep een eigen kaart met eigen tijden: daggasten, avondgasten, receptie."],
+              ["1", "Maak de kaart", "Kies een ontwerp, vul jullie namen, datum en locatie in en pas de tekst aan. Per gastengroep een eigen kaart met eigen tijden: daggasten, avondgasten, receptie."],
               ["2", "Verstuur de link", "Kopieer de link en plak hem in WhatsApp, een groepsapp of een mail. Of download de kaart als afbeelding voor Instagram en de koelkast."],
               ["3", "Gasten reageren met één tik", "De envelop opent, de kaart verschijnt, en met de RSVP-knop laten gasten weten of ze komen. Jullie zien aantallen en dieetwensen direct in het dashboard."],
             ].map(([nr, kop, tekst]) => (
@@ -228,9 +228,9 @@ export default function DigitaleUitnodigingPage() {
                 "Gasten reageren met één tik: naam, aantal personen, dieetwensen",
                 "Aparte kaarten voor daggasten, avondgasten en receptiegasten, met eigen tijden",
                 "Eigen uitnodigingstekst per kaart, later nog aan te passen",
-                "Kijkteller: zie wie de kaart heeft geopend en wie je nog even moet appen",
+                "Je gastenlijst laat zien wie nog stil is, zodat je weet wie je nog even moet appen",
                 "Ook als afbeelding te downloaden om te printen of te delen",
-                "Groeit mee: dezelfde link wordt later jullie complete trouwwebsite",
+                "Groeit mee: dezelfde kaart krijgt later een knop naar jullie trouwwebsite",
               ].map((punt) => (
                 <li key={punt} className="flex items-start gap-3 text-sm leading-relaxed" style={{ color: BODY }}>
                   <Check />

@@ -29,7 +29,7 @@ const inhoud: ZoekpaginaInhoud = {
     "Aanmelden met naam, aantal personen, kinderen en dieetwensen",
     "Aparte kaarten voor daggasten, avondgasten en receptie, met eigen tijden",
     "De trouwdag met één tik in de agenda van je gasten",
-    "Kijkteller: zie wie de kaart opende en wie je nog even moet appen",
+    "Je gastenlijst laat zien wie nog stil is, zodat je weet wie je nog even moet appen",
     "Herinnering naar wie nog stil is, met één knop uit je gastenlijst",
     "Groeit mee: dezelfde kaart krijgt later een knop naar jullie trouwwebsite",
   ],

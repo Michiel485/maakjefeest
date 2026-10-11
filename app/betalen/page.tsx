@@ -539,7 +539,10 @@ function CheckoutContent() {
       </div>
 
       <p className="text-xs text-center mb-5 leading-relaxed font-semibold" style={{ color: BODY }}>
-        Alles blijft aanpasbaar na betaling: teksten, stijl en zelfs jullie webadres. Log in via sayingyes.nl/inloggen om verder te bouwen.
+        {plan === "compleet"
+          ? "Alles blijft aanpasbaar na betaling: teksten, stijl en zelfs jullie webadres."
+          : "Alles blijft aanpasbaar na betaling: tekst, tijden en ontwerp. Gasten zien de wijziging via dezelfde link."}{" "}
+        Log in via sayingyes.nl/inloggen om verder te bouwen.
       </p>
 
       {userEmail && (

@@ -31,7 +31,7 @@ slug: "zelfde-als-bestandsnaam"
 - Begin met een intro van 2 tot 4 zinnen die het probleem of de vraag van de lezer benoemt (geen H1: de titel uit de frontmatter is de H1).
 - Gebruik `##` koppen (H2), 4 tot 8 stuks, bij voorkeur met het zoekwoord of een vraag als kop.
 - Lijstjes met `-`, vetgedrukte kernwoorden aan het begin van een lijstitem waar dat helpt.
-- Sluit af met `---` en een korte alinea over SayingYes met een link naar `/start` ("Start gratis, betalen doe je pas bij publiceren").
+- Sluit af met `---` en een korte alinea over SayingYes met een link naar `/start` ("Start gratis, betalen doe je pas als je verstuurt of live zet").
 
 ## Interne links (verplicht, minimaal 3)
 
@@ -48,9 +48,9 @@ slug: "zelfde-als-bestandsnaam"
 
 ## Feiten over SayingYes (alleen dit noemen, niets verzinnen)
 
-- Bouwen is gratis; je betaalt pas bij publiceren. Drie pakketten: Save the Date (digitale kaart, €15), Uitnodiging & RSVP (trouwkaarten per gastengroep plus RSVP-pagina en dashboard, €25) en Trouwwebsite compleet (€49,99). Upgraden kan altijd voor het verschil. De kaartpakketten hebben geen einddatum; de complete site staat een jaar online (en in elk geval tot een maand na de trouwdatum), daarna verlengen voor €22 per zes maanden. Geen abonnement.
+- Ontwerpen is gratis; je betaalt pas als je verstuurt of live zet. Drie pakketten, als ladder: Save the Date (digitale kaart, €15), Trouwkaart (trouwkaarten per gastengroep met aanmelden en dashboard, inclusief de Save the Date, €25) en Trouwwebsite compleet (inclusief beide kaarten, €49,99). Prijzen en wat erbij zit staan in `lib/plans.ts`; die gaan voor. Upgraden kan altijd voor het verschil. De kaartpakketten hebben geen einddatum; de complete site staat een jaar online (en in elk geval tot een maand na de trouwdatum), daarna verlengen voor €22 per zes maanden. Geen abonnement.
 - Landingspagina voor de uitnodiging: `/digitale-uitnodiging` (link daarheen in artikelen over kaarten, uitnodigingen en Save the Dates).
 - Eigen webadres: `jullienamen.sayingyes.nl`.
 - Functies: RSVP met dieetwensen en dag-/avondgast, programma, informatie, cadeautips, fotogalerij, ons verhaal, ceremoniemeesters, wachtwoord of geheime vraag, zes talen (NL, EN, DE, FR, ES, IT), bouwen vanaf de telefoon.
-- Unieke extra's: digitale Save the Date en trouwkaarten als WhatsApp-link met envelop-animatie (per gastengroep, met tijden, kijkteller) en een live gastenfotomuur met QR-code, slideshow, moderatie, zip-download en collage.
+- Unieke extra's: digitale Save the Date en trouwkaarten als WhatsApp-link met envelop-animatie (per gastengroep, met tijden en agendaknop), een gratis gastenlijst die zich vanzelf vult, en een live gastenfotomuur met QR-code, slideshow, moderatie, zip-download en collage.
 - Klantsites worden niet door Google geïndexeerd.

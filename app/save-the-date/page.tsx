@@ -28,8 +28,8 @@ const inhoud: ZoekpaginaInhoud = {
   voordelen: [
     "Een knop die de trouwdag in de agenda van je gasten zet",
     "Alvast een ja of nee, zodat je weet hoeveel kaarten je straks nodig hebt",
-    "Kijkteller: zie wie hem opende",
-    "Later wordt dezelfde link jullie trouwkaart, zonder bij te betalen voor de Save the Date",
+    "Gratis erbij: een gastenlijst die zich vanzelf vult",
+    "Later door naar de trouwkaart: je betaalt alleen het verschil",
     "Ook als afbeelding te downloaden voor Instagram of de koelkast",
     "Geen einddatum: de link blijft werken",
   ],
