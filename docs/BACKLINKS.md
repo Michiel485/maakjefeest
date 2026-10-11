@@ -27,19 +27,19 @@ Directories tellen alleen mee als je gegevens overal exact hetzelfde staan. Kopi
 
 **Eén regel**
 
-> Digitale trouwkaarten en Save the Dates via WhatsApp, met RSVP en een eigen trouwwebsite. Vanaf 15 euro, geen abonnement.
+> Digitale trouwkaart, gastenlijst en trouwwebsite in één. Verstuur via WhatsApp, gasten reageren met één tik. Vanaf 15 euro, geen abonnement.
 
 **Korte omschrijving (ongeveer 50 woorden)**
 
-> SayingYes maakt digitale trouwkaarten en Save the Dates die je als envelop-link via WhatsApp verstuurt. Gasten openen de envelop en reageren met één tik. Jullie zien alle aanmeldingen en dieetwensen in een dashboard. Ontwerpen is gratis, je betaalt pas bij versturen. Vanaf 15 euro, zonder abonnement.
+> SayingYes maakt digitale Save the Dates en trouwkaarten die je als envelop-link via WhatsApp verstuurt. Gasten openen de envelop en reageren met één tik, met aantal personen en dieetwensen. Alles komt vanzelf in jullie gastenlijst. Ontwerpen is gratis, je betaalt pas als je verstuurt. Vanaf 15 euro, zonder abonnement.
 
 **Lange omschrijving (ongeveer 150 woorden)**
 
-> SayingYes is een Nederlands platform waarmee bruidsparen hun trouwkaarten digitaal maken en versturen. Je ontwerpt de kaart online, zonder account en zonder kosten, en verstuurt hem als envelop-link via WhatsApp. Gasten openen de envelop, lezen de kaart en reageren met één tik.
+> SayingYes is een Nederlands platform waarmee bruidsparen hun Save the Date, trouwkaart, gastenlijst en trouwwebsite op één plek regelen. Je ontwerpt de kaart online, zonder account en zonder kosten, en verstuurt hem als envelop-link via WhatsApp. Gasten openen de envelop, lezen de kaart en reageren met één tik.
 >
-> Er zijn drie pakketten. Save the Date (15 euro) om de datum vast te zetten. Uitnodiging en RSVP (25 euro) met aparte kaarten voor daggasten, avondgasten en receptiegasten, plus een dashboard waarin jullie de aanmeldingen en dieetwensen bijhouden. Trouwwebsite compleet (49,99 euro) met daarbovenop een eigen trouwwebsite met programma, routebeschrijving, cadeautips, fotogalerij en een live gastenfotomuur waar gasten met een QR-code foto's op zetten.
+> Er zijn drie pakketten. Save the Date (15 euro) om de datum vast te zetten, met een knop voor de agenda. Trouwkaart (25 euro) met aparte kaarten voor daggasten, avondgasten en receptiegasten, en een gastenlijst die zich vanzelf vult met aanmeldingen en dieetwensen. Wie nog niet reageerde, krijgt met één knop een herinnering. Trouwwebsite compleet (49,99 euro voor een jaar) met daarbovenop een eigen site met programma, route, cadeautips, fotogalerij en een live fotomuur waar gasten met een QR-code foto's op zetten.
 >
-> Alles is eenmalig betalen, er is geen abonnement en geen drukwerk. SayingYes is gemaakt in Nederland en houdt rekening met Nederlandse trouwgebruiken, zoals het onderscheid tussen daggasten en avondgasten.
+> Geen abonnement en geen drukwerk: bij 100 gasten kost alleen de porto van één ronde papieren kaarten al 84 euro. SayingYes is gemaakt in Nederland en kent de Nederlandse gewoontes, zoals het verschil tussen daggasten en avondgasten.
 
 **Beeldmateriaal dat je bij de hand wilt hebben:** logo (vierkant en liggend), een schermafbeelding van de envelop, twee of drie kaartontwerpen, een schermafbeelding van het dashboard.
 
@@ -59,7 +59,11 @@ Dit zijn de waardevolste vermeldingen: relevante branche, bruidsparen die er ech
 - **Let op:** telefoonnummer wordt gevraagd, maar is niet verplicht. Ik heb het formulier nagekeken: het veld staat er wel (type telefoon), maar geen enkel veld is als verplicht gemarkeerd. Je kunt het dus leeg laten.
 - **Waarom eerst:** grootste Nederlandse trouwplatform, gratis, en de link naar je eigen site is een gewone volglink. Preciezer dan eerder opgeschreven: de categoriepagina linkt alleen naar interne profielpagina's. De volglinks naar het eigen domein staan op de profielpagina zelf. Gecontroleerd bij Soetzappig (profiel 21574): zes links naar soetzappig.nl, allemaal zonder nofollow. Op zo'n profiel staan ook prijzen, bij hen vanaf 6,75 per stuk.
 
-### WeddingFinder.nl, doen, gratis
+### WeddingFinder.nl, wachten: geen passende categorie
+
+- **11 oktober 2026 opnieuw gecontroleerd:** het aanmeldformulier (https://weddingfinder.nl/aanmelden) heeft een verplichte categorie, en de keuzes zijn alleen Trouwfotograaf, Trouwlocatie, Catering, Bloemist, DJ & Band, Videograaf, Bruidsmode, Weddingplanner, Trouwtaart en Trouwauto. Trouwkaarten staat er niet bij. Onder een verkeerde categorie aanmelden is misleidend voor bruidsparen en wordt mogelijk afgewezen. Advies: overslaan, of WeddingFinder eerst mailen of er een categorie Trouwkaarten komt.
+- Onderstaande gegevens van 10 september blijven geldig voor als dat verandert.
+
 
 - **Aanmelden:** via https://weddingfinder.nl/pricing, knop "Claim gratis profiel"
 - **Status:** gecontroleerd, gratis pakket van 0 euro, omschreven als "voor altijd gratis".
