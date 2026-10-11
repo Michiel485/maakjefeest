@@ -204,3 +204,51 @@ html.sy-beweegt [data-verschijn].sy-in {
     to { transform: none; }
   }
 }
+
+/* Bouwer: een potloodje per onderdeel van het voorbeeld (app/bouwen). Op de
+   laptop pas zichtbaar als je over het onderdeel gaat, met een dun gouden
+   kader om wat je gaat bewerken; op een aanraakscherm staat het er altijd. */
+.bewerk-sectie {
+  position: relative;
+}
+.bewerk-sectie > .bewerk-knop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.bewerk-sectie > .bewerk-knop:hover {
+  transform: scale(1.08);
+}
+@media (hover: hover) {
+  /* Een laag over het onderdeel heen: een outline viel weg achter de
+     gepositioneerde blokken erin, zoals de opening */
+  .bewerk-sectie::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: 2px solid rgba(197, 160, 89, 0.7);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    z-index: 15;
+  }
+  .bewerk-sectie:hover::after {
+    opacity: 1;
+  }
+  .bewerk-sectie:hover > .bewerk-knop,
+  .bewerk-sectie > .bewerk-knop:focus-visible {
+    opacity: 1;
+  }
+}
+@media (hover: none) {
+  .bewerk-sectie > .bewerk-knop {
+    opacity: 1;
+  }
+  /* Op de telefoon is het menu in het verkleinde voorbeeld te laag voor een
+     potlood; daar lag het over dat van de homepage. Stijl is de eerste stap. */
+  .bewerk-sectie > .bewerk-knop-menu {
+    display: none;
+  }
+}

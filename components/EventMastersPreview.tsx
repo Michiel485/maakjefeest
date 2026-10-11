@@ -1,6 +1,6 @@
-// Jullie aanspreekpunt: de ceremoniemeesters met hun rol, een WhatsApp-knop
+// Jullie aanspreekpunt: de ceremoniemeesters met hun rol, hun nummer met een WhatsApp-knop
 // en waar je bij hen voor terechtkunt (ontwerpronde, 2 oktober 2026). Bellen
-// gebeurt bijna niet meer; appen wel.
+// gebeurt minder dan appen, maar het nummer staat er wel.
 
 import type { SC } from "@/lib/event-styles"
 import SectieKop from "./site/SectieKop"
@@ -125,29 +125,50 @@ export default function EventMastersPreview({ masters, sc, text, onMasterClick, 
 
                 {(master.telefoon || master.email) && (
                   <div className="flex flex-col items-center" style={{ gap: 8, marginTop: 16 }}>
+                    {/* Het nummer zelf, met het WhatsApp-icoontje erachter. Eerst
+                        stond er alleen een knop WhatsApp en zag je het nummer
+                        niet; wie wil bellen kon dat dan niet (Michiel, 11
+                        oktober 2026). */}
                     {master.telefoon && (
-                      onContactClick ? (
-                        <span
-                          className="inline-flex items-center gap-2"
-                          style={{ padding: "9px 18px", borderRadius: 999, border: `1px solid ${sc.accent}`, color: sc.accent, fontWeight: 700, fontSize: "0.875rem", cursor: "pointer" }}
-                          onClick={() => onContactClick(id, "telefoon")}
-                          title="Klik om te bewerken"
-                        >
-                          <WhatsAppIcoon /> WhatsApp
-                        </span>
-                      ) : wa ? (
-                        <a
-                          href={`https://wa.me/${wa}`}
-                          target="_blank"
-                          rel="noopener"
-                          className="inline-flex items-center gap-2 transition-transform hover:-translate-y-0.5"
-                          style={{ padding: "9px 18px", borderRadius: 999, backgroundColor: sc.buttonBg, color: sc.buttonText, fontWeight: 700, fontSize: "0.875rem", textDecoration: "none" }}
-                        >
-                          <WhatsAppIcoon /> WhatsApp
-                        </a>
-                      ) : (
-                        <a href={`tel:${master.telefoon.replace(/[\s\-()]/g, "")}`} style={{ color: sc.accent, textDecoration: "none", fontSize: "0.9375rem" }}>{master.telefoon}</a>
-                      )
+                      <div className="inline-flex items-center" style={{ gap: 10 }}>
+                        {onContactClick ? (
+                          <span
+                            style={{ fontSize: "0.9375rem", fontWeight: 600, color: sc.accent, cursor: "pointer" }}
+                            onClick={() => onContactClick(id, "telefoon")}
+                            title="Klik om te bewerken"
+                          >
+                            {master.telefoon}
+                          </span>
+                        ) : (
+                          <a href={`tel:${master.telefoon.replace(/[\s\-()]/g, "")}`} style={{ fontSize: "0.9375rem", fontWeight: 600, color: sc.accent, textDecoration: "none" }}>
+                            {master.telefoon}
+                          </a>
+                        )}
+                        {wa && (
+                          onContactClick ? (
+                            <span
+                              className="inline-flex items-center justify-center"
+                              style={{ width: 32, height: 32, borderRadius: 999, backgroundColor: sc.buttonBg, color: sc.buttonText, cursor: "pointer" }}
+                              onClick={() => onContactClick(id, "telefoon")}
+                              title="WhatsApp"
+                            >
+                              <WhatsAppIcoon maat={17} />
+                            </span>
+                          ) : (
+                            <a
+                              href={`https://wa.me/${wa}`}
+                              target="_blank"
+                              rel="noopener"
+                              aria-label={`WhatsApp ${master.naam || ""}`.trim()}
+                              title="Stuur een WhatsApp"
+                              className="inline-flex items-center justify-center transition-transform hover:-translate-y-0.5"
+                              style={{ width: 32, height: 32, borderRadius: 999, backgroundColor: sc.buttonBg, color: sc.buttonText, textDecoration: "none" }}
+                            >
+                              <WhatsAppIcoon maat={17} />
+                            </a>
+                          )
+                        )}
+                      </div>
                     )}
                     {master.email && (
                       onContactClick ? (

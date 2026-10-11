@@ -1622,6 +1622,53 @@ export default function BouwenPage() {
     return { order: i, scrollMarginTop: 16, ...sectieStijl(sc, i % 2 === 1) }
   }
 
+  // Een potloodje per onderdeel van het voorbeeld: tik erop en het paneel
+  // springt naar de stap die erbij hoort (Michiel, 11 oktober 2026). Op de
+  // laptop verschijnt het als je over het onderdeel gaat, op de telefoon staat
+  // het er altijd (zie .bewerk-sectie in globals.css). Het voorbeeld is
+  // verkleind, dus het knopje rekent terug naar een vaste maat op het scherm.
+  // Tikken op een tekst zelf springt nog steeds naar dat ene veld.
+  const bewerkKnop = (label: string, stap: number, plek: "boven" | "onder" | "menu" = "boven") => {
+    if (stap < 0) return null
+    const maat = Math.round(30 / voorbeeldSchaal)
+    const rand = Math.round(12 / voorbeeldSchaal)
+    return (
+      <button
+        type="button"
+        className={plek === "menu" ? "bewerk-knop bewerk-knop-menu" : "bewerk-knop"}
+        aria-label={`${label} bewerken`}
+        title={`${label} bewerken`}
+        onClick={(e) => { e.stopPropagation(); naarStap(stap) }}
+        style={{
+          position: "absolute",
+          // Rechts in het menu staat de taalkeuze: daar links
+          ...(plek === "menu" ? { left: rand } : { right: rand }),
+          // Het menu is laag: daar in het midden van de hoogte
+          ...(plek === "boven" ? { top: rand } : plek === "onder" ? { bottom: rand } : { top: "50%", marginTop: -maat / 2 }),
+          zIndex: 20,
+          width: maat,
+          height: maat,
+          borderRadius: "9999px",
+          border: `${Math.max(1, Math.round(2 / voorbeeldSchaal))}px solid #fff`,
+          backgroundColor: "#C5A059",
+          color: "#fff",
+          // display staat in globals.css, zodat het menu-potlood daar op
+          // een aanraakscherm weg kan
+          boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
+          cursor: "pointer",
+          padding: 0,
+        }}
+      >
+        <svg width={Math.round(maat * 0.5)} height={Math.round(maat * 0.5)} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M12 20h9" />
+          <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+        </svg>
+      </button>
+    )
+  }
+  const stapVanPagina = (id: PageId) => webStappen.findIndex((st) => st.pagina === id)
+  const stapTekst = webStappen.findIndex((st) => st.kort === "Tekst")
+
 
   // Vangnet: blijft het laden om wat voor reden ook hangen, dan beginnen we
   // na een paar tellen gewoon leeg. Beter een lege bouwer dan een hartje dat
@@ -3444,6 +3491,8 @@ export default function BouwenPage() {
                           {slugPreview}.sayingyes.nl
                         </div>
                       </div>
+                      <div className="bewerk-sectie">
+                      {bewerkKnop("Stijl en menu", 0, "menu")}
                       <EventNav
                         title={safeNavTitle}
                         pages={activePagesOrdered.map((p) => ({ type: p.id, title: p.label }))}
@@ -3465,9 +3514,12 @@ export default function BouwenPage() {
                         singlePage={isSinglePagePreview}
                         vast={false}
                       />
+                      </div>
                       <div style={isSinglePagePreview ? { display: "flex", flexDirection: "column" } : undefined}>
                       {showSection("Home") && (
-                        <div data-voorbeeld-sectie="Home" style={voorbeeldSectieStijl("Home")}>
+                        <div data-voorbeeld-sectie="Home" className="bewerk-sectie" style={voorbeeldSectieStijl("Home")}>
+                        {bewerkKnop("Homepage", stapVanPagina("Home"))}
+                        {bewerkKnop("Tekst van de homepage", stapTekst, "onder")}
                         <EventHomePreview
                           title={draft?.naam ?? ""}
                           datum={draft?.datum || null}
@@ -3501,7 +3553,8 @@ export default function BouwenPage() {
                         </div>
                       )}
                       {showSection("Ceremoniemeesters") && (
-                        <div data-voorbeeld-sectie="Ceremoniemeesters" style={voorbeeldSectieStijl("Ceremoniemeesters")}>
+                        <div data-voorbeeld-sectie="Ceremoniemeesters" className="bewerk-sectie" style={voorbeeldSectieStijl("Ceremoniemeesters")}>
+                        {bewerkKnop("Ceremoniemeesters", stapVanPagina("Ceremoniemeesters"))}
                         <EventMastersPreview
                           masters={mastersForPreview}
                           sc={sc}
@@ -3513,7 +3566,8 @@ export default function BouwenPage() {
                         </div>
                       )}
                       {showSection("OnsVerhaal") && (
-                        <div data-voorbeeld-sectie="OnsVerhaal" style={voorbeeldSectieStijl("OnsVerhaal")}>
+                        <div data-voorbeeld-sectie="OnsVerhaal" className="bewerk-sectie" style={voorbeeldSectieStijl("OnsVerhaal")}>
+                        {bewerkKnop("Ons verhaal", stapVanPagina("OnsVerhaal"))}
                         <StoryPreview
                           title={(content.OnsVerhaal?.title as string) ?? "Ons Verhaal"}
                           quote={verhaalQuote(content.OnsVerhaal)}
@@ -3529,7 +3583,8 @@ export default function BouwenPage() {
                         </div>
                       )}
                       {showSection("Programma") && (
-                        <div data-voorbeeld-sectie="Programma" style={voorbeeldSectieStijl("Programma")}>
+                        <div data-voorbeeld-sectie="Programma" className="bewerk-sectie" style={voorbeeldSectieStijl("Programma")}>
+                        {bewerkKnop("Programma", stapVanPagina("Programma"))}
                         <EventProgramPreview
                           items={programmaItemsForPreview}
                           sc={sc}
@@ -3550,9 +3605,11 @@ export default function BouwenPage() {
                       {showSection("RSVP") && (
                         <div
                           data-voorbeeld-sectie="RSVP"
+                          className="bewerk-sectie"
                           style={{ cursor: "pointer", ...voorbeeldSectieStijl("RSVP") }}
                           onClick={() => { toonPaginas(); gaNaarPagina("RSVP") }}
                         >
+                        {bewerkKnop("Aanmelden", stapVanPagina("RSVP"))}
                         <div className="@container" style={{ padding: "48px 24px 64px", fontFamily: sc.fontFamily }}>
                           <SiteSectieKop
                             sc={sc}
@@ -3586,21 +3643,25 @@ export default function BouwenPage() {
                         </div>
                       )}
                       {showSection("Informatie") && (
-                        <div data-voorbeeld-sectie="Informatie" style={voorbeeldSectieStijl("Informatie")}>
+                        <div data-voorbeeld-sectie="Informatie" className="bewerk-sectie" style={voorbeeldSectieStijl("Informatie")}>
+                        {bewerkKnop("Informatie", stapVanPagina("Informatie"))}
                         <PraktischPreview tiles={praktischTiles ?? DEFAULT_PRAKTISCH_TILES} sc={sc} locatie={eventLocatie || null} route={(content.Informatie?.route as RouteInfo | undefined) ?? null} onTileClick={handleInfoTileClick} />
                         </div>
                       )}
                       {showSection("Cadeautips") && (
-                        <div data-voorbeeld-sectie="Cadeautips" style={voorbeeldSectieStijl("Cadeautips")}>
+                        <div data-voorbeeld-sectie="Cadeautips" className="bewerk-sectie" style={voorbeeldSectieStijl("Cadeautips")}>
+                        {bewerkKnop("Cadeautips", stapVanPagina("Cadeautips"))}
                         <WishlistPreview items={wishlistItems?.length ? wishlistItems : DEFAULT_WISHLIST_ITEMS} sc={sc} rekening={content.Cadeautips?.rekening as Rekening | undefined} onItemClick={handleWishlistItemClick} />
                         </div>
                       )}
                       {showSection("Fotos") && (
                         <div
                           data-voorbeeld-sectie="Fotos"
+                          className="bewerk-sectie"
                           style={{ cursor: "pointer", ...voorbeeldSectieStijl("Fotos") }}
                           onClick={() => { toonPaginas(); gaNaarPagina("Fotos") }}
                         >
+                        {bewerkKnop("Foto's", stapVanPagina("Fotos"))}
                         <FotosPreview
                           title={(content.Fotos?.title as string) || "Foto's"}
                           intro={(content.Fotos?.intro as string) || null}
@@ -3990,28 +4051,26 @@ function MastersEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // De laatste stand, ook na een upload die even duurde. onChange stond eerst
+  // binnen de updater van setMasters; dan werkt React de bouwer bij tijdens
+  // het renderen van deze editor, en dat geeft een waarschuwing.
+  const mastersRef = useRef(masters)
+  function zet(next: MasterPerson[]) {
+    mastersRef.current = next
+    setMasters(next)
+    onChange(next.map(m => ({ ...m, foto_url: m.foto_url?.startsWith("blob:") ? null : m.foto_url })))
+  }
+
   function update(id: string, patch: Partial<MasterPerson>) {
-    setMasters(prev => {
-      const next = prev.map(m => m.id === id ? { ...m, ...patch } : m)
-      onChange(next.map(m => ({ ...m, foto_url: m.foto_url?.startsWith("blob:") ? null : m.foto_url })))
-      return next
-    })
+    zet(mastersRef.current.map(m => m.id === id ? { ...m, ...patch } : m))
   }
 
   function add() {
-    setMasters(prev => {
-      const next = [...prev, { id: Date.now().toString(), naam: "", telefoon: "", email: "", foto_url: null }]
-      onChange(next)
-      return next
-    })
+    zet([...mastersRef.current, { id: Date.now().toString(), naam: "", telefoon: "", email: "", foto_url: null }])
   }
 
   function remove(id: string) {
-    setMasters(prev => {
-      const next = prev.filter(m => m.id !== id)
-      onChange(next)
-      return next
-    })
+    zet(mastersRef.current.filter(m => m.id !== id))
   }
 
   async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -4020,7 +4079,8 @@ function MastersEditor({
     const masterId = pendingIdRef.current
     if (!file || !masterId) return
     const blobUrl = URL.createObjectURL(file)
-    setMasters(prev => prev.map(m => m.id === masterId ? { ...m, foto_url: blobUrl } : m))
+    mastersRef.current = mastersRef.current.map(m => m.id === masterId ? { ...m, foto_url: blobUrl } : m)
+    setMasters(mastersRef.current)
     setUploading(masterId)
     try {
       const url = await uploadToStorage(file)
@@ -4028,7 +4088,8 @@ function MastersEditor({
       update(masterId, { foto_url: url })
     } catch {
       URL.revokeObjectURL(blobUrl)
-      setMasters(prev => prev.map(m => m.id === masterId ? { ...m, foto_url: null } : m))
+      mastersRef.current = mastersRef.current.map(m => m.id === masterId ? { ...m, foto_url: null } : m)
+      setMasters(mastersRef.current)
     } finally {
       setUploading(null)
       pendingIdRef.current = null
