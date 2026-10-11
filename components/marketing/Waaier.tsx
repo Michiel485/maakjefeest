@@ -81,6 +81,13 @@ export default function Waaier({ namen, datum }: { namen: string; datum: string 
       x: 0, y: 388, draai: 3, z: 4,
       inhoud: <Gastenlijst namen={namen} datumTekst={datumTekst} />,
     },
+    {
+      // Het aanmelden zelf, zoals een gast het onder de kaart ziet (Michiel,
+      // 11 oktober 2026)
+      label: "RSVP",
+      x: 318, y: 398, draai: -3, z: 5,
+      inhoud: <Rsvp namen={namen} datumTekst={datumTekst} />,
+    },
   ]
 
   return (
@@ -161,6 +168,23 @@ function Telefoon({ namen, datum }: { namen: string; datum: string }) {
           opFoto
         />
       </div>
+    </div>
+  )
+}
+
+/** Het aanmelden onder de kaart, zoals een gast het ziet */
+function Rsvp({ namen, datumTekst }: { namen: string; datumTekst: string }) {
+  const sc = voorbeeldStijl()
+  return (
+    <div className="rounded-2xl px-4 py-3.5" style={{ width: 214, backgroundColor: "#fff", border: `1px solid ${GOUD}40`, fontFamily: "var(--font-sans), system-ui, sans-serif" }}>
+      <p className="m-0 text-center text-[10px] font-semibold uppercase" style={{ letterSpacing: "0.14em", color: sc.accent }}>Ben je erbij?</p>
+      <p className="m-0 mt-0.5 text-center text-[11px] truncate" style={{ color: TEKST }}>{namen} · {datumTekst}</p>
+      <div className="mt-2.5 rounded-lg px-2.5 py-1.5 text-[11px]" style={{ border: `1px solid ${GOUD}55`, color: INKT }}>Oma Riet</div>
+      <div className="mt-2 grid grid-cols-2 gap-1.5">
+        <span className="rounded-lg py-1.5 text-center text-[11px] font-semibold" style={{ backgroundColor: sc.accent, color: sc.buttonText }}>&#10003; Ja, ik kom</span>
+        <span className="rounded-lg py-1.5 text-center text-[11px] font-semibold" style={{ border: `1px solid ${GOUD}66`, color: TEKST }}>Nee</span>
+      </div>
+      <p className="m-0 mt-2 text-center text-[10px]" style={{ color: TEKST }}>2 personen · vegetarisch</p>
     </div>
   )
 }
