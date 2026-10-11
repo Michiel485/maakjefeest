@@ -74,9 +74,9 @@ const LADDER: { plan: Plan; titel: string; inclusief?: string; uitleg: string }[
   },
   {
     plan: "compleet",
-    titel: "Website",
+    titel: "Trouwwebsite",
     inclusief: "Inclusief trouwkaart en Save the Date",
-    uitleg: "Programma, route, cadeautips en een fotomuur. De trouwkaart is meteen een mooie manier om de link naar je site te sturen, ook als je al papieren kaarten verstuurde.",
+    uitleg: "Programma, route, cadeautips en een fotomuur op jullie eigen webadres. De trouwkaart stuurt gasten erheen, ook naast papieren kaarten.",
   },
 ]
 
@@ -305,7 +305,7 @@ export default function StartFlow() {
           {stap === 0 && (
             <>
               {kop("Wat leuk, jullie gaan trouwen")}
-              {onder("Hoe heten jullie? Dan zetten we jullie namen meteen op een kaart.")}
+              {onder("Hoe heten jullie? Dan staan jullie namen straks meteen op jullie ontwerp.")}
               <div className="flex flex-col gap-3">
                 <label className="flex flex-col gap-1.5">
                   {label("Jouw naam")}
@@ -376,7 +376,7 @@ export default function StartFlow() {
                 })}
               </div>
               <p className="text-[12px] leading-relaxed text-center mt-4 mb-0" style={{ color: KLEUR.zacht }}>
-                Ontwerpen is gratis; je betaalt pas als je verstuurt of live zet. Begin gerust klein: later upgraden kan altijd, je betaalt alleen het verschil. Kaarten blijven online zonder einddatum, de website een jaar en in elk geval tot een maand na de bruiloft.
+                Ontwerpen is gratis. Je betaalt pas als je verstuurt of live zet, en later upgraden kost alleen het verschil.
               </p>
               <button type="button" className={`${stil} mt-3 self-center`} style={{ color: KLEUR.zacht }} onClick={() => { setKeuze("weetniet"); setStap(3) }}>
                 Weet ik nog niet, laat me alles zien
@@ -387,7 +387,7 @@ export default function StartFlow() {
           {stap === 3 && !verstuurd && (
             <>
               {kop("Zullen we het bewaren?")}
-              {onder("Laat je mailadres achter, dan staat je ontwerp klaar als je later verdergaat. Geen wachtwoord nodig: je krijgt een linkje in je mail.")}
+              {onder("Laat je mailadres achter, dan bewaren we wat je maakt en ga je later gewoon verder. Geen wachtwoord nodig: je krijgt een linkje in je mail.")}
               <label className="flex flex-col gap-1.5">
                 {label("Mailadres")}
                 <input ref={eerste} type="email" inputMode="email" autoComplete="email" className={invoerKlassen} style={invoerStijl} value={mail} onChange={(e) => { setMail(e.target.value); setFout(null) }} placeholder="naam@voorbeeld.nl" maxLength={120} />
@@ -401,7 +401,7 @@ export default function StartFlow() {
           {stap === 3 && verstuurd && (
             <>
               {kop("Kijk even in je mail")}
-              {onder(`We stuurden een linkje naar ${mail.trim()}. Klik erop, dan staat je ontwerp veilig in je account. Je kunt nu gewoon verder.`)}
+              {onder(`We stuurden een linkje naar ${mail.trim()}. Klik erop, dan staat alles veilig in je account. Je kunt nu gewoon verder.`)}
             </>
           )}
 
