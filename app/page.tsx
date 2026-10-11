@@ -157,7 +157,7 @@ export default function Home() {
                 Digitale trouwkaart en trouwwebsite
               </p>
               <h1
-                className="text-4xl sm:text-5xl lg:text-6xl leading-[1.05] mb-5 tracking-tight"
+                className="text-4xl sm:text-5xl lg:text-[3.4rem] leading-[1.05] mb-5 tracking-tight"
                 style={{ fontFamily: KOP_FONT, color: INKT, fontWeight: 700, textWrap: "balance" }}
               >
                 Alles voor jullie bruiloft, <em style={{ fontStyle: "italic", color: GOUD }}>voor minder dan de postzegels.</em>

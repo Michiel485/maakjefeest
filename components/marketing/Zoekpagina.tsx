@@ -55,7 +55,7 @@ export default function Zoekpagina({ inhoud }: { inhoud: ZoekpaginaInhoud }) {
             intro={
               <div className="max-w-2xl">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] mb-5" style={{ color: GOUD }}>{inhoud.kopje}</p>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl leading-[1.05] mb-5 tracking-tight" style={{ fontFamily: KOP_FONT, color: INKT, fontWeight: 700 }}>
+              <h1 className="text-4xl sm:text-5xl lg:text-[3.4rem] leading-[1.05] mb-5 tracking-tight" style={{ fontFamily: KOP_FONT, color: INKT, fontWeight: 700 }}>
                 {inhoud.h1}
               </h1>
               <p className="text-base sm:text-lg leading-relaxed" style={{ color: TEKST }}>{inhoud.intro}</p>

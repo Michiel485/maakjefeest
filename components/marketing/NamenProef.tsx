@@ -6,16 +6,15 @@
 // al bezig; de knop zet alles in de browser en opent de kaartbouwer met de
 // kaart erin.
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import KaartVoorkant from "@/components/kaart/KaartVoorkant"
-import { buildCardDisplay, type NieuwOntwerp } from "@/lib/cards"
-import { browserLetters } from "@/lib/kaart-ontwerpen"
+import Waaier from "./Waaier"
+import type { NieuwOntwerp } from "@/lib/cards"
 import { voegNamenSamen } from "@/lib/namen"
 import { LS_NAMEN } from "@/lib/nieuw-concept"
 import { meetStap } from "@/lib/stap"
-import { VOORBEELD, voorbeeldStijl } from "@/lib/voorbeeld"
-import { GOUD, GOUD_LICHT, INKT, IVOOR, TEKST, ZACHT } from "./stijl"
+import { VOORBEELD } from "@/lib/voorbeeld"
+import { GOUD_LICHT, INKT, IVOOR, TEKST, ZACHT } from "./stijl"
 
 const LS_KAART = "sayingyes_kaart"
 // Dezelfde kaart als die van het voorbeeldpaar (lib/voorbeeld.ts): sinds 11
@@ -33,20 +32,6 @@ export default function NamenProef({ intro }: { intro?: React.ReactNode } = {}) 
   const [een, setEen] = useState("")
   const [twee, setTwee] = useState("")
   const [datum, setDatum] = useState("")
-  const sc = voorbeeldStijl()
-
-  // Zo breed als er ruimte is, tot de maat van een kaart
-  const vak = useRef<HTMLDivElement>(null)
-  const [breedte, setBreedte] = useState(340)
-  useEffect(() => {
-    const el = vak.current
-    if (!el) return
-    const meet = () => setBreedte(Math.max(240, Math.min(360, Math.round(el.clientWidth))))
-    meet()
-    const ro = new ResizeObserver(meet)
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [])
 
   // Wie hier eerder was, ziet zijn namen staan
   useEffect(() => {
@@ -62,12 +47,6 @@ export default function NamenProef({ intro }: { intro?: React.ReactNode } = {}) 
   // Zolang er niets getypt is: het voorbeeldpaar. "Jullie namen" gaf in de
   // boog de initialen J | N.
   const namen = voegNamenSamen(een, twee) || VOORBEELD.namen
-  const display = buildCardDisplay(
-    "trouwkaart",
-    ONTWERP,
-    { names: namen, namenFont: VOORBEELD.kaartNamenLetter },
-    { title: namen, frame_names: namen, datum: datum || VOORBEELD.datum, locatie: null }
-  )
 
   function verder() {
     try {
@@ -88,8 +67,8 @@ export default function NamenProef({ intro }: { intro?: React.ReactNode } = {}) 
     // Stonden ze erboven over de hele breedte, dan zakte het formulier naar
     // het midden van de hoge kaart en bleef er een gat onder de tekst
     // (Michiel, 11 oktober 2026).
-    <div className="grid gap-10 lg:grid-cols-[1fr_380px] lg:items-center">
-      <div className="flex flex-col gap-8 min-w-0">
+    <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:items-center">
+      <div className="flex flex-col gap-8 min-w-0 max-w-xl">
       {intro}
       <form
         onSubmit={(e) => { e.preventDefault(); verder() }}
@@ -141,14 +120,8 @@ export default function NamenProef({ intro }: { intro?: React.ReactNode } = {}) 
       </form>
       </div>
 
-      <div ref={vak} className="flex flex-col items-center">
-        <div style={{ filter: "drop-shadow(0 24px 40px rgba(0,0,0,0.16))", transform: "rotate(-1.5deg)" }}>
-          <KaartVoorkant d={display} ontwerp={ONTWERP} sc={sc} breedte={breedte} letters={browserLetters(ONTWERP)} />
-        </div>
-        <p className="text-[11px] mt-5" style={{ color: ZACHT, letterSpacing: "0.12em", textTransform: "uppercase" }}>
-          <span style={{ color: GOUD }}>&#9670;</span>&nbsp; verandert live mee
-        </p>
-      </div>
+      {/* Wat je allemaal krijgt, met jullie namen erop (Michiel, 11 oktober 2026) */}
+      <Waaier namen={namen} datum={datum} />
     </div>
   )
 }
