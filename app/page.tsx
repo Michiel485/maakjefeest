@@ -195,9 +195,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 2. De envelop (op de tweede plek, Michiel, 11 oktober 2026) ── */}
+      {/* ── 2. De envelop (op de tweede plek, Michiel, 11 oktober 2026). Op de
+          laptop staat de envelop links van de tekst, op de telefoon eronder ── */}
       <section className="py-16 sm:py-28 px-6" style={{ backgroundColor: ZAND }}>
-        <div className="max-w-6xl mx-auto grid gap-8 lg:gap-12 lg:grid-cols-[1fr_1.1fr] lg:items-center">
+        <div className="max-w-6xl mx-auto grid gap-8 lg:gap-12 lg:grid-cols-[1.1fr_1fr] lg:items-center">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] mb-5" style={{ color: GOUD }}>Zo komt hij aan</p>
             <h2 className="text-4xl sm:text-5xl leading-tight mb-6" style={{ fontFamily: KOP_FONT, color: INKT, fontWeight: 700 }}>
@@ -223,7 +224,7 @@ export default function Home() {
               Bekijk de voorbeeldkaart op een hele pagina &rarr;
             </Link>
           </div>
-          <div className="rounded-3xl overflow-hidden" style={{ border: `1px solid ${GOUD_LICHT}`, boxShadow: "0 24px 60px rgba(0,0,0,0.12)" }}>
+          <div className="rounded-3xl overflow-hidden lg:order-first" style={{ border: `1px solid ${GOUD_LICHT}`, boxShadow: "0 24px 60px rgba(0,0,0,0.12)" }}>
             {/* De kaart van Sophie en Daan (lib/voorbeeld.ts). De knop
                 "Bekijk onze website" opent de kaart als twee deuren en gaat
                 door naar hun voorbeeldsite, precies zoals bij een gast */}
