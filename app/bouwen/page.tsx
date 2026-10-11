@@ -287,7 +287,7 @@ const PAGINA_STAP: Partial<Record<PageId, { vraag: string; uitleg: string }>> = 
   Informatie: { vraag: "Wat moeten gasten weten?", uitleg: "Dresscode, parkeren, overnachten: wat anders vaak gevraagd wordt." },
   Cadeautips: { vraag: "Wat wensen jullie?", uitleg: "Een lijstje of een wens, zodat gasten niet hoeven te raden." },
   Ceremoniemeesters: { vraag: "Wie zijn jullie ceremoniemeesters?", uitleg: "Zo weten gasten bij wie ze terechtkunnen voor een verrassing." },
-  RSVP: { vraag: "Wat wil je van je gasten weten?", uitleg: "Gasten melden zich aan op de site en komen vanzelf in je gratis gastenlijst. Die staat in je dashboard: daar zie je wie komt, met dieetwensen, en lees je er meer over. Probeer het formulier gerust zelf uit in het voorbeeld: er wordt niets verstuurd." },
+  RSVP: { vraag: "Wat wil je van je gasten weten?", uitleg: "Gasten melden zich aan op de site en komen vanzelf in je gratis gastenlijst. Die staat in je dashboard: daar zie je wie komt, met dieetwensen, en lees je er meer over. Probeer het formulier gerust zelf uit in het voorbeeld: er wordt niets verstuurd. Berichtjes van gasten kun je in je gastenlijst op de site zetten, als gastenboek." },
   Fotos: { vraag: "Foto's van jullie samen", uitleg: "Een paar mooie foto's maken de site persoonlijk." },
 }
 type Blad = "uiterlijk" | "paginas" | "adres" | "bekijken"
