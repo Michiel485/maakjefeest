@@ -676,13 +676,10 @@ export default function CardReveal({
           42%  { transform: translate(5px, 2px) rotate(6deg); opacity: 1; }
           100% { transform: translate(24px, 44px) rotate(38deg); opacity: 0; }
         }
-        @keyframes hint-in {
-          from { opacity: 0; transform: translate(-50%, 12px); }
-          to   { opacity: 1; transform: translate(-50%, 0); }
-        }
+        /* Het pijltje onder aan het scherm: rustig oplichten en uitdoven */
         @keyframes hint-pijl {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(3px); }
+          0%, 100% { opacity: 0.15; }
+          50% { opacity: 0.6; }
         }
         @keyframes knoppen-fadein {
           from { opacity: 0; transform: translateY(10px); }
@@ -696,32 +693,40 @@ export default function CardReveal({
         }
       `}</style>
 
+      {/* Alleen een klein pijltje dat langzaam oplicht. Eerst was het een
+          knop met tekst, maar die viel over de knop naar de website en maakte
+          het geheel te druk (Michiel, 11 oktober 2026). */}
       {hint && (
         <button
           type="button"
+          aria-label={hint}
+          title={hint}
           onClick={() => {
             const doel = hintDoelRef.current
             setHint(null)
             if (doel) window.scrollTo({ top: doel.getBoundingClientRect().top + window.scrollY - 24, behavior: reduceMotion ? "auto" : "smooth" })
           }}
-          className="fixed z-40 inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
+          className="fixed z-40 flex items-center justify-center"
           style={{
             left: "50%",
-            bottom: "calc(20px + env(safe-area-inset-bottom, 0px))",
+            bottom: "calc(6px + env(safe-area-inset-bottom, 0px))",
             transform: "translateX(-50%)",
-            backgroundColor: sc.accent,
-            color: sc.buttonText,
+            width: 44,
+            height: 44,
+            background: "none",
             border: 0,
+            padding: 0,
             cursor: "pointer",
-            whiteSpace: "nowrap",
-            maxWidth: "calc(100vw - 32px)",
-            boxShadow: "0 10px 28px -10px rgba(0,0,0,0.45)",
-            animation: reduceMotion ? "none" : "hint-in 0.4s ease both",
+            color: sc.headingColor,
+            // Een zachte rand in de kleur van de pagina, zodat het pijltje ook
+            // te zien is als het over een donkere knop valt
+            filter: `drop-shadow(0 0 2px ${sc.bodyBg}) drop-shadow(0 0 1px ${sc.bodyBg})`,
+            animation: reduceMotion ? "none" : "hint-pijl 2.8s ease-in-out infinite",
+            opacity: reduceMotion ? 0.5 : undefined,
           }}
         >
-          <span className="truncate">{hint}</span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: 0, animation: reduceMotion ? "none" : "hint-pijl 1.4s ease-in-out infinite" }}>
-            <path d="M12 5v14M6 13l6 6 6-6" />
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M6 9l6 6 6-6" />
           </svg>
         </button>
       )}
