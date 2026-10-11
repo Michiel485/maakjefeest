@@ -1995,10 +1995,13 @@ export default function BouwenPage() {
                 <button
                   type="button"
                   onClick={() => naarStap(gidsNu + 1)}
-                  className="flex-1 text-sm font-semibold px-4 py-3 rounded-xl"
+                  className="flex-1 min-w-0 flex items-center justify-center gap-1.5 text-sm font-semibold px-4 py-3 rounded-xl"
                   style={{ backgroundColor: KLEUR.inkt, color: KLEUR.ivoor, border: 0, cursor: "pointer" }}
                 >
-                  Verder: {webStappen[gidsNu + 1].kort} {"→"}
+                  {/* Op één regel; een lange stapnaam (Ceremoniemeesters) loopt af
+                      in plaats van de knop drie regels hoog te maken */}
+                  <span className="truncate">Verder: {webStappen[gidsNu + 1].kort}</span>
+                  <span aria-hidden>{"→"}</span>
                 </button>
               ) : (
                 <button
@@ -2802,7 +2805,7 @@ export default function BouwenPage() {
                                     />
                                     <div className="flex items-center justify-between">
                                       <span className="text-xs text-gray-500">Grootte</span>
-                                      <span className="text-xs text-gray-400">{homeContent.titleSize ?? 1.0}rem</span>
+                                      <span className="text-xs text-gray-400">{Math.round((homeContent.titleSize ?? 1.0) * 100)}%</span>
                                     </div>
                                     <input type="range" min={0.7} max={3} step={0.05} value={homeContent.titleSize ?? 1.0} onChange={(e) => updateDraft({ homeContent: { ...homeContent, titleSize: Number(e.target.value) } })} className="w-full accent-[#C5A059]" />
                                   </div>
@@ -2817,7 +2820,7 @@ export default function BouwenPage() {
                                     />
                                     <div className="flex items-center justify-between">
                                       <span className="text-xs text-gray-500">Grootte</span>
-                                      <span className="text-xs text-gray-400">{homeContent.bodySize ?? 0.9375}rem</span>
+                                      <span className="text-xs text-gray-400">{Math.round(((homeContent.bodySize ?? 0.9375) / 0.9375) * 100)}%</span>
                                     </div>
                                     <input type="range" min={0.7} max={2.5} step={0.05} value={homeContent.bodySize ?? 0.9375} onChange={(e) => updateDraft({ homeContent: { ...homeContent, bodySize: Number(e.target.value) } })} className="w-full accent-[#C5A059]" />
                                   </div>
@@ -2853,14 +2856,14 @@ export default function BouwenPage() {
                                 onChange={(masters) => updateContent("Ceremoniemeesters", { ...(content.Ceremoniemeesters ?? {}), masters })}
                               />
                               <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-semibold text-gray-500">Inleiding</label>
+                                <label className="text-xs font-semibold text-gray-600">Inleiding</label>
                                 <textarea
                                   id="ceremoniemeesters-vrije-tekst"
                                   rows={4}
                                   value={typeof content.Ceremoniemeesters?.text === "string" ? content.Ceremoniemeesters.text : ""}
                                   onChange={(e) => updateContent("Ceremoniemeesters", { ...(content.Ceremoniemeesters ?? {}), text: e.target.value })}
                                   placeholder="Wil je iets regelen wat wij niet mogen weten? Dan bij onze ceremoniemeesters..."
-                                  className="w-full rounded-lg border border-[var(--goud-licht)] px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] resize-none leading-relaxed"
+                                  className="w-full rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] resize-none leading-relaxed"
                                 />
                               </div>
                             </div>
@@ -2988,7 +2991,7 @@ export default function BouwenPage() {
                                         updateContent("Programma", { items: updated, layout: programLayout })
                                       }}
                                       placeholder="Titel..."
-                                      className="rounded-lg border border-[var(--goud-licht)] px-2 py-1.5 text-sm font-semibold text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)]"
+                                      className="rounded-xl border border-[var(--goud-licht)] px-3 py-2 text-sm font-semibold text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)]"
                                     />
                                     <textarea
                                       id={`programma-description-${item.id ?? i}`}
@@ -3000,7 +3003,7 @@ export default function BouwenPage() {
                                         updateContent("Programma", { items: updated, layout: programLayout })
                                       }}
                                       placeholder="Beschrijving..."
-                                      className="rounded-lg border border-[var(--goud-licht)] px-2 py-1.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] resize-none"
+                                      className="rounded-xl border border-[var(--goud-licht)] px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] resize-none"
                                     />
                                   </div>
                                 ))}
@@ -3046,7 +3049,7 @@ export default function BouwenPage() {
                                       <label key={t} className="flex items-center gap-2 text-xs font-semibold text-gray-600 cursor-pointer select-none">
                                         <input
                                           type="checkbox"
-                                          className="rounded"
+                                          className="w-4 h-4 accent-[#C5A059]"
                                           checked={current.includes(t)}
                                           onChange={(e) => {
                                             const updated = e.target.checked
@@ -3081,7 +3084,7 @@ export default function BouwenPage() {
                                 <label className="flex items-start gap-3 cursor-pointer select-none">
                                   <input
                                     type="checkbox"
-                                    className="mt-0.5"
+                                    className="mt-0.5 w-4 h-4 accent-[#C5A059]"
                                     checked={(content.RSVP?.showSongRequest as boolean) ?? false}
                                     onChange={(e) => updateContent("RSVP", { ...(content.RSVP ?? {}), showSongRequest: e.target.checked })}
                                   />
@@ -3096,7 +3099,7 @@ export default function BouwenPage() {
                                 <label className="flex items-start gap-3 cursor-pointer select-none">
                                   <input
                                     type="checkbox"
-                                    className="mt-0.5"
+                                    className="mt-0.5 w-4 h-4 accent-[#C5A059]"
                                     checked={(content.RSVP?.showOvernachting as boolean) ?? false}
                                     onChange={(e) => updateContent("RSVP", { ...(content.RSVP ?? {}), showOvernachting: e.target.checked })}
                                   />
@@ -3187,7 +3190,7 @@ export default function BouwenPage() {
                               {(() => {
                                 const rek = (content.Cadeautips?.rekening as Rekening | undefined) ?? {}
                                 const zet = (patch: Partial<Rekening>) => updateContent("Cadeautips", { ...(content.Cadeautips ?? {}), rekening: { ...rek, ...patch } })
-                                const klas = "w-full rounded-lg border border-[var(--goud-licht)] px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)]"
+                                const klas = "w-full rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)]"
                                 return (
                                   <div className="flex flex-col gap-2 bg-gray-50 rounded-xl p-3">
                                     <span className="text-xs font-semibold text-gray-700">Een bijdrage overmaken</span>
@@ -4082,7 +4085,7 @@ function MastersEditor({
             value={master.naam}
             onChange={(e) => update(master.id!, { naam: e.target.value })}
             placeholder="Volledige naam"
-            className="w-full rounded-lg border border-[var(--goud-licht)] px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)]"
+            className="w-full rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)]"
           />
           {/* Telefoon */}
           <input
@@ -4091,7 +4094,7 @@ function MastersEditor({
             value={master.telefoon}
             onChange={(e) => update(master.id!, { telefoon: e.target.value })}
             placeholder="+31 6 12345678"
-            className="w-full rounded-lg border border-[var(--goud-licht)] px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)]"
+            className="w-full rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)]"
           />
           {/* E-mail */}
           <input
@@ -4100,7 +4103,7 @@ function MastersEditor({
             value={master.email}
             onChange={(e) => update(master.id!, { email: e.target.value })}
             placeholder="naam@voorbeeld.nl"
-            className="w-full rounded-lg border border-[var(--goud-licht)] px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)]"
+            className="w-full rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)]"
           />
           {/* Rol en onderwerpen: waar je deze persoon voor belt (ontwerpronde, 2 oktober 2026) */}
           <input
@@ -4110,7 +4113,7 @@ function MastersEditor({
             onChange={(e) => update(master.id!, { rol: e.target.value })}
             placeholder="Rol, bijv. zus van Lindsey"
             maxLength={60}
-            className="w-full rounded-lg border border-[var(--goud-licht)] px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)]"
+            className="w-full rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)]"
           />
           <input
             id={`master-onderwerpen-${master.id}`}
@@ -4119,7 +4122,7 @@ function MastersEditor({
             onChange={(e) => update(master.id!, { onderwerpen: e.target.value })}
             placeholder="Waarvoor, bijv. speeches, verrassingen, dieetwensen"
             maxLength={120}
-            className="w-full rounded-lg border border-[var(--goud-licht)] px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)]"
+            className="w-full rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)]"
           />
         </div>
       ))}
@@ -4190,7 +4193,7 @@ function WishlistEditor({
             value={item.title}
             onChange={(e) => update(item.id, { title: e.target.value })}
             placeholder="Titel"
-            className="w-full rounded-lg border border-[var(--goud-licht)] px-3 py-1.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)]"
+            className="w-full rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)]"
           />
           {/* Rij 2: Icoon-picker + Verwijder */}
           <div className="flex items-center justify-between">
@@ -4244,7 +4247,7 @@ function WishlistEditor({
             value={item.text}
             onChange={(e) => update(item.id, { text: e.target.value })}
             placeholder="Beschrijving..."
-            className="w-full rounded-lg border border-[var(--goud-licht)] px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] resize-none"
+            className="w-full rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] resize-none"
           />
         </div>
       ))}
@@ -4255,7 +4258,7 @@ function WishlistEditor({
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
         </svg>
-        Informatieblok toevoegen
+        Wens toevoegen
       </button>
     </div>
   )
@@ -4315,7 +4318,7 @@ function PraktischEditor({
             value={tile.title}
             onChange={(e) => update(tile.id, { title: e.target.value })}
             placeholder="Titel"
-            className="w-full rounded-lg border border-[var(--goud-licht)] px-3 py-1.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)]"
+            className="w-full rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)]"
           />
           {/* Rij 2: Icoon-picker + Verwijder */}
           <div className="flex items-center justify-between">
@@ -4369,7 +4372,7 @@ function PraktischEditor({
             value={tile.text}
             onChange={(e) => update(tile.id, { text: e.target.value })}
             placeholder="Beschrijving..."
-            className="w-full rounded-lg border border-[var(--goud-licht)] px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] resize-none"
+            className="w-full rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] resize-none"
           />
         </div>
       ))}

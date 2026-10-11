@@ -285,7 +285,7 @@ export function HomeOntwerpTekstvelden({
               checked={instellingen.detailsIcoon === true}
               onChange={(e) => onWijzig({ detailsIcoon: e.target.checked })}
               className="w-4 h-4"
-              style={{ accentColor: "#1A1A1A" }}
+              style={{ accentColor: "#C5A059" }}
             />
             Met icoontjes
           </label>

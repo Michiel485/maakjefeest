@@ -64,7 +64,7 @@ export default function LetterKiezer({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={`${label}: ${nu.label}`}
-        className="w-full flex items-center justify-between gap-2 rounded-lg border border-[var(--goud-licht)] bg-white px-2.5 py-1.5 text-left focus:outline-none focus:ring-1 focus:ring-[var(--goud-vlak)]"
+        className="w-full flex items-center justify-between gap-2 rounded-xl border border-[var(--goud-licht)] bg-white px-3 py-2 text-left focus:outline-none focus:ring-1 focus:ring-[var(--goud-vlak)]"
         style={{ cursor: "pointer" }}
       >
         <span className="truncate text-[15px] leading-tight text-gray-700" style={{ fontFamily: nu.font, fontWeight: nu.gewicht }}>
