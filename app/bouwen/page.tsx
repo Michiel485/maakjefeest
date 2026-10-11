@@ -2,21 +2,18 @@
 
 import { useStapGeschiedenis, useTerugSluit } from "@/lib/terug"
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
-import AanmeldFormulier from "@/components/AanmeldFormulier"
-import HomeOntwerpGalerij, { HomeOntwerpTekstvelden } from "@/components/HomeOntwerpPaneel"
 import LetterKiezer from "@/components/LetterKiezer"
 import { homeOntwerp } from "@/lib/home-ontwerp"
 import { useRouter } from "next/navigation"
+import dynamic from "next/dynamic"
 import Link from "next/link"
 import EventHomePreview, { homeOpening, standaardFotoHoogte } from "@/components/EventHomePreview"
 import EventNav from "@/app/events/[slug]/event-nav"
 import PraktischPreview, { DEFAULT_PRAKTISCH_TILES, type PraktischTile, type RouteInfo } from "@/components/PraktischPreview"
-import RouteEditor from "@/components/site/RouteEditor"
 import WishlistPreview, { DEFAULT_WISHLIST_ITEMS, type Rekening, type WishlistItem } from "@/components/WishlistPreview"
 import EventMastersPreview from "@/components/EventMastersPreview"
 import EventProgramPreview, { PROGRAM_ICONS, ProgramIcon, DEFAULT_PROGRAM_ITEMS } from "@/components/EventProgramPreview"
 import StoryPreview from "@/components/StoryPreview"
-import MomentenEditor from "@/components/site/MomentenEditor"
 import { verhaalMomenten, verhaalQuote } from "@/lib/verhaal"
 import FotosPreview from "@/components/FotosPreview"
 import SiteSectieKop from "@/components/site/SectieKop"
@@ -29,7 +26,6 @@ import { DEFAULT_PLAN, hoogstePlan, PLANS, formatEur, isCardPlan, isPlan, planAl
 import BouwerSchil from "@/components/BouwerSchil"
 import { Knop, Melding, SectieKop } from "@/components/ui"
 import { KLEUR } from "@/lib/ontwerp"
-import SophieTutorial, { type SophieNav } from "@/components/SophieTutorial"
 import {
   DEFAULT_PRAKTISCH,
   DEFAULT_PROGRAMMA,
@@ -40,6 +36,14 @@ import {
   nieuwWebsiteConcept,
   LS_MAIL,
 } from "@/lib/nieuw-concept"
+
+// Wat alleen bij één stap of één onderdeel van het voorbeeld hoort, laadt
+// pas als het in beeld komt. Eerst zat alles in één script van 494 kB.
+const AanmeldFormulier = dynamic(() => import("@/components/AanmeldFormulier"))
+const HomeOntwerpGalerij = dynamic(() => import("@/components/HomeOntwerpPaneel"))
+const HomeOntwerpTekstvelden = dynamic(() => import("@/components/HomeOntwerpPaneel").then((m) => m.HomeOntwerpTekstvelden))
+const RouteEditor = dynamic(() => import("@/components/site/RouteEditor"))
+const MomentenEditor = dynamic(() => import("@/components/site/MomentenEditor"))
 
 type EventType = "bruiloft" | "verjaardag" | "evenement"
 type PageId = "Home" | "Programma" | "RSVP" | "Informatie" | "Cadeautips" | "Fotos" | "Ceremoniemeesters" | "OnsVerhaal"
