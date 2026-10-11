@@ -6,7 +6,11 @@
 // adres, en dat kan verkeerd uitvallen.
 
 import { useState } from "react"
+import dynamic from "next/dynamic"
 import { mapsLink, plekUitTekst, type RouteInfo } from "@/components/PraktischPreview"
+
+// De kaart laadt pas als je hem opent, en alleen in de browser
+const KaartKiezer = dynamic(() => import("./KaartKiezer"), { ssr: false, loading: () => <div className="text-xs text-gray-400 py-6 text-center">Kaart laden...</div> })
 
 const invoer =
   "w-full rounded-xl border border-[var(--goud-licht)] px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--goud-vlak)] focus:border-[var(--goud)] transition-all"
@@ -24,6 +28,7 @@ export default function RouteEditor({
   const metPlek = typeof route.lat === "number" && typeof route.lng === "number"
   const [plakTekst, setPlakTekst] = useState("")
   const [plakFout, setPlakFout] = useState<string | null>(null)
+  const [kaartOpen, setKaartOpen] = useState(false)
   const zet = (patch: Partial<RouteInfo>) => onChange({ ...route, ...patch })
 
   function plak(tekst: string) {
@@ -111,6 +116,22 @@ export default function RouteEditor({
                 Nog geen plek: Maps zoekt op het adres. Kies een plek als Maps de verkeerde locatie geeft of als de ingang ergens anders is.
               </span>
             )}
+            <button
+              type="button"
+              onClick={() => setKaartOpen((v) => !v)}
+              className="self-start text-xs font-semibold rounded-xl px-3 py-2 border border-[var(--goud-licht)] text-gray-700 hover:border-[#C5A059]"
+            >
+              {kaartOpen ? "Kaart sluiten" : "Kies op de kaart"}
+            </button>
+            {kaartOpen && (
+              <KaartKiezer
+                lat={route.lat}
+                lng={route.lng}
+                adres={route.adres?.trim() || locatie}
+                onKies={(lat, lng) => zet({ lat, lng })}
+              />
+            )}
+            <span className="text-[11px] text-gray-400 leading-snug">Of plak een plek:</span>
             <input
               type="text"
               value={plakTekst}
