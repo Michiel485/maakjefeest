@@ -4,7 +4,7 @@ import { Suspense, useEffect, useRef, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase"
-import { PLANS, PLAN_ORDER, isPlan, normalizePlan, upgradePrice, formatEur, type Plan } from "@/lib/plans"
+import { PLANS, PLAN_ORDER, isPlan, normalizePlan, planRank, upgradePrice, formatEur, type Plan } from "@/lib/plans"
 
 const GOLD       = "#C5A059"
 const GOLD_LIGHT = "#E8D5A3"
@@ -98,10 +98,10 @@ function PaymentCancelled({ event_id, upgrade }: { event_id: string; upgrade: st
 }
 
 // Pakketkeuze: drie kaarten, de gekozen krijgt een gouden rand
-function PakketKeuze({ gekozen, onKies }: { gekozen: Plan; onKies: (p: Plan) => void }) {
+function PakketKeuze({ gekozen, onKies, vanaf }: { gekozen: Plan; onKies: (p: Plan) => void; vanaf: Plan | null }) {
   return (
     <div className="flex flex-col gap-3 mb-6">
-      {PLAN_ORDER.map((p) => {
+      {PLAN_ORDER.filter((p) => !vanaf || planRank(p) >= planRank(vanaf)).map((p) => {
         const info = PLANS[p]
         const actief = gekozen === p
         return (
@@ -199,6 +199,13 @@ function CheckoutContent() {
   const [paying, setPaying]             = useState(false)
   const [activatingFree, setActivatingFree] = useState(false)
   const [payError, setPayError]         = useState(false)
+
+  // Wisselen kan alleen omhoog vanaf het pakket waarmee je hier kwam. Wie een
+  // website bouwde en dan voor €15 de Save the Date koos, betaalde en zag
+  // zijn site niet live gaan (Michiel, 11 oktober 2026). Zonder pakket in de
+  // URL, bijvoorbeeld vanaf een landingspagina, is alles te kiezen.
+  const vanafParam = searchParams.get("plan")
+  const vanaf: Plan | null = isPlan(vanafParam) ? vanafParam : null
 
   // Pakketkeuze: uit de URL, anders wat de bezoeker op een landingspagina koos, anders compleet
   const [plan, setPlan] = useState<Plan>(() => {
@@ -494,14 +501,18 @@ function CheckoutContent() {
 
       <div className="mb-8">
         <h1 style={{ fontFamily: "var(--font-cormorant)", fontSize: "2.25rem", fontWeight: 700, color: CHARCOAL, lineHeight: 1.15 }} className="mb-3">
-          Kies jullie pakket
+          {vanaf === "compleet" ? "Jullie pakket" : "Kies jullie pakket"}
         </h1>
         <p className="text-sm leading-relaxed" style={{ color: BODY }}>
-          Begin klein of ga meteen compleet. Upgraden kan later altijd, voor het verschil.
+          {vanaf === "compleet"
+            ? "De complete trouwwebsite, met de trouwkaart en de Save the Date erbij."
+            : vanaf
+              ? "Wil je meer? Een groter pakket kan hier ook, voor het verschil."
+              : "Begin klein of ga meteen compleet. Upgraden kan later altijd, voor het verschil."}
         </p>
       </div>
 
-      <PakketKeuze gekozen={plan} onKies={kiesPlan} />
+      <PakketKeuze gekozen={plan} onKies={kiesPlan} vanaf={vanaf} />
 
       {/* Order summary */}
       <div className="rounded-2xl mb-6 overflow-hidden" style={{ border: `1px solid ${GOLD_LIGHT}` }}>
