@@ -65,7 +65,26 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* Geist voor alle gewone tekst; eerst stond hier Arial, een overblijfsel uit
+     het startsjabloon (Michiel, 11 oktober 2026). Koppen in Cormorant en de
+     bruiloftsites en kaarten zetten hun eigen letters. */
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+/* De bouwer, de kaartbouwer en het dashboard: de grijstinten van Tailwind in
+   het warme grijs van de huisstijl, zodat koel blauwgrijs en warm bruingrijs
+   niet meer door elkaar staan (Michiel, 11 oktober 2026) */
+.warm-grijs {
+  --color-gray-50: #FAF8F5;
+  --color-gray-100: #F3EFE9;
+  --color-gray-200: #E8E1D7;
+  --color-gray-300: #CFC5B8;
+  --color-gray-400: #9A8E82;
+  --color-gray-500: #847869;
+  --color-gray-600: #6B5F52;
+  --color-gray-700: #4F453B;
+  --color-gray-800: #3F3730;
+  --color-gray-900: #2A241F;
 }
 
 /* ── Google Translate: hide all native UI ──────────────────────────────────────── */

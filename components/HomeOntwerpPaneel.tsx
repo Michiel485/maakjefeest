@@ -294,7 +294,7 @@ export function HomeOntwerpTekstvelden({
       <button
         type="button"
         onClick={() => setMeer((v) => !v)}
-        className="self-start text-xs font-semibold text-gray-500 hover:text-[#C5A059]"
+        className="self-start text-xs font-semibold text-[#C5A059] hover:underline"
         style={{ background: "none", border: 0, padding: 0, cursor: "pointer" }}
       >
         {meer ? "Lettertypes en groottes verbergen" : "Lettertypes en groottes aanpassen"}

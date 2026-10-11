@@ -51,7 +51,7 @@ export default function RouteEditor({
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-[var(--goud-licht)] bg-white p-3">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-semibold text-gray-800">Route</span>
+        <span className="text-xs font-semibold text-gray-700">Route</span>
         <button
           type="button"
           onClick={() => zet({ aan: !aan })}

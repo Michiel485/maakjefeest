@@ -53,7 +53,9 @@ export default function BouwerSchil({
   return (
     <div
       translate="no"
-      className={`min-h-screen flex flex-col antialiased ${className ?? ""}`}
+      // warm-grijs: de grijstinten van Tailwind in het warme grijs van de
+      // huisstijl, voor de hele schil (app/globals.css, 11 oktober 2026)
+      className={`warm-grijs min-h-screen flex flex-col antialiased ${className ?? ""}`}
       style={{ backgroundColor: KLEUR.ivoor }}
     >
       <header
