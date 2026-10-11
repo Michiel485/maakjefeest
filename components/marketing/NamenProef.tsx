@@ -28,7 +28,7 @@ const STIJL = VOORBEELD.stijl
 const invoer =
   "w-full rounded-xl border px-4 py-3 text-base focus:outline-none focus:ring-2 transition-all"
 
-export default function NamenProef() {
+export default function NamenProef({ intro }: { intro?: React.ReactNode } = {}) {
   const router = useRouter()
   const [een, setEen] = useState("")
   const [twee, setTwee] = useState("")
@@ -84,7 +84,13 @@ export default function NamenProef() {
   }
 
   return (
+    // De kop en de uitleg staan links boven het formulier, naast de kaart.
+    // Stonden ze erboven over de hele breedte, dan zakte het formulier naar
+    // het midden van de hoge kaart en bleef er een gat onder de tekst
+    // (Michiel, 11 oktober 2026).
     <div className="grid gap-10 lg:grid-cols-[1fr_380px] lg:items-center">
+      <div className="flex flex-col gap-8 min-w-0">
+      {intro}
       <form
         onSubmit={(e) => { e.preventDefault(); verder() }}
         className="flex flex-col gap-3"
@@ -133,6 +139,7 @@ export default function NamenProef() {
           Gratis ontwerpen, zonder account. Je betaalt pas als je de kaart verstuurt: 15 euro.
         </p>
       </form>
+      </div>
 
       <div ref={vak} className="flex flex-col items-center">
         <div style={{ filter: "drop-shadow(0 24px 40px rgba(0,0,0,0.16))", transform: "rotate(-1.5deg)" }}>

@@ -3,6 +3,7 @@ import ResetGoogleTranslate from "@/components/ResetGoogleTranslate"
 import Kop, { Ornament, Pijl, Vinkje } from "./Kop"
 import Voet from "./Voet"
 import NamenProef from "./NamenProef"
+import PapierVergelijking from "./PapierVergelijking"
 import { DONKER, DONKER_KAART, DONKER_TEKST, DONKER_ZACHT, GOUD, GOUD_LICHT, INKT, IVOOR, IVOOR_KAART, KOP_FONT, TEKST, ZAND } from "./stijl"
 import { PLANS, PLAN_ORDER, formatEur, planStartUrl, upgradeHint, type Plan } from "@/lib/plans"
 
@@ -48,20 +49,26 @@ export default function Zoekpagina({ inhoud }: { inhoud: ZoekpaginaInhoud }) {
       />
       <style>{`summary::-webkit-details-marker { display: none; }`}</style>
 
-      <section className="px-6 pt-14 pb-20 sm:pt-20 sm:pb-28" style={{ backgroundColor: IVOOR }}>
+      <section className="px-6 pt-12 pb-14 sm:pt-16 sm:pb-20" style={{ backgroundColor: IVOOR }}>
         <div className="max-w-6xl mx-auto">
-          <div className="max-w-2xl mb-10">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] mb-5" style={{ color: GOUD }}>{inhoud.kopje}</p>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl leading-[1.05] mb-5 tracking-tight" style={{ fontFamily: KOP_FONT, color: INKT, fontWeight: 700 }}>
-              {inhoud.h1}
-            </h1>
-            <p className="text-base sm:text-lg leading-relaxed" style={{ color: TEKST }}>{inhoud.intro}</p>
-          </div>
-          <NamenProef />
+          <NamenProef
+            intro={
+              <div className="max-w-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] mb-5" style={{ color: GOUD }}>{inhoud.kopje}</p>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl leading-[1.05] mb-5 tracking-tight" style={{ fontFamily: KOP_FONT, color: INKT, fontWeight: 700 }}>
+                {inhoud.h1}
+              </h1>
+              <p className="text-base sm:text-lg leading-relaxed" style={{ color: TEKST }}>{inhoud.intro}</p>
+            </div>
+            }
+          />
         </div>
       </section>
 
-      <section className="py-24 px-6" style={{ backgroundColor: ZAND }}>
+      {/* Papier tegenover SayingYes, ook hier (Michiel, 11 oktober 2026) */}
+      <PapierVergelijking allesLink />
+
+      <section className="py-16 sm:py-24 px-6" style={{ backgroundColor: IVOOR }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <Ornament />
@@ -80,7 +87,7 @@ export default function Zoekpagina({ inhoud }: { inhoud: ZoekpaginaInhoud }) {
         </div>
       </section>
 
-      <section className="py-24 px-6" style={{ backgroundColor: IVOOR }}>
+      <section className="py-16 sm:py-24 px-6" style={{ backgroundColor: ZAND }}>
         <div className="max-w-5xl mx-auto grid gap-12 lg:grid-cols-2 lg:items-center">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] mb-4" style={{ color: GOUD }}>Waarom</p>
