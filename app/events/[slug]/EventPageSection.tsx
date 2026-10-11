@@ -6,7 +6,7 @@ import AanmeldFormulier from "@/components/AanmeldFormulier"
 import EventMastersPreview from "@/components/EventMastersPreview"
 import EventProgramPreview from "@/components/EventProgramPreview"
 import StoryPreview from "@/components/StoryPreview"
-import PraktischPreview, { DEFAULT_PRAKTISCH_TILES, type PraktischTile } from "@/components/PraktischPreview"
+import PraktischPreview, { DEFAULT_PRAKTISCH_TILES, type PraktischTile, type RouteInfo } from "@/components/PraktischPreview"
 import WishlistPreview, { DEFAULT_WISHLIST_ITEMS, type Rekening, type WishlistItem } from "@/components/WishlistPreview"
 import { verhaalMomenten, verhaalQuote } from "@/lib/verhaal"
 import FotosPreview from "@/components/FotosPreview"
@@ -52,7 +52,8 @@ export default function EventPageSection({ page, sc, eventId, event }: { page: P
     // hier dan niets, terwijl de bouwer de voorbeelden wel liet zien (Michiel,
     // 27 september 2026, bij de cadeautips).
     const tiles = Array.isArray(page.content?.items) ? (page.content.items as PraktischTile[]) : DEFAULT_PRAKTISCH_TILES
-    return <PraktischPreview tiles={tiles} sc={sc} locatie={event?.locatie ?? null} />
+    const route = page.content?.route && typeof page.content.route === "object" ? (page.content.route as RouteInfo) : null
+    return <PraktischPreview tiles={tiles} sc={sc} locatie={event?.locatie ?? null} route={route} />
   }
 
   if (page.type === "Cadeautips") {

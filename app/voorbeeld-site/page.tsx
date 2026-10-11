@@ -130,7 +130,7 @@ export default function VoorbeeldSitePage() {
     },
     {
       id: "informatie",
-      inhoud: <PraktischPreview tiles={DEFAULT_PRAKTISCH_TILES} sc={sc} locatie={VOORBEELD.locatie} />,
+      inhoud: <PraktischPreview tiles={DEFAULT_PRAKTISCH_TILES} sc={sc} locatie={VOORBEELD.locatie} route={{ tekst: "De ingang zit aan de achterkant van het landhuis. Parkeren kan op het grasveld bij de poort." }} />,
     },
     {
       id: "cadeautips",

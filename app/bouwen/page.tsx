@@ -10,7 +10,8 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import EventHomePreview, { homeOpening, standaardFotoHoogte } from "@/components/EventHomePreview"
 import EventNav from "@/app/events/[slug]/event-nav"
-import PraktischPreview, { DEFAULT_PRAKTISCH_TILES, type PraktischTile } from "@/components/PraktischPreview"
+import PraktischPreview, { DEFAULT_PRAKTISCH_TILES, type PraktischTile, type RouteInfo } from "@/components/PraktischPreview"
+import RouteEditor from "@/components/site/RouteEditor"
 import WishlistPreview, { DEFAULT_WISHLIST_ITEMS, type Rekening, type WishlistItem } from "@/components/WishlistPreview"
 import EventMastersPreview from "@/components/EventMastersPreview"
 import EventProgramPreview, { PROGRAM_ICONS, ProgramIcon, DEFAULT_PROGRAM_ITEMS } from "@/components/EventProgramPreview"
@@ -3139,6 +3140,12 @@ export default function BouwenPage() {
                                 tiles={praktischTiles ?? DEFAULT_PRAKTISCH_TILES}
                                 onChange={(tiles) => updateContent("Informatie", { ...(content.Informatie ?? {}), items: tiles })}
                               />
+                              {/* De tegel Route: aan of uit, eigen tekst en een precieze plek (Michiel, 11 oktober 2026) */}
+                              <RouteEditor
+                                route={(content.Informatie?.route as RouteInfo | undefined) ?? {}}
+                                locatie={eventLocatie || ""}
+                                onChange={(route) => updateContent("Informatie", { ...(content.Informatie ?? {}), route })}
+                              />
                             </div>
                           )}
 
@@ -3552,7 +3559,7 @@ export default function BouwenPage() {
                       )}
                       {showSection("Informatie") && (
                         <div data-voorbeeld-sectie="Informatie" style={voorbeeldSectieStijl("Informatie")}>
-                        <PraktischPreview tiles={praktischTiles ?? DEFAULT_PRAKTISCH_TILES} sc={sc} locatie={eventLocatie || null} onTileClick={handleInfoTileClick} />
+                        <PraktischPreview tiles={praktischTiles ?? DEFAULT_PRAKTISCH_TILES} sc={sc} locatie={eventLocatie || null} route={(content.Informatie?.route as RouteInfo | undefined) ?? null} onTileClick={handleInfoTileClick} />
                         </div>
                       )}
                       {showSection("Cadeautips") && (
