@@ -692,7 +692,13 @@ export default function CardReveal({
           <div
             className="absolute left-0 right-0 top-0 flex flex-col items-center justify-center"
             // Over de kaart zelf, niet over de kaart plus wat eronder staat
-            style={{ pointerEvents: "none", height: gezichtHoogte ? Math.max(gezichtHoogte, envelopHoogte + 24) : "100%" }}
+            // Nog niet gemeten (de eerste weergave, vóór de browser de pagina
+            // heeft overgenomen): dezelfde schatting als de ruimte erboven.
+            // Met 100% lag de envelop over de kaart plus het formulier eronder,
+            // en schoot hij na een seconde een paar centimeter omhoog (Michiel,
+            // 11 oktober 2026). Zo blijft het midden van de envelop op het
+            // midden van het scherm, met de schatting en met de echte maat.
+            style={{ pointerEvents: "none", height: compact ? (gezichtHoogte ? Math.max(gezichtHoogte, envelopHoogte + 24) : "100%") : envelopVlak }}
           >
             <div
               className="relative"
