@@ -570,7 +570,9 @@ export default function EventHomePreview({
         {...sleepProps}
       >
         {fotoVlak("absolute inset-0", (
-          <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.38) 0%, rgba(0,0,0,0.28) 50%, rgba(0,0,0,0.45) 100%)" }} />
+          // Een donkere waas over de hele foto en een zachte gloed achter het
+          // ontwerp, zodat lichte plekken de tekst niet wegdrukken
+          <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 55% 60% at 50% 50%, rgba(0,0,0,0.32) 0%, rgba(0,0,0,0) 100%), linear-gradient(to bottom, rgba(0,0,0,0.34) 0%, rgba(0,0,0,0.24) 50%, rgba(0,0,0,0.42) 100%)" }} />
         ), true)}
         {/* Alleen het ontwerp op de foto, zonder kaart eromheen: de foto
             blijft zichtbaar (Michiel, 10 oktober 2026). Een donkere waas en

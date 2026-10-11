@@ -128,7 +128,7 @@ function LetterRegel({ waarde, ontwerpFont, schaal, onFont, onSchaal }: { waarde
         <input
           type="range"
           min={0.5}
-          max={1.8}
+          max={2.5}
           step={0.05}
           value={schaal}
           onChange={(e) => onSchaal(Number(e.target.value))}

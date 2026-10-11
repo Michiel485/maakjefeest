@@ -27,6 +27,15 @@ export interface HomeOntwerpTekst {
 /** Per tekst een lettertype (een id uit lib/title-fonts.ts) en een grootte (1 is zoals ontworpen) */
 export type HomeTekstInstellingen = Partial<Record<TekstRol, { font?: string; schaal?: number }>>
 
+/** Een kleur richting wit; deel 0 is de kleur zelf, 1 is wit */
+function lichter(hex: string, deel: number): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim())
+  if (!m) return "#F3E6CF"
+  const n = parseInt(m[1], 16)
+  const kanaal = (v: number) => Math.round(v + (255 - v) * deel).toString(16).padStart(2, "0")
+  return `#${kanaal((n >> 16) & 255)}${kanaal((n >> 8) & 255)}${kanaal(n & 255)}`
+}
+
 export default function HomeOntwerp({
   ontwerp,
   sc,
@@ -46,7 +55,9 @@ export default function HomeOntwerp({
 }) {
   // Op een foto rekent het ontwerp met een donkere achtergrond: dan kiest het
   // overal lichte tekst die leesbaar is op de foto
-  const scNu: SC = opFoto ? { ...sc, bodyBg: "#2B2622", headingColor: "#FFFFFF", bodyText: "#F4EFE9" } : sc
+  // De accentkleur wordt licht: goud of groen in de stijlkleur viel weg op een
+  // donkere foto (Michiel, 11 oktober 2026)
+  const scNu: SC = opFoto ? { ...sc, bodyBg: "#2B2622", headingColor: "#FFFFFF", bodyText: "#F4EFE9", accent: lichter(sc.accent, 0.62), labelColor: lichter(sc.accent, 0.72) } : sc
 
   // Zo breed als er ruimte is, tot de breedte die bij het ontwerp past
   const vak = useRef<HTMLDivElement>(null)

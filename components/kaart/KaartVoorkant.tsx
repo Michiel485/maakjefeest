@@ -693,6 +693,10 @@ function Inhoud({
   const tt = (rol: TekstRol, standaard: string, n: number): CSSProperties => ({
     fontFamily: eigen?.[rol]?.font ?? standaard,
     fontSize: Math.round((rol === "namen" ? n : klein(n)) * s * (eigen?.[rol]?.schaal ?? 1) * 10) / 10,
+    // Op de homepagina mag de kop zo breed worden als het scherm en breekt hij
+    // pas af als hij echt niet past; binnen de kaart brak "Wij gaan trouwen"
+    // al bij een middelgrote letter (Michiel, 11 oktober 2026)
+    ...(vrij && rol === "kop" ? { width: "max-content", maxWidth: "calc(100cqw - 32px)", justifyContent: "center" } : {}),
   })
   const hoogte = Math.round(breedte * 1.4)
 
@@ -830,8 +834,11 @@ function Inhoud({
     position: "relative",
     flexDirection: "column",
     width: breedte,
-    minHeight: hoogte,
-    overflow: "hidden",
+    // Op een foto geen vaste kaarthoogte: die gaf veel lege ruimte boven en
+    // onder het ontwerp (Michiel, 11 oktober 2026). Op de homepagina niets
+    // afsnijden, zodat een brede kop over de rand mag.
+    minHeight: opFoto ? 0 : hoogte,
+    overflow: vrij ? "visible" : "hidden",
     backgroundColor: vlak,
     ...(opFoto ? { textShadow: "0 2px 14px rgba(0,0,0,0.45)" } : {}),
     ...(schaduw ? { boxShadow: schaduw } : {}),
