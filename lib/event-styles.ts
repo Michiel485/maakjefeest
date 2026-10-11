@@ -52,8 +52,8 @@ export const STYLE_CONFIG = {
   zand: {
     accent: "#C5A059",
     heroGradient: "linear-gradient(135deg, #FAF8F5, #F3EFEA, #EDE8DF)",
-    fontFamily: "'Cormorant Garamond', serif",
-    nameFont: "'Pinyon Script', cursive" as string | null,
+    fontFamily: "var(--font-cormorant), Georgia, serif",
+    nameFont: "var(--font-pinyonscript), cursive" as string | null,
     navBg: "#FAF8F5",
     navText: "#3A352F",
     headingColor: "#3A352F",
@@ -70,7 +70,9 @@ export const STYLE_CONFIG = {
     floralFilter: null as string | null,
     bodyLetterSpacing: "normal",
     bodyFontWeight: "400",
-    fontImport: "@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Pinyon+Script&display=swap');",
+    // Beide letters staan in app/fonts. Eerst kwamen ze hier via een @import
+    // bij Google vandaan, en dan stuurde elke gast zijn IP-adres naar Google.
+    fontImport: null as string | null,
     frameBodyText: null as string | null,
   },
   earthy: {
