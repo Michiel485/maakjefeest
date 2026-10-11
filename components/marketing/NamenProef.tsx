@@ -10,20 +10,20 @@ import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import KaartVoorkant from "@/components/kaart/KaartVoorkant"
 import { buildCardDisplay, type NieuwOntwerp } from "@/lib/cards"
-import { getStyleConfig } from "@/lib/event-styles"
 import { browserLetters } from "@/lib/kaart-ontwerpen"
 import { voegNamenSamen } from "@/lib/namen"
 import { LS_NAMEN } from "@/lib/nieuw-concept"
 import { meetStap } from "@/lib/stap"
-import { VOORBEELD } from "@/lib/voorbeeld"
+import { VOORBEELD, voorbeeldStijl } from "@/lib/voorbeeld"
 import { GOUD, GOUD_LICHT, INKT, IVOOR, TEKST, ZACHT } from "./stijl"
 
 const LS_KAART = "sayingyes_kaart"
-// Hart met schaduw in Smaragd, dezelfde kaart als die van het voorbeeldpaar.
-// Eerst Olijf in Parel (sierletter vond Michiel niet mooi), daarna Boog in
-// Zand; Michiel koos op 10 oktober 2026 voor deze.
-const ONTWERP: NieuwOntwerp = "schaduwhart"
-const STIJL = "emerald"
+// Dezelfde kaart als die van het voorbeeldpaar (lib/voorbeeld.ts): sinds 11
+// oktober 2026 de krans met takjes in Zand, met de namen in Montserrat, zoals
+// Michiels testsite. Eerder Olijf in Parel, Boog in Zand en Hart met schaduw
+// in Smaragd.
+const ONTWERP: NieuwOntwerp = VOORBEELD.ontwerp
+const STIJL = VOORBEELD.stijl
 
 const invoer =
   "w-full rounded-xl border px-4 py-3 text-base focus:outline-none focus:ring-2 transition-all"
@@ -33,7 +33,7 @@ export default function NamenProef() {
   const [een, setEen] = useState("")
   const [twee, setTwee] = useState("")
   const [datum, setDatum] = useState("")
-  const sc = getStyleConfig(STIJL)
+  const sc = voorbeeldStijl()
 
   // Zo breed als er ruimte is, tot de maat van een kaart
   const vak = useRef<HTMLDivElement>(null)
@@ -65,7 +65,7 @@ export default function NamenProef() {
   const display = buildCardDisplay(
     "trouwkaart",
     ONTWERP,
-    { names: namen },
+    { names: namen, namenFont: VOORBEELD.kaartNamenLetter },
     { title: namen, frame_names: namen, datum: datum || VOORBEELD.datum, locatie: null }
   )
 
@@ -76,7 +76,7 @@ export default function NamenProef() {
       delete vorig.details
       // De bouwer opent met de kaart die je hier zag, tenzij je daar al een
       // ontwerp had gekozen
-      const ontwerp = vorig.template ? {} : { template: ONTWERP, style: STIJL }
+      const ontwerp = vorig.template ? {} : { template: ONTWERP, style: STIJL, namenFont: VOORBEELD.kaartNamenLetter }
       localStorage.setItem(LS_KAART, JSON.stringify({ ...vorig, ...ontwerp, names: voegNamenSamen(een, twee), datum, type: "trouwkaart" }))
     } catch {}
     meetStap("namen")
