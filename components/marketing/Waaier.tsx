@@ -22,6 +22,9 @@ import { GOUD, INKT, TEKST, ZACHT } from "./stijl"
 const PODIUM = 560
 const PODIUM_HOOG = 600
 const ONTWERP = VOORBEELD.ontwerp as NieuwOntwerp
+// De Save the Date in een ander ontwerp, zodat je ziet dat er keus is: Groot
+// krijthart (Michiel, 11 oktober 2026)
+const ONTWERP_STD: NieuwOntwerp = "krijtgroot"
 
 interface Stuk {
   label: string
@@ -53,14 +56,15 @@ export default function Waaier({ namen, datum }: { namen: string; datum: string 
   const event = { title: namen, frame_names: namen, datum: datum || VOORBEELD.datum, locatie: null }
   const inhoud = { names: namen, namenFont: VOORBEELD.kaartNamenLetter }
   const trouwkaart = buildCardDisplay("trouwkaart", ONTWERP, inhoud, event)
-  const saveTheDate = buildCardDisplay("save_the_date", ONTWERP, inhoud, event)
+  // Zonder de eigen letter van het voorbeeldpaar: die hoort bij de krans
+  const saveTheDate = buildCardDisplay("save_the_date", ONTWERP_STD, { names: namen }, event)
   const datumTekst = formatDate(datum || VOORBEELD.datum)
 
   const stukken: Stuk[] = [
     {
       label: "Save the Date",
       x: 18, y: 40, draai: -9, z: 1, labelBoven: true,
-      inhoud: <KaartVoorkant d={saveTheDate} ontwerp={ONTWERP} sc={sc} breedte={190} letters={letters} />,
+      inhoud: <KaartVoorkant d={saveTheDate} ontwerp={ONTWERP_STD} sc={sc} breedte={190} letters={browserLetters(ONTWERP_STD)} />,
     },
     {
       label: "Website",
