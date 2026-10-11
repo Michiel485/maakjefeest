@@ -24,6 +24,10 @@ async function verifyOwnership(cardId: string, userEmail: string): Promise<boole
   return !!event && event.user_email === userEmail
 }
 
+function procent(v: unknown): number | undefined {
+  return typeof v === "number" && Number.isFinite(v) ? Math.max(0, Math.min(100, Math.round(v))) : undefined
+}
+
 function sanitizeContent(raw: unknown): CardContent {
   const input = (raw ?? {}) as Record<string, unknown>
   const text = (value: unknown, max: number) =>
@@ -34,6 +38,10 @@ function sanitizeContent(raw: unknown): CardContent {
     location: text(input.location, MAX_FIELD),
     message: text(input.message, MAX_MESSAGE),
     photoUrl: text(input.photoUrl, 500),
+    // De foto als achtergrond van de kaart, en welk deel je ziet (0 tot 100)
+    fotoAchter: input.fotoAchter === true ? true : undefined,
+    fotoX: procent(input.fotoX),
+    fotoY: procent(input.fotoY),
     guestType: GUEST_TYPES.includes(input.guestType as CardGuestType)
       ? (input.guestType as CardGuestType)
       : undefined,

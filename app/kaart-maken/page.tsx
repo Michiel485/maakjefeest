@@ -17,6 +17,7 @@ import {
   CARD_DESIGNS,
   STANDAARD_ONTWERP,
   FOTO_ONTWERPEN,
+  fotoAchterKan,
   CARD_TAAL_LABEL,
   CARD_TALEN,
   cardTaal,
@@ -202,6 +203,8 @@ function Miniatuur({ display, sc }: { display: CardDisplay; sc: SC }) {
     // Zonder eigen foto een voorbeeldfoto, zodat je ziet dat er een foto bij
     // hoort (Michiel, 28 september 2026)
     ...(fotoHoortErbij ? (display.photoUrl ? {} : { photoUrl: VOORBEELD_FOTO }) : { photoUrl: null }),
+    // Ook de foto als achtergrond niet in de miniatuur: die laat het ontwerp zien
+    fotoAchter: null,
     ...(display.design === "eigen" ? { ontwerpVerhouding: 1.4 } : {}),
   }
   return (
@@ -262,6 +265,10 @@ interface KaartOntwerp {
   dresscode: string
   photoDataUrl: string | null
   photoUrl: string | null
+  /** De foto als achtergrond van de hele kaart, en welk deel je ziet (0 tot 100) */
+  fotoAchter: boolean
+  fotoX: number
+  fotoY: number
   animatie: CardAnimatie
   taal: CardTaal
   aanmelden: AanmeldStand
@@ -294,6 +301,9 @@ const LEEG: KaartOntwerp = {
   dresscode: "",
   photoDataUrl: null,
   photoUrl: null,
+  fotoAchter: false,
+  fotoX: 50,
+  fotoY: 50,
   animatie: "rustig",
   taal: "nl",
   aanmelden: "geen",
@@ -830,6 +840,9 @@ export default function KaartMakenPage() {
               dresscode: kaart?.content.dresscode ?? "",
               photoDataUrl: null,
               photoUrl: kaart?.content.photoUrl ?? null,
+              fotoAchter: kaart?.content.fotoAchter === true,
+              fotoX: kaart?.content.fotoX ?? 50,
+              fotoY: kaart?.content.fotoY ?? 50,
               animatie: cardAnimatie(kaart?.content.animatie),
               taal: cardTaal(kaart?.content.taal),
               aanmelden: kaart?.content.aanmelden
@@ -931,6 +944,9 @@ export default function KaartMakenPage() {
     toonGastType: ontwerp.toonGastType || undefined,
     dresscode: ontwerp.dresscode || undefined,
     photoUrl: ontwerp.photoUrl ?? ontwerp.photoDataUrl ?? undefined,
+    fotoAchter: ontwerp.fotoAchter || undefined,
+    fotoX: ontwerp.fotoAchter ? ontwerp.fotoX ?? 50 : undefined,
+    fotoY: ontwerp.fotoAchter ? ontwerp.fotoY ?? 50 : undefined,
     animatie: "rustig",
     kleur: ontwerp.kleur || undefined,
     stijl: ontwerp.style,
@@ -1255,6 +1271,9 @@ export default function KaartMakenPage() {
       dresscode: k.content.dresscode ?? "",
       photoDataUrl: null,
       photoUrl: k.content.photoUrl ?? null,
+      fotoAchter: k.content.fotoAchter === true,
+      fotoX: k.content.fotoX ?? 50,
+      fotoY: k.content.fotoY ?? 50,
       animatie: cardAnimatie(k.content.animatie),
       taal: cardTaal(k.content.taal),
       aanmelden: k.content.aanmelden ? aanmeldStand(k.content.aanmelden) : standaardAanmeldStand(k.type),
@@ -1529,6 +1548,7 @@ export default function KaartMakenPage() {
           location: ontwerp.location, message: ontwerp.message,
           guestType: ontwerp.guestType, inviteText: ontwerp.inviteText, timeText: ontwerp.timeText,
           photoUrl: ontwerp.photoUrl, taal: ontwerp.taal,
+          fotoAchter: ontwerp.fotoAchter || undefined, fotoX: ontwerp.fotoX, fotoY: ontwerp.fotoY,
           kleur: ontwerp.kleur || undefined, datum: ontwerp.datum || undefined,
           ontwerpUrl: ontwerp.ontwerpUrl ?? ontwerp.ontwerpDataUrl ?? undefined,
           ontwerpVerhouding: ontwerp.ontwerpVerhouding ?? undefined,
@@ -2366,7 +2386,28 @@ export default function KaartMakenPage() {
 
           {/* Een foto kan bij elk ontwerp */}
           <Sectie className={telefoon("foto")} vast={inPaneel("foto")} open={isOpen("foto")} onToggle={() => setStap(stap === "foto" ? null : "foto")} titel="Foto">
-            {!FOTO_ONTWERPEN.includes(cardDesign(ontwerp.template)) && (
+            {/* Een foto als achtergrond van de hele kaart, bij de ontwerpen
+                waar dat kan (Michiel, 11 oktober 2026) */}
+            {!FOTO_ONTWERPEN.includes(cardDesign(ontwerp.template)) && fotoAchterKan(cardDesign(ontwerp.template)) && (
+              <div className="rounded-xl p-3 flex flex-col gap-1.5" style={{ backgroundColor: GOLD_BG, border: `1px solid ${GOLD_LIGHT}` }}>
+                <label className="flex items-center justify-between gap-3 text-[13px] font-semibold" style={{ color: CHARCOAL, cursor: "pointer" }}>
+                  Foto als achtergrond
+                  <input
+                    type="checkbox"
+                    checked={ontwerp.fotoAchter}
+                    onChange={(e) => update({ fotoAchter: e.target.checked })}
+                    className="w-4 h-4"
+                    style={{ accentColor: CHARCOAL }}
+                  />
+                </label>
+                <span className="text-[11px] leading-snug" style={{ color: SUBTLE }}>
+                  {ontwerp.fotoAchter && !ontwerp.photoUrl && !ontwerp.photoDataUrl
+                    ? "Kies hieronder een foto. Die vult de hele kaart, met een donkere waas en lichte letters."
+                    : "De foto vult de hele kaart, met een donkere waas en lichte letters erop."}
+                </span>
+              </div>
+            )}
+            {!FOTO_ONTWERPEN.includes(cardDesign(ontwerp.template)) && !fotoAchterKan(cardDesign(ontwerp.template)) && (
               <div className="rounded-xl px-3 py-2.5 flex flex-col gap-2" style={{ backgroundColor: GOLD_BG, border: `1px solid ${GOLD_LIGHT}` }}>
                 <p className="m-0 text-[12px] leading-relaxed" style={{ color: BODY }}>
                   <b style={{ color: CHARCOAL }}>{CARD_TEMPLATE_LABEL[cardDesign(ontwerp.template)]} heeft geen plek voor een foto.</b>{" "}
@@ -2403,6 +2444,29 @@ export default function KaartMakenPage() {
                   </button>
                 )}
               </div>
+              {/* Welk deel van de foto je ziet: de kaart is staand, dus een
+                  liggende foto valt links en rechts weg, een staande boven en
+                  onder */}
+              {ontwerp.fotoAchter && fotoAchterKan(cardDesign(ontwerp.template)) && (ontwerp.photoDataUrl || ontwerp.photoUrl) && (
+                <div className="flex flex-col gap-2">
+                  {([["fotoX", "Links of rechts"], ["fotoY", "Hoger of lager"]] as const).map(([veld, label]) => (
+                    <label key={veld} className="flex items-center gap-3">
+                      <span className="text-[11px] w-24 shrink-0" style={{ color: SUBTLE }}>{label}</span>
+                      <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        step={1}
+                        value={ontwerp[veld] ?? 50}
+                        onChange={(e) => update({ [veld]: Number(e.target.value) } as Partial<KaartOntwerp>)}
+                        className="flex-1"
+                        style={{ accentColor: GOLD }}
+                        aria-label={label}
+                      />
+                    </label>
+                  ))}
+                </div>
+              )}
             </Sectie>
 
           {/* Hoe de envelop opengaat bij de gast. Het uitschuiven, het brekende

@@ -59,6 +59,9 @@ export async function POST(request: Request) {
     toonGastType: body.toonGastType === true ? true : undefined,
     // Alleen echte URL's; een lokale data-URL uit de browser kan satori niet altijd aan
     photoUrl: typeof body.photoUrl === "string" && /^https?:\/\//.test(body.photoUrl) ? body.photoUrl.slice(0, 500) : undefined,
+    fotoAchter: body.fotoAchter === true ? true : undefined,
+    fotoX: typeof body.fotoX === "number" && Number.isFinite(body.fotoX) ? Math.max(0, Math.min(100, Math.round(body.fotoX))) : undefined,
+    fotoY: typeof body.fotoY === "number" && Number.isFinite(body.fotoY) ? Math.max(0, Math.min(100, Math.round(body.fotoY))) : undefined,
     taal: cardTaal(body.taal),
     // Een eigen ontwerp staat voor het bewaren nog als data-URL in de browser;
     // satori kan die tekenen. Met een grens, want dit is een open route.

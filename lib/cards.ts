@@ -96,6 +96,15 @@ export interface CardContent {
   location?: string
   message?: string
   photoUrl?: string
+  /**
+   * De foto (photoUrl) als achtergrond van de hele kaart, met een donkere
+   * waas en lichte tekst (Michiel, 11 oktober 2026). Alleen bij de ontwerpen
+   * waar dat kan (fotoAchterKan). fotoX en fotoY: welk deel van de foto je
+   * ziet, in procenten; leeg is het midden.
+   */
+  fotoAchter?: boolean
+  fotoX?: number
+  fotoY?: number
   // Alleen voor trouwkaarten: voor welke gastengroep deze kaart(-link) is
   guestType?: CardGuestType
   // Eigen uitnodigingstekst; leeg = de standaardregel van de gastengroep
@@ -292,6 +301,24 @@ export const CARD_TEMPLATE_LABEL: Record<CardDesign, string> = {
 export const FOTO_ONTWERPEN: CardDesign[] = ["klassiek", "sierlijk", "bohemian", "boog", "fotovol", "fotoschrift"]
 
 // Oude waarden en rommel vallen terug op het strakke ontwerp
+// Ontwerpen zonder foto als achtergrond: die zijn zelf een afbeelding met
+// papier (Olijf, de oude kransen, Gouden blad, Magnolia), hebben al een foto
+// (Foto, Boog, Foto met schrift), zijn een eigen afbeelding, of worden nog
+// door de oude tekenaar gemaakt (Strak, Sierlijk, Bohemian).
+const GEEN_FOTO_ACHTER = new Set<string>([
+  "klassiek", "sierlijk", "bohemian", "olijf", "pampas", "pampasruit", "terra", "terraruit",
+  "herfst", "herfstruit", "goudblad", "magnolia", "boog", "fotovol", "fotoschrift", "eigen",
+])
+
+/** Kan dit ontwerp een foto als achtergrond krijgen? */
+export function fotoAchterKan(ontwerp: string): boolean {
+  return !GEEN_FOTO_ACHTER.has(ontwerp)
+}
+
+function procent(v: unknown): number {
+  return typeof v === "number" && Number.isFinite(v) ? Math.max(0, Math.min(100, Math.round(v))) : 50
+}
+
 export function cardDesign(template: unknown): CardDesign {
   return typeof template === "string" && template !== "foto" && (CARD_TEMPLATE_WAARDEN as string[]).includes(template)
     ? (template as CardDesign)
@@ -652,6 +679,8 @@ export interface CardDisplay extends CardVasteTeksten {
   timeText: string | null
   message: string
   photoUrl: string | null
+  /** De foto achter de hele kaart, als het bruidspaar dat koos en het ontwerp het kan */
+  fotoAchter?: { url: string; x: number; y: number } | null
   design: CardDesign
   animatie: CardAnimatie
   /** De trouwdatum als 2027-08-15, voor ontwerpen die met de cijfers spelen. */
@@ -719,6 +748,10 @@ export function buildCardDisplay(
     message: content.message?.trim() || (type === "trouwkaart" && content.guestType ? `${tk.uitnodiging[content.guestType]}.` : tk.bericht[type]),
     // Een foto hoort bij de kaart zodra er één gekozen is, los van het ontwerp
     photoUrl: content.photoUrl?.trim() || (template === "foto" ? event.hero_image_url?.trim() || null : null),
+    fotoAchter:
+      content.fotoAchter && content.photoUrl?.trim() && fotoAchterKan(cardDesign(template))
+        ? { url: content.photoUrl.trim(), x: procent(content.fotoX), y: procent(content.fotoY) }
+        : null,
     design: cardDesign(template),
     // Elke kaart opent rustig; kiezen hoeft niet meer (Michiel, 25 september
     // 2026). Wat er ooit bewaard is, maakt niet uit.

@@ -21,6 +21,7 @@ import { namenOpmaak, namenPlek, type NamenPlek } from "@/lib/namen-opmaak"
 import { tekstBreedte, type GemetenLetter } from "@/lib/letterbreedtes"
 import { initialenLijst } from "@/lib/initialen"
 import { leesbaar } from "@/lib/contrast"
+import { FOTO_WAAS, stijlOpFoto } from "@/lib/op-foto"
 
 /** Een flexbox, want satori wil dat bij elke div met meer dan één kind. */
 function D({ style, children }: { style?: CSSProperties; children?: ReactNode }) {
@@ -634,7 +635,7 @@ function decoWaaier(): string {
 function Inhoud({
   d,
   ontwerp,
-  sc,
+  sc: scIn,
   breedte,
   letters: lettersIn,
   schaduw,
@@ -676,6 +677,12 @@ function Inhoud({
   /** Een eigen letter voor de namen: om ze passend te maken met de juiste breedtes */
   namenMeting?: GemetenLetter | null
 }) {
+  // Een foto als achtergrond van de hele kaart (Michiel, 11 oktober 2026):
+  // dan rekent het ontwerp met lichte tekst, zoals op de homepagina. Niet op
+  // de homepagina zelf: daar ligt het ontwerp al op de foto van de opening.
+  const fotoAchter = !vrij && !opFoto ? d.fotoAchter ?? null : null
+  const sc = fotoAchter ? stijlOpFoto(scIn) : scIn
+  const zonderVlak = opFoto || !!fotoAchter
   const s = breedte / 400
   const px = (n: number) => Math.round(n * s * 10) / 10
   // Per soort tekst een eigen grootte, voor de homepagina. Op een kaart is
@@ -703,7 +710,7 @@ function Inhoud({
   const achtergrond = vrij ? sc.bodyBg : sc.cardBg ?? "#FFFEFB"
   // Wat echt geschilderd wordt. Op een foto niets: de foto is de achtergrond,
   // ook achter de stukjes die een lijn onderbreken.
-  const vlak = opFoto ? "transparent" : achtergrond
+  const vlak = zonderVlak ? "transparent" : achtergrond
   const kop = vrij ? sc.headingColor : sc.cardText ?? sc.headingColor
   const tekst = vrij ? sc.bodyText : sc.cardText ?? sc.bodyText
 
@@ -840,7 +847,19 @@ function Inhoud({
     minHeight: opFoto ? 0 : hoogte,
     overflow: vrij ? "visible" : "hidden",
     backgroundColor: vlak,
-    ...(opFoto ? { textShadow: "0 2px 14px rgba(0,0,0,0.45)" } : {}),
+    ...(zonderVlak ? { textShadow: "0 2px 14px rgba(0,0,0,0.45)" } : {}),
+    // De foto met een waas eroverheen, als achtergrond van de kaart zelf. Niet
+    // in de afbeelding (satori): die kent geen cover voor een achtergrond, dus
+    // daar zet KaartVoorkant hieronder een gewone afbeelding achter de inhoud.
+    ...(fotoAchter && !voorAfbeelding
+      ? {
+          backgroundColor: "#2B2622",
+          backgroundImage: `${FOTO_WAAS}, url(${fotoAchter.url})`,
+          backgroundSize: "100% 100%, cover",
+          backgroundPosition: `center, ${fotoAchter.x}% ${fotoAchter.y}%`,
+          backgroundRepeat: "no-repeat, no-repeat",
+        }
+      : {}),
     ...(schaduw ? { boxShadow: schaduw } : {}),
   }
 
@@ -2219,6 +2238,22 @@ function Inhoud({
  */
 export default function KaartVoorkant(props: Parameters<typeof Inhoud>[0]) {
   const el = Inhoud(props)
+  // De foto achter de kaart in de afbeelding voor WhatsApp en de download:
+  // satori tekent een achtergrond niet als cover, een afbeelding met
+  // objectFit wel. Hij staat als eerste in de kaart, dus de rest komt erover.
+  const foto = props.voorAfbeelding && !props.vrij && !props.opFoto ? props.d.fotoAchter ?? null : null
+  if (foto && isValidElement<{ style?: CSSProperties; children?: ReactNode }>(el)) {
+    const w = props.breedte
+    const h = Math.round(w * 1.4)
+    return cloneElement(
+      el,
+      { style: { ...(el.props.style ?? {}), backgroundColor: "#2B2622" } },
+      // eslint-disable-next-line @next/next/no-img-element
+      <img key="foto" src={foto.url} alt="" width={w} height={h} style={{ position: "absolute", top: 0, left: 0, width: w, height: "100%", objectFit: "cover", objectPosition: `${foto.x}% ${foto.y}%` }} />,
+      <div key="waas" style={{ position: "absolute", top: 0, left: 0, width: w, height: "100%", backgroundImage: "linear-gradient(to bottom, rgba(0,0,0,0.42), rgba(0,0,0,0.30) 50%, rgba(0,0,0,0.50))" }} />,
+      el.props.children,
+    )
+  }
   if (!props.vrij || !isValidElement<{ style?: CSSProperties }>(el)) return el
   const stijl = el.props.style ?? {}
   return cloneElement(el, {
