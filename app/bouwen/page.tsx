@@ -1493,6 +1493,8 @@ export default function BouwenPage() {
   const RSVP_GUEST_LABELS: Record<string, string> = { daggast: "Daggast", avondgast: "Avondgast", receptiegast: "Receptiegast" }
 
   const isSinglePagePreview = hpSettings.pageMode === 'single'
+  const isSinglePageRef = useRef(isSinglePagePreview)
+  isSinglePageRef.current = isSinglePagePreview
 
   // Onderaan het paneel: door naar de volgende. Binnen Pagina's loop je eerst
   // alle pagina's langs die aan staan, dan pas door naar Webadres.
@@ -1560,6 +1562,25 @@ export default function BouwenPage() {
     setActiveSubPage(pagina)
     if (st.pagina) setPreviewPage(st.pagina)
     if (bladRef.current) bladRef.current.scrollTop = 0
+    // Het voorbeeld loopt mee naar de pagina van de stap (Michiel, 11 oktober
+    // 2026). Op één pagina naar dat onderdeel; met aparte pagina's naar boven.
+    // Alleen binnen het voorbeeldvak zelf, nooit de hele pagina, anders sprong
+    // op de telefoon het scherm weg van het paneel.
+    if (st.pagina) {
+      const pagina = st.pagina
+      const t = setTimeout(() => {
+        const el = document.querySelector<HTMLElement>(`[data-voorbeeld-sectie="${pagina}"]`)
+        if (!el) return
+        let vak: HTMLElement | null = el.parentElement
+        while (vak && !/(auto|scroll)/.test(getComputedStyle(vak).overflowY)) vak = vak.parentElement
+        if (!vak || vak === document.body || vak === document.documentElement) return
+        const doel = isSinglePageRef.current
+          ? vak.scrollTop + el.getBoundingClientRect().top - vak.getBoundingClientRect().top - 8
+          : 0
+        vak.scrollTo({ top: Math.max(0, doel), behavior: "smooth" })
+      }, 80)
+      return () => clearTimeout(t)
+    }
   }, [gidsNu])
   // Tik je in het voorbeeld op iets, dan open je de pagina waar het bij
   // hoort; de stap springt daarheen mee
