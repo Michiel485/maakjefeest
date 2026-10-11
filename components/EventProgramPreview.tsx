@@ -357,8 +357,15 @@ export default function EventProgramPreview({ items, sc, datum, builderMode, onI
       const eerste = rondjes[0]
       const laatste = rondjes[rondjes.length - 1]
       if (!eerste || !laatste) return
-      const vakTop = el.getBoundingClientRect().top
-      const midden = (r: HTMLElement) => { const b = r.getBoundingClientRect(); return b.top - vakTop + b.height / 2 }
+      // Met offsetTop in plaats van de plek op het scherm: in de bouwer is het
+      // voorbeeld verkleind en tijdens het invaden even kleiner, en dan
+      // klopte de meting niet met de echte maat (Michiel, 11 oktober 2026)
+      const midden = (r: HTMLElement) => {
+        let y = r.offsetHeight / 2
+        let n: HTMLElement | null = r
+        while (n && n !== el) { y += n.offsetTop; n = n.offsetParent as HTMLElement | null }
+        return y
+      }
       setLijnPlek({ top: Math.round(midden(eerste)), bottom: Math.max(0, Math.round(el.clientHeight - midden(laatste))) })
     }
     meet()
