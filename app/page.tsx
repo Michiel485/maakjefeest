@@ -12,8 +12,10 @@ import { PLANS, PLAN_ORDER, RENEWAL_MONTHS, RENEWAL_PRICE, formatEur, planStartU
 import CardReveal from "./kaart/[token]/card-reveal"
 import { VOORBEELD, VOORBEELD_SITE_URL, voorbeeldKaart, voorbeeldOpening, voorbeeldStijl } from "@/lib/voorbeeld"
 
-// De homepage van SayingYes (ontwerpronde, ronde 7, 2 oktober 2026). Eén
-// ding: laten zien hoe het is om zo'n kaart te krijgen. Niet vertellen.
+// De homepage van SayingYes (ontwerpronde, ronde 7, 2 oktober 2026). Sinds 11
+// oktober 2026 eerst de boodschap: alles in één, voor minder dan de
+// postzegels van papieren kaarten; daarna laten zien hoe het is om zo'n kaart
+// te krijgen.
 // Bovenaan typ je je namen en zie je een echte kaart; daaronder gaat de
 // envelop open. De woorden uit de schrijfwijzer: de trouwkaart vooraan, de
 // website als de grote broer erachter, want "trouwwebsite" wordt bijna niet
@@ -23,8 +25,19 @@ const euro = (n: number) => formatEur(n).replace(",00", "")
 const PRIJS_KAART = euro(PLANS.save_the_date.price)
 const PRIJS_SITE = euro(PLANS.compleet.price)
 
-const TITEL = "Digitale trouwkaart via WhatsApp, met jullie eigen trouwwebsite"
-const OMSCHRIJVING = `Maak jullie digitale trouwkaart of Save the Date en verstuur hem via WhatsApp. Gasten reageren met één tik. Gratis ontwerpen, ${PRIJS_KAART} als je verstuurt. Trouwwebsite erbij voor ${PRIJS_SITE}.`
+// Alles in één, goedkoper dan papier (Michiel, 11 oktober 2026): dat is waar
+// SayingYes om bekend moet staan, niet alleen de kaart
+const TITEL = "Digitale trouwkaart, gastenlijst en trouwwebsite in één"
+const OMSCHRIJVING = `Save the Date, trouwkaart, gastenlijst en trouwwebsite in één. Verstuur via WhatsApp, gasten reageren met één tik. Vanaf ${PRIJS_KAART}, eenmalig: goedkoper dan de postzegels.`
+
+// De rekensom tegenover papier. Een postzegel kost sinds 1 januari 2026
+// €1,40 (PostNL; NOS, 2025). Bij 100 gasten gaat er ongeveer één kaart per
+// huishouden uit. Het drukwerk staat er zonder bedrag bij: daar zijn geen
+// harde prijzen voor trouwkaarten te vinden. Elk jaar op 1 januari nakijken.
+const POSTZEGEL = 1.4
+const GASTEN = 100
+const HUISHOUDENS = 60
+const PORTO_RONDE = Math.round(POSTZEGEL * HUISHOUDENS)
 
 export const metadata: Metadata = {
   // Absolute titel: de root-template zou er anders een tweede "| SayingYes" achter zetten
@@ -47,6 +60,14 @@ const FAQ_ITEMS: [string, string][] = [
   [
     "Wat kost SayingYes?",
     `Een digitale Save the Date kost eenmalig ${PRIJS_KAART}, de trouwkaart met aanmelden en gastenlijst ${euro(PLANS.uitnodiging.price)}, en de complete trouwwebsite met alles erop en eraan ${PRIJS_SITE} voor een jaar. Upgraden kan altijd, je betaalt dan alleen het verschil. Ontwerpen is gratis: je betaalt pas als je jullie kaart verstuurt of de site live zet. Geen abonnement.`,
+  ],
+  [
+    "Waarom digitaal in plaats van papier?",
+    `Omdat het een fractie kost en meer doet. Alleen de postzegels voor ${HUISHOUDENS} papieren kaarten zijn al ${euro(PORTO_RONDE)} (PostNL, 2026), en met een Save the Date erbij het dubbele, nog zonder drukwerk en enveloppen. Een digitale kaart verstuur je via WhatsApp, gasten reageren met één tik, de gastenlijst vult zich vanzelf, en verander je iets, dan zien ze meteen de nieuwste versie.`,
+  ],
+  [
+    "Kan ik papier en digitaal combineren?",
+    "Ja. Veel stellen sturen een paar papieren kaarten naar de naaste familie. Zet daar de QR-code van jullie digitale kaart op: wie scant, komt op dezelfde kaart en meldt zich daar aan. Zo staat iedereen in één gastenlijst.",
   ],
   [
     "Hoe krijgen gasten de kaart?",
@@ -74,11 +95,30 @@ const FAQ_ITEMS: [string, string][] = [
   ],
 ]
 
-const STAPPEN: [string, string][] = [
-  ["Ontwerpen", "Typ jullie namen, kies een ontwerp en pas de tekst aan. Een kaart per gastengroep als je wilt: daggasten, avondgasten, in een andere taal."],
-  ["Versturen via WhatsApp", "Je krijgt een link. Die plak je in WhatsApp of in een mail. Of je zet de QR-code op een papieren kaart."],
-  ["Reacties in je gastenlijst", "Wie antwoordt staat meteen in je gastenlijst, met dieetwensen en aantallen. Je ziet wie nog stil is en stuurt die met één knop een herinnering."],
+// Alles wat er in zit, met het pakket waar het bij hoort. Elk pakket bevat de
+// kleinere, dus de website heeft alles (lib/plans.ts).
+const ALLES: { icoon: string; titel: string; tekst: string; prijs: string }[] = [
+  { icoon: "agenda", titel: "Save the Date", tekst: "Zodat iedereen de datum vrijhoudt, met een knop die hem in de agenda zet.", prijs: PRIJS_KAART },
+  { icoon: "kaart", titel: "Trouwkaart", tekst: "Per gastengroep: daggasten, avondgasten, en in zes talen.", prijs: euro(PLANS.uitnodiging.price) },
+  { icoon: "lijst", titel: "Aanmelden en gastenlijst", tekst: "Wie komt, met hoeveel en welke dieetwensen. De lijst vult zich vanzelf.", prijs: "Gratis erbij" },
+  { icoon: "bel", titel: "Herinneringen", tekst: "Met één knop een berichtje naar wie nog niet heeft gereageerd.", prijs: "Gratis erbij" },
+  { icoon: "site", titel: "Trouwwebsite", tekst: "Programma, route, cadeautips en jullie verhaal op jullie eigen adres.", prijs: PRIJS_SITE },
+  { icoon: "camera", titel: "Fotomuur", tekst: "Gasten scannen een QR-code en hun foto's verschijnen live op de muur.", prijs: PRIJS_SITE },
 ]
+
+function AllesIcoon({ soort }: { soort: string }) {
+  const p = { fill: "none", stroke: GOUD, strokeWidth: 1.5, strokeLinecap: "round" as const, strokeLinejoin: "round" as const }
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" {...p}>
+      {soort === "agenda" && <><rect x="3.5" y="5" width="17" height="15" rx="2" /><path d="M3.5 9.5h17M8 3v4M16 3v4" /><path d="M12 13.2c-.9-1.1-2.6-.6-2.6.8 0 1.3 2.6 2.8 2.6 2.8s2.6-1.5 2.6-2.8c0-1.4-1.7-1.9-2.6-.8z" /></>}
+      {soort === "kaart" && <><rect x="3" y="6" width="18" height="13" rx="1.5" /><path d="M3.5 6.5 12 13l8.5-6.5" /></>}
+      {soort === "lijst" && <><path d="M9 6h11M9 12h11M9 18h11" /><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2" /></>}
+      {soort === "bel" && <><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z" /><path d="M10 20a2 2 0 0 0 4 0" /></>}
+      {soort === "site" && <><rect x="3" y="4.5" width="18" height="15" rx="2" /><path d="M3 8.5h18M6 6.5h.01M8.5 6.5h.01" /><path d="M7 12.5h10M7 15.5h6" /></>}
+      {soort === "camera" && <><path d="M4 8.5h3l1.5-2h7l1.5 2h3v10H4z" /><circle cx="12" cy="13.5" r="3.2" /></>}
+    </svg>
+  )
+}
 
 export default function Home() {
   // De drie nieuwste artikelen: interne links vanaf de voorpagina naar de tips
@@ -122,19 +162,125 @@ export default function Home() {
             </p>
             <h1
               className="text-4xl sm:text-5xl lg:text-6xl leading-[1.05] mb-5 tracking-tight"
-              style={{ fontFamily: KOP_FONT, color: INKT, fontWeight: 700 }}
+              style={{ fontFamily: KOP_FONT, color: INKT, fontWeight: 700, textWrap: "balance" }}
             >
-              Jullie trouwkaart, <em style={{ fontStyle: "italic", color: GOUD }}>klaar in vijf minuten.</em>
+              Alles voor jullie bruiloft, <em style={{ fontStyle: "italic", color: GOUD }}>voor minder dan de postzegels.</em>
             </h1>
             <p className="text-base sm:text-lg leading-relaxed" style={{ color: TEKST }}>
-              Verstuur hem via WhatsApp. Gasten laten met één tik weten of ze erbij zijn. En als je wilt, groeit dezelfde kaart uit tot jullie hele trouwwebsite.
+              Save the Date, trouwkaart, gastenlijst en trouwwebsite in één. Verstuur via WhatsApp en gasten laten met één tik weten of ze komen. Vanaf {PRIJS_KAART}, eenmalig.
             </p>
           </div>
           <NamenProef />
         </div>
       </section>
 
-      {/* ── 2. De envelop ── */}
+      {/* ── 2. Papier tegenover SayingYes ──
+          Het sterkste argument, direct onder de kaart (Michiel, 11 oktober
+          2026). Alleen het harde getal groot: de postzegels. */}
+      <section className="py-16 sm:py-24 px-6" style={{ backgroundColor: ZAND }}>
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12 max-w-2xl mx-auto">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] mb-5" style={{ color: GOUD }}>Papier of digitaal</p>
+            <h2 className="text-4xl sm:text-5xl leading-tight mb-5" style={{ fontFamily: KOP_FONT, color: INKT, fontWeight: 700, textWrap: "balance" }}>
+              Alleen de postzegels kosten al meer
+            </h2>
+            <p className="text-base leading-relaxed" style={{ color: TEKST }}>
+              Een bruiloft met {GASTEN} gasten is ongeveer {HUISHOUDENS} kaarten, één per huishouden. Eerst een Save the Date, daarna de trouwkaart: twee keer naar de brievenbus.
+            </p>
+          </div>
+          <div className="grid gap-5 md:grid-cols-2 mb-10">
+            <div className="rounded-3xl p-7 sm:p-8 flex flex-col" style={{ backgroundColor: "#FFFDF9", border: `1px solid ${GOUD_LICHT}` }}>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] mb-5" style={{ color: TEKST }}>Papieren kaarten</p>
+              <ul className="flex flex-col gap-3 mb-6 text-sm" style={{ color: TEKST }}>
+                {[
+                  [`Postzegels Save the Date (${HUISHOUDENS} × ${formatEur(POSTZEGEL)})`, euro(PORTO_RONDE)],
+                  [`Postzegels trouwkaart (${HUISHOUDENS} × ${formatEur(POSTZEGEL)})`, euro(PORTO_RONDE)],
+                  ["Drukwerk en enveloppen", "komt erbij"],
+                ].map(([wat, bedrag]) => (
+                  <li key={wat} className="flex items-baseline justify-between gap-4">
+                    <span>{wat}</span>
+                    <span className="font-semibold whitespace-nowrap tabular-nums" style={{ color: INKT }}>{bedrag}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-auto pt-5 flex items-baseline justify-between gap-4" style={{ borderTop: `1px solid ${GOUD_LICHT}` }}>
+                <span className="text-sm font-semibold" style={{ color: INKT }}>Alleen al aan postzegels</span>
+                <span className="leading-none tabular-nums" style={{ fontFamily: KOP_FONT, fontSize: "2.4rem", fontWeight: 700, color: INKT }}>{euro(PORTO_RONDE * 2)}</span>
+              </div>
+            </div>
+            <div className="rounded-3xl p-7 sm:p-8 flex flex-col" style={{ backgroundColor: DONKER, border: `1px solid ${GOUD}`, boxShadow: "0 20px 50px rgba(0,0,0,0.18)" }}>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] mb-5" style={{ color: GOUD }}>SayingYes</p>
+              <ul className="flex flex-col gap-3 mb-6 text-sm" style={{ color: DONKER_TEKST }}>
+                {[
+                  ["Save the Date en trouwkaart, met gastenlijst", euro(PLANS.uitnodiging.price)],
+                  ["Alles, met trouwwebsite en fotomuur", PRIJS_SITE],
+                  ["Postzegels, drukwerk en enveloppen", "€0"],
+                ].map(([wat, bedrag]) => (
+                  <li key={wat} className="flex items-baseline justify-between gap-4">
+                    <span>{wat}</span>
+                    <span className="font-semibold whitespace-nowrap tabular-nums" style={{ color: IVOOR }}>{bedrag}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-auto pt-5 flex items-baseline justify-between gap-4" style={{ borderTop: "1px solid #3A3026" }}>
+                <span className="text-sm font-semibold" style={{ color: IVOOR }}>Alles in één, eenmalig</span>
+                <span className="leading-none tabular-nums" style={{ fontFamily: KOP_FONT, fontSize: "2.4rem", fontWeight: 700, color: GOUD }}>{PRIJS_SITE}</span>
+              </div>
+            </div>
+          </div>
+          <div className="grid gap-x-8 gap-y-3 sm:grid-cols-2 max-w-3xl mx-auto mb-8">
+            {[
+              "Gasten reageren met één tik, op de kaart zelf",
+              "De gastenlijst vult zich vanzelf, met dieetwensen",
+              "Iets veranderd? Iedereen ziet meteen de nieuwste kaart",
+              "Een herinnering naar wie nog stil is, met één knop",
+            ].map((punt) => (
+              <p key={punt} className="flex items-start gap-3 text-sm leading-relaxed m-0" style={{ color: TEKST }}>
+                <Vinkje />
+                {punt}
+              </p>
+            ))}
+          </div>
+          <p className="text-center text-sm leading-relaxed max-w-2xl mx-auto m-0" style={{ color: TEKST }}>
+            Toch een paar papieren kaarten voor opa en oma? Zet de QR-code van jullie digitale kaart erop. Wie scant, meldt zich daar aan en staat in dezelfde gastenlijst.
+          </p>
+          <p className="text-center text-xs mt-6 mb-0" style={{ color: TEKST, opacity: 0.75 }}>
+            Postzegel PostNL 2026: {formatEur(POSTZEGEL)}. Uitgaande van {GASTEN} gasten in {HUISHOUDENS} huishoudens.
+          </p>
+        </div>
+      </section>
+
+      {/* ── 3. Alles in één ── */}
+      <section className="py-16 sm:py-24 px-6" style={{ backgroundColor: IVOOR }}>
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] mb-5" style={{ color: GOUD }}>Alles in één</p>
+            <h2 className="text-4xl sm:text-5xl leading-tight mb-6" style={{ fontFamily: KOP_FONT, color: INKT, fontWeight: 700, textWrap: "balance" }}>
+              Eén link, één overzicht, één prijs
+            </h2>
+            <Ornament />
+          </div>
+          {/* Op de telefoon twee naast elkaar, anders waren het zes schermvullende
+              tegels onder elkaar */}
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+            {ALLES.map((a) => (
+              <div key={a.titel} className="rounded-2xl p-4 sm:p-6 flex flex-col gap-2 sm:gap-3" style={{ backgroundColor: IVOOR_KAART, border: `1px solid ${GOUD_LICHT}` }}>
+                <div className="flex items-center justify-between gap-3">
+                  <AllesIcoon soort={a.icoon} />
+                  <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.12em] text-right" style={{ color: GOUD }}>{a.prijs}</span>
+                </div>
+                <h3 className="m-0 text-lg sm:text-xl leading-tight" style={{ fontFamily: KOP_FONT, color: INKT, fontWeight: 700 }}>{a.titel}</h3>
+                <p className="m-0 text-xs sm:text-sm leading-relaxed" style={{ color: TEKST }}>{a.tekst}</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-center text-sm mt-8 mb-0" style={{ color: TEKST }}>
+            Elk pakket bevat het kleinere: met de trouwwebsite heb je alles. Upgraden kan altijd, je betaalt alleen het verschil.
+          </p>
+        </div>
+      </section>
+
+      {/* ── 4. De envelop ── */}
       <section className="py-16 sm:py-28 px-6" style={{ backgroundColor: ZAND }}>
         <div className="max-w-6xl mx-auto grid gap-8 lg:gap-12 lg:grid-cols-[1fr_1.1fr] lg:items-center">
           <div>
@@ -180,46 +326,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 3. Drie stappen ── */}
-      <section className="py-16 sm:py-28 px-6" style={{ backgroundColor: IVOOR }}>
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] mb-5" style={{ color: GOUD }}>Zo werkt het</p>
-            <h2 className="text-4xl sm:text-5xl leading-tight mb-6" style={{ fontFamily: KOP_FONT, color: INKT, fontWeight: 700 }}>
-              Drie stappen, een kwartier
-            </h2>
-            <Ornament />
-          </div>
-          {/* Op de telefoon een lijstje, op de laptop drie kaarten: de kaarten
-              onder elkaar waren anderhalf scherm (Michiel, 2 oktober 2026) */}
-          <ol className="md:hidden flex flex-col gap-5">
-            {STAPPEN.map(([kop, tekst], i) => (
-              <li key={kop} className="flex items-start gap-4">
-                <span className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold" style={{ backgroundColor: GOUD, color: DONKER }}>
-                  {i + 1}
-                </span>
-                <div>
-                  <h3 className="text-xl mb-1" style={{ fontFamily: KOP_FONT, color: INKT, fontWeight: 700 }}>{kop}</h3>
-                  <p className="text-sm leading-relaxed" style={{ color: TEKST }}>{tekst}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-          <div className="hidden md:grid gap-6 md:grid-cols-3">
-            {STAPPEN.map(([kop, tekst], i) => (
-              <div key={kop} className="rounded-3xl p-8" style={{ backgroundColor: IVOOR_KAART, border: `1px solid ${GOUD_LICHT}` }}>
-                <div className="w-10 h-10 rounded-full flex items-center justify-center mb-5 text-sm font-bold" style={{ backgroundColor: GOUD, color: DONKER }}>
-                  {i + 1}
-                </div>
-                <h3 className="text-2xl mb-3" style={{ fontFamily: KOP_FONT, color: INKT, fontWeight: 700 }}>{kop}</h3>
-                <p className="text-sm leading-relaxed" style={{ color: TEKST }}>{tekst}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── 4. Van kaart naar website: de echte voorbeeldsite in een telefoon ── */}
+      {/* ── 5. Van kaart naar website: de echte voorbeeldsite in een telefoon ── */}
       <section className="py-16 sm:py-28 px-6" style={{ backgroundColor: GOUD_VLAK }}>
         <div className="max-w-5xl mx-auto grid gap-8 lg:gap-12 lg:grid-cols-[1.1fr_1fr] lg:items-center">
           <div>
@@ -291,7 +398,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 5. Prijzen ── */}
+      {/* ── 6. Prijzen ── */}
       <section className="py-16 sm:py-28 px-6" style={{ backgroundColor: DONKER }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
@@ -394,7 +501,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 6. Waarom wij: onze eigen bruiloft ── */}
+      {/* ── 7. Waarom wij: onze eigen bruiloft ── */}
       <section className="py-16 sm:py-28 px-6" style={{ backgroundColor: IVOOR }}>
         <div className="max-w-3xl mx-auto text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] mb-5" style={{ color: GOUD }}>Waarom SayingYes</p>
@@ -412,7 +519,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 7. Veelgestelde vragen (+ FAQPage-schema) ── */}
+      {/* ── 8. Veelgestelde vragen (+ FAQPage-schema) ── */}
       <section className="py-16 sm:py-28 px-6" style={{ backgroundColor: ZAND }}>
         <script
           type="application/ld+json"
@@ -451,7 +558,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 8. Tips ── */}
+      {/* ── 9. Tips ── */}
       <section className="py-16 sm:py-28 px-6" style={{ backgroundColor: IVOOR }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
@@ -483,7 +590,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 9. Slot ── */}
+      {/* ── 10. Slot ── */}
       <section className="py-20 sm:py-28 px-6 text-center" style={{ backgroundColor: IVOOR_KAART }}>
         <div className="max-w-2xl mx-auto">
           <div className="mb-10"><Ornament /></div>
