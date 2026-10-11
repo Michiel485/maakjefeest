@@ -5,7 +5,7 @@ import Kop, { Ornament, Pijl, Vinkje } from "@/components/marketing/Kop"
 import Voet from "@/components/marketing/Voet"
 import NamenProef from "@/components/marketing/NamenProef"
 import StartBalk from "@/components/marketing/StartBalk"
-import PapierVergelijking, { HUISHOUDENS, PORTO_RONDE } from "@/components/marketing/PapierVergelijking"
+import { HUISHOUDENS, PORTO_RONDE } from "@/components/marketing/PapierVergelijking"
 import { DONKER, DONKER_KAART, DONKER_TEKST, DONKER_ZACHT, GOUD, GOUD_LICHT, GOUD_VLAK, INKT, IVOOR, IVOOR_KAART, KOP_FONT, TEKST, ZAND } from "@/components/marketing/stijl"
 import { MARKETING_URL } from "@/lib/site-url"
 import { getAllTips } from "@/lib/tips"
@@ -171,40 +171,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 2. Papier tegenover SayingYes (components/marketing/PapierVergelijking.tsx) ── */}
-      <PapierVergelijking />
+      {/* Het blok Papier tegenover SayingYes stond hier; te veel volgens
+          Michiel (11 oktober 2026). Op de zoekpagina's staat het nog. */}
 
-      {/* ── 3. Alles in één ── */}
-      <section id="alles" className="py-16 sm:py-24 px-6 scroll-mt-16" style={{ backgroundColor: IVOOR }}>
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] mb-5" style={{ color: GOUD }}>Alles in één</p>
-            <h2 className="text-4xl sm:text-5xl leading-tight mb-6" style={{ fontFamily: KOP_FONT, color: INKT, fontWeight: 700, textWrap: "balance" }}>
-              Eén link, één overzicht, één prijs
-            </h2>
-            <Ornament />
-          </div>
-          {/* Op de telefoon twee naast elkaar, anders waren het zes schermvullende
-              tegels onder elkaar */}
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
-            {ALLES.map((a) => (
-              <div key={a.titel} className="rounded-2xl p-4 sm:p-6 flex flex-col gap-2 sm:gap-3" style={{ backgroundColor: IVOOR_KAART, border: `1px solid ${GOUD_LICHT}` }}>
-                <div className="flex items-center justify-between gap-3">
-                  <AllesIcoon soort={a.icoon} />
-                  <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.12em] text-right" style={{ color: GOUD }}>{a.prijs}</span>
-                </div>
-                <h3 className="m-0 text-lg sm:text-xl leading-tight" style={{ fontFamily: KOP_FONT, color: INKT, fontWeight: 700 }}>{a.titel}</h3>
-                <p className="m-0 text-xs sm:text-sm leading-relaxed" style={{ color: TEKST }}>{a.tekst}</p>
-              </div>
-            ))}
-          </div>
-          <p className="text-center text-sm mt-8 mb-0" style={{ color: TEKST }}>
-            Elk pakket bevat het kleinere: met de trouwwebsite heb je alles. Upgraden kan altijd, je betaalt alleen het verschil.
-          </p>
-        </div>
-      </section>
-
-      {/* ── 4. De envelop ── */}
+      {/* ── 2. De envelop (op de tweede plek, Michiel, 11 oktober 2026) ── */}
       <section className="py-16 sm:py-28 px-6" style={{ backgroundColor: ZAND }}>
         <div className="max-w-6xl mx-auto grid gap-8 lg:gap-12 lg:grid-cols-[1fr_1.1fr] lg:items-center">
           <div>
@@ -250,7 +220,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 5. Van kaart naar website: de echte voorbeeldsite in een telefoon ── */}
+      {/* ── 3. Van kaart naar website: de echte voorbeeldsite in een telefoon ── */}
       <section className="py-16 sm:py-28 px-6" style={{ backgroundColor: GOUD_VLAK }}>
         <div className="max-w-5xl mx-auto grid gap-8 lg:gap-12 lg:grid-cols-[1.1fr_1fr] lg:items-center">
           <div>
@@ -322,7 +292,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 6. Prijzen ── */}
+      {/* ── 4. Prijzen ── */}
       <section className="py-16 sm:py-28 px-6" style={{ backgroundColor: DONKER }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
@@ -425,7 +395,37 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 7. Waarom wij: onze eigen bruiloft ── */}
+      {/* ── 5. Alles in één (na de prijzen, Michiel, 11 oktober 2026) ── */}
+      <section id="alles" className="py-16 sm:py-24 px-6 scroll-mt-16" style={{ backgroundColor: ZAND }}>
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] mb-5" style={{ color: GOUD }}>Alles in één</p>
+            <h2 className="text-4xl sm:text-5xl leading-tight mb-6" style={{ fontFamily: KOP_FONT, color: INKT, fontWeight: 700, textWrap: "balance" }}>
+              Eén link, één overzicht, één prijs
+            </h2>
+            <Ornament />
+          </div>
+          {/* Op de telefoon twee naast elkaar, anders waren het zes schermvullende
+              tegels onder elkaar */}
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+            {ALLES.map((a) => (
+              <div key={a.titel} className="rounded-2xl p-4 sm:p-6 flex flex-col gap-2 sm:gap-3" style={{ backgroundColor: IVOOR_KAART, border: `1px solid ${GOUD_LICHT}` }}>
+                <div className="flex items-center justify-between gap-3">
+                  <AllesIcoon soort={a.icoon} />
+                  <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.12em] text-right" style={{ color: GOUD }}>{a.prijs}</span>
+                </div>
+                <h3 className="m-0 text-lg sm:text-xl leading-tight" style={{ fontFamily: KOP_FONT, color: INKT, fontWeight: 700 }}>{a.titel}</h3>
+                <p className="m-0 text-xs sm:text-sm leading-relaxed" style={{ color: TEKST }}>{a.tekst}</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-center text-sm mt-8 mb-0" style={{ color: TEKST }}>
+            Elk pakket bevat het kleinere: met de trouwwebsite heb je alles. Upgraden kan altijd, je betaalt alleen het verschil.
+          </p>
+        </div>
+      </section>
+
+      {/* ── 6. Waarom wij: onze eigen bruiloft ── */}
       <section className="py-16 sm:py-28 px-6" style={{ backgroundColor: IVOOR }}>
         <div className="max-w-3xl mx-auto text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] mb-5" style={{ color: GOUD }}>Waarom SayingYes</p>
@@ -443,7 +443,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 8. Veelgestelde vragen (+ FAQPage-schema) ── */}
+      {/* ── 7. Veelgestelde vragen (+ FAQPage-schema) ── */}
       <section className="py-16 sm:py-28 px-6" style={{ backgroundColor: ZAND }}>
         <script
           type="application/ld+json"
@@ -482,7 +482,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 9. Tips ── */}
+      {/* ── 8. Tips ── */}
       <section className="py-16 sm:py-28 px-6" style={{ backgroundColor: IVOOR }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
@@ -514,7 +514,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 10. Slot ── */}
+      {/* ── 9. Slot ── */}
       <section className="py-20 sm:py-28 px-6 text-center" style={{ backgroundColor: IVOOR_KAART }}>
         <div className="max-w-2xl mx-auto">
           <div className="mb-10"><Ornament /></div>
