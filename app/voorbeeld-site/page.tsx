@@ -3,9 +3,9 @@ import Link from "next/link"
 import EventNav from "@/app/events/[slug]/event-nav"
 import EventHomePreview, { type HomepageSettings } from "@/components/EventHomePreview"
 import StoryPreview from "@/components/StoryPreview"
-import EventProgramPreview, { DEFAULT_PROGRAM_ITEMS } from "@/components/EventProgramPreview"
-import PraktischPreview, { DEFAULT_PRAKTISCH_TILES } from "@/components/PraktischPreview"
-import WishlistPreview, { DEFAULT_WISHLIST_ITEMS } from "@/components/WishlistPreview"
+import EventProgramPreview, { type ProgramItem } from "@/components/EventProgramPreview"
+import PraktischPreview, { type PraktischTile } from "@/components/PraktischPreview"
+import WishlistPreview, { type WishlistItem } from "@/components/WishlistPreview"
 import EventMastersPreview from "@/components/EventMastersPreview"
 import AanmeldFormulier from "@/components/AanmeldFormulier"
 import SectieKop from "@/components/site/SectieKop"
@@ -15,10 +15,10 @@ import AanmeldKnop from "@/components/site/AanmeldKnop"
 import Gastenboek from "@/components/site/Gastenboek"
 import SiteOpening from "@/components/SiteOpening"
 import BackToTopButton from "@/components/BackToTopButton"
-import { formatDate, getStyleConfig } from "@/lib/event-styles"
+import { formatDate } from "@/lib/event-styles"
 import { VAN_KAART_SCRIPT } from "@/lib/site-opening"
 import { MARKETING_URL } from "@/lib/site-url"
-import { VOORBEELD, voorbeeldOpening } from "@/lib/voorbeeld"
+import { VOORBEELD, voorbeeldOpening, voorbeeldStijl } from "@/lib/voorbeeld"
 import type { Moment } from "@/lib/verhaal"
 import { GOUD, INKT, IVOOR } from "@/components/marketing/stijl"
 
@@ -47,9 +47,12 @@ export const metadata: Metadata = {
 
 const INSTELLINGEN: HomepageSettings = {
   layout: "editorial",
-  // De foto bovenaan, het ontwerp eronder, met Michiels heidefoto (10 oktober 2026)
-  opening: "foto-boven",
-  fotoHoogte: 65,
+  // Het ontwerp op de heidefoto, over het hele scherm en zonder knoppen, zoals
+  // Michiels eigen testsite (11 oktober 2026). Daarvoor de foto boven het ontwerp.
+  opening: "ontwerp-foto",
+  fotoHoogte: 100,
+  rsvpKnop: false,
+  agendaKnop: false,
   subtitleText: "",
   subtitleFont: "lora",
   subtitleSize: 1.1,
@@ -71,8 +74,10 @@ const INSTELLINGEN: HomepageSettings = {
   pageMode: "single",
   ontwerp: VOORBEELD.ontwerp,
   ontwerpKop: "Wij gaan trouwen",
-  tijden: VOORBEELD.tijden,
-  dresscode: VOORBEELD.dresscode,
+  // Tijden en dresscode staan op de kaart en in het programma; op de foto
+  // alleen de namen, de datum en de plek
+  tijden: "",
+  dresscode: "",
   details: "op",
   detailsStijl: "sierlijn",
 }
@@ -88,6 +93,30 @@ const MOMENTEN: Moment[] = [
 const CEREMONIEMEESTERS = [
   { id: "c1", naam: "Emma", rol: "zus van Sophie", telefoon: "", email: "", foto_url: "/voorbeeld/ceremoniemeester-emma.webp", onderwerpen: "speeches, verrassingen, het programma" },
   { id: "c2", naam: "Thomas", rol: "beste vriend van Daan", telefoon: "", email: "", foto_url: "/voorbeeld/ceremoniemeester-thomas.webp", onderwerpen: "dieetwensen, vervoer, overnachten" },
+]
+
+// Een eigen dag voor Sophie en Daan in plaats van de voorbeeldtekst uit de
+// bouwer: zo ziet een bezoeker hoe een ingevulde site leest (11 oktober 2026).
+// De tijden lopen gelijk met de kaart, 13:00 tot 23:00.
+const PROGRAMMA: ProgramItem[] = [
+  { id: "p1", time: "13:00", title: "Aankomst", description: "Koffie en thee op het terras van het landhuis", iconId: "welkom" },
+  { id: "p2", time: "14:00", title: "Ceremonie", description: "In de rozentuin achter het landhuis", iconId: "ringen" },
+  { id: "p3", time: "15:30", title: "Taart en borrel", description: "Toosten bij de vijver, met de taart van Daans moeder", iconId: "toost" },
+  { id: "p4", time: "18:30", title: "Diner", description: "Lange tafels in de oranjerie", iconId: "cutlery" },
+  { id: "p5", time: "21:00", title: "Feest", description: "Dansen tot 23:00, daarna rijden de taxi's", iconId: "feest" },
+]
+
+// Vijf tegels plus de route: twee volle rijen van drie op de laptop
+const PRAKTISCH: PraktischTile[] = [
+  { id: "1", iconId: "dresscode", title: "Dresscode", text: "Feestelijk chique. De ceremonie is op het gras, dus laat de naaldhakken liever thuis." },
+  { id: "2", iconId: "cutlery", title: "Dieetwensen", text: "Vegetarisch, glutenvrij of een allergie? Zet het in het formulier, dan zorgen wij dat de keuken het weet." },
+  { id: "3", iconId: "hotel", title: "Overnachten", text: "In het landhuis zijn tien kamers voor onze gasten. Laat het weten in het formulier, dan reserveren wij er een." },
+  { id: "5", iconId: "baby", title: "Kinderen", text: "Van harte welkom. Na het diner is er een oppas in de bibliotheek, met films en een slaaphoek." },
+  { id: "4", iconId: "geen_smart", title: "Geen telefoons", text: "Bij de ceremonie zijn we liever zonder schermen. Onze fotograaf legt alles vast, de foto's komen daarna hier op de site." },
+]
+
+const CADEAUTIPS: WishlistItem[] = [
+  { id: "1", iconId: "letter", title: "Onze huwelijksreis", text: "Jullie komst is het mooiste cadeau. Willen jullie ons toch iets geven, dan sparen we voor drie weken Japan. In de enveloppendoos bij de ingang is plek voor een kaartje." },
 ]
 
 const GASTENBOEK = [
@@ -110,13 +139,11 @@ const NAV = [
 // In het telefoontje op de homepage (een iframe) hoort de balk niet
 const BALK_SCRIPT = `(function(){try{if(window.top!==window.self){var b=document.getElementById("sy-voorbeeld-balk");if(b)b.style.display="none"}}catch(e){}})();`
 
-// Noir met Montserrat, zoals Michiel zijn eigen site had staan (10 oktober
-// 2026). De voorbeeldkaart op de homepage blijft in de stijl van het paar.
-const SITE_STIJL = "zwartgoud"
-const SITE_LETTER = "montserrat"
+// Zand met Montserrat, zoals Michiels eigen testsite (11 oktober 2026). Van 10
+// tot 11 oktober Noir. Kaart, envelop en site hebben nu dezelfde stijl.
 
 export default function VoorbeeldSitePage() {
-  const sc = getStyleConfig(SITE_STIJL, { fontPageTitles: SITE_LETTER })
+  const sc = voorbeeldStijl()
   const datumTekst = formatDate(VOORBEELD.datum)
 
   const secties: { id: string; inhoud: React.ReactNode }[] = [
@@ -126,15 +153,15 @@ export default function VoorbeeldSitePage() {
     },
     {
       id: "programma",
-      inhoud: <EventProgramPreview items={DEFAULT_PROGRAM_ITEMS} sc={sc} datum={VOORBEELD.datum} />,
+      inhoud: <EventProgramPreview items={PROGRAMMA} sc={sc} datum={VOORBEELD.datum} />,
     },
     {
       id: "informatie",
-      inhoud: <PraktischPreview tiles={DEFAULT_PRAKTISCH_TILES} sc={sc} locatie={VOORBEELD.locatie} route={{ tekst: "De ingang zit aan de achterkant van het landhuis. Parkeren kan op het grasveld bij de poort." }} />,
+      inhoud: <PraktischPreview tiles={PRAKTISCH} sc={sc} locatie={VOORBEELD.locatie} route={{ tekst: "De ingang zit aan de achterkant van het landhuis. Parkeren kan op het grasveld bij de poort." }} />,
     },
     {
       id: "cadeautips",
-      inhoud: <WishlistPreview items={DEFAULT_WISHLIST_ITEMS} sc={sc} />,
+      inhoud: <WishlistPreview items={CADEAUTIPS} sc={sc} />,
     },
     {
       id: "ceremoniemeesters",

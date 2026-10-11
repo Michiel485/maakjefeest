@@ -1,11 +1,14 @@
 // Het voorbeeldpaar van de marketingsite: Sophie en Daan. Eén plek voor hun
 // kaart en hun site, zodat de envelop op de homepage, de voorbeeldkaart en de
 // voorbeeldsite (app/voorbeeld-site) bij elkaar horen: dezelfde namen, datum,
-// stijl en ontwerp. De kaart is het ontwerp dat Michiel het mooist vond
-// (schaduwhart, 2 oktober 2026), met de tijden en dresscode op de kaart.
+// stijl en ontwerp. Sinds 11 oktober 2026 zoals Michiels eigen testsite
+// (michiel-en-lindsey.sayingyes.nl): stijl Zand, de krans met takjes, de site
+// in Montserrat, de namen op de kaart ook in Montserrat en op de homepage in
+// de Italiana van het ontwerp. Eerder schaduwhart in Smaragd.
 
 import { displayTeksten, type CardDisplay } from "./cards"
 import { siteOpeningData, type SiteOpeningData } from "./site-opening"
+import { getStyleConfig, type SC } from "./event-styles"
 
 export const VOORBEELD = {
   namen: "Sophie & Daan",
@@ -13,8 +16,13 @@ export const VOORBEELD = {
   datum: "2027-06-12",
   datumTekst: "12 juni 2027",
   locatie: "Landgoed Duno, Doorwerth",
-  stijl: "emerald",
-  ontwerp: "schaduwhart" as const,
+  stijl: "zand",
+  ontwerp: "kranstakjes" as const,
+  /** De letter van de site (koppen, menu, tekst) en van de namen op de kaart */
+  siteLetter: "montserrat",
+  kaartNamenLetter: "montserrat",
+  /** De namen in het ontwerp op de homepage en achter de deuren */
+  namenLetter: "italiana",
   tijden: "13:00 tot 23:00 uur",
   dresscode: "Feestelijk chique",
 } as const
@@ -39,6 +47,7 @@ export function voorbeeldKaart(): CardDisplay {
     animatie: "feestelijk",
     detailsStand: "op",
     detailsStijl: "sierlijn",
+    namenFont: VOORBEELD.kaartNamenLetter,
     tijd: VOORBEELD.tijden,
     dresscode: VOORBEELD.dresscode,
     ...displayTeksten("nl"),
@@ -47,5 +56,15 @@ export function voorbeeldKaart(): CardDisplay {
 
 /** Het beginscherm achter de deuren van de kaart, en waar de site mee begint */
 export function voorbeeldOpening(): SiteOpeningData {
-  return siteOpeningData(VOORBEELD.stijl, {}, VOORBEELD.namen, VOORBEELD.datum)
+  return siteOpeningData(
+    VOORBEELD.stijl,
+    { fontFrameNames: VOORBEELD.namenLetter, fontPageTitles: VOORBEELD.siteLetter },
+    VOORBEELD.namen,
+    VOORBEELD.datum,
+  )
+}
+
+/** De stijl van het paar met hun letters, voor de kaart, de envelop en de site */
+export function voorbeeldStijl(): SC {
+  return getStyleConfig(VOORBEELD.stijl, { fontPageTitles: VOORBEELD.siteLetter, fontFrameNames: VOORBEELD.namenLetter })
 }

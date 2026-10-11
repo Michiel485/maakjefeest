@@ -10,8 +10,7 @@ import { MARKETING_URL } from "@/lib/site-url"
 import { getAllTips } from "@/lib/tips"
 import { PLANS, PLAN_ORDER, RENEWAL_MONTHS, RENEWAL_PRICE, formatEur, planStartUrl, upgradeHint } from "@/lib/plans"
 import CardReveal from "./kaart/[token]/card-reveal"
-import { getStyleConfig } from "@/lib/event-styles"
-import { VOORBEELD, VOORBEELD_SITE_URL, voorbeeldKaart, voorbeeldOpening } from "@/lib/voorbeeld"
+import { VOORBEELD, VOORBEELD_SITE_URL, voorbeeldKaart, voorbeeldOpening, voorbeeldStijl } from "@/lib/voorbeeld"
 
 // De homepage van SayingYes (ontwerpronde, ronde 7, 2 oktober 2026). Eén
 // ding: laten zien hoe het is om zo'n kaart te krijgen. Niet vertellen.
@@ -84,7 +83,7 @@ const STAPPEN: [string, string][] = [
 export default function Home() {
   // De drie nieuwste artikelen: interne links vanaf de voorpagina naar de tips
   const laatsteTips = getAllTips().slice(0, 3)
-  const demoSc = getStyleConfig(VOORBEELD.stijl)
+  const demoSc = voorbeeldStijl()
 
   return (
     <div style={{ backgroundColor: IVOOR }} className="min-h-screen antialiased">

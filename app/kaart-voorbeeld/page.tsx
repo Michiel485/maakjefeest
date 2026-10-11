@@ -1,9 +1,8 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { getStyleConfig } from "@/lib/event-styles"
 import { MARKETING_URL } from "@/lib/site-url"
 import CardReveal from "../kaart/[token]/card-reveal"
-import { VOORBEELD, VOORBEELD_SITE_URL, voorbeeldKaart, voorbeeldOpening } from "@/lib/voorbeeld"
+import { VOORBEELD, VOORBEELD_SITE_URL, voorbeeldKaart, voorbeeldOpening, voorbeeldStijl } from "@/lib/voorbeeld"
 import Kop, { Pijl } from "@/components/marketing/Kop"
 import Voet from "@/components/marketing/Voet"
 import { GOUD, INKT, IVOOR, KOP_FONT, TEKST } from "@/components/marketing/stijl"
@@ -27,7 +26,7 @@ export const metadata: Metadata = {
 // pagina met kop en voet: eerst stond hij kaal, zonder uitleg en zonder weg
 // terug (ontwerpronde, ronde 7).
 export default function KaartVoorbeeldPage() {
-  const sc = getStyleConfig(VOORBEELD.stijl)
+  const sc = voorbeeldStijl()
 
   return (
     <div style={{ backgroundColor: IVOOR }} className="min-h-screen antialiased">
