@@ -25,6 +25,15 @@ export async function proxy(req: NextRequest) {
     ? currentHost.replace(`.${baseDomain}`, "")
     : (url.pathname.match(/^\/events\/([^/]+)/)?.[1] ?? null)
 
+  // Bestanden uit public (de kransen, kaders, foto's van de voorbeeldsite)
+  // gewoon laten staan. Op een subdomein werd /frames/takjes-krans.webp anders
+  // /events/slug/frames/takjes-krans.webp, en dat bestaat niet: de krans was
+  // kapot op de gepubliceerde site (Michiel, 11 oktober 2026). Een pagina van
+  // een site heeft nooit een extensie in zijn adres.
+  if (opSubdomein && /\.[a-z0-9]{2,5}$/i.test(url.pathname)) {
+    return NextResponse.next()
+  }
+
   if (slug) {
     // Heeft de site een slot, dan pas de site met een geldige toegangscookie.
     // Anders alleen het slot: de inhoud gaat dan niet mee naar de browser
