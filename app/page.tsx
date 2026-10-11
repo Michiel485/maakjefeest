@@ -5,7 +5,7 @@ import Kop, { Ornament, Pijl, Vinkje } from "@/components/marketing/Kop"
 import Voet from "@/components/marketing/Voet"
 import NamenProef from "@/components/marketing/NamenProef"
 import StartBalk from "@/components/marketing/StartBalk"
-import { HUISHOUDENS, PORTO_RONDE } from "@/components/marketing/PapierVergelijking"
+import { HUISHOUDENS, PORTO_RONDE } from "@/lib/papier"
 import { DONKER, DONKER_KAART, DONKER_TEKST, DONKER_ZACHT, GOUD, GOUD_LICHT, GOUD_VLAK, INKT, IVOOR, IVOOR_KAART, KOP_FONT, TEKST, ZAND } from "@/components/marketing/stijl"
 import { MARKETING_URL } from "@/lib/site-url"
 import { getAllTips } from "@/lib/tips"
@@ -31,7 +31,9 @@ const PRIJS_SITE = euro(PLANS.compleet.price)
 const TITEL = "Digitale trouwkaart, gastenlijst en trouwwebsite in één"
 const OMSCHRIJVING = `Save the Date, trouwkaart, gastenlijst en trouwwebsite in één. Verstuur via WhatsApp, gasten reageren met één tik. Vanaf ${PRIJS_KAART}, eenmalig: goedkoper dan de postzegels.`
 
-// De rekensom tegenover papier staat in components/marketing/PapierVergelijking.tsx
+// De rekensom tegenover papier staat in lib/papier.ts. Een blok met de
+// vergelijking stond hier kort onder de kop; dat was te veel (Michiel, 11
+// oktober 2026).
 
 export const metadata: Metadata = {
   // Absolute titel: de root-template zou er anders een tweede "| SayingYes" achter zetten
@@ -170,9 +172,6 @@ export default function Home() {
           />
         </div>
       </section>
-
-      {/* Het blok Papier tegenover SayingYes stond hier; te veel volgens
-          Michiel (11 oktober 2026). Op de zoekpagina's staat het nog. */}
 
       {/* ── 2. De envelop (op de tweede plek, Michiel, 11 oktober 2026) ── */}
       <section className="py-16 sm:py-28 px-6" style={{ backgroundColor: ZAND }}>

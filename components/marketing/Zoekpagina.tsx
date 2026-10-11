@@ -3,7 +3,6 @@ import ResetGoogleTranslate from "@/components/ResetGoogleTranslate"
 import Kop, { Ornament, Pijl, Vinkje } from "./Kop"
 import Voet from "./Voet"
 import NamenProef from "./NamenProef"
-import PapierVergelijking from "./PapierVergelijking"
 import { DONKER, DONKER_KAART, DONKER_TEKST, DONKER_ZACHT, GOUD, GOUD_LICHT, INKT, IVOOR, IVOOR_KAART, KOP_FONT, TEKST, ZAND } from "./stijl"
 import { PLANS, PLAN_ORDER, formatEur, planStartUrl, upgradeHint, type Plan } from "@/lib/plans"
 
@@ -65,10 +64,7 @@ export default function Zoekpagina({ inhoud }: { inhoud: ZoekpaginaInhoud }) {
         </div>
       </section>
 
-      {/* Papier tegenover SayingYes, ook hier (Michiel, 11 oktober 2026) */}
-      <PapierVergelijking allesLink />
-
-      <section className="py-16 sm:py-24 px-6" style={{ backgroundColor: IVOOR }}>
+      <section className="py-16 sm:py-24 px-6" style={{ backgroundColor: ZAND }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <Ornament />
@@ -87,7 +83,7 @@ export default function Zoekpagina({ inhoud }: { inhoud: ZoekpaginaInhoud }) {
         </div>
       </section>
 
-      <section className="py-16 sm:py-24 px-6" style={{ backgroundColor: ZAND }}>
+      <section className="py-16 sm:py-24 px-6" style={{ backgroundColor: IVOOR }}>
         <div className="max-w-5xl mx-auto grid gap-12 lg:grid-cols-2 lg:items-center">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] mb-4" style={{ color: GOUD }}>Waarom</p>
