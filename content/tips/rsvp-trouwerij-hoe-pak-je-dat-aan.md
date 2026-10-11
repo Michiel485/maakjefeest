@@ -1,56 +1,68 @@
 ---
 title: "RSVP trouwerij: hoe pak je dat aan?"
 date: "2026-06-13"
-description: "RSVP bijhouden hoeft geen gedoe te zijn. Wat RSVP betekent, hoe je het aanpakt en hoe je voorkomt dat je eindeloos achter je gasten aan zit."
+updated: "2026-10-11"
+description: "Wat betekent RSVP, wat vraag je je gasten, wanneer sluit je het aanmelden en wat doe je met wie niet reageert? Zo houd je de aantallen zonder gedoe bij."
 slug: "rsvp-trouwerij-hoe-pak-je-dat-aan"
 ---
 
-Je hebt de uitnodigingen verstuurd en nu begint het wachten. Wie komt er? Hoeveel mensen zijn er? Heeft iemand een allergie? RSVP bijhouden is voor veel koppels een van de meest tijdrovende onderdelen van de bruiloftsorganisatie. Zo pak je het slim aan.
+Je hebt de trouwkaarten verstuurd en nu begint het wachten. Wie komt er, met hoeveel, en heeft iemand een allergie? Het korte antwoord: laat gasten op één vaste plek reageren, vraag meteen alles wat de cateraar nodig heeft, en zet een duidelijke reactiedatum. Zo pak je dat aan.
 
 ## Wat betekent RSVP?
 
-RSVP komt van het Franse *"Répondez s'il vous plaît"*, oftewel: "Gelieve te antwoorden." Het is het verzoek aan gasten om te laten weten of ze wel of niet komen. Klinkt simpel, maar in de praktijk blijkt het soms een hele klus om iedereen op tijd een reactie te krijgen.
+RSVP komt van het Franse *répondez s'il vous plaît*: gelieve te antwoorden. Op een trouwkaart betekent het: laat ons weten of je komt. In het Nederlands zeg je ook gewoon "graag een reactie voor 1 mei" of "laat je weten of je erbij bent?".
 
-## Waarom is RSVP zo belangrijk?
+## Waarom het zo belangrijk is
 
-Jullie catering, de tafelindeling, het aantal stoelen, de hoeveelheid bedankjes: alles hangt af van het aantal gasten. Hoe later je weet hoeveel mensen er komen, hoe meer stress er ontstaat richting de grote dag. Een duidelijk RSVP-systeem voorkomt dat.
+De locatie, de cateraar, de tafelindeling, het aantal stoelen en zelfs de bedankjes: alles hangt af van het aantal gasten. De locatie wil een vast aantal op een vaste datum, vaak een tot twee weken voor de bruiloft. Geef je dat te laat door, dan heeft de locatie al ingekocht en betaal je meestal voor gasten die niet komen. Een goede RSVP is dus niet alleen netjes, het scheelt geld.
 
-## Hoe verzamel je RSVP's?
+## Hoe verzamel je de reacties?
 
-Er zijn verschillende manieren:
+**Telefoon en appjes**
+Persoonlijk, maar bij meer dan twintig gasten raak je het overzicht kwijt. Reacties staan verspreid over chats, en wie zei er ook alweer vegetarisch?
 
-**Per telefoon of app**
-De meest traditionele aanpak. Gasten bellen of appen om te laten weten of ze komen. Klinkt persoonlijk, maar wordt al snel onoverzichtelijk als je tientallen gasten hebt.
+**Antwoordkaartjes per post**
+Klassiek en mooi, maar je betaalt een extra postzegel per huishouden, en kaartjes komen laat of nooit terug.
 
-**Per e-mail**
-Iets gestructureerder, maar je moet de reacties zelf bijhouden in een spreadsheet. En wat doe je met gasten die niet reageren?
+**Een spreadsheet**
+Gestructureerd, maar jij typt alles over. Elke wijziging ("we komen toch met z'n drieën") moet je zelf bijhouden.
 
-**Via een trouwwebsite**
-Verreweg de makkelijkste aanpak. Gasten vullen een formulier in op jullie trouwwebsite: naam, aantal personen, dieetwensen en eventuele opmerkingen. Alles staat automatisch bij elkaar, geen appjes en geen spreadsheets.
+**Online aanmelden**
+Gasten vullen zelf een kort formulier in, via een link in de trouwkaart of op jullie trouwwebsite. Alles komt vanzelf in één lijst, met aantallen en dieetwensen. Dit is voor de meeste koppels de makkelijkste aanpak. Hoe je zo'n kaart met aanmeldknop verstuurt, lees je in [digitale trouwkaart versturen via WhatsApp](/tips/digitale-trouwkaart-versturen-whatsapp).
 
-## Wat vraag je bij de RSVP?
+## Wat vraag je bij het aanmelden?
 
-Zorg dat je niet alleen vraagt of iemand komt, maar ook:
+Vraag in één keer alles wat je later nodig hebt, maar niet meer dan dat. Elke extra vraag kost reacties.
 
-- **Aantal personen**: komen ze alleen of met partner/kinderen?
-- **Dieetwensen en allergieën**: vegetarisch, vegan, glutenvrij, notenallergie
-- **Aanwezigheid bij ceremonie én feest**: niet iedereen is bij beide
-- **Eventuele vragen of opmerkingen**: handig om dit meteen mee te nemen
+- **Kom je wel of niet?** Ook een nee is een reactie die je wilt hebben.
+- **Met hoeveel personen?** En als je kinderen uitnodigt: hoeveel kinderen?
+- **Dieetwensen en allergieën**: vegetarisch, veganistisch, glutenvrij, noten.
+- **Welk deel van de dag?** Als gasten kunnen kiezen tussen ceremonie, diner en feest.
+- **Een opmerking**, voor alles wat niet in de vakjes past.
 
-## Wanneer sluit je de RSVP?
+Wat je beter niet vraagt: adres, geboortedatum of liedjeswensen in hetzelfde formulier. Dat maakt het lang en mensen haken af.
 
-Stel een duidelijke deadline in, minimaal 4 tot 6 weken voor de bruiloft. Zo heb je genoeg tijd om de definitieve aantallen door te geven aan de catering en andere leveranciers.
+## Wanneer sluit je het aanmelden?
 
-Vermeld de deadline duidelijk op jullie uitnodiging én op de trouwwebsite. En stuur een week voor de deadline een vriendelijke herinnering, dat scheelt een hoop achtervolgen.
+Zet de reactiedatum **vier tot zes weken voor de bruiloft**. Reken terug vanaf de datum waarop de locatie de definitieve aantallen wil hebben, en houd een week marge voor de nakomers. Zet de datum op de trouwkaart én op de trouwwebsite, en noem een echte datum ("graag voor 1 mei"), niet "zo snel mogelijk".
+
+Weet je nog niet wanneer de kaart de deur uit moet? In [Save the Date versturen: wanneer en hoe](/tips/save-the-date-versturen-wanneer-en-hoe) staat een tijdlijn van het eerste bericht tot de definitieve aantallen.
 
 ## Wat doe je met gasten die niet reageren?
 
-Het overkomt bijna ieder koppel: gasten die de deadline laten verstrijken zonder te reageren. Stuur ze een persoonlijk berichtje, niet via de groepsapp maar individueel. Dat werkt beter en voelt minder als een aanmaning.
+Bijna elk koppel heeft ze: gasten die de datum laten verstrijken. Meestal is het vergeetachtigheid, geen onwil.
 
-## RSVP bijhouden hoeft geen gedoe te zijn
+- **Herinner een week voor de reactiedatum**, niet erna. Dan voelt het als een geheugensteuntje en niet als een aanmaning.
+- **Stuur alleen wie nog niet reageerde.** Wie al ja zei, wil geen tweede bericht.
+- **Persoonlijk, niet in de groepsapp.** Een kort "we zijn benieuwd of je erbij bent" werkt beter dan een lijst namen in een groep.
+- **Bel de laatste paar.** Na de reactiedatum zijn het er meestal nog maar een handvol.
 
-Met een digitale RSVP via jullie trouwwebsite heb je altijd een actueel overzicht. Geen losse briefjes, geen spreadsheet bijhouden, geen appjes meer. Gasten vullen zelf hun gegevens in en jij ziet in één oogopslag wie er komt en wat ze nodig hebben.
+## Na de reactiedatum
+
+Zet de lijst vast en tel twee keer: daggasten, avondgasten, kinderen en dieetwensen apart. Geef de aantallen door aan de locatie en de cateraar, en bewaar de lijst voor de tafelindeling. Komt er daarna nog een afmelding, geef die dan meteen door. Sommige locaties rekenen tot een paar dagen vooraf nog bij.
+
+Hoe dit past in de rest van de planning, zie je in de [trouw-checklist](/tips/trouw-checklist).
 
 ---
 
-Met SayingYes regel je RSVP zonder gedoe: een [digitale uitnodiging](/digitale-uitnodiging) via WhatsApp waarmee gasten met één tik reageren, een RSVP-pagina met dieetwensen en een dashboard waarin jij het overzicht houdt. Vanaf €25, of als onderdeel van de complete trouwwebsite. [Start gratis](/start), betalen doe je pas bij publiceren.
+Met SayingYes reageren gasten met één tik op jullie [digitale trouwkaart](/digitale-trouwkaart): wel of niet, met hoeveel en met welke dieetwensen. Alles komt vanzelf in de gastenlijst, en wie nog stil is krijgt met één knop een herinnering. De Trouwkaart kost €25, de Save the Date zit erbij. [Start gratis](/start), betalen doe je pas als je verstuurt.

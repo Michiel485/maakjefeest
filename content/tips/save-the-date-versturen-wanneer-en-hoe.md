@@ -3,13 +3,14 @@ title: "Save the Date versturen: wanneer en wat erop moet"
 date: "2026-09-08"
 description: "Wanneer stuur je een Save the Date, wat moet erop staan en hoe verstuur je hem slim? Praktische gids met tijdlijn, voorbeeldteksten en tips."
 slug: "save-the-date-versturen-wanneer-en-hoe"
+updated: "2026-10-11"
 ---
 
 De datum staat vast, de locatie is geboekt en je popelt om het de wereld te vertellen. Dan is het tijd voor een Save the Date. Maar wanneer stuur je hem precies, wat zet je erop en hoe pak je het slim aan? Hier lees je alles wat je moet weten.
 
 ## Wat is een Save the Date?
 
-Een Save the Date is een korte vooraankondiging van jullie bruiloft. Het is nog geen officiële uitnodiging: het enige doel is dat gasten de datum vrijhouden in hun agenda. Programma, dresscode en aanmelden komen later, in de echte trouwkaart.
+Een Save the Date is een korte vooraankondiging van jullie bruiloft. Het is nog geen officiële uitnodiging: het enige doel is dat gasten de datum vrijhouden in hun agenda. Programma, dresscode en het echte aanmelden komen later, in de trouwkaart.
 
 Daarom is een Save the Date ook heerlijk simpel. Namen, datum, plaats en de zin "de uitnodiging volgt". Meer hoeft niet.
 
@@ -37,7 +38,7 @@ Kort en duidelijk:
 
 Optioneel: een foto van jullie samen en een link naar jullie trouwwebsite, als die al bestaat.
 
-Wat je juist niet doet: het programma, de tijden en de dresscode. Die informatie kan nog veranderen, en je wilt niet dat gasten iets onthouden dat later anders blijkt. Ook aanmelden is nog niet aan de orde.
+Wat je juist niet doet: het programma, de tijden en de dresscode. Die informatie kan nog veranderen, en je wilt niet dat gasten iets onthouden dat later anders blijkt. Het echte aanmelden met aantallen en dieetwensen komt pas bij de trouwkaart. Wel handig: gasten alvast laten zeggen of ze er waarschijnlijk bij zijn.
 
 ## Drie voorbeeldteksten
 
@@ -76,4 +77,4 @@ Meer weten over de hele planning? Lees onze [ultieme trouw-checklist](/tips/trou
 
 ---
 
-Met SayingYes maak je een digitale Save the Date in de stijl van jullie trouwwebsite, ook als de site zelf nog niet af is. Gasten openen een envelop met lakzegel, en zodra jullie site live gaat verschijnen de knoppen naar de website en het RSVP-formulier vanzelf in dezelfde kaart. [Start gratis](/start), betalen doe je pas bij publiceren.
+Met SayingYes maak je een [digitale Save the Date](/save-the-date) die gasten openen als envelop met lakzegel, met een knop om de dag meteen in hun agenda te zetten. Je ziet hoe vaak de kaart is geopend, en gasten kunnen alvast ja of nee zeggen. Gaat jullie trouwwebsite later live, dan verschijnt de knop naar de site vanzelf in dezelfde kaart. De Save the Date kost €15, zonder einddatum en zonder abonnement. [Start gratis](/start), betalen doe je pas als je verstuurt.

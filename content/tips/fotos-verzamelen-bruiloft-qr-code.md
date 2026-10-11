@@ -55,4 +55,4 @@ Wil je ook de communicatie vóór de bruiloft slim regelen? Lees dan [wat je op 
 
 ---
 
-Bij SayingYes zit de gastenfotomuur gewoon bij jullie trouwwebsite: QR-code, print-klare kaart in jullie stijl, live slideshow voor op het scherm, goedkeuring vooraf als je dat wilt, en achteraf alles als zip of collage. [Start gratis met jullie trouwwebsite](/start), je betaalt pas bij publiceren.
+Bij SayingYes zit de gastenfotomuur bij de [complete trouwwebsite](/trouwwebsite-maken): QR-code, print-klare kaart in jullie stijl, live slideshow voor op het scherm, goedkeuring vooraf als je dat wilt, en achteraf alles als zip of collage. €49,99 voor een jaar online, inclusief de Save the Date en de trouwkaart. [Start gratis](/start), betalen doe je pas als je live zet.

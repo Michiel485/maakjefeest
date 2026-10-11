@@ -81,4 +81,4 @@ Dan volstaat een Save the Date met alleen namen, datum en de zin "de uitnodiging
 
 ---
 
-Bij SayingYes maak je per gastengroep een [digitale uitnodiging](/digitale-uitnodiging) met eigen tijden en je eigen tekst, als envelop met lakzegel die je via WhatsApp verstuurt. Gasten reageren met één tik, jij ziet alles in je dashboard. Vanaf €15. [Start gratis](/start), betalen doe je pas bij publiceren.
+Bij SayingYes maak je per gastengroep een [digitale trouwkaart](/digitale-trouwkaart) met eigen tijden en je eigen tekst, als envelop met lakzegel die je via WhatsApp verstuurt. Gasten reageren met één tik en jullie zien in de gastenlijst wie er komt. De Trouwkaart kost €25, de Save the Date zit erbij. [Start gratis](/start), betalen doe je pas als je verstuurt.

@@ -1,60 +1,65 @@
 ---
 title: "Digitale trouwkaart of trouwwebsite: wat kies je?"
 date: "2026-05-30"
-description: "Digitale trouwkaart of trouwwebsite: wat kies je? We leggen de verschillen uit zodat jullie de beste keuze kunnen maken voor jullie grote dag."
+updated: "2026-10-11"
+description: "Digitale trouwkaart of trouwwebsite: wat is het verschil en wat hebben jullie nodig? Per situatie een duidelijk advies, plus wanneer je ze samen gebruikt."
 slug: "digitale-trouwkaart-vs-trouwwebsite"
 ---
 
-Vroeger was het simpel: je stuurde een papieren uitnodiging en klaar. Tegenwoordig kiezen steeds meer koppels voor een digitale oplossing. Maar dan komt de vraag: kies je voor een digitale trouwkaart of een trouwwebsite? We leggen het verschil uit.
+Steeds meer koppels kiezen voor digitaal, en dan komt de vraag: is een digitale trouwkaart genoeg, of hebben jullie een trouwwebsite nodig? Het korte antwoord: een kaart nodigt uit, een website informeert. Voor een kleine bruiloft met één programma is een goede kaart met aanmeldknop genoeg. Hebben jullie meerdere locaties, gasten van ver of veel praktische informatie, dan wil je er een website bij.
 
-## Wat is een digitale trouwkaart?
+## Drie soorten digitaal
 
-Een digitale trouwkaart is de online versie van een traditionele uitnodiging. Je maakt een mooie kaart aan, vaak via een ontwerptool of app, en stuurt die per e-mail of WhatsApp naar jullie gasten. De kaart bevat de basisinformatie: datum, locatie en tijd.
+Onder "digitale trouwkaart" verstaan mensen verschillende dingen. Het verschil is groot.
 
-**Voordelen:**
-- Snel en makkelijk te maken
-- Goedkoper dan papieren kaarten
-- Milieuvriendelijk
+**1. Een kaart als plaatje**
+Een ontwerp uit een app of van Canva, dat je als foto doorstuurt. Snel en vaak gratis, maar het is een dood eindje: gasten kunnen er niet op klikken, je ziet niet wie hem heeft bekeken en een fout staat bij iedereen in de telefoon.
 
-**Nadelen:**
-- Eenmalig te bekijken, gasten bewaren het zelden
-- Geen plek voor extra informatie zoals programma of RSVP
-- Niet interactief: gasten kunnen niet reageren via de kaart zelf
+**2. Een kaart als link, met aanmelden**
+Gasten tikken op een link en openen de kaart in hun browser, vaak met een animatie. Onder de kaart staat een knop om te reageren: wel of niet, met hoeveel en met welke dieetwensen. Jullie zien alle reacties in één lijst, en een wijziging pas je aan zonder iets opnieuw te sturen.
 
-## Wat is een trouwwebsite?
+**3. Een trouwwebsite**
+Een eigen site voor jullie bruiloft, met alles wat niet op een kaart past: programma, route, dresscode, overnachten, cadeautips, ceremoniemeesters en foto's. Gasten zoeken er de weken voor de bruiloft dingen op, en op de dag zelf nog eens.
 
-Een trouwwebsite is een volledige webpagina die speciaal voor jullie bruiloft is aangemaakt. Gasten kunnen de site op elk moment bezoeken om informatie op te zoeken, zich aan te melden via RSVP, dieetwensen door te geven en meer.
+## Wat een digitale trouwkaart goed doet
 
-**Voordelen:**
-- Alle informatie op één plek, altijd bereikbaar
-- Interactief: gasten kunnen zich aanmelden en vragen stellen
-- Persoonlijk: foto's, jullie verhaal, programma
-- Eenvoudig bij te werken als er iets verandert
+- **Het moment.** De kaart landt in de WhatsApp van je gast en voelt als een echte uitnodiging, zeker met een envelop die opengaat.
+- **Per gastengroep.** Daggasten, avondgasten en receptiegasten krijgen elk een eigen kaart met de tijden die voor hen gelden.
+- **Reacties ophalen.** Met een aanmeldknop eronder komt elk antwoord meteen in je lijst.
+- **Goedkoop.** Geen drukwerk en geen postzegels. Bij 60 huishoudens scheelt dat alleen aan porto al €84 per ronde.
 
-**Nadelen:**
-- Iets meer tijd om in te stellen dan een losse kaart
+Wat een kaart niet goed doet: veel informatie kwijt. Een kaart met twintig regels tekst leest niemand.
 
-## Wanneer kies je voor wat?
+## Wat een trouwwebsite goed doet
 
-**Kies een digitale trouwkaart als:**
-- Jullie bruiloft klein en informeel is
-- Je alleen de datum en locatie wilt communiceren
-- Je geen behoefte hebt aan RSVP of extra informatie
+- **Alles op één plek**, altijd te vinden, ook als de WhatsApp van twee maanden geleden al lang is weggescrold.
+- **Bijwerken zonder opnieuw te sturen.** Verandert de tijd van het diner, dan pas je het aan en ziet iedereen het.
+- **Ruimte voor het persoonlijke**: jullie verhaal, foto's, en achteraf de foto's van gasten.
+- **Minder vragen.** Elke vraag die op de site beantwoord is, krijg je niet in je app.
 
-**Kies een trouwwebsite als:**
-- Je gasten alle informatie op één plek wilt geven
-- Je RSVP en dieetwensen digitaal wilt bijhouden
-- Je iets persoonlijks wilt maken dat gasten kunnen terugbezoeken
-- Je updates wilt kunnen doorsturen zonder opnieuw een kaart te versturen
+Wat een website niet goed doet: uitnodigen. Een losse link naar een site voelt niet als een trouwkaart.
 
-## Kunnen ze samen?
+## Wanneer kies je wat?
 
-Jazeker. Veel koppels combineren beide: ze sturen een korte digitale trouwkaart als uitnodiging, met daarin een link naar de trouwwebsite voor alle details. Zo profiteer je van het beste van beide werelden. Hoe je zo'n kaart slim verstuurt, lees je in [digitale trouwkaart versturen via WhatsApp](/tips/digitale-trouwkaart-versturen-whatsapp), en [hier zie je een voorbeeld](/kaart-voorbeeld) van hoe een gast hem ontvangt.
+**Een kaart met aanmelden is genoeg als:**
+- de bruiloft klein is, of alles op één locatie gebeurt;
+- het programma in een paar regels past;
+- jullie vooral willen weten wie er komt.
 
-## Onze conclusie
+**Neem er een trouwwebsite bij als:**
+- er meerdere locaties zijn, of vervoer tussen ceremonie en feest;
+- er gasten van ver komen die moeten overnachten;
+- jullie een dresscode, cadeautips of een uitgebreid programma willen uitleggen;
+- jullie de foto's van gasten willen verzamelen.
 
-Een digitale trouwkaart is prima voor de uitnodiging zelf, maar een trouwwebsite biedt veel meer mogelijkheden voor alles eromheen. Voor koppels die de organisatie soepel willen laten verlopen, zonder eindeloze appjes over dieetwensen en routebeschrijvingen, is een trouwwebsite de slimste keuze.
+Twijfel je nog wat er allemaal op een site hoort? Lees [wat zet je op een trouwwebsite](/tips/wat-zet-je-op-een-trouwwebsite).
+
+## Samen werken ze het best
+
+De meeste koppels met een website gebruiken ze samen: de kaart nodigt uit, met een knop naar de site voor alle details en het aanmelden. Zo heeft elke gast het mooie moment van de kaart én de informatie die hij nodig heeft. Hoe je zo'n kaart slim verstuurt, lees je in [digitale trouwkaart versturen via WhatsApp](/tips/digitale-trouwkaart-versturen-whatsapp), en [hier zie je een voorbeeld](/kaart-voorbeeld) van hoe een gast hem ontvangt.
+
+En papier? Dat kan er gewoon naast. Veel koppels sturen een papieren kaart aan opa en oma en digitaal aan de rest, of zetten een QR-code naar de website op hun papieren kaart.
 
 ---
 
-Bij SayingYes hoef je niet te kiezen: je begint met een [digitale uitnodiging](/digitale-uitnodiging) vanaf €15 en groeit wanneer je wilt door naar de complete trouwwebsite voor €49,99, waarbij je alleen het verschil betaalt. [Start gratis](/start), betalen doe je pas bij publiceren.
+Bij SayingYes hoef je niet meteen te kiezen. Je begint met een [digitale trouwkaart](/digitale-trouwkaart) met aanmelden voor €25, inclusief de Save the Date. Willen jullie later toch een [trouwwebsite](/trouwwebsite-maken), dan stap je over naar het complete pakket van €49,99 en betaal je alleen het verschil. De kaart krijgt dan vanzelf een knop naar de site. [Start gratis](/start), betalen doe je pas als je verstuurt of live zet.

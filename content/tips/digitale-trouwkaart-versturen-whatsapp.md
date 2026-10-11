@@ -3,6 +3,7 @@ title: "Digitale trouwkaart versturen via WhatsApp"
 date: "2026-09-08"
 description: "Snel, gratis en persoonlijk: zo verstuur je een digitale trouwkaart via WhatsApp. Wat zet je erop, welke fouten vermijd je en hoe reageren gasten meteen?"
 slug: "digitale-trouwkaart-versturen-whatsapp"
+updated: "2026-10-11"
 ---
 
 Steeds meer bruidsparen sturen hun trouwkaart via WhatsApp. Logisch: het is gratis, iedereen zit erop en je gasten hebben de uitnodiging binnen een seconde in handen. Toch gaat het regelmatig mis. Een wazige foto van een kaart in de groepsapp, gasten die niet weten waar ze moeten reageren, of een tijd die later toch verandert. In dit artikel lees je hoe je een digitale trouwkaart via WhatsApp goed aanpakt.
@@ -52,7 +53,7 @@ Nodig je daggasten, avondgasten en receptiegasten uit? Maak dan per groep een ap
 3. **Test de link zelf**: open hem op je telefoon en klik alle knoppen door.
 4. **Verstuur persoonlijk**, niet alleen in een groepsapp. Een individueel berichtje met een zinnetje erbij voelt als een echte uitnodiging en levert veel meer reacties op.
 5. **Stel een reactiedatum in** en vermeld die in je bericht.
-6. **Stuur een herinnering** aan wie na twee weken nog niet heeft gereageerd.
+6. **Stuur een herinnering** aan wie na twee weken nog niet heeft gereageerd. Houd je de aanmeldingen digitaal bij, dan zie je precies wie dat zijn.
 
 ## Veelgemaakte fouten
 
@@ -70,4 +71,4 @@ Een kaart nodigt uit, een website informeert. Samen dekken ze alles: de kaart la
 
 ---
 
-Met SayingYes maak je bij jullie trouwwebsite gratis digitale Save the Dates en trouwkaarten. Gasten openen een envelop met lakzegel in de stijl van jullie site, met knoppen naar de website en het RSVP-formulier. Per gastengroep een eigen kaart, met eigen tijden. [Start gratis met jullie trouwwebsite](/start), je betaalt pas als je publiceert.
+Met SayingYes maak je een [digitale trouwkaart](/digitale-trouwkaart) die gasten openen als envelop met lakzegel, met per gastengroep eigen tijden en een knop om zich aan te melden. In de gastenlijst zien jullie wie komt, en wie nog stil is krijgt met één knop een herinnering. De Trouwkaart kost €25, de Save the Date zit erbij. Bij de complete trouwwebsite van €49,99 horen beide kaarten. [Start gratis](/start), betalen doe je pas als je verstuurt of live zet.
