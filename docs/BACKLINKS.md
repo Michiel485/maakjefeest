@@ -89,15 +89,26 @@ Dit zijn de waardevolste vermeldingen: relevante branche, bruidsparen die er ech
 - **Belangrijk:** het basispakket geeft **geen** follow-link. Bevestigd op /adverteren, waar bij Pakket Plus letterlijk "Follow link naar website" staat en bij het basispakket niet. Je betaalt in basis dus voor zichtbaarheid, niet voor SEO-waarde.
 - **Advies:** overslaan tot je klanten hebt. Als je later toch instapt, alleen Plus of hoger, want anders koop je precies niet wat je zoekt.
 
-### Nog te controleren
+### Gecontroleerd op 11 oktober 2026
 
-Deze zag ik langskomen maar heb ik niet uitgeplozen. De moeite waard om zelf even te openen:
+**Huwelijk.nl, doen, gratis**
+- Aanmelden: https://www.huwelijk.nl/users/sign_up?type=company ("Gratis registreren"). Maakt meteen een account aan (wachtwoord, reCAPTCHA), dus Michiel doet het zelf.
+- Categorie: Trouwkaarten & Bedankjes > Trouwkaarten.
+- Verplicht: voornaam, achternaam, bedrijfsnaam, straat en huisnummer, postcode, plaats, provincie, categorie, e-mail, wachtwoord. Geen telefoonveld.
+- Follow-link: ja. Profielen van Studio Dijs en Koningkaart linken naar hun eigen site zonder rel-attribuut.
 
-- Huwelijk.nl, https://www.huwelijk.nl
-- De Online Trouwbeurs, https://deonlinetrouwbeurs.nl
-- Trouwbeleving.nl, https://www.trouwbeleving.nl
-- Trouwen in Nederland, https://www.trouweninnederland.nl
-- Weddingspot.nl, https://www.weddingspot.nl
+**Later (betaald of prijs onbekend)**
+- **Trouwplannen.nl**: €295 excl. btw per jaar, categorie Trouwkaarten, follow-link (BlijKaartje, alleen rel="noopener"), zegt 150.000 bezoekers per jaar. Pas als er klanten zijn.
+- **Huwelijk.be**: categorie "Uitnodiging Ontwerper", telefoon verplicht, prijs niet getoond. Belgische markt; eerst prijs navragen.
+
+**Overslaan**
+- **Weddingspot.nl**: geen kaartcategorie (alleen "Overig"), website pas zichtbaar na offerteaanvraag, dus geen backlink.
+- **De Online Trouwbeurs**: €29,95 of €39,95 per maand.
+- **TrouweninNederland.nl**: op aanvraag, websiteknop is nofollow.
+- **Trouwbeleving.nl**: vooral een trouwbeurs, links zijn nofollow.
+- **Trouwbuddy.nl**: zelf een concurrent met trouwwebsite en RSVP.
+- Dood of te koop: trouwen.be (één feestzaal), trouwgids.nl (verouderd), trouwdag.nl (sjabloon), jawoord.nl, weddingpro.nl, bruiloft.be. Zankyou gaf een foutmelding; weddingwire.be niet gecontroleerd.
+- Software-overzichten (SaaSHub, AlternativeTo): Engelstalig, nu weinig waarde. Pas bij een Engelse versie.
 
 ### Afgevallen
 
