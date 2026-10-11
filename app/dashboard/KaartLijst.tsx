@@ -251,6 +251,15 @@ export default function KaartLijst({
                   {kaartNaam(r.card)}
                 </span>
               )}
+              {/* De kijkteller: hoe vaak de gastenlink is geopend. Telt opens,
+                  geen mensen; het eigen voorbeeld van het bruidspaar telt niet
+                  mee (app/api/cards/view). Alleen als de link werkt. */}
+              {live && (
+                <span className="tabular-nums" style={{ color: KLEUR.zacht }} title="Hoe vaak de link voor je gasten is geopend">
+                  {(r.card.view_count ?? 0) === 0 ? "nog niet geopend" : `${r.card.view_count} keer geopend`}
+                  <span aria-hidden> · </span>
+                </span>
+              )}
               <span className="tabular-nums" style={{ color: KLEUR.zacht }}>
                 {r.komen + r.komenNiet === 0
                   ? "nog geen antwoorden"
