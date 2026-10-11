@@ -163,7 +163,9 @@ function Telefoon({ namen, datum }: { namen: string; datum: string }) {
         <HomeOntwerp
           ontwerp={ONTWERP}
           sc={sc}
-          tekst={{ kop: "Wij gaan trouwen", namen, datum: formatDate(datum), locatie: null }}
+          // De datum als 2027-06-12: HomeOntwerp maakt hem zelf op. Een al
+          // opgemaakte datum gaf "Invalid Date" in de telefoon.
+          tekst={{ kop: "Wij gaan trouwen", namen, datum, locatie: null }}
           vasteBreedte={156}
           opFoto
         />

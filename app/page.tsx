@@ -162,10 +162,10 @@ export default function Home() {
                 className="text-4xl sm:text-5xl lg:text-[3.4rem] leading-[1.05] mb-5 tracking-tight"
                 style={{ fontFamily: KOP_FONT, color: INKT, fontWeight: 700, textWrap: "balance" }}
               >
-                Alles voor jullie bruiloft, <em style={{ fontStyle: "italic", color: GOUD }}>voor minder dan de postzegels.</em>
+                Alles voor jullie <em style={{ fontStyle: "italic", color: GOUD }}>bruiloft.</em>
               </h1>
               <p className="text-base sm:text-lg leading-relaxed" style={{ color: TEKST }}>
-                Save the Date, trouwkaart, gastenlijst en trouwwebsite in één. Verstuur via WhatsApp en gasten laten met één tik weten of ze komen. Vanaf {PRIJS_KAART}, eenmalig.
+                Save the Date, trouwkaart, gastenlijst en trouwwebsite in één. Verstuur via WhatsApp en gasten laten met één tik weten of ze komen.
               </p>
             </div>
             }
