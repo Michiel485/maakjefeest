@@ -49,7 +49,9 @@ Directories tellen alleen mee als je gegevens overal exact hetzelfde staan. Kopi
 
 Dit zijn de waardevolste vermeldingen: relevante branche, bruidsparen die er echt zoeken, en Google snapt de context.
 
-### ThePerfectWedding.nl, doen, gratis
+### ThePerfectWedding.nl, aangemeld op 11 oktober 2026
+
+- [x] Aanmelding verstuurd door Michiel (11 okt 2026). Nog doen na goedkeuring: profiel aanvullen met omschrijving, plaatjes en prijs, en controleren dat de link naar www.sayingyes.nl erop staat.
 
 - **Aanmelden:** https://bedrijf.theperfectwedding.nl/aanmelden
 - **Status:** gecontroleerd, er staat letterlijk "Aanmelden voor een gratis naamsvermelding".
@@ -70,7 +72,9 @@ Dit zijn de waardevolste vermeldingen: relevante branche, bruidsparen die er ech
 - **Wat je krijgt:** basisprofiel met omschrijving en contactgegevens, tot 5 foto's, vindbaar in alle categorieën, geverifieerd-badge, eigen profiel-URL, reviews verzamelen.
 - **Let op:** betaalde pakketten beginnen bij 24,99 per maand. Niet doen in deze fase.
 
-### Top Trouwbedrijven, informatie opvragen
+### Top Trouwbedrijven, overslaan
+
+- **11 oktober 2026:** Michiel betaalt niet voor gidsen. Aanmelden is een informatieaanvraag met verplicht telefoonnummer, zonder gratis optie op de site. Overslaan.
 
 - **Aanmelden:** https://www.toptrouwbedrijven.nl/aanmelden/
 - **Status:** prijzen staan niet op de site, je vult een formulier in en krijgt de opties toegestuurd. "Van basis tot professioneel", dus er is waarschijnlijk een goedkope instap.
