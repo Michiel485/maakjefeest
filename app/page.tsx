@@ -126,7 +126,10 @@ export default function Home() {
       <ResetGoogleTranslate />
       <Kop />
 
-      {/* Wat we verkopen, voor Google: de drie pakketten met hun prijs */}
+      {/* Wat we verkopen, voor Google: de drie pakketten met hun prijs. Search
+          Console keurde dit af zonder plaatje (11 oktober 2026); verzenden en
+          retour staan erbij omdat Google ze vraagt: digitaal, dus gratis en
+          meteen, en geen retour (artikel 5 van de voorwaarden). */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -135,6 +138,7 @@ export default function Home() {
             "@type": "Product",
             name: "SayingYes digitale trouwkaart en trouwwebsite",
             description: OMSCHRIJVING,
+            image: `${MARKETING_URL}/opengraph-image`,
             brand: { "@type": "Brand", name: "SayingYes" },
             url: MARKETING_URL,
             offers: PLAN_ORDER.map((p) => ({
@@ -144,6 +148,24 @@ export default function Home() {
               priceCurrency: "EUR",
               availability: "https://schema.org/InStock",
               url: `${MARKETING_URL}${planStartUrl(p)}`,
+              shippingDetails: {
+                "@type": "OfferShippingDetails",
+                shippingRate: { "@type": "MonetaryAmount", value: 0, currency: "EUR" },
+                shippingDestination: [
+                  { "@type": "DefinedRegion", addressCountry: "NL" },
+                  { "@type": "DefinedRegion", addressCountry: "BE" },
+                ],
+                deliveryTime: {
+                  "@type": "ShippingDeliveryTime",
+                  handlingTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 0, unitCode: "DAY" },
+                  transitTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 0, unitCode: "DAY" },
+                },
+              },
+              hasMerchantReturnPolicy: {
+                "@type": "MerchantReturnPolicy",
+                applicableCountry: ["NL", "BE"],
+                returnPolicyCategory: "https://schema.org/MerchantReturnNotPermitted",
+              },
             })),
           }),
         }}
