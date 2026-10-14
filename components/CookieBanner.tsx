@@ -17,6 +17,9 @@ export default function CookieBanner() {
     // worden; de gasten kregen hem wel te zien (Michiel, 27 september 2026).
     if (!isMarketingHost(window.location.hostname, process.env.NODE_ENV !== "production")) return
     if (pathname?.startsWith("/events") || pathname?.startsWith("/kaart/")) return
+    // Niet in de telefoon op de homepage: daar staat de voorbeeldsite in een
+    // iframe, en de vraag staat al onderaan de echte pagina
+    if (window.self !== window.top) return
     if (localStorage.getItem(STORAGE_KEY)) return
     const t = setTimeout(() => setVisible(true), 2000)
     return () => clearTimeout(t)
