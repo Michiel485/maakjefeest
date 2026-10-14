@@ -4,7 +4,7 @@ import { verwijderEventInhoud } from "@/lib/opruimen"
 import { sendDraftReminderEmail, sendRenewalReminderEmail, sendExpiryWarningEmail, sendDeadlineEmail, sendStandEmail, sendOfflineEmail, sendWeekVoorEmail, sendDagNaEmail } from "@/lib/mail"
 import { formatDate } from "@/lib/event-styles"
 import { siteNamen } from "@/lib/site-opening"
-import { eventSiteUrl } from "@/lib/site-url"
+import { eventSiteUrl, MARKETING_URL } from "@/lib/site-url"
 import { dagenTotDeadline, leesDeadline, welkBericht } from "@/lib/deadline"
 import { frequentie, magStandMail } from "@/lib/stand"
 import { komtGast, reis } from "@/lib/gasten"
@@ -65,7 +65,7 @@ export async function GET(request: Request) {
     return Response.json({ error: fetchErr.message }, { status: 500 })
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://sayingyes.nl"
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? MARKETING_URL
 
   for (const draft of drafts ?? []) {
     // PARANOIA CHECK: skip anything that is not strictly 'draft'
@@ -285,7 +285,7 @@ async function stuurDeadlines(
     return uit
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://sayingyes.nl"
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? MARKETING_URL
 
   for (const event of events ?? []) {
     const dl = leesDeadline(event.deadline)
@@ -374,7 +374,7 @@ async function stuurStanden(
     return uit
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://sayingyes.nl"
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? MARKETING_URL
 
   for (const event of events ?? []) {
     const email = event.user_email as string | null
@@ -454,7 +454,7 @@ async function stuurMomenten(
     return uit
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://sayingyes.nl"
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? MARKETING_URL
   const vandaag = new Date(now.getFullYear(), now.getMonth(), now.getDate())
 
   for (const event of events ?? []) {

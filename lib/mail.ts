@@ -535,7 +535,7 @@ export async function sendOfflineEmail({
     gezicht: SAYINGYES,
     kop: "Jullie site is offline",
     inhoud: `${alinea(`<strong>${veilig(eventTitle)}</strong> staat vanaf vandaag niet meer online. Jullie gegevens, de gastenlijst${fotos > 0 ? ` en de ${fotos} foto's van je gasten` : ""} bewaren we gewoon.`)}
-      ${alinea("Wil je de site toch nog een tijdje laten staan, bijvoorbeeld voor de foto's? Dan zet je hem in je dashboard weer aan voor ${RENEWAL_PRICE} euro per ${RENEWAL_MONTHS} maanden.")}
+      ${alinea(`Wil je de site toch nog een tijdje laten staan, bijvoorbeeld voor de foto's? Dan zet je hem in je dashboard weer aan voor ${RENEWAL_PRICE} euro per ${RENEWAL_MONTHS} maanden.`)}
       ${knoppen(knop(dashboardUrl, "Naar je dashboard", SAYINGYES))}`,
   })
   return verstuur("Offline", { to: toEmail, subject: `${eventTitle}: jullie site is offline`, html })
