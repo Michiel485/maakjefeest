@@ -2,7 +2,6 @@
 
 Het bovenste onderwerp is het volgende artikel (nieuwe artikelen komen in `content/tips/`). Na publicatie: regel verwijderen en, als er ideeën bijkomen, onderaan toevoegen. Zoekwoorden zijn indicatief (Nederlandse zoekintentie).
 
-0. **Save the date website: wat is het en heb je het nodig?** Zoekwoord: save the date website (stijgende zoekopdracht, +350% in 2026). Uitleg van het begrip, verschil met een losse kaart, hoe de link later de uitnodiging en de trouwwebsite wordt.
 0. **Uitnodiging bruiloft: wanneer versturen en hoe lang van tevoren?** Zoekwoord: uitnodiging bruiloft wanneer versturen, uitnodiging bruiloft hoe lang van tevoren. Concrete tijdlijn per situatie (buitenland, zomer, kort dag), RSVP-deadline, wat als je laat bent.
 0. **Trouwuitnodiging maken: digitaal of papier, stappenplan.** Zoekwoord: trouwuitnodiging maken, uitnodiging bruiloft maken, uitnodiging bruiloft digitaal. Van tekst tot verzending, kosten vergeleken, wanneer papier toch wint.
 1. **Trouwwebsite kosten: wat betaal je en wat krijg je in 2026?** Zoekwoord: trouwwebsite kosten, trouwwebsite prijs. Eerlijke vergelijking van gratis tools, abonnementen en eenmalige prijzen; wat je nodig hebt en wat niet. Let op: sinds 9 sep 2026 zijn er drie pakketten (15, 25 en 49,99).
