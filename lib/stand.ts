@@ -106,8 +106,11 @@ export function standAdvies(c: StandCijfers): string {
   if (c.stil === 0) {
     return "Iedereen heeft laten weten of hij komt. Dat is eerder de uitzondering dan de regel."
   }
+  // Hoe het echt werkt (app/api/gasten/bericht): het bruidspaar schrijft het
+  // berichtje, wij mailen het naar wie een mailadres achterliet; voor de rest
+  // krijgt het bruidspaar de tekst om zelf te appen.
   if (c.stil === 1) {
-    return "Van één gast heb je nog niets gehoord. In je gastenlijst selecteer je hem met één druk, dan schrijven wij het berichtje en verstuur jij het zelf."
+    return "Van één gast heb je nog niets gehoord. In je gastenlijst selecteer je hem met één druk; jij schrijft een kort berichtje en wij mailen het, of je appt het zelf als hij geen mailadres achterliet."
   }
-  return `Van ${c.stil} gasten heb je nog niets gehoord. In je gastenlijst selecteer je ze met één druk, dan schrijven wij het berichtje en verstuur jij het zelf.`
+  return `Van ${c.stil} gasten heb je nog niets gehoord. In je gastenlijst selecteer je ze met één druk; jij schrijft een kort berichtje en wij mailen het naar wie een mailadres achterliet, de rest app je zelf.`
 }

@@ -225,7 +225,11 @@ export async function POST(request: Request) {
     // door één lege Home. Bij elke keer automatisch bewaren van een kaart.
     // Gevonden op 25 september 2026.
     if (existing && body.vanKaart) {
-      const kaartVelden: Record<string, unknown> = { last_active_at: new Date().toISOString() }
+      // Opslaan telt als activiteit, en zet ook de teller van de
+      // conceptherinneringen terug: de laatste herinnering belooft dat één
+      // keer openen genoeg is, en daarna begint de reeks gewoon opnieuw
+      // (23 oktober 2026). De dagelijkse taak meet op last_active_at.
+      const kaartVelden: Record<string, unknown> = { last_active_at: new Date().toISOString(), draft_reminder_stap: 0 }
       if (naam?.trim()) kaartVelden.title = naam
       if (datum) kaartVelden.datum = datum
       if (locatie?.trim()) kaartVelden.locatie = locatie
@@ -242,7 +246,7 @@ export async function POST(request: Request) {
     }
 
     if (existing) {
-      const velden = { type, title: naam, datum, locatie, style, font_hero, font_initials, font_frame_names, font_page_titles, hero_image_url, hero_image_pos_x: Math.round(hero_image_pos_x), hero_image_pos_y: Math.round(hero_image_pos_y), hero_overlay: heroOverlay, nav_layout, nav_title: nav_title ?? naam, use_frame, frame_style, initials, frame_names, frame_location, frame_initials_size: frameInitialsSize, frame_names_size: frameNamesSize, frame_date_size: frameDateSize, frame_location_size: frameLocationSize, homepage_settings, pw_enabled, pw_type, pw_value, pw_question, pw_answer, ...(body.concept_naam !== undefined ? { concept_naam } : {}), last_active_at: new Date().toISOString() }
+      const velden = { type, title: naam, datum, locatie, style, font_hero, font_initials, font_frame_names, font_page_titles, hero_image_url, hero_image_pos_x: Math.round(hero_image_pos_x), hero_image_pos_y: Math.round(hero_image_pos_y), hero_overlay: heroOverlay, nav_layout, nav_title: nav_title ?? naam, use_frame, frame_style, initials, frame_names, frame_location, frame_initials_size: frameInitialsSize, frame_names_size: frameNamesSize, frame_date_size: frameDateSize, frame_location_size: frameLocationSize, homepage_settings, pw_enabled, pw_type, pw_value, pw_question, pw_answer, ...(body.concept_naam !== undefined ? { concept_naam } : {}), last_active_at: new Date().toISOString(), draft_reminder_stap: 0 }
 
       let { error: updateErr } = await db.from("events").update(velden).eq("id", event_id)
       if (updateErr) {

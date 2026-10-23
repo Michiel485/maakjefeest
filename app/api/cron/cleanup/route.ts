@@ -1,7 +1,7 @@
 import { meldFout } from "@/lib/foutmelding"
 import { createServiceClient } from "@/lib/supabase"
 import { verwijderEventInhoud } from "@/lib/opruimen"
-import { sendDraftReminderEmail, sendRenewalReminderEmail, sendExpiryWarningEmail, sendDeadlineEmail, sendStandEmail, sendOfflineEmail, sendWeekVoorEmail, sendDagNaEmail } from "@/lib/mail"
+import { sendDraftReminderEmail, sendRenewalReminderEmail, sendExpiryWarningEmail, sendDeadlineEmail, sendStandEmail, sendOfflineEmail, sendWeekVoorEmail, sendDagNaEmail, sendDuwtjeEmail } from "@/lib/mail"
 import { formatDate } from "@/lib/event-styles"
 import { siteNamen } from "@/lib/site-opening"
 import { eventSiteUrl, MARKETING_URL } from "@/lib/site-url"
@@ -10,7 +10,7 @@ import { frequentie, magStandMail } from "@/lib/stand"
 import { komtGast, reis } from "@/lib/gasten"
 import { verversEvent } from "@/lib/db"
 import { sendVisitorDigest } from "@/lib/visitors"
-import { PLAN_MAIL, bewaarschema, normalizePlan, renewalAllowed } from "@/lib/plans"
+import { PLAN_MAIL, bewaarschema, normalizePlan, planAllows, renewalAllowed } from "@/lib/plans"
 
 // Vercel Cron calls this endpoint daily at 09:00 AM Europe/Amsterdam.
 // Security: Vercel sets Authorization: Bearer <CRON_SECRET> automatically.
@@ -18,7 +18,25 @@ export const dynamic = "force-dynamic"
 
 const DAG_MS           = 24 * 60 * 60 * 1000
 const SEVEN_DAYS_MS    = 7  * 24 * 60 * 60 * 1000
-const ELEVEN_MONTHS_MS = 335 * 24 * 60 * 60 * 1000 // ~11 months
+// De verlengherinnering gaat een maand voor de einddatum, gerekend vanaf
+// expires_at. Eerst stond hij op 335 dagen na publicatie, en dan kwam hij na
+// een verlenging nooit meer (23 oktober 2026).
+const DERTIG_DAGEN_MS  = 30 * 24 * 60 * 60 * 1000
+
+// ── Wie zich afmeldde voor herinneringen ────────────────────────────────────
+// Eén keer lezen, dan overal overslaan: conceptherinneringen, standmails, de
+// week-voor- en dag-na-mail en het duwtje. Niet de mails over een betaling,
+// een aanmelding of het verlopen van de site. Staat de kolom er nog niet
+// (supabase/2026-10-23-herinneringen-uit.sql), dan is niemand afgemeld en is
+// dat geen fout.
+async function leesAfgemeld(service: ReturnType<typeof createServiceClient>): Promise<Set<string>> {
+  const { data, error } = await service.from("events").select("id").eq("herinneringen_uit", true)
+  if (error) {
+    console.log("[cron/cleanup] afmeldingen overgeslagen:", error.message)
+    return new Set()
+  }
+  return new Set((data ?? []).map((r) => r.id as string))
+}
 
 export async function GET(request: Request) {
   // ── Auth: only Vercel cron (or manual calls with the secret) ──────────────
@@ -48,7 +66,11 @@ export async function GET(request: Request) {
     standen:          [] as string[],
     // Een week voor de bruiloft en de dag erna, bijvoorbeeld "abc123:week"
     momenten:         [] as string[],
+    // Het duwtje als er na een week nog geen reactie is
+    duwtjes:          [] as string[],
   }
+
+  const afgemeld = await leesAfgemeld(service)
 
   // ── Fetch all draft events ─────────────────────────────────────────────────
   // SAFETY: we explicitly filter status = 'draft'.
@@ -124,6 +146,10 @@ export async function GET(request: Request) {
     }
 
     // ── Herinneringen ───────────────────────────────────────────────────────
+    // Wie zich afmeldde krijgt ze niet; verwijderen na de bewaartermijn
+    // (hierboven) gaat wel gewoon door.
+    if (afgemeld.has(draft.id as string)) continue
+
     // draft_reminder_stap is het aantal herinneringen dat al verstuurd is. We
     // pakken de laatste waar de termijn voor verstreken is en slaan de eerdere
     // over: iemand die pas na drie maanden terugkomt hoeft niet eerst de
@@ -141,6 +167,7 @@ export async function GET(request: Request) {
     const variant = schema.herinneringen[teVersturen].variant
     const mailResult = await sendDraftReminderEmail({
       toEmail: email,
+      eventId: draft.id as string,
       eventTitle: (draft.title as string) || "jullie bruiloft",
       builderUrl,
       reminderNumber: teVersturen + 1,
@@ -178,11 +205,9 @@ export async function GET(request: Request) {
     if (!renewalAllowed(event.plan)) continue
 
     const expiresAt   = new Date(event.expires_at as string)
-    const publishedAt = new Date(event.published_at as string)
     const email       = event.user_email as string
     const title       = (event.title as string) || "jullie website"
     const timeToExpiry = expiresAt.getTime() - now.getTime()
-    const timeSincePublished = now.getTime() - publishedAt.getTime()
 
     // ── Offline zetten na verloopdatum ────────────────────────────────────
     if (timeToExpiry <= 0) {
@@ -230,8 +255,12 @@ export async function GET(request: Request) {
       continue
     }
 
-    // ── Verlengherinnering: na 11 maanden live ───────────────────────────
-    if (timeSincePublished >= ELEVEN_MONTHS_MS && !event.renewal_reminder_sent_at) {
+    // ── Verlengherinnering: een maand voor de einddatum ──────────────────
+    // Vanaf expires_at, zodat hij ook na een verlenging weer komt (de webhook
+    // zet renewal_reminder_sent_at en expiry_warning_sent_at dan op null).
+    // Binnen de laatste week niet meer: dan is de verloopwaarschuwing
+    // hierboven al de boodschap.
+    if (timeToExpiry <= DERTIG_DAGEN_MS && timeToExpiry > SEVEN_DAYS_MS && !event.renewal_reminder_sent_at) {
       const mailResult = await sendRenewalReminderEmail({ toEmail: email, eventTitle: title, expiresAt, dashboardUrl })
       if (mailResult.success) {
         await service.from("events").update({ renewal_reminder_sent_at: now.toISOString() }).eq("id", event.id)
@@ -250,8 +279,9 @@ export async function GET(request: Request) {
   //
   // Wij sturen nooit iets naar de locatie. Alleen naar het bruidspaar.
   results.deadlines = await stuurDeadlines(service, now)
-  results.standen = await stuurStanden(service, now)
-  results.momenten = await stuurMomenten(service, now)
+  results.standen = await stuurStanden(service, now, afgemeld)
+  results.momenten = await stuurMomenten(service, now, afgemeld)
+  results.duwtjes = await stuurDuwtjes(service, now, afgemeld)
 
   // ── Bezoekersoverzicht van de afgelopen 24 uur naar de eigenaar (+ opruimen >90 dagen) ──
   results.visitorDigest = await sendVisitorDigest(service, now)
@@ -358,7 +388,8 @@ async function stuurDeadlines(
 // elke week een mail waarin niets staat, en leert hij ons weg te klikken.
 async function stuurStanden(
   service: ReturnType<typeof createServiceClient>,
-  now: Date
+  now: Date,
+  afgemeld: Set<string>
 ): Promise<string[]> {
   const uit: string[] = []
 
@@ -379,6 +410,7 @@ async function stuurStanden(
   for (const event of events ?? []) {
     const email = event.user_email as string | null
     if (!email) continue
+    if (afgemeld.has(event.id as string)) continue
 
     const keuze = frequentie(event.stand_frequentie)
     const laatst = event.stand_gemaild_at as string | null
@@ -412,6 +444,7 @@ async function stuurStanden(
 
     const mail = await sendStandEmail({
       toEmail: email,
+      eventId: event.id as string,
       eventTitle: (event.title as string) || "jullie bruiloft",
       cijfers: { gasten: rijen.length, komen, nietKomen, stil, nieuw },
       dashboardUrl: `${siteUrl}/dashboard#gasten`,
@@ -440,7 +473,8 @@ async function stuurStanden(
 // er nog niet, dan gebeurt er niets en is dat geen fout.
 async function stuurMomenten(
   service: ReturnType<typeof createServiceClient>,
-  now: Date
+  now: Date,
+  afgemeld: Set<string>
 ): Promise<string[]> {
   const uit: string[] = []
   const { data: events, error } = await service
@@ -460,27 +494,37 @@ async function stuurMomenten(
   for (const event of events ?? []) {
     const email = event.user_email as string | null
     if (!email) continue
+    if (afgemeld.has(event.id as string)) continue
     const d = new Date(event.datum as string)
     if (Number.isNaN(d.getTime())) continue
     const trouwdag = new Date(d.getFullYear(), d.getMonth(), d.getDate())
     const dagen = Math.round((trouwdag.getTime() - vandaag.getTime()) / DAG_MS)
     const naam = (event.title as string) || "jullie bruiloft"
     const namen = siteNamen(event as { frame_names?: string | null; nav_title?: string | null; title?: string | null })
-    const fotomuurAan = normalizePlan(event.plan) === "compleet" && (event.guest_photos_enabled as boolean | null) === true
+    // Wat er in de mail mag staan volgt het pakket: een kaartpakket heeft
+    // geen site en geen fotomuur, een los Save the Date-pakket ook geen
+    // aanmelden. Eerst kreeg iedereen de tekst van het complete pakket.
+    const heeftSite = planAllows(event.plan, "site")
+    const heeftFotos = planAllows(event.plan, "photos")
+    const heeftRsvp = planAllows(event.plan, "rsvp")
+    const fotomuurAan = heeftFotos && (event.guest_photos_enabled as boolean | null) === true
 
     // Een week ervoor: tussen 7 en 5 dagen, zodat een gemiste dag niet
     // betekent dat de mail nooit komt
     if (dagen <= 7 && dagen >= 5 && !event.mail_week_voor_at) {
-      const { data: gasten } = await service.from("rsvp").select("std_status, inv_status").eq("event_id", event.id)
       let komen = 0
       let stil = 0
-      for (const g of gasten ?? []) {
-        const k = komtGast(reis(g.std_status), reis(g.inv_status))
-        if (k === true) komen++
-        else if (k === null || k === undefined) stil++
+      if (heeftRsvp) {
+        const { data: gasten } = await service.from("rsvp").select("std_status, inv_status").eq("event_id", event.id)
+        for (const g of gasten ?? []) {
+          const k = komtGast(reis(g.std_status), reis(g.inv_status))
+          if (k === true) komen++
+          else if (k === null || k === undefined) stil++
+        }
       }
       const mail = await sendWeekVoorEmail({
         toEmail: email,
+        eventId: event.id as string,
         eventTitle: naam,
         datumTekst: formatDate(event.datum as string),
         komen,
@@ -488,6 +532,8 @@ async function stuurMomenten(
         dashboardUrl: `${siteUrl}/dashboard`,
         cateraarUrl: `${siteUrl}/print/gasten/${event.id}`,
         fotomuurAan,
+        heeftRsvp,
+        heeftFotos,
       })
       if (mail.success) {
         await service.from("events").update({ mail_week_voor_at: now.toISOString() }).eq("id", event.id)
@@ -499,14 +545,21 @@ async function stuurMomenten(
 
     // De dag erna: tussen 1 en 3 dagen na de dag
     if (dagen <= -1 && dagen >= -3 && !event.mail_dag_na_at) {
-      const { count: fotos } = await service.from("guest_photos").select("id", { count: "exact", head: true }).eq("event_id", event.id)
+      let fotos = 0
+      if (heeftFotos) {
+        const { count } = await service.from("guest_photos").select("id", { count: "exact", head: true }).eq("event_id", event.id)
+        fotos = count ?? 0
+      }
       const slug = event.slug as string | null
       const mail = await sendDagNaEmail({
         toEmail: email,
+        eventId: event.id as string,
         names: namen,
-        fotos: fotos ?? 0,
+        fotos,
         fotomuurUrl: fotomuurAan && slug ? `${eventSiteUrl(slug)}/fotomuur` : null,
-        siteUrl: slug ? eventSiteUrl(slug) : null,
+        siteUrl: heeftSite && slug ? eventSiteUrl(slug) : null,
+        heeftSite,
+        heeftFotos,
       })
       if (mail.success) {
         await service.from("events").update({ mail_dag_na_at: now.toISOString() }).eq("id", event.id)
@@ -515,6 +568,75 @@ async function stuurMomenten(
         uit.push(`${event.id}:dag-na-mislukt`)
       }
     }
+  }
+  return uit
+}
+
+// ── Nog geen reacties, een week na het versturen ────────────────────────────
+// Eén mail met drie tips, hoogstens één keer (mail_duwtje_at, zie
+// supabase/2026-10-23-herinneringen-uit.sql). Alleen bij een pakket met
+// aanmelden, een week of langer na activeren, zolang de trouwdag nog niet
+// voorbij is en nog geen enkele gast ja of nee heeft gezegd. Staat de kolom
+// er nog niet, dan gebeurt er niets en is dat geen fout.
+async function stuurDuwtjes(
+  service: ReturnType<typeof createServiceClient>,
+  now: Date,
+  afgemeld: Set<string>
+): Promise<string[]> {
+  const uit: string[] = []
+  const { data: events, error } = await service
+    .from("events")
+    .select("id, title, plan, user_email, datum, published_at, mail_duwtje_at")
+    .eq("status", "published")
+    .is("mail_duwtje_at", null)
+    .not("published_at", "is", null)
+    .lte("published_at", new Date(now.getTime() - SEVEN_DAYS_MS).toISOString())
+
+  if (error) {
+    console.log("[cron/cleanup] duwtjes overgeslagen:", error.message)
+    return uit
+  }
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? MARKETING_URL
+
+  for (const event of events ?? []) {
+    const email = event.user_email as string | null
+    if (!email) continue
+    if (afgemeld.has(event.id as string)) continue
+    if (!planAllows(event.plan, "rsvp")) continue
+
+    // Na de trouwdag heeft een tip over reacties geen zin meer
+    if (event.datum) {
+      const d = new Date(event.datum as string)
+      if (!Number.isNaN(d.getTime()) && d.getTime() < now.getTime()) continue
+    }
+
+    // Heeft al iemand ja of nee gezegd, op de Save the Date of op de kaart?
+    const { count, error: telFout } = await service
+      .from("rsvp")
+      .select("id", { count: "exact", head: true })
+      .eq("event_id", event.id)
+      .or("std_status.in.(ja,nee),inv_status.in.(ja,nee)")
+    if (telFout) {
+      uit.push(`${event.id}:tellen-mislukt`)
+      continue
+    }
+    if ((count ?? 0) > 0) continue
+
+    const mail = await sendDuwtjeEmail({
+      toEmail: email,
+      eventId: event.id as string,
+      eventTitle: (event.title as string) || "jullie bruiloft",
+      dashboardUrl: `${siteUrl}/dashboard#gasten`,
+      heeftSite: planAllows(event.plan, "site"),
+    })
+    if (!mail.success) {
+      uit.push(`${event.id}:mislukt`)
+      continue
+    }
+
+    await service.from("events").update({ mail_duwtje_at: now.toISOString() }).eq("id", event.id)
+    uit.push(event.id as string)
   }
   return uit
 }

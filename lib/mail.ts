@@ -2,6 +2,7 @@ import { Resend } from "resend"
 import { PLANS, RENEWAL_MONTHS, RENEWAL_PRICE, draftReminderTekst, isCardPlan, type DraftVariant, type Plan } from "./plans"
 import { deadlineTekst, type DeadlineMoment } from "./deadline"
 import { standAdvies, standKop, type StandCijfers } from "./stand"
+import { afmeldUrl } from "./afmelden"
 import type { SC } from "./event-styles"
 import {
   SAYINGYES,
@@ -35,7 +36,7 @@ type Bijlage = { filename: string; content: Buffer | string }
 /** Versturen en loggen, voor elke mail hetzelfde. */
 async function verstuur(
   wat: string,
-  bericht: { to: string | string[]; subject: string; html: string; replyTo?: string | null; from?: string; attachments?: Bijlage[] }
+  bericht: { to: string | string[]; subject: string; html: string; replyTo?: string | null; from?: string; attachments?: Bijlage[]; headers?: Record<string, string> }
 ) {
   try {
     const { data: result, error } = await getResend().emails.send({
@@ -45,6 +46,7 @@ async function verstuur(
       html: bericht.html,
       ...(bericht.replyTo ? { replyTo: bericht.replyTo } : {}),
       ...(bericht.attachments?.length ? { attachments: bericht.attachments } : {}),
+      ...(bericht.headers ? { headers: bericht.headers } : {}),
     })
     if (error) {
       console.error(`[mail] ${wat} error:`, error)
@@ -55,6 +57,23 @@ async function verstuur(
   } catch (err) {
     console.error(`[mail] Unexpected error sending ${wat}:`, err)
     return { success: false as const, error: err }
+  }
+}
+
+// ── Afmelden voor herinneringen ──────────────────────────────────────────────
+// Alleen voor mails die geen betaling, aanmelding of verloopdatum betreffen:
+// conceptherinneringen, de stand, de week-voor- en dag-na-mail en het duwtje.
+// De link staat onderaan de mail, en dezelfde link gaat mee als
+// List-Unsubscribe, zodat Gmail en Outlook er een knop van maken.
+
+async function afmelden(eventId: string): Promise<{ regel: string; headers: Record<string, string> }> {
+  const url = await afmeldUrl(eventId)
+  return {
+    regel: `<a href="${url}" style="color:#9A8E82;text-decoration:underline;">Afmelden voor deze herinneringen</a>`,
+    headers: {
+      "List-Unsubscribe": `<${url}>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    },
   }
 }
 
@@ -103,10 +122,16 @@ export interface RSVPConfirmationData {
   bruiloft?: BruiloftMail | null
   /** Een voorlopig ja of nee op een Save the Date: kort en zonder tabel */
   voorlopig?: boolean
+  /**
+   * Het pakket van de bruiloft. Alleen bij een los Save the Date-pakket
+   * beloven we dat de uitnodiging nog volgt; bij de andere pakketten weten we
+   * niet of het bruidspaar die via ons stuurt.
+   */
+  plan?: Plan | null
 }
 
 export async function sendRSVPConfirmation(data: RSVPConfirmationData) {
-  const { toEmail, primaryName, eventTitle, guests, bruiloft, voorlopig = false } = data
+  const { toEmail, primaryName, eventTitle, guests, bruiloft, voorlopig = false, plan = null } = data
   const g: Gezicht = bruiloft ? bruiloftGezicht(bruiloft.sc, bruiloft.namen) : SAYINGYES
   const naam = veilig(primaryName.split(" ")[0] || primaryName)
   const komen = guests.filter((x) => x.attending !== "no")
@@ -152,7 +177,9 @@ export async function sendRSVPConfirmation(data: RSVPConfirmationData) {
        ${bericht}
        ${bruiloft?.kaartUrl || bruiloft?.siteUrl ? knoppen(knop(bruiloft.kaartUrl ?? bruiloft.siteUrl!, "Toch iets aanpassen", g, true)) : ""}`
     : voorlopig
-      ? `${alinea(`Fijn dat je het alvast laat weten. De officiële uitnodiging volgt nog; dan vragen we ook naar de rest.`)}
+      ? `${alinea(plan === "save_the_date"
+            ? `Fijn dat je het alvast laat weten. De officiële uitnodiging volgt nog; dan vragen we ook naar de rest.`
+            : `Fijn dat je het alvast laat weten. Verandert er iets, dan pas je het via dezelfde link aan.`)}
          ${praktisch}
          ${knoppen(...[bruiloft?.ics ? knop(bruiloft.kaartUrl ?? bruiloft.siteUrl ?? "#", "Open de kaart", g, true) : null].filter(Boolean) as string[])}`
       : `${alinea(`We hebben jullie genoteerd${komen.length > 1 ? ` met ${komen.length} personen` : ""}. ${bruiloft ? "We kijken ernaar uit je te zien." : `Je aanmelding voor <strong>${veilig(eventTitle)}</strong> is bevestigd.`}`)}
@@ -229,7 +256,7 @@ export async function sendAdminRSVPNotification(data: AdminRSVPNotificationData)
       ${guests[0]?.message ? `<div style="margin:0 0 20px;padding:14px 18px;background:#FAF7F2;border-left:3px solid ${GOUD};border-radius:0 8px 8px 0;color:#5C5248;font-style:italic;font-size:14px;line-height:1.6;">&ldquo;${veilig(guests[0].message)}&rdquo;</div>` : ""}
       ${knoppen(knop(dashboardUrl, "Naar je gastenlijst", SAYINGYES))}`,
     afzender: null,
-    voetExtra: "Je krijgt dit bij elke aanmelding. Liever een stand per dag of per week? Dat kies je in je dashboard.",
+    voetExtra: "Je krijgt dit bij elke aanmelding zolang je in je dashboard geen stand per dag, week of maand hebt gekozen. Kies je dat wel, dan komt dit niet meer per gast.",
   })
 
   return verstuur("Admin RSVP notification", {
@@ -420,6 +447,7 @@ export async function sendInvoiceEmail({
 
 export async function sendDraftReminderEmail({
   toEmail,
+  eventId,
   eventTitle,
   builderUrl,
   reminderNumber,
@@ -429,6 +457,8 @@ export async function sendDraftReminderEmail({
   kaartAfbeeldingUrl,
 }: {
   toEmail: string
+  /** Voor de afmeldlink onderaan */
+  eventId: string
   eventTitle: string
   builderUrl: string
   // Welke herinnering dit is, alleen voor de logregel
@@ -441,6 +471,7 @@ export async function sendDraftReminderEmail({
   kaartAfbeeldingUrl?: string | null
 }) {
   const { w, subject, headline, bodyText, dagen, laatste } = draftReminderTekst({ eventTitle, plan, variant, dagenTotVerwijderen })
+  const af = await afmelden(eventId)
 
   const html = omlijsting({
     gezicht: SAYINGYES,
@@ -449,13 +480,16 @@ export async function sendDraftReminderEmail({
       ${kaartAfbeeldingUrl ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;"><tr><td align="center" style="background-color:#FAF7F2;border:1px solid #E8D5A3;border-radius:12px;padding:18px;"><img src="${kaartAfbeeldingUrl}" alt="Jullie kaart" width="320" style="display:block;width:100%;max-width:320px;height:auto;border-radius:8px;" /></td></tr></table>` : ""}
       ${laatste ? vlak(`<p style="margin:0;font-size:13px;color:#9a3412;line-height:1.65;"><strong>Let op:</strong> als jullie niets doen, wordt ${w.kwijt} ${dagen} verwijderd. Openen is genoeg om dat te voorkomen.</p>`, "let-op") : ""}
       ${knoppen(knop(builderUrl, laatste ? "Ontwerp openen" : `Verder met ${w.ding}`, SAYINGYES))}`,
+    voetExtra: `Je krijgt dit omdat er een ontwerp van jullie klaarstaat. ${af.regel}`,
   })
 
-  const r = await verstuur(`Draft reminder #${reminderNumber}`, { to: toEmail, subject, html })
+  const r = await verstuur(`Draft reminder #${reminderNumber}`, { to: toEmail, subject, html, headers: af.headers })
   return r
 }
 
-// ── Verlengen: na 11 maanden ─────────────────────────────────────────────────
+// ── Verlengen: een maand voor de einddatum ──────────────────────────────────
+// Gerekend vanaf expires_at, niet vanaf de publicatiedatum: zo klopt hij ook
+// na een verlenging (23 oktober 2026).
 
 export async function sendRenewalReminderEmail({
   toEmail,
@@ -471,7 +505,7 @@ export async function sendRenewalReminderEmail({
   const expireStr = expiresAt.toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })
   const html = omlijsting({
     gezicht: SAYINGYES,
-    kop: "Jullie site staat bijna een jaar online",
+    kop: "Over een maand gaat jullie site offline",
     inhoud: `${alinea(`<strong>${veilig(eventTitle)}</strong> gaat op <strong>${expireStr}</strong> offline. Willen jullie de site, de foto's en de gastenlijst langer bewaren? Verlengen kost &euro;&nbsp;${RENEWAL_PRICE} voor ${RENEWAL_MONTHS} maanden, in één keer, geen abonnement.`)}
       ${knoppen(knop(dashboardUrl, `Verlengen voor ${RENEWAL_PRICE} euro`, SAYINGYES))}
       ${alinea(`Verleng je niet, dan gaat de site op ${expireStr} vanzelf offline. Jullie gegevens bewaren we, dus later opnieuw aanzetten kan altijd.`, "font-size:13px;color:#9A8E82;")}`,
@@ -534,7 +568,10 @@ export async function sendOfflineEmail({
   const html = omlijsting({
     gezicht: SAYINGYES,
     kop: "Jullie site is offline",
-    inhoud: `${alinea(`<strong>${veilig(eventTitle)}</strong> staat vanaf vandaag niet meer online. Jullie gegevens, de gastenlijst${fotos > 0 ? ` en de ${fotos} foto's van je gasten` : ""} bewaren we gewoon.`)}
+    // TODO (Michiel): hoe lang bewaren we een verlopen site echt? Er wordt nu
+    // nog niets opgeruimd; "een half jaar" is een voorlopige belofte tot de
+    // echte termijn is gekozen en er een opruimstap bij de dagelijkse taak zit.
+    inhoud: `${alinea(`<strong>${veilig(eventTitle)}</strong> staat vanaf vandaag niet meer online. Jullie gegevens, de gastenlijst${fotos > 0 ? ` en de ${fotos} foto's van je gasten` : ""} bewaren we nog een half jaar.`)}
       ${alinea(`Wil je de site toch nog een tijdje laten staan, bijvoorbeeld voor de foto's? Dan zet je hem in je dashboard weer aan voor ${RENEWAL_PRICE} euro per ${RENEWAL_MONTHS} maanden.`)}
       ${knoppen(knop(dashboardUrl, "Naar je dashboard", SAYINGYES))}`,
   })
@@ -580,7 +617,11 @@ export async function sendPlanActivatedEmail({
       ${vinkjes([
         ["Aanpassen kan altijd.", "Ook na het versturen. Wijzig je iets, dan zien je gasten de nieuwe kaart zodra ze de link opnieuw openen."],
         ["Je gastenlijst vult zichzelf.", "Wie antwoordt staat meteen in je dashboard, en je ziet wie nog stil is."],
-        ["Meerdere kaarten zitten in de prijs.", "Een voor je daggasten en een voor je avondgasten, of dezelfde kaart in een andere taal."],
+        // Een kaart per gastengroep zit alleen in de Trouwkaart; andere talen
+        // alleen in Compleet, dus die noemen we hier niet.
+        isStd
+          ? ["Gasten zetten de dag met één tik in hun agenda.", "En laten alvast weten of ze erbij zijn, als je daarom vraagt."] as [string, string]
+          : ["Meerdere kaarten zitten in de prijs.", "Een voor je daggasten en een voor je avondgasten, elk met een eigen tekst en tijden."] as [string, string],
         ...(isStd
           ? [[`De trouwkaart komt erbij voor ${eur(bijInv)}.`, `Wat je nu betaalde telt mee; de complete website kost ${eur(bijSite)} extra.`] as [string, string]]
           : [["De Save the Date zit erbij.", `Die verstuur je zonder bij te betalen. Wil je later de complete website, dan betaal je ${eur(bijSite)} bij.`] as [string, string]]),
@@ -717,7 +758,7 @@ export async function sendDeadlineEmail({
         { label: "Nog stil", waarde: stil, kleur: stil > 0 ? "#B45309" : undefined },
       ])}
       ${stil > 0 && dringend ? alinea(`Van ${stil} ${stil === 1 ? "gast" : "gasten"} heb je nog niets gehoord. In je gastenlijst selecteer je ze met één druk, zodat je ze nog even kunt najagen voordat je de aantallen doorgeeft.`, "font-size:13px;color:#9A8E82;") : ""}
-      ${alinea(`Wij sturen niets naar ${veilig(locatie ?? "je locatie")}. Dat blijft aan jou, net als alle berichten aan je gasten. Wij zorgen dat je het niet vergeet en dat de lijst klaarstaat.`, "font-size:14px;")}
+      ${alinea(`Wij sturen niets naar ${veilig(locatie ?? "je locatie")}. Dat blijft aan jou. Ook naar je gasten gaat er niets zonder dat jij er zelf op drukt. Wij zorgen dat je het niet vergeet en dat de lijst klaarstaat.`, "font-size:14px;")}
       ${knoppen(knop(knopUrl, t.knop ?? "Naar je dashboard", SAYINGYES), knop(dashboardUrl, "Naar je dashboard", SAYINGYES, true))}`,
     afzender: null,
     voetExtra: "Je krijgt dit omdat je een datum hebt gezet voor je definitieve aantallen. Zeg in je dashboard dat het gelukt is, dan houden we er voorgoed over op.",
@@ -732,11 +773,14 @@ export async function sendDeadlineEmail({
 
 export async function sendStandEmail({
   toEmail,
+  eventId,
   eventTitle,
   cijfers: c,
   dashboardUrl,
 }: {
   toEmail: string
+  /** Voor de afmeldlink onderaan */
+  eventId: string
   eventTitle: string
   cijfers: StandCijfers
   dashboardUrl: string
@@ -746,6 +790,7 @@ export async function sendStandEmail({
   const totaal = Math.max(c.gasten, 1)
   const breedteJa = Math.round((c.komen / totaal) * 100)
   const breedteNee = Math.round((c.nietKomen / totaal) * 100)
+  const af = await afmelden(eventId)
 
   const html = omlijsting({
     gezicht: SAYINGYES,
@@ -765,18 +810,23 @@ export async function sendStandEmail({
       ${alinea(advies, "font-size:14px;")}
       ${knoppen(knop(dashboardUrl, "Naar je gastenlijst", SAYINGYES))}`,
     afzender: null,
-    voetExtra: "Je hebt zelf gekozen hoe vaak je dit hoort. In je dashboard zet je het op dagelijks, wekelijks, maandelijks of nooit. We sturen niets als er niets nieuws is.",
+    voetExtra: `Je hebt zelf gekozen hoe vaak je dit hoort. In je dashboard zet je het op dagelijks, wekelijks, maandelijks of nooit. We sturen niets als er niets nieuws is. ${af.regel}`,
   })
 
-  return verstuur("Stand", { to: toEmail, subject: `${kop} voor ${eventTitle}`, html })
+  return verstuur("Stand", { to: toEmail, subject: `${kop} voor ${eventTitle}`, html, headers: af.headers })
 }
 
 // ── Een week voor de bruiloft ────────────────────────────────────────────────
 // De stand, wie nog stil is, de lijst voor de cateraar en de tip om de
 // QR-kaart voor de fotomuur te printen (ontwerpronde, ronde 6).
+//
+// Per pakket alleen wat erbij hoort (23 oktober 2026): zonder site geen
+// fotomuur, zonder aanmelden (los Save the Date-pakket) geen stand en geen
+// cateraarlijst. Eerst kreeg iedereen de tekst van het complete pakket.
 
 export async function sendWeekVoorEmail({
   toEmail,
+  eventId,
   eventTitle,
   datumTekst,
   komen,
@@ -784,8 +834,12 @@ export async function sendWeekVoorEmail({
   dashboardUrl,
   cateraarUrl,
   fotomuurAan,
+  heeftRsvp,
+  heeftFotos,
 }: {
   toEmail: string
+  /** Voor de afmeldlink onderaan */
+  eventId: string
   eventTitle: string
   datumTekst: string
   komen: number
@@ -793,59 +847,158 @@ export async function sendWeekVoorEmail({
   dashboardUrl: string
   cateraarUrl: string
   fotomuurAan: boolean
+  /** Mag dit pakket aanmelden (planAllows rsvp)? Zo niet: geen stand, geen cateraarlijst. */
+  heeftRsvp: boolean
+  /** Hoort de fotomuur bij dit pakket (planAllows photos)? */
+  heeftFotos: boolean
 }) {
+  const af = await afmelden(eventId)
+  const lijst = [
+    heeftRsvp
+      ? stil > 0
+        ? `Van ${stil} ${stil === 1 ? "gast" : "gasten"} heb je nog niets gehoord. Selecteer ze in je gastenlijst en stuur ze een laatste berichtje.`
+        : "Iedereen heeft gereageerd. Dat is zeldzaam, geniet ervan."
+      : null,
+    heeftRsvp ? `Print het <a href="${cateraarUrl}" style="color:${GOUD};font-weight:600;">overzicht voor de cateraar</a>, met de dieetwensen en allergieën erbij.` : null,
+    heeftFotos
+      ? fotomuurAan
+        ? "Print de QR-kaart van de fotomuur en zet hem op de tafels. Zo verzamel je de foto's van je gasten zonder er iets voor te hoeven doen."
+        : "Zet de fotomuur aan in je dashboard en print de QR-kaart voor op de tafels. Zo verzamel je de foto's van je gasten zonder er iets voor te hoeven doen."
+      : null,
+    "Kijk je kaart nog één keer na: kloppen de tijden en de locatie? Een wijziging zien je gasten zodra ze de link opnieuw openen.",
+  ].filter((s): s is string => !!s)
+
   const html = omlijsting({
     gezicht: SAYINGYES,
     kop: "Nog een week!",
     subkop: datumTekst,
-    inhoud: `${alinea(`Over een week is het zover. Even de stand van <strong>${veilig(eventTitle)}</strong>, en drie dingen die je nu nog kunt doen.`)}
-      ${cijfers([
-        { label: "Komen", waarde: komen, kleur: "#065F46" },
-        { label: "Nog stil", waarde: stil, kleur: stil > 0 ? "#B45309" : undefined },
-      ])}
-      ${stappen([
-        stil > 0 ? `Van ${stil} ${stil === 1 ? "gast" : "gasten"} heb je nog niets gehoord. Selecteer ze in je gastenlijst en stuur ze een laatste berichtje.` : "Iedereen heeft gereageerd. Dat is zeldzaam, geniet ervan.",
-        `Print het <a href="${cateraarUrl}" style="color:${GOUD};font-weight:600;">overzicht voor de cateraar</a>, met de dieetwensen en allergieën erbij.`,
-        fotomuurAan
-          ? "Print de QR-kaart van de fotomuur en zet hem op de tafels. Zo verzamel je de foto's van je gasten zonder er iets voor te hoeven doen."
-          : "Zet de fotomuur aan in je dashboard en print de QR-kaart voor op de tafels. Zo verzamel je de foto's van je gasten zonder er iets voor te hoeven doen.",
-      ])}
+    inhoud: `${alinea(heeftRsvp
+        ? `Over een week is het zover. Even de stand van <strong>${veilig(eventTitle)}</strong>, en een paar dingen die je nu nog kunt doen.`
+        : `Over een week is het zover voor <strong>${veilig(eventTitle)}</strong>. Een paar dingen die je nu nog kunt doen.`)}
+      ${heeftRsvp
+        ? cijfers([
+            { label: "Komen", waarde: komen, kleur: "#065F46" },
+            { label: "Nog stil", waarde: stil, kleur: stil > 0 ? "#B45309" : undefined },
+          ])
+        : ""}
+      ${stappen(lijst)}
       ${knoppen(knop(dashboardUrl, "Naar je dashboard", SAYINGYES))}
-      ${alinea("Heel veel plezier volgende week. Na de dag hoor je nog één keer van ons, met de foto's.", "font-size:14px;")}`,
+      ${alinea(`Heel veel plezier volgende week. Na de dag hoor je nog één keer van ons${heeftFotos ? ", met de foto's" : ""}.`, "font-size:14px;")}`,
+    voetExtra: `Je krijgt dit omdat jullie trouwdag eraan komt. ${af.regel}`,
   })
-  return verstuur("Week voor", { to: toEmail, subject: `Nog een week tot ${eventTitle}`, html })
+  return verstuur("Week voor", { to: toEmail, subject: `Nog een week tot ${eventTitle}`, html, headers: af.headers })
 }
 
 // ── De dag erna ──────────────────────────────────────────────────────────────
+// Zonder site geen "jullie site zegt" en geen fotomuur: dan alleen de
+// felicitatie en de vraag om een ervaring (23 oktober 2026).
 
 export async function sendDagNaEmail({
   toEmail,
+  eventId,
   names,
   fotos,
   fotomuurUrl,
   siteUrl,
+  heeftSite,
+  heeftFotos,
 }: {
   toEmail: string
+  /** Voor de afmeldlink onderaan */
+  eventId: string
   names: string
   fotos: number
   fotomuurUrl: string | null
   siteUrl: string | null
+  /** Hoort een site bij dit pakket (planAllows site)? */
+  heeftSite: boolean
+  /** Hoort de fotomuur bij dit pakket (planAllows photos)? */
+  heeftFotos: boolean
 }) {
+  const af = await afmelden(eventId)
+  const siteAlinea = !heeftSite
+    ? ""
+    : fotos > 0 && heeftFotos
+      ? alinea(`Er staan al <strong>${fotos} foto's</strong> van jullie gasten op de fotomuur. De site zegt vanaf vandaag "Wij zijn getrouwd" en zet de foto's bovenaan, zodat iedereen ze kan terugkijken en zijn eigen foto's nog kan delen.`)
+      : alinea(`Jullie site zegt vanaf vandaag "Wij zijn getrouwd".${heeftFotos ? ` ${fotomuurUrl ? "Vraag je gasten om hun foto's te delen; die komen vanzelf op de fotomuur." : "Zet de fotomuur aan in je dashboard, dan kunnen je gasten hun foto's nog delen."}` : ""}`)
+  const knopRij = [
+    heeftFotos && fotomuurUrl ? knop(fotomuurUrl, "Naar de fotomuur", SAYINGYES) : null,
+    heeftSite && siteUrl ? knop(siteUrl, "Bekijk de site", SAYINGYES, true) : null,
+  ].filter((k): k is string => !!k)
+
   const html = omlijsting({
     gezicht: SAYINGYES,
     kop: "Gefeliciteerd!",
     inhoud: `${alinea(`Lieve ${veilig(names)},`)}
       ${alinea("Jullie zijn getrouwd. Van harte gefeliciteerd, en wat fijn dat SayingYes een klein stukje van jullie dag mocht zijn.")}
-      ${
-        fotos > 0
-          ? alinea(`Er staan al <strong>${fotos} foto's</strong> van jullie gasten op de fotomuur. De site zegt vanaf vandaag "Wij zijn getrouwd" en zet de foto's bovenaan, zodat iedereen ze kan terugkijken en zijn eigen foto's nog kan delen.`)
-          : alinea(`Jullie site zegt vanaf vandaag "Wij zijn getrouwd". ${fotomuurUrl ? "Vraag je gasten om hun foto's te delen; die komen vanzelf op de fotomuur." : "Zet de fotomuur aan in je dashboard, dan kunnen je gasten hun foto's nog delen."}`)
-      }
-      ${knoppen(...[fotomuurUrl ? knop(fotomuurUrl, "Naar de fotomuur", SAYINGYES) : null, siteUrl ? knop(siteUrl, "Bekijk de site", SAYINGYES, true) : null].filter(Boolean) as string[])}
-      ${vlak(`${kopje("Mogen we iets vragen?", SAYINGYES)}<p style="margin:0;font-size:14px;color:#5C5248;line-height:1.65;">Hoe was het, met de kaart en de site? Antwoord op deze mail met twee zinnen. Mogen we die als ervaring op onze site zetten, zeg dat er dan bij. Het helpt het volgende bruidspaar kiezen.</p>`)}`,
+      ${siteAlinea}
+      ${knopRij.length ? knoppen(...knopRij) : ""}
+      ${vlak(`${kopje("Mogen we iets vragen?", SAYINGYES)}<p style="margin:0;font-size:14px;color:#5C5248;line-height:1.65;">Hoe was het, met ${heeftSite ? "de kaart en de site" : "de kaart"}? Antwoord op deze mail met twee zinnen. Mogen we die als ervaring op onze site zetten, zeg dat er dan bij. Het helpt het volgende bruidspaar kiezen.</p>`)}`,
     afzender: "Veel geluk samen,<br><strong style=\"color:#1A1A1A;\">Michiel van SayingYes</strong>",
+    voetExtra: `Je krijgt dit omdat jullie trouwdag net geweest is. ${af.regel}`,
   })
-  return verstuur("Dag na", { to: toEmail, subject: "Gefeliciteerd, jullie zijn getrouwd!", html })
+  return verstuur("Dag na", { to: toEmail, subject: "Gefeliciteerd, jullie zijn getrouwd!", html, headers: af.headers })
+}
+
+// ── Verlenging gelukt ────────────────────────────────────────────────────────
+// Na de factuur nog een gewone mail: de site staat weer online, tot wanneer
+// (23 oktober 2026). Eerst kwam er na een verlenging alleen de factuur.
+
+export async function sendRenewalConfirmedEmail({
+  toEmail,
+  eventTitle,
+  expiresAt,
+  dashboardUrl,
+}: {
+  toEmail: string
+  eventTitle: string
+  expiresAt: Date
+  dashboardUrl: string
+}) {
+  const expireStr = expiresAt.toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })
+  const html = omlijsting({
+    gezicht: SAYINGYES,
+    kop: "Jullie site staat weer een tijdje online",
+    inhoud: `${alinea(`Bedankt voor het verlengen. <strong>${veilig(eventTitle)}</strong> blijft online tot <strong>${expireStr}</strong>, met de foto's en de gastenlijst erbij. De factuur zit in een aparte mail.`)}
+      ${alinea(`Een maand voor ${expireStr} hoor je weer van ons. Verlengen kan dan opnieuw voor ${RENEWAL_PRICE} euro per ${RENEWAL_MONTHS} maanden.`)}
+      ${knoppen(knop(dashboardUrl, "Naar je dashboard", SAYINGYES))}`,
+  })
+  return verstuur("Renewal confirmed", { to: toEmail, subject: `Jullie site staat online tot ${expireStr}`, html })
+}
+
+// ── Nog geen reacties, een week na het versturen ────────────────────────────
+// Eén keer, alleen als er na een week nog niemand heeft geantwoord
+// (23 oktober 2026). Drie tips die uit de praktijk komen.
+
+export async function sendDuwtjeEmail({
+  toEmail,
+  eventId,
+  eventTitle,
+  dashboardUrl,
+  heeftSite,
+}: {
+  toEmail: string
+  /** Voor de afmeldlink onderaan */
+  eventId: string
+  eventTitle: string
+  dashboardUrl: string
+  /** Met een complete site deelt het bruidspaar vaak de site in plaats van de kaart */
+  heeftSite: boolean
+}) {
+  const af = await afmelden(eventId)
+  const html = omlijsting({
+    gezicht: SAYINGYES,
+    kop: "Nog geen reacties? Zo krijg je ze wel",
+    inhoud: `${alinea(`<strong>${veilig(eventTitle)}</strong> staat al een week klaar, maar er heeft nog niemand gereageerd. Dat is normaal: een kaart in een groepsapp wordt gezien en vergeten. Drie dingen die helpen.`)}
+      ${stappen([
+        `Stuur ${heeftSite ? "de kaart of de link naar je site" : "de kaart"} persoonlijk, in een los berichtje aan elke gast of elk gezin, en niet alleen in de groepsapp. Een persoonlijk berichtje wordt beantwoord, een groepsbericht niet.`,
+        "Noem een datum waarvoor je het wilt weten. Zonder datum stelt iedereen het uit.",
+        "Stuur na twee weken een herinnering. In je gastenlijst selecteer je wie nog stil is en druk je op de knop; wie een mailadres achterliet krijgt hem van ons, voor de rest krijg je de tekst om zelf te appen.",
+      ])}
+      ${knoppen(knop(dashboardUrl, "Naar je gastenlijst", SAYINGYES))}`,
+    voetExtra: `Je krijgt dit één keer, omdat er na een week nog geen reactie binnen is. ${af.regel}`,
+  })
+  return verstuur("Duwtje", { to: toEmail, subject: `Nog geen reacties op ${eventTitle}? Zo krijg je ze wel`, html, headers: af.headers })
 }
 
 // ── Bezoekersoverzicht (dagelijks, naar de eigenaar) ─────────────────────────
