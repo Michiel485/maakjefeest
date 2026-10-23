@@ -5,9 +5,10 @@ import type { Payment } from "@mollie/api-client"
 import { verversEvent } from "@/lib/db"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { createServiceClient } from "@/lib/supabase"
-import { sendWebsiteLiveEmail, sendInvoiceEmail, sendPlanActivatedEmail } from "@/lib/mail"
+import { sendWebsiteLiveEmail, sendInvoiceEmail, sendPlanActivatedEmail, sendRenewalConfirmedEmail } from "@/lib/mail"
 import { generateInvoicePDF } from "@/lib/invoice-pdf"
 import { PLANS, normalizePlan, planRank, planExpiry, isPlan } from "@/lib/plans"
+import { volgendFactuurnummer } from "@/lib/factuur"
 
 export const dynamic = "force-dynamic"
 
@@ -42,11 +43,7 @@ async function verwerkFactuur(
   const btwAmount  = Math.round((amountIncl - amountExcl) * 100) / 100
   const invoiceDate = formatDate(now)
 
-  const { count } = await supabase
-    .from("invoices")
-    .select("*", { count: "exact", head: true })
-    .gte("created_at", `${year}-01-01`)
-  const invoiceNumber = `SY-${year}-${String((count ?? 0) + 1).padStart(3, "0")}`
+  const invoiceNumber = await volgendFactuurnummer(supabase, now)
 
   let pdfBuffer: Buffer | undefined
   let pdfFilePath: string | undefined
@@ -210,12 +207,25 @@ export async function POST(request: Request) {
         now,
       })
 
+      // Na de factuur nog een gewone mail: tot wanneer de site nu online
+      // staat. Eerst kwam er na een verlenging alleen de factuur (23 oktober 2026).
+      if (eventRow.user_email) {
+        await sendRenewalConfirmedEmail({
+          toEmail: eventRow.user_email as string,
+          eventTitle: (eventRow.title as string) || "jullie website",
+          expiresAt: newExpiry,
+          dashboardUrl: "https://www.sayingyes.nl/dashboard",
+        })
+      }
+
       await verversEvent(eventRow.slug as string | null)
     }
     return NextResponse.json({ received: true }, { status: 200 })
   }
 
-  // ── Upgrade: hoger pakket activeren, geldigheid blijft ──────────────────
+  // ── Upgrade: hoger pakket activeren ─────────────────────────────────────
+  // Tussen kaartpakketten blijft de geldigheid zoals hij was. Naar compleet
+  // gaat de site nu live, dus dan begint het jaar nu.
   if (payment_type === "upgrade") {
     if (!isPlan(metadata?.plan)) {
       return NextResponse.json({ received: true }, { status: 200 })
@@ -224,13 +234,25 @@ export async function POST(request: Request) {
 
     const { data: eventRow } = await supabase
       .from("events")
-      .select("plan, slug, user_email, title, frame_names")
+      .select("plan, slug, user_email, title, frame_names, datum")
       .eq("id", event_id)
       .single()
 
     if (eventRow) {
       if (planRank(target) > planRank(eventRow.plan)) {
-        await supabase.from("events").update({ plan: target }).eq("id", event_id)
+        // Zonder dit hield een kaartpakket zijn oude expires_at en liep de
+        // site veel te vroeg af (bevinding 23 oktober 2026). Zelfde als in
+        // de gratis upgrade van /api/checkout.
+        const compleetErbij = target === "compleet"
+          ? {
+              status:                   "published",
+              published_at:             now.toISOString(),
+              expires_at:               planExpiry(now, eventRow.datum as string | null).toISOString(),
+              renewal_reminder_sent_at: null,
+              expiry_warning_sent_at:   null,
+            }
+          : {}
+        await supabase.from("events").update({ plan: target, ...compleetErbij }).eq("id", event_id)
       }
 
       const names = (eventRow.frame_names || eventRow.title || "jullie") as string

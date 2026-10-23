@@ -2,7 +2,7 @@ import { after } from "next/server"
 import { meldFout } from "@/lib/foutmelding"
 import { createServiceClient } from "@/lib/supabase"
 import { sendRSVPConfirmation, sendAdminRSVPNotification } from "@/lib/mail"
-import { planAllows } from "@/lib/plans"
+import { normalizePlan, planAllows } from "@/lib/plans"
 import { formatDate, getStyleConfig } from "@/lib/event-styles"
 import { siteNamen } from "@/lib/site-opening"
 import { eventSiteUrl, MARKETING_URL } from "@/lib/site-url"
@@ -426,6 +426,31 @@ export async function POST(request: Request) {
     }
   }
 
+  // Voor een regel die er al staat (door het bruidspaar ingetypt, of een
+  // eerder antwoord) schrijven we alleen wat de gast nu echt instuurde. Wie op
+  // "nee" drukt vult geen mail, telefoon of dieetwens in, en wat het bruidspaar
+  // daar al had genoteerd moet dan blijven staan. Voorheen werd elk ontbrekend
+  // veld op leeg gezet en de gastengroep teruggezet op de standaard (bevinding
+  // 23 oktober 2026). Nieuwe regels krijgen wel alle velden, met standaarden.
+  function veldenBijwerken(g: (typeof schoon)[number]): Record<string, unknown> {
+    const alles: Record<string, unknown> = velden(g)
+    // De gastengroep alleen als het formulier hem meestuurde; de kaart en
+    // "daggast" zijn standaarden voor nieuwe regels, niet voor bestaande.
+    if (tekst(g.guest_type, 40) == null) delete alles.guest_type
+    // Of iemand een kind is weet het bruidspaar al; alleen overnemen als het
+    // formulier het zelf zegt.
+    if (g.is_kind == null) {
+      delete alles.is_kind
+      delete alles.leeftijd
+    }
+    const rij: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(alles)) {
+      if (v === undefined || v === null || v === "") continue
+      rij[k] = v
+    }
+    return rij
+  }
+
   // Mist de kolom adres nog, dan mag dat een aanmelding nooit kosten. Dezelfde
   // les als concept_naam: één ontbrekende kolom voor een bijzaak mag de
   // hoofdzaak niet meenemen. Dan zonder adres, en dat staat in het log.
@@ -465,7 +490,7 @@ export async function POST(request: Request) {
   // het indeelde. Wij weten niet beter dan zij wie bij wie hoort.
   for (const p of paren) {
     if (!p.bestaand || fout) continue
-    const rij = { submission_id, ...velden(p.g), ...stdErbij(p) }
+    const rij = { submission_id, ...veldenBijwerken(p.g), ...stdErbij(p) }
     let { error } = await supabase.from("rsvp").update(rij).eq("id", p.bestaand.id)
     if (error && "adres" in rij) {
       console.warn("[rsvp] update zonder adres geprobeerd - migratie nog niet gedraaid?")
@@ -512,6 +537,7 @@ export async function POST(request: Request) {
         eventTitle,
         guests: guestPayload,
         voorlopig: status !== "definitief",
+        plan: normalizePlan(event.plan),
         bruiloft: {
           namen,
           sc: getStyleConfig((event.style as string | null) ?? "ivoor"),
@@ -533,12 +559,25 @@ export async function POST(request: Request) {
       })
     }
     if (status === "definitief" && event.user_email) {
-      await sendAdminRSVPNotification({
-        toEmail: event.user_email as string,
-        eventTitle,
-        primaryName: hoofdgast.naam,
-        guests: guestPayload,
-      })
+      // Alleen per gast mailen als het bruidspaar geen stand per dag, week of
+      // maand heeft gekozen (lib/stand.ts). Die keuze staat in
+      // stand_frequentie; is die leeg of bestaat de kolom nog niet, dan
+      // geldt per gast. Eerst kwam deze mail altijd, naast de standmail
+      // (23 oktober 2026).
+      const { data: keuze, error: keuzeFout } = await supabase
+        .from("events")
+        .select("stand_frequentie")
+        .eq("id", event.id)
+        .maybeSingle()
+      const perGast = !!keuzeFout || !keuze || keuze.stand_frequentie == null
+      if (perGast) {
+        await sendAdminRSVPNotification({
+          toEmail: event.user_email as string,
+          eventTitle,
+          primaryName: hoofdgast.naam,
+          guests: guestPayload,
+        })
+      }
     }
   }
 

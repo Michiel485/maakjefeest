@@ -2,9 +2,10 @@ import { createMollieClient } from "@mollie/api-client"
 import { createServerClient } from "@supabase/ssr"
 import { createServiceClient } from "@/lib/supabase"
 import { cookies } from "next/headers"
-import { PLANS, isPlan, normalizePlan, planRank, upgradePrice, type Plan } from "@/lib/plans"
+import { PLANS, isPlan, normalizePlan, planRank, planExpiry, upgradePrice, type Plan } from "@/lib/plans"
 import { verversEvent } from "@/lib/db"
 import { sendWebsiteLiveEmail, sendPlanActivatedEmail } from "@/lib/mail"
+import { volgendFactuurnummer } from "@/lib/factuur"
 
 export const dynamic = "force-dynamic"
 
@@ -47,23 +48,30 @@ async function gratisUpgrade(
   const now = new Date()
   const { data: eventRow } = await supabase
     .from("events")
-    .select("plan, slug, user_email, title, frame_names")
+    .select("plan, slug, user_email, title, frame_names, datum")
     .eq("id", event_id)
     .single()
   if (!eventRow) return
   if (planRank(target) > planRank(eventRow.plan)) {
-    await supabase.from("events").update({ plan: target }).eq("id", event_id)
+    // Naar compleet: de site gaat nu live, dus het jaar begint nu. Zonder
+    // dit hield een kaartpakket zijn oude expires_at en liep de site veel te
+    // vroeg af (bevinding 23 oktober 2026). Zelfde als in /api/webhook.
+    const compleetErbij = target === "compleet"
+      ? {
+          status:                   "published",
+          published_at:             now.toISOString(),
+          expires_at:               planExpiry(now, eventRow.datum as string | null).toISOString(),
+          renewal_reminder_sent_at: null,
+          expiry_warning_sent_at:   null,
+        }
+      : {}
+    await supabase.from("events").update({ plan: target, ...compleetErbij }).eq("id", event_id)
   }
   await supabase.from("discount_codes").update({ used_count: opts.gebruikt + 1 }).eq("id", opts.codeId)
 
-  const year = now.getFullYear()
-  const { count } = await supabase
-    .from("invoices")
-    .select("*", { count: "exact", head: true })
-    .gte("created_at", `${year}-01-01`)
   await supabase.from("invoices").insert({
     event_id,
-    invoice_number:    `SY-${year}-${String((count ?? 0) + 1).padStart(3, "0")}`,
+    invoice_number:    await volgendFactuurnummer(supabase, now),
     customer_email:    eventRow.user_email ?? "",
     customer_name:     eventRow.frame_names || eventRow.title || "",
     description:       `Upgrade naar ${PLANS[target].label} (kortingscode: ${code})`,

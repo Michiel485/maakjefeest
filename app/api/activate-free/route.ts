@@ -1,9 +1,23 @@
 import { createServiceClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase-server"
 import { verversEvent } from "@/lib/db"
 import { sendWebsiteLiveEmail, sendPlanActivatedEmail } from "@/lib/mail"
 import { PLANS, normalizePlan, planExpiry } from "@/lib/plans"
+import { bezoekerIp, teVeelPogingen } from "@/lib/rem"
+import { volgendFactuurnummer } from "@/lib/factuur"
 
 export const dynamic = "force-dynamic"
+
+// Wie is ingelogd, via de sessiecookie. Zelfde manier als in /api/checkout.
+async function ingelogdEmail(): Promise<string | undefined> {
+  try {
+    const db = await createClient()
+    const { data: { user } } = await db.auth.getUser()
+    return user?.email ?? undefined
+  } catch {
+    return undefined
+  }
+}
 
 // POST: pakket gratis activeren met een 100%-kortingscode (vrienden, tests)
 export async function POST(request: Request) {
@@ -20,7 +34,34 @@ export async function POST(request: Request) {
   }
   const plan = normalizePlan(body.plan)
 
+  // Dezelfde rem als op /api/discount: zonder rem kan een script hier codes
+  // aflopen, en hier levert een goede code meteen een gratis pakket op.
+  if (teVeelPogingen("activate-free", bezoekerIp(request), 20)) {
+    return Response.json(
+      { error: "Te veel pogingen. Wacht even en probeer het opnieuw." },
+      { status: 429 }
+    )
+  }
+
+  // Alleen de eigenaar zelf, net als bij een gratis upgrade in /api/checkout.
+  // Anders kan iedereen met een code en een event_id andermans bruiloft
+  // activeren (bevinding 23 oktober 2026).
+  const customerEmail = await ingelogdEmail()
+  if (!customerEmail) {
+    return Response.json({ error: "Log in om deze code te gebruiken" }, { status: 403 })
+  }
+
   const supabase = createServiceClient()
+
+  const { data: existing } = await supabase
+    .from("events")
+    .select("status, datum, user_email")
+    .eq("id", event_id)
+    .single()
+  if (!existing) return Response.json({ error: "Event niet gevonden" }, { status: 404 })
+  if (existing.user_email !== customerEmail) {
+    return Response.json({ error: "Geen toegang" }, { status: 403 })
+  }
 
   // Validate code (same checks as /api/discount)
   const { data: codeRow } = await supabase
@@ -40,18 +81,13 @@ export async function POST(request: Request) {
   }
 
   // Idempotency: skip if already published
-  const { data: existing } = await supabase
-    .from("events")
-    .select("status, datum")
-    .eq("id", event_id)
-    .single()
-  if (existing?.status === "published") {
+  if (existing.status === "published") {
     return Response.json({ ok: true })
   }
 
   // Publish event
   const now = new Date()
-  const expiresAt = planExpiry(now, existing?.datum as string | null)
+  const expiresAt = planExpiry(now, existing.datum as string | null)
 
   const { data: updatedEvent, error: updateError } = await supabase
     .from("events")
@@ -76,13 +112,7 @@ export async function POST(request: Request) {
     .eq("id", codeRow.id)
 
   // Create €0 invoice record for bookkeeping
-  const year = now.getFullYear()
-  const { count } = await supabase
-    .from("invoices")
-    .select("*", { count: "exact", head: true })
-    .gte("created_at", `${year}-01-01`)
-
-  const invoiceNumber = `SY-${year}-${String((count ?? 0) + 1).padStart(3, "0")}`
+  const invoiceNumber = await volgendFactuurnummer(supabase, now)
   await supabase.from("invoices").insert({
     event_id,
     invoice_number:    invoiceNumber,
