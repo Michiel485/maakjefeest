@@ -8,6 +8,16 @@ export const config = {
 }
 
 export async function proxy(req: NextRequest) {
+  // Pagina's zijn er om te lezen. Een POST op een pagina kan alleen een
+  // server action zijn, en die stuurt altijd de header next-action mee. Alles
+  // zonder die header is een scanner die /backoffice, /wp-login en zo
+  // afgaat; Next liep daar op vast ("Expected RSC response, got text/plain")
+  // en dat gaf foutmails (Michiel, 23 oktober 2026). De API-routes vallen
+  // buiten de matcher hierboven en merken hier niets van.
+  if (req.method !== "GET" && req.method !== "HEAD" && req.method !== "OPTIONS" && !req.headers.has("next-action")) {
+    return new NextResponse(null, { status: 405, headers: { allow: "GET, HEAD" } })
+  }
+
   const url = req.nextUrl.clone()
   const hostname = req.headers.get("host") || ""
   const currentHost = hostname.split(":")[0]
