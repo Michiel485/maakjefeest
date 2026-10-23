@@ -91,31 +91,6 @@ const FAQ_ITEMS: [string, string][] = [
   ],
 ]
 
-// Alles wat er in zit, met het pakket waar het bij hoort. Elk pakket bevat de
-// kleinere, dus de website heeft alles (lib/plans.ts).
-const ALLES: { icoon: string; titel: string; tekst: string; prijs: string }[] = [
-  { icoon: "agenda", titel: "Save the Date", tekst: "Zodat iedereen de datum vrijhoudt, met een knop die hem in de agenda zet.", prijs: PRIJS_KAART },
-  { icoon: "kaart", titel: "Trouwkaart", tekst: "Per gastengroep: daggasten, avondgasten, en in zes talen.", prijs: euro(PLANS.uitnodiging.price) },
-  { icoon: "lijst", titel: "Aanmelden en gastenlijst", tekst: "Wie komt, met hoeveel en welke dieetwensen. De lijst vult zich vanzelf.", prijs: "Gratis erbij" },
-  { icoon: "bel", titel: "Herinneringen", tekst: "Met één knop een berichtje naar wie nog niet heeft gereageerd.", prijs: "Gratis erbij" },
-  { icoon: "site", titel: "Trouwwebsite", tekst: "Programma, route, cadeautips en jullie verhaal op jullie eigen adres.", prijs: PRIJS_SITE },
-  { icoon: "camera", titel: "Fotomuur", tekst: "Gasten scannen een QR-code en hun foto's verschijnen live op de muur.", prijs: PRIJS_SITE },
-]
-
-function AllesIcoon({ soort }: { soort: string }) {
-  const p = { fill: "none", stroke: GOUD, strokeWidth: 1.5, strokeLinecap: "round" as const, strokeLinejoin: "round" as const }
-  return (
-    <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" {...p}>
-      {soort === "agenda" && <><rect x="3.5" y="5" width="17" height="15" rx="2" /><path d="M3.5 9.5h17M8 3v4M16 3v4" /><path d="M12 13.2c-.9-1.1-2.6-.6-2.6.8 0 1.3 2.6 2.8 2.6 2.8s2.6-1.5 2.6-2.8c0-1.4-1.7-1.9-2.6-.8z" /></>}
-      {soort === "kaart" && <><rect x="3" y="6" width="18" height="13" rx="1.5" /><path d="M3.5 6.5 12 13l8.5-6.5" /></>}
-      {soort === "lijst" && <><path d="M9 6h11M9 12h11M9 18h11" /><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2" /></>}
-      {soort === "bel" && <><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z" /><path d="M10 20a2 2 0 0 0 4 0" /></>}
-      {soort === "site" && <><rect x="3" y="4.5" width="18" height="15" rx="2" /><path d="M3 8.5h18M6 6.5h.01M8.5 6.5h.01" /><path d="M7 12.5h10M7 15.5h6" /></>}
-      {soort === "camera" && <><path d="M4 8.5h3l1.5-2h7l1.5 2h3v10H4z" /><circle cx="12" cy="13.5" r="3.2" /></>}
-    </svg>
-  )
-}
-
 export default function Home() {
   // De drie nieuwste artikelen: interne links vanaf de voorpagina naar de tips
   const laatsteTips = getAllTips().slice(0, 3)
@@ -417,37 +392,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 5. Alles in één (na de prijzen, Michiel, 11 oktober 2026) ── */}
-      <section id="alles" className="py-16 sm:py-24 px-6 scroll-mt-16" style={{ backgroundColor: ZAND }}>
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] mb-5" style={{ color: GOUD }}>Alles in één</p>
-            <h2 className="text-4xl sm:text-5xl leading-tight mb-6" style={{ fontFamily: KOP_FONT, color: INKT, fontWeight: 700, textWrap: "balance" }}>
-              Eén link, één overzicht, één prijs
-            </h2>
-            <Ornament />
-          </div>
-          {/* Op de telefoon twee naast elkaar, anders waren het zes schermvullende
-              tegels onder elkaar */}
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
-            {ALLES.map((a) => (
-              <div key={a.titel} className="rounded-2xl p-4 sm:p-6 flex flex-col gap-2 sm:gap-3" style={{ backgroundColor: IVOOR_KAART, border: `1px solid ${GOUD_LICHT}` }}>
-                <div className="flex items-center justify-between gap-3">
-                  <AllesIcoon soort={a.icoon} />
-                  <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.12em] text-right" style={{ color: GOUD }}>{a.prijs}</span>
-                </div>
-                <h3 className="m-0 text-lg sm:text-xl leading-tight" style={{ fontFamily: KOP_FONT, color: INKT, fontWeight: 700 }}>{a.titel}</h3>
-                <p className="m-0 text-xs sm:text-sm leading-relaxed" style={{ color: TEKST }}>{a.tekst}</p>
-              </div>
-            ))}
-          </div>
-          <p className="text-center text-sm mt-8 mb-0" style={{ color: TEKST }}>
-            Elk pakket bevat het kleinere: met de trouwwebsite heb je alles. Upgraden kan altijd, je betaalt alleen het verschil.
-          </p>
-        </div>
-      </section>
-
-      {/* ── 6. Waarom wij: onze eigen bruiloft ── */}
+      {/* ── 5. Waarom wij: onze eigen bruiloft ── */}
       <section className="py-16 sm:py-28 px-6" style={{ backgroundColor: IVOOR }}>
         <div className="max-w-3xl mx-auto text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] mb-5" style={{ color: GOUD }}>Waarom SayingYes</p>
@@ -465,7 +410,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 7. Veelgestelde vragen (+ FAQPage-schema) ── */}
+      {/* ── 6. Veelgestelde vragen (+ FAQPage-schema) ── */}
       <section className="py-16 sm:py-28 px-6" style={{ backgroundColor: ZAND }}>
         <script
           type="application/ld+json"
@@ -504,7 +449,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 8. Tips ── */}
+      {/* ── 7. Tips ── */}
       <section className="py-16 sm:py-28 px-6" style={{ backgroundColor: IVOOR }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
@@ -536,7 +481,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 9. Slot ── */}
+      {/* ── 8. Slot ── */}
       <section className="py-20 sm:py-28 px-6 text-center" style={{ backgroundColor: IVOOR_KAART }}>
         <div className="max-w-2xl mx-auto">
           <div className="mb-10"><Ornament /></div>

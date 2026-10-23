@@ -14,7 +14,7 @@ import { voegNamenSamen } from "@/lib/namen"
 import { LS_NAMEN } from "@/lib/nieuw-concept"
 import { meetStap } from "@/lib/stap"
 import { VOORBEELD } from "@/lib/voorbeeld"
-import { GOUD_LICHT, INKT, IVOOR, TEKST, ZACHT } from "./stijl"
+import { GOUD, GOUD_LICHT, INKT, IVOOR, TEKST, ZACHT } from "./stijl"
 
 const LS_KAART = "sayingyes_kaart"
 // Dezelfde kaart als die van het voorbeeldpaar (lib/voorbeeld.ts): sinds 11
@@ -116,6 +116,11 @@ export default function NamenProef({ intro }: { intro?: React.ReactNode } = {}) 
         </button>
         <p className="text-xs" style={{ color: TEKST }}>
           Gratis ontwerpen, zonder account. Je betaalt pas als je de kaart verstuurt.
+        </p>
+        {/* Eén regel vertrouwen, zolang er nog geen klantreviews zijn (Michiel, 23 oktober 2026) */}
+        <p className="text-xs flex items-center gap-2 mt-1" style={{ color: TEKST }}>
+          <span aria-hidden="true" style={{ color: GOUD }}>&#10003;</span>
+          Gebruikt op onze eigen bruiloft, 24 mei 2026. Gemaakt in Nederland.
         </p>
       </form>
       </div>
