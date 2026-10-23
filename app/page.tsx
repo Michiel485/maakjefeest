@@ -5,6 +5,7 @@ import Kop, { Ornament, Pijl, Vinkje } from "@/components/marketing/Kop"
 import Voet from "@/components/marketing/Voet"
 import NamenProef from "@/components/marketing/NamenProef"
 import StartBalk from "@/components/marketing/StartBalk"
+import WhatsAppVenster from "@/components/marketing/WhatsAppVenster"
 import { HUISHOUDENS, PORTO_RONDE } from "@/lib/papier"
 import { DONKER, DONKER_KAART, DONKER_TEKST, DONKER_ZACHT, GOUD, GOUD_LICHT, GOUD_VLAK, INKT, IVOOR, IVOOR_KAART, KOP_FONT, TEKST, ZAND } from "@/components/marketing/stijl"
 import { MARKETING_URL } from "@/lib/site-url"
@@ -180,7 +181,7 @@ export default function Home() {
               Een envelop die opengaat
             </h2>
             <p className="text-base leading-relaxed mb-6" style={{ color: TEKST }}>
-              Dit is wat jullie gasten zien als ze op de link tikken: een envelop met lakzegel in jullie stijl, de kaart erin, en eronder de knop om te laten weten of ze komen. Probeer het hiernaast, en tik daarna op Bekijk onze website.
+              Jullie sturen een berichtje met de link, via WhatsApp of mail. Je gast tikt erop en ziet een envelop met lakzegel in jullie stijl, de kaart erin, en eronder de knop om te laten weten of hij komt. Probeer het hiernaast, en tik daarna op Bekijk onze website.
             </p>
             <ul className="hidden lg:flex flex-col gap-3 mb-8">
               {[
@@ -203,16 +204,18 @@ export default function Home() {
             {/* De kaart van Sophie en Daan (lib/voorbeeld.ts). De knop
                 "Bekijk onze website" opent de kaart als twee deuren en gaat
                 door naar hun voorbeeldsite, precies zoals bij een gast */}
-            <CardReveal
-              display={voorbeeldKaart()}
-              initials={VOORBEELD.initialen}
-              sc={demoSc}
-              siteUrl={VOORBEELD_SITE_URL}
-              siteOpening={voorbeeldOpening()}
-              rsvpUrl={null}
-              demo
-              compact
-            />
+            <WhatsAppVenster sc={demoSc}>
+              <CardReveal
+                display={voorbeeldKaart()}
+                initials={VOORBEELD.initialen}
+                sc={demoSc}
+                siteUrl={VOORBEELD_SITE_URL}
+                siteOpening={voorbeeldOpening()}
+                rsvpUrl={null}
+                demo
+                compact
+              />
+            </WhatsAppVenster>
           </div>
         </div>
       </section>
