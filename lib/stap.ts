@@ -5,7 +5,7 @@
 // ronde 7, 2 oktober 2026). Alleen in de browser, en nooit belangrijker dan
 // de pagina zelf.
 
-export type Stap = "namen" | "kaart-bouwer" | "site-bouwer" | "betaald"
+export type Stap = "namen" | "tekst" | "kaart-bouwer" | "site-bouwer" | "betaald"
 
 export function meetStap(naam: Stap) {
   if (typeof window === "undefined") return

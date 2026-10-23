@@ -43,6 +43,7 @@ const inhoud: ZoekpaginaInhoud = {
   pakket: "uitnodiging",
   artikelen: [
     ["/tips/wat-zet-je-op-een-trouwkaart", "Wat zet je op een trouwkaart? Complete checklist"],
+    ["/trouwkaart-tekst", "Trouwkaart tekst maken: kies je gasten en je toon"],
     ["/tips/trouwkaart-tekst-daggasten-avondgasten", "Trouwkaart tekst: voorbeelden voor dag- en avondgast"],
     ["/tips/digitale-trouwkaart-versturen-whatsapp", "Digitale trouwkaart versturen via WhatsApp"],
   ],

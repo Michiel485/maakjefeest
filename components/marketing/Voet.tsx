@@ -5,6 +5,7 @@ const LINKS: [string, string][] = [
   ["/digitale-trouwkaart", "Digitale trouwkaart"],
   ["/save-the-date", "Save the Date"],
   ["/trouwwebsite-maken", "Trouwwebsite"],
+  ["/trouwkaart-tekst", "Trouwkaart tekst"],
   ["/kaart-voorbeeld", "Voorbeeldkaart"],
   ["/tips", "Tips"],
   ["/contact", "Contact"],

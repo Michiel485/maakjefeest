@@ -3,9 +3,10 @@ title: "Trouwkaart tekst: voorbeelden voor dag- en avondgast"
 date: "2026-09-09"
 description: "Zoek je een tekst voor je trouwkaart? Tien voorbeelden voor daggasten, avondgasten en receptiegasten, van formeel tot losjes, plus tips om zelf te schrijven."
 slug: "trouwkaart-tekst-daggasten-avondgasten"
+updated: "2026-10-23"
 ---
 
-De kaart is ontworpen, de datum staat, en dan komt het moeilijkste deel: de tekst. Wat schrijf je op een trouwkaart zonder stijf of juist te flauw te klinken? En hoe maak je een avondgast duidelijk dat het feest om acht uur begint, zonder dat het als een afwijzing voelt? Hieronder tien voorbeeldteksten die je direct kunt gebruiken of aanpassen, gesorteerd per gastengroep en toon.
+De kaart is ontworpen, de datum staat, en dan komt het moeilijkste deel: de tekst. Wat schrijf je op een trouwkaart zonder stijf of juist te flauw te klinken? En hoe maak je een avondgast duidelijk dat het feest om acht uur begint, zonder dat het als een afwijzing voelt? Hieronder tien voorbeeldteksten die je direct kunt gebruiken of aanpassen, gesorteerd per gastengroep en toon. Liever meteen een tekst met jullie namen, datum en tijden erin? Gebruik dan de [tekst-tool voor je trouwkaart](/trouwkaart-tekst): kies je gasten en je toon, en de tekst staat op een kaart.
 
 ## Eerst: waarom je per gastengroep een andere tekst wilt
 
