@@ -134,7 +134,10 @@ export default async function DashboardPage({
   ]
 
   const checklist = bruiloft ? voortgang(leesStand(extra[bruiloft.id]?.checklist), signalen) : null
-  const liveSite = groep.find((e) => e.status === "published" && planAllows(e.plan, "site")) ?? null
+  // Ook een verlopen site hoort hier: dan toont de tegel "Verlopen" met de
+  // knop om te verlengen, in plaats van "Live zetten" voor iets dat al betaald is
+  const liveSite = groep.find((e) => ["published", "expired"].includes(e.status) && planAllows(e.plan, "site")) ?? null
+  const siteOpgeruimd = !!liveSite?.opgeruimd_at
   const siteAdres = stand.magSite && stand.live && bruiloft ? eventSiteLabel(bruiloft.slug) : null
   const fotoEvents = groep.filter((e) => gpSettings[e.id])
 
@@ -269,7 +272,8 @@ export default async function DashboardPage({
           />
           <WebsiteTegel
             mag={stand.magSite}
-            live={stand.live && !!liveSite}
+            live={!!liveSite && !siteOpgeruimd}
+            opgeruimd={siteOpgeruimd}
             eventId={bruiloft?.id ?? null}
             adres={siteAdres}
             fotomuurAan={stand.fotomuurAan}

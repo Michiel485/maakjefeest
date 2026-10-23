@@ -27,6 +27,8 @@ export interface Bruiloft {
   locatie: string | null
   created_at: string
   expires_at: string | null
+  /** Wanneer de verlopen site is opgeruimd (twee weken na de einddatum); leeg als dat niet zo is. */
+  opgeruimd_at: string | null
   hero_image_url: string | null
   /**
    * Is er een website-ontwerp, los van of het pakket betaald is? De
@@ -122,7 +124,7 @@ export async function laadBruiloft(email: string, gekozenId?: string | null): Pr
   const basis = "id, slug, title, type, status, plan, created_at, expires_at, hero_image_url, datum, locatie, concept_naam"
   const eerst = await service
     .from("events")
-    .select(`${basis}, hoort_bij, checklist, deadline, stand_frequentie`)
+    .select(`${basis}, hoort_bij, checklist, deadline, stand_frequentie, opgeruimd_at`)
     .eq("user_email", email)
     .order("created_at", { ascending: false })
   const eventsFout = eerst.error

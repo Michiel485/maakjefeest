@@ -545,7 +545,7 @@ export async function sendExpiryWarningEmail({
           ? vlak(`<p style="margin:0 0 6px;font-size:15px;color:#1A1A1A;"><strong>Er staan ${fotos} foto's van je gasten klaar.</strong></p><p style="margin:0;font-size:14px;color:#5C5248;line-height:1.65;">Haal ze binnen voordat de site offline gaat. ${fotosUrl ? `<a href="${fotosUrl}" style="color:${GOUD};font-weight:600;">Naar je fotomuur</a>` : ""}</p>`)
           : ""
       }
-      ${alinea(`Verleng je niet voor ${expireStr}? Dan gaat de site vanzelf offline. Later opnieuw aanzetten kan altijd via je dashboard.`, "font-size:13px;color:#9A8E82;")}`,
+      ${alinea(`Verleng je niet voor ${expireStr}? Dan gaat de site vanzelf offline. Opnieuw aanzetten kan daarna nog twee weken via je dashboard; daarna verwijderen we de site, de gastenlijst en de foto's.`, "font-size:13px;color:#9A8E82;")}`,
   })
   return verstuur("Expiry warning", { to: toEmail, subject: `Nog 7 dagen: jullie trouwwebsite gaat offline op ${expireStr}`, html })
 }
@@ -568,11 +568,11 @@ export async function sendOfflineEmail({
   const html = omlijsting({
     gezicht: SAYINGYES,
     kop: "Jullie site is offline",
-    // TODO (Michiel): hoe lang bewaren we een verlopen site echt? Er wordt nu
-    // nog niets opgeruimd; "een half jaar" is een voorlopige belofte tot de
-    // echte termijn is gekozen en er een opruimstap bij de dagelijkse taak zit.
-    inhoud: `${alinea(`<strong>${veilig(eventTitle)}</strong> staat vanaf vandaag niet meer online. Jullie gegevens, de gastenlijst${fotos > 0 ? ` en de ${fotos} foto's van je gasten` : ""} bewaren we nog een half jaar.`)}
-      ${alinea(`Wil je de site toch nog een tijdje laten staan, bijvoorbeeld voor de foto's? Dan zet je hem in je dashboard weer aan voor ${RENEWAL_PRICE} euro per ${RENEWAL_MONTHS} maanden.`)}
+    // Twee weken bewaren, daarna ruimt de dagelijkse taak alles op (besluit
+    // Michiel, 23 oktober 2026: daarna zet niemand hem nog aan).
+    inhoud: `${alinea(`<strong>${veilig(eventTitle)}</strong> staat vanaf vandaag niet meer online. Jullie gegevens, de gastenlijst${fotos > 0 ? ` en de ${fotos} foto's van je gasten` : ""} bewaren we nog <strong>twee weken</strong>. Daarna verwijderen we de site, de gastenlijst en de foto's.`)}
+      ${fotos > 0 ? alinea(`Wil je de foto's van je gasten houden? Download ze dan binnen twee weken via je dashboard.`) : ""}
+      ${alinea(`Wil je de site toch nog een tijdje laten staan? Dan zet je hem binnen twee weken in je dashboard weer aan voor ${RENEWAL_PRICE} euro per ${RENEWAL_MONTHS} maanden.`)}
       ${knoppen(knop(dashboardUrl, "Naar je dashboard", SAYINGYES))}`,
   })
   return verstuur("Offline", { to: toEmail, subject: `${eventTitle}: jullie site is offline`, html })

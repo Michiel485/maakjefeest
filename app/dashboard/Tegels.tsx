@@ -393,6 +393,7 @@ export function WebsiteTegel({
   naam,
   slug,
   geldigTot,
+  opgeruimd = false,
   prijs,
 }: {
   mag: boolean
@@ -409,6 +410,8 @@ export function WebsiteTegel({
   slug: string | null
   /** Tot wanneer de betaalde site geldig is; leeg als er geen einddatum is. */
   geldigTot: string | null
+  /** Twee weken na de einddatum is de site opgeruimd: pagina's, gastenlijst en foto's zijn weg. */
+  opgeruimd?: boolean
   /** Wat live zetten kost: het verschil als er al iets betaald is. */
   prijs: string
 }) {
@@ -435,6 +438,21 @@ export function WebsiteTegel({
       fotomuurAan={fotomuurAan}
     />
   ) : null
+
+  // Opgeruimd (besluit Michiel, 23 oktober 2026): niets meer te verlengen of
+  // te bekijken, wel opnieuw te beginnen.
+  if (mag && opgeruimd) {
+    return (
+      <Tegel titel="Website" breed rechts={<Chip soort="stil">Opgeruimd</Chip>}>
+        <p className="m-0 text-sm" style={{ color: KLEUR.tekst }}>
+          {geldigTot ? `Jullie site verliep op ${datumTekst(geldigTot)}. ` : ""}Twee weken na de einddatum hebben we de site, de gastenlijst en de foto&apos;s verwijderd, zoals in de mail stond. Een nieuwe site bouwen kan altijd.
+        </p>
+        <div className="flex flex-wrap gap-2 mt-auto">
+          <TegelKnop href="/bouwen?plan=compleet" soort="stil">Nieuwe site bouwen</TegelKnop>
+        </div>
+      </Tegel>
+    )
+  }
 
   // Wel gebouwd, nog niet betaald: dezelfde vorm als een kaart in concept.
   // Michiels bevinding van 22 september 2026: hij bouwde een site, ging terug
@@ -489,9 +507,11 @@ export function WebsiteTegel({
   return (
     <Tegel titel="Website" breed rechts={chip}>
       <p className="m-0 text-sm" style={{ color: KLEUR.tekst }}>
-        {live && adres
-          ? <>Route, programma, cadeautips{fotomuurAan ? `, en de fotomuur staat aan${fotos > 0 ? ` (${fotos} foto's)` : ""}` : ""}.</>
-          : "Je site staat klaar om live te zetten. Daarna kan de trouwkaart ernaar verwijzen voor de route, het programma en de cadeautips."}
+        {live && verlopen
+          ? "Je site is offline. Verleng binnen twee weken, dan staat hij weer online met alles erop. Daarna ruimen we de site, de gastenlijst en de foto's op."
+          : live && adres
+            ? <>Route, programma, cadeautips{fotomuurAan ? `, en de fotomuur staat aan${fotos > 0 ? ` (${fotos} foto's)` : ""}` : ""}.</>
+            : "Je site staat klaar om live te zetten. Daarna kan de trouwkaart ernaar verwijzen voor de route, het programma en de cadeautips."}
       </p>
       <div className="flex flex-col rounded-xl" style={{ border: `1px solid ${KLEUR.zand}` }}>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-[13px]">

@@ -56,6 +56,7 @@ export async function GET(request: Request) {
     deleted:          [] as string[],
     fotosVerwijderd:  0,
     renewalReminders: [] as string[],
+    opgeruimd:        [] as string[],
     expiryWarnings:   [] as string[],
     expired:          [] as string[],
     errors:           [] as string[],
@@ -271,6 +272,14 @@ export async function GET(request: Request) {
     }
   }
 
+  // ── Opruimen, twee weken na de einddatum ─────────────────────────────────
+  // Besluit Michiel, 23 oktober 2026: daarna zet niemand de site nog aan. De
+  // site, de kaarten, de gastenlijst en de foto's gaan weg; de rij in events
+  // blijft met opgeruimd_at, zodat het dashboard het kan zeggen en verlengen
+  // niet meer kan. Facturen blijven altijd. De offlinemail en de
+  // verloopwaarschuwing noemen deze termijn.
+  results.opgeruimd = await ruimVerlopenOp(service, now)
+
   // ── Aantallen naar de locatie ─────────────────────────────────────────────
   // Uit Michiels eigen bruiloft: hij gaf zijn aantallen te laat door, de
   // locatie had de inkoop al gedaan, en hij betaalde voor gasten die niet
@@ -471,6 +480,45 @@ async function stuurStanden(
 // 6, 2 oktober 2026). Elk hoogstens één keer, onthouden in mail_week_voor_at
 // en mail_dag_na_at (supabase/migration_mailmomenten.sql). Staan die kolommen
 // er nog niet, dan gebeurt er niets en is dat geen fout.
+const VEERTIEN_DAGEN_MS = 14 * DAG_MS
+
+async function ruimVerlopenOp(service: ReturnType<typeof createServiceClient>, now: Date): Promise<string[]> {
+  const grens = new Date(now.getTime() - VEERTIEN_DAGEN_MS).toISOString()
+  const { data, error } = await service
+    .from("events")
+    .select("id, slug, hero_image_url, expires_at")
+    .eq("status", "expired")
+    .is("opgeruimd_at", null)
+    .lte("expires_at", grens)
+  if (error) {
+    // Zolang de migratie (kolom opgeruimd_at) niet gedraaid is, gebeurt er niets
+    console.warn("[cron/cleanup] Opruimen overgeslagen:", error.message)
+    return []
+  }
+
+  const klaar: string[] = []
+  for (const event of data ?? []) {
+    // Nog één keer kijken: alleen als hij nu nog echt verlopen is, zodat een
+    // verlenging van vanochtend nooit per ongeluk wordt weggegooid
+    const { data: check } = await service.from("events").select("status, opgeruimd_at").eq("id", event.id).single()
+    if (!check || check.status !== "expired" || check.opgeruimd_at) continue
+
+    await verwijderEventInhoud(service, event.id as string, event.hero_image_url as string | null)
+    const { error: updErr } = await service
+      .from("events")
+      .update({ opgeruimd_at: now.toISOString(), hero_image_url: null })
+      .eq("id", event.id)
+      .eq("status", "expired")
+    if (updErr) {
+      console.error("[cron/cleanup] Opgeruimd markeren mislukt:", event.id, updErr.message)
+      continue
+    }
+    await verversEvent(event.slug as string | null)
+    klaar.push(event.id as string)
+  }
+  return klaar
+}
+
 async function stuurMomenten(
   service: ReturnType<typeof createServiceClient>,
   now: Date,

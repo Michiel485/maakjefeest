@@ -170,7 +170,7 @@ export async function POST(request: Request) {
     const supabase = createServiceClient()
     const { data: event } = await supabase
       .from("events")
-      .select("id, plan, status, user_email")
+      .select("id, plan, status, user_email, opgeruimd_at")
       .eq("id", event_id)
       .single()
 
@@ -180,6 +180,11 @@ export async function POST(request: Request) {
     }
     if (!["published", "expired"].includes(event.status as string)) {
       return Response.json({ error: "Upgraden kan pas na de eerste aankoop" }, { status: 400 })
+    }
+    // Een opgeruimde site (twee weken na de einddatum) is leeg; daar valt niets
+    // meer op te upgraden
+    if (event.opgeruimd_at) {
+      return Response.json({ error: "Deze site is opgeruimd. Je kunt wel een nieuwe site bouwen." }, { status: 400 })
     }
 
     const bedrag = upgradePrice(event.plan, target)

@@ -76,13 +76,22 @@ export async function POST(request: Request) {
   const supabase = createServiceClient()
   const { data: event } = await supabase
     .from("events")
-    .select("id, title, user_email, plan")
+    .select("id, title, user_email, plan, opgeruimd_at")
     .eq("id", event_id)
     .eq("user_email", customerEmail)
     .single()
 
   if (!event) {
     return Response.json({ error: "Event niet gevonden" }, { status: 404 })
+  }
+
+  // Twee weken na de einddatum is alles opgeruimd (besluit Michiel, 23 oktober
+  // 2026); dan valt er niets meer aan te zetten.
+  if (event.opgeruimd_at) {
+    return Response.json(
+      { error: "Deze site is opgeruimd: twee weken na de einddatum verwijderen we de site, de gastenlijst en de foto's. Je kunt wel een nieuwe site bouwen." },
+      { status: 400 }
+    )
   }
 
   // Verlengen hoort bij een complete site; bij een kaartpakket is een upgrade
